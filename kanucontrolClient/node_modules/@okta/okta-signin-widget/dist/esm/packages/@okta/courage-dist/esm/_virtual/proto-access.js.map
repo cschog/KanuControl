@@ -1,0 +1,1 @@
+{"version":3,"file":"proto-access.js","sources":["../../../../../../../packages/@okta/courage-dist/esm/_virtual/proto-access.js"],"sourcesContent":["var protoAccess = {};\n\nexport { protoAccess as __exports };\n"],"names":["protoAccess"],"mappings":"AAAIA,IAAAA,WAAW,GAAG;;;;"}

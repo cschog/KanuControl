@@ -1,0 +1,1 @@
+{"version":3,"file":"no-conflict.js","sources":["../../../../../../../packages/@okta/courage-dist/esm/_virtual/no-conflict.js"],"sourcesContent":["var noConflict = {exports: {}};\n\nexport { noConflict as n };\n"],"names":["noConflict","exports"],"mappings":"AAAA,IAAIA,UAAU,GAAG;AAACC,EAAAA,OAAO,EAAE,EAAA;AAAV;;;;"}

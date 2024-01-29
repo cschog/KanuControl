@@ -1,0 +1,1 @@
+{"version":3,"file":"base.js","sources":["../../../../../../../packages/@okta/courage-dist/esm/_virtual/base.js"],"sourcesContent":["var base = {};\n\nexport { base as __exports };\n"],"names":["base"],"mappings":"AAAIA,IAAAA,IAAI,GAAG;;;;"}

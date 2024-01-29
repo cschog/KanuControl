@@ -1,0 +1,1 @@
+{"version":3,"file":"js.cookie.js","sources":["../../../../../../../packages/@okta/courage-dist/esm/_virtual/js.cookie.js"],"sourcesContent":["var js_cookie = {exports: {}};\n\nexport { js_cookie as j };\n"],"names":["js_cookie","exports"],"mappings":"AAAA,IAAIA,SAAS,GAAG;AAACC,EAAAA,OAAO,EAAE,EAAA;AAAV;;;;"}

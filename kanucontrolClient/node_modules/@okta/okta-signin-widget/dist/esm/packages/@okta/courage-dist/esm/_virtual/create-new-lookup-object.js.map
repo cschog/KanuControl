@@ -1,0 +1,1 @@
+{"version":3,"file":"create-new-lookup-object.js","sources":["../../../../../../../packages/@okta/courage-dist/esm/_virtual/create-new-lookup-object.js"],"sourcesContent":["var createNewLookupObject = {};\n\nexport { createNewLookupObject as __exports };\n"],"names":["createNewLookupObject"],"mappings":"AAAIA,IAAAA,qBAAqB,GAAG;;;;"}

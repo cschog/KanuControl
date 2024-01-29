@@ -1,0 +1,1 @@
+{"version":3,"file":"lookup.js","sources":["../../../../../../../packages/@okta/courage-dist/esm/_virtual/lookup.js"],"sourcesContent":["var lookup = {exports: {}};\n\nexport { lookup as l };\n"],"names":["lookup","exports"],"mappings":"AAAA,IAAIA,MAAM,GAAG;AAACC,EAAAA,OAAO,EAAE,EAAA;AAAV;;;;"}

@@ -1,0 +1,1 @@
+{"version":3,"file":"logger.js","sources":["../../../../../../../packages/@okta/courage-dist/esm/_virtual/logger.js"],"sourcesContent":["var logger = {exports: {}};\n\nexport { logger as l };\n"],"names":["logger","exports"],"mappings":"AAAA,IAAIA,MAAM,GAAG;AAACC,EAAAA,OAAO,EAAE,EAAA;AAAV;;;;"}

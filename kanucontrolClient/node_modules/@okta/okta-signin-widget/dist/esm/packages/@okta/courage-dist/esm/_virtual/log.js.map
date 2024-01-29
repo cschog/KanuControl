@@ -1,0 +1,1 @@
+{"version":3,"file":"log.js","sources":["../../../../../../../packages/@okta/courage-dist/esm/_virtual/log.js"],"sourcesContent":["var log = {exports: {}};\n\nexport { log as l };\n"],"names":["log","exports"],"mappings":"AAAA,IAAIA,GAAG,GAAG;AAACC,EAAAA,OAAO,EAAE,EAAA;AAAV;;;;"}

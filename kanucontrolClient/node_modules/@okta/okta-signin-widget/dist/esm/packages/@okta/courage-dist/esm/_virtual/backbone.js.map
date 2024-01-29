@@ -1,0 +1,1 @@
+{"version":3,"file":"backbone.js","sources":["../../../../../../../packages/@okta/courage-dist/esm/_virtual/backbone.js"],"sourcesContent":["var backbone = {exports: {}};\n\nexport { backbone as b };\n"],"names":["backbone","exports"],"mappings":"AAAA,IAAIA,QAAQ,GAAG;AAACC,EAAAA,OAAO,EAAE,EAAA;AAAV;;;;"}

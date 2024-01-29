@@ -1,0 +1,1 @@
+{"version":3,"file":"jquery-1.12.4.js","sources":["../../../../../../../packages/@okta/courage-dist/esm/_virtual/jquery-1.12.4.js"],"sourcesContent":["var jquery1_12_4 = {exports: {}};\n\nexport { jquery1_12_4 as j };\n"],"names":["jquery1_12_4","exports"],"mappings":"AAAA,IAAIA,YAAY,GAAG;AAACC,EAAAA,OAAO,EAAE,EAAA;AAAV;;;;"}

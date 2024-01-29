@@ -1,0 +1,1 @@
+{"version":3,"file":"index.js","sources":["../../../src/index.ts"],"sourcesContent":["// Entry point for Typescript build\nimport OktaSignIn from './widget/OktaSignIn';\n\nexport { OktaSignIn };\nexport default OktaSignIn;\nexport * from './types';\n"],"names":[],"mappings":";;;AAAA"}
