@@ -14,7 +14,7 @@ export function VereinEditForm({
   onSpeichern,
   onAbbruch,
   verein,
-}: VereinEditFormProps) {
+}: Readonly<VereinEditFormProps>) {
   const [name, setVereinsName] = useState("");
   const [abk, setVereinsKurz] = useState("");
   const [strasse, setVereinsStrasse] = useState("");
@@ -28,7 +28,7 @@ export function VereinEditForm({
   const [bic, setVereinsBIC] = useState("");
   const toast = useRef<Toast | null>(null);
 
-  // console.log(modusNeuerVerein, verein);
+  console.log(verein);
 
   const createUpdateVerein = useCallback(() => {
     // If verein exists, it´s an update, so include the "id" property

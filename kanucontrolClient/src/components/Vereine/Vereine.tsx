@@ -98,14 +98,12 @@ class Vereine extends Component<VereineProps, VereineState> {
       ) {
         if (modusNeuerVerein) {
           await dbCreateVerein(verein);
-        } else {
-          if (selectedVerein) {
+        } else if (selectedVerein) {
             verein.id = selectedVerein.id;
             await dbReplaceVerein(verein);
           } else {
             throw new Error("No selected Verein found.");
           }
-        }
 
         this.fetchVereineData();
 

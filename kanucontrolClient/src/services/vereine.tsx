@@ -15,6 +15,8 @@ export const getAllVereine = async () => {
     
     return vereine;
   } catch (error) {
+    // log and rethrow 
+    console.log(error);
     throw error;
   }
 };
@@ -26,6 +28,8 @@ export const createVerein = async (verein: Verein) => {
     });
     return response.data;
   } catch (error) {
+    // log and rethrow 
+    console.log(error);
     throw error;
   }
 };
@@ -41,6 +45,8 @@ export const replaceVerein = async (verein: Verein) => {
     });
     return response.data;
   } catch (error) {
+    // log and rethrow 
+    console.log(error);
     throw error;
   }
 };
@@ -50,6 +56,8 @@ export const deleteVerein = async (vereinId: number) => {
   try {
     await axios.delete(getElementURL(vereinId));
   } catch (error) {
+    // log and rethrow 
+    console.log(error);
     throw error;
   }
 };
