@@ -6,7 +6,7 @@ interface BtnStoreCancelProps {
   onAbbruch: () => void;
 }
 
-export function BtnStoreCancel({ createUpdate, onAbbruch }: BtnStoreCancelProps) {
+export function BtnStoreCancel({ createUpdate, onAbbruch }: Readonly<BtnStoreCancelProps>) {
   return (
     <>
       <Button

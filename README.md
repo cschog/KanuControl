@@ -27,5 +27,6 @@ Der generelle Ablauf besteht in den folgenden Schritten:
    Einzige Vorraussetzung ist eine stabile Internetverbindung.
 
    Die Daten werden auf einem Server im Internet in einer mySL Datenbank gespeichert. 
-   Das Frontend ist eine REACT Anwendung, die mit einem Java-Backendserver 
+   Das Frontend ist eine REACT Anwendung, die mit einem Java-Backendserver kommuniziert.
+   Der Backendserver ist eine Spring Boot Anwendung.
    
