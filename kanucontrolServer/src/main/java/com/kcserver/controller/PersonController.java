@@ -1,17 +1,12 @@
 package com.kcserver.controller;
 
-import com.kcserver.dto.PersonCreateDTO;
-import com.kcserver.dto.PersonWithVereinDTO;
 import com.kcserver.entity.Person;
 import com.kcserver.service.PersonService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 public class PersonController {
@@ -33,15 +28,9 @@ public class PersonController {
     }
 
     @PostMapping(value = "/person", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-//    public Person createPerson(@Valid @RequestBody Person person) {
-//        return personService.createPerson(person);
-//    }
-
-    public ResponseEntity<Person> createPerson(@RequestBody PersonCreateDTO personDTO) {
-        Person createdPerson = personService.createPersonWithVerein(personDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdPerson);
+    public Person createPerson(@Valid @RequestBody Person person) {
+        return personService.createPerson(person);
     }
-
 
     @DeleteMapping(value = "/person/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> deletePerson(@PathVariable long id) {
@@ -64,12 +53,6 @@ public class PersonController {
             return ResponseEntity.notFound().build();
         }
     }
-
-    @GetMapping(value = "/mitglied", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<PersonWithVereinDTO> getPersonsWithVerein() {
-        return personService.getAllPersonenWithVerein();
-    }
-
 }
 
 
