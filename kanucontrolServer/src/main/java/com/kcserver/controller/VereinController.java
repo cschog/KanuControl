@@ -53,7 +53,6 @@ public class VereinController {
             return ResponseEntity.notFound().build();
         }
     }
-
 }
 
 

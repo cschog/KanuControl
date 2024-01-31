@@ -1,11 +1,10 @@
 package com.kcserver.entity;
 
 import jakarta.persistence.*;
-
-import lombok.*;
-
-import java.util.HashSet;
-import java.util.Set;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Data
 @Entity(name = "verein")
@@ -13,7 +12,7 @@ import java.util.Set;
 @ToString
 @NoArgsConstructor(force = true)
 @Table
-public class Verein {
+public class Verein<name> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,40 +20,37 @@ public class Verein {
     private Long id;
 
     @Column(name = "name")
-    private final String name;
+    private String name;
 
     @Column(name = "abk")
-    private final String abk;
+    private  String abk;
 
     @Column(name = "strasse")
-    private final String strasse;
+    private  String strasse;
 
     @Column(name = "plz")
-    private final String plz;
+    private  String plz;
 
     @Column(name = "ort")
-    private final String ort;
+    private  String ort;
 
     @Column(name = "telefon")
-    private final String telefon;
+    private  String telefon;
 
     @Column(name = "bank_name")
-    private final String bankName;
+    private  String bankName;
 
     @Column(name = "konto_inhaber")
-    private final String kontoInhaber;
+    private  String kontoInhaber;
 
     @Column(name = "ki_anschrift")
-    private final String kiAnschrift;
+    private  String kiAnschrift;
 
     @Column(name = "iban")
-    private final String iban;
+    private  String iban;
 
     @Column(name = "bic")
-    private final String bic;
-
-    @OneToMany(mappedBy = "vereinMitgliedschaft")
-    private Set<Mitglied> mitglieder = new HashSet<>();
+    private  String bic;
 
     // Parameterized constructor
     public Verein(String name, String abk, String strasse, String plz, String ort,
@@ -75,54 +71,4 @@ public class Verein {
 
     }
 
-    public Set<Mitglied> getMitglieder() {
-        return mitglieder;
-    }
-
-    public void setMitglieder(Set<Mitglied> mitglieder) {
-        this.mitglieder = mitglieder;
-    }
-
-    public void addMitglied(Mitglied mitglied) {
-        mitglieder.add(mitglied);
-        mitglied.setVereinMitgliedschaft(this);
-    }
-
-    public void removeMitglied(Mitglied mitglied) {
-        mitglieder.remove(mitglied);
-        mitglied.setVereinMitgliedschaft(null);
-    }
-
-    public void setName(String name) {
-    }
-
-    public void setAbk(String abk) {
-    }
-
-    public void setStrasse(String strasse) {
-    }
-
-    public void setPlz(String plz) {
-    }
-
-    public void setOrt(String ort) {
-    }
-
-    public void setTelefon(String telefon) {
-    }
-
-    public void setBankName(String bankName) {
-    }
-
-    public void setKontoInhaber(String kontoInhaber) {
-    }
-
-    public void setKiAnschrift(String kiAnschrift) {
-    }
-
-    public void setIban(String iban) {
-    }
-
-    public void setBic(String bic) {
-    }
 }

@@ -3,12 +3,8 @@ package com.kcserver.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-
-import java.util.HashSet;
-import java.util.Set;
 
 @Data
 @Entity(name = "person")
@@ -24,34 +20,31 @@ public class Person {
     private Long id;
 
     @Column(name = "name")
-    private final String name;
+    private  String name;
 
     @Column(name = "vorname")
-    private final String vorname;
+    private  String vorname;
 
     @Column(name = "strasse")
-    private final String strasse;
+    private  String strasse;
 
     @Column(name = "plz")
-    private final String plz;
+    private  String plz;
 
     @Column(name = "ort")
-    private final String ort;
+    private  String ort;
 
     @Column(name = "telefon")
-    private final String telefon;
+    private  String telefon;
 
     @Column(name = "bank_name")
-    private final String bankName;
+    private  String bankName;
 
     @Column(name = "iban")
-    private final String iban;
+    private  String iban;
 
     @Column(name = "bic")
-    private final String bic;
-
-    @OneToMany(mappedBy = "personMitgliedschaft")
-    private final Set<Mitglied> mitglieder = new HashSet<>();
+    private  String bic;
 
 
     // Parameterized constructor
@@ -71,30 +64,4 @@ public class Person {
 
     }
 
-    public void setName(String name) {
-    }
-
-    public void setVorname(String vorname) {
-    }
-
-    public void setStrasse(String strasse) {
-    }
-
-    public void setPlz(String plz) {
-    }
-
-    public void setOrt(String ort) {
-    }
-
-    public void setTelefon(String telefon) {
-    }
-
-    public void setBankName(String bankName) {
-    }
-
-    public void setIban(String iban) {
-    }
-
-    public void setBic(String bic) {
-    }
 }
