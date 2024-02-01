@@ -12,7 +12,7 @@ import lombok.ToString;
 @ToString
 @NoArgsConstructor(force = true)
 @Table
-public class Verein<name> {
+public class Verein {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
