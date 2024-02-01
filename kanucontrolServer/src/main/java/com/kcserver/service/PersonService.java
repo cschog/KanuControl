@@ -26,6 +26,10 @@ public class PersonService {
         return personRepository.findAll();
     }
 
+    public Person getPersonByName(String name) {
+        return personRepository.findByNameIs(name);
+    }
+
 
     public Person createPerson(Person person) {
         return personRepository.save(person);
