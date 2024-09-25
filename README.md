@@ -1,27 +1,27 @@
 KanuControl
 ===========
 
-KanuControl ist eine Anwendung zur Beantragung und Abrechnung von Zuschüssen aus dem Kinder-, Jugend und Freizeitplan (KJFP) vom LSB NRW. 
-Die Anträge und Abrechnungen werden von der Geschäftsstelle des KanuVerbandes NRW (KVNR) verarbeitet.
+KanuControl ist eine Anwendung zur Beantragung und Abrechnung von Zuschüssen aus dem Kinder-, Jugend und Freizeitplan (KJFP) vom Landessportbund NRW (LSB NRW). 
+Die Anträge und Abrechnungen werden von der Geschäftsstelle des KanuVerbandes NRW (KVNRW) verarbeitet.
 
 Der generelle Ablauf besteht in den folgenden Schritten:
   - Anlegen eines Vereins, falls noch nicht vorhanden
   - Eintragen von Mitglieder in diesen Verein
 
   Antragstellung:
-  - Anlegen einer Jugend-Veranstaltung, für die Zuschussmittel beantragt werden sollen
-  - Ausgabe der Antragsformulare als PDF. Dort eventuell fehlende Angaben manuell nachtragen
+  - Anlegen einer Jugend-Veranstaltung, für die Zuschussmittel beantragt werden sollen. Dies ist dann die aktive Veranstaltung.
+  - Ausgabe der Antragsformulare als bearbeitbare PDF-Formulare. Dort eventuell fehlende Angaben manuell nachtragen
 
   Durchführung der Veranstaltung
   - Eintragen der Teilnehmer dieser Veranstaltung
-    - Falls die Teilnehmer noch nicht in der Mitgliederliste enthalten sind, werden sie dort angelegt (beim Eintragen als Teilnehmer)
+    - Falls die Teilnehmer noch nicht in der Mitgliedertabelle enthalten sind, werden sie  angelegt und automatische der aktiven Veranstaltung als Teilnehmer zugeordnet.
    
   Abrechnung:
   - Eintragen der Einnahmen und Kosten der Veranstaltung
   - Eventuell Erfassen von Reisekosten (i.d.R. Fahrtkosten von PKW´s)
   - Ausgabe der Abrechnungsdokumente als PDF
     - Deckblatt
-    - Erhebungsbogen
+    - Erhebungsbogen (das ist sind mehrere Blätter mit statistischen Auswertungen)
     - Teilnehmerliste
 
    KanuControl - Technik
@@ -45,7 +45,9 @@ Der generelle Ablauf besteht in den folgenden Schritten:
    
    Backend
    =======
-   Der Backendserver ist eine Spring Boot Anwendung. Das Datenbank Schema wird über Hibernate im Backend definiert. In mySQL wird nur die Datenbank selber einmal angelegt. 
+   Der Backendserver ist eine Spring Boot Anwendung. 
+   Spring Boot Version 3.2.2, Java Version 17. Dependency Mgmt mit Maven.
+   Das Datenbank Schema wird über Hibernate im Backend definiert. In mySQL wird nur die Datenbank selber einmal angelegt. 
    
    Schema von KanuControl
    ======================
