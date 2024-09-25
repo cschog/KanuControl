@@ -10,7 +10,7 @@ Der generelle Ablauf besteht in den folgenden Schritten:
 
   Antragstellung:
   - Anlegen einer Jugend-Veranstaltung, für die Zuschussmittel beantragt werden sollen. Dies ist dann die aktive Veranstaltung.
-  - Ausgabe der Antragsformulare als bearbeitbare PDF-Formulare. Dort eventuell fehlende Angaben manuell nachtragen
+  - Ausgabe der Antragsformulare als bearbeitbare PDF-Formulare. Dort können eventuell fehlende Angaben manuell nachgetragen werden.
 
   Durchführung der Veranstaltung
   - Eintragen der Teilnehmer dieser Veranstaltung
