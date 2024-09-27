@@ -21,7 +21,7 @@ Der generelle Ablauf besteht in den folgenden Schritten:
   - Eventuell Erfassen von Reisekosten (i.d.R. Fahrtkosten von PKW´s)
   - Ausgabe der Abrechnungsdokumente als PDF
     - Deckblatt
-    - Erhebungsbogen (das ist sind mehrere Blätter mit statistischen Auswertungen)
+    - Erhebungsbogen (das sind mehrere Blätter mit statistischen Auswertungen)
     - Teilnehmerliste
 
    KanuControl - Technik
