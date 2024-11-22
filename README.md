@@ -21,7 +21,7 @@ Der generelle Ablauf besteht in den folgenden Schritten:
   - Eventuell Erfassen von Reisekosten (i.d.R. Fahrtkosten von PKW´s)
   - Ausgabe der Abrechnungsdokumente als PDF
     - Deckblatt
-    - Erhebungsbogen (das ist sind mehrere Blätter mit statistischen Auswertungen)
+    - Erhebungsbogen (das sind mehrere Blätter mit statistischen Auswertungen)
     - Teilnehmerliste
 
    KanuControl - Technik
@@ -66,3 +66,7 @@ Der generelle Ablauf besteht in den folgenden Schritten:
    
    1. Mitglied = Verein : Person (n:m) mit Attributen (z.B. Funktion)
    2. Teilnehmer = Veranstaltung : Person (n:m)
+
+Mandantenfähigkeit
+==================
+In der Version 2.0 ist geplant, dass die Nutzerdaten über eine Benutzerverwaltung getrennt werden. Damit wird sichergestellt, dass jeder Kanuverein nur seine Daten sehen und verändern kann.
