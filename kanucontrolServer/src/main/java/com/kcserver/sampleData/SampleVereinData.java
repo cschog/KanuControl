@@ -1,5 +1,6 @@
 package com.kcserver.sampleData;
 
+import com.kcserver.dto.VereinDTO;
 import com.kcserver.entity.Verein;
 import com.kcserver.repository.VereinRepository;
 import org.slf4j.Logger;
@@ -10,6 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Configuration
 @Order(1)
@@ -23,8 +25,9 @@ public class SampleVereinData {
             if (vereinRepository.count() == 0) { // Check if data already exists
                 logger.info("Loading sample Verein data...");
 
-                List<Verein> sampleVereine = List.of(
-                        new Verein(
+                List<VereinDTO> sampleVereinDTOs = List.of(
+                        new VereinDTO(
+                                null, // ID will be auto-generated
                                 "Eschweiler Kanu Club",
                                 "EKC",
                                 "Ardennenstr. 82",
@@ -37,7 +40,8 @@ public class SampleVereinData {
                                 "DE45391629806106794020",
                                 "GENODED1WUR"
                         ),
-                        new Verein(
+                        new VereinDTO(
+                                null,
                                 "Spielvereinigung Boich Thum",
                                 "SVBT",
                                 "",
@@ -50,7 +54,8 @@ public class SampleVereinData {
                                 "",
                                 ""
                         ),
-                        new Verein(
+                        new VereinDTO(
+                                null,
                                 "Oberhausener Kanu Club",
                                 "OKC",
                                 "",
@@ -63,7 +68,8 @@ public class SampleVereinData {
                                 "",
                                 ""
                         ),
-                        new Verein(
+                        new VereinDTO(
+                                null,
                                 "Kanu Club Grün Gelb e.V.",
                                 "KCG",
                                 "",
@@ -78,12 +84,39 @@ public class SampleVereinData {
                         )
                 );
 
+                // Convert DTOs to entities and save them
+                List<Verein> sampleVereine = sampleVereinDTOs.stream()
+                        .map(this::convertToEntity)
+                        .collect(Collectors.toList());
+
                 vereinRepository.saveAll(sampleVereine);
 
-                logger.info("Sample Verein data loaded successfully.");
+                logger.info("Sample Verein data loaded successfully: {} records added.", sampleVereine.size());
             } else {
                 logger.info("Sample Verein data already exists. Skipping initialization.");
             }
         };
+    }
+
+    /**
+     * Converts a VereinDTO to a Verein entity.
+     *
+     * @param vereinDTO The VereinDTO to convert.
+     * @return The corresponding Verein entity.
+     */
+    private Verein convertToEntity(VereinDTO vereinDTO) {
+        return new Verein(
+                vereinDTO.getName(),
+                vereinDTO.getAbk(),
+                vereinDTO.getStrasse(),
+                vereinDTO.getPlz(),
+                vereinDTO.getOrt(),
+                vereinDTO.getTelefon(),
+                vereinDTO.getBankName(),
+                vereinDTO.getKontoInhaber(),
+                vereinDTO.getKiAnschrift(),
+                vereinDTO.getIban(),
+                vereinDTO.getBic()
+        );
     }
 }

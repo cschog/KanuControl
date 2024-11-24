@@ -82,6 +82,8 @@ public class Verein {
         this.lastModifiedDate = LocalDateTime.now();
     }
 
+
+
     public
     Verein(String name, String abk, String strasse, String plz, String ort,
            String telefon, String bankName, String kontoInhaber,

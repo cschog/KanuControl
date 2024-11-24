@@ -1,6 +1,6 @@
 package com.kcserver.controller;
 
-import com.kcserver.entity.Verein;
+import com.kcserver.dto.VereinDTO;
 import com.kcserver.service.VereinService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,54 +23,51 @@ public class VereinController {
     }
 
     /**
-     * Retrieve all Vereine.
+     * Retrieve all Vereine as VereinDTOs.
      *
-     * @return List of Vereine.
+     * @return List of VereinDTOs.
      */
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<Verein>> getAllVereine() {
-        List<Verein> vereine = vereinService.getAllVereine();
-        return ResponseEntity.ok(vereine);
+    public ResponseEntity<List<VereinDTO>> getAllVereine() {
+        List<VereinDTO> vereinDTOs = vereinService.getAllVereine();
+        return ResponseEntity.ok(vereinDTOs);
     }
 
     /**
-     * Retrieve a Verein by its ID.
+     * Retrieve a Verein by its ID as VereinDTO.
      *
      * @param id The ID of the Verein.
-     * @return The Verein or 404 if not found.
+     * @return The VereinDTO or 404 if not found.
      */
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Verein> getVereinById(@PathVariable Long id) {
-        Verein verein = vereinService.getVerein(id);
-        return ResponseEntity.ok(verein);
+    public ResponseEntity<VereinDTO> getVereinById(@PathVariable Long id) {
+        VereinDTO vereinDTO = vereinService.getVerein(id);
+        return ResponseEntity.ok(vereinDTO);
     }
 
     /**
-     * Create a new Verein.
+     * Create a new Verein from a VereinDTO.
      *
-     * @param verein The Verein to be created.
-     * @return The created Verein.
+     * @param vereinDTO The VereinDTO to be created.
+     * @return The created VereinDTO.
      */
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Verein> createVerein(@Valid @RequestBody Verein verein) {
-        Verein createdVerein = vereinService.createVerein(verein);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdVerein);
+    public ResponseEntity<VereinDTO> createVerein(@Valid @RequestBody VereinDTO vereinDTO) {
+        VereinDTO createdVereinDTO = vereinService.createVerein(vereinDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdVereinDTO);
     }
 
     /**
-     * Update an existing Verein by its ID.
+     * Update an existing Verein by its ID using VereinDTO.
      *
      * @param id            The ID of the Verein to be updated.
-     * @param updatedVerein The updated Verein data.
-     * @return The updated Verein or 404 if not found.
+     * @param updatedVereinDTO The updated VereinDTO data.
+     * @return The updated VereinDTO or 404 if not found.
      */
     @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Verein> updateVerein(@PathVariable Long id, @Valid @RequestBody Verein updatedVerein) {
-        Verein updated = vereinService.updateVerein(id, updatedVerein);
-        if (updated != null) {
-            return ResponseEntity.ok(updated);
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    public ResponseEntity<VereinDTO> updateVerein(@PathVariable Long id, @Valid @RequestBody VereinDTO updatedVereinDTO) {
+        VereinDTO updatedVereinDTOResult = vereinService.updateVerein(id, updatedVereinDTO);
+        return ResponseEntity.ok(updatedVereinDTOResult);
     }
 
     /**
