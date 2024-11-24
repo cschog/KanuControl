@@ -1,6 +1,6 @@
 package com.kcserver.controller;
 
-import com.kcserver.entity.Person;
+import com.kcserver.dto.PersonDTO;
 import com.kcserver.service.PersonService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,54 +23,51 @@ public class PersonController {
     }
 
     /**
-     * Retrieve all persons.
+     * Retrieve all persons as PersonDTOs.
      *
-     * @return List of persons.
+     * @return List of PersonDTOs.
      */
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<Person>> getAllPersons() {
-        List<Person> persons = personService.getAllPersonen();
-        return ResponseEntity.ok(persons);
+    public ResponseEntity<List<PersonDTO>> getAllPersons() {
+        List<PersonDTO> personDTOs = personService.getAllPersons();
+        return ResponseEntity.ok(personDTOs);
     }
 
     /**
-     * Retrieve a person by their ID.
+     * Retrieve a person by their ID as PersonDTO.
      *
      * @param id The ID of the person.
-     * @return The person or 404 if not found.
+     * @return The PersonDTO or 404 if not found.
      */
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Person> getPersonById(@PathVariable Long id) {
-        Person person = personService.getPerson(id);
-        return ResponseEntity.ok(person);
+    public ResponseEntity<PersonDTO> getPersonById(@PathVariable Long id) {
+        PersonDTO personDTO = personService.getPerson(id);
+        return ResponseEntity.ok(personDTO);
     }
 
     /**
-     * Create a new person.
+     * Create a new person from a PersonDTO.
      *
-     * @param person The person to be created.
-     * @return The created person.
+     * @param personDTO The PersonDTO to be created.
+     * @return The created PersonDTO.
      */
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Person> createPerson(@Valid @RequestBody Person person) {
-        Person createdPerson = personService.createPerson(person);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdPerson);
+    public ResponseEntity<PersonDTO> createPerson(@Valid @RequestBody PersonDTO personDTO) {
+        PersonDTO createdPersonDTO = personService.createPerson(personDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdPersonDTO);
     }
 
     /**
-     * Update an existing person by their ID.
+     * Update an existing person by their ID using PersonDTO.
      *
-     * @param id            The ID of the person to be updated.
-     * @param updatedPerson The updated person data.
-     * @return The updated person or 404 if not found.
+     * @param id         The ID of the person to be updated.
+     * @param personDTO The updated PersonDTO data.
+     * @return The updated PersonDTO or 404 if not found.
      */
     @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Person> updatePerson(@PathVariable Long id, @Valid @RequestBody Person updatedPerson) {
-        Person updated = personService.updatePerson(id, updatedPerson);
-        if (updated != null) {
-            return ResponseEntity.ok(updated);
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    public ResponseEntity<PersonDTO> updatePerson(@PathVariable Long id, @Valid @RequestBody PersonDTO personDTO) {
+        PersonDTO updatedPersonDTO = personService.updatePerson(id, personDTO);
+        return ResponseEntity.ok(updatedPersonDTO);
     }
 
     /**

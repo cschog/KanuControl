@@ -12,7 +12,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @ToString
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@Table
+@Table(name = "mitglied", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"person_id", "verein_id"})
+})
 public class Mitglied {
 
     @Id

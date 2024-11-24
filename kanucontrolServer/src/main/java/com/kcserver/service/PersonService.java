@@ -1,15 +1,15 @@
 package com.kcserver.service;
 
+import com.kcserver.dto.PersonDTO;
 import com.kcserver.entity.Person;
 import com.kcserver.repository.PersonRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class PersonService {
@@ -22,75 +22,73 @@ public class PersonService {
     }
 
     /**
-     * Retrieves all Person entities.
+     * Retrieve all persons as PersonDTOs.
      *
-     * @return a list of all persons
+     * @return List of PersonDTOs.
      */
-    public List<Person> getAllPersonen() {
-        return personRepository.findAll();
+    public List<PersonDTO> getAllPersons() {
+        return personRepository.findAll().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
 
     /**
-     * Retrieves a Person by their unique ID.
+     * Retrieve a person by their ID and return as PersonDTO.
      *
-     * @param id the ID of the person
-     * @return the person object
-     * @throws ResponseStatusException if person with the given ID is not found
+     * @param id The ID of the person.
+     * @return The PersonDTO.
+     * @throws ResponseStatusException if the person is not found.
      */
-    public Person getPerson(long id) {
-        return personRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("Person with ID %s not found", id)));
+    public PersonDTO getPerson(long id) {
+        Person person = personRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Person not found"));
+        return convertToDTO(person);
     }
 
     /**
-     * Retrieves a Person by their exact name.
+     * Create a new person from PersonDTO.
      *
-     * @param name the name of the person
-     * @return the person object
-     * @throws ResponseStatusException if no person with the given name is found
+     * @param personDTO The PersonDTO to be created.
+     * @return The created PersonDTO.
      */
-    public Person getPersonByName(String name) {
-        return Optional.ofNullable(personRepository.findByNameIs(name))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("Person with name %s not found", name)));
+    public PersonDTO createPerson(PersonDTO personDTO) {
+        Person person = convertToEntity(personDTO);
+        Person savedPerson = personRepository.save(person);
+        return convertToDTO(savedPerson);
+    }
+
+
+    /**
+     * Update an existing person by their ID using PersonDTO.
+     *
+     * @param id        The ID of the person to be updated.
+     * @param personDTO The updated PersonDTO data.
+     * @return The updated PersonDTO.
+     * @throws ResponseStatusException if the person is not found.
+     */
+    public PersonDTO updatePerson(long id, PersonDTO personDTO) {
+        Person existingPerson = personRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Person not found"));
+
+        existingPerson.setName(personDTO.getName());
+        existingPerson.setVorname(personDTO.getVorname());
+        existingPerson.setStrasse(personDTO.getStrasse());
+        existingPerson.setPlz(personDTO.getPlz());
+        existingPerson.setOrt(personDTO.getOrt());
+        existingPerson.setTelefon(personDTO.getTelefon());
+        existingPerson.setBankName(personDTO.getBankName());
+        existingPerson.setIban(personDTO.getIban());
+        existingPerson.setBic(personDTO.getBic());
+
+        Person updatedPerson = personRepository.save(existingPerson);
+        return convertToDTO(updatedPerson);
     }
 
     /**
-     * Creates a new person.
+     * Delete a person by their ID.
      *
-     * @param person the person object to be saved
-     * @return the saved person
-     */
-    public Person createPerson(Person person) {
-        return personRepository.save(person);
-    }
-
-    /**
-     * Updates an existing person.
-     *
-     * @param personId      the ID of the person to be updated
-     * @param updatedPerson the updated person object
-     * @return the updated person, or null if not found
-     * @throws ResponseStatusException if the person with the given ID doesn't exist
-     */
-    public Person updatePerson(long personId, Person updatedPerson) {
-        Person existingPerson = getPerson(personId); // Using the getPerson method to ensure the person exists
-        existingPerson.setName(updatedPerson.getName());
-        existingPerson.setVorname(updatedPerson.getVorname());
-        existingPerson.setStrasse(updatedPerson.getStrasse());
-        existingPerson.setPlz(updatedPerson.getPlz());
-        existingPerson.setOrt(updatedPerson.getOrt());
-        existingPerson.setTelefon(updatedPerson.getTelefon());
-        existingPerson.setBankName(updatedPerson.getBankName());
-        existingPerson.setIban(updatedPerson.getIban());
-        existingPerson.setBic(updatedPerson.getBic());
-        return personRepository.save(existingPerson);
-    }
-
-    /**
-     * Deletes a person by their ID.
-     *
-     * @param id the ID of the person to be deleted
-     * @return true if the person was deleted successfully, otherwise false
+     * @param id The ID of the person to delete.
+     * @return true if successful, false otherwise.
      */
     public boolean deletePerson(long id) {
         if (personRepository.existsById(id)) {
@@ -101,42 +99,43 @@ public class PersonService {
     }
 
     /**
-     * Finds a list of people by last name.
+     * Converts a Person entity to a PersonDTO.
      *
-     * @param name the last name to search for
-     * @return a list of people with the specified last name
+     * @param person The Person entity.
+     * @return The corresponding PersonDTO.
      */
-    public List<Person> findPeopleByName(String name) {
-        return personRepository.findByName(name);
+    private PersonDTO convertToDTO(Person person) {
+        return new PersonDTO(
+                person.getId(),
+                person.getName(),
+                person.getVorname(),
+                person.getStrasse(),
+                person.getPlz(),
+                person.getOrt(),
+                person.getTelefon(),
+                person.getBankName(),
+                person.getIban(),
+                person.getBic()
+        );
     }
 
     /**
-     * Finds a list of people by first name starting with a given prefix.
+     * Converts a PersonDTO to a Person entity.
      *
-     * @param prefix the prefix to search for
-     * @return a list of people whose first name starts with the given prefix
+     * @param personDTO The PersonDTO.
+     * @return The corresponding Person entity.
      */
-    public List<Person> findPeopleByVornamePrefix(String prefix) {
-        return personRepository.findByVornameStartingWith(prefix);
-    }
-
-    /**
-     * Finds people by their city of residence.
-     *
-     * @param ort the city to search for
-     * @return a list of people residing in the specified city
-     */
-    public List<Person> findPeopleByOrt(String ort) {
-        return personRepository.findByOrt(ort);
-    }
-
-    /**
-     * Finds people by their postal code.
-     *
-     * @param plz the postal code to search for
-     * @return a list of people residing in the specified postal code
-     */
-    public List<Person> findPeopleByPlz(String plz) {
-        return personRepository.findByPlz(plz);
+    public Person convertToEntity(PersonDTO personDTO) {
+        return new Person(
+                personDTO.getName(),
+                personDTO.getVorname(),
+                personDTO.getStrasse(),
+                personDTO.getPlz(),
+                personDTO.getOrt(),
+                personDTO.getTelefon(),
+                personDTO.getBankName(),
+                personDTO.getIban(),
+                personDTO.getBic()
+        );
     }
 }

@@ -1,15 +1,15 @@
 package com.kcserver.service;
 
+import com.kcserver.dto.VereinDTO;
 import com.kcserver.entity.Verein;
 import com.kcserver.repository.VereinRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class VereinService {
@@ -22,77 +22,75 @@ public class VereinService {
     }
 
     /**
-     * Retrieves all Verein entities.
+     * Retrieve all Vereine as VereinDTOs.
      *
-     * @return a list of all Vereine
+     * @return List of VereinDTOs.
      */
-    public List<Verein> getAllVereine() {
-        return vereinRepository.findAll();
+    public List<VereinDTO> getAllVereine() {
+        return vereinRepository.findAll().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
 
     /**
-     * Retrieves a Verein by its unique ID.
+     * Retrieve a Verein by its ID and return as VereinDTO.
      *
-     * @param id the ID of the Verein
-     * @return the verein object
-     * @throws ResponseStatusException if the Verein with the given ID is not found
+     * @param id The ID of the Verein.
+     * @return The VereinDTO.
+     * @throws ResponseStatusException if the Verein is not found.
      */
-    public Verein getVerein(long id) {
-        return vereinRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("Verein with ID %s not found", id)));
+    public VereinDTO getVerein(long id) {
+        Verein verein = vereinRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Verein not found"));
+        return convertToDTO(verein);
     }
 
     /**
-     * Retrieves a Verein by its exact name.
+     * Create a new Verein from VereinDTO.
      *
-     * @param name the name of the Verein
-     * @return the verein object
-     * @throws ResponseStatusException if no Verein with the given name is found
+     * @param vereinDTO The VereinDTO to be created.
+     * @return The created VereinDTO.
      */
-    public Verein getVereinByName(String name) {
-        return Optional.ofNullable(vereinRepository.findByNameIs(name))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("Verein with name %s not found", name)));
+    public VereinDTO createVerein(VereinDTO vereinDTO) {
+        Verein verein = convertToEntity(vereinDTO);
+        Verein savedVerein = vereinRepository.save(verein);
+        return convertToDTO(savedVerein);
+    }
+
+
+    /**
+     * Update an existing Verein by its ID using VereinDTO.
+     *
+     * @param id The ID of the Verein to be updated.
+     * @param vereinDTO The updated VereinDTO data.
+     * @return The updated VereinDTO.
+     * @throws ResponseStatusException if the Verein is not found.
+     */
+    public VereinDTO updateVerein(long id, VereinDTO vereinDTO) {
+        Verein existingVerein = vereinRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Verein not found"));
+
+        existingVerein.setName(vereinDTO.getName());
+        existingVerein.setAbk(vereinDTO.getAbk());
+        existingVerein.setStrasse(vereinDTO.getStrasse());
+        existingVerein.setPlz(vereinDTO.getPlz());
+        existingVerein.setOrt(vereinDTO.getOrt());
+        existingVerein.setTelefon(vereinDTO.getTelefon());
+        existingVerein.setBankName(vereinDTO.getBankName());
+        existingVerein.setKontoInhaber(vereinDTO.getKontoInhaber());
+        existingVerein.setKiAnschrift(vereinDTO.getKiAnschrift());
+        existingVerein.setIban(vereinDTO.getIban());
+        existingVerein.setBic(vereinDTO.getBic());
+
+        Verein updatedVerein = vereinRepository.save(existingVerein);
+        return convertToDTO(updatedVerein);
     }
 
     /**
-     * Creates a new Verein.
+     * Delete a Verein by its ID.
      *
-     * @param verein the Verein object to be saved
-     * @return the saved Verein
-     */
-    public Verein createVerein(Verein verein) {
-        return vereinRepository.save(verein);
-    }
-
-    /**
-     * Updates an existing Verein.
-     *
-     * @param vereinId      the ID of the Verein to be updated
-     * @param updatedVerein the updated Verein object
-     * @return the updated Verein, or null if not found
-     * @throws ResponseStatusException if the Verein with the given ID doesn't exist
-     */
-    public Verein updateVerein(long vereinId, Verein updatedVerein) {
-        Verein existingVerein = getVerein(vereinId); // Using the getVerein method to ensure the Verein exists
-        existingVerein.setName(updatedVerein.getName());
-        existingVerein.setAbk(updatedVerein.getAbk());
-        existingVerein.setStrasse(updatedVerein.getStrasse());
-        existingVerein.setPlz(updatedVerein.getPlz());
-        existingVerein.setOrt(updatedVerein.getOrt());
-        existingVerein.setTelefon(updatedVerein.getTelefon());
-        existingVerein.setBankName(updatedVerein.getBankName());
-        existingVerein.setKontoInhaber(updatedVerein.getKontoInhaber());
-        existingVerein.setKiAnschrift(updatedVerein.getKiAnschrift());
-        existingVerein.setIban(updatedVerein.getIban());
-        existingVerein.setBic(updatedVerein.getBic());
-        return vereinRepository.save(existingVerein);
-    }
-
-    /**
-     * Deletes a Verein by its ID.
-     *
-     * @param id the ID of the Verein to be deleted
-     * @return true if the Verein was deleted successfully, otherwise false
+     * @param id The ID of the Verein to delete.
+     * @return true if successful, false otherwise.
      */
     public boolean deleteVerein(long id) {
         if (vereinRepository.existsById(id)) {
@@ -103,32 +101,47 @@ public class VereinService {
     }
 
     /**
-     * Finds Vereine by their name.
+     * Converts a Verein entity to a VereinDTO.
      *
-     * @param name the name to search for
-     * @return a list of Vereine with the specified name
+     * @param verein The Verein entity.
+     * @return The corresponding VereinDTO.
      */
-    public List<Verein> findVereineByName(String name) {
-        return vereinRepository.findByName(name);
+    private VereinDTO convertToDTO(Verein verein) {
+        return new VereinDTO(
+                verein.getId(),
+                verein.getName(),
+                verein.getAbk(),
+                verein.getStrasse(),
+                verein.getPlz(),
+                verein.getOrt(),
+                verein.getTelefon(),
+                verein.getBankName(),
+                verein.getKontoInhaber(),
+                verein.getKiAnschrift(),
+                verein.getIban(),
+                verein.getBic()
+        );
     }
 
     /**
-     * Finds Vereine by their postal code.
+     * Converts a VereinDTO to a Verein entity.
      *
-     * @param plz the postal code to search for
-     * @return a list of Vereine in the specified postal code
+     * @param vereinDTO The VereinDTO.
+     * @return The corresponding Verein entity.
      */
-    public List<Verein> findVereineByPlz(String plz) {
-        return vereinRepository.findByPlz(plz);
-    }
-
-    /**
-     * Finds Vereine by their city.
-     *
-     * @param ort the city to search for
-     * @return a list of Vereine in the specified city
-     */
-    public List<Verein> findVereineByOrt(String ort) {
-        return vereinRepository.findByOrt(ort);
+    public Verein convertToEntity(VereinDTO vereinDTO) {
+        return new Verein(
+                vereinDTO.getName(),
+                vereinDTO.getAbk(),
+                vereinDTO.getStrasse(),
+                vereinDTO.getPlz(),
+                vereinDTO.getOrt(),
+                vereinDTO.getTelefon(),
+                vereinDTO.getBankName(),
+                vereinDTO.getKontoInhaber(),
+                vereinDTO.getKiAnschrift(),
+                vereinDTO.getIban(),
+                vereinDTO.getBic()
+        );
     }
 }
