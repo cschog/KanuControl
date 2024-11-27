@@ -41,13 +41,13 @@ Der generelle Ablauf besteht in den folgenden Schritten:
    
    Frontend
    ========
-   Das Frontend ist eine REACT Anwendung, die mit einem Java-Backendserver kommuniziert. Es wird TypeScript verwendet. Als Entwicklungsumgebung wird VS Code eingesetzt.
+   Das Frontend ist eine REACT Anwendung, die mit einem Java-Backendserver kommuniziert. Es wird TypeScript verwendet. Als Entwicklungsumgebung wird VS Code eingesetzt. Damit der Code funktioniert muss Node 18 verwendet werden.
    
    Backend
    =======
    Der Backendserver ist eine Spring Boot Anwendung. 
    Spring Boot Version 3.2.2, Java Version 17. Dependency Mgmt mit Maven.
-   Das Datenbank Schema wird über Hibernate im Backend definiert. In mySQL wird nur die Datenbank selber einmal angelegt. 
+   Das Datenbank Schema wird über Hibernate im Backend definiert. In mySQL wird nur die Datenbank "Kanu" selber einmal angelegt. 
    
    Schema von KanuControl
    ======================
