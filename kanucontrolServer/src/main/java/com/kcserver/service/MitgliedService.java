@@ -5,6 +5,7 @@ import com.kcserver.entity.Mitglied;
 import com.kcserver.entity.Person;
 import com.kcserver.entity.Verein;
 import com.kcserver.repository.MitgliedRepository;
+import com.kcserver.mapper.EntityMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -17,10 +18,12 @@ import java.util.stream.Collectors;
 public class MitgliedService {
 
     private final MitgliedRepository mitgliedRepository;
+    private final EntityMapper mapper;
 
     @Autowired
-    public MitgliedService(MitgliedRepository mitgliedRepository) {
+    public MitgliedService(MitgliedRepository mitgliedRepository, EntityMapper mapper) {
         this.mitgliedRepository = mitgliedRepository;
+        this.mapper = mapper;
     }
 
     /**
@@ -32,7 +35,7 @@ public class MitgliedService {
      * @param hauptVerein indicates whether this is the main verein for the person
      * @return the saved Mitglied as a DTO
      */
-    public Mitglied createMitglied(Person person, Verein verein, String funktion, Boolean hauptVerein) {
+    public MitgliedDTO createMitglied(Person person, Verein verein, String funktion, Boolean hauptVerein) {
         if (person == null || verein == null) {
             throw new IllegalArgumentException("Person and Verein cannot be null");
         }
@@ -43,9 +46,28 @@ public class MitgliedService {
         mitglied.setFunktion(funktion);
         mitglied.setHauptVerein(hauptVerein);
 
-        return mitgliedRepository.save(mitglied); // Return the entity
+        Mitglied savedMitglied = mitgliedRepository.save(mitglied);
+        return mapper.toMitgliedDTO(savedMitglied);
     }
 
+    /**
+     * Updates an existing Mitglied entity.
+     *
+     * @param mitgliedId the ID of the Mitglied to update
+     * @param funktion   the updated role of the Mitglied
+     * @param hauptVerein indicates whether this is the main verein
+     * @return the updated Mitglied as a DTO
+     */
+    public MitgliedDTO updateMitglied(Long mitgliedId, String funktion, Boolean hauptVerein) {
+        Mitglied mitglied = mitgliedRepository.findById(mitgliedId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Mitglied not found"));
+
+        mitglied.setFunktion(funktion);
+        mitglied.setHauptVerein(hauptVerein);
+
+        Mitglied updatedMitglied = mitgliedRepository.save(mitglied);
+        return mapper.toMitgliedDTO(updatedMitglied);
+    }
 
     /**
      * Retrieves all Mitglied entities associated with a specific Person and converts them to DTOs.
@@ -53,12 +75,11 @@ public class MitgliedService {
      * @param personId the ID of the person
      * @return a list of MitgliedDTOs
      */
-    public List<Mitglied> getMitgliedByPersonId(Long personId) {
-        return mitgliedRepository.findAll().stream()
-                .filter(mitglied -> mitglied.getPersonMitgliedschaft().getId().equals(personId))
+    public List<MitgliedDTO> getMitgliedByPersonId(Long personId) {
+        return mitgliedRepository.findByPersonMitgliedschaft_Id(personId).stream()
+                .map(mapper::toMitgliedDTO)
                 .collect(Collectors.toList());
     }
-
 
     /**
      * Retrieves all Mitglied entities associated with a specific Verein and converts them to DTOs.
@@ -66,12 +87,11 @@ public class MitgliedService {
      * @param vereinId the ID of the verein
      * @return a list of MitgliedDTOs
      */
-    public List<Mitglied> getMitgliedByVereinId(Long vereinId) {
-        return mitgliedRepository.findAll().stream()
-                .filter(mitglied -> mitglied.getVereinMitgliedschaft().getId().equals(vereinId))
+    public List<MitgliedDTO> getMitgliedByVereinId(Long vereinId) {
+        return mitgliedRepository.findByVereinMitgliedschaft_Id(vereinId).stream()
+                .map(mapper::toMitgliedDTO)
                 .collect(Collectors.toList());
     }
-
 
     /**
      * Deletes a Mitglied by its ID.
@@ -86,34 +106,13 @@ public class MitgliedService {
     }
 
     /**
-     * Converts a Mitglied entity to its corresponding DTO.
+     * Retrieves all Mitglieds and converts them to DTOs.
      *
-     * @param mitglied the Mitglied entity
-     * @return the corresponding MitgliedDTO
+     * @return a list of all MitgliedDTOs
      */
-    private MitgliedDTO convertToDTO(Mitglied mitglied) {
-        return MitgliedDTO.builder()
-                .id(mitglied.getId())
-                .personId(mitglied.getPersonMitgliedschaft() != null ? mitglied.getPersonMitgliedschaft().getId() : null)
-                .vereinId(mitglied.getVereinMitgliedschaft() != null ? mitglied.getVereinMitgliedschaft().getId() : null)
-                .funktion(mitglied.getFunktion())
-                .hauptVerein(mitglied.getHauptVerein())
-                .build();
-    }
-
-    /**
-     * Converts a Mitglied entity to its corresponding DTO.
-     *
-     * @param mitglied the Mitglied entity
-     * @return the corresponding MitgliedDTO
-     */
-    public MitgliedDTO toDTO(Mitglied mitglied) {
-        return MitgliedDTO.builder()
-                .id(mitglied.getId())
-                .personId(mitglied.getPersonMitgliedschaft().getId())
-                .vereinId(mitglied.getVereinMitgliedschaft().getId())
-                .funktion(mitglied.getFunktion())
-                .hauptVerein(mitglied.getHauptVerein())
-                .build();
+    public List<MitgliedDTO> getAllMitglieds() {
+        return mitgliedRepository.findAll().stream()
+                .map(mapper::toMitgliedDTO)
+                .collect(Collectors.toList());
     }
 }

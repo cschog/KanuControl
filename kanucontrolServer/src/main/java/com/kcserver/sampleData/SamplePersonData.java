@@ -1,6 +1,5 @@
 package com.kcserver.sampleData;
 
-import com.kcserver.dto.PersonDTO;
 import com.kcserver.entity.Person;
 import com.kcserver.repository.PersonRepository;
 import org.springframework.boot.CommandLineRunner;
@@ -11,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Configuration
 @Order(2)
@@ -25,9 +23,8 @@ public class SamplePersonData {
             if (personRepository.count() == 0) { // Check if data already exists
                 logger.info("Loading sample Person data...");
 
-                List<PersonDTO> samplePersonDTOs = List.of(
-                        new PersonDTO(
-                                null, // ID will be auto-generated
+                List<Person> samplePersons = List.of(
+                        new Person(
                                 "Schog",
                                 "Chris",
                                 "Ardennenstr. 82",
@@ -38,8 +35,7 @@ public class SamplePersonData {
                                 "DE671234567890",
                                 "DRESGENOW"
                         ),
-                        new PersonDTO(
-                                null,
+                        new Person(
                                 "Schog",
                                 "Hildegard",
                                 "Ardennenstr. 82",
@@ -52,10 +48,6 @@ public class SamplePersonData {
                         )
                 );
 
-                List<Person> samplePersons = samplePersonDTOs.stream()
-                        .map(this::convertToEntity) // Convert DTOs to entities
-                        .collect(Collectors.toList());
-
                 personRepository.saveAll(samplePersons);
 
                 logger.info("Sample Person data loaded successfully: {} records added.", samplePersons.size());
@@ -63,25 +55,5 @@ public class SamplePersonData {
                 logger.info("Sample Person data already exists. Skipping initialization.");
             }
         };
-    }
-
-    /**
-     * Converts a PersonDTO to a Person entity.
-     *
-     * @param personDTO The PersonDTO to convert.
-     * @return The corresponding Person entity.
-     */
-    private Person convertToEntity(PersonDTO personDTO) {
-        return new Person(
-                personDTO.getName(),
-                personDTO.getVorname(),
-                personDTO.getStrasse(),
-                personDTO.getPlz(),
-                personDTO.getOrt(),
-                personDTO.getTelefon(),
-                personDTO.getBankName(),
-                personDTO.getIban(),
-                personDTO.getBic()
-        );
     }
 }

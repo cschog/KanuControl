@@ -4,18 +4,16 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
-
 @Data
 @Entity(name = "mitglied")
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 @Table(name = "mitglied", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"person_id", "verein_id"})
 })
-public class Mitglied {
+public class Mitglied extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,25 +37,6 @@ public class Mitglied {
     @NotNull
     @Column(name = "haupt_verein")
     private Boolean hauptVerein;
-
-    // Audit Fields (optional)
-    @Column(name = "created_date")
-    private LocalDateTime createdDate;
-
-    @Column(name = "last_modified_date")
-    private LocalDateTime lastModifiedDate;
-
-    // Pre-persist and Pre-update methods
-    @PrePersist
-    public void prePersist() {
-        this.createdDate = LocalDateTime.now();
-        this.lastModifiedDate = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    public void preUpdate() {
-        this.lastModifiedDate = LocalDateTime.now();
-    }
 
     public
     Mitglied(Verein vereinMitgliedschaft, Person personMitgliedschaft, String funktion, Boolean hauptVerein) {

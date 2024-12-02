@@ -1,25 +1,21 @@
 package com.kcserver.controller;
 
 import com.kcserver.dto.MitgliedDTO;
-import com.kcserver.dto.PersonDTO;
-import com.kcserver.dto.VereinDTO;
-import com.kcserver.entity.Mitglied;
 import com.kcserver.entity.Person;
 import com.kcserver.entity.Verein;
 import com.kcserver.service.MitgliedService;
 import com.kcserver.service.PersonService;
 import com.kcserver.service.VereinService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/mitglied")
@@ -47,33 +43,36 @@ public class MitgliedController {
     @PostMapping
     public ResponseEntity<MitgliedDTO> createMitglied(@RequestBody @Valid MitgliedDTO mitgliedDTO) {
         try {
-            // Fetch Person and Verein entities from the DTOs
-            Person personEntity = personService.convertToEntity(personService.getPerson(mitgliedDTO.getPersonId()));
-            Verein vereinEntity = vereinService.convertToEntity(vereinService.getVerein(mitgliedDTO.getVereinId()));
+            // Validate that Person ID and Verein ID are not null
+            Long personId = mitgliedDTO.getPersonId();
+            Long vereinId = mitgliedDTO.getVereinId();
 
-            // Create a new Mitglied entity
-            Mitglied mitglied = mitgliedService.createMitglied(
-                    personEntity,
-                    vereinEntity,
+            if (personId == null || vereinId == null) {
+                throw new IllegalArgumentException("Person ID and Verein ID must not be null");
+            }
+
+            // Fetch Person and Verein entities
+            Person person = personService.getPersonEntityById(personId);
+            Verein verein = vereinService.getVereinEntityById(vereinId);
+
+            // Create the Mitglied and return the DTO
+            MitgliedDTO createdMitgliedDTO = mitgliedService.createMitglied(
+                    person,
+                    verein,
                     mitgliedDTO.getFunktion(),
                     mitgliedDTO.getHauptVerein()
             );
 
-            // Convert the saved Mitglied to a DTO
-            MitgliedDTO savedDTO = mitgliedService.toDTO(mitglied);
-
-            logger.info("Created new Mitglied: {}", savedDTO);
-            return ResponseEntity.status(HttpStatus.CREATED).body(savedDTO);
+            logger.info("Created new Mitglied: {}", createdMitgliedDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdMitgliedDTO);
         } catch (IllegalArgumentException e) {
             logger.error("Validation error creating Mitglied: {}", e.getMessage());
             return ResponseEntity.badRequest().body(null);
         } catch (Exception e) {
             logger.error("Unexpected error creating Mitglied: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
-
-
 
     /**
      * Retrieves all Mitglied entries for a given Person ID.
@@ -84,15 +83,13 @@ public class MitgliedController {
     @GetMapping("/person/{personId}")
     public ResponseEntity<List<MitgliedDTO>> getMitgliedByPerson(@PathVariable @NotNull Long personId) {
         try {
-            List<MitgliedDTO> mitgliedDTOs = mitgliedService.getMitgliedByPersonId(personId).stream()
-                    .map(mitgliedService::toDTO)
-                    .collect(Collectors.toList());
+            List<MitgliedDTO> mitgliedDTOs = mitgliedService.getMitgliedByPersonId(personId);
 
             logger.info("Retrieved {} Mitglied entries for Person ID {}", mitgliedDTOs.size(), personId);
             return ResponseEntity.ok(mitgliedDTOs);
         } catch (Exception e) {
             logger.error("Error retrieving Mitglied for Person ID {}: {}", personId, e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 
@@ -105,15 +102,13 @@ public class MitgliedController {
     @GetMapping("/verein/{vereinId}")
     public ResponseEntity<List<MitgliedDTO>> getMitgliedByVerein(@PathVariable @NotNull Long vereinId) {
         try {
-            List<MitgliedDTO> mitgliedDTOs = mitgliedService.getMitgliedByVereinId(vereinId).stream()
-                    .map(mitgliedService::toDTO)
-                    .collect(Collectors.toList());
+            List<MitgliedDTO> mitgliedDTOs = mitgliedService.getMitgliedByVereinId(vereinId);
 
             logger.info("Retrieved {} Mitglied entries for Verein ID {}", mitgliedDTOs.size(), vereinId);
             return ResponseEntity.ok(mitgliedDTOs);
         } catch (Exception e) {
             logger.error("Error retrieving Mitglied for Verein ID {}: {}", vereinId, e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 

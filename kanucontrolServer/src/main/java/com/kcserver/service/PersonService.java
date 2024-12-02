@@ -1,8 +1,12 @@
 package com.kcserver.service;
 
 import com.kcserver.dto.PersonDTO;
+import com.kcserver.entity.Mitglied;
 import com.kcserver.entity.Person;
+import com.kcserver.entity.Verein;
 import com.kcserver.repository.PersonRepository;
+import com.kcserver.repository.VereinRepository;
+import com.kcserver.mapper.EntityMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -15,10 +19,14 @@ import java.util.stream.Collectors;
 public class PersonService {
 
     private final PersonRepository personRepository;
+    private final VereinRepository vereinRepository;
+    private final EntityMapper mapper;
 
     @Autowired
-    public PersonService(PersonRepository personRepository) {
+    public PersonService(PersonRepository personRepository, VereinRepository vereinRepository, EntityMapper mapper) {
         this.personRepository = personRepository;
+        this.vereinRepository = vereinRepository;
+        this.mapper = mapper;
     }
 
     /**
@@ -28,7 +36,7 @@ public class PersonService {
      */
     public List<PersonDTO> getAllPersons() {
         return personRepository.findAll().stream()
-                .map(this::convertToDTO)
+                .map(mapper::toPersonDTO)
                 .collect(Collectors.toList());
     }
 
@@ -42,7 +50,19 @@ public class PersonService {
     public PersonDTO getPerson(long id) {
         Person person = personRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Person not found"));
-        return convertToDTO(person);
+        return mapper.toPersonDTO(person);
+    }
+
+    /**
+     * Retrieve a Person entity by its ID.
+     *
+     * @param id The ID of the person.
+     * @return The Person entity.
+     * @throws ResponseStatusException if the person is not found.
+     */
+    public Person getPersonEntityById(long id) {
+        return personRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Person not found"));
     }
 
     /**
@@ -52,11 +72,26 @@ public class PersonService {
      * @return The created PersonDTO.
      */
     public PersonDTO createPerson(PersonDTO personDTO) {
-        Person person = convertToEntity(personDTO);
-        Person savedPerson = personRepository.save(person);
-        return convertToDTO(savedPerson);
-    }
+        Person person = mapper.toPersonEntity(personDTO);
 
+        // Handle Mitgliedschaften if provided
+        if (personDTO.getMitgliedschaften() != null) {
+            personDTO.getMitgliedschaften().forEach(mitgliedDTO -> {
+                Verein verein = vereinRepository.findById(mitgliedDTO.getVereinId())
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Verein not found"));
+                Mitglied mitglied = new Mitglied(
+                        verein,
+                        person,
+                        mitgliedDTO.getFunktion(),
+                        mitgliedDTO.getHauptVerein()
+                );
+                person.getMitgliedschaften().add(mitglied);
+            });
+        }
+
+        Person savedPerson = personRepository.save(person);
+        return mapper.toPersonDTO(savedPerson);
+    }
 
     /**
      * Update an existing person by their ID using PersonDTO.
@@ -70,18 +105,26 @@ public class PersonService {
         Person existingPerson = personRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Person not found"));
 
-        existingPerson.setName(personDTO.getName());
-        existingPerson.setVorname(personDTO.getVorname());
-        existingPerson.setStrasse(personDTO.getStrasse());
-        existingPerson.setPlz(personDTO.getPlz());
-        existingPerson.setOrt(personDTO.getOrt());
-        existingPerson.setTelefon(personDTO.getTelefon());
-        existingPerson.setBankName(personDTO.getBankName());
-        existingPerson.setIban(personDTO.getIban());
-        existingPerson.setBic(personDTO.getBic());
+        mapper.updatePersonFromDTO(personDTO, existingPerson);
+
+        // Update Mitgliedschaften
+        existingPerson.getMitgliedschaften().clear();
+        if (personDTO.getMitgliedschaften() != null) {
+            personDTO.getMitgliedschaften().forEach(mitgliedDTO -> {
+                Verein verein = vereinRepository.findById(mitgliedDTO.getVereinId())
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Verein not found"));
+                Mitglied mitglied = new Mitglied(
+                        verein,
+                        existingPerson,
+                        mitgliedDTO.getFunktion(),
+                        mitgliedDTO.getHauptVerein()
+                );
+                existingPerson.getMitgliedschaften().add(mitglied);
+            });
+        }
 
         Person updatedPerson = personRepository.save(existingPerson);
-        return convertToDTO(updatedPerson);
+        return mapper.toPersonDTO(updatedPerson);
     }
 
     /**
@@ -96,46 +139,5 @@ public class PersonService {
             return true;
         }
         return false;
-    }
-
-    /**
-     * Converts a Person entity to a PersonDTO.
-     *
-     * @param person The Person entity.
-     * @return The corresponding PersonDTO.
-     */
-    private PersonDTO convertToDTO(Person person) {
-        return new PersonDTO(
-                person.getId(),
-                person.getName(),
-                person.getVorname(),
-                person.getStrasse(),
-                person.getPlz(),
-                person.getOrt(),
-                person.getTelefon(),
-                person.getBankName(),
-                person.getIban(),
-                person.getBic()
-        );
-    }
-
-    /**
-     * Converts a PersonDTO to a Person entity.
-     *
-     * @param personDTO The PersonDTO.
-     * @return The corresponding Person entity.
-     */
-    public Person convertToEntity(PersonDTO personDTO) {
-        return new Person(
-                personDTO.getName(),
-                personDTO.getVorname(),
-                personDTO.getStrasse(),
-                personDTO.getPlz(),
-                personDTO.getOrt(),
-                personDTO.getTelefon(),
-                personDTO.getBankName(),
-                personDTO.getIban(),
-                personDTO.getBic()
-        );
     }
 }

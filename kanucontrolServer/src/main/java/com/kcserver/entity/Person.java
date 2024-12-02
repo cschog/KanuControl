@@ -4,16 +4,16 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
-@Entity(name = "person")
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {"iban", "telefon", "bic"}) // Exclude sensitive fields from string representation
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@Table
-public class Person {
+@ToString
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
+@Table(name = "person")
+@Entity
+public class Person extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -55,24 +55,8 @@ public class Person {
     @Column(name = "bic")
     private String bic;
 
-    // Audit Fields (optional)
-    @Column(name = "created_date")
-    private LocalDateTime createdDate;
-
-    @Column(name = "last_modified_date")
-    private LocalDateTime lastModifiedDate;
-
-    // Pre-persist and Pre-update methods
-    @PrePersist
-    public void prePersist() {
-        this.createdDate = LocalDateTime.now();
-        this.lastModifiedDate = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    public void preUpdate() {
-        this.lastModifiedDate = LocalDateTime.now();
-    }
+    @OneToMany(mappedBy = "personMitgliedschaft", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Mitglied> mitgliedschaften; // One-to-many relationship to Mitglied
 
     public
     Person(String name, String vorname, String strasse, String plz, String ort,

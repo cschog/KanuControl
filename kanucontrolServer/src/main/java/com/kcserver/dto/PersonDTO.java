@@ -1,8 +1,8 @@
 package com.kcserver.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -18,4 +18,9 @@ public class PersonDTO {
     private String bankName; // Matches 'bankName' in Person
     private String iban; // Matches 'iban' in Person
     private String bic; // Matches 'bic' in Person
+
+    @Getter
+    @Setter
+    private List<MitgliedDTO> mitgliedschaften; // New field for memberships
+
 }
