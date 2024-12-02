@@ -1,0 +1,14 @@
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IntelliJ IDEA project files
+.idea/
+*.iml
+
+# General temporary files
+*.swp
+*.tmp

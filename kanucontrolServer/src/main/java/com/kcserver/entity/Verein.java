@@ -4,16 +4,14 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
-
 @Data
 @Entity(name = "verein")
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(exclude = {"iban", "bic"}) // Optionally exclude sensitive fields from string representation
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 @Table
-public class Verein {
+public class Verein extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -62,26 +60,6 @@ public class Verein {
     // @Pattern(regexp = "^[A-Z0-9]+$", message = "Invalid BIC format")
     @Column(name = "bic")
     private String bic;
-
-    // Audit Fields (optional)
-    @Column(name = "created_date")
-    private LocalDateTime createdDate;
-
-    @Column(name = "last_modified_date")
-    private LocalDateTime lastModifiedDate;
-
-    // Pre-persist and Pre-update methods
-    @PrePersist
-    public void prePersist() {
-        this.createdDate = LocalDateTime.now();
-        this.lastModifiedDate = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    public void preUpdate() {
-        this.lastModifiedDate = LocalDateTime.now();
-    }
-
 
 
     public

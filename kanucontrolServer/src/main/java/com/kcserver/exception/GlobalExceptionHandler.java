@@ -1,4 +1,4 @@
-package com.kcserver.controller;
+package com.kcserver.exception;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
