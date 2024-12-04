@@ -1,6 +1,8 @@
 KanuControl
 ===========
 
+KanuControl ist noch in der Entwicklung und läuft noch nicht!
+
 KanuControl ist eine Anwendung zur Beantragung und Abrechnung von Zuschüssen aus dem Kinder-, Jugend und Freizeitplan (KJFP) vom Landessportbund NRW (LSB NRW). 
 Die Anträge und Abrechnungen werden von der Geschäftsstelle des KanuVerbandes NRW (KVNRW) verarbeitet.
 
@@ -43,7 +45,7 @@ Der generelle Ablauf besteht in den folgenden Schritten:
    ========
    Das Frontend ist eine REACT Anwendung, die mit einem Java-Backendserver kommuniziert. Es wird TypeScript verwendet. Als Entwicklungsumgebung wird VS Code eingesetzt.
 
-Das Frontend erfordert Node 18.
+   Das Frontend erfordert Node 18.
    
    Backend
    =======
@@ -51,7 +53,17 @@ Das Frontend erfordert Node 18.
    Spring Boot Version 3.2.2, Java Version 17. Dependency Mgmt mit Maven.
    Das Datenbank Schema wird über Hibernate im Backend definiert. In mySQL wird nur die Datenbank selber einmal angelegt. 
 
-Die Spring Boot Anwendung läuft unter Java17.
+   Die Spring Boot Anwendung läuft unter Java17.
+
+   Workflow
+   ========
+
+	1.	React Frontend sends an HTTP request →
+	2.	Spring Boot Controller handles the request →
+	3.	Service Layer processes the logic →
+	4.	Mapper converts DTO ↔ Entity →
+	5.	Repository interacts with MySQL DB →
+	6.	Response flows back through the layers to the frontend.
    
    Schema von KanuControl
    ======================
@@ -68,7 +80,7 @@ Die Spring Boot Anwendung läuft unter Java17.
    
    Weiterhin gibt es die Beziehungen:
    
-   1. Mitglied = Verein : Person (n:m) mit Attributen (z.B. Funktion)
+   1. Mitglied = Verein : Person (n:m) mit Attributen (Funktion und Hauptverein)
    2. Teilnehmer = Veranstaltung : Person (n:m)
 
 Mandantenfähigkeit
