@@ -23,25 +23,25 @@ public class PersonController {
     }
 
     /**
-     * Retrieve all persons as PersonDTOs.
+     * Retrieve all persons as PersonDTOs, including their Mitgliedschaften and related Verein data.
      *
      * @return List of PersonDTOs.
      */
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<PersonDTO>> getAllPersons() {
-        List<PersonDTO> personDTOs = personService.getAllPersons();
+        List<PersonDTO> personDTOs = personService.getAllPersonsWithDetails();
         return ResponseEntity.ok(personDTOs);
     }
 
     /**
-     * Retrieve a person by their ID as PersonDTO.
+     * Retrieve a person by their ID as PersonDTO, including their Mitgliedschaften and related Verein data.
      *
      * @param id The ID of the person.
      * @return The PersonDTO or 404 if not found.
      */
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<PersonDTO> getPersonById(@PathVariable Long id) {
-        PersonDTO personDTO = personService.getPerson(id);
+        PersonDTO personDTO = personService.getPersonWithDetails(id);
         return ResponseEntity.ok(personDTO);
     }
 

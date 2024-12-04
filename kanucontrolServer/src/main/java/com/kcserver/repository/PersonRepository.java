@@ -1,12 +1,13 @@
 package com.kcserver.repository;
 
 import com.kcserver.entity.Person;
+import com.kcserver.projection.PersonWithMitgliedschaften;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
 import java.util.List;
 
-@Repository
+@RepositoryRestResource(excerptProjection = PersonWithMitgliedschaften.class)
 public interface PersonRepository extends JpaRepository<Person, Long> {
 
     /**
