@@ -20,11 +20,12 @@ import java.util.List;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-public class PersonControllerTest {
+public class PersonControllerIT {
 
     @Autowired
     private MockMvc mockMvc;
@@ -68,11 +69,12 @@ public class PersonControllerTest {
         );
 
         // Mock the service call
-        when(personService.getAllPersons()).thenReturn(samplePersons);
+        when(personService.getAllPersonsWithDetails()).thenReturn(samplePersons);
 
         // Perform GET request
         mockMvc.perform(get("/person")
                         .accept(MediaType.APPLICATION_JSON))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.length()").value(2))
@@ -81,7 +83,7 @@ public class PersonControllerTest {
                 .andExpect(jsonPath("$[1].vorname").value("Hildegard"));
 
         // Verify service call
-        verify(personService, times(1)).getAllPersons();
+        verify(personService, times(1)).getAllPersonsWithDetails();
     }
 
     @Test
@@ -98,15 +100,16 @@ public class PersonControllerTest {
                 "Bank",
                 "IBAN123",
                 "BIC123",
-                null
+                List.of(new MitgliedDTO(1L, 1L, "Test Verein", "TV", "Member", true))
         );
 
         // Mock the service behavior
-        when(personService.getPerson(1L)).thenReturn(mockPerson);
+        when(personService.getPersonWithDetails(1L)).thenReturn(mockPerson);
 
         // Perform GET request
         mockMvc.perform(get("/person/1")
                         .accept(MediaType.APPLICATION_JSON))
+                .andDo(print())
                 .andExpect(status().isOk()) // Check for HTTP 200
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.name").value("Smith"))

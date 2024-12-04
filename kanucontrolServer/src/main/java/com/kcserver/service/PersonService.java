@@ -65,6 +65,29 @@ public class PersonService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Person not found"));
     }
 
+    public PersonDTO getPersonWithDetails(long id) {
+        Person person = personRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Person not found"));
+
+        PersonDTO personDTO = mapper.toPersonDTO(person);
+        personDTO.setMitgliedschaften(person.getMitgliedschaften().stream()
+                .map(mapper::toMitgliedDTO)
+                .collect(Collectors.toList()));
+        return personDTO;
+    }
+
+    public List<PersonDTO> getAllPersonsWithDetails() {
+        return personRepository.findAll().stream()
+                .map(person -> {
+                    PersonDTO personDTO = mapper.toPersonDTO(person);
+                    personDTO.setMitgliedschaften(person.getMitgliedschaften().stream()
+                            .map(mapper::toMitgliedDTO)
+                            .collect(Collectors.toList()));
+                    return personDTO;
+                })
+                .collect(Collectors.toList());
+    }
+
     /**
      * Create a new person from PersonDTO.
      *
