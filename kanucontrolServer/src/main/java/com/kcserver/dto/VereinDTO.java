@@ -20,4 +20,5 @@ public class VereinDTO {
     private String kiAnschrift;  // Address of the account holder (optional)
     private String iban; // Matches 'iban' in Verein
     private String bic; // Matches 'bic' in Verein
+
 }

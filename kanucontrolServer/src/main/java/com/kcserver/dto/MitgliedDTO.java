@@ -19,8 +19,7 @@ public class MitgliedDTO {
     private Boolean hauptVerein;      // Indicates if this is the main Verein
 
     // Custom Constructor
-    public MitgliedDTO(Long id, Long personId, Long vereinId, String vereinName, String vereinAbk, String funktion, Boolean hauptVerein) {
-        this.id = id;
+    public MitgliedDTO(Long personId, Long vereinId, String vereinName, String vereinAbk, String funktion, Boolean hauptVerein) {
         this.personId = personId;
         this.vereinId = vereinId;
         this.vereinName = vereinName;
