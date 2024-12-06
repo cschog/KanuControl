@@ -4,12 +4,13 @@ import com.kcserver.dto.PersonDTO;
 import com.kcserver.entity.Mitglied;
 import com.kcserver.entity.Person;
 import com.kcserver.entity.Verein;
+import com.kcserver.mapper.EntityMapper;
 import com.kcserver.repository.PersonRepository;
 import com.kcserver.repository.VereinRepository;
-import com.kcserver.mapper.EntityMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -34,6 +35,7 @@ public class PersonService {
      *
      * @return List of PersonDTOs.
      */
+    @Transactional(readOnly = true)
     public List<PersonDTO> getAllPersons() {
         return personRepository.findAll().stream()
                 .map(mapper::toPersonDTO)
@@ -75,7 +77,7 @@ public class PersonService {
                 .collect(Collectors.toList()));
         return personDTO;
     }
-
+    @Transactional(readOnly = true)
     public List<PersonDTO> getAllPersonsWithDetails() {
         return personRepository.findAll().stream()
                 .map(person -> {
