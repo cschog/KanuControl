@@ -14,6 +14,7 @@ public class CorsConfig implements WebMvcConfigurer {
         registry.addMapping("/**")
                 .allowedOrigins(
                         "http://localhost:3000",
+                        "http://localhost:5173",
                         "http://your-production-url.com"
                 ) // Add production URL(s) here
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Include OPTIONS for preflight requests
