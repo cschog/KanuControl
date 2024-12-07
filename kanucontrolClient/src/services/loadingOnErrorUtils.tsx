@@ -1,19 +1,17 @@
-import React from "react";
-
 interface LoadingOrErrorProps {
-  loading: boolean;
-  error: string | null;
+	loading: boolean;
+	error: string | null;
 }
 // loadingOrErrorUtils.js
 export const renderLoadingOrError = ({
-  loading,
-  error,
+	loading,
+	error,
 }: LoadingOrErrorProps) => {
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
-  return null;
+	if (loading) {
+		return <div>Loading...</div>;
+	}
+	if (error) {
+		return <div>Error: {error}</div>;
+	}
+	return null;
 };

@@ -30,7 +30,7 @@ export const VereinFormView: React.FC<VereinFormViewProps> = ({
 
   const accept = useCallback(() => {
     if (selectedVerein) {
-      const message = selectedVerein.name + " wurde gelöscht!";
+      const message = `${selectedVerein.name} wurde gelöscht!`;
       onDeleteVerein();
       if (toast.current) {
         toast.current.show({
@@ -45,7 +45,7 @@ export const VereinFormView: React.FC<VereinFormViewProps> = ({
 
   const reject = useCallback(() => {
     if (selectedVerein) {
-      const message = selectedVerein.name + " wurde nicht gelöscht!";
+      const message = `${selectedVerein.name} wurde nicht gelöscht!`;
       if (toast.current) {
         toast.current.show({
           severity: "warn",
@@ -57,70 +57,95 @@ export const VereinFormView: React.FC<VereinFormViewProps> = ({
     }
   }, [selectedVerein]);
 
-  const placeholderFunction = (): boolean => {
-    return false;
-  };
-
-  btnÄndernVerein = !selectedVerein; // true if selectedVerein is not null, false otherwise
-  btnLöschenVerein = !selectedVerein;
-
   return (
     <>
       <Toast ref={toast} />
-      <div className="grid m-auto w-11">
-        {selectedVerein && (
+      <div className="grid m-auto w-11 p-4 border bg-gray-50 shadow-md rounded">
+        <h2 className="text-xl font-bold mb-4 text-blue-700">Vereinsdetails</h2>
+        {selectedVerein ? (
           <>
-            {FormFeld(
-              selectedVerein.abk,
-              "Kurzname",
-              true,
-              placeholderFunction
-            )}
-            {FormFeld(selectedVerein.name, "Verein", true, placeholderFunction)}
-            {FormFeld(
-              selectedVerein.strasse,
-              "Strasse",
-              true,
-              placeholderFunction
-            )}
-            {FormFeld(selectedVerein.plz, "PLZ", true, placeholderFunction)}
-            {FormFeld(selectedVerein.ort, "Ort", true, placeholderFunction)}
-            {FormFeld(
-              selectedVerein.bankName,
-              "Bank",
-              true,
-              placeholderFunction
-            )}
-            {FormFeld(
-              selectedVerein.kontoInhaber,
-              "Kontoinhaber",
-              true,
-              placeholderFunction
-            )}
-            {FormFeld(
-              selectedVerein.kiAnschrift,
-              "Anschrift",
-              true,
-              placeholderFunction
-            )}
-            {FormFeld(selectedVerein.iban, "IBAN", true, placeholderFunction)}
-            {FormFeld(selectedVerein.bic, "BIC", true, placeholderFunction)}
+            <FormFeld
+              value={selectedVerein.abk}
+              label="Kurzname"
+              disabled={true}
+              onChange={() => {}}
+            />
+            <FormFeld
+              value={selectedVerein.name}
+              label="Verein"
+              disabled={true}
+              onChange={() => {}}
+            />
+            <FormFeld
+              value={selectedVerein.strasse}
+              label="Strasse"
+              disabled={true}
+              onChange={() => {}}
+            />
+            <FormFeld
+              value={selectedVerein.plz}
+              label="PLZ"
+              disabled={true}
+              onChange={() => {}}
+            />
+            <FormFeld
+              value={selectedVerein.ort}
+              label="Ort"
+              disabled={true}
+              onChange={() => {}}
+            />
+            <FormFeld
+              value={selectedVerein.bankName}
+              label="Bank"
+              disabled={true}
+              onChange={() => {}}
+            />
+            <FormFeld
+              value={selectedVerein.kontoInhaber}
+              label="Kontoinhaber"
+              disabled={true}
+              onChange={() => {}}
+            />
+            <FormFeld
+              value={selectedVerein.kiAnschrift}
+              label="Anschrift"
+              disabled={true}
+              onChange={() => {}}
+            />
+            <FormFeld
+              value={selectedVerein.iban}
+              label="IBAN"
+              disabled={true}
+              onChange={() => {}}
+            />
+            <FormFeld
+              value={selectedVerein.bic}
+              label="BIC"
+              disabled={true}
+              onChange={() => {}}
+            />
           </>
+        ) : (
+          <div className="text-gray-500 italic text-center">
+            Bitte wählen Sie einen Verein aus der Tabelle aus.
+          </div>
         )}
       </div>
-      {buttonNeuerVerein({
-        onNeuerVerein,
-        btnNeuerVerein,
-        visible,
-        setVisible,
-        selectedVerein,
-        accept,
-        reject,
-        onÄndernVerein,
-        btnÄndernVerein,
-        btnLöschenVerein,
-        onStartMenue,
-      })}
+      <div className="mt-4">
+        {buttonNeuerVerein({
+          onNeuerVerein,
+          btnNeuerVerein,
+          visible,
+          setVisible,
+          selectedVerein,
+          accept,
+          reject,
+          onÄndernVerein,
+          btnÄndernVerein,
+          btnLöschenVerein,
+          onStartMenue,
+        })}
+      </div>
     </>
   );
 };

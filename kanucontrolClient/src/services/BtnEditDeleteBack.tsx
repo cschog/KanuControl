@@ -9,13 +9,14 @@ interface BtnEditDeleteBackProps {
   onStartMenue: () => void;
 }
 
+// Mark props as readonly using the Readonly utility type
 export function BtnEditDeleteBack({
   onÄndern,
   btnÄndern,
   setVisible,
   btnLöschen,
   onStartMenue,
-}: BtnEditDeleteBackProps) {
+}: Readonly<BtnEditDeleteBackProps>) {
   return (
     <>
       <Button

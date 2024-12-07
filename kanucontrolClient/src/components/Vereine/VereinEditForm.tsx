@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Toast } from "primereact/toast";
 import { BtnStoreCancel } from "../../services/BtnStoreCancel";
 import { FormFeld } from "../../services/FormFeld";
@@ -28,13 +28,10 @@ export function VereinEditForm({
   const [bic, setVereinsBIC] = useState("");
   const toast = useRef<Toast | null>(null);
 
-  console.log(verein);
-
   const createUpdateVerein = useCallback(() => {
-    // If verein exists, it´s an update, so include the "id" property
     if (verein) {
       const updatedVerein: Verein = {
-        id: verein.id, // Include the id
+        id: verein.id,
         name,
         abk,
         strasse,
@@ -48,9 +45,6 @@ export function VereinEditForm({
         bic,
       };
       onSpeichern(updatedVerein);
-    } else {
-      // If verein doesn't exist, it's a new entry, you might handle this case differently
-      // For example, create a new instance or show an error//
     }
   }, [
     name,
@@ -65,6 +59,7 @@ export function VereinEditForm({
     iban,
     bic,
     onSpeichern,
+    verein,
   ]);
 
   useEffect(() => {
@@ -85,29 +80,102 @@ export function VereinEditForm({
 
   const handleCreateUpdateVerein = () => {
     createUpdateVerein();
-    return false; // Placeholder value indicating that the update was not successful
+    return false;
   };
 
   return (
     <>
       <Toast ref={toast} />
-      <div className="grid m-auto w-11">
-        {FormFeld(abk, "Abkürzung", false, setVereinsKurz)}
-        {FormFeld(name, "Vereinsname", false, setVereinsName)}
-        {FormFeld(strasse, "Strasse", false, setVereinsStrasse)}
-        {FormFeld(plz, "PLZ", false, setVereinsPLZ)}
-        {FormFeld(ort, "Ort", false, setVereinsOrt)}
-        {FormFeld(telefon, "Telefon", false, setVereinsTelefon)}
-        {FormFeld(bankName, "Bank", false, setVereinsBankName)}
-        {FormFeld(kontoInhaber, "Konto-Inhaber", false, setVereinsKontoInhaber)}
-        {FormFeld(kiAnschrift, "Anschrift", false, setVereinsKIAnschrift)}
-        {FormFeld(iban, "IBAN", false, setVereinsIBAN)}
-        {FormFeld(bic, "BIC", false, setVereinsBIC)}
+      <div className="w-full max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-6">
+        <h2 className="text-xl font-bold mb-6 text-center">
+          {verein?.id ? "Verein bearbeiten" : "Neuen Verein erstellen"}
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <FormFeld
+            value={abk}
+            label="Abkürzung"
+            disabled={false}
+            onChange={setVereinsKurz}
+            className="bg-gray-100 focus:bg-white border-2 border-gray-300 focus:border-blue-500 rounded"
+          />
+          <FormFeld
+            value={name}
+            label="Vereinsname"
+            disabled={false}
+            onChange={setVereinsName}
+            className="bg-gray-100 focus:bg-white border-2 border-gray-300 focus:border-blue-500 rounded"
+          />
+          <FormFeld
+            value={strasse}
+            label="Strasse"
+            disabled={false}
+            onChange={setVereinsStrasse}
+            className="bg-gray-100 focus:bg-white border-2 border-gray-300 focus:border-blue-500 rounded"
+          />
+          <FormFeld
+            value={plz}
+            label="PLZ"
+            disabled={false}
+            onChange={setVereinsPLZ}
+            className="bg-gray-100 focus:bg-white border-2 border-gray-300 focus:border-blue-500 rounded"
+          />
+          <FormFeld
+            value={ort}
+            label="Ort"
+            disabled={false}
+            onChange={setVereinsOrt}
+            className="bg-gray-100 focus:bg-white border-2 border-gray-300 focus:border-blue-500 rounded"
+          />
+          <FormFeld
+            value={telefon}
+            label="Telefon"
+            disabled={false}
+            onChange={setVereinsTelefon}
+            className="bg-gray-100 focus:bg-white border-2 border-gray-300 focus:border-blue-500 rounded"
+          />
+          <FormFeld
+            value={bankName}
+            label="Bank"
+            disabled={false}
+            onChange={setVereinsBankName}
+            className="bg-gray-100 focus:bg-white border-2 border-gray-300 focus:border-blue-500 rounded"
+          />
+          <FormFeld
+            value={kontoInhaber}
+            label="Konto-Inhaber"
+            disabled={false}
+            onChange={setVereinsKontoInhaber}
+            className="bg-gray-100 focus:bg-white border-2 border-gray-300 focus:border-blue-500 rounded"
+          />
+          <FormFeld
+            value={kiAnschrift}
+            label="Anschrift"
+            disabled={false}
+            onChange={setVereinsKIAnschrift}
+            className="bg-gray-100 focus:bg-white border-2 border-gray-300 focus:border-blue-500 rounded"
+          />
+          <FormFeld
+            value={iban}
+            label="IBAN"
+            disabled={false}
+            onChange={setVereinsIBAN}
+            className="bg-gray-100 focus:bg-white border-2 border-gray-300 focus:border-blue-500 rounded"
+          />
+          <FormFeld
+            value={bic}
+            label="BIC"
+            disabled={false}
+            onChange={setVereinsBIC}
+            className="bg-gray-100 focus:bg-white border-2 border-gray-300 focus:border-blue-500 rounded"
+          />
+        </div>
+        <div className="mt-6 flex justify-end space-x-4">
+          <BtnStoreCancel
+            createUpdate={handleCreateUpdateVerein}
+            onAbbruch={onAbbruch}
+          />
+        </div>
       </div>
-      <BtnStoreCancel
-        createUpdate={handleCreateUpdateVerein}
-        onAbbruch={onAbbruch}
-      />
     </>
   );
 }

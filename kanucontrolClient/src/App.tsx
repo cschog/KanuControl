@@ -1,4 +1,3 @@
-import React from "react";
 import "./App.css";
 import "primereact/resources/themes/md-light-indigo/theme.css";
 import "primereact/resources/primereact.min.css";
@@ -21,72 +20,33 @@ import Abrechnung from "./components/Abrechnung";
 import AusgabeReisekosten from "./components/AusgabeReisekosten";
 
 const App = () => {
-  return (
-    <div className="App">
-      <Navigation />
-      <Router>
-        <Routes>
-          <Route
-            path="/login"
-            element={<Login />}
-          />
-          <Route
-            path="/startmenue"
-            element={<StartMenue />}
-          />
-          <Route
-            path="/"
-            element={null}
-          />
-          <Route
-            path="/vereine"
-            element={<Vereine />}
-          />
-          <Route
-            path="/personen"
-            element={<Personen />}
-          />
-          <Route
-            path="/veranstaltungen"
-            element={<Veranstaltungen />}
-          />
-          <Route
-            path="/teilnehmer"
-            element={<Teilnehmer />}
-          />
-          <Route
-            path="/kosten"
-            element={<Kosten />}
-          />
-          <Route
-            path="/reisekosten"
-            element={<Reisekosten />}
-          />
-          <Route
-            path="/teilnehmerliste"
-            element={<Teilnehmerliste />}
-          />
-          <Route
-            path="/erhebungsbogen"
-            element={<Erhebungsbogen />}
-          />
-          <Route
-            path="/anmeldung"
-            element={<Anmeldung />}
-          />
-          <Route
-            path="/abrechnung"
-            element={<Abrechnung />}
-          />
-          <Route
-            path="/ausgabeReisekosten"
-            element={<AusgabeReisekosten />}
-          />
-          <Route path="*" element={<p>Path not resolved</p>} />
-        </Routes>
-      </Router>
-    </div>
-  );
+	return (
+		<div className="App">
+			<Navigation />
+			<Router>
+				<Routes>
+					<Route path="/login" element={<Login />} />
+					<Route path="/startmenue" element={<StartMenue />} />
+					<Route path="/" element={null} />
+					<Route path="/vereine" element={<Vereine />} />
+					<Route path="/personen" element={<Personen />} />
+					<Route path="/veranstaltungen" element={<Veranstaltungen />} />
+					<Route path="/teilnehmer" element={<Teilnehmer />} />
+					<Route path="/kosten" element={<Kosten />} />
+					<Route path="/reisekosten" element={<Reisekosten />} />
+					<Route path="/teilnehmerliste" element={<Teilnehmerliste />} />
+					<Route path="/erhebungsbogen" element={<Erhebungsbogen />} />
+					<Route path="/anmeldung" element={<Anmeldung />} />
+					<Route path="/abrechnung" element={<Abrechnung />} />
+					<Route
+						path="/ausgabeReisekosten"
+						element={<AusgabeReisekosten />}
+					/>
+					<Route path="*" element={<p>Path not resolved</p>} />
+				</Routes>
+			</Router>
+		</div>
+	);
 };
 
 export default App;

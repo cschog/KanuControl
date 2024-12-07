@@ -8,11 +8,11 @@ interface PersonFormViewProps {
   onNeuePerson: () => void;
   btnNeuePerson: boolean;
   onÄndernPerson: () => void;
-  btnÄndernPerson: boolean;
+  btnÄndernPerson: boolean; // Correct prop name
   onDeletePerson: () => void;
   btnLöschenPerson: boolean;
   onStartMenue: () => void;
-  selectedPerson: Person | null; // Use the Person interface here
+  selectedPerson: Person | null;
 }
 
 export const PersonFormView: React.FC<PersonFormViewProps> = ({
@@ -26,11 +26,13 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
   selectedPerson,
 }) => {
   const toast = useRef<Toast>(null);
+
+  // Proper destructuring of useState
   const [visible, setVisible] = useState(false);
 
   const accept = useCallback(() => {
     if (selectedPerson) {
-      const message = selectedPerson.name + " wurde gelöscht!";
+      const message = `${selectedPerson.name} wurde gelöscht!`;
       onDeletePerson();
       if (toast.current) {
         toast.current.show({
@@ -45,7 +47,7 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
 
   const reject = useCallback(() => {
     if (selectedPerson) {
-      const message = selectedPerson.name + " wurde nicht gelöscht!";
+      const message = `${selectedPerson.name} wurde nicht gelöscht!`;
       if (toast.current) {
         toast.current.show({
           severity: "warn",
@@ -57,12 +59,9 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
     }
   }, [selectedPerson]);
 
-  const placeholderFunction = (): boolean => {
-    return false;
-  };
-
-  btnÄndernPerson = !selectedPerson; // true if selectedPerson is not null, false otherwise
-  btnLöschenPerson = !selectedPerson;
+  // Use local variables to determine the button states
+  const isBtnÄndernPersonDisabled = !selectedPerson; // true if selectedPerson is null
+  const isBtnLöschenPersonDisabled = !selectedPerson;
 
   return (
     <>
@@ -70,15 +69,61 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
       <div className="grid m-auto w-11">
         {selectedPerson && (
           <>
-            {FormFeld(selectedPerson.name, "Name", true, placeholderFunction)}
-            {FormFeld(selectedPerson.vorname, "Vorname", true, placeholderFunction)}
-            {FormFeld(selectedPerson.strasse, "Strasse", true, placeholderFunction)}
-            {FormFeld(selectedPerson.plz, "PLZ", true, placeholderFunction)}
-            {FormFeld(selectedPerson.ort, "Ort", true, placeholderFunction)}
-            {FormFeld(selectedPerson.telefon, "Telefon", true, placeholderFunction)}
-            {FormFeld(selectedPerson.bankName, "Bank", true, placeholderFunction)}
-            {FormFeld(selectedPerson.iban, "IBAN", true, placeholderFunction)}
-            {FormFeld(selectedPerson.bic, "BIC", true, placeholderFunction)}
+            <FormFeld
+              value={selectedPerson.name}
+              label="Name"
+              disabled={true}
+              onChange={(value) => console.log(value)}
+            />
+            <FormFeld
+              value={selectedPerson.vorname}
+              label="Vorname"
+              disabled={true}
+              onChange={(value) => console.log(value)}
+            />
+            <FormFeld
+              value={selectedPerson.strasse}
+              label="Strasse"
+              disabled={true}
+              onChange={(value) => console.log(value)}
+            />
+             <FormFeld
+              value={selectedPerson.plz}
+              label="PLZ"
+              disabled={true}
+              onChange={(value) => console.log(value)}
+            />
+             <FormFeld
+              value={selectedPerson.ort}
+              label="Ort"
+              disabled={true}
+              onChange={(value) => console.log(value)}
+            />
+             <FormFeld
+              value={selectedPerson.telefon}
+              label="Telefon"
+              disabled={true}
+              onChange={(value) => console.log(value)}
+            />
+            <FormFeld
+              value={selectedPerson.bankName}
+              label="Bank"
+              disabled={true}
+              onChange={(value) => console.log(value)}
+            />
+             <FormFeld
+              value={selectedPerson.iban}
+              label="IBAN"
+              disabled={true}
+              onChange={(value) => console.log(value)}
+            />
+             <FormFeld
+              value={selectedPerson.bic}
+              label="BIC"
+              disabled={true}
+              onChange={(value) => console.log(value)}
+            />
+           
           </>
         )}
       </div>
@@ -91,8 +136,8 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
         accept,
         reject,
         onÄndernPerson,
-        btnÄndernPerson,
-        btnLöschenPerson,
+        btnÄndernPerson: isBtnÄndernPersonDisabled,
+        btnLöschenPerson: isBtnLöschenPersonDisabled,
         onStartMenue,
       })}
     </>
