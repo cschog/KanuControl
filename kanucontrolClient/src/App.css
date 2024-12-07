@@ -34,9 +34,20 @@
 }
 
 .card {
-  padding: 2em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow-x: auto; /* Allows horizontal scrolling if absolutely needed */
+  width: 100%; /* Ensures the container spans the screen */
 }
 
 .read-the-docs {
   color: #888;
+}
+
+.p-datatable .p-datatable-tbody > tr > td {
+  border: 1px solid #ddd; /* Custom border color */
+}
+.p-datatable .p-datatable-thead > tr > th {
+  border: 1px solid #bbb; /* Custom header border color */
 }

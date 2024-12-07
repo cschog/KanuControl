@@ -3,160 +3,98 @@ import { Button } from "primereact/button";
 import "primereact/resources/themes/md-light-indigo/theme.css";
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
-import "primeflex/primeflex.css";
 
 const StartMenue = () => {
-	const callVereine = useCallback(function () {
-		window.location.href = "/vereine";
-	}, []);
+  const callVereine = useCallback(() => (window.location.href = "/vereine"), []);
+  const callMitglieder = useCallback(() => (window.location.href = "/personen"), []);
+  const callVeranstaltungen = useCallback(() => (window.location.href = "/veranstaltungen"), []);
+  const callTeilnehmer = useCallback(() => (window.location.href = "/teilnehmer"), []);
+  const callKosten = useCallback(() => (window.location.href = "/kosten"), []);
+  const callReisekosten = useCallback(() => (window.location.href = "/reisekosten"), []);
+  const callTeilnehmerliste = useCallback(() => (window.location.href = "/teilnehmerliste"), []);
+  const callErhebungsbogen = useCallback(() => (window.location.href = "/erhebungsbogen"), []);
+  const callAnmeldung = useCallback(() => (window.location.href = "/anmeldung"), []);
+  const callAbrechnung = useCallback(() => (window.location.href = "/abrechnung"), []);
+  const callAusgabeReisekosten = useCallback(() => (window.location.href = "/ausgabeReisekosten"), []);
 
-	const callMitglieder = useCallback(function () {
-		window.location.href = "/personen";
-	}, []);
+  return (
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">KanuControl</h1>
+      <h4 className="text-lg mb-2">Aktive Veranstaltung</h4>
+      <p className="mb-6">Test-Veranstaltung</p>
 
-	const callVeranstaltungen = useCallback(function () {
-		window.location.href = "/veranstaltungen";
-	}, []);
+      {/* Main container for two blocks */}
+      <div className="space-y-8">
+        {/* First block: Main menu */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Button
+            label="Vereine"
+            className="w-full bg-blue-700 text-white font-bold p-4 rounded hover:bg-blue-600 whitespace-normal"
+            onClick={callVereine}
+          />
+		   <Button
+            label="Veranstaltungen"
+            className="w-full bg-blue-700 text-white font-bold p-4 rounded hover:bg-blue-600 whitespace-normal"
+            onClick={callVeranstaltungen}
+          />
+         <Button
+            label="Kosten"
+            className="w-full bg-blue-700 text-white font-bold p-4 rounded hover:bg-blue-600 whitespace-normal"
+            onClick={callKosten}
+          />
+		   <Button
+            label="Mitglieder"
+            className="w-full bg-blue-700 text-white font-bold p-4 rounded hover:bg-blue-600 whitespace-normal"
+            onClick={callMitglieder}
+          />
+         
+          <Button
+            label="Teilnehmer"
+            className="w-full bg-blue-700 text-white font-bold p-4 rounded hover:bg-blue-600 whitespace-normal"
+            onClick={callTeilnehmer}
+          />
+		  
+          
+          <Button
+            label="Reisekosten"
+            className="w-full bg-blue-700 text-white font-bold p-4 rounded hover:bg-blue-600 whitespace-normal"
+            onClick={callReisekosten}
+          />
+        </div>
 
-	const callTeilnehmer = useCallback(function () {
-		window.location.href = "/teilnehmer";
-	}, []);
-
-	const callKosten = useCallback(function () {
-		window.location.href = "/kosten";
-	}, []);
-
-	const callReisekosten = useCallback(function () {
-		window.location.href = "/reisekosten";
-	}, []);
-
-	const callTeilnehmerliste = useCallback(function () {
-		window.location.href = "/teilnehmerliste";
-	}, []);
-
-	const callErhebungsbogen = useCallback(function () {
-		window.location.href = "/erhebungsbogen";
-	}, []);
-
-	const callAnmeldung = useCallback(function () {
-		window.location.href = "/anmeldung";
-	}, []);
-
-	const callAbrechnung = useCallback(function () {
-		window.location.href = "/abrechnung";
-	}, []);
-
-	const callAusgabeReisekosten = useCallback(function () {
-		window.location.href = "/ausgabeReisekosten";
-	}, []);
-
-	return (
-		<div>
-			<h1>KanuControl</h1>
-			<h4>aktive Veranstaltung</h4>
-			<p>Test-Veranstaltung</p>
-			<div className="grid border-solid m-auto w-11">
-				<div className="col">
-					<div className="p-3">
-						<div className="block bg-blue-700 text-white font-bold text-center p-3 border-round mb-3">
-							<Button
-								label="Vereine"
-								className="w-full bg-blue-700 hover:text-yellow-500"
-								onClick={callVereine}></Button>
-						</div>
-						<div className="block bg-blue-700 text-white font-bold text-center p-3 border-round mb-3">
-							<Button
-								label="Mitglieder"
-								className="w-full bg-blue-700 hover:text-yellow-500"
-								onClick={callMitglieder}></Button>
-						</div>
-					</div>
-				</div>
-				<div className="col">
-					<div className="p-3">
-						<div className="block bg-blue-700 text-white font-bold text-center p-3 border-round mb-3">
-							<Button
-								label="Veranstaltungen"
-								className="w-full bg-blue-700 hover:text-yellow-500"
-								onClick={callVeranstaltungen}></Button>
-						</div>
-						<div className="block bg-blue-700 text-white font-bold text-center p-3 border-round mb-3">
-							<Button
-								label="Teilnehmer"
-								className="w-full bg-blue-700 hover:text-yellow-500"
-								onClick={callTeilnehmer}></Button>
-						</div>
-					</div>
-				</div>
-				<div className="col">
-					<div className="p-3">
-						<div className="block bg-blue-700 text-white font-bold text-center p-3 border-round mb-3">
-							<Button
-								label="Kosten"
-								className="w-full bg-blue-700 hover:text-yellow-500"
-								onClick={callKosten}></Button>
-						</div>
-						<div className="block bg-blue-700 text-white font-bold text-center p-3 border-round mb-3">
-							<Button
-								label="Reisekosten"
-								className="w-full bg-blue-700 hover:text-yellow-500"
-								onClick={callReisekosten}></Button>
-						</div>
-					</div>
-				</div>
-			</div>
-			<p></p>
-
-			{/* Ab hier kommt das Menue zur Abrechnung */}
-
-			<div className="grid border-solid m-auto w-11">
-				<div className="col">
-					<div className="p-3">
-						<div className="block bg-yellow-500 font-bold text-center p-3 border-round mb-3">
-							<Button
-								label="Teilnehmerliste"
-								className="w-full text-900 hover:text-pink-500 bg-yellow-500"
-								onClick={callTeilnehmerliste}></Button>
-						</div>
-						<div className="block bg-yellow-500 font-bold text-center p-3 border-round mb-3">
-							<Button
-								label="Erhebungsbogen"
-								className="w-full text-900 hover:text-pink-500 bg-yellow-500"
-								onClick={callErhebungsbogen}></Button>
-						</div>
-					</div>
-				</div>
-				<div className="col">
-					<div className="p-3">
-						<div className="block bg-red-700 font-bold text-center p-3 border-round mb-3">
-							<Button
-								label="Anmeldung"
-								className="w-full text-50 hover:text-yellow-500 bg-red-700 whitespace-nowrap"
-								onClick={callAnmeldung}
-							/>
-						</div>
-						<div className="block bg-yellow-500 font-bold text-center p-3 border-round mb-3">
-							<Button
-								label="Abrechnung"
-								className="w-full text-900 hover:text-pink-500 bg-yellow-500 whitespace-nowrap"
-								onClick={callAbrechnung}
-							/>
-						</div>
-					</div>
-				</div>
-				<div className="col">
-					<div className="p-3">
-						<div className="block bg-yellow-500 font-bold text-center p-3 border-round mb-3">
-							<Button
-								label="Reisekosten"
-								className="w-full text-900 hover:text-pink-500 bg-yellow-500"
-								onClick={callAusgabeReisekosten}></Button>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	);
+        {/* Second block: Abrechnung menu */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Button
+            label="Teilnehmerliste"
+            className="w-full bg-yellow-500 text-gray-900 font-bold p-4 rounded hover:bg-yellow-400 whitespace-normal"
+            onClick={callTeilnehmerliste}
+          />
+		  <Button
+            label="Anmeldung"
+            className="w-full bg-red-700 text-white font-bold p-4 rounded hover:bg-red-600 whitespace-normal"
+            onClick={callAnmeldung}
+          />
+		   <Button
+            label="Abrechnung"
+            className="w-full bg-yellow-500 text-gray-900 font-bold p-4 rounded hover:bg-yellow-400 whitespace-normal"
+            onClick={callAbrechnung}
+          />
+          <Button
+            label="Erhebungsbogen"
+            className="w-full bg-yellow-500 text-gray-900 font-bold p-4 rounded hover:bg-yellow-400 whitespace-normal"
+            onClick={callErhebungsbogen}
+          />
+          
+         
+          <Button
+            label="Reisekosten Ausgabe"
+            className="w-full bg-yellow-500 text-gray-900 font-bold p-4 rounded hover:bg-yellow-400 whitespace-normal"
+            onClick={callAusgabeReisekosten}
+          />
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default StartMenue;

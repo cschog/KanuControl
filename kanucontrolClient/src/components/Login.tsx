@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { InputText } from "primereact/inputtext";
 import { Checkbox } from "primereact/checkbox";
 import { Button } from "primereact/button";
@@ -25,39 +25,28 @@ const Login = () => {
           </span>
           <a
             href="##"
-            className="font-medium no-underline ml-2 text-blue-500 cursor-pointer">
+            className="font-medium no-underline ml-2 text-blue-500 cursor-pointer"
+          >
             Hier registrieren!
           </a>
         </div>
 
         <div>
-          <label
-            htmlFor="Email"
-            className="block text-900 font-medium mb-2">
+          <label htmlFor="Email" className="block text-900 font-medium mb-2">
             Email
           </label>
-          <InputText
-            id="email"
-            type="text"
-            className="w-full mb-3"
-          />
+          <InputText id="email" type="text" className="w-full mb-3" />
 
-          <label
-            htmlFor="password"
-            className="block text-900 font-medium mb-2">
+          <label htmlFor="password" className="block text-900 font-medium mb-2">
             Passwort
           </label>
-          <InputText
-            id="password"
-            type="password"
-            className="w-full mb-3"
-          />
+          <InputText id="password" type="password" className="w-full mb-3" />
 
           <div className="flex align-items-center justify-content-between mb-6">
             <div className="flex align-items-center">
               <Checkbox
                 id="rememberme"
-                onChange={(e) => setChecked(e.checked)}
+                onChange={(e) => setChecked(e.checked ?? false)}
                 checked={checked}
                 className="mr-2"
               />
@@ -65,7 +54,8 @@ const Login = () => {
             </div>
             <a
               href="##"
-              className="font-medium no-underline ml-2 text-blue-500 text-right cursor-pointer">
+              className="font-medium no-underline ml-2 text-blue-500 text-right cursor-pointer"
+            >
               Passwort vergessen?
             </a>
           </div>
@@ -74,7 +64,8 @@ const Login = () => {
             label="Anmelden"
             icon="pi pi-user"
             className="w-full bg-blue-700"
-            onClick={callStartMenue}></Button>
+            onClick={callStartMenue}
+          ></Button>
         </div>
       </div>
     </div>

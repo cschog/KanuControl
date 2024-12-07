@@ -1,25 +1,20 @@
-import React from "react";
 import { InputText } from "primereact/inputtext";
 
-export function FormFeld(
-  feldName: string,
-  label: string,
-  feldDisabled: boolean,
-  setFunction: (value: string) => void
-) {
-  return (
-    <div className=" col-fixed">
-      <div className="p-0">
-        <span className="p-float-label">
-          <InputText
-            id={feldName}
-            value={feldName}
-            disabled={feldDisabled}
-            onChange={(e) => setFunction(e.target.value)}
-          />
-          <label htmlFor="in">{label}</label>
-        </span>
-      </div>
-    </div>
-  );
+interface FormFeldProps {
+  value: string;
+  label: string;
+  disabled: boolean;
+  onChange: (value: string) => void;
 }
+
+export const FormFeld: React.FC<FormFeldProps> = ({ value, label, disabled, onChange }) => (
+  <div className="p-float-label">
+    <InputText
+      id={label}
+      value={value}
+      disabled={disabled}
+      onChange={(e) => onChange(e.target.value)}
+    />
+    <label htmlFor={label}>{label}</label>
+  </div>
+);

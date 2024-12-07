@@ -1,9 +1,9 @@
-import React, { Component } from "react";
+import { Component } from "react";
 import { MenueHeader } from "../MenueHeader";
 import { PersonTable } from "./PersonTable";
 import { PersonFormView } from "./PersonFormView";
 import { PersonEditForm } from "./PersonEditForm";
-import { Person } from "../interfaces/Person"; 
+import { Person } from "../interfaces/Person";
 import { renderLoadingOrError } from "../../services/loadingOnErrorUtils";
 import { navigateToStartMenu } from "../../services/navigateToStartMenue";
 
@@ -51,7 +51,7 @@ class Personen extends Component<PersonenProps, PersonenState> {
 
   fetchPersonenData = async () => {
     try {
-      const personen = await dbGetAllPersonen(); 
+      const personen = await dbGetAllPersonen();
       this.setState({
         data: personen,
         loading: false,
@@ -66,52 +66,51 @@ class Personen extends Component<PersonenProps, PersonenState> {
     }
   };
   btnSpeichern = async (person: Person) => {
-    this.setState({
-      btnLöschenIsDisabled: true,
-      btnÄndernIsDisabled: true,
-    });
-
-    const { modusNeuePerson, selectedPerson } = this.state;
-
-    try {
-      // Perform validation check here
-      if (
-        (modusNeuePerson &&
-          person.name.trim() !== "" &&
-          person.vorname.trim() !== "") ||
-        (!modusNeuePerson && selectedPerson)
-      ) {
-        if (modusNeuePerson) {
-          await dbCreatePerson(person);
-        } else {
-          if (selectedPerson) {
-            person.id = selectedPerson.id;
-            await dbReplacePerson(person);
-          } else {
-            throw new Error("No selected Person found.");
-          }
-        }
-
-        this.fetchPersonenData();
-
-        if (!modusNeuePerson && selectedPerson) {
-          this.setState({
-            selectedPerson: {
-              ...selectedPerson,
-              ...person,
-            },
-          });
-        }
-
-        this.setState({
-          personFormEditMode: false,
-        });
-      } else {
-        // message: speichern einer leeren Person ist nicht zulässig
-      }
-    } catch (error) {
-      console.error("Error saving person:", error);
-    }
+	this.setState({
+	  btnLöschenIsDisabled: true,
+	  btnÄndernIsDisabled: true,
+	});
+  
+	const { modusNeuePerson, selectedPerson } = this.state;
+  
+	try {
+	  // Perform validation check here
+	  if (
+		(modusNeuePerson &&
+		  person.name.trim() !== "" &&
+		  person.vorname.trim() !== "") ||
+		(!modusNeuePerson && selectedPerson)
+	  ) {
+		if (modusNeuePerson) {
+		  await dbCreatePerson(person);
+		} else if (selectedPerson?.id !== undefined) {
+		  // Use optional chaining to ensure selectedPerson and its id exist
+		  person.id = selectedPerson.id;
+		  await dbReplacePerson(person);
+		} else {
+		  throw new Error("No selected Person found.");
+		}
+  
+		await this.fetchPersonenData(); // Ensure the latest data is fetched
+  
+		if (!modusNeuePerson && selectedPerson) {
+		  this.setState({
+			selectedPerson: {
+			  ...selectedPerson,
+			  ...person,
+			},
+		  });
+		}
+  
+		this.setState({
+		  personFormEditMode: false,
+		});
+	  } else {
+		console.error("Saving an empty person is not allowed.");
+	  }
+	} catch (error) {
+	  console.error("Error saving person:", error);
+	}
   };
 
   btnAbbruch = () => {
@@ -224,7 +223,7 @@ class Personen extends Component<PersonenProps, PersonenState> {
               onNeuePerson={this.btnNeuePerson}
               btnNeuePerson={this.btnNeuePersonIsDisabled}
               onÄndernPerson={this.editPerson}
-              btnÄndernPerson={this.btnÄndernIsDisabled}
+              btnÄndernPerson={this.btnÄndernIsDisabled} // Correctly pass this prop
               onDeletePerson={this.deletePerson}
               btnLöschenPerson={this.btnLöschenIsDisabled}
               onStartMenue={this.btnStartMenue}

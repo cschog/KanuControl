@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import { Component } from "react";
 import { MenueHeader } from "../MenueHeader";
 import { VereinTable } from "./VereinTable";
 import { VereinFormView } from "./VereinFormView";
