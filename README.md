@@ -43,9 +43,11 @@ Der generelle Ablauf besteht in den folgenden Schritten:
    
    Frontend
    ========
-   Das Frontend ist eine REACT Anwendung, die mit einem Java-Backendserver kommuniziert. Es wird TypeScript verwendet. Als Entwicklungsumgebung wird VS Code eingesetzt.
+   Das Frontend ist eine REACT Anwendung, die mit einem Java-Backendserver kommuniziert. Es wird TypeScript verwendet. Als Entwicklungsumgebung wird VS Code eingesetzt. 
+   
+   Das Frontend lauft im Vite Framework. Vite ist ein modernes Build-Tool, das auf Geschwindigkeit und Effizienz ausgelegt ist, insbesondere bei der Arbeit mit JavaScript-Frameworks wie React. 
 
-   Das Frontend erfordert Node 18.
+  Zur Darstellung des User-Interface wird Tailwind eingesetzt.
    
    Backend
    =======
