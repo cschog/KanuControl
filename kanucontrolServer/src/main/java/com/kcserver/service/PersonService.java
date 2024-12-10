@@ -1,5 +1,6 @@
 package com.kcserver.service;
 
+import com.kcserver.dto.MitgliedDTO;
 import com.kcserver.dto.PersonDTO;
 import com.kcserver.entity.Mitglied;
 import com.kcserver.entity.Person;
@@ -7,17 +8,26 @@ import com.kcserver.entity.Verein;
 import com.kcserver.mapper.EntityMapper;
 import com.kcserver.repository.PersonRepository;
 import com.kcserver.repository.VereinRepository;
+import com.kcserver.sampleData.sampleService.SamplePersonService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
 public class PersonService {
+
+    private static final Logger logger = LoggerFactory.getLogger(SamplePersonService.class);
 
     private final PersonRepository personRepository;
     private final VereinRepository vereinRepository;
@@ -127,31 +137,66 @@ public class PersonService {
      * @throws ResponseStatusException if the person is not found.
      */
     public PersonDTO updatePerson(long id, PersonDTO personDTO) {
+        logger.info("Updating person with ID: {} using data: {}", id, personDTO);
+
         Person existingPerson = personRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Person not found"));
+                .orElseThrow(() -> {
+                    logger.error("Person with ID: {} not found", id);
+                    return new ResponseStatusException(HttpStatus.NOT_FOUND, "Person not found");
+                });
 
+        logger.debug("Found person: {}", existingPerson);
+
+        // Map DTO to entity
         mapper.updatePersonFromDTO(personDTO, existingPerson);
+        logger.debug("Mapped fields from DTO to entity for ID: {}", id);
 
-        // Update Mitgliedschaften
-        existingPerson.getMitgliedschaften().clear();
+        // Clear existing Mitgliedschaften
+        logger.info("Payload received for update: {}", personDTO);
+        if (existingPerson.getMitgliedschaften() == null) {
+            logger.error("Mitgliedschaften is null for person ID {}", id);
+            existingPerson.setMitgliedschaften(new ArrayList<>());
+        } else {
+            logger.info("Existing Mitgliedschaften: {}", existingPerson.getMitgliedschaften());
+            existingPerson.getMitgliedschaften().clear();
+        }
+
+        // Rebuild Mitgliedschaften from the DTO
         if (personDTO.getMitgliedschaften() != null) {
-            personDTO.getMitgliedschaften().forEach(mitgliedDTO -> {
+            // Map of existing Mitgliedschaften by Verein ID for quick lookup
+            Map<Long, Mitglied> existingMitgliedMap = existingPerson.getMitgliedschaften().stream()
+                    .collect(Collectors.toMap(m -> m.getVerein().getId(), Function.identity()));
+
+            for (MitgliedDTO mitgliedDTO : personDTO.getMitgliedschaften()) {
                 Verein verein = vereinRepository.findById(mitgliedDTO.getVereinId())
                         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Verein not found"));
-                Mitglied mitglied = new Mitglied(
-                        verein,
-                        existingPerson,
-                        mitgliedDTO.getFunktion(),
-                        mitgliedDTO.getHauptVerein()
-                );
-                existingPerson.getMitgliedschaften().add(mitglied);
-            });
+
+                Mitglied mitglied = existingMitgliedMap.get(verein.getId());
+                if (mitglied == null) {
+                    // New Mitglied
+                    mitglied = new Mitglied();
+                    mitglied.setPerson(existingPerson);
+                    mitglied.setVerein(verein);
+                    existingPerson.getMitgliedschaften().add(mitglied);
+                }
+
+                // Update fields
+                mitglied.setFunktion(mitgliedDTO.getFunktion());
+                mitglied.setHauptVerein(mitgliedDTO.getHauptVerein());
+            }
+
+            // Remove Mitgliedschaften not in the DTO
+            Set<Long> incomingVereinIds = personDTO.getMitgliedschaften().stream()
+                    .map(MitgliedDTO::getVereinId)
+                    .collect(Collectors.toSet());
+
+            existingPerson.getMitgliedschaften().removeIf(m -> !incomingVereinIds.contains(m.getVerein().getId()));
         }
 
         Person updatedPerson = personRepository.save(existingPerson);
+        logger.info("Successfully updated person with ID: {}", id);
         return mapper.toPersonDTO(updatedPerson);
     }
-
     /**
      * Delete a person by their ID.
      *

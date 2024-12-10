@@ -2,50 +2,57 @@ import apiClient from "./apiClient";
 import { Person } from "../components/interfaces/Person";
 
 const getCollectionURL = () => {
-	// baseURL is defined in apiClient, so just return the root path for 'person' endpoint
-	return "/person";
+  // baseURL is defined in apiClient, so just return the root path for 'person' endpoint
+  return "/person";
 };
 
 const getElementURL = (personId: number) =>
-	`${getCollectionURL()}/${encodeURIComponent(personId)}`;
+  `${getCollectionURL()}/${encodeURIComponent(personId)}`;
 
 export const getAllPersonen = async () => {
-	try {
-		const response = await apiClient.get(getCollectionURL());
-		console.log("getAllPersonen:", getCollectionURL());
-		const personen = response.data;
-		return personen;
-	} catch (error) {
-		throw error;
-	}
+  try {
+    const response = await apiClient.get(getCollectionURL());
+    console.log("getAllPersonen:", getCollectionURL());
+    const personen = response.data;
+    return personen;
+  } catch (error) {
+    console.error("Error in getAllPeronen:", error);
+    throw error;
+  }
 };
 
 export const createPerson = async (person: Person) => {
-	try {
-		const response = await apiClient.post(getCollectionURL(), person);
-		return response.data;
-	} catch (error) {
-		throw error;
-	}
+  try {
+    const response = await apiClient.post(getCollectionURL(), person);
+    return response.data;
+  } catch (error) {
+    console.error("Error in createPerson:", error);
+    throw error;
+  }
 };
 
 export const replacePerson = async (person: Person) => {
-	try {
-		if (person.id === undefined) {
-			throw new Error("Person ID is missing for replacement.");
-		}
+  try {
+    if (person.id === undefined) {
+      throw new Error("Person ID is missing for replacement.");
+    }
 
-		const response = await apiClient.put(getElementURL(person.id), person);
-		return response.data;
-	} catch (error) {
-		throw error;
-	}
+    const response = await apiClient.put(
+      `/person/${encodeURIComponent(person.id)}`,
+      person
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error in replacePerson:", error);
+    throw error;
+  }
 };
 
 export const deletePerson = async (personId: number) => {
-	try {
-		await apiClient.delete(getElementURL(personId));
-	} catch (error) {
-		throw error;
-	}
+  try {
+    await apiClient.delete(getElementURL(personId));
+  } catch (error) {
+    console.error("Error in deletePerson:", error);
+    throw error;
+  }
 };

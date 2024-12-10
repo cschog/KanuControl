@@ -72,7 +72,7 @@ public class PersonControllerIT {
         when(personService.getAllPersonsWithDetails()).thenReturn(samplePersons);
 
         // Perform GET request
-        mockMvc.perform(get("/person")
+        mockMvc.perform(get("/api/person")
                         .accept(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -107,7 +107,7 @@ public class PersonControllerIT {
         when(personService.getPersonWithDetails(1L)).thenReturn(mockPerson);
 
         // Perform GET request
-        mockMvc.perform(get("/person/1")
+        mockMvc.perform(get("/api/person/1")
                         .accept(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isOk()) // Check for HTTP 200
@@ -133,7 +133,7 @@ public class PersonControllerIT {
         when(personService.createPerson(Mockito.any(PersonDTO.class))).thenReturn(createdPerson);
 
         // Act & Assert
-        mockMvc.perform(post("/person")
+        mockMvc.perform(post("/api/person")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(inputPerson)))
                 .andExpect(status().isCreated())
@@ -166,7 +166,7 @@ public class PersonControllerIT {
         when(personService.updatePerson(eq(1L), any(PersonDTO.class))).thenReturn(updatedPerson);
 
         // Perform PUT request
-        mockMvc.perform(put("/person/1")
+        mockMvc.perform(put("/api/person/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                 {
@@ -198,15 +198,33 @@ public class PersonControllerIT {
     void shouldDeletePerson() throws Exception {
         when(personService.deletePerson(1L)).thenReturn(true);
 
-        mockMvc.perform(delete("/person/1"))
+        mockMvc.perform(delete("/api/person/1"))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void shouldUpdatePersonWithMitgliedschaften() throws Exception {
+        PersonDTO updatedPersonDTO = new PersonDTO(
+                1L, "Updated Name", "Updated Vorname", "Updated Strasse", "54321", "Updated Ort",
+                "987654321", "Updated Bank", "Updated IBAN", "Updated BIC",
+                List.of(new MitgliedDTO(1L, 1L, "Updated Verein", "Updated Abk", "Updated Funktion", true))
+        );
+
+        when(personService.updatePerson(eq(1L), any(PersonDTO.class))).thenReturn(updatedPersonDTO);
+
+        mockMvc.perform(put("/api/person/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updatedPersonDTO))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.mitgliedschaften[0].vereinName").value("Updated Verein"));
     }
 
     @Test
     void shouldReturnNotFoundWhenDeletingNonExistingPerson() throws Exception {
         when(personService.deletePerson(999L)).thenReturn(false);
 
-        mockMvc.perform(delete("/person/999"))
+        mockMvc.perform(delete("/api/person/999"))
                 .andExpect(status().isNotFound());
     }
 }

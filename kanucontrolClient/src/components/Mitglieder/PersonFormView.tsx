@@ -60,71 +60,82 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
   }, [selectedPerson]);
 
   // Use local variables to determine the button states
-  const isBtnÄndernPersonDisabled = !selectedPerson; // true if selectedPerson is null
-  const isBtnLöschenPersonDisabled = !selectedPerson;
 
   return (
     <>
       <Toast ref={toast} />
-      <div className="grid m-auto w-11">
-        {selectedPerson && (
+      <div className="grid m-auto w-11 p-4 border bg-gray-50 shadow-md rounded">
+      <h2 className="text-xl font-bold mb-4 text-blue-700">Mitgliederdetails</h2>
+        {selectedPerson ? (
           <>
             <FormFeld
               value={selectedPerson.name}
               label="Name"
               disabled={true}
               onChange={(value) => console.log(value)}
+               className="bg-gray-100 focus:bg-white border-2 border-gray-300 focus:border-blue-500 rounded p-2"
             />
             <FormFeld
               value={selectedPerson.vorname}
               label="Vorname"
               disabled={true}
               onChange={(value) => console.log(value)}
+               className="bg-gray-100 focus:bg-white border-2 border-gray-300 focus:border-blue-500 rounded p-2"
             />
             <FormFeld
               value={selectedPerson.strasse}
               label="Strasse"
               disabled={true}
               onChange={(value) => console.log(value)}
+               className="bg-gray-100 focus:bg-white border-2 border-gray-300 focus:border-blue-500 rounded p-2"
             />
              <FormFeld
               value={selectedPerson.plz}
               label="PLZ"
               disabled={true}
               onChange={(value) => console.log(value)}
+               className="bg-gray-100 focus:bg-white border-2 border-gray-300 focus:border-blue-500 rounded p-2"
             />
              <FormFeld
               value={selectedPerson.ort}
               label="Ort"
               disabled={true}
               onChange={(value) => console.log(value)}
+               className="bg-gray-100 focus:bg-white border-2 border-gray-300 focus:border-blue-500 rounded p-2"
             />
              <FormFeld
               value={selectedPerson.telefon}
               label="Telefon"
               disabled={true}
               onChange={(value) => console.log(value)}
+               className="bg-gray-100 focus:bg-white border-2 border-gray-300 focus:border-blue-500 rounded p-2"
             />
             <FormFeld
               value={selectedPerson.bankName}
               label="Bank"
               disabled={true}
               onChange={(value) => console.log(value)}
+               className="bg-gray-100 focus:bg-white border-2 border-gray-300 focus:border-blue-500 rounded p-2"
             />
              <FormFeld
               value={selectedPerson.iban}
               label="IBAN"
               disabled={true}
               onChange={(value) => console.log(value)}
+               className="bg-gray-100 focus:bg-white border-2 border-gray-300 focus:border-blue-500 rounded p-2"
             />
              <FormFeld
               value={selectedPerson.bic}
               label="BIC"
               disabled={true}
               onChange={(value) => console.log(value)}
+               className="bg-gray-100 focus:bg-white border-2 border-gray-300 focus:border-blue-500 rounded p-2"
             />
-           
           </>
+        ): (
+          <div className="text-gray-500 italic text-center">
+            Bitte wählen Sie ein Mitglied aus der Tabelle aus.
+          </div>
         )}
       </div>
       {buttonNeuePerson({
@@ -136,8 +147,8 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
         accept,
         reject,
         onÄndernPerson,
-        btnÄndernPerson: isBtnÄndernPersonDisabled,
-        btnLöschenPerson: isBtnLöschenPersonDisabled,
+        btnÄndernPerson,
+        btnLöschenPerson,
         onStartMenue,
       })}
     </>

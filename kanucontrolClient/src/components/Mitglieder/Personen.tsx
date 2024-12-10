@@ -6,6 +6,7 @@ import { PersonEditForm } from "./PersonEditForm";
 import { Person } from "../interfaces/Person";
 import { renderLoadingOrError } from "../../services/loadingOnErrorUtils";
 import { navigateToStartMenu } from "../../services/navigateToStartMenue";
+import { MessageSavingEmptyPerson } from "../../services/MessageSavingEmptyPerson";
 
 import {
   getAllPersonen as dbGetAllPersonen,
@@ -65,53 +66,6 @@ class Personen extends Component<PersonenProps, PersonenState> {
       });
     }
   };
-  btnSpeichern = async (person: Person) => {
-	this.setState({
-	  btnLöschenIsDisabled: true,
-	  btnÄndernIsDisabled: true,
-	});
-  
-	const { modusNeuePerson, selectedPerson } = this.state;
-  
-	try {
-	  // Perform validation check here
-	  if (
-		(modusNeuePerson &&
-		  person.name.trim() !== "" &&
-		  person.vorname.trim() !== "") ||
-		(!modusNeuePerson && selectedPerson)
-	  ) {
-		if (modusNeuePerson) {
-		  await dbCreatePerson(person);
-		} else if (selectedPerson?.id !== undefined) {
-		  // Use optional chaining to ensure selectedPerson and its id exist
-		  person.id = selectedPerson.id;
-		  await dbReplacePerson(person);
-		} else {
-		  throw new Error("No selected Person found.");
-		}
-  
-		await this.fetchPersonenData(); // Ensure the latest data is fetched
-  
-		if (!modusNeuePerson && selectedPerson) {
-		  this.setState({
-			selectedPerson: {
-			  ...selectedPerson,
-			  ...person,
-			},
-		  });
-		}
-  
-		this.setState({
-		  personFormEditMode: false,
-		});
-	  } else {
-		console.error("Saving an empty person is not allowed.");
-	  }
-	} catch (error) {
-	  console.error("Error saving person:", error);
-	}
-  };
 
   btnAbbruch = () => {
     this.setState({
@@ -119,6 +73,57 @@ class Personen extends Component<PersonenProps, PersonenState> {
       personFormEditMode: false,
       selectedPerson: null,
     });
+  };
+
+  btnSpeichern = async (person: Person) => {
+    console.log("Saving person:", person); // Log the person object
+    this.setState({
+      btnLöschenIsDisabled: true,
+      btnÄndernIsDisabled: true,
+    });
+  
+    const { modusNeuePerson, selectedPerson } = this.state;
+  
+    try {
+
+      let response;
+      q
+      if (
+        (modusNeuePerson &&
+          person.name.trim() !== "" &&
+          person.vorname.trim() !== "") ||
+        (!modusNeuePerson && selectedPerson)
+      ) {
+        if (modusNeuePerson) {
+          response =  await dbCreatePerson(person); // Calls the API to create a new person
+        } else if (selectedPerson) {
+          person.id = selectedPerson.id; // Ensure the ID is set for updating
+          response = await dbReplacePerson(person); // Calls the API to update the existing person
+        } else {
+          throw new Error("No selected Person found.");
+        }
+        console.log("API response:", response); // Log API response
+        this.fetchPersonenData(); // Refresh data from the server
+  
+        if (!modusNeuePerson && selectedPerson) {
+          this.setState({
+            selectedPerson: {
+              ...selectedPerson,
+              ...person, // Merge updated data
+            },
+          });
+        }
+  
+        this.setState({
+          personFormEditMode: false,
+        });
+      } else {
+        MessageSavingEmptyPerson(); // Handle the case where mandatory fields are empty
+      }
+    } catch (error) {
+      console.error("Error saving person:", error);
+      alert("Failed to save changes");
+    }
   };
 
   btnNeuePerson = () => {

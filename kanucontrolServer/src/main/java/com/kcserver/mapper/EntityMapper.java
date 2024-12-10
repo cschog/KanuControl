@@ -6,11 +6,13 @@ import com.kcserver.dto.VereinDTO;
 import com.kcserver.entity.Mitglied;
 import com.kcserver.entity.Person;
 import com.kcserver.entity.Verein;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
+import com.kcserver.repository.PersonRepository;
+import com.kcserver.repository.VereinRepository;
+import org.mapstruct.*;
 
-@Mapper(componentModel = "spring")
+@Mapper(
+        componentModel = "spring",
+        uses = {PersonRepository.class, VereinRepository.class})
 public interface EntityMapper {
 
     // Person Mappings
@@ -82,10 +84,27 @@ public interface EntityMapper {
     @Mapping(source = "hauptVerein", target = "hauptVerein")
     MitgliedDTO toMitgliedDTO(Mitglied mitglied);
 
-    @Mapping(source = "personId", target = "personMitgliedschaft.id")
-    @Mapping(source = "vereinId", target = "vereinMitgliedschaft.id")
+    @Mapping(target = "personMitgliedschaft", ignore = true) // Explicitly ignore
+    @Mapping(target = "vereinMitgliedschaft", ignore = true) // Explicitly ignore
+    @Mapping(target = "person", ignore = true) // Explicitly ignore
+    @Mapping(target = "verein", ignore = true) // Explicitly ignore
     @Mapping(source = "funktion", target = "funktion")
     @Mapping(source = "hauptVerein", target = "hauptVerein")
     Mitglied toMitgliedEntity(MitgliedDTO mitgliedDTO);
 
+    @AfterMapping
+    default void mapMitgliedAssociations(MitgliedDTO mitgliedDTO, @MappingTarget Mitglied mitglied,
+                                         @Context PersonRepository personRepository,
+                                         @Context VereinRepository vereinRepository) {
+        if (mitgliedDTO.getPersonId() != null) {
+            Person person = personRepository.findById(mitgliedDTO.getPersonId())
+                    .orElseThrow(() -> new IllegalArgumentException("Invalid person ID"));
+            mitglied.setPersonMitgliedschaft(person);
+        }
+        if (mitgliedDTO.getVereinId() != null) {
+            Verein verein = vereinRepository.findById(mitgliedDTO.getVereinId())
+                    .orElseThrow(() -> new IllegalArgumentException("Invalid verein ID"));
+            mitglied.setVereinMitgliedschaft(verein);
+        }
+    }
 }

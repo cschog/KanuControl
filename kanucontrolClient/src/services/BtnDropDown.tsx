@@ -24,7 +24,7 @@ export function BtnDropDown({
 	selectedItem,
 	items,
 	setSelectedItem,
-}: Props) {
+}: Readonly<Props>) {
 	const handleChange = (e: MyDropdownChangeEvent) => {
 		setSelectedItem(e.value as Item | null);
 	};
