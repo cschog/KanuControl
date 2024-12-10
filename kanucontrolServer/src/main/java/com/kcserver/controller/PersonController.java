@@ -3,6 +3,8 @@ package com.kcserver.controller;
 import com.kcserver.dto.PersonDTO;
 import com.kcserver.service.PersonService;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -16,6 +18,8 @@ import java.util.List;
 public class PersonController {
 
     private final PersonService personService;
+
+    private static final Logger logger = LoggerFactory.getLogger(PersonController.class);
 
     @Autowired
     public PersonController(PersonService personService) {
@@ -66,8 +70,17 @@ public class PersonController {
      */
     @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<PersonDTO> updatePerson(@PathVariable Long id, @Valid @RequestBody PersonDTO personDTO) {
-        PersonDTO updatedPersonDTO = personService.updatePerson(id, personDTO);
-        return ResponseEntity.ok(updatedPersonDTO);
+
+        logger.info("Received PUT request to update person with ID: {} and payload: {}", id, personDTO);
+
+        try {
+            PersonDTO updatedPerson = personService.updatePerson(id, personDTO);
+            logger.info("Successfully updated person with ID: {}", id);
+            return ResponseEntity.ok(updatedPerson);
+        } catch (Exception e) {
+            logger.error("Error updating person with ID: {}", id, e);
+            throw e; // Let Spring handle and return the appropriate error response
+        }
     }
 
     /**

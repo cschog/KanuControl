@@ -1,9 +1,11 @@
 package com.kcserver.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -56,7 +58,20 @@ public class Person extends Auditable {
     private String bic;
 
     @OneToMany(mappedBy = "personMitgliedschaft", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Mitglied> mitgliedschaften; // One-to-many relationship to Mitglied
+    private List<Mitglied> mitgliedschaften = new ArrayList<>(); // Initialize with an empty list
+
+    // Helper method to add a Mitglied
+    public void addMitglied(Mitglied mitglied) {
+        mitgliedschaften.add(mitglied);
+        mitglied.setPerson(this);
+    }
+
+    // Helper method to remove a Mitglied
+    public void removeMitglied(Mitglied mitglied) {
+        mitgliedschaften.remove(mitglied);
+        mitglied.setPerson(null);
+    }
+
 
     public
     Person(String name, String vorname, String strasse, String plz, String ort,

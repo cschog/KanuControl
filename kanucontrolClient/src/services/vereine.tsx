@@ -29,7 +29,10 @@ export const replaceVerein = async (verein: Verein): Promise<Verein> => {
     if (verein.id === undefined) {
       throw new Error("Verein ID is missing for replacement.");
     }
-    const response = await apiClient.put(`/verein/${encodeURIComponent(verein.id)}`, verein);
+    const response = await apiClient.put(
+      `/verein/${encodeURIComponent(verein.id)}`,
+      verein
+    );
     return response.data;
   } catch (error) {
     console.error("Error in replaceVerein:", error);

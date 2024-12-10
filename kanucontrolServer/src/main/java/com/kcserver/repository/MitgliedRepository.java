@@ -1,6 +1,7 @@
 package com.kcserver.repository;
 
 import com.kcserver.entity.Mitglied;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -32,4 +33,7 @@ public interface MitgliedRepository extends JpaRepository<Mitglied, Long> {
          * @return a list of Mitglied entities
          */
         List<Mitglied> findByHauptVerein(boolean hauptVerein);
+
+        @EntityGraph(attributePaths = {"personMitgliedschaft", "vereinMitgliedschaft"})
+        List<Mitglied> findAll();
 }

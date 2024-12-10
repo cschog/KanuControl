@@ -2,9 +2,12 @@ import { Component } from "react";
 import { MenueHeader } from "../MenueHeader";
 import { VereinTable } from "./VereinTable";
 import { VereinFormView } from "./VereinFormView";
+import { VereinEditForm } from "./VereinEditForm";
 import { Verein } from "../interfaces/Verein";
 import { renderLoadingOrError } from "../../services/loadingOnErrorUtils";
-import { navigateToStartMenu } from "../../services/navigateToStartMenue"; 
+import { navigateToStartMenu } from "../../services/navigateToStartMenue";
+
+import { MessageSavingEmptyVerein } from "../../services/MessageSavingEmptyVerein";
 
 import {
   getAllVereine as dbGetAllVereine,
@@ -12,8 +15,6 @@ import {
   createVerein as dbCreateVerein,
   replaceVerein as dbReplaceVerein,
 } from "../../services/vereine";
-import { VereinEditForm } from "./VereinEditForm";
-import { MessageSavingEmptyVerein } from "../../services/MessageSavingEmptyVerein";
 
 interface VereineProps {}
 
@@ -99,11 +100,11 @@ class Vereine extends Component<VereineProps, VereineState> {
         if (modusNeuerVerein) {
           await dbCreateVerein(verein);
         } else if (selectedVerein) {
-            verein.id = selectedVerein.id;
-            await dbReplaceVerein(verein);
-          } else {
-            throw new Error("No selected Verein found.");
-          }
+          verein.id = selectedVerein.id;
+          await dbReplaceVerein(verein);
+        } else {
+          throw new Error("No selected Verein found.");
+        }
 
         this.fetchVereineData();
 

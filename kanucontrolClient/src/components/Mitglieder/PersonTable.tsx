@@ -21,7 +21,7 @@ export const PersonTable: React.FC<PersonTableProps> = ({
 	handleRowSelect,
 }) => {
 	return (
-		<div className="card border-solid m-auto w-11">
+		<div className="card border-solid m-auto w-full overflow-auto">
 			<DataTable
 				value={data}
 				size="small"

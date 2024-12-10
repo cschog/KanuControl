@@ -69,60 +69,70 @@ export const VereinFormView: React.FC<VereinFormViewProps> = ({
               label="Kurzname"
               disabled={true}
               onChange={() => {}}
+              className="bg-gray-100 focus:bg-white border-2 border-gray-300 focus:border-blue-500 rounded p-2"
             />
             <FormFeld
               value={selectedVerein.name}
               label="Verein"
               disabled={true}
               onChange={() => {}}
+              className="bg-gray-100 focus:bg-white border-2 border-gray-300 focus:border-blue-500 rounded p-2"
             />
             <FormFeld
               value={selectedVerein.strasse}
               label="Strasse"
               disabled={true}
               onChange={() => {}}
+              className="bg-gray-100 focus:bg-white border-2 border-gray-300 focus:border-blue-500 rounded p-2"
             />
             <FormFeld
               value={selectedVerein.plz}
               label="PLZ"
               disabled={true}
               onChange={() => {}}
+              className="bg-gray-100 focus:bg-white border-2 border-gray-300 focus:border-blue-500 rounded p-2"
             />
             <FormFeld
               value={selectedVerein.ort}
               label="Ort"
               disabled={true}
               onChange={() => {}}
+              className="bg-gray-100 focus:bg-white border-2 border-gray-300 focus:border-blue-500 rounded p-2"
             />
             <FormFeld
               value={selectedVerein.bankName}
               label="Bank"
               disabled={true}
               onChange={() => {}}
+              className="bg-gray-100 focus:bg-white border-2 border-gray-300 focus:border-blue-500 rounded p-2"
             />
             <FormFeld
               value={selectedVerein.kontoInhaber}
               label="Kontoinhaber"
               disabled={true}
               onChange={() => {}}
+              className="bg-gray-100 focus:bg-white border-2 border-gray-300 focus:border-blue-500 rounded p-2"
             />
             <FormFeld
               value={selectedVerein.kiAnschrift}
               label="Anschrift"
               disabled={true}
               onChange={() => {}}
+              className="bg-gray-100 focus:bg-white border-2 border-gray-300 focus:border-blue-500 rounded p-2"
             />
             <FormFeld
               value={selectedVerein.iban}
               label="IBAN"
               disabled={true}
               onChange={() => {}}
+              className="bg-gray-100 focus:bg-white border-2 border-gray-300 focus:border-blue-500 rounded p-2"
             />
             <FormFeld
               value={selectedVerein.bic}
               label="BIC"
               disabled={true}
               onChange={() => {}}
+              className="bg-gray-100 focus:bg-white border-2 border-gray-300 focus:border-blue-500 rounded p-2"
             />
           </>
         ) : (
