@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @ActiveProfiles("test") // Use a separate test profile to avoid affecting production data
-public class SampleMitgliedDataIT {
+public class SampleMitgliedDataGesamt {
 
     @Autowired
     private MitgliedRepository mitgliedRepository;

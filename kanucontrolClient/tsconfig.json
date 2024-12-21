@@ -1,11 +1,13 @@
 {
   "compilerOptions": {
-    "target": "ES6",
-    "module": "ES6",
+    "target": "es2022",
+    "module": "es2022", 
     "jsx": "react-jsx",
     "moduleResolution": "node",
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true, // Optional: Skips type checks for libraries
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true, // Ensures compatibility with CommonJS modules
+    "esModuleInterop": true, // Ensures compatibility with ES modules
     "strict": true,
     "baseUrl": ".",
     "paths": {
@@ -13,5 +15,5 @@
     }
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules", "dist", "build"]
 }

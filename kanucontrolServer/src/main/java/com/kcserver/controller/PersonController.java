@@ -1,6 +1,7 @@
 package com.kcserver.controller;
 
 import com.kcserver.dto.PersonDTO;
+import com.kcserver.filter.TenantContext;
 import com.kcserver.service.PersonService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -34,6 +35,7 @@ public class PersonController {
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<PersonDTO>> getAllPersons() {
         List<PersonDTO> personDTOs = personService.getAllPersonsWithDetails();
+        logger.info("Current Tenant: {}", TenantContext.getTenantId());
         return ResponseEntity.ok(personDTOs);
     }
 
@@ -46,6 +48,7 @@ public class PersonController {
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<PersonDTO> getPersonById(@PathVariable Long id) {
         PersonDTO personDTO = personService.getPersonWithDetails(id);
+        logger.info("Current Tenant: {}", TenantContext.getTenantId());
         return ResponseEntity.ok(personDTO);
     }
 
@@ -58,6 +61,7 @@ public class PersonController {
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<PersonDTO> createPerson(@Valid @RequestBody PersonDTO personDTO) {
         PersonDTO createdPersonDTO = personService.createPerson(personDTO);
+        logger.info("Current Tenant: {}", TenantContext.getTenantId());
         return ResponseEntity.status(HttpStatus.CREATED).body(createdPersonDTO);
     }
 
@@ -76,6 +80,7 @@ public class PersonController {
         try {
             PersonDTO updatedPerson = personService.updatePerson(id, personDTO);
             logger.info("Successfully updated person with ID: {}", id);
+            logger.info("Current Tenant: {}", TenantContext.getTenantId());
             return ResponseEntity.ok(updatedPerson);
         } catch (Exception e) {
             logger.error("Error updating person with ID: {}", id, e);
@@ -93,6 +98,7 @@ public class PersonController {
     public ResponseEntity<Void> deletePerson(@PathVariable Long id) {
         boolean isDeleted = personService.deletePerson(id);
         if (isDeleted) {
+            logger.info("Current Tenant: {}", TenantContext.getTenantId());
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build();

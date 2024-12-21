@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: kc_server # Name of the KC server app
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9080/realms/KanuControl
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    url: jdbc:mysql://localhost:3306/kanu?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    user: root
+    password: CHsab581_mysql
+    enabled: true
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/kanu?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: root
+    password: CHsab581_mysql
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      multiTenancy: SCHEMA
+      tenant_identifier_resolver: com.kcserver.config.TenantIdentifierResolver
+      multi_tenant_connection_provider: com.kcserver.config.SchemaMultiTenantConnectionProvider
+      ddl-auto: none
+
+data:
+  rest:
+    default-page-size: 20
+    return-body-on-create: true
