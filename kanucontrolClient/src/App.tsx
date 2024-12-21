@@ -5,8 +5,8 @@ import "primeicons/primeicons.css";
 import "primeflex/primeflex.css";
 import Navigation from "./components/Nav";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Login from "./components/Login";
 import StartMenue from "./components/StartMenue";
+import LoginHandler from "./components/LoginHandler";
 import Vereine from "./components/Vereine/Vereine";
 import Personen from "./components/Mitglieder/Personen";
 import Veranstaltungen from "./components/Veranstaltungen";
@@ -25,10 +25,10 @@ const App = () => {
 			<Navigation />
 			<Router>
 				<Routes>
-					<Route path="/login" element={<Login />} />
 					<Route path="/startmenue" element={<StartMenue />} />
 					<Route path="/" element={null} />
 					<Route path="/vereine" element={<Vereine />} />
+					<Route path="/login" element={<LoginHandler />} />
 					<Route path="/personen" element={<Personen />} />
 					<Route path="/veranstaltungen" element={<Veranstaltungen />} />
 					<Route path="/teilnehmer" element={<Teilnehmer />} />

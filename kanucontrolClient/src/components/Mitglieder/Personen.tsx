@@ -87,7 +87,7 @@ class Personen extends Component<PersonenProps, PersonenState> {
     try {
 
       let response;
-      q
+      
       if (
         (modusNeuePerson &&
           person.name.trim() !== "" &&
@@ -161,7 +161,7 @@ class Personen extends Component<PersonenProps, PersonenState> {
 
   deletePerson = async () => {
     const { selectedPerson } = this.state;
-    if (selectedPerson && selectedPerson.id !== undefined) {
+    if (selectedPerson?.id !== undefined) {
       // Check if id is defined
       try {
         await dbDeletePerson(selectedPerson.id);

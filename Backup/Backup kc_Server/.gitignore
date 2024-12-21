@@ -1,0 +1,25 @@
+# Compiled Java classes
+target/
+
+# Log files
+*.log
+
+# Temporary files
+*.tmp
+*.swp
+
+# Maven specific
+.mvn/
+.settings/
+*.iml
+
+# Environment files
+.env
+
+# IntelliJ IDEA specific
+.idea/
+*.iml
+
+# OS specific
+.DS_Store
+Thumbs.db

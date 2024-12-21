@@ -1,0 +1,9 @@
+# src/test/resources/application.yml
+spring:
+  config:
+    activate:
+      on-profile: test
+  datasource:
+    url: jdbc:mysql://localhost:3306/kanu?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: root
+    password: CHsab581_mysql

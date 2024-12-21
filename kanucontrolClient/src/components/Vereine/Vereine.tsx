@@ -180,7 +180,7 @@ class Vereine extends Component<VereineProps, VereineState> {
 
   deleteVerein = async () => {
     const { selectedVerein } = this.state;
-    if (selectedVerein && selectedVerein.id !== undefined) {
+    if (selectedVerein?.id !== undefined) {
       // Check if id is defined
       try {
         await dbDeleteVerein(selectedVerein.id);
