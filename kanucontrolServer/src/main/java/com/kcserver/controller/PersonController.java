@@ -1,7 +1,7 @@
 package com.kcserver.controller;
 
 import com.kcserver.dto.PersonDTO;
-import com.kcserver.filter.TenantContext;
+import com.kcserver.tenancy.TenantContext;
 import com.kcserver.service.PersonService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;

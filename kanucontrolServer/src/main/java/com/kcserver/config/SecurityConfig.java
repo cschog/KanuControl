@@ -1,6 +1,6 @@
 package com.kcserver.config;
 
-import com.kcserver.filter.TenantFilter;
+import com.kcserver.tenancy.TenantFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;

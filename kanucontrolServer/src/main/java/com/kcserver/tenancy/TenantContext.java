@@ -1,4 +1,4 @@
-package com.kcserver.filter;
+package com.kcserver.tenancy;
 
 public class TenantContext {
 
