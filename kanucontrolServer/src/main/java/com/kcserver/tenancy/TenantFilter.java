@@ -1,43 +1,33 @@
 package com.kcserver.tenancy;
 
+import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import jakarta.servlet.Filter;
 
 import java.io.IOException;
 
 @Component
 public class TenantFilter implements Filter {
 
-    @Autowired
-    private TenantDatabaseService tenantDatabaseService;
+    private final TenantResolver tenantResolver;
+
+    public TenantFilter(TenantResolver tenantResolver) {
+        this.tenantResolver = tenantResolver;
+    }
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
-        try {
-            // Determine tenant from Keycloak group
-            String tenant = resolveTenantFromKeycloak();
+        // Resolve tenant ID and set it in a context or thread-local storage
+        String tenantId = tenantResolver.resolveTenantFromToken();
 
-            // Dynamically create the schema if it doesn't exist
-            tenantDatabaseService.createSchemaIfNotExists(tenant);
+        // Optionally, store tenant ID in a thread-local or context
+        TenantContext.setTenantId(tenantId);
 
-            // Set the current tenant
-            TenantAwareDataSource.setCurrentTenant(tenant);
-
-            chain.doFilter(request, response);
-        } finally {
-            TenantAwareDataSource.setCurrentTenant(null);
-        }
-    }
-
-    private String resolveTenantFromKeycloak() {
-        // Fetch Keycloak groups and resolve to tenant schema
-        // Similar to the earlier resolveTenantFromKeycloak implementation
-        return "dynamic_schema_name";
+        // Continue filter chain
+        chain.doFilter(request, response);
     }
 }

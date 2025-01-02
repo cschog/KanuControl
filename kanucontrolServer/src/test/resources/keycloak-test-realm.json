@@ -1,0 +1,11 @@
+{
+  "realm": "KanuControl",
+  "enabled": true,
+  "clients": [
+    {
+      "clientId": "kc_server",
+      "secret": "***REMOVED***",
+      "directAccessGrantsEnabled": true
+    }
+  ]
+}
