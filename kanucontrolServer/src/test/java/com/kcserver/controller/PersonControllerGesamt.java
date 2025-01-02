@@ -28,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(classes = KC_Server.class)
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
-class PersonControllerIT {
+class PersonControllerGesamt {
 
     @Autowired
     private MockMvc mockMvc;
