@@ -1,6 +1,9 @@
 import React from "react";
 import { InputText } from "primereact/inputtext";
 import { Menubar } from "primereact/menubar";
+import keycloak from "../keycloak";
+
+console.log("Imported keycloak:", keycloak); // Should log an object if
 
 const Navigation = () => {
   const navlist = [
@@ -12,10 +15,11 @@ const Navigation = () => {
       },
     },
     {
-      label: "Anmelden",
-      icon: "pi pi-sign-in",
+      label: "Logout",
+      icon: "pi pi-sign-out",
       command: () => {
-        window.location.href = "/login";
+        keycloak.logout({ redirectUri: "http://localhost:5173" }
+        );
       },
     },
   ];

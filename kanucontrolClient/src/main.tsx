@@ -1,21 +1,11 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App' // Update this if your App component is in a different location
-import keycloak from "./keycloak";
-import { ReactKeycloakProvider } from "@react-keycloak/web";
-import './index.css'; // Update the CSS import if necessary
-
-if (process.env.NODE_ENV === "development") {
-  console.log("Clearing localStorage and sessionStorage for development");
-  localStorage.clear();
-  sessionStorage.clear();
-}
+// main.tsx (or main.jsx)
+import React from "react";
+import ReactDOM from "react-dom/client";
+import Root from "./components/Root";
+import "./index.css";  // ensure your global CSS is still here
 
 
+// Then mount Root instead of App
 ReactDOM.createRoot(document.getElementById("root")!).render(
-  
-    <ReactKeycloakProvider authClient={keycloak}>
-      <App />
-    </ReactKeycloakProvider>
-  
+  <Root />
 );

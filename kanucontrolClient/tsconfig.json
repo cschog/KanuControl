@@ -1,19 +1,21 @@
 {
   "compilerOptions": {
     "target": "es2022",
-    "module": "es2022", 
+    "module": "es2022",
     "jsx": "react-jsx",
+    "allowJs": true,
+    "checkJs": false,
     "moduleResolution": "node",
-    "skipLibCheck": true, // Optional: Skips type checks for libraries
+    "skipLibCheck": true,
     "resolveJsonModule": true,
-    "allowSyntheticDefaultImports": true, // Ensures compatibility with CommonJS modules
-    "esModuleInterop": true, // Ensures compatibility with ES modules
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
     "strict": true,
     "baseUrl": ".",
-    "paths": {
-      "*": ["node_modules/*"]
-    }
+    "paths": { "*": ["node_modules/*"] },
+    "outDir": "./dist", // Specify where the compiled files should go
+    "rootDir": "./src"  // Specify the root directory of your source files
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.js", "src/**/*.jsx"],
   "exclude": ["node_modules", "dist", "build"]
 }
