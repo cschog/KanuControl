@@ -11,10 +11,7 @@ const keycloak = new Keycloak({
 const Public = () => {
   return (
     <div>
-      <h1>Public Area</h1>
-      <button onClick={() => keycloak.logout()}>
-        Log out
-      </button>
+      <h1> </h1>
     </div>
   );
 };
