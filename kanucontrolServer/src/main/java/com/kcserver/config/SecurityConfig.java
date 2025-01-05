@@ -25,7 +25,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Allow CORS preflight
                         .anyRequest().authenticated() // Require authentication for other endpoints
                 )
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt()); // Enable JWT-based authentication
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwt -> jwt
+                                .decoder(jwtDecoder()) // Explicitly set the JWT decoder
+                        )
+                ); // Enable JWT-based authentication
 
         return http.build();
     }
