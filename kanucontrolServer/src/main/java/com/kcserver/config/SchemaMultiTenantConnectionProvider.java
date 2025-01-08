@@ -65,7 +65,7 @@ public class SchemaMultiTenantConnectionProvider
             if ("42000".equals(e.getSQLState()) || e.getMessage().contains("already exists")) {
                 logger.info("Schema already exists for tenant: {}", tenantIdentifier);
             } else {
-                logger.error("Unexpected error creating schema for tenant: {}", tenantIdentifier);
+                logger.error("Unexpected error creating schema for tenant: {}", tenantIdentifier, e);
                 // throw e; // Rethrow unexpected exceptions
             }
         }
