@@ -1,4 +1,7 @@
 databaseChangeLog:
+- property:
+    name: schemaName
+    value: ${schemaName}
 - changeSet:
     id: 1734696729680-1
     author: chris (generated)
@@ -7,9 +10,12 @@ databaseChangeLog:
         onError: MARK_RAN
         not:
             tableExists:
+                schemaName: "${schemaName}"
                 tableName: mitglied
     changes:
     - createTable:
+        schemaName: "${schemaName}"
+        tableName: mitglied
         columns:
         - column:
             constraints:
@@ -42,7 +48,6 @@ databaseChangeLog:
         - column:
             name: funktion
             type: VARCHAR(255)
-        tableName: mitglied
 - changeSet:
     id: 1734696729680-2
     author: chris (generated)
@@ -51,9 +56,12 @@ databaseChangeLog:
         onError: MARK_RAN
         not:
             tableExists:
+                schemaName: "${schemaName}"
                 tableName: person
     changes:
     - createTable:
+        schemaName: "${schemaName}"
+        tableName: person
         columns:
         - column:
             name: created_date
@@ -99,7 +107,6 @@ databaseChangeLog:
         - column:
             name: telefon
             type: VARCHAR(255)
-        tableName: person
 - changeSet:
     id: 1734696729680-3
     author: chris (generated)
@@ -108,9 +115,12 @@ databaseChangeLog:
         onError: MARK_RAN
         not:
             tableExists:
+                schemaName: "${schemaName}"
                 tableName: verein
     changes:
     - createTable:
+        schemaName: "${schemaName}"
+        tableName: verein
         columns:
         - column:
             name: created_date
@@ -162,7 +172,6 @@ databaseChangeLog:
         - column:
             name: telefon
             type: VARCHAR(255)
-        tableName: verein
 - changeSet:
     id: 1734696729680-4
     author: chris (generated)
