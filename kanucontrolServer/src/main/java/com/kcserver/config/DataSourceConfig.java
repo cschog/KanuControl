@@ -15,7 +15,7 @@ public class DataSourceConfig {
     @Primary
     public DataSource dataSource() {
         HikariConfig config = new HikariConfig();
-        config.setJdbcUrl("jdbc:mysql://localhost:3306?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC");
+        config.setJdbcUrl("jdbc:mysql://localhost:3306/kanu?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC");
         config.setUsername("root");
         config.setPassword("CHsab581_mysql");
         config.setDriverClassName("com.mysql.cj.jdbc.Driver");
