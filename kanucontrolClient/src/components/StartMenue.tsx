@@ -1,27 +1,52 @@
-import { useCallback } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "primereact/button";
+import apiClient from "../services/apiClient"; // Import the configured axios instance
 import "primereact/resources/themes/md-light-indigo/theme.css";
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
 
 const StartMenue = () => {
-  const callVereine = useCallback(() => (window.location.href = "/vereine"), []);
-  const callMitglieder = useCallback(() => (window.location.href = "/personen"), []);
-  const callVeranstaltungen = useCallback(() => (window.location.href = "/veranstaltungen"), []);
-  const callTeilnehmer = useCallback(() => (window.location.href = "/teilnehmer"), []);
-  const callKosten = useCallback(() => (window.location.href = "/kosten"), []);
-  const callReisekosten = useCallback(() => (window.location.href = "/reisekosten"), []);
-  const callAnmeldung = useCallback(() => (window.location.href = "/anmeldung"), []);
-  const callAbrechnung = useCallback(() => (window.location.href = "/abrechnung"), []);
-  const callTeilnehmerliste = useCallback(() => (window.location.href = "/teilnehmerliste"), []);
-  const callAusgabeReisekosten = useCallback(() => (window.location.href = "/ausgabeReisekosten"), []);
-  const callErhebungsbogen = useCallback(() => (window.location.href = "/erhebungsbogen"), []);
+  const [activeSchema, setActiveSchema] = useState("");
+  const [error, setError] = useState(null);
+
+  // Fetch the active schema name on component mount
+  useEffect(() => {
+    const fetchSchema = async () => {
+      try {
+        const response = await apiClient.get("/active-schema"); // Use apiClient to fetch the schema
+        setActiveSchema(response.data); // Assume API returns the schema name in plain text or JSON
+      } catch (err) {
+        console.error("Error fetching active schema:", err);
+        setError("Failed to fetch the active schema.");
+      }
+    };
+    fetchSchema();
+  }, []);
+  const callVereine = () => (window.location.href = "/vereine");
+  const callMitglieder = () => (window.location.href = "/personen");
+  const callVeranstaltungen = () => (window.location.href = "/veranstaltungen");
+  const callTeilnehmer = () => (window.location.href = "/teilnehmer");
+  const callKosten = () => (window.location.href = "/kosten");
+  const callReisekosten = () => (window.location.href = "/reisekosten");
+  const callAnmeldung = () => (window.location.href = "/anmeldung");
+  const callAbrechnung = () => (window.location.href = "/abrechnung");
+  const callTeilnehmerliste = () => (window.location.href = "/teilnehmerliste");
+  const callAusgabeReisekosten = () => (window.location.href = "/ausgabeReisekosten");
+  const callErhebungsbogen = () => (window.location.href = "/erhebungsbogen");
 
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">KanuControl</h1>
-      <h4 className="text-lg mb-2">Aktive Veranstaltung</h4>
-      <p className="mb-6">Test-Veranstaltung</p>
+      <h4 className="text-lg mb-2">Mandant:</h4>
+      <p className="mb-6">
+        {error ? (
+          <span className="text-red-500">{error}</span>
+        ) : activeSchema ? (
+          activeSchema
+        ) : (
+          "Lädt..."
+        )}
+      </p>
 
       {/* Single grid block with 3 columns in large screens */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
