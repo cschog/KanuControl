@@ -230,9 +230,9 @@
 				<artifactId>liquibase-maven-plugin</artifactId>
 				<version>4.23.2</version> <!-- Ensure this matches your Liquibase dependency version -->
 				<configuration>
-					<defaultSchemaName>${schemaName}</defaultSchemaName>
+					<defaultSchemaName>kanu</defaultSchemaName>
 					<changeLogFile>db/changelog/db.changelog-master.yaml</changeLogFile>
-					<url>jdbc:mysql://localhost:3306/${schemaName}?useSSL=false&amp;allowPublicKeyRetrieval=true&amp;serverTimezone=UTC</url>
+					<url>jdbc:mysql://localhost:3306/kanu?useSSL=false&amp;allowPublicKeyRetrieval=true&amp;serverTimezone=UTC</url>
 					<username>root</username>
 					<password>CHsab581_mysql</password>
 				</configuration>

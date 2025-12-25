@@ -12,9 +12,9 @@ public class LoginService {
     private SchemaMultiTenantConnectionProvider schemaMultiTenantConnectionProvider;
 
     public void handleLogin(String tenantId) {
+        TenantContext.setTenant(tenantId);
         try {
-            TenantContext.setTenantId(tenantId); // Set the tenant in the context
-            schemaMultiTenantConnectionProvider.getTenantConnection(tenantId); // Ensure schema exists and switch
+            schemaMultiTenantConnectionProvider.getTenantConnection(tenantId);
         } catch (Exception e) {
             throw new RuntimeException("Failed to prepare tenant schema for tenant: " + tenantId, e);
         }

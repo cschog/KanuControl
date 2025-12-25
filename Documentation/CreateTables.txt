@@ -1,0 +1,44 @@
+CREATE TABLE verein (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    abk VARCHAR(10) NOT NULL,
+    strasse VARCHAR(255),
+    plz VARCHAR(255),
+    ort VARCHAR(255),
+    telefon VARCHAR(255),
+    bank_name VARCHAR(255),
+    konto_inhaber VARCHAR(255),
+    ki_anschrift VARCHAR(255),
+    iban VARCHAR(255),
+    bic VARCHAR(255),
+    created_date DATETIME(6),
+    last_modified_date DATETIME(6)
+);
+
+CREATE TABLE person (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    vorname VARCHAR(100) NOT NULL,
+    strasse VARCHAR(255),
+    plz VARCHAR(255),
+    ort VARCHAR(255),
+    telefon VARCHAR(255),
+    bank_name VARCHAR(255),
+    iban VARCHAR(255),
+    bic VARCHAR(255),
+    created_date DATETIME(6),
+    last_modified_date DATETIME(6)
+);
+
+CREATE TABLE mitglied (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    verein_id BIGINT NOT NULL,
+    person_id BIGINT NOT NULL,
+    funktion VARCHAR(255),
+    haupt_verein BOOLEAN NOT NULL,
+    created_date DATETIME(6),
+    last_modified_date DATETIME(6),
+    UNIQUE (person_id, verein_id),
+    CONSTRAINT fk_mitglied_verein FOREIGN KEY (verein_id) REFERENCES verein (id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+    CONSTRAINT fk_mitglied_person FOREIGN KEY (person_id) REFERENCES person (id) ON DELETE RESTRICT ON UPDATE RESTRICT
+);

@@ -1,6 +1,7 @@
-# db.changelog-master.yaml
 databaseChangeLog:
-    - include:
-          file: db/changelog/changes/initial-schema.yaml
-#   - include:
-#        file: db/changelog/changes/additional-changes.yaml
+  - include:
+      file: db/changelog/001-person.yaml
+  - include:
+      file: db/changelog/002-verein.yaml
+  - include:
+      file: db/changelog/003-mitglied.yaml

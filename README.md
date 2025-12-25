@@ -88,3 +88,25 @@ Der generelle Ablauf besteht in den folgenden Schritten:
 Mandantenfähigkeit
 ==================
 In der Version 2.0 ist geplant, dass die Nutzerdaten über eine Benutzerverwaltung getrennt werden. Damit wird sichergestellt, dass jeder Kanuverein nur seine Daten sehen und verändern kann.
+
+Keycloak
+========
+Keycloak ist eine Open-Source-Software auf Java-Basis, die als Identity and Access Management (IAM) System dient. Es ermöglicht die Verwaltung von Benutzern, Rollen und Berechtigungen sowie die sichere Authentifizierung und Autorisierung von Anwendungen.
+
+Für die SW Entwicklung auf dem Mac sind die folgenden Schritte nötig:
+
+1. Starten der App Docker
+2. Sarten von Keycloak als Container in Docker
+	bash
+		docker run -d --name keycloak \                                               
+ 		 -p 9080:8080 \
+ 		 -e KEYCLOAK_ADMIN=admin \
+ 		 -e KEYCLOAK_ADMIN_PASSWORD=admin \
+ 		 -v /Volumes/Merlin_Daten/Apps/keyCloak-Data:/opt/keycloak/data \
+  			quay.io/keycloak/keycloak:24.0.2 start-dev
+ 3. Management von Keycloak im. Browser starten
+ 	http://localhost:9080
+ 	User: admin
+ 	PW: admin
+ 	dort REALM KanuControl auswählen
+

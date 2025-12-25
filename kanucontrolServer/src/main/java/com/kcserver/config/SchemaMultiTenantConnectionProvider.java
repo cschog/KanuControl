@@ -1,8 +1,6 @@
 package com.kcserver.config;
 
 import com.kcserver.tenancy.TenantContext;
-import liquibase.Contexts;
-import liquibase.LabelExpression;
 import liquibase.Liquibase;
 import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
@@ -14,9 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 
 @Component
 public class SchemaMultiTenantConnectionProvider
@@ -28,19 +24,18 @@ public class SchemaMultiTenantConnectionProvider
     @Autowired
     private DataSource dataSource;
 
+    @Override
+    protected DataSource selectAnyDataSource() {
+        return dataSource;
+    }
+
     public SchemaMultiTenantConnectionProvider() {
         logger.info("SchemaMultiTenantConnectionProvider initialized.");
     }
 
     @Override
-    protected DataSource selectAnyDataSource() {
-        logger.debug("Selecting default data source.");
-        return dataSource;
-    }
-
-    @Override
     protected DataSource selectDataSource(Object tenantIdentifier) {
-        String tenantId = TenantContext.getTenantId(); // Ensure this is set after login
+        String tenantId = TenantContext.getTenant();
         if (tenantId == null) {
             throw new IllegalStateException("Tenant identifier is not set. Ensure login is complete.");
         }
@@ -55,31 +50,56 @@ public class SchemaMultiTenantConnectionProvider
         return connection;
     }
 
-    public void ensureSchemaExists(Connection connection, String tenantIdentifier) throws SQLException {
-        String createSchemaSQL = "CREATE SCHEMA `" + tenantIdentifier + "`";
-        try (Statement statement = connection.createStatement()) {
-            logger.info("Attempting to create schema for tenant: {}", tenantIdentifier);
-            statement.execute(createSchemaSQL);
-            logger.info("Schema created for tenant: {}", tenantIdentifier);
-        } catch (SQLException e) {
-            if ("42000".equals(e.getSQLState()) || e.getMessage().contains("already exists")) {
-                logger.info("Schema already exists for tenant: {}", tenantIdentifier);
-            } else {
-                logger.error("Unexpected error creating schema for tenant: {}", tenantIdentifier, e);
-                // throw e; // Rethrow unexpected exceptions
+    private boolean isSchemaInitialized(String tenantId) {
+        String query = "SELECT initialized FROM schema_status WHERE tenant_id = ?";
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, tenantId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next() && resultSet.getBoolean("initialized");
             }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to check schema initialization status", e);
         }
-        runLiquibaseMigrations(tenantIdentifier);
+    }
+
+    private void markSchemaAsInitialized(String tenantId) {
+        String query = "INSERT INTO schema_status (tenant_id, initialized) VALUES (?, TRUE) " +
+                "ON DUPLICATE KEY UPDATE initialized = TRUE, last_updated = CURRENT_TIMESTAMP";
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, tenantId);
+            statement.executeUpdate();
+            logger.info("Marked schema as initialized for tenant: {}", tenantId);
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to mark schema as initialized", e);
+        }
     }
 
     private void switchToSchema(Connection connection, String schema) throws SQLException {
-        logger.info("Switching connection to schema: {}", schema);
+        logger.info("Switching to schema: {}", schema);
         try (Statement statement = connection.createStatement()) {
             statement.execute("USE `" + schema + "`");
-            logger.info("Successfully switched to schema: {}", schema);
-        } catch (SQLException e) {
-            logger.error("Error switching to schema: {}", schema);
-            //throw e;
+            logger.info("Switched to schema: {}", schema);
+        }
+    }
+
+    public void ensureSchemaExists(Connection connection, String tenantIdentifier) throws SQLException {
+        logger.info("Ensuring schema exists for tenant: {}", tenantIdentifier);
+
+        // Create schema if it doesn't exist
+        try (Statement statement = connection.createStatement()) {
+            String createSchemaSQL = "CREATE SCHEMA IF NOT EXISTS `" + tenantIdentifier + "`";
+            statement.execute(createSchemaSQL);
+            logger.info("Schema ensured for tenant: {}", tenantIdentifier);
+        }
+
+        // Run migrations only if schema is not initialized
+        if (!isSchemaInitialized(tenantIdentifier)) {
+            runLiquibaseMigrations(tenantIdentifier);
+            markSchemaAsInitialized(tenantIdentifier);
+        } else {
+            logger.info("Schema already initialized for tenant: {}", tenantIdentifier);
         }
     }
 
@@ -87,38 +107,30 @@ public class SchemaMultiTenantConnectionProvider
         logger.info("Running Liquibase migrations for schema: {}", tenantIdentifier);
 
         try (Connection connection = dataSource.getConnection()) {
+            switchToSchema(connection, tenantIdentifier);
 
-            // Ensure the connection switches to the correct schema
-            try (Statement statement = connection.createStatement()) {
-                statement.execute("USE `" + tenantIdentifier + "`");
-            }
-            // Set up Liquibase
+            // Configure Liquibase
             Liquibase liquibase = new Liquibase(
                     "db/changelog/db.changelog-master.yaml",
                     new ClassLoaderResourceAccessor(),
                     DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection))
             );
-            // Pass the tenant schema as a parameter
+
+            // Set Liquibase parameters
             liquibase.setChangeLogParameter("schemaName", tenantIdentifier);
             logger.info("Liquibase schemaName set to: {}", tenantIdentifier);
 
-            // Explicitly set the default schema for Liquibase
-            liquibase.getDatabase().setDefaultSchemaName(tenantIdentifier);
-            liquibase.getDatabase().setOutputDefaultSchema(false);
-
-            // Run the migrations
-            liquibase.update(new Contexts(), new LabelExpression());
-
+            // Run migrations
+            liquibase.update((String) null); // Using the current context
             logger.info("Liquibase migrations completed for schema: {}", tenantIdentifier);
         } catch (Exception e) {
-            logger.error("Liquibase migration failed for schema: {}", tenantIdentifier);
-            // throw new SQLException("Failed to run Liquibase migrations for schema: " + tenantIdentifier, e);
+            logger.error("Liquibase migration failed for schema: {}", tenantIdentifier, e);
+            throw new SQLException("Failed to run Liquibase migrations for schema: " + tenantIdentifier, e);
         }
     }
 
     @Override
     public boolean supportsAggressiveRelease() {
-        logger.debug("supportsAggressiveRelease: false");
         return false;
     }
 }

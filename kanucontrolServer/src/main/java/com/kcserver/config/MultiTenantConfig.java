@@ -40,7 +40,6 @@ public class MultiTenantConfig {
         Map<String, Object> properties = new HashMap<>();
         properties.put(AvailableSettings.MULTI_TENANT_CONNECTION_PROVIDER, multiTenantConnectionProvider);
         properties.put(AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLVER, tenantIdentifierResolver);
-        properties.put(AvailableSettings.DIALECT, "org.hibernate.dialect.MySQLDialect");
         properties.put(AvailableSettings.SHOW_SQL, true);
         properties.put(AvailableSettings.FORMAT_SQL, true);
 

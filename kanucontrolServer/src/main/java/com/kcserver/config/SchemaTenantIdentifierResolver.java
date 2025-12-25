@@ -2,32 +2,34 @@ package com.kcserver.config;
 
 import com.kcserver.tenancy.TenantContext;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 public class SchemaTenantIdentifierResolver implements CurrentTenantIdentifierResolver {
 
-    private static final Logger logger = LoggerFactory.getLogger(SchemaTenantIdentifierResolver.class);
-
-    private static final String DEFAULT_TENANT = "kanu"; // Static tenant for initialization
-    private static final ThreadLocal<String> currentTenant = new ThreadLocal<>();
-
     @Override
     public String resolveCurrentTenantIdentifier() {
-        String tenantId = TenantContext.getTenantId();
-        if (tenantId == null) {
-            logger.debug("No tenant ID found. Using default tenant: {}", DEFAULT_TENANT);
-            return DEFAULT_TENANT;
-        }
-        logger.info("Resolved tenant identifier: {}", tenantId);
-        return tenantId;
-    }
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
-    public static void setTenant(String tenant) {
-        logger.info("Setting tenant ID: {}", tenant);
-        currentTenant.set(tenant);
+        String tenant = "kanu"; // Default
+
+        if (auth instanceof JwtAuthenticationToken jwtAuth) {
+            List<String> groups = jwtAuth.getToken().getClaimAsStringList("groups");
+
+            if (groups != null) {
+                if (groups.contains("/EKC_EschweilerKanuClub")) tenant = "ekc";
+                else if (groups.contains("/OKC_OberhausenerKanuClub")) tenant = "okc";
+                else if (groups.contains("/SVBT_SpielvereinigungBoichThum")) tenant = "svbt";
+            }
+        }
+
+        TenantContext.setTenant(tenant);
+        return tenant;
     }
 
     @Override

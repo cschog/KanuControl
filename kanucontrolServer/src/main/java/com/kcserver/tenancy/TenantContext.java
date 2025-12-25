@@ -2,22 +2,17 @@ package com.kcserver.tenancy;
 
 public class TenantContext {
 
-    private static final ThreadLocal<String> currentTenant = new ThreadLocal<>();
+    private static final ThreadLocal<String> CURRENT_TENANT = new ThreadLocal<>();
 
-    // Set the tenant identifier
-    public static void setTenantId(String tenantId) {
-        currentTenant.set(tenantId);
+    public static void setTenant(String tenant) {
+        CURRENT_TENANT.set(tenant);
     }
 
-    // Get the tenant identifier
-    public static String getTenantId() {
-        return currentTenant.get();
+    public static String getTenant() {
+        return CURRENT_TENANT.get();
     }
 
-    // Clear the tenant identifier (important to avoid memory leaks)
     public static void clear() {
-        currentTenant.remove();
+        CURRENT_TENANT.remove();
     }
-
-
 }
