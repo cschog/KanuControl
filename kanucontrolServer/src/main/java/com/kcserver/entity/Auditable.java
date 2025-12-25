@@ -4,56 +4,32 @@ import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
 import java.time.LocalDateTime;
 
 @MappedSuperclass
 public abstract class Auditable {
 
-    @Column(name = "created_date", updatable = false)
-    private LocalDateTime createdDate;
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
 
-    @Column(name = "created_by", updatable = false, length = 100)
+    @Column(name = "last_modified_at")
+    private LocalDateTime lastModifiedAt;
+
+    @Column(name = "created_by")
     private String createdBy;
 
-    @Column(name = "last_modified_date")
-    private LocalDateTime lastModifiedDate;
-
-    @Column(name = "last_modified_by", length = 100)
+    @Column(name = "last_modified_by")
     private String lastModifiedBy;
 
     @PrePersist
     public void prePersist() {
-        LocalDateTime now = LocalDateTime.now();
-        this.createdDate = now;
-        this.lastModifiedDate = now;
-        this.createdBy = resolveCurrentUser();
-        this.lastModifiedBy = this.createdBy;
+        this.createdAt = LocalDateTime.now();
+        this.lastModifiedAt = LocalDateTime.now();
     }
 
     @PreUpdate
     public void preUpdate() {
-        this.lastModifiedDate = LocalDateTime.now();
-        this.lastModifiedBy = resolveCurrentUser();
+        this.lastModifiedAt = LocalDateTime.now();
     }
-
-    private String resolveCurrentUser() {
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication instanceof JwtAuthenticationToken jwtAuth) {
-            String username =
-                    jwtAuth.getToken().getClaimAsString("preferred_username");
-            if (username != null) {
-                return username;
-            }
-        }
-
-        return "system";
-    }
-
-    // Getter / Setter (oder Lombok @Getter/@Setter)
 }
