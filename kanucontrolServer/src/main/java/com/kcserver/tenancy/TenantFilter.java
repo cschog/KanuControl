@@ -25,10 +25,13 @@ public class TenantFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
-        String tenant = TenantContext.getTenant();
+        String tenant = request.getHeader("X-Tenant");
 
-        if (tenant != null) {
-            initializer.initializeIfNeeded(tenant);
+        if (tenant != null && !tenant.isBlank()) {
+            TenantContext.setTenant(tenant);
+
+            // 🔥 FIX: neue, explizite Methode
+            initializer.createSchemaIfNotExists(tenant);
         }
 
         try {

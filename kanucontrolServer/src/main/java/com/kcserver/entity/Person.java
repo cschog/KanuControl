@@ -37,7 +37,9 @@ public class Person extends Auditable {
     private String ort;
     private String telefon;
 
+    @Column(name = "bank_name")
     private String bankName;
+
     private String iban;
     private String bic;
 

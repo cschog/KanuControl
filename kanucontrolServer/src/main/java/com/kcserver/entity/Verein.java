@@ -37,9 +37,15 @@ public class Verein extends Auditable {
     private String ort;
     private String telefon;
 
+    @Column(name = "bank_name")
     private String bankName;
+
+    @Column(name = "konto_inhaber")
     private String kontoInhaber;
+
+    @Column(name = "ki_anschrift")
     private String kiAnschrift;
+
     private String iban;
     private String bic;
 
