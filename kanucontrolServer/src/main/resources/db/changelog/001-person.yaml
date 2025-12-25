@@ -1,0 +1,50 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-person
+      author: chris
+      changes:
+        - createTable:
+            tableName: person
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: name
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: vorname
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+
+              - column: { name: strasse, type: VARCHAR(255) }
+              - column: { name: plz, type: VARCHAR(20) }
+              - column: { name: ort, type: VARCHAR(100) }
+              - column: { name: telefon, type: VARCHAR(50) }
+
+              - column: { name: bank_name, type: VARCHAR(255) }
+              - column: { name: iban, type: VARCHAR(34) }
+              - column: { name: bic, type: VARCHAR(11) }
+
+              # Auditing
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+              - column:
+                  name: created_by
+                  type: VARCHAR(100)
+              - column:
+                  name: last_modified_at
+                  type: TIMESTAMP
+              - column:
+                  name: last_modified_by
+                  type: VARCHAR(100)

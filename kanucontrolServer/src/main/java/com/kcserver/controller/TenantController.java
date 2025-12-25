@@ -9,7 +9,7 @@ public class TenantController {
 
     @GetMapping("/api/active-schema")
     public String getActiveSchema() {
-        String tenantId = TenantContext.getTenantId();
+        String tenantId = TenantContext.getTenant();
         return tenantId != null ? tenantId : "No tenant schema active";
     }
 }

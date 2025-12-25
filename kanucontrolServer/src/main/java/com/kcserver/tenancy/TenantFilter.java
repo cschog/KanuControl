@@ -1,33 +1,40 @@
 package com.kcserver.tenancy;
 
-import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
 @Component
-public class TenantFilter implements Filter {
+public class TenantFilter extends OncePerRequestFilter {
 
-    private final TenantResolver tenantResolver;
+    private final TenantSchemaInitializer initializer;
 
-    public TenantFilter(TenantResolver tenantResolver) {
-        this.tenantResolver = tenantResolver;
+    public TenantFilter(TenantSchemaInitializer initializer) {
+        this.initializer = initializer;
     }
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
-            throws IOException, ServletException {
-        // Resolve tenant ID and set it in a context or thread-local storage
-        String tenantId = tenantResolver.resolveTenantFromToken();
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain
+    ) throws ServletException, IOException {
 
-        // Optionally, store tenant ID in a thread-local or context
-        TenantContext.setTenantId(tenantId);
+        String tenant = TenantContext.getTenant();
 
-        // Continue filter chain
-        chain.doFilter(request, response);
+        if (tenant != null) {
+            initializer.initializeIfNeeded(tenant);
+        }
+
+        try {
+            filterChain.doFilter(request, response);
+        } finally {
+            TenantContext.clear();
+        }
     }
 }
