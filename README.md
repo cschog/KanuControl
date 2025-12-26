@@ -86,6 +86,8 @@ Repository (JPA)
    │
 MySQL (Schema-per-Tenant)
 
+---
+
 ## 🌐 Mandantenfähigkeit
 
 KanuControl ist mandantenfähig aufgebaut.
@@ -113,6 +115,8 @@ Database
 │   └── …
 
 Schemas werden lazy erstellt und gecacht.
+
+---
 
 ## 🔐 Authentifizierung & Autorisierung
 
