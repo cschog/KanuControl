@@ -72,38 +72,21 @@ KanuControl ist eine **Client-Server-Webanwendung**.
 
 ### Überblick
 
-┌──────────────┐
-│   Browser    │
-│  (React)     │
-└──────┬───────┘
-       │ HTTPS / JSON
-       ▼
-┌──────────────┐
-│ Spring Boot  │
-│ Controllers  │
-└──────┬───────┘
-       ▼
-┌──────────────┐
-│ Service      │  ← Business-Logik
-│ Layer        │
-└──────┬───────┘
-       ▼
-┌──────────────┐
-│ Mapper       │  ← DTO ↔ Entity
-│ (MapStruct)  │
-└──────┬───────┘
-       ▼
-┌──────────────┐
-│ Repository   │
-│ (JPA)        │
-└──────┬───────┘
-       ▼
-┌──────────────┐
-│ MySQL        │
-│ Schema/Tenant│
-└──────────────┘
+```text
+Browser (React)
+   │
+   ▼
+Spring Boot REST API
+   │
+Service Layer
+   │
+Mapper (DTO ↔ Entity)
+   │
+Repository (JPA)
+   │
+MySQL (Schema-per-Tenant)
 
-🌐 Mandantenfähigkeit
+## 🌐 Mandantenfähigkeit
 
 KanuControl ist mandantenfähig aufgebaut.
 	•	Jeder Verein sieht nur seine eigenen Daten
@@ -113,8 +96,9 @@ KanuControl ist mandantenfähig aufgebaut.
 	•	HTTP-Header
 
 
-Datenbankstruktur
-==================
+## Datenbankstruktur
+
+```text
 Database
 ├── kanu                (System / Default)
 ├── tenant_verein_1
@@ -130,7 +114,7 @@ Database
 
 Schemas werden lazy erstellt und gecacht.
 
-🔐 Authentifizierung & Autorisierung
+## 🔐 Authentifizierung & Autorisierung
 
 Zur Benutzerverwaltung wird Keycloak eingesetzt.
 	•	Open-Source IAM
@@ -149,7 +133,7 @@ Zur Benutzerverwaltung wird Keycloak eingesetzt.
 	•	Nachvollziehbarkeit
 	•	Erweiterbarkeit
 
-📦 Backend
+## 📦 Backend
 
 Technologien
 	•	Java 17
@@ -166,7 +150,7 @@ Architekturprinzipien
 	•	Zentrale Fehlerbehandlung (@RestControllerAdvice)
 	•	Mandantenlogik außerhalb der Fachlogik
 
-🎨 Frontend
+## 🎨 Frontend
 
 Technologien
 	•	React
@@ -178,37 +162,37 @@ Technologien
 Das Frontend kommuniziert ausschließlich über die REST-API
 und enthält keine Businesslogik.
 
-🗺️ Roadmap
+## 🗺️ Roadmap
 
-Phase 0 – Fundament (aktuell)
+### Phase 0 – Fundament (aktuell)
 	•	Backend-Grundstruktur
 	•	Mandantenfähigkeit
 	•	Keycloak-Integration
 	•	CRUD für Verein, Person, Mitglied
 	•	Integrationstests
 
-Phase 1 – Frontend-Basis
+### Phase 1 – Frontend-Basis
 	•	Login via Keycloak
 	•	CRUD-Oberflächen
 	•	Basis-Navigation
 
-Phase 2 – Veranstaltungen
+### Phase 2 – Veranstaltungen
 	•	Veranstaltungen & Typen
 	•	Teilnehmerverwaltung
 	•	Fachliche Validierungen
 
-Phase 3 – Abrechnung
+### Phase 3 – Abrechnung
 	•	Einnahmen / Ausgaben
 	•	Reisekosten
 	•	Plausibilitätsprüfungen
 
-Phase 4 – Dokumente
+### Phase 4 – Dokumente
 	•	PDF-Erzeugung
 	•	Editierbare Formulare
 	•	Archivierung
 
 
-🌍 Open-Source & Contributions
+## 🌍 Open-Source & Contributions
 
 KanuControl ist von Beginn an als Open-Source-Projekt gedacht.
 
@@ -227,7 +211,7 @@ Contributions sind willkommen
 
 Contribution-Guidelines folgen in einer späteren Version.
 
-🛠️ Lokale Entwicklung (Mac)
+## 🛠️ Lokale Entwicklung (Mac)
 
 Voraussetzungen
 	•	Docker
@@ -235,8 +219,7 @@ Voraussetzungen
 	•	Maven
 	•	Node.js
 
-Keycloak starten
-================
+### Keycloak starten
 
 docker run -d --name keycloak \
   -p 9080:8080 \
@@ -245,19 +228,18 @@ docker run -d --name keycloak \
   -v /Volumes/Merlin_Daten/Apps/keyCloak-Data:/opt/keycloak/data \
   quay.io/keycloak/keycloak:24.0.2 start-dev
   
-Keycloak Admin UI
-=================
+### Keycloak Admin UI
 	•	URL: http://localhost:9080
 	•	User: admin
 	•	Passwort: admin
 	•	Realm: KanuControl
 	
-📄 Lizenz
+## 📄 Lizenz
 
 Die Lizenz wird zu einem späteren Zeitpunkt festgelegt
 (vorgesehen: Open-Source, z. B. MIT oder Apache 2.0).
 
-❤️ Motivation
+## ❤️ Motivation
 
 KanuControl entsteht aus der Praxis für die Praxis –
 mit dem Ziel, ehrenamtliche Arbeit zu entlasten
