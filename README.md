@@ -72,7 +72,7 @@ KanuControl ist eine **Client-Server-Webanwendung**.
 
 ### Überblick
 
-```text
+```
 Browser (React)
    │
    ▼
@@ -85,7 +85,7 @@ Mapper (DTO ↔ Entity)
 Repository (JPA)
    │
 MySQL (Schema-per-Tenant)
-
+```
 ---
 
 ## 🌐 Mandantenfähigkeit
@@ -100,7 +100,7 @@ KanuControl ist mandantenfähig aufgebaut.
 
 ## Datenbankstruktur
 
-```text
+```
 Database
 ├── kanu                (System / Default)
 ├── tenant_verein_1
@@ -113,6 +113,7 @@ Database
 │   ├── verein
 │   ├── mitglied
 │   └── …
+```
 
 Schemas werden lazy erstellt und gecacht.
 
