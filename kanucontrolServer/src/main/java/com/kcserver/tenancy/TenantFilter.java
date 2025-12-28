@@ -12,10 +12,10 @@ import java.io.IOException;
 @Component
 public class TenantFilter extends OncePerRequestFilter {
 
-    private final TenantSchemaInitializer initializer;
+    private final TenantSchemaService tenantSchemaService;
 
-    public TenantFilter(TenantSchemaInitializer initializer) {
-        this.initializer = initializer;
+    public TenantFilter(TenantSchemaService tenantSchemaService) {
+        this.tenantSchemaService = tenantSchemaService;
     }
 
     @Override
@@ -27,14 +27,14 @@ public class TenantFilter extends OncePerRequestFilter {
 
         String tenant = request.getHeader("X-Tenant");
 
-        if (tenant != null && !tenant.isBlank()) {
-            TenantContext.setTenant(tenant);
-
-            // 🔥 FIX: neue, explizite Methode
-            initializer.createSchemaIfNotExists(tenant);
+        if (tenant == null || tenant.isBlank()) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing X-Tenant header");
+            return;
         }
 
         try {
+            TenantContext.setTenant(tenant);
+            tenantSchemaService.ensureSchemaExists(tenant);
             filterChain.doFilter(request, response);
         } finally {
             TenantContext.clear();
