@@ -25,16 +25,22 @@ public class TenantFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
-        String tenant = request.getHeader("X-Tenant");
+        // ✅ HIER war der Fehler: tenantId fehlte
+        String tenantId = request.getHeader("X-Tenant");
 
-        if (tenant == null || tenant.isBlank()) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing X-Tenant header");
+        if (tenantId == null || tenantId.isBlank()) {
+            response.sendError(
+                    HttpServletResponse.SC_BAD_REQUEST,
+                    "Missing X-Tenant header"
+            );
             return;
         }
 
+        // ✅ Schema initialisieren (cached)
+        tenantSchemaService.initializeTenant(tenantId);
+
         try {
-            TenantContext.setTenant(tenant);
-            tenantSchemaService.ensureSchemaExists(tenant);
+            TenantContext.setCurrentTenant(tenantId);
             filterChain.doFilter(request, response);
         } finally {
             TenantContext.clear();

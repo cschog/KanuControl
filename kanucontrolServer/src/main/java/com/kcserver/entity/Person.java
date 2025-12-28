@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,6 +32,9 @@ public class Person extends Auditable {
     @NotNull
     @Size(min = 2, max = 100)
     private String vorname;
+
+    @NotNull
+    private LocalDate geburtsdatum;
 
     private String strasse;
     private String plz;

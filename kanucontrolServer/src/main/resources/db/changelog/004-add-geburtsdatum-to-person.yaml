@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-add-geburtsdatum-to-person
+      author: chris
+      changes:
+        - addColumn:
+            tableName: person
+            columns:
+              - column:
+                  name: geburtsdatum
+                  type: date

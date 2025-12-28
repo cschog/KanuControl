@@ -5,3 +5,5 @@ databaseChangeLog:
       file: db/changelog/002-verein.yaml
   - include:
       file: db/changelog/003-mitglied.yaml
+  - include:
+      file: db/changelog/004-add-geburtsdatum-to-person.yaml

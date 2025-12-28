@@ -35,31 +35,32 @@ public class MitgliedService {
     }
 
     @Transactional
-    public MitgliedDTO createMitglied(
-            Long personId,
-            Long vereinId,
-            String funktion,
-            Boolean hauptVerein) {
+    public MitgliedDTO createMitglied(MitgliedDTO dto) {
 
-        Person person = personRepository.findById(personId)
+        Person person = personRepository.findById(dto.getPersonId())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Person not found"));
 
-        Verein verein = vereinRepository.findById(vereinId)
+        Verein verein = vereinRepository.findById(dto.getVereinId())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Verein not found"));
 
         // Fachliche Regel: nur ein Hauptverein pro Person
-        if (Boolean.TRUE.equals(hauptVerein)) {
-            mitgliedRepository
-                    .findByPerson_IdAndHauptVereinTrue(personId);
+        if (Boolean.TRUE.equals(dto.getHauptVerein())) {
+            mitgliedRepository.findByPerson_IdAndHauptVereinTrue(dto.getPersonId())
+                    .ifPresent(existing -> {
+                        throw new ResponseStatusException(
+                                HttpStatus.CONFLICT,
+                                "Person already has a Hauptverein"
+                        );
+                    });
         }
 
         Mitglied mitglied = new Mitglied();
         mitglied.setPerson(person);
         mitglied.setVerein(verein);
-        mitglied.setFunktion(funktion);
-        mitglied.setHauptVerein(hauptVerein);
+        mitglied.setFunktion(dto.getFunktion());     // ✅ Enum
+        mitglied.setHauptVerein(dto.getHauptVerein());
 
         return mapper.toMitgliedDTO(mitgliedRepository.save(mitglied));
     }

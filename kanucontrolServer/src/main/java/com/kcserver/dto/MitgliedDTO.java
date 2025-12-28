@@ -1,5 +1,6 @@
 package com.kcserver.dto;
 
+import com.kcserver.entity.MitgliedFunktion;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,7 +20,7 @@ public class MitgliedDTO {
     private String vereinName;
     private String vereinAbk;
 
-    private String funktion;
+    private MitgliedFunktion funktion; // ✅ Enum statt String
 
     @NotNull
     private Boolean hauptVerein;

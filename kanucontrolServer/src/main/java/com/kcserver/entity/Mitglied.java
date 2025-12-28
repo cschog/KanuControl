@@ -28,8 +28,9 @@ public class Mitglied extends Auditable {
     @JoinColumn(name = "verein_id", nullable = false)
     private Verein verein;
 
-    @Column(name = "funktion")
-    private String funktion;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = true)
+    private MitgliedFunktion funktion;
 
     @Column(name = "haupt_verein", nullable = false)
     private Boolean hauptVerein;
