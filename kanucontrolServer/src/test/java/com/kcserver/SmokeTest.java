@@ -6,8 +6,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.List;
-
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -29,14 +27,21 @@ class SmokeTest {
     }
 
     @Test
-    void securedEndpoint_withJwt_andTenantHeader_returns200() throws Exception {
+    void request_withoutTenantHeader_returns400() throws Exception {
         mockMvc.perform(
                         get("/api/person")
-                                .with(jwt().jwt(jwt -> {
-                                    jwt.claim("groups", List.of("EKC_EschweilerKanuClub"));
-                                    jwt.claim("preferred_username", "testuser");
-                                    jwt.issuer("http://localhost:9080/realms/KanuControl");
-                                }))
+                                .with(jwt())
+                )
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void securedEndpoint_withJwt_andTenantHeader_returns200() throws Exception {
+
+        mockMvc.perform(
+                        get("/api/person")
+                                .header("X-Tenant", "ekc_test")
+                                .with(jwt())
                 )
                 .andExpect(status().isOk());
     }

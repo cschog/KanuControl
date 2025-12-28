@@ -3,12 +3,14 @@ package com.kcserver.controller;
 import com.kcserver.dto.PersonDTO;
 import com.kcserver.service.PersonService;
 import com.kcserver.tenancy.TenantContext;
-import jakarta.validation.Valid;
+import com.kcserver.validation.OnCreate;
+import com.kcserver.validation.OnUpdate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -49,7 +51,8 @@ public class PersonController {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<PersonDTO> createPerson(@Valid @RequestBody PersonDTO personDTO) {
+    public ResponseEntity<PersonDTO> createPerson(
+            @Validated(OnCreate.class) @RequestBody PersonDTO personDTO) {
         logger.info("POST /api/person | tenant={}", TenantContext.getTenant());
         PersonDTO created = personService.createPerson(personDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
@@ -66,7 +69,8 @@ public class PersonController {
     )
     public ResponseEntity<PersonDTO> updatePerson(
             @PathVariable long id,
-            @Valid @RequestBody PersonDTO personDTO) {
+            @Validated(OnUpdate.class) @RequestBody PersonDTO personDTO) {
+
 
         logger.info("PUT /api/person/{} | tenant={}", id, TenantContext.getTenant());
         PersonDTO updated = personService.updatePerson(id, personDTO);

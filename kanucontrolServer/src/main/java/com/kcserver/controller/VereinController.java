@@ -2,11 +2,13 @@ package com.kcserver.controller;
 
 import com.kcserver.dto.VereinDTO;
 import com.kcserver.service.VereinService;
-import jakarta.validation.Valid;
+import com.kcserver.validation.OnCreate;
+import com.kcserver.validation.OnUpdate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -52,7 +54,7 @@ public class VereinController {
      * @return The created VereinDTO.
      */
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<VereinDTO> createVerein(@Valid @RequestBody VereinDTO vereinDTO) {
+    public ResponseEntity<VereinDTO> createVerein(@Validated(OnCreate.class) @RequestBody VereinDTO vereinDTO) {
         VereinDTO createdVereinDTO = vereinService.createVerein(vereinDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdVereinDTO);
     }
@@ -65,7 +67,7 @@ public class VereinController {
      * @return The updated VereinDTO or 404 if not found.
      */
     @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<VereinDTO> updateVerein(@PathVariable Long id, @Valid @RequestBody VereinDTO updatedVereinDTO) {
+    public ResponseEntity<VereinDTO> updateVerein(@PathVariable Long id, @Validated(OnUpdate.class) @RequestBody VereinDTO updatedVereinDTO) {
         VereinDTO updatedVereinDTOResult = vereinService.updateVerein(id, updatedVereinDTO);
         return ResponseEntity.ok(updatedVereinDTOResult);
     }

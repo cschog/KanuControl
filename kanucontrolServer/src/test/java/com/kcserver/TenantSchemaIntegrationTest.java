@@ -37,7 +37,7 @@ class TenantSchemaIntegrationTest {
 
         String tenant = "ekc_test";
 
-        tenantSchemaInitializer.createSchemaIfNotExists(tenant);
+        tenantSchemaInitializer.initializeIfNeeded(tenant);
 
         assertThat(schemaExists(tenant)).isTrue();
     }
