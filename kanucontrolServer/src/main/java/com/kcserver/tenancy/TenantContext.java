@@ -1,18 +1,39 @@
 package com.kcserver.tenancy;
 
-public class TenantContext {
+public final class TenantContext {
 
-    private static final ThreadLocal<String> CURRENT_TENANT = new ThreadLocal<>();
+    private static final ThreadLocal<String> CURRENT_TENANT =
+            new ThreadLocal<>();
 
-    public static void setTenant(String tenant) {
+    private TenantContext() {
+        // utility class
+    }
+
+    /* =========================================================
+       Neue, saubere API
+       ========================================================= */
+
+    public static void setCurrentTenant(String tenant) {
         CURRENT_TENANT.set(tenant);
     }
 
-    public static String getTenant() {
+    public static String getCurrentTenant() {
         return CURRENT_TENANT.get();
     }
 
     public static void clear() {
         CURRENT_TENANT.remove();
+    }
+
+    /* =========================================================
+       🔁 Legacy-Kompatibilität (wichtig!)
+       ========================================================= */
+
+    public static void setTenant(String tenant) {
+        setCurrentTenant(tenant);
+    }
+
+    public static String getTenant() {
+        return getCurrentTenant();
     }
 }
