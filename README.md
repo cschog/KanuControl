@@ -88,6 +88,23 @@ MySQL (Schema-per-Tenant)
 ```
 ---
 
+flowchart LR
+    FE[React Frontend] --> C[REST Controller]
+    C --> S[Service Layer]
+    S --> M[Mapper]
+    M --> R[Repository]
+    R --> DB[(MySQL)]
+
+    subgraph Tenancy
+        TF[TenantFilter]
+        TC[TenantContext]
+        TS[TenantSchemaService]
+    end
+
+    FE --> TF
+    TF --> TC
+    TS --> DB
+
 ## 🌐 Mandantenfähigkeit
 
 KanuControl ist mandantenfähig aufgebaut.
