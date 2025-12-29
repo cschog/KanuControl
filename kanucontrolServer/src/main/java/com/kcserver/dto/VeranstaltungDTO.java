@@ -1,45 +1,60 @@
 package com.kcserver.dto;
 
-import com.kcserver.entity.VeranstaltungTyp;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import lombok.*;
+import com.kcserver.enumtype.CountryCode;
+import com.kcserver.enumtype.VeranstaltungTyp;
+import lombok.Data;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class VeranstaltungDTO {
 
     private Long id;
 
-    @NotNull
-    private Long vereinId;
+    /* =========================
+       Stammdaten
+       ========================= */
 
-    @NotNull
-    private Long leiterId;
-
-    @NotNull
+    private String name;
     private VeranstaltungTyp typ;
 
-    @NotNull
-    @Size(min = 3, max = 255)
-    private String name;
+    private String artDerUnterkunft;
+    private String artDerVerpflegung;
 
-    @NotNull
-    private LocalDate beginn;
+    private String plz;
+    private String ort;
 
-    @NotNull
-    private LocalDate ende;
+    private CountryCode laenderCode;
 
-    /** Plan-Zahlen für Antrag */
-    @NotNull
-    private Integer geplanteTeilnehmer;
+    private LocalDate beginnDatum;
+    private LocalTime beginnZeit;
 
-    @NotNull
-    private Integer geplanteMitarbeiter;
+    private LocalDate endeDatum;
+    private LocalTime endeZeit;
 
-    /** Status */
-    private boolean aktiv;
+    /* =========================
+       Beziehungen (IDs!)
+       ========================= */
+
+    private Long vereinId;
+    private Long leiterId;
+
+    /* =========================
+       Plan-Zahlen (optional)
+       ========================= */
+
+    private Integer geplanteTeilnehmerMaennlich;
+    private Integer geplanteTeilnehmerWeiblich;
+    private Integer geplanteTeilnehmerDivers;
+
+    private Integer geplanteMitarbeiterMaennlich;
+    private Integer geplanteMitarbeiterWeiblich;
+    private Integer geplanteMitarbeiterDivers;
+
+    /* =========================
+       Status
+       ========================= */
+
+    private Boolean aktiv;
 }

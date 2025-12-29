@@ -1,11 +1,13 @@
 package com.kcserver.exception;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,9 +15,14 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // ✅ @Valid Fehler
+    /* =========================================================
+       @Valid / Bean Validation Fehler
+       ========================================================= */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiError> handleValidationErrors(MethodArgumentNotValidException ex) {
+    public ResponseEntity<ApiError> handleValidationErrors(
+            MethodArgumentNotValidException ex,
+            HttpServletRequest request
+    ) {
 
         Map<String, String> fieldErrors = new HashMap<>();
 
@@ -33,19 +40,59 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(apiError);
     }
 
-    // ✅ IllegalArgumentException
+    /* =========================================================
+       ResponseStatusException (404, 409, 400, …)
+       ========================================================= */
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ApiError> handleResponseStatus(
+            ResponseStatusException ex,
+            HttpServletRequest request
+    ) {
+
+        ApiError apiError = ApiError.simple(
+                ex.getStatusCode().value(),
+                ex.getStatusCode().toString(), // z.B. "404 NOT_FOUND"
+                ex.getReason()
+        );
+
+        return ResponseEntity
+                .status(ex.getStatusCode())
+                .body(apiError);
+    }
+
+    /* =========================================================
+       IllegalArgumentException (Enums, Converter, etc.)
+       ========================================================= */
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ApiError> handleIllegalArgument(IllegalArgumentException ex) {
+    public ResponseEntity<ApiError> handleIllegalArgument(
+            IllegalArgumentException ex,
+            HttpServletRequest request
+    ) {
+
         return ResponseEntity.badRequest().body(
-                ApiError.simple(400, "BAD_REQUEST", ex.getMessage())
+                ApiError.simple(
+                        HttpStatus.BAD_REQUEST.value(),
+                        "BAD_REQUEST",
+                        ex.getMessage()
+                )
         );
     }
 
-    // ✅ Fallback
+    /* =========================================================
+       Fallback – alles andere
+       ========================================================= */
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiError> handleGeneric(Exception ex) {
+    public ResponseEntity<ApiError> handleGeneric(
+            Exception ex,
+            HttpServletRequest request
+    ) {
+
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-                ApiError.simple(500, "INTERNAL_ERROR", "An unexpected error occurred")
+                ApiError.simple(
+                        HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                        "INTERNAL_ERROR",
+                        "An unexpected error occurred"
+                )
         );
     }
 }

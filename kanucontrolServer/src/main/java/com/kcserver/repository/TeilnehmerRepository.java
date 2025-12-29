@@ -1,6 +1,7 @@
 package com.kcserver.repository;
 
 import com.kcserver.entity.*;
+import com.kcserver.enumtype.TeilnehmerRolle;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

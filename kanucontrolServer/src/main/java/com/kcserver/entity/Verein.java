@@ -40,14 +40,13 @@ public class Verein extends Auditable {
     @Column(name = "bank_name")
     private String bankName;
 
-    @Column(name = "konto_inhaber")
-    private String kontoInhaber;
-
-    @Column(name = "ki_anschrift")
-    private String kiAnschrift;
-
     private String iban;
     private String bic;
+
+    /** 🔗 NEU: Kontoinhaber als Person */
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "kontoinhaber_id", nullable = false)
+    private Person kontoinhaber;
 
     @OneToMany(
             mappedBy = "verein",

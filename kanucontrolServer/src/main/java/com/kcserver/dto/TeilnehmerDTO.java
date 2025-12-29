@@ -1,11 +1,9 @@
 package com.kcserver.dto;
 
-import com.kcserver.entity.TeilnehmerRolle;
-import lombok.*;
+import com.kcserver.enumtype.TeilnehmerRolle;
+import lombok.Data;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class TeilnehmerDTO {
 
     private Long id;
@@ -13,5 +11,7 @@ public class TeilnehmerDTO {
     private Long veranstaltungId;
     private Long personId;
 
-    private TeilnehmerRolle rolle;   // LEITER, TEILNEHMER, MITARBEITER
+    private TeilnehmerRolle rolle;
+
+    private Boolean aktiv;
 }

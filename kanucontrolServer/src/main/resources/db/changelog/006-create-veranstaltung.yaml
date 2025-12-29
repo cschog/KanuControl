@@ -1,0 +1,189 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-veranstaltung-table
+      author: chris
+      changes:
+
+        - createTable:
+            tableName: veranstaltung
+            columns:
+
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              # =========================
+              # Stammdaten
+              # =========================
+
+              - column:
+                  name: name
+                  type: VARCHAR(200)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: typ
+                  type: char(3)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: art_der_unterkunft
+                  type: VARCHAR(200)
+
+              - column:
+                  name: art_der_verpflegung
+                  type: VARCHAR(200)
+
+              - column:
+                  name: plz
+                  type: VARCHAR(10)
+
+              - column:
+                  name: ort
+                  type: VARCHAR(200)
+
+              - column:
+                  name: laender_code
+                  type: CHAR(2)
+                  constraints:
+                    nullable: true
+
+              - column:
+                  name: beginn_datum
+                  type: DATE
+                  constraints:
+                    nullable: true
+
+              - column:
+                  name: beginn_zeit
+                  type: TIME
+                  constraints:
+                    nullable: true
+
+              - column:
+                  name: ende_datum
+                  type: DATE
+                  constraints:
+                    nullable: true
+
+              - column:
+                  name: ende_zeit
+                  type: TIME
+                  constraints:
+                    nullable: true
+
+              # =========================
+              # Beziehungen
+              # =========================
+
+              - column:
+                  name: verein_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: leiter_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              # =========================
+              # Plan-Zahlen (nullable!)
+              # =========================
+
+              - column:
+                  name: geplante_teilnehmer_maennlich
+                  type: INT
+
+              - column:
+                  name: geplante_teilnehmer_weiblich
+                  type: INT
+
+              - column:
+                  name: geplante_teilnehmer_divers
+                  type: INT
+
+              - column:
+                  name: geplante_mitarbeiter_maennlich
+                  type: INT
+
+              - column:
+                  name: geplante_mitarbeiter_weiblich
+                  type: INT
+
+              - column:
+                  name: geplante_mitarbeiter_divers
+                  type: INT
+
+              # =========================
+              # Status
+              # =========================
+
+              - column:
+                  name: aktiv
+                  type: BOOLEAN
+                  constraints:
+                    nullable: false
+
+              # =========================
+              # Auditable (von Auditable)
+              # =========================
+
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+
+              - column:
+                  name: created_by
+                  type: VARCHAR(100)
+
+              - column:
+                  name: last_modified_at
+                  type: TIMESTAMP
+
+              - column:
+                  name: last_modified_by
+                  type: VARCHAR(100)
+
+        # =========================
+        # Foreign Keys
+        # =========================
+
+        - addForeignKeyConstraint:
+            baseTableName: veranstaltung
+            baseColumnNames: verein_id
+            referencedTableName: verein
+            referencedColumnNames: id
+            constraintName: fk_veranstaltung_verein
+
+        - addForeignKeyConstraint:
+            baseTableName: veranstaltung
+            baseColumnNames: leiter_id
+            referencedTableName: person
+            referencedColumnNames: id
+            constraintName: fk_veranstaltung_leiter
+
+        # =========================
+        # Indexe (Performance & Filter)
+        # =========================
+
+        - createIndex:
+            tableName: veranstaltung
+            indexName: idx_veranstaltung_aktiv
+            columns:
+              - column:
+                  name: aktiv
+
+        - createIndex:
+            tableName: veranstaltung
+            indexName: idx_veranstaltung_verein
+            columns:
+              - column:
+                  name: verein_id

@@ -1,4 +1,4 @@
-package com.kcserver.entity;
+package com.kcserver.enumtype;
 
 public enum MitgliedFunktion {
     VORSITZENDER,

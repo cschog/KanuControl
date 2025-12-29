@@ -2,31 +2,32 @@ package com.kcserver.service;
 
 import com.kcserver.dto.PersonDTO;
 import com.kcserver.entity.Person;
-import com.kcserver.mapper.EntityMapper;
+import com.kcserver.mapper.PersonMapper;
 import com.kcserver.repository.PersonRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class PersonService {
 
-    private static final Logger logger = LoggerFactory.getLogger(PersonService.class);
+    private static final Logger logger =
+            LoggerFactory.getLogger(PersonService.class);
 
     private final PersonRepository personRepository;
-    private final EntityMapper mapper;
+    private final PersonMapper personMapper;
 
-    @Autowired
-    public PersonService(PersonRepository personRepository, EntityMapper mapper) {
+    public PersonService(
+            PersonRepository personRepository,
+            PersonMapper personMapper
+    ) {
         this.personRepository = personRepository;
-        this.mapper = mapper;
+        this.personMapper = personMapper;
     }
 
     /* =========================================================
@@ -36,18 +37,25 @@ public class PersonService {
     @Transactional(readOnly = true)
     public List<PersonDTO> getAllPersons() {
         logger.debug("Fetching all persons");
-        return personRepository.findAll().stream()
-                .map(mapper::toPersonDTO)
-                .collect(Collectors.toList());
+
+        return personRepository.findAll()
+                .stream()
+                .map(personMapper::toDTO)
+                .toList();
     }
 
     @Transactional(readOnly = true)
     public PersonDTO getPerson(long id) {
         logger.debug("Fetching person with id {}", id);
+
         Person person = personRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Person not found"));
-        return mapper.toPersonDTO(person);
+                .orElseThrow(() ->
+                        new ResponseStatusException(
+                                HttpStatus.NOT_FOUND, "Person not found"
+                        )
+                );
+
+        return personMapper.toDTO(person);
     }
 
     /* =========================================================
@@ -55,14 +63,14 @@ public class PersonService {
        ========================================================= */
 
     @Transactional
-    public PersonDTO createPerson(PersonDTO personDTO) {
-        logger.info("Creating new person: {}", personDTO);
+    public PersonDTO createPerson(PersonDTO dto) {
+        logger.info("Creating new person");
 
-        Person person = mapper.toPersonEntity(personDTO);
-        Person savedPerson = personRepository.save(person);
+        Person person = personMapper.toEntity(dto);
+        Person saved = personRepository.save(person);
 
-        logger.info("Person created with id {}", savedPerson.getId());
-        return mapper.toPersonDTO(savedPerson);
+        logger.info("Person created with id {}", saved.getId());
+        return personMapper.toDTO(saved);
     }
 
     /* =========================================================
@@ -70,19 +78,22 @@ public class PersonService {
        ========================================================= */
 
     @Transactional
-    public PersonDTO updatePerson(long id, PersonDTO personDTO) {
+    public PersonDTO updatePerson(long id, PersonDTO dto) {
         logger.info("Updating person with id {}", id);
 
-        Person existingPerson = personRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Person not found"));
+        Person person = personRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResponseStatusException(
+                                HttpStatus.NOT_FOUND, "Person not found"
+                        )
+                );
 
-        mapper.updatePersonFromDTO(personDTO, existingPerson);
+        personMapper.updateFromDTO(dto, person);
 
-        Person updatedPerson = personRepository.save(existingPerson);
+        Person updated = personRepository.save(person);
 
         logger.info("Person updated with id {}", id);
-        return mapper.toPersonDTO(updatedPerson);
+        return personMapper.toDTO(updated);
     }
 
     /* =========================================================
@@ -95,7 +106,8 @@ public class PersonService {
 
         if (!personRepository.existsById(id)) {
             throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND, "Person not found");
+                    HttpStatus.NOT_FOUND, "Person not found"
+            );
         }
 
         personRepository.deleteById(id);

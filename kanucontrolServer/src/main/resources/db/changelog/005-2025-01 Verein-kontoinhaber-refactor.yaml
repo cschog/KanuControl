@@ -1,0 +1,42 @@
+databaseChangeLog:
+  - changeSet:
+      id: 2025-01-verein-kontoinhaber-refactor
+      author: chris
+      changes:
+
+        # 1️⃣ Alte fachlich falsche Spalten entfernen
+        - dropColumn:
+            tableName: verein
+            columnName: konto_inhaber
+
+        - dropColumn:
+            tableName: verein
+            columnName: ki_anschrift
+
+        # 2️⃣ Neue Referenz auf Person
+        - addColumn:
+            tableName: verein
+            columns:
+              - column:
+                  name: kontoinhaber_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+        # 3️⃣ Foreign Key setzen
+        - addForeignKeyConstraint:
+            constraintName: fk_verein_kontoinhaber
+            baseTableName: verein
+            baseColumnNames: kontoinhaber_id
+            referencedTableName: person
+            referencedColumnNames: id
+            onDelete: RESTRICT
+            onUpdate: CASCADE
+
+        # 4 Index auf konotinhaber_id
+        - createIndex:
+            tableName: verein
+            indexName: idx_verein_kontoinhaber
+            columns:
+              - column:
+                  name: kontoinhaber_id
