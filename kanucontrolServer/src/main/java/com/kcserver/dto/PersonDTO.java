@@ -1,5 +1,6 @@
 package com.kcserver.dto;
 
+import com.kcserver.enumtype.Sex;
 import com.kcserver.validation.ExactlyOneHauptverein;
 import com.kcserver.validation.IbanRequiresBankName;
 import com.kcserver.validation.OnCreate;
@@ -9,6 +10,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -30,6 +32,12 @@ public class PersonDTO {
     @Size(min = 2, max = 100)
     private String vorname;
 
+    private LocalDate geburtsdatum;
+
+    /** M / W / D */
+    private Sex sex;
+
+    private String telefonFestnetz;
     private String strasse;
     private String plz;
     private String ort;

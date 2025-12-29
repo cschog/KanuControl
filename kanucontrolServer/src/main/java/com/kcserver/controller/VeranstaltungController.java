@@ -4,7 +4,6 @@ import com.kcserver.dto.VeranstaltungDTO;
 import com.kcserver.service.VeranstaltungService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,49 +19,47 @@ public class VeranstaltungController {
     }
 
     /* =========================================================
-       READ
-       ========================================================= */
-
-    @GetMapping
-    public ResponseEntity<List<VeranstaltungDTO>> getAll() {
-        return ResponseEntity.ok(veranstaltungService.getAll());
-    }
-
-    @GetMapping("/active")
-    public ResponseEntity<VeranstaltungDTO> getActive() {
-        return ResponseEntity.ok(veranstaltungService.getActive());
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<VeranstaltungDTO> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(veranstaltungService.getById(id));
-    }
-
-    /* =========================================================
        CREATE
        ========================================================= */
 
     @PostMapping
-    public ResponseEntity<VeranstaltungDTO> create(
-            @Valid @RequestBody VeranstaltungDTO dto
-    ) {
-        VeranstaltungDTO created = veranstaltungService.create(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    @ResponseStatus(HttpStatus.CREATED)
+    public VeranstaltungDTO create(@Valid @RequestBody VeranstaltungDTO dto) {
+        return veranstaltungService.create(dto);
     }
 
     /* =========================================================
-       STATE MANAGEMENT
+       READ
+       ========================================================= */
+
+    @GetMapping
+    public List<VeranstaltungDTO> getAll() {
+        return veranstaltungService.getAll();
+    }
+
+    @GetMapping("/active")
+    public VeranstaltungDTO getActive() {
+        return veranstaltungService.getActive();
+    }
+
+    @GetMapping("/{id}")
+    public VeranstaltungDTO getById(@PathVariable Long id) {
+        return veranstaltungService.getById(id);
+    }
+
+    /* =========================================================
+       STATE
        ========================================================= */
 
     @PostMapping("/beenden")
-    public ResponseEntity<Void> beenden() {
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void beenden() {
         veranstaltungService.beenden();
-        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{id}/aktivieren")
-    public ResponseEntity<Void> aktivieren(@PathVariable Long id) {
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void aktivieren(@PathVariable Long id) {
         veranstaltungService.aktivieren(id);
-        return ResponseEntity.noContent().build();
     }
 }

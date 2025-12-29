@@ -1,24 +1,32 @@
 package com.kcserver.dto;
 
-import lombok.AllArgsConstructor;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 public class VereinDTO {
-    private Long id;         // ID of the Verein
-    private String name;     // Name of the Verein
-    private String abk;      // Abbreviation of the Verein
-    private String strasse;  // Street address
-    private String plz;      // Postal code
-    private String ort;      // City
-    private String telefon;  // Phone number
-    private String bankName; // Name of the bank (optional)
-    private String kontoInhaber; // Account holder name (optional)
-    private String kiAnschrift;  // Address of the account holder (optional)
-    private String iban; // Matches 'iban' in Verein
-    private String bic; // Matches 'bic' in Verein
 
+    private Long id;
+
+    @NotNull
+    @Size(min = 2, max = 100)
+    private String name;
+
+    @NotNull
+    @Size(min = 1, max = 10)
+    private String abk;
+
+    private String strasse;
+    private String plz;
+    private String ort;
+    private String telefon;
+
+    private String bankName;
+    private String iban;
+    private String bic;
+
+    /** 👤 Person-ID des Kontoinhabers */
+    @NotNull
+    private Long kontoinhaberId;
 }

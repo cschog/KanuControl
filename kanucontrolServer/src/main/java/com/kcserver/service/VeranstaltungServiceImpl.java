@@ -2,7 +2,8 @@ package com.kcserver.service;
 
 import com.kcserver.dto.VeranstaltungDTO;
 import com.kcserver.entity.*;
-import com.kcserver.mapper.EntityMapper;
+import com.kcserver.enumtype.TeilnehmerRolle;
+import com.kcserver.mapper.VeranstaltungMapper;
 import com.kcserver.repository.*;
 import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
@@ -20,20 +21,20 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
     private final VereinRepository vereinRepository;
     private final PersonRepository personRepository;
     private final TeilnehmerRepository teilnehmerRepository;
-    private final EntityMapper mapper;
+    private final VeranstaltungMapper veranstaltungMapper;
 
     public VeranstaltungServiceImpl(
             VeranstaltungRepository veranstaltungRepository,
             VereinRepository vereinRepository,
             PersonRepository personRepository,
             TeilnehmerRepository teilnehmerRepository,
-            EntityMapper mapper
+            VeranstaltungMapper veranstaltungMapper
     ) {
         this.veranstaltungRepository = veranstaltungRepository;
         this.vereinRepository = vereinRepository;
         this.personRepository = personRepository;
         this.teilnehmerRepository = teilnehmerRepository;
-        this.mapper = mapper;
+        this.veranstaltungMapper = veranstaltungMapper;
     }
 
     /* =========================================================
@@ -52,35 +53,43 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
 
         Verein verein = vereinRepository.findById(dto.getVereinId())
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Verein not found"));
+                        HttpStatus.NOT_FOUND, "Verein not found"
+                ));
 
         Person leiter = personRepository.findById(dto.getLeiterId())
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Leiter not found"));
+                        HttpStatus.NOT_FOUND, "Leiter not found"
+                ));
 
         validateLeiterAge(leiter);
 
         Veranstaltung veranstaltung = new Veranstaltung();
         veranstaltung.setName(dto.getName());
         veranstaltung.setTyp(dto.getTyp());
-        veranstaltung.setBeginn(dto.getBeginn());
-        veranstaltung.setEnde(dto.getEnde());
+        veranstaltung.setBeginnDatum(dto.getBeginnDatum());
+        veranstaltung.setEndeDatum(dto.getEndeDatum());
+        veranstaltung.setBeginnZeit(dto.getBeginnZeit());
+        veranstaltung.setEndeZeit(dto.getEndeZeit());
         veranstaltung.setVerein(verein);
         veranstaltung.setLeiter(leiter);
-        veranstaltung.setGeplanteTeilnehmer(dto.getGeplanteTeilnehmer());
-        veranstaltung.setGeplanteMitarbeiter(dto.getGeplanteMitarbeiter());
+        veranstaltung.setGeplanteTeilnehmerMaennlich(dto.getGeplanteTeilnehmerMaennlich());
+        veranstaltung.setGeplanteTeilnehmerWeiblich(dto.getGeplanteTeilnehmerWeiblich());
+        veranstaltung.setGeplanteTeilnehmerDivers(dto.getGeplanteTeilnehmerDivers());
+        veranstaltung.setGeplanteMitarbeiterMaennlich(dto.getGeplanteMitarbeiterMaennlich());
+        veranstaltung.setGeplanteMitarbeiterWeiblich(dto.getGeplanteMitarbeiterWeiblich());
+        veranstaltung.setGeplanteMitarbeiterDivers(dto.getGeplanteMitarbeiterDivers());
         veranstaltung.setAktiv(true);
 
         Veranstaltung saved = veranstaltungRepository.save(veranstaltung);
 
-        // Leiter automatisch als Teilnehmer
-        Teilnehmer teilnehmer = new Teilnehmer();
-        teilnehmer.setVeranstaltung(saved);
-        teilnehmer.setPerson(leiter);
-        teilnehmer.setRolle(TeilnehmerRolle.LEITER);
-        teilnehmerRepository.save(teilnehmer);
+        // 🔒 Leiter automatisch als Teilnehmer
+        Teilnehmer leiterTeilnehmer = new Teilnehmer();
+        leiterTeilnehmer.setVeranstaltung(saved);
+        leiterTeilnehmer.setPerson(leiter);
+        leiterTeilnehmer.setRolle(TeilnehmerRolle.LEITER);
+        teilnehmerRepository.save(leiterTeilnehmer);
 
-        return mapper.toVeranstaltungDTO(saved);
+        return veranstaltungMapper.toDTO(saved);
     }
 
     /* =========================================================
@@ -91,14 +100,14 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
     public List<VeranstaltungDTO> getAll() {
         return veranstaltungRepository.findAll()
                 .stream()
-                .map(mapper::toVeranstaltungDTO)
+                .map(veranstaltungMapper::toDTO)
                 .toList();
     }
 
     @Override
     public VeranstaltungDTO getActive() {
         return veranstaltungRepository.findByAktivTrue()
-                .map(mapper::toVeranstaltungDTO)
+                .map(veranstaltungMapper::toDTO)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "No active Veranstaltung"
                 ));
@@ -107,7 +116,7 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
     @Override
     public VeranstaltungDTO getById(Long id) {
         return veranstaltungRepository.findById(id)
-                .map(mapper::toVeranstaltungDTO)
+                .map(veranstaltungMapper::toDTO)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Veranstaltung not found"
                 ));
@@ -153,7 +162,9 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
 
     private void validateLeiterAge(Person person) {
         if (person.getGeburtsdatum() == null ||
-                person.getGeburtsdatum().plusYears(18).isAfter(LocalDate.now())) {
+                person.getGeburtsdatum()
+                        .plusYears(18)
+                        .isAfter(LocalDate.now())) {
 
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,

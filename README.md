@@ -201,13 +201,13 @@ und enthält keine Businesslogik.
 
 KanuControl ist von Beginn an als Open-Source-Projekt gedacht.
 
-Ziele
+### Ziele
 	•	Nachvollziehbarer Code
 	•	Klare Struktur
 	•	Einsteigerfreundlich
 	•	Fachlich verständlich (auch für Nicht-Informatiker)
 
-Contributions sind willkommen
+### Contributions sind willkommen
 	•	Bugfixes
 	•	Refactorings
 	•	Tests
@@ -218,7 +218,7 @@ Contribution-Guidelines folgen in einer späteren Version.
 
 ## 🛠️ Lokale Entwicklung (Mac)
 
-Voraussetzungen
+### Voraussetzungen
 	•	Docker
 	•	Java 17
 	•	Maven

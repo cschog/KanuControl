@@ -1,5 +1,9 @@
 package com.kcserver.entity;
 
+import com.kcserver.enumtype.CountryCode;
+import com.kcserver.enumtype.Sex;
+import com.kcserver.persistence.converter.CountryCodeConverter;
+import com.kcserver.persistence.converter.SexConverter;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -25,6 +29,10 @@ public class Person extends Auditable {
     @ToString.Include
     private Long id;
 
+    /* =========================
+       Stammdaten
+       ========================= */
+
     @NotNull
     @Size(min = 2, max = 100)
     private String name;
@@ -36,16 +44,41 @@ public class Person extends Auditable {
     @NotNull
     private LocalDate geburtsdatum;
 
+    @NotNull
+    @Convert(converter = SexConverter.class)
+    @Column(nullable = false, length = 1)
+    private Sex sex;   // ✅ Enum M/W/D → CHAR(1)
+
+    /* =========================
+       Adresse & Kontakt
+       ========================= */
+
     private String strasse;
     private String plz;
     private String ort;
+
+    @Convert(converter = CountryCodeConverter.class)
+    @Column(name = "country_code", length = 2)
+    private CountryCode countryCode;
+
+    @Column(name = "telefon_festnetz")
+    private String telefonFestnetz;
+
     private String telefon;
+
+    /* =========================
+       Bankdaten
+       ========================= */
 
     @Column(name = "bank_name")
     private String bankName;
 
     private String iban;
     private String bic;
+
+    /* =========================
+       Beziehungen
+       ========================= */
 
     @OneToMany(
             mappedBy = "person",
@@ -54,7 +87,10 @@ public class Person extends Auditable {
     )
     private List<Mitglied> mitgliedschaften = new ArrayList<>();
 
-    // Convenience-Methoden
+    /* =========================
+       Convenience
+       ========================= */
+
     public void addMitgliedschaft(Mitglied mitglied) {
         mitgliedschaften.add(mitglied);
         mitglied.setPerson(this);

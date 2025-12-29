@@ -1,5 +1,7 @@
 package com.kcserver.entity;
 
+import com.kcserver.enumtype.TeilnehmerRolle;
+import com.kcserver.enumtype.TeilnehmerRolleConverter;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -40,8 +42,8 @@ public class Teilnehmer extends Auditable {
        Rolle in der Veranstaltung
        ========================= */
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Convert(converter = TeilnehmerRolleConverter.class)
+    @Column(nullable = false, length = 1)
     private TeilnehmerRolle rolle;
 
     /* =========================

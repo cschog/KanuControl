@@ -2,7 +2,8 @@ package com.kcserver.service;
 
 import com.kcserver.dto.TeilnehmerDTO;
 import com.kcserver.entity.*;
-import com.kcserver.mapper.EntityMapper;
+import com.kcserver.enumtype.TeilnehmerRolle;
+import com.kcserver.mapper.TeilnehmerMapper;
 import com.kcserver.repository.PersonRepository;
 import com.kcserver.repository.TeilnehmerRepository;
 import com.kcserver.repository.VeranstaltungRepository;
@@ -21,18 +22,18 @@ public class TeilnehmerService {
     private final TeilnehmerRepository teilnehmerRepository;
     private final VeranstaltungRepository veranstaltungRepository;
     private final PersonRepository personRepository;
-    private final EntityMapper mapper;
+    private final TeilnehmerMapper teilnehmerMapper;
 
     public TeilnehmerService(
             TeilnehmerRepository teilnehmerRepository,
             VeranstaltungRepository veranstaltungRepository,
             PersonRepository personRepository,
-            EntityMapper mapper
+            TeilnehmerMapper teilnehmerMapper
     ) {
         this.teilnehmerRepository = teilnehmerRepository;
         this.veranstaltungRepository = veranstaltungRepository;
         this.personRepository = personRepository;
-        this.mapper = mapper;
+        this.teilnehmerMapper = teilnehmerMapper;
     }
 
     /* =========================================================
@@ -45,7 +46,7 @@ public class TeilnehmerService {
 
         return teilnehmerRepository.findByVeranstaltung(veranstaltung)
                 .stream()
-                .map(mapper::toTeilnehmerDTO)
+                .map(teilnehmerMapper::toDTO)
                 .toList();
     }
 
@@ -77,7 +78,7 @@ public class TeilnehmerService {
                         : TeilnehmerRolle.TEILNEHMER
         );
 
-        return mapper.toTeilnehmerDTO(
+        return teilnehmerMapper.toDTO(
                 teilnehmerRepository.save(teilnehmer)
         );
     }
@@ -121,7 +122,10 @@ public class TeilnehmerService {
 
         // alten Leiter zurücksetzen
         teilnehmerRepository
-                .findByVeranstaltungAndRolle(veranstaltung, TeilnehmerRolle.LEITER)
+                .findByVeranstaltungAndRolle(
+                        veranstaltung,
+                        TeilnehmerRolle.LEITER
+                )
                 .ifPresent(existing -> {
                     existing.setRolle(TeilnehmerRolle.TEILNEHMER);
                     teilnehmerRepository.save(existing);
@@ -139,7 +143,7 @@ public class TeilnehmerService {
 
         teilnehmer.setRolle(TeilnehmerRolle.LEITER);
 
-        return mapper.toTeilnehmerDTO(
+        return teilnehmerMapper.toDTO(
                 teilnehmerRepository.save(teilnehmer)
         );
     }
@@ -172,7 +176,10 @@ public class TeilnehmerService {
             );
         }
 
-        if (person.getGeburtsdatum().plusYears(18).isAfter(LocalDate.now())) {
+        if (person.getGeburtsdatum()
+                .plusYears(18)
+                .isAfter(LocalDate.now())) {
+
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Leiter must be at least 18 years old"

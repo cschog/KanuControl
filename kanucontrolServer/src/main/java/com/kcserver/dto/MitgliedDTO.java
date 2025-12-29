@@ -1,6 +1,6 @@
 package com.kcserver.dto;
 
-import com.kcserver.entity.MitgliedFunktion;
+import com.kcserver.enumtype.MitgliedFunktion;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;

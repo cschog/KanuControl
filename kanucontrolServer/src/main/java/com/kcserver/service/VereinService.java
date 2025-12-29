@@ -1,106 +1,110 @@
 package com.kcserver.service;
 
 import com.kcserver.dto.VereinDTO;
+import com.kcserver.entity.Person;
 import com.kcserver.entity.Verein;
+import com.kcserver.mapper.VereinMapper;
+import com.kcserver.repository.PersonRepository;
 import com.kcserver.repository.VereinRepository;
-import com.kcserver.mapper.EntityMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class VereinService {
 
     private final VereinRepository vereinRepository;
-    private final EntityMapper mapper;
+    private final PersonRepository personRepository;
+    private final VereinMapper vereinMapper;
 
-    @Autowired
-    public VereinService(VereinRepository vereinRepository, EntityMapper mapper) {
+    public VereinService(
+            VereinRepository vereinRepository,
+            PersonRepository personRepository,
+            VereinMapper vereinMapper
+    ) {
         this.vereinRepository = vereinRepository;
-        this.mapper = mapper;
+        this.personRepository = personRepository;
+        this.vereinMapper = vereinMapper;
     }
 
-    /**
-     * Retrieve all Vereine as VereinDTOs.
-     *
-     * @return List of VereinDTOs.
-     */
-    public List<VereinDTO> getAllVereine() {
-        return vereinRepository.findAll().stream()
-                .map(mapper::toVereinDTO)
-                .collect(Collectors.toList());
+    /* =========================================================
+       READ
+       ========================================================= */
+
+    @Transactional(readOnly = true)
+    public List<VereinDTO> getAll() {
+        return vereinRepository.findAll()
+                .stream()
+                .map(vereinMapper::toDTO)
+                .toList();
     }
 
-    /**
-     * Retrieve a Verein by its ID and return as VereinDTO.
-     *
-     * @param id The ID of the Verein.
-     * @return The VereinDTO.
-     * @throws ResponseStatusException if the Verein is not found.
-     */
-    public VereinDTO getVerein(long id) {
+    @Transactional(readOnly = true)
+    public VereinDTO getById(Long id) {
         Verein verein = vereinRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Verein not found"));
-        return mapper.toVereinDTO(verein);
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Verein not found"
+                ));
+        return vereinMapper.toDTO(verein);
     }
 
-    /**
-     * Retrieve a Verein entity by its ID.
-     *
-     * @param id The ID of the Verein.
-     * @return The Verein entity.
-     * @throws ResponseStatusException if the Verein is not found.
-     */
-    public Verein getVereinEntityById(long id) {
-        return vereinRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Verein not found"));
+    /* =========================================================
+       CREATE
+       ========================================================= */
+
+    public VereinDTO create(VereinDTO dto) {
+
+        Person kontoinhaber = personRepository.findById(dto.getKontoinhaberId())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Kontoinhaber not found"
+                ));
+
+        Verein verein = vereinMapper.toEntity(dto);
+        verein.setKontoinhaber(kontoinhaber);
+
+        return vereinMapper.toDTO(
+                vereinRepository.save(verein)
+        );
     }
 
-    /**
-     * Create a new Verein from VereinDTO.
-     *
-     * @param vereinDTO The VereinDTO to be created.
-     * @return The created VereinDTO.
-     */
-    public VereinDTO createVerein(VereinDTO vereinDTO) {
-        Verein verein = mapper.toVereinEntity(vereinDTO);
-        Verein savedVerein = vereinRepository.save(verein);
-        return mapper.toVereinDTO(savedVerein);
-    }
+    /* =========================================================
+       UPDATE
+       ========================================================= */
 
-    /**
-     * Update an existing Verein by its ID using VereinDTO.
-     *
-     * @param id        The ID of the Verein to be updated.
-     * @param vereinDTO The updated VereinDTO data.
-     * @return The updated VereinDTO.
-     * @throws ResponseStatusException if the Verein is not found.
-     */
-    public VereinDTO updateVerein(long id, VereinDTO vereinDTO) {
-        Verein existingVerein = vereinRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Verein not found"));
+    public VereinDTO update(Long id, VereinDTO dto) {
 
-        mapper.updateVereinFromDTO(vereinDTO, existingVerein);
+        Verein verein = vereinRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Verein not found"
+                ));
 
-        Verein updatedVerein = vereinRepository.save(existingVerein);
-        return mapper.toVereinDTO(updatedVerein);
-    }
+        vereinMapper.updateFromDTO(dto, verein);
 
-    /**
-     * Delete a Verein by its ID.
-     *
-     * @param id The ID of the Verein to delete.
-     * @return true if successful, false otherwise.
-     */
-    public boolean deleteVerein(long id) {
-        if (vereinRepository.existsById(id)) {
-            vereinRepository.deleteById(id);
-            return true;
+        if (!verein.getKontoinhaber().getId().equals(dto.getKontoinhaberId())) {
+            Person neuerInhaber = personRepository.findById(dto.getKontoinhaberId())
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.NOT_FOUND, "Kontoinhaber not found"
+                    ));
+            verein.setKontoinhaber(neuerInhaber);
         }
-        return false;
+
+        return vereinMapper.toDTO(verein);
+    }
+
+    /* =========================================================
+       DELETE
+       ========================================================= */
+
+    public void delete(Long id) {
+        if (!vereinRepository.existsById(id)) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND, "Verein not found"
+            );
+        }
+        vereinRepository.deleteById(id);
     }
 }
