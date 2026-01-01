@@ -1,20 +1,13 @@
 package com.kcserver.persistence.converter;
 
 import com.kcserver.enumtype.CountryCode;
-import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
-@Converter(autoApply = true)
+@Converter(autoApply = false)
 public class CountryCodeConverter
-        implements AttributeConverter<CountryCode, String> {
+        extends AbstractCodeEnumConverter<CountryCode> {
 
-    @Override
-    public String convertToDatabaseColumn(CountryCode code) {
-        return code == null ? null : code.name();
-    }
-
-    @Override
-    public CountryCode convertToEntityAttribute(String dbValue) {
-        return dbValue == null ? null : CountryCode.valueOf(dbValue);
+    public CountryCodeConverter() {
+        super(CountryCode.class);
     }
 }

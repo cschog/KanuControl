@@ -1,22 +1,28 @@
 package com.kcserver.service;
 
-import com.kcserver.config.SchemaMultiTenantConnectionProvider;
+import com.kcserver.repository.PersonRepository;
 import com.kcserver.tenancy.TenantContext;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 @Service
+@Transactional
 public class LoginService {
 
-    @Autowired
-    private SchemaMultiTenantConnectionProvider schemaMultiTenantConnectionProvider;
+    private final PersonRepository personRepository;
 
-    public void handleLogin(String tenantId) {
-        TenantContext.setTenant(tenantId);
+    public LoginService(PersonRepository personRepository) {
+        this.personRepository = personRepository;
+    }
+
+    public void login(String tenant) {
+
+        TenantContext.setCurrentTenant(tenant);
         try {
-            schemaMultiTenantConnectionProvider.getTenantConnection(tenantId);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to prepare tenant schema for tenant: " + tenantId, e);
+            // ganz normal JPA verwenden
+            personRepository.findAll();
+        } finally {
+            TenantContext.clear();
         }
     }
 }

@@ -1,6 +1,6 @@
-package com.kcserver.enumtype;
+package com.kcserver.persistence.converter;
 
-import com.kcserver.persistence.converter.AbstractCodeEnumConverter;
+import com.kcserver.enumtype.TeilnehmerRolle;
 import jakarta.persistence.Converter;
 
 @Converter(autoApply = false)

@@ -58,13 +58,15 @@ public class VereinService {
 
     public VereinDTO create(VereinDTO dto) {
 
-        Person kontoinhaber = personRepository.findById(dto.getKontoinhaberId())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Kontoinhaber not found"
-                ));
-
         Verein verein = vereinMapper.toEntity(dto);
-        verein.setKontoinhaber(kontoinhaber);
+
+        if (dto.getKontoinhaberId() != null) {
+            Person kontoinhaber = personRepository.findById(dto.getKontoinhaberId())
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.NOT_FOUND, "Kontoinhaber not found"
+                    ));
+            verein.setKontoinhaber(kontoinhaber);
+        }
 
         return vereinMapper.toDTO(
                 vereinRepository.save(verein)
@@ -84,7 +86,15 @@ public class VereinService {
 
         vereinMapper.updateFromDTO(dto, verein);
 
-        if (!verein.getKontoinhaber().getId().equals(dto.getKontoinhaberId())) {
+        // Kontoinhaber entfernen
+        if (dto.getKontoinhaberId() == null) {
+            verein.setKontoinhaber(null);
+        }
+        // Kontoinhaber setzen oder wechseln
+        else if (
+                verein.getKontoinhaber() == null ||
+                        !verein.getKontoinhaber().getId().equals(dto.getKontoinhaberId())
+        ) {
             Person neuerInhaber = personRepository.findById(dto.getKontoinhaberId())
                     .orElseThrow(() -> new ResponseStatusException(
                             HttpStatus.NOT_FOUND, "Kontoinhaber not found"

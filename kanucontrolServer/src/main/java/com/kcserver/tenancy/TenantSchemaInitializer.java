@@ -3,10 +3,13 @@ package com.kcserver.tenancy;
 import liquibase.Contexts;
 import liquibase.LabelExpression;
 import liquibase.Liquibase;
-import liquibase.exception.LiquibaseException;
+import liquibase.database.Database;
+import liquibase.database.DatabaseFactory;
+import liquibase.database.jvm.JdbcConnection;
 import liquibase.resource.ClassLoaderResourceAccessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -15,6 +18,7 @@ import java.sql.Connection;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Profile("!test")
 @Component
 public class TenantSchemaInitializer {
 
@@ -59,7 +63,9 @@ public class TenantSchemaInitializer {
 
     private void createSchemaIfNotExists(String schema) {
         logger.info("Ensuring schema {} exists", schema);
-        jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS `" + schema + "`");
+        jdbcTemplate.execute(
+                "CREATE SCHEMA IF NOT EXISTS \"" + schema + "\""
+        );
     }
 
     private void runLiquibase(String schema) {
@@ -69,16 +75,24 @@ public class TenantSchemaInitializer {
 
             connection.setSchema(schema);
 
+            Database database =
+                    DatabaseFactory.getInstance()
+                            .findCorrectDatabaseImplementation(
+                                    new JdbcConnection(connection)
+                            );
+
+            // 🔥🔥🔥 DAS FEHLT BEI DIR 🔥🔥🔥
+            database.setDefaultSchemaName(schema);
+
             Liquibase liquibase = new Liquibase(
                     "db/changelog/db.changelog-master.yaml",
                     new ClassLoaderResourceAccessor(),
-                    new liquibase.database.jvm.JdbcConnection(connection)
+                    database
             );
 
-            // ✅ KORREKT – kein Rückgabewert!
             liquibase.update(new Contexts(), new LabelExpression());
 
-        } catch (LiquibaseException | java.sql.SQLException ex) {
+        } catch (Exception ex) {
             logger.error("Liquibase failed for schema {}", schema, ex);
             throw new IllegalStateException(
                     "Failed to initialize schema " + schema, ex

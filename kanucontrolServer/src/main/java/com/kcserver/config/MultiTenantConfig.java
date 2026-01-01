@@ -1,20 +1,22 @@
 package com.kcserver.config;
 
 import jakarta.persistence.EntityManagerFactory;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
-import org.hibernate.cfg.AvailableSettings;
-import org.springframework.context.annotation.Bean;
 
 import javax.sql.DataSource;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 
 @Configuration
+@Profile("!test")
 public class MultiTenantConfig {
 
     @Autowired

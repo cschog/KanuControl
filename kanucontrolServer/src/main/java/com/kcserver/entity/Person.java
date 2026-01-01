@@ -4,6 +4,7 @@ import com.kcserver.enumtype.CountryCode;
 import com.kcserver.enumtype.Sex;
 import com.kcserver.persistence.converter.CountryCodeConverter;
 import com.kcserver.persistence.converter.SexConverter;
+import com.kcserver.validation.OnCreate;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -41,12 +42,12 @@ public class Person extends Auditable {
     @Size(min = 2, max = 100)
     private String vorname;
 
-    @NotNull
+    @NotNull(groups = OnCreate.class)
     private LocalDate geburtsdatum;
 
-    @NotNull
+    @NotNull(groups = OnCreate.class)
     @Convert(converter = SexConverter.class)
-    @Column(nullable = false, length = 1)
+    @Column(length = 1)
     private Sex sex;   // ✅ Enum M/W/D → CHAR(1)
 
     /* =========================
