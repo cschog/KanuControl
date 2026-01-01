@@ -72,7 +72,7 @@ Fokus liegt zunächst auf stabilen Datenmodellen und Prozessen.
 KanuControl ist eine Client-Server-Webanwendung.
 
 ### Überblick
-
+```
 Browser (React)
    |
    v
@@ -85,7 +85,7 @@ Mapper (DTO <-> Entity)
 Repository (JPA)
    |
 PostgreSQL (Schema-per-Tenant)
-
+``
 ---
 
 ## 🌐 Mandantenfähigkeit
@@ -106,6 +106,7 @@ und zur Laufzeit gecacht.
 
 ## 🗄️ Datenbankstruktur (PostgreSQL)
 
+```
 Database: kanu
 ├── kanu                (System / Default-Schema)
 ├── ekc_test
@@ -118,6 +119,7 @@ Database: kanu
 │   ├── verein
 │   ├── mitglied
 │   └── …
+```
 
 - Keine produktiven Daten im Default-Schema
 - Schreibzugriffe erfolgen ausschließlich mit gesetztem Tenant
