@@ -44,8 +44,8 @@ public class Verein extends Auditable {
     private String bic;
 
     /** 🔗 NEU: Kontoinhaber als Person */
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "kontoinhaber_id", nullable = false)
+    @OneToOne(optional = true)
+    @JoinColumn(name = "kontoinhaber_id", nullable = true)
     private Person kontoinhaber;
 
     @OneToMany(

@@ -19,10 +19,9 @@ class SmokeTest {
 
     @Test
     void applicationStarts_and_securedEndpointIsReachable() throws Exception {
-        mockMvc.perform(
-                        get("/api/person")
-                                .header("Authorization", "Bearer dummy")
-                )
+        mockMvc.perform(get("/api/person")
+                        .header("X-Tenant", "ekc_test")
+                        .header("Authorization", "Bearer dummy"))
                 .andExpect(status().isUnauthorized());
     }
 

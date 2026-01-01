@@ -1,12 +1,14 @@
 package com.kcserver.controller;
 
 import com.kcserver.dto.PersonDTO;
+import com.kcserver.dto.PersonSearchCriteria;
 import com.kcserver.service.PersonService;
 import com.kcserver.tenancy.TenantContext;
 import com.kcserver.validation.OnCreate;
 import com.kcserver.validation.OnUpdate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -52,7 +54,8 @@ public class PersonController {
             produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<PersonDTO> createPerson(
-            @Validated(OnCreate.class) @RequestBody PersonDTO personDTO) {
+            @Validated(OnCreate.class) @RequestBody PersonDTO personDTO
+    ) {
         logger.info("POST /api/person | tenant={}", TenantContext.getTenant());
         PersonDTO created = personService.createPerson(personDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
@@ -69,9 +72,8 @@ public class PersonController {
     )
     public ResponseEntity<PersonDTO> updatePerson(
             @PathVariable long id,
-            @Validated(OnUpdate.class) @RequestBody PersonDTO personDTO) {
-
-
+            @Validated(OnUpdate.class) @RequestBody PersonDTO personDTO
+    ) {
         logger.info("PUT /api/person/{} | tenant={}", id, TenantContext.getTenant());
         PersonDTO updated = personService.updatePerson(id, personDTO);
         return ResponseEntity.ok(updated);
@@ -86,5 +88,21 @@ public class PersonController {
         logger.info("DELETE /api/person/{} | tenant={}", id, TenantContext.getTenant());
         personService.deletePerson(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /* =========================================================
+       SEARCH (UC-P1)
+       ========================================================= */
+
+    @GetMapping(value = "/search", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<PersonDTO>> searchPersons(
+            PersonSearchCriteria criteria,
+            Pageable pageable
+    ) {
+        logger.debug("GET /api/person/search | tenant={}", TenantContext.getTenant());
+
+        return ResponseEntity.ok(
+                personService.search(criteria, pageable).getContent()
+        );
     }
 }

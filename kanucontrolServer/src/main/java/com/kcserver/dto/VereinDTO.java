@@ -27,6 +27,5 @@ public class VereinDTO {
     private String bic;
 
     /** 👤 Person-ID des Kontoinhabers */
-    @NotNull
     private Long kontoinhaberId;
 }

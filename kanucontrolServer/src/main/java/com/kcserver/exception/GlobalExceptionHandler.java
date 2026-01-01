@@ -1,6 +1,7 @@
 package com.kcserver.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -12,12 +13,10 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    /* =========================================================
-       @Valid / Bean Validation Fehler
-       ========================================================= */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleValidationErrors(
             MethodArgumentNotValidException ex,
@@ -27,47 +26,56 @@ public class GlobalExceptionHandler {
         Map<String, String> fieldErrors = new HashMap<>();
 
         for (FieldError error : ex.getBindingResult().getFieldErrors()) {
-            fieldErrors.put(error.getField(), error.getDefaultMessage());
+            fieldErrors.putIfAbsent(error.getField(), error.getDefaultMessage());
         }
 
-        ApiError apiError = new ApiError(
-                HttpStatus.BAD_REQUEST.value(),
-                "VALIDATION_ERROR",
-                "Validation failed",
-                fieldErrors
+        return ResponseEntity.badRequest().body(
+                new ApiError(
+                        HttpStatus.BAD_REQUEST.value(),
+                        "VALIDATION_ERROR",
+                        "Validation failed",
+                        fieldErrors
+                )
         );
-
-        return ResponseEntity.badRequest().body(apiError);
     }
 
-    /* =========================================================
-       ResponseStatusException (404, 409, 400, …)
-       ========================================================= */
+    @ExceptionHandler(jakarta.validation.ConstraintViolationException.class)
+    public ResponseEntity<ApiError> handleConstraintViolation(
+            jakarta.validation.ConstraintViolationException ex
+    ) {
+        Map<String, String> fieldErrors = new HashMap<>();
+
+        ex.getConstraintViolations().forEach(v ->
+                fieldErrors.put(
+                        v.getPropertyPath().toString(),
+                        v.getMessage()
+                )
+        );
+
+        return ResponseEntity.badRequest().body(
+                new ApiError(
+                        400,
+                        "VALIDATION_ERROR",
+                        "Validation failed",
+                        fieldErrors
+                )
+        );
+    }
+
     @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<ApiError> handleResponseStatus(
-            ResponseStatusException ex,
-            HttpServletRequest request
-    ) {
+    public ResponseEntity<ApiError> handleResponseStatus(ResponseStatusException ex) {
 
-        ApiError apiError = ApiError.simple(
-                ex.getStatusCode().value(),
-                ex.getStatusCode().toString(), // z.B. "404 NOT_FOUND"
-                ex.getReason()
+        return ResponseEntity.status(ex.getStatusCode()).body(
+                ApiError.simple(
+                        ex.getStatusCode().value(),
+                        ex.getStatusCode().toString(),
+                        ex.getReason()
+                )
         );
-
-        return ResponseEntity
-                .status(ex.getStatusCode())
-                .body(apiError);
     }
 
-    /* =========================================================
-       IllegalArgumentException (Enums, Converter, etc.)
-       ========================================================= */
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ApiError> handleIllegalArgument(
-            IllegalArgumentException ex,
-            HttpServletRequest request
-    ) {
+    public ResponseEntity<ApiError> handleIllegalArgument(IllegalArgumentException ex) {
 
         return ResponseEntity.badRequest().body(
                 ApiError.simple(
@@ -78,20 +86,16 @@ public class GlobalExceptionHandler {
         );
     }
 
-    /* =========================================================
-       Fallback – alles andere
-       ========================================================= */
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiError> handleGeneric(
-            Exception ex,
-            HttpServletRequest request
-    ) {
+    public ResponseEntity<ApiError> handleGeneric(Exception ex) {
+
+        log.error("Unhandled exception", ex);
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                 ApiError.simple(
-                        HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                        "INTERNAL_ERROR",
-                        "An unexpected error occurred"
+                        500,
+                        ex.getClass().getSimpleName(),
+                        ex.getMessage()
                 )
         );
     }

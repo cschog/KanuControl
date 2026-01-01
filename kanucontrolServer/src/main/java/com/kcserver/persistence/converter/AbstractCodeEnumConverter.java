@@ -3,7 +3,8 @@ package com.kcserver.persistence.converter;
 import com.kcserver.enumtype.CodeEnum;
 import jakarta.persistence.AttributeConverter;
 
-public abstract class AbstractCodeEnumConverter<E extends Enum<E> & CodeEnum>
+public abstract class AbstractCodeEnumConverter<
+        E extends Enum<E> & CodeEnum>
         implements AttributeConverter<E, String> {
 
     private final Class<E> enumClass;

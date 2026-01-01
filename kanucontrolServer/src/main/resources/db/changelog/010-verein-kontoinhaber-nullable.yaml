@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: 010-verein-kontoinhaber-nullable
+      author: chris
+      changes:
+        - dropNotNullConstraint:
+            tableName: verein
+            columnName: kontoinhaber_id
+            columnDataType: BIGINT

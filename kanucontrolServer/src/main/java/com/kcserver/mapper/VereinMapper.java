@@ -4,7 +4,10 @@ import com.kcserver.dto.VereinDTO;
 import com.kcserver.entity.Verein;
 import org.mapstruct.*;
 
-@Mapper(componentModel = "spring")
+@Mapper(
+        componentModel = "spring",
+        unmappedTargetPolicy = ReportingPolicy.IGNORE
+)
 public interface VereinMapper {
 
     @Mapping(source = "kontoinhaber.id", target = "kontoinhaberId")
