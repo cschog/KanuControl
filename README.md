@@ -10,7 +10,7 @@
 KanuControl ist eine Webanwendung zur Beantragung, Verwaltung und Abrechnung von Zuschüssen
 aus dem Kinder-, Jugend- und Freizeitplan (KJFP) des Landessportbundes NRW (LSB NRW).
 
-Die Anwendung richtet sich an:
+Die Anwendung richtet sich an
 
 - Kanuvereine
 - Kanuverbände (z. B. KVNRW)
