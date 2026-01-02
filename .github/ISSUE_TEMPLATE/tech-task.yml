@@ -1,0 +1,95 @@
+name: 🧱 Tech Task
+description: Technische Aufgabe, Refactoring, Infrastruktur, Tests, Architektur
+title: "[TECH] "
+labels:
+  - tech-debt
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: Kontext
+      description: |
+        Warum ist diese Aufgabe notwendig?
+        (z. B. Tech Debt, Vorbereitung für Feature, Testbarkeit, Performance)
+      placeholder: |
+        Aktueller Zustand / Problem:
+        -
+    validations:
+      required: true
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: Ziel
+      description: |
+        Was soll nach Umsetzung besser / anders sein?
+      placeholder: |
+        Klar messbares Ziel:
+        -
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Umfang (Scope)
+      description: |
+        Was gehört explizit dazu – und was nicht?
+      placeholder: |
+        Gehört dazu:
+        - 
+        Gehört NICHT dazu:
+        -
+    validations:
+      required: true
+
+  - type: textarea
+    id: implementation
+    attributes:
+      label: Technische Umsetzung (Vorschlag)
+      description: |
+        Grober Lösungsansatz (keine Detail-Doku nötig)
+      placeholder: |
+        z. B.
+        - Anpassung PersonSpecification
+        - Liquibase Changeset
+        - neue Integrationstests
+    validations:
+      required: false
+
+  - type: textarea
+    id: tests
+    attributes:
+      label: Tests
+      description: |
+        Welche Tests sind nötig / betroffen?
+      placeholder: |
+        - [ ] Unit Test
+        - [ ] Integration Test
+        - [ ] Regression Test
+    validations:
+      required: false
+
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risiken / Auswirkungen
+      description: |
+        Mögliche Nebenwirkungen oder Migrationsrisiken
+      placeholder: |
+        z. B. Schema-Migration, Datenbestand, API-Verhalten
+    validations:
+      required: false
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Akzeptanzkriterien
+      description: |
+        Wann ist die Aufgabe fertig?
+      placeholder: |
+        - [ ] Tests grün
+        - [ ] Keine Regression
+        - [ ] Code Review erfolgt
+    validations:
+      required: true
