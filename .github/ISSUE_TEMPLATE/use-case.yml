@@ -1,0 +1,82 @@
+name: "Use Case"
+description: "Fachlicher Use Case für KanuControl"
+title: "UC-XX: <kurze Beschreibung>"
+labels:
+  - use-case
+body:
+  - type: input
+    id: uc-id
+    attributes:
+      label: UC-ID
+      description: Eindeutige Use-Case-ID (z. B. UC-P1)
+      placeholder: UC-P1
+    validations:
+      required: true
+
+  - type: textarea
+    id: ziel
+    attributes:
+      label: Ziel / Beschreibung
+      description: Was soll mit diesem Use Case erreicht werden?
+      placeholder: >
+        Kurze fachliche Beschreibung des Ziels.
+    validations:
+      required: true
+
+  - type: textarea
+    id: fachlicher-kontext
+    attributes:
+      label: Fachlicher Kontext
+      description: In welchem fachlichen Zusammenhang wird der Use Case genutzt?
+      placeholder: >
+        z. B. Mitgliederverwaltung, Veranstaltungsplanung, Statistik …
+    validations:
+      required: false
+
+  - type: textarea
+    id: eingaben
+    attributes:
+      label: Eingaben / Filter
+      description: Welche Eingaben oder Filter sind möglich?
+      placeholder: |
+        - Name (contains)
+        - Vorname (contains)
+        - Verein
+        - Aktiv / Inaktiv
+        - Alter min / max
+    validations:
+      required: false
+
+  - type: textarea
+    id: regeln
+    attributes:
+      label: Fachliche Regeln
+      description: Welche Regeln gelten?
+      placeholder: |
+        - Filter sind UND-verknüpft
+        - Aktiv = true ist Default
+        - Paging optional
+    validations:
+      required: false
+
+  - type: textarea
+    id: api
+    attributes:
+      label: API / Technische Umsetzung
+      description: API-Design oder technische Hinweise
+      placeholder: |
+        GET /api/person/search
+        Query-Parameter: name, vorname, aktiv, alterMin, alterMax …
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: definition-of-done
+    attributes:
+      label: Definition of Done
+      options:
+        - label: API implementiert
+        - label: Validierung umgesetzt
+        - label: Integrationstest vorhanden
+        - label: Dokumentation aktualisiert
+        - label: Review durchgeführt
