@@ -1,0 +1,89 @@
+name: 🐞 Bug
+description: Einen Fehler oder unerwartetes Verhalten melden
+title: "[BUG] "
+labels: ["bug"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 🐞 Bug Report
+        Bitte fülle dieses Formular so vollständig wie möglich aus.
+        Ziel ist eine **reproduzierbare, testbare Fehlerbeschreibung**.
+
+  - type: input
+    id: summary
+    attributes:
+      label: Kurzbeschreibung
+      description: Was ist kaputt?
+      placeholder: "Suche nach Personen liefert zu viele Ergebnisse"
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Erwartetes Verhalten
+      description: Was sollte stattdessen passieren?
+      placeholder: "Es sollten nur aktive Personen zurückgegeben werden"
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Tatsächliches Verhalten
+      description: Was passiert aktuell?
+      placeholder: "Inaktive Personen werden ebenfalls angezeigt"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Schritte zur Reproduktion
+      description: Wie kann man den Bug zuverlässig nachstellen?
+      placeholder: |
+        1. Tenant = ekc_test
+        2. GET /api/person/search?aktiv=true
+        3. Antwort prüfen
+    validations:
+      required: true
+
+  - type: input
+    id: endpoint
+    attributes:
+      label: Betroffener Endpoint / Bereich
+      placeholder: "GET /api/person/search"
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / Fehlermeldungen
+      description: Relevante Logs oder Stacktraces (optional)
+      render: shell
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Schweregrad
+      options:
+        - kritisch (Blocker)
+        - hoch
+        - mittel
+        - niedrig
+    validations:
+      required: true
+
+  - type: input
+    id: related_uc
+    attributes:
+      label: Zugehöriger Use Case (falls vorhanden)
+      placeholder: "UC-P1"
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Zusätzliche Hinweise
+      description: Anything else?
