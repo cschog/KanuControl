@@ -9,7 +9,6 @@ import liquibase.database.jvm.JdbcConnection;
 import liquibase.resource.ClassLoaderResourceAccessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -18,7 +17,6 @@ import java.sql.Connection;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Profile("!test")
 @Component
 public class TenantSchemaInitializer {
 

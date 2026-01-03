@@ -2,21 +2,22 @@ spring:
   config:
     activate:
       on-profile: test
+
   datasource:
-    url: jdbc:mysql://localhost:3306/kanu?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-    username: root
-    password: CHsab581_mysql
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:postgresql://localhost:5432/kanu?currentSchema=public
+    username: kcuser
+    password: ""
+    driver-class-name: org.postgresql.Driver
+
   jpa:
     hibernate:
       ddl-auto: none
+    properties:
+      hibernate:
+        multiTenancy: NONE
+
   liquibase:
     enabled: true
 
 keycloak:
-  auth-server-url: http://localhost:9080/auth
-  realm: KanuControl
-  resource: kc_server
-  credentials:
-    secret: OkEJPqHgEPuCz3rSpCsw3R3xHx00aV1W
-  use-resource-role-mappings: true
+  enabled: false

@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: add-person-aktiv
+      author: chris
+      changes:
+        - addColumn:
+            tableName: person
+            columns:
+              - column:
+                  name: aktiv
+                  type: boolean
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false

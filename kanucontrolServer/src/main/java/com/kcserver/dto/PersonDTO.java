@@ -52,6 +52,8 @@ public class PersonDTO {
     private String iban;
     private String bic;
 
+    private Boolean aktiv;
+
     private List<MitgliedDTO> mitgliedschaften;
 
     /* =========================================================

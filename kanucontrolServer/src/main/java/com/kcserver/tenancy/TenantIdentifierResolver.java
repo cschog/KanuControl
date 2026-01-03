@@ -2,12 +2,13 @@ package com.kcserver.tenancy;
 
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.springframework.context.annotation.Profile;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 @Slf4j
-@Profile("!test")
 @Component
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class TenantIdentifierResolver
         implements CurrentTenantIdentifierResolver {
 

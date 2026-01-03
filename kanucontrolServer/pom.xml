@@ -18,6 +18,7 @@
 		<maven.compiler.source>17</maven.compiler.source>
 		<maven.compiler.target>17</maven.compiler.target>
 		<maven.compiler.compilerVersion>21</maven.compiler.compilerVersion>
+		<postgresql.version>42.7.3</postgresql.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -213,18 +214,6 @@
 				<groupId>com.commsen.maven</groupId>
 				<artifactId>bom-helper-maven-plugin</artifactId>
 				<version>0.2.0</version>
-			</plugin>
-			<plugin>
-				<groupId>org.liquibase</groupId>
-				<artifactId>liquibase-maven-plugin</artifactId>
-				<version>4.23.2</version> <!-- Ensure this matches your Liquibase dependency version -->
-				<configuration>
-					<defaultSchemaName>kanu</defaultSchemaName>
-					<changeLogFile>db/changelog/db.changelog-master.yaml</changeLogFile>
-					<url>jdbc:mysql://localhost:3306/kanu?useSSL=false&amp;allowPublicKeyRetrieval=true&amp;serverTimezone=UTC</url>
-					<username>root</username>
-					<password>CHsab581_mysql</password>
-				</configuration>
 			</plugin>
 
 			<!-- Maven Compiler Plugin -->

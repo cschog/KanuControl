@@ -1,92 +1,102 @@
 package com.kcserver.persistence.specification;
 
+import com.kcserver.dto.PersonSearchCriteria;
 import com.kcserver.entity.Mitglied;
 import com.kcserver.entity.Person;
-import com.kcserver.enumtype.Sex;
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 
-import java.time.LocalDate;
+import static com.kcserver.util.StringUtils.hasText;
 
 public class PersonSpecification {
 
-    public static Specification<Person> byCriteria(
-            String name,
-            String vorname,
-            Long vereinId,
-            Boolean aktiv,
-            Sex sex,
-            Integer alterMin,
-            Integer alterMax,
-            String plz,
-            String ort
-    ) {
+    public static Specification<Person> byCriteria(PersonSearchCriteria c) {
         return (root, query, cb) -> {
 
+            query.distinct(true);
             Predicate predicate = cb.conjunction();
 
-            if (name != null) {
+            // Name
+            if (hasText(c.getName())) {
                 predicate = cb.and(predicate,
                         cb.like(cb.lower(root.get("name")),
-                                "%" + name.toLowerCase() + "%"));
+                                "%" + c.getName().toLowerCase() + "%"));
             }
 
-            if (vorname != null) {
+            // Vorname
+            if (hasText(c.getVorname())) {
                 predicate = cb.and(predicate,
                         cb.like(cb.lower(root.get("vorname")),
-                                "%" + vorname.toLowerCase() + "%"));
+                                "%" + c.getVorname().toLowerCase() + "%"));
             }
 
-            if (sex != null) {
+            // Sex
+            if (c.getSex() != null) {
                 predicate = cb.and(predicate,
-                        cb.equal(root.get("sex"), sex));
+                        cb.equal(root.get("sex"), c.getSex()));
             }
 
-            if (plz != null) {
+            // Aktiv (Default: true)
+            Boolean aktiv = c.getAktiv();
+            if (aktiv == null) {
+                aktiv = true;
+            }
+
+            predicate = cb.and(
+                    predicate,
+                    cb.equal(root.get("aktiv"), aktiv)
+            );
+
+            // Unvollständig
+            if (Boolean.TRUE.equals(c.getUnvollstaendig())) {
                 predicate = cb.and(predicate,
-                        cb.equal(root.get("plz"), plz));
+                        cb.isNull(root.get("geburtsdatum")));
             }
 
-            if (ort != null) {
+            // PLZ
+            if (hasText(c.getPlz())) {
+                predicate = cb.and(predicate,
+                        cb.equal(root.get("plz"), c.getPlz()));
+            }
+
+            // Ort
+            if (hasText(c.getOrt())) {
                 predicate = cb.and(predicate,
                         cb.like(cb.lower(root.get("ort")),
-                                "%" + ort.toLowerCase() + "%"));
+                                "%" + c.getOrt().toLowerCase() + "%"));
             }
 
-            // Alter → Geburtsdatum
-            LocalDate today = LocalDate.now();
-
-            if (alterMin != null) {
-                LocalDate latestBirthdate = today.minusYears(alterMin);
+            // Verein
+            if (c.getVereinId() != null) {
+                Join<Person, Mitglied> join =
+                        root.join("mitgliedschaften", JoinType.INNER);
                 predicate = cb.and(predicate,
-                        cb.lessThanOrEqualTo(root.get("geburtsdatum"), latestBirthdate));
+                        cb.equal(join.get("verein").get("id"), c.getVereinId()));
             }
 
-            if (alterMax != null) {
-                LocalDate earliestBirthdate = today.minusYears(alterMax + 1).plusDays(1);
-                predicate = cb.and(predicate,
-                        cb.greaterThanOrEqualTo(root.get("geburtsdatum"), earliestBirthdate));
-            }
+            // Alter
+            if (c.getAlterMin() != null || c.getAlterMax() != null) {
 
-            // Mitgliedschaft (JOIN)
-            if (vereinId != null || aktiv != null) {
+                Expression<Integer> alterExpr = cb.function(
+                        "date_part",
+                        Integer.class,
+                        cb.literal("year"),
+                        cb.function("age", Object.class,
+                                cb.currentDate(),
+                                root.get("geburtsdatum"))
+                );
 
-                Join<Person, Mitglied> mitgliedJoin =
-                        root.join("mitgliedschaften", JoinType.LEFT);
-
-                if (vereinId != null) {
+                if (c.getAlterMin() != null) {
                     predicate = cb.and(predicate,
-                            cb.equal(mitgliedJoin.get("verein").get("id"), vereinId));
+                            cb.greaterThanOrEqualTo(alterExpr, c.getAlterMin()));
                 }
-
-                if (aktiv != null) {
+                if (c.getAlterMax() != null) {
                     predicate = cb.and(predicate,
-                            cb.equal(mitgliedJoin.get("aktiv"), aktiv));
+                            cb.lessThanOrEqualTo(alterExpr, c.getAlterMax()));
                 }
-
-                query.distinct(true);
             }
 
             return predicate;

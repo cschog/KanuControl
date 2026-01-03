@@ -11,15 +11,14 @@ import com.kcserver.persistence.specification.PersonSpecification;
 import com.kcserver.repository.MitgliedRepository;
 import com.kcserver.repository.PersonRepository;
 import com.kcserver.repository.VereinRepository;
-import com.kcserver.tenancy.TenantContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -79,8 +78,8 @@ public class PersonServiceImpl implements PersonService {
     @Override
     public PersonDTO createPerson(PersonDTO dto) {
 
-        logger.info(">>> Current tenant BEFORE save: {}",
-                TenantContext.getCurrentTenant());
+        //logger.info(">>> Current tenant BEFORE save: {}",
+        //        TenantContext.getCurrentTenant());
 
         // 1️⃣ Person speichern (OHNE Mitgliedschaften)
         Person person = personMapper.toEntity(dto);
@@ -150,17 +149,7 @@ public class PersonServiceImpl implements PersonService {
     public Page<PersonDTO> search(PersonSearchCriteria criteria, Pageable pageable) {
 
         return personRepository.findAll(
-                PersonSpecification.byCriteria(
-                        criteria.getName(),
-                        criteria.getVorname(),
-                        criteria.getVereinId(),
-                        criteria.getAktiv(),
-                        criteria.getSex(),
-                        criteria.getAlterMin(),
-                        criteria.getAlterMax(),
-                        criteria.getPlz(),
-                        criteria.getOrt()
-                ),
+                PersonSpecification.byCriteria(criteria),
                 pageable
         ).map(personMapper::toDTO);
     }

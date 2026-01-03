@@ -1,0 +1,21 @@
+databaseChangeLog:
+  - changeSet:
+      id: ux-person-identity
+      author: chris
+      changes:
+        - createIndex:
+            indexName: ux_person_identity
+            tableName: person
+            unique: true
+            columns:
+              - column:
+                  name: name
+                  computed: true
+                  valueComputed: lower(name)
+              - column:
+                  name: vorname
+                  computed: true
+                  valueComputed: lower(vorname)
+              - column:
+                  name: geburtsdatum
+            where: geburtsdatum IS NOT NULL

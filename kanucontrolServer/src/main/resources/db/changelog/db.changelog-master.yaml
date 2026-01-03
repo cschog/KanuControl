@@ -19,3 +19,13 @@ databaseChangeLog:
       file: db/changelog/009-2025-12-29-01-create-erhebungsbogen.yaml
   - include:
       file: db/changelog/010-verein-kontoinhaber-nullable.yaml
+  - include:
+      file: db/changelog/011-add-person-aktiv.yaml
+  - include:
+      file: db/changelog/012-person-geburtsdatum-nullable.yaml
+  - include:
+      file: db/changelog/013-ux-person-identity.yaml
+  - include:
+      file: db/changelog/014-ux-verein-identity.yaml
+  - include:
+      file: db/changelog/015-cleanup-duplicate-persons.yaml
