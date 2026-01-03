@@ -1,7 +1,9 @@
 package com.kcserver.service;
 
 import com.kcserver.dto.TeilnehmerDTO;
-import com.kcserver.entity.*;
+import com.kcserver.entity.Person;
+import com.kcserver.entity.Teilnehmer;
+import com.kcserver.entity.Veranstaltung;
 import com.kcserver.enumtype.TeilnehmerRolle;
 import com.kcserver.mapper.TeilnehmerMapper;
 import com.kcserver.repository.PersonRepository;
@@ -40,9 +42,8 @@ public class TeilnehmerService {
        READ
        ========================================================= */
 
-    public List<TeilnehmerDTO> getTeilnehmerByVeranstaltung(Long veranstaltungId) {
-
-        Veranstaltung veranstaltung = getVeranstaltung(veranstaltungId);
+    public List<TeilnehmerDTO> getTeilnehmerDerAktivenVeranstaltung() {
+        Veranstaltung veranstaltung = getAktiveVeranstaltung();
 
         return teilnehmerRepository.findByVeranstaltung(veranstaltung)
                 .stream()
@@ -51,12 +52,12 @@ public class TeilnehmerService {
     }
 
     /* =========================================================
-       CREATE
+       CREATE (UC-T1)
        ========================================================= */
 
-    public TeilnehmerDTO addTeilnehmer(Long veranstaltungId, TeilnehmerDTO dto) {
+    public TeilnehmerDTO addTeilnehmerZurAktivenVeranstaltung(TeilnehmerDTO dto) {
 
-        Veranstaltung veranstaltung = getVeranstaltung(veranstaltungId);
+        Veranstaltung veranstaltung = getAktiveVeranstaltung();
         Person person = getPerson(dto.getPersonId());
 
         // 🔒 darf nur einmal Teilnehmer sein
@@ -65,7 +66,7 @@ public class TeilnehmerService {
                 .ifPresent(existing -> {
                     throw new ResponseStatusException(
                             HttpStatus.CONFLICT,
-                            "Person is already Teilnehmer of this Veranstaltung"
+                            "Person is already Teilnehmer of the active Veranstaltung"
                     );
                 });
 
@@ -87,9 +88,9 @@ public class TeilnehmerService {
        DELETE
        ========================================================= */
 
-    public void removeTeilnehmer(Long veranstaltungId, Long personId) {
+    public void removeTeilnehmerVonAktiverVeranstaltung(Long personId) {
 
-        Veranstaltung veranstaltung = getVeranstaltung(veranstaltungId);
+        Veranstaltung veranstaltung = getAktiveVeranstaltung();
         Person person = getPerson(personId);
 
         Teilnehmer teilnehmer = teilnehmerRepository
@@ -101,7 +102,7 @@ public class TeilnehmerService {
 
         if (teilnehmer.getRolle() == TeilnehmerRolle.LEITER) {
             throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
+                    HttpStatus.CONFLICT,
                     "Leiter cannot be removed. Assign another Leiter first."
             );
         }
@@ -113,9 +114,9 @@ public class TeilnehmerService {
        LEITER
        ========================================================= */
 
-    public TeilnehmerDTO setLeiter(Long veranstaltungId, Long personId) {
+    public TeilnehmerDTO setLeiterDerAktivenVeranstaltung(Long personId) {
 
-        Veranstaltung veranstaltung = getVeranstaltung(veranstaltungId);
+        Veranstaltung veranstaltung = getAktiveVeranstaltung();
         Person person = getPerson(personId);
 
         validateLeiterAge(person);
@@ -138,6 +139,7 @@ public class TeilnehmerService {
                     Teilnehmer t = new Teilnehmer();
                     t.setVeranstaltung(veranstaltung);
                     t.setPerson(person);
+                    t.setRolle(TeilnehmerRolle.TEILNEHMER);
                     return t;
                 });
 
@@ -152,11 +154,11 @@ public class TeilnehmerService {
        HELPER
        ========================================================= */
 
-    private Veranstaltung getVeranstaltung(Long id) {
-        return veranstaltungRepository.findById(id)
+    private Veranstaltung getAktiveVeranstaltung() {
+        return veranstaltungRepository.findByAktivTrue()
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Veranstaltung not found"
+                        HttpStatus.CONFLICT,
+                        "No active Veranstaltung found"
                 ));
     }
 

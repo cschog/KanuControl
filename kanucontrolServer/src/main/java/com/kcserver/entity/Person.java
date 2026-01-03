@@ -42,7 +42,6 @@ public class Person extends Auditable {
     @Size(min = 2, max = 100)
     private String vorname;
 
-    @NotNull(groups = OnCreate.class)
     private LocalDate geburtsdatum;
 
     @NotNull(groups = OnCreate.class)
@@ -76,6 +75,14 @@ public class Person extends Auditable {
 
     private String iban;
     private String bic;
+
+    /* aktiv = true
+    „Diese Person soll standardmäßig bei der
+    Auswahl von Teilnehmern sichtbar sein“
+     */
+
+    @Column(nullable = false)
+    private boolean aktiv = true;
 
     /* =========================
        Beziehungen

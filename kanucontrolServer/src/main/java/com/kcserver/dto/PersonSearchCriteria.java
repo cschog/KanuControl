@@ -19,4 +19,6 @@ public class PersonSearchCriteria {
 
     private String plz;
     private String ort;
+
+    private Boolean unvollstaendig;
 }
