@@ -1,8 +1,10 @@
 package com.kcserver.tenancy;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 @Service
+@Profile("!test")
 public class TenantSchemaServiceImpl implements TenantSchemaService {
 
     private final TenantSchemaInitializer initializer;
@@ -13,7 +15,7 @@ public class TenantSchemaServiceImpl implements TenantSchemaService {
 
     @Override
     public void initializeTenant(String tenantId) {
-        // ✅ EXAKT die existierende Methode aufrufen
-        initializer.initializeIfNeeded(tenantId);
+        // bewusst leer
+        // Tenant-Schemas werden aktuell nur in Tests erzeugt
     }
 }

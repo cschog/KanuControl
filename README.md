@@ -99,8 +99,12 @@ KanuControl ist mandantenfähig (Multi-Tenant) aufgebaut.
   - HTTP-Header
 - Ein neutrales Default-Schema (kanu) wird ausschließlich für Systemzwecke genutzt
 
-Schemas werden lazy erzeugt, über Liquibase migriert
-und zur Laufzeit gecacht.
+Schemas werden lazy erzeugt.
+
+- Das Baseline-Schema (`kanu`) wird ausschließlich über Liquibase verwaltet
+- Neue Tenant-Schemas werden zur Laufzeit aus dieser Baseline abgeleitet
+- Die Struktur der Tenant-Schemas ist damit garantiert identisch
+- Schema-Initialisierung erfolgt kontrolliert und idempotent
 
 ---
 
@@ -121,8 +125,9 @@ Database: kanu
 │   └── …
 ```
 
-- Keine produktiven Daten im Default-Schema
-- Schreibzugriffe erfolgen ausschließlich mit gesetztem Tenant
+- Das Schema `kanu` dient als technisches Baseline- und System-Schema
+- Tenant-Schemas enthalten ausschließlich fachliche Daten
+- Änderungen an der Struktur erfolgen immer zuerst im Baseline-Schema
 
 ---
 
@@ -147,11 +152,11 @@ Zur Benutzerverwaltung wird Keycloak eingesetzt.
   - Liquibase-Migrationen
 - Smoke-Tests für Systemstart & Grundfunktionen
 
-Fokus auf:
-- Stabilität
-- Nachvollziehbarkeit
-- Erweiterbarkeit
-- Testbarkeit der Mandantenlogik
+### Besonderer Fokus liegt auf der Absicherung der Mandantenarchitektur:
+
+- Baseline-Migrationstests (Liquibase)
+- Smoke-Tests für Tenant-Schema-Provisionierung
+- Verifikation der Schema-Isolation
 
 ---
 

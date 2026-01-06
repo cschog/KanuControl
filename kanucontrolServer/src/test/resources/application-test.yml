@@ -4,9 +4,9 @@ spring:
       on-profile: test
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/kanu?currentSchema=public
+    url: jdbc:postgresql://localhost:5432/kanu?currentSchema=kanu
     username: kcuser
-    password: ""
+    password: kcpassword
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -18,6 +18,13 @@ spring:
 
   liquibase:
     enabled: true
+    drop-first: true
+
+kcserver:
+  test-tenants:
+    - tenant_test_1
+    - tenant_test_2
+    - tenant_test_3
 
 keycloak:
   enabled: false

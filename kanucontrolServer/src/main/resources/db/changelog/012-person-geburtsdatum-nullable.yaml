@@ -1,9 +1,0 @@
-databaseChangeLog:
-  - changeSet:
-      id: person-geburtsdatum-nullable
-      author: chris
-      changes:
-        - dropNotNullConstraint:
-            tableName: person
-            columnName: geburtsdatum
-            columnDataType: date

@@ -1,99 +1,57 @@
 package com.kcserver.tenancy;
 
-import liquibase.Contexts;
-import liquibase.LabelExpression;
-import liquibase.Liquibase;
-import liquibase.database.Database;
-import liquibase.database.DatabaseFactory;
-import liquibase.database.jvm.JdbcConnection;
-import liquibase.resource.ClassLoaderResourceAccessor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.List;
 
 @Component
+@Profile("!test")
 public class TenantSchemaInitializer {
 
-    private static final Logger logger =
-            LoggerFactory.getLogger(TenantSchemaInitializer.class);
-
-    private final DataSource dataSource;
     private final JdbcTemplate jdbcTemplate;
+    private final List<String> tenants;
 
-    /**
-     * 🔥 Schema-Cache (thread-safe)
-     */
-    private final Set<String> initializedSchemas =
-            ConcurrentHashMap.newKeySet();
-
-    public TenantSchemaInitializer(DataSource dataSource) {
-        this.dataSource = dataSource;
-        this.jdbcTemplate = new JdbcTemplate(dataSource);
+    public TenantSchemaInitializer(
+            JdbcTemplate jdbcTemplate,
+            @Value("${kcserver.test-tenants}") List<String> tenants
+    ) {
+        this.jdbcTemplate = jdbcTemplate;
+        this.tenants = tenants;
     }
 
-    /**
-     * Entry point – wird vom Filter / Resolver aufgerufen
-     */
-    public void initializeIfNeeded(String tenant) {
-        if (initializedSchemas.contains(tenant)) {
-            logger.debug("Schema {} already initialized (cache hit)", tenant);
-            return;
-        }
-
-        synchronized (this) {
-            if (initializedSchemas.contains(tenant)) {
-                return;
-            }
-
+    @PostConstruct
+    public void initTenantSchemas() {
+        for (String tenant : tenants) {
             createSchemaIfNotExists(tenant);
-            runLiquibase(tenant);
-
-            initializedSchemas.add(tenant);
-            logger.info("Schema {} initialized and cached", tenant);
+            cloneTablesFromBaseSchema(tenant);
         }
     }
 
     private void createSchemaIfNotExists(String schema) {
-        logger.info("Ensuring schema {} exists", schema);
-        jdbcTemplate.execute(
-                "CREATE SCHEMA IF NOT EXISTS \"" + schema + "\""
-        );
+        jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS " + schema);
     }
 
-    private void runLiquibase(String schema) {
-        logger.info("Running Liquibase for schema {}", schema);
+    private void cloneTablesFromBaseSchema(String tenantSchema) {
+        List<String> tables = jdbcTemplate.queryForList(
+                """
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_schema = 'kanu'
+                  AND table_type = 'BASE TABLE'
+                """,
+                String.class
+        );
 
-        try (Connection connection = dataSource.getConnection()) {
-
-            connection.setSchema(schema);
-
-            Database database =
-                    DatabaseFactory.getInstance()
-                            .findCorrectDatabaseImplementation(
-                                    new JdbcConnection(connection)
-                            );
-
-            // 🔥🔥🔥 DAS FEHLT BEI DIR 🔥🔥🔥
-            database.setDefaultSchemaName(schema);
-
-            Liquibase liquibase = new Liquibase(
-                    "db/changelog/db.changelog-master.yaml",
-                    new ClassLoaderResourceAccessor(),
-                    database
-            );
-
-            liquibase.update(new Contexts(), new LabelExpression());
-
-        } catch (Exception ex) {
-            logger.error("Liquibase failed for schema {}", schema, ex);
-            throw new IllegalStateException(
-                    "Failed to initialize schema " + schema, ex
+        for (String table : tables) {
+            jdbcTemplate.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS %s.%s
+                    (LIKE kanu.%s INCLUDING ALL)
+                    """.formatted(tenantSchema, table, table)
             );
         }
     }
