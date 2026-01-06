@@ -1,0 +1,619 @@
+databaseChangeLog:
+
+  #################################################
+  # PERSON
+  #################################################
+  - changeSet:
+      id: baseline-001-person
+      author: chris
+      changes:
+        - createTable:
+            tableName: person
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: name
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: vorname
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+
+              - column: { name: geburtsdatum, type: DATE }
+              - column: { name: sex, type: char(1), constraints: { nullable: false } }
+
+              - column:
+                  name: aktiv
+                  type: boolean
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+
+
+              - column: { name: strasse, type: VARCHAR(255) }
+              - column: { name: plz, type: VARCHAR(20) }
+              - column: { name: ort, type: VARCHAR(100) }
+              - column: { name: country_code, type: char(2) }
+              - column: { name: telefon, type: VARCHAR(50) }
+              - column: { name: telefon_festnetz, type: VARCHAR(50) }
+
+              - column: { name: bank_name, type: VARCHAR(255) }
+              - column: { name: iban, type: VARCHAR(34) }
+
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column: { name: created_by, type: VARCHAR(255) }
+              - column: { name: last_modified_at, type: TIMESTAMP }
+              - column: { name: last_modified_by, type: VARCHAR(255) }
+
+        - addUniqueConstraint:
+            tableName: person
+            columnNames: name, vorname, geburtsdatum
+            constraintName: ux_person_name_vorname_geburtsdatum
+
+        - sql:
+            sql: >
+              ALTER TABLE person
+              ADD CONSTRAINT ck_person_sex
+              CHECK (sex IN ('M','W','D'))
+
+        - createIndex:
+            tableName: person
+            indexName: idx_person_aktiv
+            columns:
+              - column:
+                  name: aktiv
+
+        - createIndex:
+            indexName: ux_person_identity
+            tableName: person
+            unique: true
+            columns:
+              - column:
+                  name: name
+                  computed: true
+                  valueComputed: lower(name)
+              - column:
+                  name: vorname
+                  computed: true
+                  valueComputed: lower(vorname)
+              - column:
+                  name: geburtsdatum
+            where: geburtsdatum IS NOT NULL
+  #################################################
+  # VEREIN
+  #################################################
+  - changeSet:
+      id: baseline-002-verein
+      author: chris
+      changes:
+        - createTable:
+            tableName: verein
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: name
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: abk
+                  type: VARCHAR(10)
+                  constraints:
+                    nullable: false
+
+              - column: { name: strasse, type: VARCHAR(255) }
+              - column: { name: plz, type: VARCHAR(20) }
+              - column: { name: ort, type: VARCHAR(100) }
+              - column: { name: telefon, type: VARCHAR(50) }
+
+              - column: { name: bank_name, type: VARCHAR(255) }
+              - column: { name: iban, type: VARCHAR(34) }
+
+              # =========================
+              # Auditing (Teil der Tabelle!)
+              # =========================
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column: { name: created_by, type: VARCHAR(100) }
+              - column: { name: last_modified_at, type: TIMESTAMP }
+              - column: { name: last_modified_by, type: VARCHAR(100) }
+
+        # =========================
+        # Kontoinhaber (optional)
+        # =========================
+        - addColumn:
+            tableName: verein
+            columns:
+              - column:
+                  name: kontoinhaber_id
+                  type: BIGINT
+
+        - addForeignKeyConstraint:
+            constraintName: fk_verein_kontoinhaber
+            baseTableName: verein
+            baseColumnNames: kontoinhaber_id
+            referencedTableName: person
+            referencedColumnNames: id
+            onDelete: RESTRICT
+
+        - createIndex:
+            tableName: verein
+            indexName: idx_verein_kontoinhaber
+            columns:
+              - column:
+                  name: kontoinhaber_id
+
+        # =========================
+        # Case-insensitive Identity
+        # =========================
+        - createIndex:
+            indexName: ux_verein_identity
+            tableName: verein
+            unique: true
+            columns:
+              - column:
+                  name: abk
+                  computed: true
+                  valueComputed: lower(abk)
+              - column:
+                  name: name
+                  computed: true
+                  valueComputed: lower(name)
+
+  #################################################
+  # VERANSTALTUNG
+  #################################################
+  - changeSet:
+      id: baseline-003-veranstaltung
+      author: chris
+      changes:
+
+        # =========================
+        # Tabelle
+        # =========================
+        - createTable:
+            tableName: veranstaltung
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              # =========================
+              # Stammdaten
+              # =========================
+              - column:
+                  name: name
+                  type: VARCHAR(200)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: typ
+                  type: CHAR(3)
+                  constraints:
+                    nullable: false
+
+              - column: { name: plz, type: VARCHAR(10) }
+              - column: { name: ort, type: VARCHAR(200) }
+              - column: { name: country_code, type: CHAR(2) }
+
+              - column: { name: beginn_datum, type: DATE }
+              - column: { name: beginn_zeit, type: TIME }
+              - column: { name: ende_datum, type: DATE }
+              - column: { name: ende_zeit, type: TIME }
+
+              # =========================
+              # Status
+              # =========================
+              - column:
+                  name: aktiv
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+
+              # =========================
+              # Planung
+              # =========================
+              - column: { name: geplante_teilnehmer_maennlich, type: INTEGER }
+              - column: { name: geplante_teilnehmer_weiblich, type: INTEGER }
+              - column: { name: geplante_teilnehmer_divers, type: INTEGER }
+
+              - column: { name: geplante_mitarbeiter_maennlich, type: INTEGER }
+              - column: { name: geplante_mitarbeiter_weiblich, type: INTEGER }
+              - column: { name: geplante_mitarbeiter_divers, type: INTEGER }
+
+              - column: { name: art_der_unterkunft, type: VARCHAR(200) }
+              - column: { name: art_der_verpflegung, type: VARCHAR(200) }
+
+              # =========================
+              # Beziehungen
+              # =========================
+              - column:
+                  name: verein_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: leiter_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              # =========================
+              # Auditing
+              # =========================
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column: { name: created_by, type: VARCHAR(255) }
+              - column: { name: last_modified_at, type: TIMESTAMP }
+              - column: { name: last_modified_by, type: VARCHAR(255) }
+
+        # =========================
+        # Foreign Keys
+        # =========================
+        - addForeignKeyConstraint:
+            constraintName: fk_veranstaltung_verein
+            baseTableName: veranstaltung
+            baseColumnNames: verein_id
+            referencedTableName: verein
+            referencedColumnNames: id
+            onDelete: RESTRICT
+
+        - addForeignKeyConstraint:
+            constraintName: fk_veranstaltung_leiter
+            baseTableName: veranstaltung
+            baseColumnNames: leiter_id
+            referencedTableName: person
+            referencedColumnNames: id
+            onDelete: RESTRICT
+
+        # =========================
+        # ENUM / Checks
+        # =========================
+        - sql:
+            sql: >
+              ALTER TABLE veranstaltung
+              ADD CONSTRAINT ck_veranstaltung_typ
+              CHECK (typ IN ('JEM','FM','B','G'))
+  
+
+  #################################################
+  # TEILNEHMER
+  #################################################
+  - changeSet:
+      id: baseline-004-teilnehmer
+      author: chris
+      changes:
+        - createTable:
+            tableName: teilnehmer
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              # =========================
+              # Beziehungen
+              # =========================
+
+              - column:
+                  name: veranstaltung_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: person_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              # =========================
+              # Rolle
+              # =========================
+
+              - column:
+                  name: rolle
+                  type: char(1)
+
+              - column: { name: created_at, type: TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: created_by, type: VARCHAR(255) }
+              - column: { name: last_modified_at, type: TIMESTAMP }
+              - column: { name: last_modified_by, type: VARCHAR(255) }
+
+        - addForeignKeyConstraint:
+            baseTableName: teilnehmer
+            baseColumnNames: veranstaltung_id
+            referencedTableName: veranstaltung
+            referencedColumnNames: id
+            constraintName: fk_teilnehmer_veranstaltung
+            onDelete: CASCADE
+
+        - addForeignKeyConstraint:
+            baseTableName: teilnehmer
+            baseColumnNames: person_id
+            referencedTableName: person
+            referencedColumnNames: id
+            constraintName: fk_teilnehmer_person
+            onDelete: RESTRICT
+
+        - addUniqueConstraint:
+            tableName: teilnehmer
+            columnNames: veranstaltung_id, person_id
+            constraintName: ux_teilnehmer_veranstaltung_person
+
+        - createIndex:
+            tableName: teilnehmer
+            indexName: ux_teilnehmer_single_leiter
+            unique: true
+            columns:
+              - column: { name: veranstaltung_id }
+            where: rolle = 'L'
+
+        - createIndex:
+            tableName: teilnehmer
+            indexName: idx_teilnehmer_veranstaltung
+            columns:
+              - column:
+                  name: veranstaltung_id
+
+        - createIndex:
+            tableName: teilnehmer
+            indexName: idx_teilnehmer_person
+            columns:
+              - column:
+                  name: person_id
+
+  #################################################
+  # ERHEBUNGSBOGEN
+  #################################################
+  - changeSet:
+      id: baseline-005-erhebungsbogen
+      author: chris
+      changes:
+        - createTable:
+            tableName: erhebungsbogen
+            columns:
+
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              # =========================
+              # Bezug
+              # =========================
+
+              - column:
+                  name: veranstaltung_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    unique: true
+
+              # =========================
+              # Status
+              # =========================
+
+              - column:
+                  name: abgeschlossen
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: stichtag
+                  type: DATE
+                  constraints:
+                    nullable: false
+
+              # =========================
+              # Statistik – Teilnehmer
+              # =========================
+
+              - column: { name: teilnehmer_maennlich_u6,        type: INT, defaultValueNumeric: 0 }
+              - column: { name: teilnehmer_maennlich_6_13,      type: INT, defaultValueNumeric: 0 }
+              - column: { name: teilnehmer_maennlich_14_17,     type: INT, defaultValueNumeric: 0 }
+              - column: { name: teilnehmer_maennlich_18_plus,   type: INT, defaultValueNumeric: 0 }
+
+              - column: { name: teilnehmer_weiblich_u6,         type: INT, defaultValueNumeric: 0 }
+              - column: { name: teilnehmer_weiblich_6_13,       type: INT, defaultValueNumeric: 0 }
+              - column: { name: teilnehmer_weiblich_14_17,      type: INT, defaultValueNumeric: 0 }
+              - column: { name: teilnehmer_weiblich_18_plus,    type: INT, defaultValueNumeric: 0 }
+
+              - column: { name: teilnehmer_divers_u6,           type: INT, defaultValueNumeric: 0 }
+              - column: { name: teilnehmer_divers_6_13,         type: INT, defaultValueNumeric: 0 }
+              - column: { name: teilnehmer_divers_14_17,        type: INT, defaultValueNumeric: 0 }
+              - column: { name: teilnehmer_divers_18_plus,      type: INT, defaultValueNumeric: 0 }
+
+              # =========================
+              # Statistik – Mitarbeitende
+              # =========================
+
+              - column: { name: mitarbeiter_maennlich, type: INT, defaultValueNumeric: 0 }
+              - column: { name: mitarbeiter_weiblich,  type: INT, defaultValueNumeric: 0 }
+              - column: { name: mitarbeiter_divers,    type: INT, defaultValueNumeric: 0 }
+
+              # =========================
+              # Optional
+              # =========================
+
+              - column:
+                  name: bemerkung
+                  type: VARCHAR(500)
+
+              # =========================
+              # Audit
+              # =========================
+
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: created_by
+                  type: VARCHAR(100)
+
+              - column:
+                  name: last_modified_at
+                  type: TIMESTAMP
+
+              - column:
+                  name: last_modified_by
+                  type: VARCHAR(100)
+
+        - addForeignKeyConstraint:
+            baseTableName: erhebungsbogen
+            baseColumnNames: veranstaltung_id
+            referencedTableName: veranstaltung
+            referencedColumnNames: id
+            constraintName: fk_erhebungsbogen_veranstaltung
+            onDelete: RESTRICT
+
+        - createIndex:
+            tableName: erhebungsbogen
+            indexName: idx_erhebungsbogen_veranstaltung
+            columns:
+              - column:
+                  name: veranstaltung_id
+
+  ##########################################################
+  # MITGLIED
+  ##########################################################
+  - changeSet:
+      id: 006-mitglied
+      author: chris
+      changes:
+        - createTable:
+            tableName: mitglied
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: person_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: verein_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              - column: { name: funktion, type: VARCHAR(100) }
+
+              - column:
+                  name: haupt_verein
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+
+              - column: { name: eintrittsdatum, type: DATE }
+              - column: { name: austrittsdatum, type: DATE }
+
+              # Auditing
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_by
+                  type: VARCHAR(100)
+              - column:
+                  name: last_modified_at
+                  type: TIMESTAMP
+              - column:
+                  name: last_modified_by
+                  type: VARCHAR(100)
+
+        - addUniqueConstraint:
+            tableName: mitglied
+            columnNames: person_id, verein_id
+            constraintName: uk_mitglied_person_verein
+
+        - addForeignKeyConstraint:
+            baseTableName: mitglied
+            baseColumnNames: person_id
+            referencedTableName: person
+            referencedColumnNames: id
+            constraintName: fk_mitglied_person
+            onDelete: CASCADE
+
+        - addForeignKeyConstraint:
+            baseTableName: mitglied
+            baseColumnNames: verein_id
+            referencedTableName: verein
+            referencedColumnNames: id
+            constraintName: fk_mitglied_verein
+            onDelete: CASCADE
+
+        - createIndex:
+            tableName: mitglied
+            indexName: idx_mitglied_person
+            columns:
+              - column: { name: person_id }
+
+        - createIndex:
+            tableName: mitglied
+            indexName: idx_mitglied_verein
+            columns:
+              - column: { name: verein_id }
+
+        - createIndex:
+            tableName: mitglied
+            indexName: idx_mitglied_hauptverein
+            columns:
+              - column: { name: haupt_verein }
