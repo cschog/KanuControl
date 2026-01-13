@@ -1,5 +1,6 @@
 package com.kcserver.entity;
 
+import com.kcserver.audit.Auditable;
 import com.kcserver.enumtype.CountryCode;
 import com.kcserver.enumtype.Sex;
 import com.kcserver.persistence.converter.CountryCodeConverter;
@@ -74,7 +75,6 @@ public class Person extends Auditable {
     private String bankName;
 
     private String iban;
-    private String bic;
 
     /* aktiv = true
     „Diese Person soll standardmäßig bei der

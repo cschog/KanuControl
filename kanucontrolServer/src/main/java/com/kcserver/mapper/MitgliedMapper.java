@@ -12,9 +12,23 @@ import org.mapstruct.ReportingPolicy;
 )
 public interface MitgliedMapper {
 
+    /* ============================
+       Entity → DTO
+       ============================ */
+
+    @Mapping(source = "id", target = "id")
     @Mapping(source = "person.id", target = "personId")
     @Mapping(source = "verein.id", target = "vereinId")
     @Mapping(source = "verein.name", target = "vereinName")
     @Mapping(source = "verein.abk", target = "vereinAbk")
-    MitgliedDTO toDTO(Mitglied mitglied);
+    @Mapping(source = "hauptVerein", target = "hauptVerein")
+    MitgliedDTO toDTO(Mitglied entity);
+
+    /* ============================
+       DTO → Entity
+       ============================ */
+
+    @Mapping(target = "person", ignore = true)
+    @Mapping(target = "verein", ignore = true)
+    Mitglied toEntity(MitgliedDTO dto);
 }

@@ -7,6 +7,8 @@ import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class TenantSchemaProvisioner {
@@ -15,6 +17,12 @@ public class TenantSchemaProvisioner {
             LoggerFactory.getLogger(TenantSchemaProvisioner.class);
 
     private final JdbcTemplate jdbcTemplate;
+
+    /**
+     * Merkt sich bereits initialisierte Tenants (Runtime)
+     */
+    private final Set<String> initializedTenants =
+            ConcurrentHashMap.newKeySet();
 
     /**
      * Baseline-Schema (Liquibase!)
@@ -37,8 +45,32 @@ public class TenantSchemaProvisioner {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
     }
 
+    /* =================================================
+       Öffentliche API
+       ================================================= */
+
     /**
-     * Erstellt ein Tenant-Schema vollständig aus der Baseline
+     * Für Runtime (TenantFilter → Service)
+     * → idempotent + performant
+     */
+    public void createFromBaselineIfNeeded(String tenantSchema) {
+
+        if (initializedTenants.contains(tenantSchema)) {
+            return;
+        }
+
+        synchronized (this) {
+            if (initializedTenants.contains(tenantSchema)) {
+                return;
+            }
+
+            createFromBaseline(tenantSchema);
+            initializedTenants.add(tenantSchema);
+        }
+    }
+
+    /**
+     * Für Tests (explizit, deterministisch)
      */
     public void createFromBaseline(String tenantSchema) {
 
@@ -49,6 +81,10 @@ public class TenantSchemaProvisioner {
 
         log.info("Tenant schema '{}' successfully provisioned", tenantSchema);
     }
+
+    /* =================================================
+       Internals
+       ================================================= */
 
     private void createSchemaIfNotExists(String schema) {
         jdbcTemplate.execute(

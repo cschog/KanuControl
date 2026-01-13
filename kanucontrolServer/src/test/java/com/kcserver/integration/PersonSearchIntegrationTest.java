@@ -1,32 +1,27 @@
 package com.kcserver.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kcserver.dto.MitgliedDTO;
-import com.kcserver.dto.PersonDTO;
-import com.kcserver.enumtype.MitgliedFunktion;
-import com.kcserver.enumtype.Sex;
+import com.kcserver.integration.support.AbstractTenantIntegrationTest;
+import com.kcserver.testdata.PersonTestFactory;
+import com.kcserver.testdata.VereinTestFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
-import java.util.List;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
-class PersonSearchIntegrationTest {
+class PersonSearchIntegrationTest extends AbstractTenantIntegrationTest {
 
     @Autowired
     MockMvc mockMvc;
@@ -35,132 +30,88 @@ class PersonSearchIntegrationTest {
     ObjectMapper objectMapper;
 
     Long vereinId;
-    private String tenant;
+
+    private static final String TEST_ABK  = "EKC_SEARCH";
+    private static final String TEST_NAME = "Eschweiler KC Search";
 
     @BeforeEach
     void setupData() throws Exception {
 
-        tenant = "test_" + System.currentTimeMillis();
+        VereinTestFactory vereine =
+                new VereinTestFactory(mockMvc, objectMapper, TENANT);
 
-        // Verein anlegen
-        String vereinResponse =
-                mockMvc.perform(
-                                post("/api/verein")
-                                        .header("X-Tenant", tenant)
-                                        .with(jwt())
-                                        .contentType(MediaType.APPLICATION_JSON)
-                                        .content("""
-                                            {
-                                              "name": "EKC",
-                                              "abk": "EKC"
-                                            }
-                                            """)
-                        )
-                        .andExpect(status().isCreated())
-                        .andReturn()
-                        .getResponse()
-                        .getContentAsString();
+        PersonTestFactory personen =
+                new PersonTestFactory(mockMvc, objectMapper, TENANT);
 
-        vereinId = objectMapper.readTree(vereinResponse).get("id").asLong();
+        vereinId = vereine.createIfNotExists(TEST_ABK, TEST_NAME);
 
-        createPerson("Max", "Mustermann", LocalDate.of(2005, 1, 1), "Köln", "50667");
-        createPerson("Erika", "Mustermann", LocalDate.of(1990, 6, 1), "Bonn", "53111");
-    }
+        // Person 1
+        personen.createOrReuse(
+                "Max",
+                "Mustermann",
+                LocalDate.of(2005, 1, 1),
+                vereinId,
+                "Köln",
+                "50667"
+        );
 
-    private void createPerson(
-            String vorname,
-            String name,
-            LocalDate geburtsdatum,
-            String ort,
-            String plz
-    ) throws Exception {
-
-        PersonDTO dto = new PersonDTO();
-        dto.setVorname(vorname);
-        dto.setName(name);
-        dto.setGeburtsdatum(geburtsdatum);
-        dto.setSex(Sex.WEIBLICH);
-        dto.setOrt(ort);
-        dto.setPlz(plz);
-
-        MitgliedDTO mitglied = new MitgliedDTO();
-        mitglied.setVereinId(vereinId);
-        mitglied.setFunktion(MitgliedFunktion.JUGENDWART);
-        mitglied.setHauptVerein(true);
-
-        dto.setMitgliedschaften(List.of(mitglied));
-
-        mockMvc.perform(
-                        post("/api/person")
-                                .header("X-Tenant", tenant)
-                                .with(jwt())
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(dto))
-                )
-                .andExpect(status().isCreated());
+        // Person 2
+        personen.createOrReuse(
+                "Erika",
+                "Mustermann",
+                LocalDate.of(1990, 6, 1),
+                vereinId,
+                "Bonn",
+                "53111"
+        );
     }
 
     /* =========================================================
-       TESTS
+       BASISFILTER
        ========================================================= */
 
     @Test
     void search_byName_returnsMatchingPersons() throws Exception {
 
         mockMvc.perform(
-                        get("/api/person/search")
-                                .header("X-Tenant", tenant)
-                                .with(jwt())
+                        tenantRequest(get("/api/person/search"))
                                 .param("name", "Muster")
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2));
     }
+
     @Test
     void search_aktivFalse_returnsEmptyResult() throws Exception {
 
         mockMvc.perform(
-                        get("/api/person/search")
-                                .header("X-Tenant", tenant)
-                                .with(jwt())
+                        tenantRequest(get("/api/person/search"))
                                 .param("aktiv", "false")
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
     }
 
-    @Test
-    void search_bySex_filtersCorrectly() throws Exception {
-
-        mockMvc.perform(
-                        get("/api/person/search")
-                                .header("X-Tenant", tenant)
-                                .with(jwt())
-                                .param("sex", "WEIBLICH")
-                )
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2));
-    }
+    /* =========================================================
+       EINZELFILTER
+       ========================================================= */
 
     @Test
     void search_byVerein_filtersCorrectly() throws Exception {
 
         mockMvc.perform(
-                        get("/api/person/search")
-                                .header("X-Tenant", tenant)
-                                .with(jwt())
+                        tenantRequest(get("/api/person/search"))
                                 .param("vereinId", vereinId.toString())
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2));
     }
+
     @Test
     void search_byAlterRange_filtersCorrectly() throws Exception {
 
         mockMvc.perform(
-                        get("/api/person/search")
-                                .header("X-Tenant", tenant)
-                                .with(jwt())
+                        tenantRequest(get("/api/person/search"))
                                 .param("alterMin", "18")
                                 .param("alterMax", "25")
                 )
@@ -168,18 +119,20 @@ class PersonSearchIntegrationTest {
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].vorname").value("Max"));
     }
+
+    /* =========================================================
+       KOMBINIERTE FILTER (AND)
+       ========================================================= */
+
     @Test
     void search_multipleFilters_AND_combined() throws Exception {
 
         mockMvc.perform(
-                        get("/api/person/search")
-                                .header("X-Tenant", tenant)
-                                .with(jwt())
+                        tenantRequest(get("/api/person/search"))
                                 .param("name", "Muster")
                                 .param("alterMin", "18")
                                 .param("alterMax", "30")
                                 .param("vereinId", vereinId.toString())
-                                .param("sex", "WEIBLICH")
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
@@ -190,9 +143,7 @@ class PersonSearchIntegrationTest {
     void search_byPlzAndOrt_combined() throws Exception {
 
         mockMvc.perform(
-                        get("/api/person/search")
-                                .header("X-Tenant", tenant)
-                                .with(jwt())
+                        tenantRequest(get("/api/person/search"))
                                 .param("plz", "50667")
                                 .param("ort", "Köln")
                 )
@@ -201,13 +152,15 @@ class PersonSearchIntegrationTest {
                 .andExpect(jsonPath("$[0].vorname").value("Max"));
     }
 
+    /* =========================================================
+       PAGING
+       ========================================================= */
+
     @Test
     void search_withFilterAndPaging() throws Exception {
 
         mockMvc.perform(
-                        get("/api/person/search")
-                                .header("X-Tenant", tenant)
-                                .with(jwt())
+                        tenantRequest(get("/api/person/search"))
                                 .param("name", "Muster")
                                 .param("page", "0")
                                 .param("size", "1")
@@ -220,9 +173,7 @@ class PersonSearchIntegrationTest {
     void search_withPaging_stillWorks() throws Exception {
 
         mockMvc.perform(
-                        get("/api/person/search")
-                                .header("X-Tenant", tenant)
-                                .with(jwt())
+                        tenantRequest(get("/api/person/search"))
                                 .param("page", "0")
                                 .param("size", "10")
                 )

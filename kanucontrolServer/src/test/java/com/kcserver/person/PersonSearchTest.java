@@ -1,0 +1,119 @@
+package com.kcserver.person;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kcserver.dto.PersonDTO;
+import com.kcserver.enumtype.Sex;
+import com.kcserver.integration.support.AbstractTenantIntegrationTest;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.time.LocalDate;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@Tag("person-crud")
+@SpringBootTest
+@ActiveProfiles("test")
+@AutoConfigureMockMvc
+class PersonSearchTest extends AbstractTenantIntegrationTest {
+
+    @Autowired
+    MockMvc mockMvc;
+
+    @Autowired
+    ObjectMapper objectMapper;
+
+    @BeforeEach
+    void setup() throws Exception {
+        createPerson("Max", "Mustermann", Sex.MAENNLICH, true, LocalDate.of(1990,1,1));
+        createPerson("Erika", "Mustermann", Sex.WEIBLICH, true, LocalDate.of(1991,1,1));
+        createPerson("Paul", "Meier", Sex.MAENNLICH, false, LocalDate.of(1992,1,1));
+    }
+
+    private void createPerson(
+            String vorname,
+            String name,
+            Sex sex,
+            boolean aktiv,
+            LocalDate geburtsdatum
+    ) throws Exception {
+
+        PersonDTO dto = new PersonDTO();
+        dto.setVorname(vorname);
+        dto.setName(name);
+        dto.setSex(sex);
+        dto.setAktiv(aktiv);
+        dto.setGeburtsdatum(geburtsdatum);
+
+        mockMvc.perform(
+                tenantRequest(post("/api/person"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto))
+        ).andExpect(status().isCreated());
+    }
+
+    @Test
+    void search_byName_returnsMatchingPersons() throws Exception {
+        mockMvc.perform(
+                        tenantRequest(get("/api/person/search"))
+                                .param("name", "Muster")
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2));
+    }
+
+    @Test
+    void search_bySex_filtersCorrectly() throws Exception {
+        mockMvc.perform(
+                        tenantRequest(get("/api/person/search"))
+                                .param("sex", "WEIBLICH")
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].vorname").value("Erika"));
+    }
+
+    @Test
+    void search_byAktivFalse_returnsOnlyInactive() throws Exception {
+        mockMvc.perform(
+                        tenantRequest(get("/api/person/search"))
+                                .param("aktiv", "false")
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].name").value("Meier"));
+    }
+
+    @Test
+    void search_withPaging_limitsResults() throws Exception {
+        mockMvc.perform(
+                        tenantRequest(get("/api/person/search"))
+                                .param("page", "0")
+                                .param("size", "2")
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2));
+    }
+
+    @Test
+    void search_combinedFilters_AND_applied() throws Exception {
+        mockMvc.perform(
+                        tenantRequest(get("/api/person/search"))
+                                .param("name", "Muster")
+                                .param("sex", "MAENNLICH")
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].vorname").value("Max"));
+    }
+}

@@ -1,5 +1,6 @@
 package com.kcserver.entity;
 
+import com.kcserver.audit.Auditable;
 import jakarta.persistence.*;
 import lombok.*;
 

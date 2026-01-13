@@ -32,9 +32,14 @@ public class PersonDTO {
     @Size(min = 2, max = 100)
     private String vorname;
 
+    @PastOrPresent(
+            groups = {OnCreate.class, OnUpdate.class},
+            message = "Geburtsdatum darf nicht in der Zukunft liegen"
+    )
     private LocalDate geburtsdatum;
 
     /** M / W / D */
+    @NotNull(groups = OnCreate.class)
     private Sex sex;
 
     private String telefonFestnetz;
@@ -50,7 +55,6 @@ public class PersonDTO {
 
     private String bankName;
     private String iban;
-    private String bic;
 
     private Boolean aktiv;
 

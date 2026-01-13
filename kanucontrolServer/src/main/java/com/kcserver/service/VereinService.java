@@ -3,9 +3,11 @@ package com.kcserver.service;
 import com.kcserver.dto.VereinDTO;
 import com.kcserver.entity.Person;
 import com.kcserver.entity.Verein;
+import org.springframework.data.domain.Pageable;
 import com.kcserver.mapper.VereinMapper;
 import com.kcserver.repository.PersonRepository;
 import com.kcserver.repository.VereinRepository;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,11 +54,41 @@ public class VereinService {
         return vereinMapper.toDTO(verein);
     }
 
+    @Transactional(readOnly = true)
+    public List<VereinDTO> search(String name, String abk, Pageable pageable) {
+
+        Specification<Verein> spec = Specification.where(null);
+
+        if (name != null && !name.isBlank()) {
+            spec = spec.and((root, query, cb) ->
+                    cb.like(cb.lower(root.get("name")), "%" + name.toLowerCase() + "%"));
+        }
+
+        if (abk != null && !abk.isBlank()) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("abk"), abk));
+        }
+
+        return vereinRepository.findAll(spec, pageable)
+                .map(vereinMapper::toDTO)
+                .getContent();
+    }
+
     /* =========================================================
        CREATE
        ========================================================= */
 
     public VereinDTO create(VereinDTO dto) {
+
+        normalize(dto);
+
+        // 🔒 Fachliche Duplikatsprüfung
+        if (vereinRepository.existsByAbkAndName(dto.getAbk(), dto.getName())) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Verein mit Abkürzung und Name existiert bereits"
+            );
+        }
 
         Verein verein = vereinMapper.toEntity(dto);
 
@@ -79,10 +111,27 @@ public class VereinService {
 
     public VereinDTO update(Long id, VereinDTO dto) {
 
+        normalize(dto);
+
         Verein verein = vereinRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Verein not found"
                 ));
+
+        // 🔒 Fachliche Duplikatsprüfung (UPDATE!)
+        if (vereinRepository.existsByAbkAndName(dto.getAbk(), dto.getName())) {
+
+            boolean sameEntity =
+                    verein.getAbk().equals(dto.getAbk()) &&
+                            verein.getName().equals(dto.getName());
+
+            if (!sameEntity) {
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "Verein mit Abkürzung und Name existiert bereits"
+                );
+            }
+        }
 
         vereinMapper.updateFromDTO(dto, verein);
 
@@ -116,5 +165,14 @@ public class VereinService {
             );
         }
         vereinRepository.deleteById(id);
+    }
+
+    private void normalize(VereinDTO dto) {
+        if (dto.getName() != null) {
+            dto.setName(dto.getName().trim());
+        }
+        if (dto.getAbk() != null) {
+            dto.setAbk(dto.getAbk().trim());
+        }
     }
 }

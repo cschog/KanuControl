@@ -1,5 +1,7 @@
 package com.kcserver;
 
+import com.kcserver.tenancy.TenantSchemaProvisioner;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -9,6 +11,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /* Der Test prüft genau das, was ein SmokeTest soll:
@@ -25,29 +28,30 @@ class SmokeTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Test
-    void applicationStarts_and_securedEndpointRequiresAuth() throws Exception {
-        mockMvc.perform(
-                        get("/api/person")
-                                .header("X-Tenant", "ekc_test")
-                )
-                .andExpect(status().isUnauthorized());
+    @Autowired
+    private TenantSchemaProvisioner provisioner;
+
+    private static final String TENANT = "ekc_test";
+
+    @BeforeEach
+    void setupTenant() {
+        provisioner.createFromBaseline(TENANT);
     }
 
     @Test
-    void request_withoutTenantHeader_returns400() throws Exception {
+    void request_withoutTenantHeader_usesDefaultTenant_kanu() throws Exception {
         mockMvc.perform(
-                        get("/api/person")
-                                .with(jwt())
+                        get("/api/person").with(jwt())
                 )
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isOk())
+                .andExpect(content().json("[]"));
     }
 
     @Test
     void securedEndpoint_withJwt_andTenantHeader_isReachable() throws Exception {
         mockMvc.perform(
                         get("/api/person")
-                                .header("X-Tenant", "ekc_test")
+                                .header("X-Tenant", TENANT)
                                 .with(jwt())
                 )
                 .andExpect(status().is2xxSuccessful());

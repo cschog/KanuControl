@@ -3,6 +3,7 @@ package com.kcserver;
 import com.kcserver.dto.MitgliedDTO;
 import com.kcserver.dto.PersonDTO;
 import com.kcserver.enumtype.MitgliedFunktion;
+import com.kcserver.enumtype.Sex;
 import com.kcserver.validation.OnCreate;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
@@ -47,16 +48,12 @@ class PersonCreateValidationTest {
     void createPerson_withTwoHauptvereine_isInvalid() {
         PersonDTO dto = validPerson();
 
-        MitgliedDTO secondMitglied = new MitgliedDTO(
-                null,
-                2L,
-                null,
-                null,
-                MitgliedFunktion.JUGENDWART,
-                true
-        );
+        MitgliedDTO second = new MitgliedDTO();
+        second.setVereinId(2L);
+        second.setHauptVerein(true);
+        second.setFunktion(MitgliedFunktion.JUGENDWART);
 
-        dto.getMitgliedschaften().add(secondMitglied);
+        dto.getMitgliedschaften().add(second);
 
         Set<ConstraintViolation<PersonDTO>> violations =
                 validator.validate(dto, OnCreate.class);
@@ -83,18 +80,16 @@ class PersonCreateValidationTest {
         PersonDTO dto = new PersonDTO();
         dto.setName("Müller");
         dto.setVorname("Anna");
+        dto.setSex(Sex.WEIBLICH);
 
-        MitgliedDTO mitglied = new MitgliedDTO(
-                null,
-                1L,
-                null,
-                null,
-                MitgliedFunktion.JUGENDWART,
-                true
-        );
+        MitgliedDTO mitglied = new MitgliedDTO();
+        mitglied.setVereinId(1L);
+        mitglied.setHauptVerein(true);
+        mitglied.setFunktion(MitgliedFunktion.JUGENDWART);
 
         List<MitgliedDTO> list = new ArrayList<>();
         list.add(mitglied);
+
         dto.setMitgliedschaften(list);
         return dto;
     }
