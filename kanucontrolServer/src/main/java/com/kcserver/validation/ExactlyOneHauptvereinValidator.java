@@ -8,10 +8,19 @@ public class ExactlyOneHauptvereinValidator
         implements ConstraintValidator<ExactlyOneHauptverein, PersonDTO> {
 
     @Override
-    public boolean isValid(PersonDTO person, ConstraintValidatorContext context) {
+    public boolean isValid(
+            PersonDTO person,
+            ConstraintValidatorContext context
+    ) {
 
-        // Null = andere Validatoren greifen
-        if (person == null || person.getMitgliedschaften() == null) {
+        // Person selbst ist null → andere Validatoren greifen
+        if (person == null) {
+            return true;
+        }
+
+        // ✅ KEINE Mitgliedschaften → erlaubt (reine Person-CRUDs!)
+        if (person.getMitgliedschaften() == null
+                || person.getMitgliedschaften().isEmpty()) {
             return true;
         }
 

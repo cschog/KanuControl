@@ -200,36 +200,76 @@ und enthält keine Businesslogik.
 
 ### Phase 0 – Fundament (aktuell)
 
-- Backend-Grundstruktur
-- Mandantenfähigkeit (Schema-per-Tenant)
-- Keycloak-Integration
-- CRUD für Verein, Person, Mitglied
-- Controller- & Integrationstests
+- [x] Backend-Grundstruktur
+- [x] Mandantenfähigkeit (Schema-per-Tenant)
+- [x] Keycloak-Integration
+- [x] CRUD für:
+  - [x] Verein
+  - [x] Person
+  - [x] Mitglied
+  - [x] Veranstaltung
+  - [x] Teilnehmer
+- [x] Teilnehmerverwaltung
+- [x] Controller- & Integrationstests
+- [x] Fachliche Validierungen
+- [ ] Technische Basis für Datei-Uploads
+
+---
 
 ### Phase 1 – Frontend-Basis
 
-- Login via Keycloak
-- CRUD-Oberflächen
-- Basis-Navigation
+- [ ] Login via Keycloak
+- [ ] CRUD-Oberflächen
+- [ ] Basis-Navigation
+- [ ] Tabellen mit Pagination & Sortierung
+- [ ] CSV-Export (read-only)
+  - [ ] Mitgliederliste
+  - [ ] Personenliste
+  - [ ] Filterabhängiger Export
+	- Multipart-Handling
+	- Größenlimits
 
-### Phase 2 – Veranstaltungen
+---
 
-- Veranstaltungen & Typen
-- Teilnehmerverwaltung
-- Fachliche Validierungen
+### Phase 2 – Mitglieder & Datenimport
 
-### Phase 3 – Abrechnung
+- [ ] CSV-Import Mitglieder
+  - [ ] Datei-Upload
+  - [ ] Vorschau / Dry-Run
+  - [ ] Validierung
+    - Pflichtfelder
+    - Fachliche Regeln
+    - Dubletten
+  - [ ] Fehlerbericht (Zeile + Ursache)
+- [ ] Mapping
+  - [ ] Person ↔ Mitglied ↔ Verein
+- [ ] Idempotenter Import
+- [ ] Import-Historie / Protokoll
 
-- Einnahmen / Ausgaben
-- Reisekosten
-- Plausibilitätsprüfungen
+---
 
-### Phase 4 – Dokumente
+### Phase 3 – Veranstaltungen
 
-- PDF-Erzeugung
-- Editierbare Formulare
-- Archivierung
+- [ ] Veranstaltungsverwaltung
+- [ ] Teilnehmerlisten
+- [ ] Anmeldestatus
 
+---
+
+### Phase 4 – Abrechnung
+
+- [ ] Einnahmen / Ausgaben
+- [ ] Reisekosten
+- [ ] Plausibilitätsprüfungen
+
+---
+
+### Phase 5 – Dokumente
+
+- [ ] PDF-Erzeugung
+- [ ] Editierbare Formulare
+- [ ] Dokument-Templates
+- [ ] Archivierung
 ---
 
 ## 🌍 Open-Source & Contributions
@@ -261,22 +301,6 @@ Contribution-Guidelines folgen in einer späteren Version.
 - Java 17
 - Maven
 - Node.js
-
-### Keycloak starten
-
-docker run -d --name keycloak \
-  -p 9080:8080 \
-  -e KEYCLOAK_ADMIN=admin \
-  -e KEYCLOAK_ADMIN_PASSWORD=admin \
-  -v /Volumes/Merlin_Daten/Apps/keyCloak-Data:/opt/keycloak/data \
-  quay.io/keycloak/keycloak:24.0.2 start-dev
-
-### Keycloak Admin UI
-
-- URL: http://localhost:9080
-- User: admin
-- Passwort: admin
-- Realm: KanuControl
 
 ---
 

@@ -1,0 +1,174 @@
+package com.kcserver.testdata;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kcserver.dto.MitgliedDTO;
+import com.kcserver.dto.PersonDTO;
+import com.kcserver.enumtype.MitgliedFunktion;
+import com.kcserver.enumtype.Sex;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+public class PersonTestFactory {
+
+    private final MockMvc mockMvc;
+    private final ObjectMapper objectMapper;
+    private final String tenant;
+
+    public PersonTestFactory(
+            MockMvc mockMvc,
+            ObjectMapper objectMapper,
+            String tenant
+    ) {
+        this.mockMvc = mockMvc;
+        this.objectMapper = objectMapper;
+        this.tenant = tenant;
+    }
+
+    /* =========================================================
+       Create or Reuse (Basis)
+       ========================================================= */
+
+    public Long createOrReuse(
+            String vorname,
+            String name,
+            LocalDate geburtsdatum,
+            Long vereinId
+    ) throws Exception {
+
+        Optional<Long> existing =
+                findPersonId(vorname, name, geburtsdatum, vereinId);
+
+        if (existing.isPresent()) {
+            return existing.get();
+        }
+
+        return createPerson(vorname, name, geburtsdatum, vereinId);
+    }
+
+    /* =========================================================
+       Create or Reuse (mit Ort & PLZ)
+       ========================================================= */
+
+    public Long createOrReuse(
+            String vorname,
+            String name,
+            LocalDate geburtsdatum,
+            Long vereinId,
+            String ort,
+            String plz
+    ) throws Exception {
+
+        PersonDTO dto = new PersonDTO();
+        dto.setVorname(vorname);
+        dto.setName(name);
+        dto.setGeburtsdatum(geburtsdatum);
+        dto.setSex(Sex.WEIBLICH);
+        dto.setOrt(ort);
+        dto.setPlz(plz);
+        dto.setAktiv(true);
+
+        MitgliedDTO mitglied = new MitgliedDTO();
+        mitglied.setVereinId(vereinId);
+        mitglied.setHauptVerein(true);
+        mitglied.setFunktion(MitgliedFunktion.JUGENDWART);
+
+        dto.setMitgliedschaften(List.of(mitglied));
+
+        MvcResult result = mockMvc.perform(
+                        post("/api/person")
+                                .header("X-Tenant", tenant)
+                                .with(jwt())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(dto))
+                )
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        return objectMapper
+                .readTree(result.getResponse().getContentAsString())
+                .get("id")
+                .asLong();
+    }
+
+    /* =========================================================
+       Create Person (immer neu)
+       ========================================================= */
+
+    public Long createPerson(
+            String vorname,
+            String name,
+            LocalDate geburtsdatum,
+            Long vereinId
+    ) throws Exception {
+
+        PersonDTO dto = new PersonDTO();
+        dto.setVorname(vorname);
+        dto.setName(name);
+        dto.setGeburtsdatum(geburtsdatum);
+        dto.setSex(Sex.WEIBLICH);
+        dto.setAktiv(true);
+
+        MitgliedDTO mitglied = new MitgliedDTO();
+        mitglied.setVereinId(vereinId);
+        mitglied.setHauptVerein(true);
+        mitglied.setFunktion(MitgliedFunktion.JUGENDWART);
+
+        dto.setMitgliedschaften(List.of(mitglied));
+
+        MvcResult result = mockMvc.perform(
+                        post("/api/person")
+                                .header("X-Tenant", tenant)
+                                .with(jwt())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(dto))
+                )
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        return objectMapper
+                .readTree(result.getResponse().getContentAsString())
+                .get("id")
+                .asLong();
+    }
+
+    /* =========================================================
+       Suche bestehende Person
+       ========================================================= */
+
+    private Optional<Long> findPersonId(
+            String vorname,
+            String name,
+            LocalDate geburtsdatum,
+            Long vereinId
+    ) throws Exception {
+
+        MvcResult result = mockMvc.perform(
+                        get("/api/person/search")
+                                .header("X-Tenant", tenant)
+                                .with(jwt())
+                                .param("vorname", vorname)
+                                .param("name", name)
+                                .param("vereinId", vereinId.toString())
+                )
+                .andExpect(status().isOk())
+                .andReturn();
+
+        var json = objectMapper.readTree(result.getResponse().getContentAsString());
+
+        if (!json.isArray() || json.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(json.get(0).get("id").asLong());
+    }
+}

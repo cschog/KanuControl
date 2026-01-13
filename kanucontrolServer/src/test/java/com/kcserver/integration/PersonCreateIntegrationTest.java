@@ -5,7 +5,7 @@ import com.kcserver.dto.MitgliedDTO;
 import com.kcserver.dto.PersonDTO;
 import com.kcserver.enumtype.MitgliedFunktion;
 import com.kcserver.enumtype.Sex;
-import org.junit.jupiter.api.BeforeEach;
+import com.kcserver.integration.support.AbstractTenantIntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -13,6 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -24,38 +25,30 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
-class PersonCreateIntegrationTest {
+class PersonCreateIntegrationTest extends AbstractTenantIntegrationTest {
 
     @Autowired
     MockMvc mockMvc;
 
-    Long vereinId;
-    private String tenant;
-
     @Autowired
     ObjectMapper objectMapper;
-
-    @BeforeEach
-    void setup() {
-        tenant = "test_" + System.currentTimeMillis();
-    }
 
     @Test
     void createPerson_createsDataInTenantSchema() throws Exception {
 
-        // 1️⃣ Verein über API
+        // 1️⃣ Verein anlegen
         String vereinResponse =
                 mockMvc.perform(
-                                post("/api/verein")
-                                        .header("X-Tenant", tenant)
-                                        .with(jwt())
+                                tenantRequest(post("/api/verein"))
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content("""
-                                {
-                                  "name": "EKC",
-                                  "abk": "EKC"
-                                }
-                                """)
+                                                {
+                                                   "name": "EKC",
+                                                   "abk": "EKC",
+                                                   "iban": "DE89370400440532013000",
+                                                   "bankName": "Testbank"
+                                                 }
+                                            """)
                         )
                         .andExpect(status().isCreated())
                         .andReturn()
@@ -65,20 +58,21 @@ class PersonCreateIntegrationTest {
         Long vereinId =
                 objectMapper.readTree(vereinResponse).get("id").asLong();
 
-        // 2️⃣ Person über API
+        // 2️⃣ Person anlegen
         PersonDTO dto = validPerson();
         dto.getMitgliedschaften().get(0).setVereinId(vereinId);
 
         mockMvc.perform(
-                        post("/api/person")
-                                .header("X-Tenant", tenant)
-                                .with(jwt())
+                        tenantRequest(post("/api/person"))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(dto))
                 )
                 .andExpect(status().isCreated());
     }
 
+    /* -------------------------------------------------
+       Helpers
+       ------------------------------------------------- */
 
     private PersonDTO validPerson() {
         PersonDTO dto = new PersonDTO();
@@ -93,5 +87,13 @@ class PersonCreateIntegrationTest {
 
         dto.setMitgliedschaften(List.of(mitglied));
         return dto;
+    }
+
+    protected MockHttpServletRequestBuilder tenantRequest(
+            MockHttpServletRequestBuilder builder
+    ) {
+        return builder
+                .header("X-Tenant", TENANT)
+                .with(jwt());
     }
 }

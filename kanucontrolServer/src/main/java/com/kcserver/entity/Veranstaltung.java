@@ -1,5 +1,6 @@
 package com.kcserver.entity;
 
+import com.kcserver.audit.Auditable;
 import com.kcserver.enumtype.CountryCode;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.persistence.converter.VeranstaltungTypConverter;

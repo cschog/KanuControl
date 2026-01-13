@@ -12,6 +12,4 @@ public class TeilnehmerDTO {
     private Long personId;
 
     private TeilnehmerRolle rolle;
-
-    private Boolean aktiv;
 }

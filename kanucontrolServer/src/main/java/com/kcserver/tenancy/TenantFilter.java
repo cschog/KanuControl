@@ -30,7 +30,6 @@ public class TenantFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
-        // ✅ HIER war der Fehler: tenantId fehlte
         String tenantId = request.getHeader("X-Tenant");
 
         if (tenantId == null || tenantId.isBlank()) {

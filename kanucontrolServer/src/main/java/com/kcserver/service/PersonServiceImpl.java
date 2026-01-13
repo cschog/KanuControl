@@ -78,8 +78,23 @@ public class PersonServiceImpl implements PersonService {
     @Override
     public PersonDTO createPerson(PersonDTO dto) {
 
-        //logger.info(">>> Current tenant BEFORE save: {}",
-        //        TenantContext.getCurrentTenant());
+        // 0️⃣ Fachliche Duplikatsprüfung
+        if (dto.getGeburtsdatum() != null) {
+
+            boolean exists = personRepository
+                    .existsByVornameAndNameAndGeburtsdatum(
+                            dto.getVorname(),
+                            dto.getName(),
+                            dto.getGeburtsdatum()
+                    );
+
+            if (exists) {
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "Eine Person mit gleichem Namen und Geburtsdatum existiert bereits"
+                );
+            }
+        }
 
         // 1️⃣ Person speichern (OHNE Mitgliedschaften)
         Person person = personMapper.toEntity(dto);
@@ -117,12 +132,33 @@ public class PersonServiceImpl implements PersonService {
 
     @Override
     public PersonDTO updatePerson(long id, PersonDTO dto) {
+
         Person existing = personRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         NOT_FOUND, "Person not found"
                 ));
 
+        // 0️⃣ Fachliche Duplikatsprüfung (nur wenn Geburtsdatum gesetzt)
+        if (dto.getGeburtsdatum() != null) {
+            personRepository
+                    .findByVornameAndNameAndGeburtsdatum(
+                            dto.getVorname(),
+                            dto.getName(),
+                            dto.getGeburtsdatum()
+                    )
+                    .filter(p -> !p.getId().equals(existing.getId())) // 👈 sich selbst erlauben
+                    .ifPresent(p -> {
+                        throw new ResponseStatusException(
+                                HttpStatus.CONFLICT,
+                                "Eine andere Person mit gleichem Namen und Geburtsdatum existiert bereits"
+                        );
+                    });
+        }
+
+        // 1️⃣ Update durchführen
         personMapper.updateFromDTO(dto, existing);
+
+        // 2️⃣ Rückgabe
         return personMapper.toDTO(existing);
     }
 

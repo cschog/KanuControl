@@ -33,12 +33,7 @@ class TenantSchemaSmokeTest {
         assertTableExists(tenant, "teilnehmer");
     }
 
-    /* -------------------------------------------------
-       Helper
-       ------------------------------------------------- */
-
     private void assertTableExists(String schema, String table) {
-
         Integer count = jdbcTemplate.queryForObject("""
             SELECT COUNT(*)
             FROM information_schema.tables

@@ -1,5 +1,6 @@
 package com.kcserver.config;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Component;
 import java.util.Optional;
 
 @Component
+@Profile("!test")
 public class SecurityAuditorAware implements AuditorAware<String> {
 
     @Override
@@ -18,9 +20,9 @@ public class SecurityAuditorAware implements AuditorAware<String> {
                 SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication instanceof JwtAuthenticationToken jwtAuth) {
-            String username =
-                    jwtAuth.getToken().getClaimAsString("preferred_username");
-            return Optional.ofNullable(username);
+            return Optional.ofNullable(
+                    jwtAuth.getToken().getClaimAsString("preferred_username")
+            );
         }
 
         return Optional.of("system");
