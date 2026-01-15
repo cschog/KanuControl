@@ -52,5 +52,6 @@ public class Teilnehmer extends Auditable {
        ========================= */
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean aktiv = true;
 }
