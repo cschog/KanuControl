@@ -1,9 +1,9 @@
 import React from "react";
-import Navigation from "./components/Nav";
+import Navigation from "@/components/layout/Nav";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import StartMenue from "./components/StartMenue";
-import Vereine from "./components/Vereine/Vereine";
-import Personen from "./components/Mitglieder/Personen";
+import StartMenue from "@/components/layout/StartMenue";
+import Vereine from "./components/verein/Vereine";
+import Personen from "./components/person/Personen";
 import Veranstaltungen from "./Platzhalter/Veranstaltungen";
 import Teilnehmer from "./Platzhalter/Teilnehmer";
 import Kosten from "./Platzhalter/Kosten";

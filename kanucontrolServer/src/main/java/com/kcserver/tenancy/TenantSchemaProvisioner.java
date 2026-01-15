@@ -56,11 +56,19 @@ public class TenantSchemaProvisioner {
     public void createFromBaselineIfNeeded(String tenantSchema) {
 
         if (initializedTenants.contains(tenantSchema)) {
+            log.debug(
+                    "Tenant schema '{}' already initialized (runtime cache)",
+                    tenantSchema
+            );
             return;
         }
 
         synchronized (this) {
             if (initializedTenants.contains(tenantSchema)) {
+                log.debug(
+                        "Tenant schema '{}' already initialized (double-check)",
+                        tenantSchema
+                );
                 return;
             }
 
