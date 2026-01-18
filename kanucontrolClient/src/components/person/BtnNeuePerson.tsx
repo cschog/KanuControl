@@ -1,24 +1,36 @@
-import React, { ReactNode } from "react";
+import React from "react";
+import {
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Stack,
+} from "@mui/material";
 import { BtnEditDeleteBack } from "@/components/common/BtnEditDeleteBack";
-import { Button } from "primereact/button";
-import { ConfirmDialog } from "primereact/confirmdialog";
-import { Person } from "@/api/types/Person"; // Import the Person interface
+import { Person } from "@/api/types/Person";
 
 interface ButtonNeuePersonProps {
   onNeuePerson: () => void;
   btnNeuePerson: boolean;
+
   visible: boolean;
   setVisible: React.Dispatch<React.SetStateAction<boolean>>;
-  selectedPerson: Person | null; // Use the Person interface here
+
+  selectedPerson: Person | null;
+
   accept: () => void;
   reject: () => void;
+
   onÄndernPerson: () => void;
   btnÄndernPerson: boolean;
   btnLöschenPerson: boolean;
+
   onStartMenue: () => void;
 }
 
-export function buttonNeuePerson({
+export function ButtonNeuePerson({
   onNeuePerson,
   btnNeuePerson,
   visible,
@@ -30,30 +42,48 @@ export function buttonNeuePerson({
   btnÄndernPerson,
   btnLöschenPerson,
   onStartMenue,
-}: ButtonNeuePersonProps): ReactNode {
+}: ButtonNeuePersonProps) {
   return (
-    <div>
+    <Stack spacing={2}>
+      {/* ➕ Neue Person */}
       <Button
-        label="Neue Person" // Update the label
-        className="p-button-outlined m-2"
+        variant="outlined"
         onClick={onNeuePerson}
         disabled={btnNeuePerson}
-      />
-      <ConfirmDialog
-        visible={visible}
-        onHide={() => setVisible(false)}
-        message={
-          selectedPerson
-            ? "Soll die Person " + selectedPerson.name + " gelöscht werden?" // Update the message
-            : ""
-        }
-        header={
-          selectedPerson ? "Löschen der Person " + selectedPerson.name + "?" : "" // Update the header
-        }
-        icon="pi pi-exclamation-triangle"
-        accept={accept}
-        reject={reject}
-      />
+      >
+        Neue Person
+      </Button>
+
+      {/* 🗑️ Löschen-Dialog */}
+      <Dialog
+        open={visible}
+        onClose={() => setVisible(false)}
+      >
+        <DialogTitle>
+          {selectedPerson
+            ? `Löschen der Person ${selectedPerson.name}?`
+            : "Löschen"}
+        </DialogTitle>
+
+        <DialogContent>
+          <DialogContentText>
+            {selectedPerson
+              ? `Soll die Person ${selectedPerson.name} wirklich gelöscht werden?`
+              : ""}
+          </DialogContentText>
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={reject} color="inherit">
+            Abbrechen
+          </Button>
+          <Button onClick={accept} color="error" variant="contained">
+            Löschen
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* ✏️ Ändern / Löschen / Zurück */}
       <BtnEditDeleteBack
         onÄndern={onÄndernPerson}
         btnÄndern={btnÄndernPerson}
@@ -61,6 +91,6 @@ export function buttonNeuePerson({
         btnLöschen={btnLöschenPerson}
         onStartMenue={onStartMenue}
       />
-    </div>
+    </Stack>
   );
 }

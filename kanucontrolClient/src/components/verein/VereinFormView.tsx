@@ -1,7 +1,16 @@
-import React, { useState, useCallback, useRef } from "react";
-import { Toast } from "primereact/toast";
+import React, { useState, useCallback } from "react";
+import {
+  Box,
+  Typography,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Snackbar,
+  Alert,
+} from "@mui/material";
 import { FormFeld } from "@/components/common/FormFeld";
-import { buttonNeuerVerein } from "./BtnNeuerVerein";
 import { Verein } from "@/api/types/Verein";
 
 interface VereinFormViewProps {
@@ -25,157 +34,116 @@ export const VereinFormView: React.FC<VereinFormViewProps> = ({
   onStartMenue,
   selectedVerein,
 }) => {
-  const toast = useRef<Toast>(null);
-  const [visible, setVisible] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [snackbar, setSnackbar] = useState<string | null>(null);
 
-  // Called when user confirms deletion
-  const accept = useCallback(() => {
-    if (selectedVerein) {
-      const message = `${selectedVerein.name} wurde gelöscht!`;
-      onDeleteVerein();
-      if (toast.current) {
-        toast.current.show({
-          severity: "info",
-          summary: "Bestätigung",
-          detail: message,
-          life: 3000,
-        });
-      }
-    }
+  const handleDeleteConfirm = useCallback(() => {
+    if (!selectedVerein) return;
+
+    onDeleteVerein();
+    setConfirmOpen(false);
+    setSnackbar(`${selectedVerein.name} wurde gelöscht`);
   }, [selectedVerein, onDeleteVerein]);
-
-  // Called when user cancels deletion
-  const reject = useCallback(() => {
-    if (selectedVerein) {
-      const message = `${selectedVerein.name} wurde nicht gelöscht!`;
-      if (toast.current) {
-        toast.current.show({
-          severity: "warn",
-          summary: "Abbruch",
-          detail: message,
-          life: 3000,
-        });
-      }
-    }
-  }, [selectedVerein]);
 
   return (
     <>
-      <Toast ref={toast} />
-
-      {/* Same container layout as in VereinEditForm */}
-      <div className="w-full max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-6">
-        <h2 className="text-xl font-bold mb-6 text-center text-blue-700">
-          {/* Possibly a heading here */}
+      {/* Container */}
+      <Box maxWidth="lg" mx="auto">
+        <Typography variant="h5" align="center" gutterBottom>
           Vereinsdetails
-        </h2>
+        </Typography>
 
         {selectedVerein ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-5 gap-y-2">
-            <FormFeld
-              value={selectedVerein.abk}
-              label="Abkürzung"
-              disabled={true}
-              onChange={() => {}}
-              className="bg-gray-100 focus:bg-white border-2 border-gray-300 
-                         focus:border-blue-500 rounded p-2 w-full"
-            />
-            <FormFeld
-              value={selectedVerein.name}
-              label="Verein"
-              disabled={true}
-              onChange={() => {}}
-              className="bg-gray-100 focus:bg-white border-2 border-gray-300 
-                         focus:border-blue-500 rounded p-2 w-full"
-            />
-            <FormFeld
-              value={selectedVerein.strasse}
-              label="Strasse"
-              disabled={true}
-              onChange={() => {}}
-              className="bg-gray-100 focus:bg-white border-2 border-gray-300 
-                         focus:border-blue-500 rounded p-2 w-full"
-            />
-            <FormFeld
-              value={selectedVerein.plz}
-              label="PLZ"
-              disabled={true}
-              onChange={() => {}}
-              className="bg-gray-100 focus:bg-white border-2 border-gray-300 
-                         focus:border-blue-500 rounded p-2 w-full"
-            />
-            <FormFeld
-              value={selectedVerein.ort}
-              label="Ort"
-              disabled={true}
-              onChange={() => {}}
-              className="bg-gray-100 focus:bg-white border-2 border-gray-300 
-                         focus:border-blue-500 rounded p-2 w-full"
-            />
-            <FormFeld
-              value={selectedVerein.telefon}
-              label="Telefon"
-              disabled={true}
-              onChange={() => {}}
-              className="bg-gray-100 focus:bg-white border-2 border-gray-300 
-                         focus:border-blue-500 rounded p-2 w-full"
-            />
-            <FormFeld
-              value={selectedVerein.bankName}
-              label="Bank"
-              disabled={true}
-              onChange={() => {}}
-              className="bg-gray-100 focus:bg-white border-2 border-gray-300 
-                         focus:border-blue-500 rounded p-2 w-full"
-            />
-            <FormFeld
-              value={selectedVerein.kontoInhaber}
-              label="Konto-Inhaber"
-              disabled={true}
-              onChange={() => {}}
-              className="bg-gray-100 focus:bg-white border-2 border-gray-300 
-                         focus:border-blue-500 rounded p-2 w-full"
-            />
-            <FormFeld
-              value={selectedVerein.kiAnschrift}
-              label="Anschrift"
-              disabled={true}
-              onChange={() => {}}
-              className="bg-gray-100 focus:bg-white border-2 border-gray-300 
-                         focus:border-blue-500 rounded p-2 w-full"
-            />
-            <FormFeld
-              value={selectedVerein.iban}
-              label="IBAN"
-              disabled={true}
-              onChange={() => {}}
-              className="bg-gray-100 focus:bg-white border-2 border-gray-300 
-                         focus:border-blue-500 rounded p-2 w-full"
-            />
-          </div>
-        ) : (
-          <div className="text-gray-500 italic text-center">
-            Bitte wählen Sie einen Verein aus der Tabelle aus.
-          </div>
-        )}
-      </div>
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: {
+                xs: "1fr",
+                sm: "1fr 1fr",
+                lg: "1fr 1fr 1fr",
+              },
+              gap: 2,
+            }}
+          >
+            <FormFeld label="Abkürzung" value={selectedVerein.abk} disabled />
+            <FormFeld label="Verein" value={selectedVerein.name} disabled />
+            <FormFeld label="Straße" value={selectedVerein.strasse} disabled />
 
-      {/* Buttons for Neuer/Löschen/Ändern, etc. */}
-      <div className="mt-4">
-        {buttonNeuerVerein({
-          onNeuerVerein,
-          btnNeuerVerein,
-          visible,
-          setVisible,
-          selectedVerein,
-          accept,
-          reject,
-          onÄndernVerein,
-          btnÄndernVerein,
-          btnLöschenVerein,
-          onStartMenue,
-        })}
-      </div>
+            <FormFeld label="PLZ" value={selectedVerein.plz} disabled />
+            <FormFeld label="Ort" value={selectedVerein.ort} disabled />
+            <FormFeld label="Telefon" value={selectedVerein.telefon} disabled />
+
+            <FormFeld label="Bank" value={selectedVerein.bankName} disabled />
+            <Box sx={{ gridColumn: { xs: "1", lg: "1 / -1" } }}>
+              <FormFeld label="IBAN" value={selectedVerein.iban} disabled />
+            </Box>
+          </Box>
+        ) : (
+          <Typography color="text.secondary" align="center" sx={{ mt: 2 }}>
+            Bitte wählen Sie einen Verein aus der Tabelle aus.
+          </Typography>
+        )}
+
+        {/* Action Buttons */}
+        <Box mt={4} display="flex" gap={2} flexWrap="wrap">
+          <Button
+            variant="contained"
+            onClick={onNeuerVerein}
+            disabled={btnNeuerVerein}
+          >
+            Neuer Verein
+          </Button>
+
+          <Button
+            variant="outlined"
+            onClick={onÄndernVerein}
+            disabled={btnÄndernVerein}
+          >
+            Bearbeiten
+          </Button>
+
+          <Button
+            variant="outlined"
+            color="error"
+            onClick={() => setConfirmOpen(true)}
+            disabled={btnLöschenVerein}
+          >
+            Löschen
+          </Button>
+
+          <Box flexGrow={1} />
+
+          <Button variant="text" onClick={onStartMenue}>
+            Zurück
+          </Button>
+        </Box>
+      </Box>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
+        <DialogTitle>Verein löschen?</DialogTitle>
+        <DialogContent>
+          {selectedVerein &&
+            `Soll der Verein "${selectedVerein.name}" wirklich gelöscht werden?`}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmOpen(false)}>Abbrechen</Button>
+          <Button color="error" onClick={handleDeleteConfirm}>
+            Löschen
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Snackbar */}
+      <Snackbar
+        open={!!snackbar}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar(null)}
+      >
+        <Alert severity="info" onClose={() => setSnackbar(null)}>
+          {snackbar}
+        </Alert>
+      </Snackbar>
     </>
   );
 };

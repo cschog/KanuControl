@@ -31,22 +31,26 @@ public class SchemaMultiTenantConnectionProvider
     }
 
     @Override
-    public Connection getConnection(Object tenantIdentifier)
-            throws SQLException {
+    public Connection getConnection(Object tenantIdentifier) throws SQLException {
+        String schema = tenantIdentifier.toString();
 
-        String schema = (String) tenantIdentifier;
-        Connection connection = dataSource.getConnection();
-        connection.setSchema(schema);
+        Connection connection = getAnyConnection();
+
+        try (var stmt = connection.createStatement()) {
+            stmt.execute("set search_path to " + schema);
+        }
+
         return connection;
     }
 
     @Override
-    public void releaseConnection(
-            Object tenantIdentifier,
-            Connection connection
-    ) throws SQLException {
+    public void releaseConnection(Object tenantIdentifier, Connection connection)
+            throws SQLException {
 
-        connection.setSchema("kanu"); // fallback
+        try (var stmt = connection.createStatement()) {
+            stmt.execute("set search_path to kanu");
+        }
+
         connection.close();
     }
 

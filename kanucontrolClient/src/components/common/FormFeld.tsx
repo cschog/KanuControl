@@ -1,28 +1,38 @@
-import { InputText } from "primereact/inputtext";
+// components/common/FormFeld.tsx
+import { TextField } from "@mui/material";
+
+type FormValue = string | number | boolean | null | undefined;
 
 interface FormFeldProps {
-  value: string;
   label: string;
-  disabled: boolean;
-  onChange: (value: string) => void;
-  className?: string; // Optional className prop for custom styling
+  value: FormValue;
+  disabled?: boolean;
+  onChange?: (value: string) => void;
 }
 
 export const FormFeld: React.FC<FormFeldProps> = ({
-  value,
   label,
-  disabled,
+  value,
+  disabled = false,
   onChange,
-  className = "", // Default to an empty string
-}) => (
-  <div className={`p-float-label ${className}`}>
-    <InputText
-      id={label}
-      value={value}
+}) => {
+  const displayValue =
+    typeof value === "boolean"
+      ? value ? "Ja" : "Nein"
+      : value ?? "";
+
+  return (
+    <TextField
+      fullWidth
+      size="small"
+      label={label}
+      value={displayValue}
       disabled={disabled}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-full" // Ensure input spans the width of its container
+      onChange={
+        onChange
+          ? (e) => onChange(e.target.value)
+          : undefined
+      }
     />
-    <label htmlFor={label}>{label}</label>
-  </div>
-);
+  );
+};

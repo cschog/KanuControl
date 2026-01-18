@@ -36,9 +36,6 @@ public class JpaMultiTenantConfig {
         props.put("hibernate.multi_tenant_connection_provider", connectionProvider);
         props.put("hibernate.tenant_identifier_resolver", tenantIdentifierResolver);
 
-        // optional aber sinnvoll
-        props.put("hibernate.default_schema", "kanu");
-
         emf.setJpaPropertyMap(props);
         return emf;
     }

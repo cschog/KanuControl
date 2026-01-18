@@ -1,33 +1,43 @@
-import { Button } from "primereact/button";
+import { Button, Stack } from "@mui/material";
 
 interface BtnStoreCancelProps {
-	createUpdate: () => boolean;
-	onAbbruch: () => void;
+  createUpdate: () => Promise<boolean>;
+  onAbbruch: () => void;
 }
 
 export function BtnStoreCancel({
-	createUpdate,
-	onAbbruch,
-  }: Readonly<BtnStoreCancelProps>) {
-	const handleSave = () => {
-	  const success = createUpdate();
-	  if (!success) {
-		console.error("Failed to save changes");
-	  }
-	};
-  
-	return (
-	  <>
-		<Button
-		  label="Speichern"
-		  className="p-button-outlined p-button-success m-2"
-		  onClick={handleSave}
-		/>
-		<Button
-		  label="Abbruch"
-		  className="p-button-outlined m-2 ml-6"
-		  onClick={onAbbruch}
-		/>
-	  </>
-	);
-  }
+  createUpdate,
+  onAbbruch,
+}: Readonly<BtnStoreCancelProps>) {
+
+  const handleSave = async () => {
+    try {
+      const success = await createUpdate();
+      if (!success) {
+        console.error("Failed to save changes");
+      }
+    } catch (err) {
+      console.error("Save threw error", err);
+    }
+  };
+
+  return (
+    <Stack direction="row" spacing={2}>
+      <Button
+        variant="contained"
+        color="success"
+        onClick={handleSave}
+      >
+        Speichern
+      </Button>
+
+      <Button
+        variant="outlined"
+        color="inherit"
+        onClick={onAbbruch}
+      >
+        Abbruch
+      </Button>
+    </Stack>
+  );
+}

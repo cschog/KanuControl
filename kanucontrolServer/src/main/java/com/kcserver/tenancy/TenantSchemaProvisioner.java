@@ -1,5 +1,6 @@
 package com.kcserver.tenancy;
 
+import com.kcserver.controller.PersonController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -12,6 +13,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class TenantSchemaProvisioner {
+
+    private static final Logger logger = LoggerFactory.getLogger(PersonController.class);
 
     private static final Logger log =
             LoggerFactory.getLogger(TenantSchemaProvisioner.class);
@@ -56,7 +59,7 @@ public class TenantSchemaProvisioner {
     public void createFromBaselineIfNeeded(String tenantSchema) {
 
         if (initializedTenants.contains(tenantSchema)) {
-            log.debug(
+            logger.debug(
                     "Tenant schema '{}' already initialized (runtime cache)",
                     tenantSchema
             );
@@ -65,7 +68,7 @@ public class TenantSchemaProvisioner {
 
         synchronized (this) {
             if (initializedTenants.contains(tenantSchema)) {
-                log.debug(
+                logger.debug(
                         "Tenant schema '{}' already initialized (double-check)",
                         tenantSchema
                 );
@@ -82,12 +85,12 @@ public class TenantSchemaProvisioner {
      */
     public void createFromBaseline(String tenantSchema) {
 
-        log.info("Provisioning tenant schema '{}'", tenantSchema);
+        logger.info("Provisioning tenant schema '{}'", tenantSchema);
 
         createSchemaIfNotExists(tenantSchema);
         createTables(tenantSchema);
 
-        log.info("Tenant schema '{}' successfully provisioned", tenantSchema);
+        logger.info("Tenant schema '{}' successfully provisioned", tenantSchema);
     }
 
     /* =================================================
@@ -113,7 +116,7 @@ public class TenantSchemaProvisioner {
                     table
             );
 
-            log.debug("Creating table {}.{}", tenantSchema, table);
+            logger.debug("Creating table {}.{}", tenantSchema, table);
             jdbcTemplate.execute(sql);
         }
     }

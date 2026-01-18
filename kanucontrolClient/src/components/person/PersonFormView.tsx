@@ -1,16 +1,29 @@
-import React, { useState, useCallback, useRef } from "react";
-import { Toast } from "primereact/toast";
+import React, { useState, useCallback } from "react";
+import {
+  Box,
+  Typography,
+  Button,
+  Snackbar,
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from "@mui/material";
+
 import { FormFeld } from "@/components/common/FormFeld";
-import { buttonNeuePerson } from "@/components/person/BtnNeuePerson"; // Similar to buttonNeuerVerein
 import { Person } from "@/api/types/Person";
 
 interface PersonFormViewProps {
   onNeuePerson: () => void;
   btnNeuePerson: boolean;
+
   onÄndernPerson: () => void;
   btnÄndernPerson: boolean;
+
   onDeletePerson: () => void;
   btnLöschenPerson: boolean;
+
   onStartMenue: () => void;
   selectedPerson: Person | null;
 }
@@ -25,138 +38,134 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
   onStartMenue,
   selectedPerson,
 }) => {
-  const toast = useRef<Toast>(null);
-  const [visible, setVisible] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [snackbarMsg, setSnackbarMsg] = useState<string | null>(null);
+  const [snackbarSeverity, setSnackbarSeverity] =
+    useState<"success" | "warning">("success");
 
-  const accept = useCallback(() => {
-    if (selectedPerson) {
-      const message = `${selectedPerson.name} wurde gelöscht!`;
-      onDeletePerson();
-      if (toast.current) {
-        toast.current.show({
-          severity: "info",
-          summary: "Bestätigung",
-          detail: message,
-          life: 3000,
-        });
-      }
-    }
-  }, [selectedPerson, onDeletePerson]);
+  const handleDeleteConfirm = useCallback(() => {
+    if (!selectedPerson) return;
 
-  const reject = useCallback(() => {
+    onDeletePerson();
+    setConfirmOpen(false);
+    setSnackbarMsg(`${selectedPerson.name} wurde gelöscht`);
+    setSnackbarSeverity("success");
+  }, [onDeletePerson, selectedPerson]);
+
+  const handleDeleteCancel = () => {
+    setConfirmOpen(false);
     if (selectedPerson) {
-      const message = `${selectedPerson.name} wurde nicht gelöscht!`;
-      if (toast.current) {
-        toast.current.show({
-          severity: "warn",
-          summary: "Abbruch",
-          detail: message,
-          life: 3000,
-        });
-      }
+      setSnackbarMsg(`${selectedPerson.name} wurde nicht gelöscht`);
+      setSnackbarSeverity("warning");
     }
-  }, [selectedPerson]);
+  };
 
   return (
     <>
-      <Toast ref={toast} />
-
-      {/* Same container style as your edit forms */}
-      <div className="w-full max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-6">
-        <h2 className="text-xl font-bold mb-6 text-center text-blue-700">
+      <Box
+        maxWidth="lg"
+        mx="auto"
+        p={3}
+        borderRadius={2}
+        boxShadow={3}
+        bgcolor="background.paper"
+      >
+        <Typography variant="h6" gutterBottom align="center">
           Mitgliederdetails
-        </h2>
+        </Typography>
 
         {selectedPerson ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-5 gap-y-2">
-            <FormFeld
-              value={selectedPerson.name}
-              label="Name"
-              disabled={true}
-              onChange={() => {}}
-              className="bg-gray-100 focus:bg-white border-2 border-gray-300 
-                         focus:border-blue-500 rounded p-2 w-full"
-            />
-            <FormFeld
-              value={selectedPerson.vorname}
-              label="Vorname"
-              disabled={true}
-              onChange={() => {}}
-              className="bg-gray-100 focus:bg-white border-2 border-gray-300 
-                         focus:border-blue-500 rounded p-2 w-full"
-            />
-            <FormFeld
-              value={selectedPerson.strasse}
-              label="Strasse"
-              disabled={true}
-              onChange={() => {}}
-              className="bg-gray-100 focus:bg-white border-2 border-gray-300 
-                         focus:border-blue-500 rounded p-2 w-full"
-            />
-            <FormFeld
-              value={selectedPerson.plz}
-              label="PLZ"
-              disabled={true}
-              onChange={() => {}}
-              className="bg-gray-100 focus:bg-white border-2 border-gray-300 
-                         focus:border-blue-500 rounded p-2 w-full"
-            />
-            <FormFeld
-              value={selectedPerson.ort}
-              label="Ort"
-              disabled={true}
-              onChange={() => {}}
-              className="bg-gray-100 focus:bg-white border-2 border-gray-300 
-                         focus:border-blue-500 rounded p-2 w-full"
-            />
-            <FormFeld
-              value={selectedPerson.telefon}
-              label="Telefon"
-              disabled={true}
-              onChange={() => {}}
-              className="bg-gray-100 focus:bg-white border-2 border-gray-300 
-                         focus:border-blue-500 rounded p-2 w-full"
-            />
-            <FormFeld
-              value={selectedPerson.bankName}
-              label="Bank"
-              disabled={true}
-              onChange={() => {}}
-              className="bg-gray-100 focus:bg-white border-2 border-gray-300 
-                         focus:border-blue-500 rounded p-2 w-full"
-            />
-            <FormFeld
-              value={selectedPerson.iban}
-              label="IBAN"
-              disabled={true}
-              onChange={() => {}}
-              className="bg-gray-100 focus:bg-white border-2 border-gray-300 
-                         focus:border-blue-500 rounded p-2 w-full"
-            />
-            </div>
+          <Box
+            display="grid"
+            gridTemplateColumns={{
+              xs: "1fr",
+              sm: "1fr 1fr",
+              md: "1fr 1fr 1fr",
+            }}
+            gap={2}
+          >
+            <FormFeld label="Name" value={selectedPerson.name} disabled />
+            <FormFeld label="Vorname" value={selectedPerson.vorname} disabled />
+            <FormFeld label="Sex" value={selectedPerson.sex} disabled />
+            <FormFeld label="Geburtsd." value={selectedPerson.geburtsdatum} disabled />
+            <FormFeld label="Straße" value={selectedPerson.strasse} disabled />
+            <FormFeld label="PLZ" value={selectedPerson.plz} disabled />
+            <FormFeld label="Ort" value={selectedPerson.ort} disabled />
+            <FormFeld label="Land" value={selectedPerson.countryCode} disabled />
+            <FormFeld label="Telefon" value={selectedPerson.telefon} disabled />
+            <FormFeld label="Festnetz" value={selectedPerson.telefonFestnetz} disabled />
+            <FormFeld label="Bank" value={selectedPerson.bankName} disabled />
+            <FormFeld label="IBAN" value={selectedPerson.iban} disabled />
+            <FormFeld label="Aktiv" value={selectedPerson.aktiv} disabled />
+          </Box>
         ) : (
-          <div className="text-gray-500 italic text-center">
+          <Typography
+            color="text.secondary"
+            align="center"
+            sx={{ fontStyle: "italic", mt: 2 }}
+          >
             Bitte wählen Sie ein Mitglied aus der Tabelle aus.
-          </div>
+          </Typography>
         )}
-      </div>
+      </Box>
 
-      {/* The buttons for Neue, Löschen, etc. */}
-      <div className="mt-4">
-        {buttonNeuePerson({
-          onNeuePerson,
-          btnNeuePerson,
-          visible,
-          setVisible,
-          selectedPerson,
-          accept,
-          reject,
-          onÄndernPerson,
-          btnÄndernPerson,
-          btnLöschenPerson,
-          onStartMenue,
-        })}
-      </div>
+      {/* 🔘 Action Buttons */}
+      <Box mt={3} display="flex" gap={2} flexWrap="wrap">
+        <Button
+          variant="contained"
+          onClick={onNeuePerson}
+          disabled={btnNeuePerson}
+        >
+          Neue Person
+        </Button>
+
+        <Button
+          variant="outlined"
+          onClick={onÄndernPerson}
+          disabled={btnÄndernPerson || !selectedPerson}
+        >
+          Bearbeiten
+        </Button>
+
+        <Button
+          variant="outlined"
+          color="error"
+          onClick={() => setConfirmOpen(true)}
+          disabled={btnLöschenPerson || !selectedPerson}
+        >
+          Löschen
+        </Button>
+
+        <Button variant="text" onClick={onStartMenue}>
+          Zurück zum Startmenü
+        </Button>
+      </Box>
+
+      {/* ❗ Delete Confirm Dialog */}
+      <Dialog open={confirmOpen} onClose={handleDeleteCancel}>
+        <DialogTitle>Löschen bestätigen</DialogTitle>
+        <DialogContent>
+          {selectedPerson &&
+            `Soll die Person "${selectedPerson.name}" wirklich gelöscht werden?`}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel}>Abbruch</Button>
+          <Button color="error" onClick={handleDeleteConfirm}>
+            Löschen
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* 🔔 Feedback */}
+      <Snackbar
+        open={!!snackbarMsg}
+        autoHideDuration={3000}
+        onClose={() => setSnackbarMsg(null)}
+      >
+        <Alert severity={snackbarSeverity}>
+          {snackbarMsg}
+        </Alert>
+      </Snackbar>
     </>
   );
 };

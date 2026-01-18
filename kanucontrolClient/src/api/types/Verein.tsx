@@ -7,8 +7,7 @@ export interface Verein {
   ort: string;
   telefon: string;
   bankName: string;
-  kontoInhaber: string;
-  kiAnschrift: string;
   iban: string;
+  kontoInhaber?: number;
 }
 export default Verein;
