@@ -1,23 +1,25 @@
 package com.kcserver.tenancy;
 
+import com.kcserver.controller.PersonController;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.core.Ordered;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.lang.NonNull;
-import org.springframework.core.annotation.Order;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
 
-@Component
-@Order(Ordered.LOWEST_PRECEDENCE - 10)
+@Slf4j
 public class TenantFilter extends OncePerRequestFilter {
+
+    private static final Logger logger = LoggerFactory.getLogger(PersonController.class);
 
     private final TenantSchemaService tenantSchemaService;
 
@@ -35,6 +37,9 @@ public class TenantFilter extends OncePerRequestFilter {
         return
                 // CORS Preflight
                 "OPTIONS".equalsIgnoreCase(request.getMethod())
+
+                        // Startmenü / Anzeige
+                        || path.equals("/api/active-schema")
 
                         // Spring / Infra
                         || path.startsWith("/actuator")
@@ -55,14 +60,24 @@ public class TenantFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
 
+        logger.debug("➡️ TenantFilter ENTER  {} {}", request.getMethod(), request.getRequestURI());
+
         var authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication == null || !(authentication.getPrincipal() instanceof Jwt jwt)) {
+        if (authentication == null) {
+            logger.debug("❌ No Authentication in SecurityContext");
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "No JWT found");
+            return;
+        }
+
+        if (!(authentication.getPrincipal() instanceof Jwt jwt)) {
+            logger.debug("❌ Authentication principal is {}", authentication.getPrincipal().getClass());
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "No JWT found");
             return;
         }
 
         String tenantId = extractTenant(jwt);
+        logger.debug("🔑 Extracted tenant from JWT = {}", tenantId);
 
         if (tenantId == null) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No tenant in token");
@@ -73,12 +88,15 @@ public class TenantFilter extends OncePerRequestFilter {
 
         try {
             TenantContext.setCurrentTenant(tenantId);
+            logger.debug("🟢 TenantContext SET = {}", tenantId);
+
             filterChain.doFilter(request, response);
+
         } finally {
             TenantContext.clear();
+            logger.debug("🧹 TenantContext CLEARED");
         }
     }
-
     private String extractTenant(Jwt jwt) {
         // 🔹 Custom Claim (falls später)
         String tenant = jwt.getClaimAsString("tenant");

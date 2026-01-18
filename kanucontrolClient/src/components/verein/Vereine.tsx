@@ -137,10 +137,7 @@ class Vereine extends Component<Record<string, never>, VereineState> {
       ort: "",
       telefon: "",
       bankName: "",
-      kontoInhaber: "",
-      kiAnschrift: "",
       iban: "",
-      bic: "",
     };
 
     this.setState({
@@ -153,18 +150,21 @@ class Vereine extends Component<Record<string, never>, VereineState> {
     });
   };
 
-  handleRowSelect = (event: { data: Verein }) => {
-    this.setState(
-      {
-        btnLöschenIsDisabled: false,
-        btnÄndernIsDisabled: false,
-        vereinFormEditMode: false,
-        selectedVerein: event.data,
-      },
-      () => {
-        //
-      }
-    );
+  handleSelectVerein = (verein: Verein | null) => {
+    if (!verein) {
+      this.setState({
+        selectedVerein: null,
+        btnLöschenIsDisabled: true,
+        btnÄndernIsDisabled: true,
+      });
+      return;
+    }
+  
+    this.setState({
+      selectedVerein: verein,
+      btnLöschenIsDisabled: false,
+      btnÄndernIsDisabled: false,
+    });
   };
 
   editVerein = () => {
@@ -213,10 +213,10 @@ class Vereine extends Component<Record<string, never>, VereineState> {
         {renderLoadingOrError({ loading, error })}
 
         <VereinTable
-          data={data}
-          selectedVerein={selectedVerein}
-          handleRowSelect={this.handleRowSelect}
-        />
+  data={data}
+  selectedVerein={selectedVerein}
+  onSelectVerein={this.handleSelectVerein}
+/>
 
         <br />
         <div>

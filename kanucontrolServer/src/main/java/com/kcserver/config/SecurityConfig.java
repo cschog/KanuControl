@@ -1,5 +1,7 @@
 package com.kcserver.config;
 
+import com.kcserver.tenancy.TenantFilter;
+import com.kcserver.tenancy.TenantSchemaService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -7,31 +9,39 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 
 @Configuration
 public class SecurityConfig {
 
     @Bean
+    public TenantFilter tenantFilter(TenantSchemaService tenantSchemaService) {
+        return new TenantFilter(tenantSchemaService);
+    }
+
+    @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
-            CorsConfigurationSource corsConfigurationSource
+            CorsConfigurationSource corsConfigurationSource,
+            TenantFilter tenantFilter
     ) throws Exception {
 
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .authorizeHttpRequests(auth -> auth
-                        // ✅ CORS Preflight
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
-                        // 🔍 Debug / Tenant
-                        .requestMatchers("/api/tenant").authenticated()
-
-                        // 🔐 Alles andere geschützt
+                        // ✅ MUSS authenticated sein
+                        .requestMatchers("/api/active-schema").authenticated()
                         .anyRequest().authenticated()
                 )
-                // ✅ NICHT deprecated
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
+
+                // ✅ RICHTIG für Spring Boot 3.2.x
+                .addFilterAfter(
+                        tenantFilter,
+                        BearerTokenAuthenticationFilter.class
+                );
 
         return http.build();
     }

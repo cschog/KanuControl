@@ -1,56 +1,76 @@
 import React from "react";
-import { InputText } from "primereact/inputtext";
-import { Menubar } from "primereact/menubar";
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  Box,
+  TextField,
+  IconButton,
+} from "@mui/material";
+import HomeIcon from "@mui/icons-material/Home";
+import LogoutIcon from "@mui/icons-material/Logout";
 import keycloak from "@/auth/keycloak";
-
-console.log("Imported keycloak:", keycloak); // Should log an object if
+import { useNavigate } from "react-router-dom";
 
 const Navigation = () => {
-  const navlist = [
-    {
-      label: "Home",
-      icon: "pi pi-fw pi-home",
-      command: () => {
-        window.location.href = "/startmenue";
-      },
-    },
-    {
-      label: "Logout",
-      icon: "pi pi-sign-out",
-      command: () => {
-        keycloak.logout({ redirectUri: "http://localhost:5173" }
-        );
-      },
-    },
-  ];
+  const navigate = useNavigate();
 
-  const start = (
-    <img
-      src="https://i.ibb.co/wM20B9N/logo-Kanu-Control200px.png"
-      alt="KanuControl"
-      width="30"></img>
-  );
-  const end = (
-    <InputText
-      placeholder="Search"
-      type="text"
-    />
-  );
+  const handleHome = () => {
+    navigate("/startmenue");
+  };
+
+  const handleLogout = () => {
+    keycloak.logout({ redirectUri: "http://localhost:5173" });
+  };
 
   return (
-    <div>
-      <header>
-        <nav>
-          <ul>
-            <Menubar
-              model={navlist}
-              start={start}
-              end={end}
-            />
-          </ul>
-        </nav>
-      </header>
-    </div>
+    <AppBar position="static">
+      <Toolbar>
+        {/* 🔰 Logo */}
+        <Box
+          component="img"
+          src="https://i.ibb.co/wM20B9N/logo-Kanu-Control200px.png"
+          alt="KanuControl"
+          sx={{ height: 30, mr: 2 }}
+        />
+
+        {/* 🧭 Titel */}
+        <Typography
+          variant="h6"
+          component="div"
+          sx={{ flexGrow: 1 }}
+        >
+          KanuControl
+        </Typography>
+
+        {/* 🔍 Search */}
+        <TextField
+          size="small"
+          placeholder="Search"
+          variant="outlined"
+          sx={{
+            mr: 2,
+            bgcolor: "white",
+            borderRadius: 1,
+          }}
+        />
+
+        {/* 🏠 Home */}
+        <IconButton color="inherit" onClick={handleHome}>
+          <HomeIcon />
+        </IconButton>
+
+        {/* 🚪 Logout */}
+        <Button
+          color="inherit"
+          startIcon={<LogoutIcon />}
+          onClick={handleLogout}
+        >
+          Logout
+        </Button>
+      </Toolbar>
+    </AppBar>
   );
 };
 

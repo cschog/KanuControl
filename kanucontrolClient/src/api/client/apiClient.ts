@@ -15,17 +15,13 @@ const apiClient = axios.create({
 ========================= */
 apiClient.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
-    if (!keycloak.authenticated) {
-      return Promise.reject({
-        isAuthError: true,
-        message: "Not authenticated",
-      });
+
+    if (keycloak.authenticated) {
+      await keycloak.updateToken(30);
+
+      config.headers = config.headers ?? {};
+      config.headers.Authorization = `Bearer ${keycloak.token}`;
     }
-
-    await keycloak.updateToken(30);
-
-    config.headers = config.headers ?? {};
-    config.headers.Authorization = `Bearer ${keycloak.token}`;
 
     return config;
   }

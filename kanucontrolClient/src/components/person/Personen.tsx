@@ -120,11 +120,15 @@ class Personen extends Component<Record<string, never>, PersonenState> {
     const newPerson: Person = {
       name: "",
       vorname: "",
-      sex: "DIVERS", // oder Default deiner Wahl
+      sex: "WEIBLICH", // oder Default deiner Wahl
+      geburtsdatum: "",
+      aktiv: true,
       strasse: "",
       plz: "",
       ort: "",
+      countryCode: "",
       telefon: "",
+      telefonFestnetz: "",
       bankName: "",
       iban: ""
     };
@@ -174,18 +178,22 @@ class Personen extends Component<Record<string, never>, PersonenState> {
     navigateToStartMenu();
   };
 
-  handleRowSelect = (event: { data: Person }) => {
-    this.setState(
-      {
-        btnLöschenIsDisabled: false,
-        btnÄndernIsDisabled: false,
-        personFormEditMode: false,
-        selectedPerson: event.data,
-      },
-      () => {
-        //
-      }
-    );
+  handleSelectPerson = (person: Person | null) => {
+    if (!person) {
+      this.setState({
+        selectedPerson: null,
+        btnLöschenIsDisabled: true,
+        btnÄndernIsDisabled: true,
+      });
+      return;
+    }
+  
+    this.setState({
+      selectedPerson: person,
+      btnLöschenIsDisabled: false,
+      btnÄndernIsDisabled: false,
+      personFormEditMode: false,
+    });
   };
 
   render() {
@@ -201,29 +209,29 @@ class Personen extends Component<Record<string, never>, PersonenState> {
         <PersonTable
           data={data}
           selectedPerson={selectedPerson}
-          handleRowSelect={this.handleRowSelect}
-        />
+          onSelectPerson={this.handleSelectPerson}
+/>
 
         <br />
         <div>
-          {this.state.personFormEditMode ? (
-            <PersonEditForm
-              onSpeichern={this.btnSpeichern}
-              onAbbruch={this.btnAbbruch}
-              person={selectedPerson || undefined}
-            />
-          ) : (
-            <PersonFormView
-            onNeuePerson={this.btnNeuePerson}
-            btnNeuePerson={this.state.btnNeuePersonIsDisabled}
-            onÄndernPerson={this.editPerson}
-            btnÄndernPerson={this.state.btnÄndernIsDisabled}
-            onDeletePerson={this.deletePerson}
-            btnLöschenPerson={this.state.btnLöschenIsDisabled}
-            onStartMenue={this.btnStartMenue}
-            selectedPerson={selectedPerson}
-          />
-          )}
+        {this.state.personFormEditMode && selectedPerson ? (
+          <PersonEditForm
+           person={selectedPerson}
+    onSave={this.btnSpeichern}
+    onCancel={this.btnAbbruch}
+  />
+) : (
+  <PersonFormView
+    onNeuePerson={this.btnNeuePerson}
+    btnNeuePerson={this.state.btnNeuePersonIsDisabled}
+    onÄndernPerson={this.editPerson}
+    btnÄndernPerson={this.state.btnÄndernIsDisabled}
+    onDeletePerson={this.deletePerson}
+    btnLöschenPerson={this.state.btnLöschenIsDisabled}
+    onStartMenue={this.btnStartMenue}
+    selectedPerson={selectedPerson}
+  />
+)}
         </div>
       </div>
     );

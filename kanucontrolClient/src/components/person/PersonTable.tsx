@@ -1,72 +1,47 @@
-import React from "react";
-import { DataTable } from "primereact/datatable";
-import { Column } from "primereact/column";
-import { Person } from "@/api/types/Person"; // Import the Person interface
+// PersonTable.tsx
+import { Person } from "@/api/types/Person";
+import { GenericTable } from "@/components/common/GenericTable";
+import { personColumns } from "./personColumns";
 
-interface DataTableRowSelectEvent {
-	originalEvent: React.SyntheticEvent;
-	data: Person;
-	type: "row" | "radio" | "checkbox";
+interface PersonWithId extends Person {
+  id: number;
 }
 
 interface PersonTableProps {
-	data: Person[];
-	selectedPerson: Person | null;
-	handleRowSelect: (e: DataTableRowSelectEvent) => void;
+  data: Person[];
+  selectedPerson: Person | null;
+  onSelectPerson: (person: Person | null) => void;
 }
 
 export const PersonTable: React.FC<PersonTableProps> = ({
-	data,
-	selectedPerson,
-	handleRowSelect,
+  data,
+  selectedPerson,
+  onSelectPerson,
 }) => {
-	return (
-		<div className="card border-solid m-auto w-full overflow-auto">
-			<DataTable
-				value={data}
-				size="small"
-				selectionMode="single"
-				selection={selectedPerson}
-				sortField="vorname"
-				sortOrder={1}
-				scrollable
-				scrollHeight="35vh"
-				onRowSelect={handleRowSelect}>
-				<Column
-					field="vorname"
-					header="Vorname"
-					style={{
-						minWidth: "100px",
-					}}
-					sortable></Column>
-				<Column
-					field="name"
-					header="Nachname"
-					style={{
-						minWidth: "200px",
-					}}
-					sortable></Column>
-				<Column
-					field="strasse"
-					header="Straße"
-					style={{
-						minWidth: "100px",
-					}}></Column>
-				<Column
-					field="plz"
-					header="PLZ"
-					style={{
-						minWidth: "80px",
-					}}
-					sortable></Column>
-				<Column
-					field="ort"
-					header="Ort"
-					style={{
-						minWidth: "100px",
-					}}
-					sortable></Column>
-			</DataTable>
-		</div>
-	);
+  // ✅ Rows: nur Personen mit ID
+  const rows: PersonWithId[] = data.filter(
+    (p): p is PersonWithId => typeof p.id === "number"
+  );
+
+  // ✅ selectedRow: explizit als PersonWithId bestimmen
+  const selectedRow: PersonWithId | null =
+    selectedPerson && typeof selectedPerson.id === "number"
+      ? rows.find((r) => r.id === selectedPerson.id) ?? null
+      : null;
+
+  return (
+    <GenericTable<PersonWithId>
+      rows={rows}
+      columns={personColumns}
+      selectedRow={selectedRow}
+      initialSortModel={[
+		{ field: "name", sort: "asc" },
+		{ field: "vorname", sort: "asc" },
+	  ]}
+      onSelectRow={(row) => {
+        // 🔁 Rückübersetzung: PersonWithId → Person
+        onSelectPerson(row);
+      }}
+    />
+  );
 };
