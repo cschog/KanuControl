@@ -6,13 +6,21 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static com.kcserver.integration.support.TestJwtUtils.jwtWithTenant;
 
 public abstract class AbstractTenantIntegrationTest {
 
-    protected static final String TENANT = "ekc_test";
+    /**
+     * 🔑 Standard-Test-Tenant
+     * (pro Testklasse überschreibbar)
+     */
+    protected String tenant() {
+        return "ekc_test";
+    }
 
     @Autowired
     protected TenantSchemaProvisioner tenantSchemaProvisioner;
@@ -20,12 +28,18 @@ public abstract class AbstractTenantIntegrationTest {
     @Autowired
     protected JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    protected MockMvc mockMvc;
+
     @BeforeEach
     void setupTenant() {
-        tenantSchemaProvisioner.createFromBaseline(TENANT);
-        TenantContext.setCurrentTenant(TENANT);
+        String tenant = tenant();
 
-        // 🔥 DAS ist entscheidend
+        tenantSchemaProvisioner.createFromBaseline(tenant);
+        TenantContext.setCurrentTenant(tenant);
+
+        jdbcTemplate.execute("SET search_path TO " + tenant);
+
         jdbcTemplate.execute("TRUNCATE TABLE teilnehmer CASCADE");
         jdbcTemplate.execute("TRUNCATE TABLE mitglied CASCADE");
         jdbcTemplate.execute("TRUNCATE TABLE person CASCADE");
@@ -38,11 +52,17 @@ public abstract class AbstractTenantIntegrationTest {
         TenantContext.clear();
     }
 
+    /**
+     * ✅ EINZIGE Request-Methode
+     */
+
+    protected RequestPostProcessor tenantAuth() {
+        return jwtWithTenant(tenant());
+    }
+
     protected MockHttpServletRequestBuilder tenantRequest(
             MockHttpServletRequestBuilder builder
     ) {
-        return builder
-                .header("X-Tenant", TENANT)
-                .with(jwt());
+        return builder.with(tenantAuth());
     }
 }

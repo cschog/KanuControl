@@ -18,6 +18,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+
 @SpringBootTest
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
@@ -38,14 +39,13 @@ class PersonSearchIntegrationTest extends AbstractTenantIntegrationTest {
     void setupData() throws Exception {
 
         VereinTestFactory vereine =
-                new VereinTestFactory(mockMvc, objectMapper, TENANT);
+                new VereinTestFactory(mockMvc, objectMapper, tenantAuth());
 
         PersonTestFactory personen =
-                new PersonTestFactory(mockMvc, objectMapper, TENANT);
+                new PersonTestFactory(mockMvc, objectMapper, tenantAuth());
 
         vereinId = vereine.createIfNotExists(TEST_ABK, TEST_NAME);
 
-        // Person 1
         personen.createOrReuse(
                 "Max",
                 "Mustermann",
@@ -55,7 +55,6 @@ class PersonSearchIntegrationTest extends AbstractTenantIntegrationTest {
                 "50667"
         );
 
-        // Person 2
         personen.createOrReuse(
                 "Erika",
                 "Mustermann",
@@ -74,8 +73,10 @@ class PersonSearchIntegrationTest extends AbstractTenantIntegrationTest {
     void search_byName_returnsMatchingPersons() throws Exception {
 
         mockMvc.perform(
-                        tenantRequest(get("/api/person/search"))
-                                .param("name", "Muster")
+                        tenantRequest(
+                                get("/api/person/search")
+                                        .param("name", "Muster")
+                        )
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2));
@@ -85,8 +86,10 @@ class PersonSearchIntegrationTest extends AbstractTenantIntegrationTest {
     void search_aktivFalse_returnsEmptyResult() throws Exception {
 
         mockMvc.perform(
-                        tenantRequest(get("/api/person/search"))
-                                .param("aktiv", "false")
+                        tenantRequest(
+                                get("/api/person/search")
+                                        .param("aktiv", "false")
+                        )
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
@@ -100,8 +103,10 @@ class PersonSearchIntegrationTest extends AbstractTenantIntegrationTest {
     void search_byVerein_filtersCorrectly() throws Exception {
 
         mockMvc.perform(
-                        tenantRequest(get("/api/person/search"))
-                                .param("vereinId", vereinId.toString())
+                        tenantRequest(
+                                get("/api/person/search")
+                                        .param("vereinId", vereinId.toString())
+                        )
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2));
@@ -111,9 +116,11 @@ class PersonSearchIntegrationTest extends AbstractTenantIntegrationTest {
     void search_byAlterRange_filtersCorrectly() throws Exception {
 
         mockMvc.perform(
-                        tenantRequest(get("/api/person/search"))
-                                .param("alterMin", "18")
-                                .param("alterMax", "25")
+                        tenantRequest(
+                                get("/api/person/search")
+                                        .param("alterMin", "18")
+                                        .param("alterMax", "25")
+                        )
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
@@ -121,18 +128,20 @@ class PersonSearchIntegrationTest extends AbstractTenantIntegrationTest {
     }
 
     /* =========================================================
-       KOMBINIERTE FILTER (AND)
+       KOMBINIERTE FILTER
        ========================================================= */
 
     @Test
     void search_multipleFilters_AND_combined() throws Exception {
 
         mockMvc.perform(
-                        tenantRequest(get("/api/person/search"))
-                                .param("name", "Muster")
-                                .param("alterMin", "18")
-                                .param("alterMax", "30")
-                                .param("vereinId", vereinId.toString())
+                        tenantRequest(
+                                get("/api/person/search")
+                                        .param("name", "Muster")
+                                        .param("alterMin", "18")
+                                        .param("alterMax", "30")
+                                        .param("vereinId", vereinId.toString())
+                        )
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
@@ -143,9 +152,11 @@ class PersonSearchIntegrationTest extends AbstractTenantIntegrationTest {
     void search_byPlzAndOrt_combined() throws Exception {
 
         mockMvc.perform(
-                        tenantRequest(get("/api/person/search"))
-                                .param("plz", "50667")
-                                .param("ort", "Köln")
+                        tenantRequest(
+                                get("/api/person/search")
+                                        .param("plz", "50667")
+                                        .param("ort", "Köln")
+                        )
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
@@ -160,10 +171,12 @@ class PersonSearchIntegrationTest extends AbstractTenantIntegrationTest {
     void search_withFilterAndPaging() throws Exception {
 
         mockMvc.perform(
-                        tenantRequest(get("/api/person/search"))
-                                .param("name", "Muster")
-                                .param("page", "0")
-                                .param("size", "1")
+                        tenantRequest(
+                                get("/api/person/search")
+                                        .param("name", "Muster")
+                                        .param("page", "0")
+                                        .param("size", "1")
+                        )
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1));
@@ -173,9 +186,11 @@ class PersonSearchIntegrationTest extends AbstractTenantIntegrationTest {
     void search_withPaging_stillWorks() throws Exception {
 
         mockMvc.perform(
-                        tenantRequest(get("/api/person/search"))
-                                .param("page", "0")
-                                .param("size", "10")
+                        tenantRequest(
+                                get("/api/person/search")
+                                        .param("page", "0")
+                                        .param("size", "10")
+                        )
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2));

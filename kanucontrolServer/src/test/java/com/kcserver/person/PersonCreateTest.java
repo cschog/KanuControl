@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.AuditorAware;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -39,6 +40,16 @@ class PersonCreateTest {
     @Autowired
     ObjectMapper objectMapper;
 
+    @Autowired(required = false)
+    AuditorAware<String> auditorAware;
+
+    @Test
+    void auditCheck() {
+        System.out.println("Auditor bean = " + auditorAware);
+        System.out.println("Auditor value = " +
+                (auditorAware == null ? "NULL" : auditorAware.getCurrentAuditor()));
+    }
+
     @Test
     void createPerson_withMinimalValidData_returns201AndId() throws Exception {
 
@@ -52,7 +63,7 @@ class PersonCreateTest {
         // when / then
         mockMvc.perform(
                         post("/api/person")
-                                .header("X-Tenant", "test")
+                                .with(jwt().jwt(jwt -> jwt.claim("tenant", "test")))
                                 .with(jwt())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(dto))
@@ -75,7 +86,7 @@ class PersonCreateTest {
         // 1️⃣ erster Create → OK
         mockMvc.perform(
                         post("/api/person")
-                                .header("X-Tenant", "test")
+                                .with(jwt().jwt(jwt -> jwt.claim("tenant", "test")))
                                 .with(jwt())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(dto))
@@ -85,7 +96,7 @@ class PersonCreateTest {
         // 2️⃣ gleicher Create → ❌ Conflict
         mockMvc.perform(
                         post("/api/person")
-                                .header("X-Tenant", "test")
+                                .with(jwt().jwt(jwt -> jwt.claim("tenant", "test")))
                                 .with(jwt())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(dto))
@@ -108,14 +119,14 @@ class PersonCreateTest {
         p2.setGeburtsdatum(LocalDate.of(1995, 1, 1));
 
         mockMvc.perform(post("/api/person")
-                        .header("X-Tenant", "test")
+                        .with(jwt().jwt(jwt -> jwt.claim("tenant", "test")))
                         .with(jwt())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(p1)))
                 .andExpect(status().isCreated());
 
         mockMvc.perform(post("/api/person")
-                        .header("X-Tenant", "test")
+                        .with(jwt().jwt(jwt -> jwt.claim("tenant", "test")))
                         .with(jwt())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(p2)))
@@ -131,14 +142,14 @@ class PersonCreateTest {
         dto.setGeburtsdatum(null);
 
         mockMvc.perform(post("/api/person")
-                        .header("X-Tenant", "test")
+                        .with(jwt().jwt(jwt -> jwt.claim("tenant", "test")))
                         .with(jwt())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isCreated());
 
         mockMvc.perform(post("/api/person")
-                        .header("X-Tenant", "test")
+                        .with(jwt().jwt(jwt -> jwt.claim("tenant", "test")))
                         .with(jwt())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))

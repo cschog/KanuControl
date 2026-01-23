@@ -3,7 +3,6 @@ package com.kcserver;
 import com.kcserver.config.TestAuditorAware;
 import com.kcserver.controller.PersonController;
 import com.kcserver.exception.GlobalExceptionHandler;
-import com.kcserver.service.LoginService;
 import com.kcserver.service.PersonService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,8 +28,8 @@ class PersonControllerTest {
     @Autowired
     MockMvc mockMvc;
 
-    @MockBean PersonService personService;
-    @MockBean LoginService loginService;
+    @MockBean
+    PersonService personService; // ✅ DAS fehlt!
 
     @Test
     void postPerson_withInvalidPayload_returns400() throws Exception {

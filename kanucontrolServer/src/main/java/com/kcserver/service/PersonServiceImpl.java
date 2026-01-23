@@ -104,6 +104,11 @@ public class PersonServiceImpl implements PersonService {
         if (dto.getMitgliedschaften() != null) {
             for (MitgliedDTO m : dto.getMitgliedschaften()) {
 
+                // ✅ KEIN Verein → KEINE Mitgliedschaft
+                if (m.getVereinId() == null) {
+                    continue;
+                }
+
                 Mitglied mitglied = new Mitglied();
                 mitglied.setPerson(savedPerson);
 
@@ -117,7 +122,7 @@ public class PersonServiceImpl implements PersonService {
 
                 mitglied.setVerein(verein);
                 mitglied.setFunktion(m.getFunktion());
-                mitglied.setHauptVerein(m.getHauptVerein());
+                mitglied.setHauptVerein(Boolean.TRUE.equals(m.getHauptVerein()));
 
                 mitgliedRepository.save(mitglied);
             }

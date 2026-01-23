@@ -8,6 +8,7 @@ import com.kcserver.enumtype.Sex;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -18,16 +19,19 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/**
+ * Tenant-agnostische Test-Factory für Personen inkl. Mitgliedschaft
+ */
 public class PersonTestFactory {
 
     private final MockMvc mockMvc;
     private final ObjectMapper objectMapper;
-    private final String tenant;
+    private final RequestPostProcessor tenant;
 
     public PersonTestFactory(
             MockMvc mockMvc,
             ObjectMapper objectMapper,
-            String tenant
+            RequestPostProcessor tenant
     ) {
         this.mockMvc = mockMvc;
         this.objectMapper = objectMapper;
@@ -68,31 +72,28 @@ public class PersonTestFactory {
             String plz
     ) throws Exception {
 
-        PersonDTO dto = new PersonDTO();
-        dto.setVorname(vorname);
-        dto.setName(name);
-        dto.setGeburtsdatum(geburtsdatum);
-        dto.setSex(Sex.WEIBLICH);
+        PersonDTO dto = basePerson(vorname, name, geburtsdatum);
+
+        if (vereinId != null) {
+            dto.setMitgliedschaften(List.of(defaultMitglied(vereinId)));
+        }
         dto.setOrt(ort);
         dto.setPlz(plz);
-        dto.setAktiv(true);
 
-        MitgliedDTO mitglied = new MitgliedDTO();
-        mitglied.setVereinId(vereinId);
-        mitglied.setHauptVerein(true);
-        mitglied.setFunktion(MitgliedFunktion.JUGENDWART);
+        if (vereinId != null) {
+            dto.setMitgliedschaften(List.of(defaultMitglied(vereinId)));
+        }
 
-        dto.setMitgliedschaften(List.of(mitglied));
-
-        MvcResult result = mockMvc.perform(
-                        post("/api/person")
-                                .header("X-Tenant", tenant)
-                                .with(jwt())
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(dto))
-                )
-                .andExpect(status().isCreated())
-                .andReturn();
+        MvcResult result =
+                mockMvc.perform(
+                                post("/api/person")
+                                        .with(tenant)
+                                        .with(jwt())
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(dto))
+                        )
+                        .andExpect(status().isCreated())
+                        .andReturn();
 
         return objectMapper
                 .readTree(result.getResponse().getContentAsString())
@@ -111,29 +112,21 @@ public class PersonTestFactory {
             Long vereinId
     ) throws Exception {
 
-        PersonDTO dto = new PersonDTO();
-        dto.setVorname(vorname);
-        dto.setName(name);
-        dto.setGeburtsdatum(geburtsdatum);
-        dto.setSex(Sex.WEIBLICH);
-        dto.setAktiv(true);
+        PersonDTO dto = basePerson(vorname, name, geburtsdatum);
+        if (vereinId != null) {
+            dto.setMitgliedschaften(List.of(defaultMitglied(vereinId)));
+        }
 
-        MitgliedDTO mitglied = new MitgliedDTO();
-        mitglied.setVereinId(vereinId);
-        mitglied.setHauptVerein(true);
-        mitglied.setFunktion(MitgliedFunktion.JUGENDWART);
-
-        dto.setMitgliedschaften(List.of(mitglied));
-
-        MvcResult result = mockMvc.perform(
-                        post("/api/person")
-                                .header("X-Tenant", tenant)
-                                .with(jwt())
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(dto))
-                )
-                .andExpect(status().isCreated())
-                .andReturn();
+        MvcResult result =
+                mockMvc.perform(
+                                post("/api/person")
+                                        .with(tenant)
+                                        .with(jwt())
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(dto))
+                        )
+                        .andExpect(status().isCreated())
+                        .andReturn();
 
         return objectMapper
                 .readTree(result.getResponse().getContentAsString())
@@ -152,14 +145,16 @@ public class PersonTestFactory {
             Long vereinId
     ) throws Exception {
 
-        MvcResult result = mockMvc.perform(
-                        get("/api/person/search")
-                                .header("X-Tenant", tenant)
-                                .with(jwt())
-                                .param("vorname", vorname)
-                                .param("name", name)
-                                .param("vereinId", vereinId.toString())
-                )
+        var request = get("/api/person/search")
+                .with(tenant)
+                .param("vorname", vorname)
+                .param("name", name);
+
+        if (vereinId != null) {
+            request = request.param("vereinId", vereinId.toString());
+        }
+
+        MvcResult result = mockMvc.perform(request)
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -170,5 +165,37 @@ public class PersonTestFactory {
         }
 
         return Optional.of(json.get(0).get("id").asLong());
+    }
+
+    /* =========================================================
+       Helpers
+       ========================================================= */
+
+    private PersonDTO basePerson(
+            String vorname,
+            String name,
+            LocalDate geburtsdatum
+    ) {
+        PersonDTO dto = new PersonDTO();
+        dto.setVorname(vorname);
+        dto.setName(name);
+        dto.setGeburtsdatum(geburtsdatum);
+        dto.setSex(Sex.WEIBLICH);
+        dto.setAktiv(true);
+        return dto;
+    }
+
+    private MitgliedDTO defaultMitglied(Long vereinId) {
+        if (vereinId == null) {
+            throw new IllegalArgumentException(
+                    "defaultMitglied darf nicht mit vereinId=null aufgerufen werden"
+            );
+        }
+
+        MitgliedDTO mitglied = new MitgliedDTO();
+        mitglied.setVereinId(vereinId);
+        mitglied.setHauptVerein(true);
+        mitglied.setFunktion(MitgliedFunktion.JUGENDWART);
+        return mitglied;
     }
 }

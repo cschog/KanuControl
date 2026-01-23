@@ -1,14 +1,16 @@
 package com.kcserver.verein;
 
-import com.kcserver.test.AbstractIntegrationTest;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kcserver.integration.support.AbstractTenantIntegrationTest;
+import com.kcserver.testdata.VereinTestFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -17,14 +19,21 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Tag("verein-crud")
-class VereinSearchSortTest extends AbstractIntegrationTest {
+class VereinSearchSortTest extends AbstractTenantIntegrationTest {
+
+    @Autowired
+    ObjectMapper objectMapper;
 
     @BeforeEach
     void setup() throws Exception {
-        createVerein("Eschweiler Kanu Club", "EKC");
-        createVerein("Oberhausener Kanu Club", "OKC");
-        createVerein("Aachener Kanu Verein", "AKV");
-        createVerein("Bonner Kanu Freunde", "BKF");
+
+        VereinTestFactory vereine =
+                new VereinTestFactory(mockMvc, objectMapper, tenantAuth());
+
+        vereine.createIfNotExists("EKC", "Eschweiler Kanu Club");
+        vereine.createIfNotExists("OKC", "Oberhausener Kanu Club");
+        vereine.createIfNotExists("AKV", "Aachener Kanu Verein");
+        vereine.createIfNotExists("BKF", "Bonner Kanu Freunde");
     }
 
     /* =========================================================
@@ -35,9 +44,10 @@ class VereinSearchSortTest extends AbstractIntegrationTest {
     void search_sortedByNameAsc() throws Exception {
 
         mockMvc.perform(
-                        get("/api/verein/search")
-                                .with(jwt())
-                                .param("sort", "name,asc")
+                        tenantRequest(
+                                get("/api/verein/search")
+                                        .param("sort", "name,asc")
+                        )
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].name").value("Aachener Kanu Verein"))
@@ -48,9 +58,10 @@ class VereinSearchSortTest extends AbstractIntegrationTest {
     void search_sortedByNameDesc() throws Exception {
 
         mockMvc.perform(
-                        get("/api/verein/search")
-                                .with(jwt())
-                                .param("sort", "name,desc")
+                        tenantRequest(
+                                get("/api/verein/search")
+                                        .param("sort", "name,desc")
+                        )
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].name").value("Oberhausener Kanu Club"))
@@ -61,9 +72,10 @@ class VereinSearchSortTest extends AbstractIntegrationTest {
     void search_sortedByAbkAsc() throws Exception {
 
         mockMvc.perform(
-                        get("/api/verein/search")
-                                .with(jwt())
-                                .param("sort", "abk,asc")
+                        tenantRequest(
+                                get("/api/verein/search")
+                                        .param("sort", "abk,asc")
+                        )
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].abk").value("AKV"))
@@ -78,11 +90,12 @@ class VereinSearchSortTest extends AbstractIntegrationTest {
     void search_withPagingAndSorting_returnsSecondPage() throws Exception {
 
         mockMvc.perform(
-                        get("/api/verein/search")
-                                .with(jwt())
-                                .param("sort", "name,asc")
-                                .param("page", "1")
-                                .param("size", "2")
+                        tenantRequest(
+                                get("/api/verein/search")
+                                        .param("sort", "name,asc")
+                                        .param("page", "1")
+                                        .param("size", "2")
+                        )
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))

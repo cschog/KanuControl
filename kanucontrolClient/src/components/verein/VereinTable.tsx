@@ -1,10 +1,7 @@
 // components/verein/VereinTable.tsx
-import { Verein } from "@/api/types/Verein";
+import { Verein } from "@/api/types/VereinFormModel";
 import { GenericTable } from "@/components/common/GenericTable";
-import {
-  vereinColumns,
-  VereinWithId,
-} from "./vereinColumns";
+import { vereinColumns, VereinWithId } from "./vereinColumns";
 
 interface VereinTableProps {
   data: Verein[];
@@ -18,9 +15,7 @@ export const VereinTable: React.FC<VereinTableProps> = ({
   onSelectVerein,
 }) => {
   // ✅ nur Vereine mit ID
-  const rows: VereinWithId[] = data.filter(
-    (v): v is VereinWithId => typeof v.id === "number"
-  );
+  const rows: VereinWithId[] = data.filter((v): v is VereinWithId => typeof v.id === "number");
 
   // ✅ selektierte Zeile sicher ableiten
   const selectedRow: VereinWithId | null =
@@ -34,9 +29,7 @@ export const VereinTable: React.FC<VereinTableProps> = ({
       columns={vereinColumns}
       selectedRow={selectedRow}
       onSelectRow={onSelectVerein}
-      initialSortModel={[
-        { field: "abk", sort: "asc" },
-      ]}
+      initialSortModel={[{ field: "abk", sort: "asc" }]}
     />
   );
 };

@@ -1,16 +1,19 @@
 package com.kcserver.mitglied;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.dto.MitgliedDTO;
-import com.kcserver.test.AbstractIntegrationTest;
+import com.kcserver.integration.support.AbstractTenantIntegrationTest;
+import com.kcserver.testdata.PersonTestFactory;
+import com.kcserver.testdata.VereinTestFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -19,7 +22,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Tag("mitglied-crud")
-class MitgliedDeleteTest extends AbstractIntegrationTest {
+class MitgliedDeleteTest extends AbstractTenantIntegrationTest {
+
+    @Autowired
+    ObjectMapper objectMapper;
 
     Long personId;
     Long vereinId;
@@ -27,26 +33,44 @@ class MitgliedDeleteTest extends AbstractIntegrationTest {
 
     @BeforeEach
     void setup() throws Exception {
-        personId = createPerson("Max", "Mustermann");
-        vereinId = createVerein("Eschweiler Kanu Club", "EKC");
 
+        VereinTestFactory vereine =
+                new VereinTestFactory(mockMvc, objectMapper, tenantAuth());
+
+        PersonTestFactory personen =
+                new PersonTestFactory(mockMvc, objectMapper, tenantAuth());
+
+        vereinId = vereine.createIfNotExists(
+                "EKC_DELETE",
+                "Eschweiler Kanu Club"
+        );
+
+        personId = personen.createPerson(
+                "Max",
+                "Mustermann",
+                java.time.LocalDate.of(2000, 1, 1),
+                null
+        );
+
+        // Mitglied anlegen (Setup)
         MitgliedDTO dto = new MitgliedDTO();
         dto.setPersonId(personId);
         dto.setVereinId(vereinId);
         dto.setHauptVerein(true);
 
-        String response = mockMvc.perform(
-                        post("/api/mitglied")
-                                .with(jwt())
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(dto))
-                )
-                .andExpect(status().isCreated())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
+        String response =
+                mockMvc.perform(
+                                tenantRequest(post("/api/mitglied"))
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(dto))
+                        )
+                        .andExpect(status().isCreated())
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
 
-        mitgliedId = objectMapper.readValue(response, MitgliedDTO.class).getId();
+        mitgliedId =
+                objectMapper.readTree(response).get("id").asLong();
     }
 
     /* =========================================================
@@ -57,8 +81,7 @@ class MitgliedDeleteTest extends AbstractIntegrationTest {
     void deleteMitglied_existing_returns204() throws Exception {
 
         mockMvc.perform(
-                        delete("/api/mitglied/{id}", mitgliedId)
-                                .with(jwt())
+                        tenantRequest(delete("/api/mitglied/{id}", mitgliedId))
                 )
                 .andExpect(status().isNoContent());
     }
@@ -71,8 +94,7 @@ class MitgliedDeleteTest extends AbstractIntegrationTest {
     void deleteMitglied_notExisting_returns404() throws Exception {
 
         mockMvc.perform(
-                        delete("/api/mitglied/{id}", 99999L)
-                                .with(jwt())
+                        tenantRequest(delete("/api/mitglied/{id}", 99999L))
                 )
                 .andExpect(status().isNotFound());
     }

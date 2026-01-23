@@ -1,16 +1,18 @@
 package com.kcserver.verein;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.dto.VereinDTO;
-import com.kcserver.test.AbstractIntegrationTest;
+import com.kcserver.integration.support.AbstractTenantIntegrationTest;
+import com.kcserver.testdata.VereinTestFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -18,16 +20,34 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Tag("verein-crud")
-class VereinUpdateConflictTest extends AbstractIntegrationTest {
+class VereinUpdateConflictTest extends AbstractTenantIntegrationTest {
+
+    @Autowired
+    ObjectMapper objectMapper;
 
     Long verein1Id;
     Long verein2Id;
 
     @BeforeEach
     void setup() throws Exception {
-        verein1Id = createVerein("Eschweiler Kanu Club", "EKC");
-        verein2Id = createVerein("Oberhausener Kanu Club", "OKC");
+
+        VereinTestFactory vereine =
+                new VereinTestFactory(mockMvc, objectMapper, tenantAuth());
+
+        verein1Id = vereine.createIfNotExists(
+                "EKC",
+                "Eschweiler Kanu Club"
+        );
+
+        verein2Id = vereine.createIfNotExists(
+                "OKC",
+                "Oberhausener Kanu Club"
+        );
     }
+
+    /* =========================================================
+       KONFLIKT-TESTS
+       ========================================================= */
 
     @Test
     void updateVerein_toExistingAbkAndName_returns409() throws Exception {
@@ -37,10 +57,11 @@ class VereinUpdateConflictTest extends AbstractIntegrationTest {
         update.setAbk("EKC");
 
         mockMvc.perform(
-                        put("/api/verein/{id}", verein2Id)
-                                .with(jwt())
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(update))
+                        tenantRequest(
+                                put("/api/verein/{id}", verein2Id)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(update))
+                        )
                 )
                 .andExpect(status().isConflict());
     }
@@ -53,10 +74,11 @@ class VereinUpdateConflictTest extends AbstractIntegrationTest {
         update.setAbk("EKC");
 
         mockMvc.perform(
-                        put("/api/verein/{id}", verein1Id)
-                                .with(jwt())
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(update))
+                        tenantRequest(
+                                put("/api/verein/{id}", verein1Id)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(update))
+                        )
                 )
                 .andExpect(status().isOk());
     }

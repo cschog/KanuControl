@@ -1,4 +1,5 @@
 import { Sex } from "@/api/enums/Sex";
+import { Mitglied } from "@/api/types/Mitglied";
 
 export interface Person {
   id?: number;
@@ -15,6 +16,8 @@ export interface Person {
   telefonFestnetz: string;
   bankName: string;
   iban: string;
+
+  mitglieder?: Mitglied[];
 }
 
 export default Person;

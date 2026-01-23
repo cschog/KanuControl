@@ -1,6 +1,6 @@
 package com.kcserver.verein;
 
-import com.kcserver.test.AbstractIntegrationTest;
+import com.kcserver.integration.support.AbstractTenantIntegrationTest;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -15,7 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Tag("verein-crud")
-class VereinDeleteNotFoundTest extends AbstractIntegrationTest {
+class VereinDeleteNotFoundTest extends AbstractTenantIntegrationTest {
 
     @Test
     void deleteVerein_notFound_returns404() throws Exception {

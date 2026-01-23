@@ -1,8 +1,8 @@
 package com.kcserver.person;
 
-import com.kcserver.entity.Person;
-import com.kcserver.enumtype.Sex;
-import com.kcserver.repository.PersonRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kcserver.integration.support.AbstractTenantIntegrationTest;
+import com.kcserver.testdata.PersonTestFactory;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,70 +11,65 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import java.time.LocalDate;
+
+import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-/**
- * Integration tests for reading Person entities.
- * Ensures correct retrieval via REST API
- * including list and single-entity access.
- */
 
 @Tag("person-crud")
 @SpringBootTest
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
-class PersonReadTest {
+class PersonReadTest extends AbstractTenantIntegrationTest {
 
     @Autowired
     MockMvc mockMvc;
 
     @Autowired
-    PersonRepository personRepository;
+    ObjectMapper objectMapper; // ✅ DAS fehlte
+
 
     @Test
     void getAllPersons_returnsList() throws Exception {
 
-        // given – minimal, valide Person DIREKT in DB
-        Person person = new Person();
-        person.setVorname("Max");
-        person.setName("Mustermann");
-        person.setSex(Sex.MAENNLICH);
+        PersonTestFactory personen =
+                new PersonTestFactory(mockMvc, objectMapper, tenantAuth());
 
-        personRepository.save(person);
+        personen.createOrReuse(
+                "Max",
+                "Mustermann",
+                LocalDate.of(1990, 1, 1),
+                null   // 👈 kein Verein nötig für diesen Test
+        );
 
-        // when / then
         mockMvc.perform(
-                        get("/api/person")
-                                .header("X-Tenant", "test")
-                                .with(jwt())
+                        tenantRequest(get("/api/person"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].vorname").value("Max"))
-                .andExpect(jsonPath("$[0].name").value("Mustermann"));
+                .andExpect(jsonPath("$[*].vorname").value(hasItem("Max")))
+                .andExpect(jsonPath("$[*].name").value(hasItem("Mustermann")));
     }
 
     @Test
     void getPersonById_returnsPerson() throws Exception {
 
-        // given
-        Person person = new Person();
-        person.setVorname("Erika");
-        person.setName("Mustermann");
-        person.setSex(Sex.WEIBLICH);
+        PersonTestFactory personen =
+                new PersonTestFactory(mockMvc, objectMapper, tenantAuth());
 
-        Person saved = personRepository.save(person);
+        Long personId =
+                personen.createOrReuse(
+                        "Erika",
+                        "Mustermann",
+                        LocalDate.of(1995, 5, 5),
+                        null
+                );
 
-        // when / then
         mockMvc.perform(
-                        get("/api/person/{id}", saved.getId())
-                                .header("X-Tenant", "test")
-                                .with(jwt())
+                        tenantRequest(get("/api/person/{id}", personId))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(saved.getId()))
+                .andExpect(jsonPath("$.id").value(personId))
                 .andExpect(jsonPath("$.vorname").value("Erika"))
                 .andExpect(jsonPath("$.name").value("Mustermann"));
     }

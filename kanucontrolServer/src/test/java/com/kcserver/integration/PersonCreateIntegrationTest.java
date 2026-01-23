@@ -13,12 +13,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import java.time.LocalDate;
 import java.util.List;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -32,6 +30,11 @@ class PersonCreateIntegrationTest extends AbstractTenantIntegrationTest {
 
     @Autowired
     ObjectMapper objectMapper;
+
+    @Override
+    protected String tenant() {
+        return "tenant_test_2";
+    }
 
     @Test
     void createPerson_createsDataInTenantSchema() throws Exception {
@@ -87,13 +90,5 @@ class PersonCreateIntegrationTest extends AbstractTenantIntegrationTest {
 
         dto.setMitgliedschaften(List.of(mitglied));
         return dto;
-    }
-
-    protected MockHttpServletRequestBuilder tenantRequest(
-            MockHttpServletRequestBuilder builder
-    ) {
-        return builder
-                .header("X-Tenant", TENANT)
-                .with(jwt());
     }
 }

@@ -188,7 +188,7 @@ Zur Benutzerverwaltung wird Keycloak eingesetzt.
 - React
 - Vite
 - TypeScript
-- Tailwind CSS
+- Material UI ab V7.x
 - VS Code
 
 Das Frontend kommuniziert ausschließlich über die REST-API

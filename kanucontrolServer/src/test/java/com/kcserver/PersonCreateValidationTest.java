@@ -8,6 +8,9 @@ import com.kcserver.validation.OnCreate;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -18,8 +21,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class PersonCreateValidationTest {
 
-    private final Validator validator =
-            Validation.buildDefaultValidatorFactory().getValidator();
+    private static ValidatorFactory validatorFactory;
+    private static Validator validator;
+
+    @BeforeAll
+    static void initValidator() {
+        validatorFactory = Validation.buildDefaultValidatorFactory();
+        validator = validatorFactory.getValidator();
+    }
+
+    @AfterAll
+    static void closeValidator() {
+        validatorFactory.close();
+    }
 
     @Test
     void createPerson_withExactlyOneHauptverein_isValid() {

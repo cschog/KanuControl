@@ -1,14 +1,16 @@
 package com.kcserver.verein;
 
-import com.kcserver.test.AbstractIntegrationTest;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kcserver.integration.support.AbstractTenantIntegrationTest;
+import com.kcserver.testdata.VereinTestFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -17,21 +19,39 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Tag("verein-crud")
-class VereinReadTest extends AbstractIntegrationTest {
+class VereinReadTest extends AbstractTenantIntegrationTest {
+
+    @Autowired
+    ObjectMapper objectMapper;
 
     Long vereinId;
 
     @BeforeEach
     void setup() throws Exception {
-        vereinId = createVerein("Eschweiler Kanu Club", "EKC");
+
+        VereinTestFactory vereine =
+                new VereinTestFactory(mockMvc, objectMapper, tenantAuth());
+
+        vereinId = vereine.createIfNotExists(
+                "EKC",
+                "Eschweiler Kanu Club"
+        );
     }
 
     @Test
     void getAll_returnsAllVereine() throws Exception {
 
-        createVerein("Oberhausener Kanu Club", "OKC");
+        VereinTestFactory vereine =
+                new VereinTestFactory(mockMvc, objectMapper, tenantAuth());
 
-        mockMvc.perform(get("/api/verein").with(jwt()))
+        vereine.createIfNotExists(
+                "OKC",
+                "Oberhausener Kanu Club"
+        );
+
+        mockMvc.perform(
+                        tenantRequest(get("/api/verein"))
+                )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].name").exists())
@@ -41,7 +61,9 @@ class VereinReadTest extends AbstractIntegrationTest {
     @Test
     void getById_returnsVerein() throws Exception {
 
-        mockMvc.perform(get("/api/verein/{id}", vereinId).with(jwt()))
+        mockMvc.perform(
+                        tenantRequest(get("/api/verein/{id}", vereinId))
+                )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(vereinId))
                 .andExpect(jsonPath("$.name").value("Eschweiler Kanu Club"))
@@ -51,7 +73,9 @@ class VereinReadTest extends AbstractIntegrationTest {
     @Test
     void getById_notFound_returns404() throws Exception {
 
-        mockMvc.perform(get("/api/verein/{id}", 99999L).with(jwt()))
+        mockMvc.perform(
+                        tenantRequest(get("/api/verein/{id}", 99999L))
+                )
                 .andExpect(status().isNotFound());
     }
 }

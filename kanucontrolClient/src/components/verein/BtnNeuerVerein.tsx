@@ -2,7 +2,7 @@ import React, { ReactNode } from "react";
 import { BtnEditDeleteBack } from "@/components/common/BtnEditDeleteBack";
 import { Button } from "primereact/button";
 import { ConfirmDialog } from "primereact/confirmdialog";
-import { Verein } from "@/api/types/Verein";
+import { Verein } from "@/api/types/VereinFormModel";
 
 interface ButtonNeuerVereinProps {
   onNeuerVerein: () => void;
@@ -42,14 +42,8 @@ export function buttonNeuerVerein({
       <ConfirmDialog
         visible={visible}
         onHide={() => setVisible(false)}
-        message={
-          selectedVerein
-            ? "Soll der " + selectedVerein.name + " gelöscht werden?"
-            : ""
-        }
-        header={
-          selectedVerein ? "Löschen des " + selectedVerein.name + "?" : ""
-        }
+        message={selectedVerein ? "Soll der " + selectedVerein.name + " gelöscht werden?" : ""}
+        header={selectedVerein ? "Löschen des " + selectedVerein.name + "?" : ""}
         icon="pi pi-exclamation-triangle"
         accept={accept}
         reject={reject}
