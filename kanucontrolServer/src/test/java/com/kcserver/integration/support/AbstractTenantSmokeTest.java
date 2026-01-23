@@ -15,10 +15,12 @@ public abstract class AbstractTenantSmokeTest {
     @Autowired
     TenantSchemaProvisioner provisioner;
 
-    protected final String TENANT = "ekc_test";
+    protected String tenant() {
+        return "ekc_test";
+    }
 
     @BeforeAll
     void setupTenant() {
-        provisioner.createFromBaseline(TENANT);
+        provisioner.createFromBaseline(tenant());
     }
 }

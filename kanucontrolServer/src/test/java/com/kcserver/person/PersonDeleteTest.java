@@ -45,7 +45,7 @@ class PersonDeleteTest {
         String response =
                 mockMvc.perform(
                                 post("/api/person")
-                                        .header("X-Tenant", "test")
+                                        .with(jwt().jwt(jwt -> jwt.claim("tenant", "test")))
                                         .with(jwt())
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(dto))
@@ -69,7 +69,7 @@ class PersonDeleteTest {
 
         mockMvc.perform(
                         delete("/api/person/{id}", id)
-                                .header("X-Tenant", "test")
+                                .with(jwt().jwt(jwt -> jwt.claim("tenant", "test")))
                                 .with(jwt())
                 )
                 .andExpect(status().isNoContent());
@@ -82,14 +82,14 @@ class PersonDeleteTest {
 
         mockMvc.perform(
                         delete("/api/person/{id}", id)
-                                .header("X-Tenant", "test")
+                                .with(jwt().jwt(jwt -> jwt.claim("tenant", "test")))
                                 .with(jwt())
                 )
                 .andExpect(status().isNoContent());
 
         mockMvc.perform(
                         get("/api/person/{id}", id)
-                                .header("X-Tenant", "test")
+                                .with(jwt().jwt(jwt -> jwt.claim("tenant", "test")))
                                 .with(jwt())
                 )
                 .andExpect(status().isNotFound());
@@ -100,7 +100,7 @@ class PersonDeleteTest {
 
         mockMvc.perform(
                         delete("/api/person/{id}", 99999L)
-                                .header("X-Tenant", "test")
+                                .with(jwt().jwt(jwt -> jwt.claim("tenant", "test")))
                                 .with(jwt())
                 )
                 .andExpect(status().isNotFound());

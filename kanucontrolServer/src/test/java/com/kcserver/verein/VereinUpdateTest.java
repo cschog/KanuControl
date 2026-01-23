@@ -2,7 +2,8 @@ package com.kcserver.verein;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.dto.VereinDTO;
-import com.kcserver.test.AbstractIntegrationTest;
+import com.kcserver.integration.support.AbstractTenantIntegrationTest;
+import com.kcserver.testdata.VereinTestFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -11,9 +12,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -22,10 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Tag("verein-crud")
-class VereinUpdateTest extends AbstractIntegrationTest {
-
-    @Autowired
-    MockMvc mockMvc;
+class VereinUpdateTest extends AbstractTenantIntegrationTest {
 
     @Autowired
     ObjectMapper objectMapper;
@@ -34,7 +30,14 @@ class VereinUpdateTest extends AbstractIntegrationTest {
 
     @BeforeEach
     void setup() throws Exception {
-        vereinId = createVerein("Eschweiler Kanu Club", "EKC");
+
+        VereinTestFactory vereine =
+                new VereinTestFactory(mockMvc, objectMapper, tenantAuth());
+
+        vereinId = vereine.createIfNotExists(
+                "EKC",
+                "Eschweiler Kanu Club"
+        );
     }
 
     /* =========================================================
@@ -49,10 +52,11 @@ class VereinUpdateTest extends AbstractIntegrationTest {
         update.setAbk("EKC");
 
         mockMvc.perform(
-                        put("/api/verein/{id}", vereinId)
-                                .with(jwt())
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(update))
+                        tenantRequest(
+                                put("/api/verein/{id}", vereinId)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(update))
+                        )
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(vereinId))
@@ -68,11 +72,12 @@ class VereinUpdateTest extends AbstractIntegrationTest {
         update.setAbk("GC");
 
         mockMvc.perform(
-                put("/api/verein/{id}", 99999L)
-                        .with(jwt())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(update)));
-
-
+                        tenantRequest(
+                                put("/api/verein/{id}", 99999L)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(update))
+                        )
+                )
+                .andExpect(status().isNotFound());
     }
 }

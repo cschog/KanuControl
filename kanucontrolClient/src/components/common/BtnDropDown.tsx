@@ -1,4 +1,4 @@
-import { Dropdown, DropdownChangeEvent } from "primereact/dropdown";
+import { Autocomplete, TextField } from "@mui/material";
 
 interface Item {
   name: string;
@@ -10,7 +10,7 @@ interface Props {
   labelPlaceholder: string;
   selectedItem: Item | null;
   items: Item[];
-  setSelectedItem: (item: Item | null) => boolean;
+  setSelectedItem: (item: Item | null) => void;
 }
 
 export function BtnDropDown({
@@ -20,26 +20,17 @@ export function BtnDropDown({
   items,
   setSelectedItem,
 }: Readonly<Props>) {
-
-  const handleChange = (e: DropdownChangeEvent) => {
-    setSelectedItem(e.value as Item | null);
-  };
-
   return (
-    <div className="col-fixed">
-      <div className="p-0">
-        <span className="p-float-label">
-          <Dropdown
-            optionLabel="name"
-            optionValue="code"
-            value={selectedItem}
-            options={items}
-            onChange={handleChange}
-            placeholder={labelPlaceholder}
-          />
-          <label>{label}</label>
-        </span>
-      </div>
-    </div>
+    <Autocomplete
+      options={items}
+      value={selectedItem}
+      getOptionLabel={(option) => option.name}
+      isOptionEqualToValue={(option, value) => option.code === value.code}
+      onChange={(_, value) => setSelectedItem(value)}
+      renderInput={(params) => (
+        <TextField {...params} label={label} placeholder={labelPlaceholder} />
+      )}
+      sx={{ minWidth: 220 }}
+    />
   );
 }

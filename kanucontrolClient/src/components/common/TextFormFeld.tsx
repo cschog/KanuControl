@@ -19,7 +19,7 @@ export function TextFormFeld({
       fullWidth
       size="small"
       label={label}
-      value={value}
+      value={value ?? ""}
       disabled={disabled}
       onChange={(e) => onChange(e.target.value)}
     />

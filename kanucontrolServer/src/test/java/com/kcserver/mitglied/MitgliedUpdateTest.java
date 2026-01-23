@@ -1,25 +1,34 @@
 package com.kcserver.mitglied;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.dto.MitgliedDTO;
 import com.kcserver.enumtype.MitgliedFunktion;
-import com.kcserver.test.AbstractIntegrationTest;
+import com.kcserver.integration.support.AbstractTenantIntegrationTest;
+import com.kcserver.testdata.PersonTestFactory;
+import com.kcserver.testdata.VereinTestFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import java.time.LocalDate;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Tag("mitglied-crud")
-class MitgliedUpdateTest extends AbstractIntegrationTest {
+class MitgliedUpdateTest extends AbstractTenantIntegrationTest {
+
+    @Autowired
+    ObjectMapper objectMapper;
 
     Long personId;
     Long verein1Id;
@@ -29,12 +38,25 @@ class MitgliedUpdateTest extends AbstractIntegrationTest {
 
     @BeforeEach
     void setup() throws Exception {
-        personId = createPerson("Max", "Mustermann");
-        verein1Id = createVerein("Eschweiler Kanu Club", "EKC");
-        verein2Id = createVerein("Oberhausener Kanu Club", "OKC");
 
-        mitglied1Id = createMitglied(personId, verein1Id, true);
-        mitglied2Id = createMitglied(personId, verein2Id, false);
+        VereinTestFactory vereine =
+                new VereinTestFactory(mockMvc, objectMapper, tenantAuth());
+
+        PersonTestFactory personen =
+                new PersonTestFactory(mockMvc, objectMapper, tenantAuth());
+
+        verein1Id = vereine.createIfNotExists("EKC_U", "Eschweiler Kanu Club");
+        verein2Id = vereine.createIfNotExists("OKC_U", "Oberhausener Kanu Club");
+
+        personId = personen.createOrReuse(
+                "Max",
+                "Mustermann",
+                LocalDate.of(1990, 1, 1),
+                null
+        );
+
+        mitglied1Id = createMitglied(personId, verein1Id);
+        mitglied2Id = createMitglied(personId, verein2Id);
     }
 
     /* =========================================================
@@ -48,10 +70,11 @@ class MitgliedUpdateTest extends AbstractIntegrationTest {
         update.setFunktion(MitgliedFunktion.BOOTSHAUSWART);
 
         mockMvc.perform(
-                        put("/api/mitglied/{id}", mitglied1Id)
-                                .with(jwt())
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(update))
+                        tenantRequest(
+                                put("/api/mitglied/{id}", mitglied1Id)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(update))
+                        )
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.funktion").value("BOOTSHAUSWART"));
@@ -67,22 +90,26 @@ class MitgliedUpdateTest extends AbstractIntegrationTest {
         MitgliedDTO update = new MitgliedDTO();
         update.setHauptVerein(true);
 
+        // zweiter Mitglied wird Hauptverein
         mockMvc.perform(
-                        put("/api/mitglied/{id}", mitglied2Id)
-                                .with(jwt())
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(update))
+                        tenantRequest(
+                                put("/api/mitglied/{id}", mitglied2Id)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(update))
+                        )
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.hauptVerein").value(true));
 
-        // alter Hauptverein ist jetzt false
+        // erster ist jetzt kein Hauptverein mehr
         mockMvc.perform(
-                        put("/api/mitglied/{id}", mitglied1Id)
-                                .with(jwt())
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content("{}")
+                        tenantRequest(
+                                put("/api/mitglied/{id}", mitglied1Id)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content("{}")
+                        )
                 )
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.hauptVerein").value(false));
     }
 
@@ -97,10 +124,11 @@ class MitgliedUpdateTest extends AbstractIntegrationTest {
         update.setPersonId(999L);
 
         mockMvc.perform(
-                        put("/api/mitglied/{id}", mitglied1Id)
-                                .with(jwt())
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(update))
+                        tenantRequest(
+                                put("/api/mitglied/{id}", mitglied1Id)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(update))
+                        )
                 )
                 .andExpect(status().isBadRequest());
     }
@@ -112,11 +140,38 @@ class MitgliedUpdateTest extends AbstractIntegrationTest {
         update.setVereinId(999L);
 
         mockMvc.perform(
-                        put("/api/mitglied/{id}", mitglied1Id)
-                                .with(jwt())
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(update))
+                        tenantRequest(
+                                put("/api/mitglied/{id}", mitglied1Id)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(update))
+                        )
                 )
                 .andExpect(status().isBadRequest());
+    }
+
+    /* =========================================================
+       Helper
+       ========================================================= */
+
+    private Long createMitglied(Long personId, Long vereinId) throws Exception {
+
+        MitgliedDTO dto = new MitgliedDTO();
+        dto.setPersonId(personId);
+        dto.setVereinId(vereinId);
+
+        String response =
+                mockMvc.perform(
+                                tenantRequest(
+                                        post("/api/mitglied")
+                                                .contentType(MediaType.APPLICATION_JSON)
+                                                .content(objectMapper.writeValueAsString(dto))
+                                )
+                        )
+                        .andExpect(status().isCreated())
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
+
+        return objectMapper.readValue(response, MitgliedDTO.class).getId();
     }
 }

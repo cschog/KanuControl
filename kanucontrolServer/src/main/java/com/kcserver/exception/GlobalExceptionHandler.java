@@ -99,4 +99,17 @@ public class GlobalExceptionHandler {
                 )
         );
     }
+
+    @ExceptionHandler(BusinessRuleViolationException.class)
+    public ResponseEntity<ApiError> handleBusinessRuleViolation(
+            BusinessRuleViolationException ex
+    ) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                ApiError.simple(
+                        HttpStatus.CONFLICT.value(),
+                        "BUSINESS_RULE_VIOLATION",
+                        ex.getMessage()
+                )
+        );
+    }
 }

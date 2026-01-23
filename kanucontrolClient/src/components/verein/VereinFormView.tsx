@@ -11,7 +11,8 @@ import {
   Alert,
 } from "@mui/material";
 import { FormFeld } from "@/components/common/FormFeld";
-import { Verein } from "@/api/types/Verein";
+import  Verein  from "@/api/types/VereinFormModel";
+import { BottomActionBar } from "@/components/common/BottomActionBar";
 
 interface VereinFormViewProps {
   onNeuerVerein: () => void;
@@ -83,48 +84,13 @@ export const VereinFormView: React.FC<VereinFormViewProps> = ({
             Bitte wählen Sie einen Verein aus der Tabelle aus.
           </Typography>
         )}
-
-        {/* Action Buttons */}
-        <Box mt={4} display="flex" gap={2} flexWrap="wrap">
-          <Button
-            variant="contained"
-            onClick={onNeuerVerein}
-            disabled={btnNeuerVerein}
-          >
-            Neuer Verein
-          </Button>
-
-          <Button
-            variant="outlined"
-            onClick={onÄndernVerein}
-            disabled={btnÄndernVerein}
-          >
-            Bearbeiten
-          </Button>
-
-          <Button
-            variant="outlined"
-            color="error"
-            onClick={() => setConfirmOpen(true)}
-            disabled={btnLöschenVerein}
-          >
-            Löschen
-          </Button>
-
-          <Box flexGrow={1} />
-
-          <Button variant="text" onClick={onStartMenue}>
-            Zurück
-          </Button>
-        </Box>
       </Box>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
         <DialogTitle>Verein löschen?</DialogTitle>
         <DialogContent>
-          {selectedVerein &&
-            `Soll der Verein "${selectedVerein.name}" wirklich gelöscht werden?`}
+          {selectedVerein && `Soll der Verein "${selectedVerein.name}" wirklich gelöscht werden?`}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setConfirmOpen(false)}>Abbrechen</Button>
@@ -134,12 +100,35 @@ export const VereinFormView: React.FC<VereinFormViewProps> = ({
         </DialogActions>
       </Dialog>
 
+      <BottomActionBar
+        left={[
+          {
+            label: "Neuer Verein",
+            onClick: onNeuerVerein,
+            disabled: btnNeuerVerein,
+          },
+          {
+            label: "Bearbeiten",
+            onClick: onÄndernVerein,
+            disabled: btnÄndernVerein || !selectedVerein,
+            variant: "outlined",
+          },
+          {
+            label: "Löschen",
+            onClick: onDeleteVerein,
+            disabled: btnLöschenVerein || !selectedVerein,
+            variant: "outlined",
+            color: "error",
+          },
+          {
+            label: "Zurück",
+            onClick: onStartMenue,
+          },
+        ]}
+      />
+
       {/* Snackbar */}
-      <Snackbar
-        open={!!snackbar}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar(null)}
-      >
+      <Snackbar open={!!snackbar} autoHideDuration={4000} onClose={() => setSnackbar(null)}>
         <Alert severity="info" onClose={() => setSnackbar(null)}>
           {snackbar}
         </Alert>

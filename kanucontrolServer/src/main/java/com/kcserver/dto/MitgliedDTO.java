@@ -25,6 +25,5 @@ public class MitgliedDTO {
 
     private MitgliedFunktion funktion;
 
-    @NotNull(groups = OnCreate.class)
     private Boolean hauptVerein;
 }

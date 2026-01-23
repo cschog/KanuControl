@@ -1,4 +1,4 @@
-export interface Verein {
+export interface VereinFormModel {
   id?: number; // Assuming `id` is a number
   name: string;
   abk: string;
@@ -10,4 +10,4 @@ export interface Verein {
   iban: string;
   kontoInhaber?: number;
 }
-export default Verein;
+export default VereinFormModel;

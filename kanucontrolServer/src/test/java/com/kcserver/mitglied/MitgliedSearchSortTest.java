@@ -1,41 +1,61 @@
 package com.kcserver.mitglied;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.dto.MitgliedDTO;
 import com.kcserver.enumtype.MitgliedFunktion;
-import com.kcserver.test.AbstractIntegrationTest;
+import com.kcserver.integration.support.AbstractTenantIntegrationTest;
+import com.kcserver.testdata.PersonTestFactory;
+import com.kcserver.testdata.VereinTestFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import java.time.LocalDate;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Tag("mitglied-search")
-class MitgliedSearchSortTest extends AbstractIntegrationTest {
+class MitgliedSearchSortTest extends AbstractTenantIntegrationTest {
+
+    @Autowired
+    ObjectMapper objectMapper;
 
     Long personId;
-    Long vereinId;
 
     @BeforeEach
     void setup() throws Exception {
-        personId = createPerson("Anna", "Müller");
 
-        Long verein1 = createVerein("Eschweiler KC", "EKC");
-        Long verein2 = createVerein("Oberhausener KC", "OKC");
-        Long verein3 = createVerein("Bonner KC", "BKC");
+        VereinTestFactory vereine =
+                new VereinTestFactory(mockMvc, objectMapper, tenantAuth());
 
-        createMitglied(personId, verein1, MitgliedFunktion.BOOTSHAUSWART, true);
-        createMitglied(personId, verein2, MitgliedFunktion.JUGENDWART, false);
-        createMitglied(personId, verein3, MitgliedFunktion.KASSENWART, false);
+        PersonTestFactory personen =
+                new PersonTestFactory(mockMvc, objectMapper, tenantAuth());
+
+        Long verein1 = vereine.createIfNotExists("EKC_SORT", "Eschweiler KC");
+        Long verein2 = vereine.createIfNotExists("OKC_SORT", "Oberhausener KC");
+        Long verein3 = vereine.createIfNotExists("BKC_SORT", "Bonner KC");
+
+        personId = personen.createPerson(
+                "Anna",
+                "Müller",
+                LocalDate.of(1995, 1, 1),
+                null
+        );
+
+        createMitglied(personId, verein1, MitgliedFunktion.BOOTSHAUSWART);
+        createMitglied(personId, verein2, MitgliedFunktion.JUGENDWART);
+        createMitglied(personId, verein3, MitgliedFunktion.KASSENWART);
     }
 
     /* =========================================================
@@ -46,10 +66,11 @@ class MitgliedSearchSortTest extends AbstractIntegrationTest {
     void getMitgliederByPerson_sortByFunktionAsc() throws Exception {
 
         mockMvc.perform(
-                        get("/api/mitglied/person/{personId}", personId)
-                                .param("sort", "funktion,asc")
-                                .with(jwt())
-                                .accept(MediaType.APPLICATION_JSON)
+                        tenantRequest(
+                                get("/api/mitglied/person/{personId}", personId)
+                                        .param("sort", "funktion,asc")
+                                        .accept(MediaType.APPLICATION_JSON)
+                        )
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].funktion").value("BOOTSHAUSWART"))
@@ -65,37 +86,36 @@ class MitgliedSearchSortTest extends AbstractIntegrationTest {
     void getMitgliederByPerson_sortByHauptvereinDesc() throws Exception {
 
         mockMvc.perform(
-                        get("/api/mitglied/person/{personId}", personId)
-                                .param("sort", "hauptVerein,desc")
-                                .with(jwt())
-                                .accept(MediaType.APPLICATION_JSON)
+                        tenantRequest(
+                                get("/api/mitglied/person/{personId}", personId)
+                                        .param("sort", "hauptVerein,desc")
+                                        .accept(MediaType.APPLICATION_JSON)
+                        )
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].hauptVerein").value(true))
                 .andExpect(jsonPath("$[1].hauptVerein").value(false))
                 .andExpect(jsonPath("$[2].hauptVerein").value(false));
+
     }
 
     /* =========================================================
-       Test-Helfer
+       Helper
        ========================================================= */
 
     private void createMitglied(
             Long personId,
             Long vereinId,
-            MitgliedFunktion funktion,
-            boolean hauptverein
+            MitgliedFunktion funktion
     ) throws Exception {
 
         MitgliedDTO dto = new MitgliedDTO();
         dto.setPersonId(personId);
         dto.setVereinId(vereinId);
         dto.setFunktion(funktion);
-        dto.setHauptVerein(hauptverein);
 
         mockMvc.perform(
-                        post("/api/mitglied")
-                                .with(jwt())
+                        tenantRequest(post("/api/mitglied"))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(dto))
                 )

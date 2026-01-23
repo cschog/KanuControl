@@ -3,7 +3,7 @@ import { MenueHeader } from "@/components/layout/MenueHeader";
 import { VereinTable } from "@/components/verein/VereinTable";
 import { VereinFormView } from "@/components/verein/VereinFormView";
 import { VereinEditForm } from "@/components/verein/VereinEditForm";
-import { Verein } from "@/api/types/Verein";
+import  Verein  from "@/api/types/VereinFormModel";
 import { renderLoadingOrError } from "@/components/common/loadingOnErrorUtils";
 import { navigateToStartMenu } from "@/components/layout/navigateToStartMenue";
 
@@ -90,9 +90,7 @@ class Vereine extends Component<Record<string, never>, VereineState> {
     try {
       // Perform validation check here
       if (
-        (modusNeuerVerein &&
-          verein.name.trim() !== "" &&
-          verein.abk.trim() !== "") ||
+        (modusNeuerVerein && verein.name.trim() !== "" && verein.abk.trim() !== "") ||
         (!modusNeuerVerein && selectedVerein)
       ) {
         if (modusNeuerVerein) {
@@ -159,7 +157,7 @@ class Vereine extends Component<Record<string, never>, VereineState> {
       });
       return;
     }
-  
+
     this.setState({
       selectedVerein: verein,
       btnLöschenIsDisabled: false,
@@ -184,9 +182,7 @@ class Vereine extends Component<Record<string, never>, VereineState> {
         await dbDeleteVerein(selectedVerein.id);
         // Remove the deleted Verein from the state's data array
         this.setState((prevState) => ({
-          data: prevState.data.filter(
-            (verein) => verein.id !== selectedVerein.id
-          ),
+          data: prevState.data.filter((verein) => verein.id !== selectedVerein.id),
           selectedVerein: null,
           btnLöschenIsDisabled: true,
           btnÄndernIsDisabled: true,
@@ -213,10 +209,10 @@ class Vereine extends Component<Record<string, never>, VereineState> {
         {renderLoadingOrError({ loading, error })}
 
         <VereinTable
-  data={data}
-  selectedVerein={selectedVerein}
-  onSelectVerein={this.handleSelectVerein}
-/>
+          data={data}
+          selectedVerein={selectedVerein}
+          onSelectVerein={this.handleSelectVerein}
+        />
 
         <br />
         <div>

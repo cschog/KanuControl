@@ -2,7 +2,7 @@ package com.kcserver.verein;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.dto.VereinDTO;
-import com.kcserver.test.AbstractIntegrationTest;
+import com.kcserver.integration.support.AbstractTenantIntegrationTest;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +19,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Tag("verein-crud")
-class VereinValidationTest extends AbstractIntegrationTest {
+class VereinValidationTest extends AbstractTenantIntegrationTest {
 
     @Autowired
     ObjectMapper objectMapper;

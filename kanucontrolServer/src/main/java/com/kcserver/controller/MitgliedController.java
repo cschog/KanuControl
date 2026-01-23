@@ -44,8 +44,11 @@ public class MitgliedController {
     }
 
     @GetMapping("/person/{personId}")
-    public List<MitgliedDTO> getByPerson(@PathVariable Long personId) {
-        return mitgliedService.getByPerson(personId);
+    public List<MitgliedDTO> getByPerson(
+            @PathVariable Long personId,
+            org.springframework.data.domain.Pageable pageable
+    ) {
+        return mitgliedService.getByPerson(personId, pageable);
     }
 
     @GetMapping("/verein/{vereinId}")

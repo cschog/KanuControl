@@ -3,7 +3,7 @@ package com.kcserver.person;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.dto.PersonDTO;
 import com.kcserver.enumtype.Sex;
-import com.kcserver.test.AbstractIntegrationTest;
+import com.kcserver.integration.support.AbstractTenantIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -28,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Tag("person-crud")
 /*@WithTestTenant("tenant_test_2")
 * aktuell wird immer Schema Kanu verwendet */
-class PersonSearchSortTest extends AbstractIntegrationTest {
+class PersonSearchSortTest extends AbstractTenantIntegrationTest {
 
     @Autowired
     MockMvc mockMvc;

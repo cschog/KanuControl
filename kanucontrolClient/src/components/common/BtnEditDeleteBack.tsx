@@ -1,5 +1,5 @@
 import React from "react";
-import { Button } from "primereact/button";
+import { Button, Stack } from "@mui/material";
 
 interface BtnEditDeleteBackProps {
   onÄndern: () => void;
@@ -9,7 +9,6 @@ interface BtnEditDeleteBackProps {
   onStartMenue: () => void;
 }
 
-// Mark props as readonly using the Readonly utility type
 export function BtnEditDeleteBack({
   onÄndern,
   btnÄndern,
@@ -18,24 +17,23 @@ export function BtnEditDeleteBack({
   onStartMenue,
 }: Readonly<BtnEditDeleteBackProps>) {
   return (
-    <>
+    <Stack direction="row" spacing={2}>
+      <Button variant="outlined" color="warning" onClick={onÄndern} disabled={btnÄndern}>
+        Ändern
+      </Button>
+
       <Button
-        label="Ändern"
-        className="p-button-outlined p-button-warning m-2"
-        onClick={onÄndern}
-        disabled={btnÄndern}
-      />
-      <Button
+        variant="outlined"
+        color="error"
         onClick={() => setVisible(true)}
-        className="p-button-outlined p-button-danger m-2"
-        label="Löschen"
         disabled={btnLöschen}
-      />
-      <Button
-        label="Zurück"
-        className="p-button-outlined m-2"
-        onClick={onStartMenue}
-      />
-    </>
+      >
+        Löschen
+      </Button>
+
+      <Button variant="outlined" onClick={onStartMenue}>
+        Zurück
+      </Button>
+    </Stack>
   );
 }

@@ -49,7 +49,7 @@ class PersonUpdateTest {
         String response =
                 mockMvc.perform(
                                 post("/api/person")
-                                        .header("X-Tenant", "test")
+                                        .with(jwt().jwt(jwt -> jwt.claim("tenant", "test")))
                                         .with(jwt())
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(dto))
@@ -84,7 +84,7 @@ class PersonUpdateTest {
 
         mockMvc.perform(
                         put("/api/person/{id}", id)
-                                .header("X-Tenant", "test")
+                                .with(jwt().jwt(jwt -> jwt.claim("tenant", "test")))
                                 .with(jwt())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(update))
@@ -118,7 +118,7 @@ class PersonUpdateTest {
 
         mockMvc.perform(
                         put("/api/person/{id}", id2)
-                                .header("X-Tenant", "test")
+                                .with(jwt().jwt(jwt -> jwt.claim("tenant", "test")))
                                 .with(jwt())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(update))
@@ -144,7 +144,7 @@ class PersonUpdateTest {
 
         mockMvc.perform(
                         put("/api/person/{id}", id)
-                                .header("X-Tenant", "test")
+                                .with(jwt().jwt(jwt -> jwt.claim("tenant", "test")))
                                 .with(jwt())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(update))
@@ -163,7 +163,7 @@ class PersonUpdateTest {
 
         mockMvc.perform(
                         put("/api/person/{id}", 9999L)
-                                .header("X-Tenant", "test")
+                                .with(jwt().jwt(jwt -> jwt.claim("tenant", "test")))
                                 .with(jwt())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(update))

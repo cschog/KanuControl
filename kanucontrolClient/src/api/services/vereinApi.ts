@@ -1,5 +1,5 @@
 import apiClient from "@/api/client/apiClient";
-import { Verein } from "@/api/types/Verein";
+import Verein from "@/api/types/VereinFormModel";
 
 const BASE = "/verein";
 
@@ -18,10 +18,7 @@ export const updateVerein = async (verein: Verein): Promise<Verein> => {
     throw new Error("Verein ID is missing");
   }
 
-  const { data } = await apiClient.put<Verein>(
-    `${BASE}/${verein.id}`,
-    verein
-  );
+  const { data } = await apiClient.put<Verein>(`${BASE}/${verein.id}`, verein);
 
   return data;
 };

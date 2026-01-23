@@ -1,6 +1,6 @@
 // components/verein/vereinColumns.ts
 import { GridColDef } from "@mui/x-data-grid";
-import { Verein } from "@/api/types/Verein";
+import  Verein  from "@/api/types/VereinFormModel";
 
 export interface VereinWithId extends Verein {
   id: number;
