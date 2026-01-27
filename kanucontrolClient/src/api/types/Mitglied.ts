@@ -5,4 +5,5 @@ export interface Mitglied {
   id: number;
   verein: VereinRef;
   hauptVerein: boolean;
+  funktion?: string;
 }

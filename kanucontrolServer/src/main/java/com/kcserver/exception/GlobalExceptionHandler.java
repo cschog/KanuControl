@@ -23,6 +23,8 @@ public class GlobalExceptionHandler {
             HttpServletRequest request
     ) {
 
+        ex.printStackTrace();
+
         Map<String, String> fieldErrors = new HashMap<>();
 
         for (FieldError error : ex.getBindingResult().getFieldErrors()) {

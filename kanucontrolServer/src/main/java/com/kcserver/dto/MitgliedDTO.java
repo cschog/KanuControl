@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class MitgliedDTO {
+public class MitgliedDTO implements HasHauptverein{
 
     private Long id;
 

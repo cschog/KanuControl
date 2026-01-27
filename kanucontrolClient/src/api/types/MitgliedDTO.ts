@@ -5,4 +5,5 @@ export interface MitgliedDTO {
   vereinName: string;
   vereinAbk: string;
   hauptVerein: boolean;
+  funktion?: string,
 }

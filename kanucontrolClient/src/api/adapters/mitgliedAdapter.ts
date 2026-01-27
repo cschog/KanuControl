@@ -15,5 +15,6 @@ export function mapMitglied(dto: MitgliedDTO): Mitglied {
       abk: dto.vereinAbk ?? undefined,
     },
     hauptVerein: dto.hauptVerein ?? false,
+    funktion: dto.funktion ?? undefined,
   };
 }

@@ -27,6 +27,8 @@ public interface MitgliedRepository extends JpaRepository<Mitglied, Long> {
 
     Optional<Mitglied> findByPerson_IdAndHauptVereinTrue(Long personId);
 
+    Optional<Mitglied> findFirstByPerson_IdOrderByIdAsc(Long personId);
+
     /* =========================
        CONSTRAINTS / CHECKS
        ========================= */

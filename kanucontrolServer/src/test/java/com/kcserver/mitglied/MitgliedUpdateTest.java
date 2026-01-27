@@ -17,9 +17,10 @@ import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDate;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static com.kcserver.testsupport.ResultMatchersExt.hasExactlyOneHauptverein;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -173,5 +174,15 @@ class MitgliedUpdateTest extends AbstractTenantIntegrationTest {
                         .getContentAsString();
 
         return objectMapper.readValue(response, MitgliedDTO.class).getId();
+    }
+
+    @Test
+    void updatePerson_updatesMitgliedschaftenCorrectly() throws Exception {
+
+        mockMvc.perform(
+                        tenantRequest(get("/api/person/{id}", personId))
+                )
+                .andExpect(status().isOk())
+                .andExpect(hasExactlyOneHauptverein());
     }
 }

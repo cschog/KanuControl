@@ -127,12 +127,22 @@ public class MitgliedService {
 
     @Transactional
     public void delete(Long id) {
-        if (!mitgliedRepository.existsById(id)) {
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND, "Mitglied not found"
-            );
+
+        Mitglied mitglied = mitgliedRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Mitglied not found"
+                ));
+
+        Long personId = mitglied.getPerson().getId();
+        boolean wasHauptverein = Boolean.TRUE.equals(mitglied.getHauptVerein());
+
+        mitgliedRepository.delete(mitglied);
+
+        if (wasHauptverein) {
+            mitgliedRepository
+                    .findFirstByPerson_IdOrderByIdAsc(personId)
+                    .ifPresent(m -> m.setHauptVerein(true));
         }
-        mitgliedRepository.deleteById(id);
     }
 
     /* =========================================================
@@ -176,7 +186,7 @@ public class MitgliedService {
 
             mitglied.setHauptVerein(true);
         }
-
+        // explizites Entfernen des Hauptvereins ist fachlich nicht erlaubt
         if (Boolean.FALSE.equals(dto.getHauptVerein())) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,

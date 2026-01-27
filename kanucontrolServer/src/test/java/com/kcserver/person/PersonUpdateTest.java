@@ -2,7 +2,9 @@ package com.kcserver.person;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.dto.PersonDTO;
+import com.kcserver.dto.PersonSaveDTO;
 import com.kcserver.enumtype.Sex;
+import com.kcserver.integration.support.AbstractTenantIntegrationTest;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,15 +16,16 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("person-crud")
 @SpringBootTest
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
-class PersonUpdateTest {
+class PersonUpdateTest extends AbstractTenantIntegrationTest {
 
     @Autowired
     MockMvc mockMvc;
@@ -48,9 +51,7 @@ class PersonUpdateTest {
 
         String response =
                 mockMvc.perform(
-                                post("/api/person")
-                                        .with(jwt().jwt(jwt -> jwt.claim("tenant", "test")))
-                                        .with(jwt())
+                                tenantRequest(post("/api/person"))
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(dto))
                         )
@@ -75,17 +76,15 @@ class PersonUpdateTest {
                 LocalDate.of(1990, 1, 1)
         );
 
-        PersonDTO update = new PersonDTO();
-        update.setId(id);
+        PersonSaveDTO update = new PersonSaveDTO();
+        update.setId(id); // 👈 PFLICHT bei OnUpdate
         update.setVorname("Maximilian");
         update.setName("Mustermann");
         update.setGeburtsdatum(LocalDate.of(1990, 1, 1));
         update.setSex(Sex.MAENNLICH);
 
         mockMvc.perform(
-                        put("/api/person/{id}", id)
-                                .with(jwt().jwt(jwt -> jwt.claim("tenant", "test")))
-                                .with(jwt())
+                        tenantRequest(put("/api/person/{id}", id))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(update))
                 )
@@ -108,8 +107,7 @@ class PersonUpdateTest {
                 LocalDate.of(1992, 3, 3)
         );
 
-        // Versuch: Person 2 wird fachlich identisch zu Person 1
-        PersonDTO update = new PersonDTO();
+        PersonSaveDTO update = new PersonSaveDTO();
         update.setId(id2);
         update.setVorname("Anna");
         update.setName("Meyer");
@@ -117,9 +115,7 @@ class PersonUpdateTest {
         update.setSex(Sex.WEIBLICH);
 
         mockMvc.perform(
-                        put("/api/person/{id}", id2)
-                                .with(jwt().jwt(jwt -> jwt.claim("tenant", "test")))
-                                .with(jwt())
+                        tenantRequest(put("/api/person/{id}", id2))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(update))
                 )
@@ -135,17 +131,15 @@ class PersonUpdateTest {
                 LocalDate.of(1988, 8, 8)
         );
 
-        PersonDTO update = new PersonDTO();
-        update.setId(id);
+        PersonSaveDTO update = new PersonSaveDTO();
+        update.setId(id); // 👈 PFLICHT bei OnUpdate
         update.setVorname("Paul");
         update.setName("Berg");
         update.setGeburtsdatum(LocalDate.of(1988, 8, 8));
         update.setSex(Sex.MAENNLICH);
 
         mockMvc.perform(
-                        put("/api/person/{id}", id)
-                                .with(jwt().jwt(jwt -> jwt.claim("tenant", "test")))
-                                .with(jwt())
+                        tenantRequest(put("/api/person/{id}", id))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(update))
                 )
@@ -162,9 +156,7 @@ class PersonUpdateTest {
         update.setSex(Sex.MAENNLICH);
 
         mockMvc.perform(
-                        put("/api/person/{id}", 9999L)
-                                .with(jwt().jwt(jwt -> jwt.claim("tenant", "test")))
-                                .with(jwt())
+                        tenantRequest(put("/api/person/{id}", 9999L))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(update))
                 )

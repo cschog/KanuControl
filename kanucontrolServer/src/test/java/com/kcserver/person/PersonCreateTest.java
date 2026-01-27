@@ -2,7 +2,9 @@ package com.kcserver.person;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.dto.PersonDTO;
+import com.kcserver.dto.PersonSaveDTO;
 import com.kcserver.enumtype.Sex;
+import com.kcserver.integration.support.AbstractTenantIntegrationTest;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -32,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 @Transactional
-class PersonCreateTest {
+class PersonCreateTest extends AbstractTenantIntegrationTest {
 
     @Autowired
     MockMvc mockMvc;
@@ -62,11 +64,11 @@ class PersonCreateTest {
 
         // when / then
         mockMvc.perform(
-                        post("/api/person")
-                                .with(jwt().jwt(jwt -> jwt.claim("tenant", "test")))
-                                .with(jwt())
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(dto))
+                        tenantRequest(
+                                post("/api/person")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(dto))
+                        )
                 )
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -154,5 +156,26 @@ class PersonCreateTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isCreated());
+    }
+
+    @Test
+    void createPerson_returnsPersonDetailDTO() throws Exception {
+
+        PersonSaveDTO dto = new PersonSaveDTO();
+        dto.setVorname("Lisa");
+        dto.setName("Schmidt");
+        dto.setSex(Sex.WEIBLICH);
+        dto.setGeburtsdatum(LocalDate.of(2001, 3, 3));
+
+        mockMvc.perform(
+                        tenantRequest(
+                                post("/api/person")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(dto))
+                        )
+                )
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.mitgliedschaften").isArray());
     }
 }
