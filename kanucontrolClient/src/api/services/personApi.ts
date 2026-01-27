@@ -1,7 +1,10 @@
 import apiClient from "@/api/client/apiClient";
-import { Person } from "@/api/types/Person";
+
+import { PersonList } from "@/api/types/PersonList";
+import { PersonDetail } from "@/api/types/PersonDetail";
 import { PersonSearchParams } from "@/api/types/PersonSearchParams";
-import { normalizePersonPayload } from "@/api/normalize/normalizePerson";
+
+import { toPersonSaveDTO } from "@/api/mappers/personMapper";
 
 const BASE = "/person";
 
@@ -9,13 +12,20 @@ const BASE = "/person";
  * READ
  * ========================= */
 
-export const getAllPersonen = async (): Promise<Person[]> => {
-  const { data } = await apiClient.get<Person[]>(BASE);
+export const getAllPersonen = async (): Promise<PersonList[]> => {
+  const { data } = await apiClient.get<PersonList[]>(BASE);
   return data;
 };
 
-export const searchPersons = async (params: PersonSearchParams): Promise<Person[]> => {
-  const { data } = await apiClient.get<Person[]>(`${BASE}/search`, { params });
+export const searchPersons = async (params: PersonSearchParams): Promise<PersonList[]> => {
+  const { data } = await apiClient.get<PersonList[]>(`${BASE}/search`, {
+    params,
+  });
+  return data;
+};
+
+export const getPersonById = async (id: number): Promise<PersonDetail> => {
+  const { data } = await apiClient.get<PersonDetail>(`${BASE}/${id}`);
   return data;
 };
 
@@ -23,10 +33,9 @@ export const searchPersons = async (params: PersonSearchParams): Promise<Person[
  * CREATE
  * ========================= */
 
-export const createPerson = async (person: Person): Promise<Person> => {
-  const payload = normalizePersonPayload(person, "create");
-
-  const { data } = await apiClient.post<Person>(BASE, payload);
+export const createPerson = async (person: PersonDetail): Promise<PersonDetail> => {
+  const dto = toPersonSaveDTO(person);
+  const { data } = await apiClient.post<PersonDetail>(BASE, dto);
   return data;
 };
 
@@ -34,16 +43,9 @@ export const createPerson = async (person: Person): Promise<Person> => {
  * UPDATE
  * ========================= */
 
-export const updatePerson = async (person: Person): Promise<Person> => {
-  if (!person.id) {
-    throw new Error("updatePerson: Person ID missing");
-  }
-
-  const payload = normalizePersonPayload(person, "update");
-  console.log("PUT /person payload", payload);
-
-  const { data } = await apiClient.put<Person>(`${BASE}/${person.id}`, payload);
-
+export const updatePerson = async (person: PersonDetail): Promise<PersonDetail> => {
+  const dto = toPersonSaveDTO(person);
+  const { data } = await apiClient.put<PersonDetail>(`${BASE}/${person.id}`, dto);
   return data;
 };
 

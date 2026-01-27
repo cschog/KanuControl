@@ -25,37 +25,39 @@ public class PersonController {
         this.personService = personService;
     }
 
-    /* =========================================================
-       LIST / SEARCH
-       ========================================================= */
+    /* =========================
+       LIST
+       ========================= */
 
     @GetMapping
-    public ResponseEntity<List<PersonListDTO>> getAllPersons() {
-        return ResponseEntity.ok(personService.getAllPersonsList());
+    public List<PersonListDTO> getAll(Pageable pageable) {
+        return personService.getAll(pageable).getContent();
     }
 
+    /* =========================
+       SEARCH  ← 🔑 WICHTIG
+       ========================= */
+
     @GetMapping("/search")
-    public ResponseEntity<List<PersonListDTO>> searchPersons(
+    public List<PersonListDTO> search(
             PersonSearchCriteria criteria,
             Pageable pageable
     ) {
-        return ResponseEntity.ok(
-                personService.searchList(criteria, pageable).getContent()
-        );
+        return personService.searchList(criteria, pageable).getContent();
     }
 
-    /* =========================================================
+    /* =========================
        DETAIL
-       ========================================================= */
+       ========================= */
 
     @GetMapping("/{id}")
-    public ResponseEntity<PersonDetailDTO> getPersonById(@PathVariable long id) {
-        return ResponseEntity.ok(personService.getPersonDetail(id));
+    public PersonDetailDTO getPerson(@PathVariable long id) {
+        return personService.getPersonDetail(id);
     }
 
-    /* =========================================================
+    /* =========================
        CREATE / UPDATE
-       ========================================================= */
+       ========================= */
 
     @PostMapping
     public ResponseEntity<PersonDetailDTO> createPerson(
@@ -67,20 +69,20 @@ public class PersonController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PersonDetailDTO> updatePerson(
+    public PersonDetailDTO updatePerson(
             @PathVariable long id,
             @Validated(OnUpdate.class) @RequestBody PersonSaveDTO dto
     ) {
-        return ResponseEntity.ok(personService.updatePerson(id, dto));
+        return personService.updatePerson(id, dto);
     }
 
-    /* =========================================================
+    /* =========================
        DELETE
-       ========================================================= */
+       ========================= */
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePerson(@PathVariable long id) {
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deletePerson(@PathVariable long id) {
         personService.deletePerson(id);
-        return ResponseEntity.noContent().build();
     }
 }

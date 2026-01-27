@@ -1,6 +1,6 @@
 package com.kcserver.mapper;
 
-import com.kcserver.dto.PersonDTO;
+import com.kcserver.dto.PersonListDTO;
 import com.kcserver.entity.Person;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,34 +17,35 @@ class PersonMapperTest {
     PersonMapper mapper;
 
     @Test
-    void personDto_containsCorrectAge() {
+    void personListDto_containsCorrectAge() {
         // given
         LocalDate geb = LocalDate.now().minusYears(30);
         Person p = new Person();
         p.setGeburtsdatum(geb);
 
         // when
-        PersonDTO dto = mapper.toDTO(p);
+        PersonListDTO dto = mapper.toListDTO(p);
 
         // then
         assertThat(dto.getAlter()).isEqualTo(30);
     }
+
     @Test
-    void personDto_withNullBirthdate_hasNullAge() {
+    void personListDto_withNullBirthdate_hasNullAge() {
         Person p = new Person();
         p.setGeburtsdatum(null);
 
-        PersonDTO dto = mapper.toDTO(p);
+        PersonListDTO dto = mapper.toListDTO(p);
 
         assertThat(dto.getAlter()).isNull();
     }
 
     @Test
-    void personDto_birthdayToday_ageIsZero() {
+    void personListDto_birthdayToday_ageIsZero() {
         Person p = new Person();
         p.setGeburtsdatum(LocalDate.now());
 
-        PersonDTO dto = mapper.toDTO(p);
+        PersonListDTO dto = mapper.toListDTO(p);
 
         assertThat(dto.getAlter()).isZero();
     }

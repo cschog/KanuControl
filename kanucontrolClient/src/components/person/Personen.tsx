@@ -2,10 +2,11 @@ import { Component } from "react";
 import { MenueHeader } from "@/components/layout/MenueHeader";
 import { PersonTable } from "@/components/person/PersonTable";
 import { PersonFormView } from "@/components/person/PersonFormView";
-import { PersonEditForm } from "@/components/person/PersonEditForm";
-import { Person } from "@/api/types/Person";
 import { renderLoadingOrError } from "@/components/common/loadingOnErrorUtils";
 import { navigateToStartMenu } from "@/components/layout/navigateToStartMenue";
+import { PersonList } from "@/api/types/PersonList";
+import { PersonDetail } from "@/api/types/PersonDetail";
+import { getPersonById } from "@/api/services/personApi";
 
 import {
   getAllPersonen as dbGetAllPersonen,
@@ -15,8 +16,8 @@ import {
 } from "@/api/services/personApi";
 
 interface PersonenState {
-  data: Person[];
-  selectedPerson: Person | null;
+  data: PersonList[];
+  selectedPerson: PersonDetail | null;
   loading: boolean;
   error: null | string;
   personFormEditMode: boolean;
@@ -68,30 +69,24 @@ class Personen extends Component<Record<string, never>, PersonenState> {
     });
   };
 
-  btnSpeichern = async (person: Person) => {
+  btnSpeichern = async (person: PersonDetail) => {
     try {
-      let response: Person;
+      let response: PersonDetail;
 
       if (person.id) {
-        response = await dbReplacePerson(person); // ✏️ UPDATE
+        response = await dbReplacePerson(person);
       } else {
-        response = await dbCreatePerson(person); // ➕ CREATE
+        response = await dbCreatePerson(person);
       }
 
-      this.setState((prev) => {
-        const exists = prev.data.some((p) => p.id === response.id);
+      await this.fetchPersonenData();
 
-        return {
-          data: exists
-            ? prev.data.map((p) => (p.id === response.id ? response : p))
-            : [...prev.data, response],
-
-          selectedPerson: response,
-          personFormEditMode: false,
-          modusNeuePerson: false, // 🔑 WICHTIG
-          btnÄndernIsDisabled: false,
-          btnLöschenIsDisabled: false,
-        };
+      this.setState({
+        selectedPerson: response,
+        personFormEditMode: false,
+        modusNeuePerson: false,
+        btnÄndernIsDisabled: false,
+        btnLöschenIsDisabled: false,
       });
     } catch (e) {
       console.error(e);
@@ -100,21 +95,14 @@ class Personen extends Component<Record<string, never>, PersonenState> {
   };
 
   btnNeuePerson = () => {
-    // Create a new empty person
-    const newPerson: Person = {
-      name: "",
+    const newPerson: PersonDetail = {
       vorname: "",
-      sex: "W", // oder Default deiner Wahl
-      geburtsdatum: "",
+      name: "",
+      sex: "W",
       aktiv: true,
-      strasse: "",
-      plz: "",
+      geburtsdatum: undefined,
       ort: "",
-      countryCode: undefined, // ✅ FIX
-      telefon: "",
-      telefonFestnetz: "",
-      bankName: "",
-      iban: "",
+      mitgliedschaften: [], // 🔑 extrem wichtig
     };
 
     this.setState({
@@ -160,8 +148,8 @@ class Personen extends Component<Record<string, never>, PersonenState> {
     navigateToStartMenu();
   };
 
-  handleSelectPerson = (person: Person | null) => {
-    if (!person) {
+  handleSelectPerson = async (row: PersonList | null) => {
+    if (!row) {
       this.setState({
         selectedPerson: null,
         btnLöschenIsDisabled: true,
@@ -170,8 +158,10 @@ class Personen extends Component<Record<string, never>, PersonenState> {
       return;
     }
 
+    const detail = await getPersonById(row.id);
+
     this.setState({
-      selectedPerson: person,
+      selectedPerson: detail,
       btnLöschenIsDisabled: false,
       btnÄndernIsDisabled: false,
       personFormEditMode: false,
@@ -191,31 +181,21 @@ class Personen extends Component<Record<string, never>, PersonenState> {
         {renderLoadingOrError({ loading, error })}
 
         <PersonTable
-          key={data.map((p) => p.id).join("-")}
           data={data}
-          selectedPerson={selectedPerson}
+          selectedPersonId={selectedPerson?.id ?? null}
           onSelectPerson={this.handleSelectPerson}
         />
         <br />
         <div>
-          {this.state.personFormEditMode && selectedPerson ? (
-            <PersonEditForm
-              person={selectedPerson}
-              onSave={this.btnSpeichern}
-              onCancel={this.btnAbbruch}
-            />
-          ) : (
-            <PersonFormView
-              onNeuePerson={this.btnNeuePerson}
-              btnNeuePerson={this.state.btnNeuePersonIsDisabled}
-              onÄndernPerson={this.btnSpeichern}
-              btnÄndernPerson={this.state.btnÄndernIsDisabled}
-              onDeletePerson={this.deletePerson}
-              btnLöschenPerson={this.state.btnLöschenIsDisabled}
-              onStartMenue={this.btnStartMenue}
-              selectedPerson={selectedPerson}
-            />
-          )}
+          <PersonFormView
+            selectedPerson={selectedPerson}
+            onNeuePerson={this.btnNeuePerson}
+            onÄndernPerson={this.btnSpeichern}
+            btnÄndernPerson={this.state.btnÄndernIsDisabled}
+            onDeletePerson={this.deletePerson}
+            btnLöschenPerson={this.state.btnLöschenIsDisabled}
+            onStartMenue={this.btnStartMenue}
+          />
         </div>
       </div>
     );

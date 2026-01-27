@@ -25,6 +25,14 @@ public interface MitgliedRepository extends JpaRepository<Mitglied, Long> {
 
     Page<Mitglied> findByPerson_Id(Long personId, Pageable pageable);
 
+    @Query("""
+        select m
+        from Mitglied m
+        join fetch m.verein
+        where m.id = :id
+    """)
+    Optional<Mitglied> findByIdWithVerein(@Param("id") Long id);
+
     Optional<Mitglied> findByPerson_IdAndHauptVereinTrue(Long personId);
 
     Optional<Mitglied> findFirstByPerson_IdOrderByIdAsc(Long personId);

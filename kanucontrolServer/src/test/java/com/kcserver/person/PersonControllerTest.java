@@ -1,4 +1,4 @@
-package com.kcserver;
+package com.kcserver.person;
 
 import com.kcserver.config.TestAuditorAware;
 import com.kcserver.controller.PersonController;

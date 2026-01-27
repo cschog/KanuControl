@@ -1,10 +1,8 @@
 package com.kcserver.repository;
 
-import com.kcserver.dto.PersonListDTO;
 import com.kcserver.entity.Person;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -28,17 +26,29 @@ public interface PersonRepository
             LocalDate geburtsdatum
     );
 
-    /* Liste */
-    @Query("""
-      select new com.kcserver.dto.PersonListDTO(
-        p.id, p.vorname, p.name, p.sex, p.aktiv, p.geburtsdatum,
-        size(p.mitgliedschaften)
-      )
-      from Person p
-    """)
-    Page<PersonListDTO> findAllList(Pageable pageable);
+    /* =========================
+       LIST
+       ========================= */
 
-    /* Detail */
+    @EntityGraph(attributePaths = {
+            "mitgliedschaften",
+            "mitgliedschaften.verein"
+    })
+    Page<Person> findAll(Pageable pageable);
+
+    @EntityGraph(attributePaths = {
+            "mitgliedschaften",
+            "mitgliedschaften.verein"
+    })
+    Page<Person> findAll(
+            org.springframework.data.jpa.domain.Specification<Person> spec,
+            Pageable pageable
+    );
+
+    /* =========================
+       DETAIL
+       ========================= */
+
     @EntityGraph(attributePaths = {
             "mitgliedschaften",
             "mitgliedschaften.verein"

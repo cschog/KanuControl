@@ -8,7 +8,6 @@ import com.kcserver.validation.OnUpdate;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Null;
 import jakarta.validation.constraints.PastOrPresent;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -23,11 +22,6 @@ import java.util.List;
 @IbanRequiresBankName(groups = {OnCreate.class, OnUpdate.class})
 @ExactlyOneHauptverein(groups = OnCreate.class)
 public class PersonSaveDTO implements HasMitgliedschaften {
-
-
-    @Null(groups = OnCreate.class)
-    @NotNull(groups = OnUpdate.class)
-    private Long id;
 
     @NotBlank(groups = {OnCreate.class, OnUpdate.class})
     private String name;

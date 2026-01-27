@@ -16,44 +16,33 @@ import java.util.List;
 )
 public interface PersonMapper {
 
-    /* =========================================================
-       LEGACY (kann später entfernt werden)
-       ========================================================= */
-
+    /* LIST */
     @Mapping(
             target = "alter",
             expression = "java(calculateAlter(person.getGeburtsdatum()))"
     )
-    PersonDTO toDTO(Person person);
-
-    /* =========================================================
-       LIST (NEU)
-       ========================================================= */
-
+    @Mapping(target = "mitgliedschaftenCount", ignore = true)
+    @Mapping(target = "ort", source = "ort")
     @Mapping(
-            target = "mitgliedschaftenCount",
-            expression = "java(person.getMitgliedschaften() != null ? person.getMitgliedschaften().size() : 0)"
+            target = "hauptvereinAbk",
+            expression = "java(resolveHauptvereinAbk(person))"
     )
     PersonListDTO toListDTO(Person person);
 
-    /* =========================================================
-       DETAIL (NEU)
-       ========================================================= */
-
+    /* DETAIL */
+    @Mapping(target = "mitgliedschaften", source = "mitgliedschaften")
     PersonDetailDTO toDetailDTO(Person person);
 
     MitgliedDetailDTO toMitgliedDetailDTO(Mitglied mitglied);
-
     VereinRefDTO toVereinRefDTO(Verein verein);
 
-    /* =========================================================
-       WRITE
-       ========================================================= */
-
-    Person toEntity(PersonSaveDTO dto);
-
-    @Mapping(target = "mitgliedschaften", ignore = true)
+    /* WRITE */
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "mitgliedschaften", ignore = true)
+    Person toNewEntity(PersonSaveDTO dto);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "mitgliedschaften", ignore = true)
     void updateFromDTO(PersonSaveDTO dto, @MappingTarget Person entity);
 
     @AfterMapping
@@ -66,12 +55,19 @@ public interface PersonMapper {
         }
     }
 
-    /* =========================================================
-       Helper
-       ========================================================= */
-
     default Integer calculateAlter(LocalDate geburtsdatum) {
         if (geburtsdatum == null) return null;
         return Period.between(geburtsdatum, LocalDate.now()).getYears();
+    }
+
+    // 🔑 NEU
+    default String resolveHauptvereinAbk(Person person) {
+        if (person.getMitgliedschaften() == null) return null;
+
+        return person.getMitgliedschaften().stream()
+                .filter(Mitglied::getHauptVerein)
+                .map(m -> m.getVerein() != null ? m.getVerein().getAbk() : null)
+                .findFirst()
+                .orElse(null);
     }
 }

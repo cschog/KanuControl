@@ -1,6 +1,9 @@
 package com.kcserver.controller;
 
 import com.kcserver.dto.MitgliedDTO;
+import com.kcserver.dto.MitgliedDetailDTO;
+import com.kcserver.entity.Mitglied;
+import com.kcserver.mapper.MitgliedMapper;
 import com.kcserver.service.MitgliedService;
 import com.kcserver.validation.OnCreate;
 import com.kcserver.validation.OnUpdate;
@@ -17,8 +20,14 @@ public class MitgliedController {
 
     private final MitgliedService mitgliedService;
 
-    public MitgliedController(MitgliedService mitgliedService) {
+    private final MitgliedMapper mitgliedMapper;
+
+    public MitgliedController(
+            MitgliedService mitgliedService,
+            MitgliedMapper mitgliedMapper
+    ) {
         this.mitgliedService = mitgliedService;
+        this.mitgliedMapper = mitgliedMapper;
     }
 
     /* =========================================================
@@ -26,12 +35,13 @@ public class MitgliedController {
        ========================================================= */
 
     @PostMapping
-    public ResponseEntity<MitgliedDTO> create(
-            @RequestBody @Validated(OnCreate.class) MitgliedDTO dto) {
-
+    public ResponseEntity<MitgliedDetailDTO> create(
+            @RequestBody @Validated(OnCreate.class) MitgliedDTO dto
+    ) {
+        Mitglied mitglied = mitgliedService.createMitgliedEntity(dto);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(mitgliedService.createMitglied(dto));
+                .body(mitgliedMapper.toDetailDTO(mitglied));
     }
 
     /* =========================================================
@@ -80,10 +90,11 @@ public class MitgliedController {
        ========================= */
 
     @PutMapping("/{id}")
-    public MitgliedDTO update(
+    public MitgliedDetailDTO update(
             @PathVariable Long id,
-            @RequestBody @Validated(OnUpdate.class) MitgliedDTO dto) {
-
-        return mitgliedService.updateMitglied(id, dto);
+            @RequestBody @Validated(OnUpdate.class) MitgliedDTO dto
+    ) {
+        Mitglied mitglied = mitgliedService.updateMitgliedEntity(id, dto);
+        return mitgliedMapper.toDetailDTO(mitglied);
     }
 }

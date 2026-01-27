@@ -1,7 +1,10 @@
 package com.kcserver.mapper;
 
 import com.kcserver.dto.MitgliedDTO;
+import com.kcserver.dto.MitgliedDetailDTO;
+import com.kcserver.dto.VereinRefDTO;
 import com.kcserver.entity.Mitglied;
+import com.kcserver.entity.Verein;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
@@ -31,4 +34,13 @@ public interface MitgliedMapper {
     @Mapping(target = "person", ignore = true)
     @Mapping(target = "verein", ignore = true)
     Mitglied toEntity(MitgliedDTO dto);
+
+    /* ============================
+       NEU: Detail DTO
+       ============================ */
+
+    @Mapping(source = "verein", target = "verein")
+    MitgliedDetailDTO toDetailDTO(Mitglied entity);
+
+    VereinRefDTO toVereinRefDTO(Verein verein);
 }
