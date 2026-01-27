@@ -77,7 +77,6 @@ class PersonUpdateTest extends AbstractTenantIntegrationTest {
         );
 
         PersonSaveDTO update = new PersonSaveDTO();
-        update.setId(id); // 👈 PFLICHT bei OnUpdate
         update.setVorname("Maximilian");
         update.setName("Mustermann");
         update.setGeburtsdatum(LocalDate.of(1990, 1, 1));
@@ -108,7 +107,6 @@ class PersonUpdateTest extends AbstractTenantIntegrationTest {
         );
 
         PersonSaveDTO update = new PersonSaveDTO();
-        update.setId(id2);
         update.setVorname("Anna");
         update.setName("Meyer");
         update.setGeburtsdatum(LocalDate.of(1995, 5, 5));
@@ -132,7 +130,6 @@ class PersonUpdateTest extends AbstractTenantIntegrationTest {
         );
 
         PersonSaveDTO update = new PersonSaveDTO();
-        update.setId(id); // 👈 PFLICHT bei OnUpdate
         update.setVorname("Paul");
         update.setName("Berg");
         update.setGeburtsdatum(LocalDate.of(1988, 8, 8));

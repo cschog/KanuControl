@@ -1,26 +1,23 @@
 // PersonTable.tsx
 import { GenericTable } from "@/components/common/GenericTable";
 import { personColumns, PersonWithId } from "@/components/person/personColumns";
-import { Person } from "@/api/types/Person";
+import { PersonList } from "@/api/types/PersonList";
 
 interface PersonTableProps {
-  data: Person[];
-  selectedPerson: Person | null;
-  onSelectPerson: (person: Person | null) => void;
+  data: PersonList[];
+  selectedPersonId: number | null;
+  onSelectPerson: (row: PersonList | null) => void;
 }
 
 export const PersonTable: React.FC<PersonTableProps> = ({
   data,
-  selectedPerson,
+  selectedPersonId,
   onSelectPerson,
 }) => {
   const rows: PersonWithId[] = data.filter((p): p is PersonWithId => typeof p.id === "number");
 
   const selectedRow =
-    selectedPerson && typeof selectedPerson.id === "number"
-      ? rows.find((r) => r.id === selectedPerson.id) ?? null
-      : null;
-
+    selectedPersonId != null ? rows.find((r) => r.id === selectedPersonId) ?? null : null;
 
   return (
     <GenericTable<PersonWithId>
@@ -28,7 +25,7 @@ export const PersonTable: React.FC<PersonTableProps> = ({
       columns={personColumns}
       selectedRow={selectedRow}
       initialSortField="name"
-      onSelectRow={onSelectPerson}
+      onSelectRow={onSelectPerson} // 🔑 bekommt PersonList
     />
   );
 };

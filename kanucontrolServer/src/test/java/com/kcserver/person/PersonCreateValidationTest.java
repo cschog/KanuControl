@@ -1,4 +1,4 @@
-package com.kcserver;
+package com.kcserver.person;
 
 import com.kcserver.dto.MitgliedSaveDTO;
 import com.kcserver.dto.PersonSaveDTO;

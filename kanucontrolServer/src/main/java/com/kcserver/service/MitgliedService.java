@@ -1,7 +1,6 @@
 package com.kcserver.service;
 
 import com.kcserver.dto.MitgliedDTO;
-import org.springframework.data.domain.Pageable;
 import com.kcserver.entity.Mitglied;
 import com.kcserver.entity.Person;
 import com.kcserver.entity.Verein;
@@ -10,6 +9,7 @@ import com.kcserver.mapper.MitgliedMapper;
 import com.kcserver.repository.MitgliedRepository;
 import com.kcserver.repository.PersonRepository;
 import com.kcserver.repository.VereinRepository;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,6 +43,17 @@ public class MitgliedService {
 
     @Transactional
     public MitgliedDTO createMitglied(MitgliedDTO dto) {
+        return mitgliedMapper.toDTO(createMitgliedInternal(dto));
+    }
+
+    @Transactional
+    public Mitglied createMitgliedEntity(MitgliedDTO dto) {
+        Mitglied saved = createMitgliedInternal(dto);
+        return mitgliedRepository.findByIdWithVerein(saved.getId())
+                .orElseThrow();
+    }
+
+    private Mitglied createMitgliedInternal(MitgliedDTO dto) {
 
         Person person = personRepository.findById(dto.getPersonId())
                 .orElseThrow(() -> new ResponseStatusException(
@@ -66,13 +77,11 @@ public class MitgliedService {
         mitglied.setVerein(verein);
         mitglied.setFunktion(dto.getFunktion());
 
-        // ⭐ CREATE schaltet IMMER Hauptverein um
+        // ⭐ genau ein Hauptverein pro Person
         mitgliedRepository.unsetHauptvereinByPerson(person.getId());
         mitglied.setHauptVerein(true);
 
-        return mitgliedMapper.toDTO(
-                mitgliedRepository.save(mitglied)
-        );
+        return mitgliedRepository.save(mitglied);
     }
 
     /* =========================================================
@@ -104,10 +113,6 @@ public class MitgliedService {
                 .toList();
     }
 
-    /* =========================================================
-   READ – HAUPTVEREIN
-   ========================================================= */
-
     @Transactional(readOnly = true)
     public MitgliedDTO getHauptvereinByPerson(Long personId) {
 
@@ -121,7 +126,7 @@ public class MitgliedService {
         return mitgliedMapper.toDTO(mitglied);
     }
 
-    /* =========================================================
+     /* =========================================================
        DELETE
        ========================================================= */
 
@@ -151,12 +156,22 @@ public class MitgliedService {
 
     @Transactional
     public MitgliedDTO updateMitglied(Long id, MitgliedDTO dto) {
+        return mitgliedMapper.toDTO(updateMitgliedInternal(id, dto));
+    }
 
-        Mitglied mitglied = mitgliedRepository.findById(id)
+    @Transactional
+    public Mitglied updateMitgliedEntity(Long id, MitgliedDTO dto) {
+        return updateMitgliedInternal(id, dto);
+    }
+
+    private Mitglied updateMitgliedInternal(Long id, MitgliedDTO dto) {
+
+        Mitglied mitglied = mitgliedRepository.findByIdWithVerein(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Mitglied not found"
                 ));
 
+        // 🔒 Identität darf nicht geändert werden
         if (dto.getPersonId() != null &&
                 !mitglied.getPerson().getId().equals(dto.getPersonId())) {
             throw new ResponseStatusException(
@@ -183,10 +198,9 @@ public class MitgliedService {
             mitgliedRepository.unsetHauptvereinByPerson(
                     mitglied.getPerson().getId()
             );
-
             mitglied.setHauptVerein(true);
         }
-        // explizites Entfernen des Hauptvereins ist fachlich nicht erlaubt
+
         if (Boolean.FALSE.equals(dto.getHauptVerein())) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -194,7 +208,6 @@ public class MitgliedService {
             );
         }
 
-        return mitgliedMapper.toDTO(mitglied);
+        return mitglied;
     }
-
 }

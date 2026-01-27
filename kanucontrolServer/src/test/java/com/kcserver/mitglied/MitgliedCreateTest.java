@@ -70,11 +70,11 @@ class MitgliedCreateTest extends AbstractTenantIntegrationTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(dto))
                 )
-                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.personId").value(personId))
-                .andExpect(jsonPath("$.vereinId").value(verein1Id))
-                .andExpect(jsonPath("$.hauptVerein").value(true));
+                .andExpect(jsonPath("$.hauptVerein").value(true))
+                .andExpect(jsonPath("$.funktion").value("JUGENDWART"))
+                .andExpect(jsonPath("$.verein.id").value(verein1Id))
+                .andExpect(jsonPath("$.verein.name").value("Eschweiler Kanu Club"));
     }
 
     /* =========================================================

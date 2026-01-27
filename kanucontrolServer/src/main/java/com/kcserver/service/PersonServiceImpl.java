@@ -49,14 +49,6 @@ public class PersonServiceImpl implements PersonService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<PersonListDTO> getAllPersonsList() {
-        return personRepository
-                .findAllList(Pageable.unpaged())
-                .getContent();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public PersonDetailDTO getPersonDetail(long id) {
 
         Person person = personRepository.findDetailById(id)
@@ -65,6 +57,22 @@ public class PersonServiceImpl implements PersonService {
                 ));
 
         return personMapper.toDetailDTO(person);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PersonListDTO> getAll(Pageable pageable) {
+        return personRepository
+                .findAll(pageable)
+                .map(p -> {
+                    PersonListDTO dto = personMapper.toListDTO(p);
+                    dto.setMitgliedschaftenCount(
+                            p.getMitgliedschaften() == null
+                                    ? 0
+                                    : p.getMitgliedschaften().size()
+                    );
+                    return dto;
+                });
     }
 
     /* =========================================================
@@ -86,7 +94,7 @@ public class PersonServiceImpl implements PersonService {
             );
         }
 
-        Person entity = personMapper.toEntity(dto);
+        Person entity = personMapper.toNewEntity(dto);
 
         if (entity.getCountryCode() == null) {
             entity.setCountryCode(CountryCode.DE);
@@ -173,25 +181,62 @@ public class PersonServiceImpl implements PersonService {
             Person person,
             List<MitgliedSaveDTO> dtos
     ) {
-        List<Mitglied> target = person.getMitgliedschaften();
-        target.clear();
+        List<Mitglied> existing = person.getMitgliedschaften();
 
-        if (dtos == null) return;
+        if (dtos == null) {
+            existing.clear();
+            return;
+        }
 
+        // 1️⃣ Entfernte Mitgliedschaften löschen
+        existing.removeIf(m ->
+                dtos.stream().noneMatch(dto ->
+                        dto.getVereinId().equals(m.getVerein().getId())
+                )
+        );
+
+        // 2️⃣ Upsert (update oder neu)
         for (MitgliedSaveDTO dto : dtos) {
-            Verein verein = vereinRepository.findById(dto.getVereinId())
-                    .orElseThrow(() -> new ResponseStatusException(
-                            HttpStatus.NOT_FOUND,
-                            "Verein not found: " + dto.getVereinId()
-                    ));
 
-            Mitglied m = new Mitglied();
-            m.setPerson(person);
-            m.setVerein(verein);
-            m.setFunktion(dto.getFunktion());
-            m.setHauptVerein(dto.getHauptVerein());
+            Mitglied mitglied = existing.stream()
+                    .filter(m -> m.getVerein().getId().equals(dto.getVereinId()))
+                    .findFirst()
+                    .orElseGet(() -> {
+                        Verein verein = vereinRepository.findById(dto.getVereinId())
+                                .orElseThrow(() -> new ResponseStatusException(
+                                        HttpStatus.NOT_FOUND,
+                                        "Verein not found: " + dto.getVereinId()
+                                ));
 
-            target.add(m);
+                        Mitglied m = new Mitglied();
+                        m.setPerson(person);
+                        m.setVerein(verein);
+                        existing.add(m);
+                        return m;
+                    });
+
+            mitglied.setFunktion(dto.getFunktion());
+            mitglied.setHauptVerein(Boolean.TRUE.equals(dto.getHauptVerein()));
+        }
+
+        // 3️⃣ 🔑 HAUPTVEREIN-REGEL
+        List<Mitglied> hauptvereine = existing.stream()
+                .filter(Mitglied::getHauptVerein)
+                .toList();
+
+        if (hauptvereine.size() > 1) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Eine Person darf nur einen Hauptverein haben"
+            );
+        }
+
+        if (hauptvereine.size() == 1) {
+            Mitglied haupt = hauptvereine.get(0);
+
+            existing.forEach(m ->
+                    m.setHauptVerein(m == haupt)
+            );
         }
     }
 }
