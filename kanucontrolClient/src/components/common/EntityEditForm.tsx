@@ -1,4 +1,3 @@
-// components/common/EntityEditForm.tsx
 import { ReactNode, useState } from "react";
 import { Box, Typography, Snackbar, Alert } from "@mui/material";
 import { BtnStoreCancel } from "@/components/common/BtnStoreCancel";
@@ -10,12 +9,7 @@ interface EntityEditFormProps {
   children: ReactNode;
 }
 
-export function EntityEditForm({
-  title,
-  onSave,
-  onCancel,
-  children,
-}: EntityEditFormProps) {
+export function EntityEditForm({ title, onSave, onCancel, children }: EntityEditFormProps) {
   const [error, setError] = useState<string | null>(null);
 
   const handleSave = async (): Promise<boolean> => {
@@ -25,7 +19,7 @@ export function EntityEditForm({
       setError("Speichern fehlgeschlagen");
     }
 
-    return ok; // ✅ WICHTIG
+    return ok;
   };
 
   return (
@@ -37,17 +31,10 @@ export function EntityEditForm({
       {children}
 
       <Box mt={4} display="flex" justifyContent="flex-end">
-        <BtnStoreCancel
-          createUpdate={handleSave} // ✅ Typ passt jetzt
-          onAbbruch={onCancel}
-        />
+        <BtnStoreCancel createUpdate={handleSave} onAbbruch={onCancel} />
       </Box>
 
-      <Snackbar
-        open={!!error}
-        autoHideDuration={4000}
-        onClose={() => setError(null)}
-      >
+      <Snackbar open={!!error} autoHideDuration={4000} onClose={() => setError(null)}>
         <Alert severity="error" onClose={() => setError(null)}>
           {error}
         </Alert>

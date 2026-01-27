@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Person } from "@/api/types/Person";
 import { VereinRef } from "@/api/types/VereinRef";
 import { Sex } from "@/api/enums/Sex";
+import { CountrySelectFeld } from "@/components/common/CountrySelect";
 import { FormFeldDate } from "@/components/common/FormFeldDate";
 import { EntityEditForm } from "@/components/common/EntityEditForm";
 import { FormGrid } from "@/components/common/FormGrid";
@@ -29,31 +30,39 @@ export function PersonEditForm({
   onCreateMitglied,
   onCancel,
 }: PersonEditFormProps) {
-  const [state, setState] = useState<Person>({
+
+  const [state, setState] = useState<Person>(() => ({
     ...person,
+    mitgliedschaften: person.mitgliedschaften ?? [],
     telefon: person.telefon ?? "",
     iban: person.iban ?? "",
     strasse: person.strasse ?? "",
-  });
+  }));
 
   const [selectedVerein, setSelectedVerein] = useState<VereinRef | null>(null);
   const [loadingMitglied, setLoadingMitglied] = useState(false);
 
-  const mitglieder: Mitglied[] = state.mitglieder ?? [];
+  const mitglieder: Mitglied[] = state.mitgliedschaften ?? [];
 
   // 🔑 bereits zugeordnete Vereine
-  const zugeordneteVereinIds = new Set(mitglieder.map((m) => m.verein.id));
+  const zugeordneteVereinIds = new Set(
+    mitglieder.map((m) => m.verein?.id).filter((id): id is number => id !== undefined),
+  );
 
   const verfügbareVereine = (vereine ?? []).filter(
     (v) => v.id !== undefined && !zugeordneteVereinIds.has(v.id),
   );
+
+  if (!person || !person.id) {
+    return null;
+  }
 
   return (
     <EntityEditForm
       title="Person bearbeiten"
       onCancel={onCancel}
       onSave={async () => {
-        await onSave(state);
+        await onSave(state); // 🔑 state IST Person
         return true;
       }}
     >
@@ -73,14 +82,19 @@ export function PersonEditForm({
         <EnumSelectFeld<Sex>
           label="Geschlecht"
           value={state.sex}
-          options={["MAENNLICH", "WEIBLICH", "DIVERS"]}
+          options={["M", "W", "D"]}
           onChange={(v) => setState((s) => ({ ...s, sex: v }))}
         />
 
         <FormFeldDate
           label="Geburtsdatum"
-          value={state.geburtsdatum}
-          onChange={(v) => setState((s) => ({ ...s, geburtsdatum: v }))}
+          value={state.geburtsdatum ?? ""} // ✅ HIER
+          onChange={(v) =>
+            setState((s) => ({
+              ...s,
+              geburtsdatum: v || undefined, // 🔑 "" → undefined zurück
+            }))
+          }
         />
 
         <TextFormFeld
@@ -98,7 +112,7 @@ export function PersonEditForm({
           value={state.ort}
           onChange={(v) => setState((s) => ({ ...s, ort: v }))}
         />
-        <TextFormFeld
+        <CountrySelectFeld
           label="Land"
           value={state.countryCode}
           onChange={(v) => setState((s) => ({ ...s, countryCode: v }))}
@@ -129,7 +143,7 @@ export function PersonEditForm({
       <Divider sx={{ my: 3 }} />
 
       <Stack spacing={1}>
-        {mitglieder.map((m) => (
+        {mitglieder?.map((m) => (
           <Chip key={m.id} label={`${m.verein.name}${m.hauptVerein ? " ⭐" : ""}`} size="small" />
         ))}
       </Stack>
@@ -170,8 +184,8 @@ export function PersonEditForm({
 
               setState((s) => ({
                 ...s,
-                mitglieder: [
-                  ...(s.mitglieder ?? []).map((m) => ({
+                mitgliedschaften: [
+                  ...(s.mitgliedschaften ?? []).map((m) => ({
                     ...m,
                     hauptVerein: false, // 🔑 alle alten zurücksetzen
                   })),

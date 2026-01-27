@@ -1,7 +1,7 @@
 package com.kcserver.person;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kcserver.dto.PersonDTO;
+import com.kcserver.dto.PersonSaveDTO;
 import com.kcserver.enumtype.Sex;
 import com.kcserver.integration.support.AbstractTenantIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
@@ -52,7 +52,7 @@ class PersonSearchTest extends AbstractTenantIntegrationTest {
             LocalDate geburtsdatum
     ) throws Exception {
 
-        PersonDTO dto = new PersonDTO();
+        PersonSaveDTO dto = new PersonSaveDTO();
         dto.setVorname(vorname);
         dto.setName(name);
         dto.setSex(sex);
@@ -119,5 +119,19 @@ class PersonSearchTest extends AbstractTenantIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].vorname").value("Max"));
+    }
+    @Test
+    void searchPersons_returnsPagedPersonListDTO() throws Exception {
+
+        mockMvc.perform(
+                        tenantRequest(get("/api/person/search"))
+                                .param("page", "0")
+                                .param("size", "5")
+                                .param("sort", "name,asc")
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].id").exists())
+                .andExpect(jsonPath("$[0].mitgliedschaften").doesNotExist());
     }
 }

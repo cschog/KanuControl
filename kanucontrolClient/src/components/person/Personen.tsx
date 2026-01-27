@@ -6,7 +6,6 @@ import { PersonEditForm } from "@/components/person/PersonEditForm";
 import { Person } from "@/api/types/Person";
 import { renderLoadingOrError } from "@/components/common/loadingOnErrorUtils";
 import { navigateToStartMenu } from "@/components/layout/navigateToStartMenue";
-import { MessageSavingEmptyPerson } from "@/api/services/MessageSavingEmptyPerson"; 
 
 import {
   getAllPersonen as dbGetAllPersonen,
@@ -14,7 +13,6 @@ import {
   createPerson as dbCreatePerson,
   updatePerson as dbReplacePerson,
 } from "@/api/services/personApi";
-
 
 interface PersonenState {
   data: Person[];
@@ -71,47 +69,33 @@ class Personen extends Component<Record<string, never>, PersonenState> {
   };
 
   btnSpeichern = async (person: Person) => {
-    this.setState({
-      btnLöschenIsDisabled: true,
-      btnÄndernIsDisabled: true,
-    });
-  
-    const { modusNeuePerson, selectedPerson } = this.state;
-  
-    const isValid =
-      person.name.trim() !== "" && person.vorname.trim() !== "";
-  
-    if (modusNeuePerson && !isValid) {
-      MessageSavingEmptyPerson();
-      return;
-    }
-  
-    if (!modusNeuePerson && !selectedPerson) {
-      throw new Error("No selected person");
-    }
-  
     try {
       let response: Person;
-  
-      if (modusNeuePerson) {
-        response = await dbCreatePerson(person);
+
+      if (person.id) {
+        response = await dbReplacePerson(person); // ✏️ UPDATE
       } else {
-        const personToSave: Person = {
-          ...person,
-          id: selectedPerson!.id,
-        };
-        response = await dbReplacePerson(personToSave);
+        response = await dbCreatePerson(person); // ➕ CREATE
       }
-  
-      await this.fetchPersonenData();
-  
-      this.setState({
-        personFormEditMode: false,
-        selectedPerson: response,
+
+      this.setState((prev) => {
+        const exists = prev.data.some((p) => p.id === response.id);
+
+        return {
+          data: exists
+            ? prev.data.map((p) => (p.id === response.id ? response : p))
+            : [...prev.data, response],
+
+          selectedPerson: response,
+          personFormEditMode: false,
+          modusNeuePerson: false, // 🔑 WICHTIG
+          btnÄndernIsDisabled: false,
+          btnLöschenIsDisabled: false,
+        };
       });
-    } catch (error) {
-      console.error("Error saving person:", error);
-      alert("Failed to save changes");
+    } catch (e) {
+      console.error(e);
+      alert("Speichern fehlgeschlagen");
     }
   };
 
@@ -120,17 +104,17 @@ class Personen extends Component<Record<string, never>, PersonenState> {
     const newPerson: Person = {
       name: "",
       vorname: "",
-      sex: "WEIBLICH", // oder Default deiner Wahl
+      sex: "W", // oder Default deiner Wahl
       geburtsdatum: "",
       aktiv: true,
       strasse: "",
       plz: "",
       ort: "",
-      countryCode: "",
+      countryCode: undefined, // ✅ FIX
       telefon: "",
       telefonFestnetz: "",
       bankName: "",
-      iban: ""
+      iban: "",
     };
 
     this.setState({
@@ -146,9 +130,9 @@ class Personen extends Component<Record<string, never>, PersonenState> {
   editPerson = () => {
     this.setState({
       personFormEditMode: true,
+      modusNeuePerson: false, // 🔑 EXPLIZIT
       btnLöschenIsDisabled: true,
       btnÄndernIsDisabled: true,
-      modusNeuePerson: false,
     });
   };
 
@@ -160,9 +144,7 @@ class Personen extends Component<Record<string, never>, PersonenState> {
         await dbDeletePerson(selectedPerson.id);
         // Remove the deleted Person from the state's data array
         this.setState((prevState) => ({
-          data: prevState.data.filter(
-            (person) => person.id !== selectedPerson.id
-          ),
+          data: prevState.data.filter((person) => person.id !== selectedPerson.id),
           selectedPerson: null,
           btnLöschenIsDisabled: true,
           btnÄndernIsDisabled: true,
@@ -187,7 +169,7 @@ class Personen extends Component<Record<string, never>, PersonenState> {
       });
       return;
     }
-  
+
     this.setState({
       selectedPerson: person,
       btnLöschenIsDisabled: false,
@@ -201,37 +183,39 @@ class Personen extends Component<Record<string, never>, PersonenState> {
     const { loading, error } = this.state;
     const personAnz = data.length;
 
+    // console.log("RENDER Personen – data:", data);
+
     return (
       <div>
         <MenueHeader headerText={`${personAnz} Personen`} />
         {renderLoadingOrError({ loading, error })}
 
         <PersonTable
+          key={data.map((p) => p.id).join("-")}
           data={data}
           selectedPerson={selectedPerson}
           onSelectPerson={this.handleSelectPerson}
-/>
-
+        />
         <br />
         <div>
-        {this.state.personFormEditMode && selectedPerson ? (
-          <PersonEditForm
-           person={selectedPerson}
-    onSave={this.btnSpeichern}
-    onCancel={this.btnAbbruch}
-  />
-) : (
-  <PersonFormView
-    onNeuePerson={this.btnNeuePerson}
-    btnNeuePerson={this.state.btnNeuePersonIsDisabled}
-    onÄndernPerson={this.editPerson}
-    btnÄndernPerson={this.state.btnÄndernIsDisabled}
-    onDeletePerson={this.deletePerson}
-    btnLöschenPerson={this.state.btnLöschenIsDisabled}
-    onStartMenue={this.btnStartMenue}
-    selectedPerson={selectedPerson}
-  />
-)}
+          {this.state.personFormEditMode && selectedPerson ? (
+            <PersonEditForm
+              person={selectedPerson}
+              onSave={this.btnSpeichern}
+              onCancel={this.btnAbbruch}
+            />
+          ) : (
+            <PersonFormView
+              onNeuePerson={this.btnNeuePerson}
+              btnNeuePerson={this.state.btnNeuePersonIsDisabled}
+              onÄndernPerson={this.btnSpeichern}
+              btnÄndernPerson={this.state.btnÄndernIsDisabled}
+              onDeletePerson={this.deletePerson}
+              btnLöschenPerson={this.state.btnLöschenIsDisabled}
+              onStartMenue={this.btnStartMenue}
+              selectedPerson={selectedPerson}
+            />
+          )}
         </div>
       </div>
     );

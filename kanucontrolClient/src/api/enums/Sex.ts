@@ -1,1 +1,1 @@
-export type Sex = "MAENNLICH" | "WEIBLICH" | "DIVERS";
+export type Sex = "M" | "W" | "D";

@@ -1,16 +1,14 @@
 package com.kcserver.controller;
 
-import com.kcserver.dto.PersonDTO;
+import com.kcserver.dto.PersonDetailDTO;
+import com.kcserver.dto.PersonListDTO;
+import com.kcserver.dto.PersonSaveDTO;
 import com.kcserver.dto.PersonSearchCriteria;
 import com.kcserver.service.PersonService;
-import com.kcserver.tenancy.TenantContext;
 import com.kcserver.validation.OnCreate;
 import com.kcserver.validation.OnUpdate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -21,8 +19,6 @@ import java.util.List;
 @RequestMapping("/api/person")
 public class PersonController {
 
-    private static final Logger logger = LoggerFactory.getLogger(PersonController.class);
-
     private final PersonService personService;
 
     public PersonController(PersonService personService) {
@@ -30,53 +26,52 @@ public class PersonController {
     }
 
     /* =========================================================
-       READ
+       LIST / SEARCH
        ========================================================= */
 
-    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<PersonDTO>> getAllPersons() {
-        logger.debug("GET /api/person | tenant={}", TenantContext.getTenant());
-        return ResponseEntity.ok(personService.getAllPersons());
+    @GetMapping
+    public ResponseEntity<List<PersonListDTO>> getAllPersons() {
+        return ResponseEntity.ok(personService.getAllPersonsList());
     }
 
-    @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<PersonDTO> getPersonById(@PathVariable long id) {
-        logger.debug("GET /api/person/{} | tenant={}", id, TenantContext.getTenant());
-        return ResponseEntity.ok(personService.getPerson(id));
-    }
-
-    /* =========================================================
-       CREATE
-       ========================================================= */
-
-    @PostMapping(
-            consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE
-    )
-    public ResponseEntity<PersonDTO> createPerson(
-            @Validated(OnCreate.class) @RequestBody PersonDTO personDTO
+    @GetMapping("/search")
+    public ResponseEntity<List<PersonListDTO>> searchPersons(
+            PersonSearchCriteria criteria,
+            Pageable pageable
     ) {
-        logger.info("POST /api/person | tenant={}", TenantContext.getTenant());
-        PersonDTO created = personService.createPerson(personDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        return ResponseEntity.ok(
+                personService.searchList(criteria, pageable).getContent()
+        );
     }
 
     /* =========================================================
-       UPDATE
+       DETAIL
        ========================================================= */
 
-    @PutMapping(
-            value = "/{id}",
-            consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE
-    )
-    public ResponseEntity<PersonDTO> updatePerson(
+    @GetMapping("/{id}")
+    public ResponseEntity<PersonDetailDTO> getPersonById(@PathVariable long id) {
+        return ResponseEntity.ok(personService.getPersonDetail(id));
+    }
+
+    /* =========================================================
+       CREATE / UPDATE
+       ========================================================= */
+
+    @PostMapping
+    public ResponseEntity<PersonDetailDTO> createPerson(
+            @Validated(OnCreate.class) @RequestBody PersonSaveDTO dto
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(personService.createPerson(dto));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<PersonDetailDTO> updatePerson(
             @PathVariable long id,
-            @Validated(OnUpdate.class) @RequestBody PersonDTO personDTO
+            @Validated(OnUpdate.class) @RequestBody PersonSaveDTO dto
     ) {
-        logger.info("PUT /api/person/{} | tenant={}", id, TenantContext.getTenant());
-        PersonDTO updated = personService.updatePerson(id, personDTO);
-        return ResponseEntity.ok(updated);
+        return ResponseEntity.ok(personService.updatePerson(id, dto));
     }
 
     /* =========================================================
@@ -85,24 +80,7 @@ public class PersonController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePerson(@PathVariable long id) {
-        logger.info("DELETE /api/person/{} | tenant={}", id, TenantContext.getTenant());
         personService.deletePerson(id);
         return ResponseEntity.noContent().build();
-    }
-
-    /* =========================================================
-       SEARCH (UC-P1)
-       ========================================================= */
-
-    @GetMapping(value = "/search", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<PersonDTO>> searchPersons(
-            PersonSearchCriteria criteria,
-            Pageable pageable
-    ) {
-        logger.debug("GET /api/person/search | tenant={}", TenantContext.getTenant());
-
-        return ResponseEntity.ok(
-                personService.search(criteria, pageable).getContent()
-        );
     }
 }

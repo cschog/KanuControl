@@ -11,7 +11,8 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ExactlyOneHauptverein {
 
-    String message() default "Exactly one Hauptverein must be selected";
+    String message() default
+            "Exactly one Mitglied must be marked as Hauptverein";
 
     Class<?>[] groups() default {};
 

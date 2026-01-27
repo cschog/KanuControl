@@ -3,25 +3,20 @@ import { TextField } from "@mui/material";
 
 interface TextFormFeldProps {
   label: string;
-  value: string;
+  value?: string; // ✅ WICHTIG
+  onChange?: (value: string) => void;
   disabled?: boolean;
-  onChange: (value: string) => void;
 }
 
-export function TextFormFeld({
-  label,
-  value,
-  disabled = false,
-  onChange,
-}: TextFormFeldProps) {
+export function TextFormFeld({ label, value, onChange, disabled = false }: TextFormFeldProps) {
   return (
     <TextField
       fullWidth
       size="small"
       label={label}
-      value={value ?? ""}
+      value={value ?? ""} // ✅ NIE undefined ins TextField
       disabled={disabled}
-      onChange={(e) => onChange(e.target.value)}
+      onChange={(e) => onChange?.(e.target.value)}
     />
   );
 }

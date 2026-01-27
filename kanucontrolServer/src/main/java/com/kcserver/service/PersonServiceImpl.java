@@ -1,14 +1,12 @@
 package com.kcserver.service;
 
-import com.kcserver.dto.MitgliedDTO;
-import com.kcserver.dto.PersonDTO;
-import com.kcserver.dto.PersonSearchCriteria;
+import com.kcserver.dto.*;
 import com.kcserver.entity.Mitglied;
 import com.kcserver.entity.Person;
 import com.kcserver.entity.Verein;
+import com.kcserver.enumtype.CountryCode;
 import com.kcserver.mapper.PersonMapper;
 import com.kcserver.persistence.specification.PersonSpecification;
-import com.kcserver.repository.MitgliedRepository;
 import com.kcserver.repository.PersonRepository;
 import com.kcserver.repository.VereinRepository;
 import org.slf4j.Logger;
@@ -19,10 +17,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import com.kcserver.dto.PersonListDTO;
+import com.kcserver.dto.PersonDetailDTO;
 
 import java.util.List;
-
-import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 @Transactional
@@ -34,17 +32,14 @@ public class PersonServiceImpl implements PersonService {
     private final PersonRepository personRepository;
     private final PersonMapper personMapper;
     private final VereinRepository vereinRepository;
-    private final MitgliedRepository mitgliedRepository;
 
     public PersonServiceImpl(
             PersonRepository personRepository,
             PersonMapper personMapper,
-            MitgliedRepository mitgliedRepository,
             VereinRepository vereinRepository
     ) {
         this.personRepository = personRepository;
         this.personMapper = personMapper;
-        this.mitgliedRepository = mitgliedRepository;
         this.vereinRepository = vereinRepository;
     }
 
@@ -54,21 +49,22 @@ public class PersonServiceImpl implements PersonService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<PersonDTO> getAllPersons() {
-        return personRepository.findAll()
-                .stream()
-                .map(personMapper::toDTO)
-                .toList();
+    public List<PersonListDTO> getAllPersonsList() {
+        return personRepository
+                .findAllList(Pageable.unpaged())
+                .getContent();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public PersonDTO getPerson(long id) {
-        Person person = personRepository.findById(id)
+    public PersonDetailDTO getPersonDetail(long id) {
+
+        Person person = personRepository.findDetailById(id)
                 .orElseThrow(() -> new ResponseStatusException(
-                        NOT_FOUND, "Person not found"
+                        HttpStatus.NOT_FOUND, "Person not found"
                 ));
-        return personMapper.toDTO(person);
+
+        return personMapper.toDetailDTO(person);
     }
 
     /* =========================================================
@@ -76,59 +72,29 @@ public class PersonServiceImpl implements PersonService {
        ========================================================= */
 
     @Override
-    public PersonDTO createPerson(PersonDTO dto) {
+    public PersonDetailDTO createPerson(PersonSaveDTO dto) {
 
-        // 0️⃣ Fachliche Duplikatsprüfung
-        if (dto.getGeburtsdatum() != null) {
-
-            boolean exists = personRepository
-                    .existsByVornameAndNameAndGeburtsdatum(
-                            dto.getVorname(),
-                            dto.getName(),
-                            dto.getGeburtsdatum()
-                    );
-
-            if (exists) {
-                throw new ResponseStatusException(
-                        HttpStatus.CONFLICT,
-                        "Eine Person mit gleichem Namen und Geburtsdatum existiert bereits"
-                );
-            }
+        if (dto.getGeburtsdatum() != null &&
+                personRepository.existsByVornameAndNameAndGeburtsdatum(
+                        dto.getVorname(),
+                        dto.getName(),
+                        dto.getGeburtsdatum()
+                )) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Eine Person mit gleichem Namen und Geburtsdatum existiert bereits"
+            );
         }
 
-        // 1️⃣ Person speichern (OHNE Mitgliedschaften)
-        Person person = personMapper.toEntity(dto);
-        Person savedPerson = personRepository.save(person);
+        Person entity = personMapper.toEntity(dto);
 
-        // 2️⃣ Mitgliedschaften explizit anlegen
-        if (dto.getMitgliedschaften() != null) {
-            for (MitgliedDTO m : dto.getMitgliedschaften()) {
-
-                // ✅ KEIN Verein → KEINE Mitgliedschaft
-                if (m.getVereinId() == null) {
-                    continue;
-                }
-
-                Mitglied mitglied = new Mitglied();
-                mitglied.setPerson(savedPerson);
-
-                Verein verein = vereinRepository.findById(m.getVereinId())
-                        .orElseThrow(() ->
-                                new ResponseStatusException(
-                                        HttpStatus.BAD_REQUEST,
-                                        "Verein not found: " + m.getVereinId()
-                                )
-                        );
-
-                mitglied.setVerein(verein);
-                mitglied.setFunktion(m.getFunktion());
-                mitglied.setHauptVerein(Boolean.TRUE.equals(m.getHauptVerein()));
-
-                mitgliedRepository.save(mitglied);
-            }
+        if (entity.getCountryCode() == null) {
+            entity.setCountryCode(CountryCode.DE);
         }
 
-        return personMapper.toDTO(savedPerson);
+        Person saved = personRepository.save(entity);
+
+        return personMapper.toDetailDTO(saved);
     }
 
     /* =========================================================
@@ -136,14 +102,13 @@ public class PersonServiceImpl implements PersonService {
        ========================================================= */
 
     @Override
-    public PersonDTO updatePerson(long id, PersonDTO dto) {
+    public PersonDetailDTO updatePerson(long id, PersonSaveDTO dto) {
 
-        Person existing = personRepository.findById(id)
+        Person existing = personRepository.findDetailById(id)
                 .orElseThrow(() -> new ResponseStatusException(
-                        NOT_FOUND, "Person not found"
+                        HttpStatus.NOT_FOUND, "Person not found"
                 ));
 
-        // 0️⃣ Fachliche Duplikatsprüfung (nur wenn Geburtsdatum gesetzt)
         if (dto.getGeburtsdatum() != null) {
             personRepository
                     .findByVornameAndNameAndGeburtsdatum(
@@ -151,7 +116,7 @@ public class PersonServiceImpl implements PersonService {
                             dto.getName(),
                             dto.getGeburtsdatum()
                     )
-                    .filter(p -> !p.getId().equals(existing.getId())) // 👈 sich selbst erlauben
+                    .filter(p -> !p.getId().equals(existing.getId()))
                     .ifPresent(p -> {
                         throw new ResponseStatusException(
                                 HttpStatus.CONFLICT,
@@ -160,11 +125,15 @@ public class PersonServiceImpl implements PersonService {
                     });
         }
 
-        // 1️⃣ Update durchführen
         personMapper.updateFromDTO(dto, existing);
 
-        // 2️⃣ Rückgabe
-        return personMapper.toDTO(existing);
+        syncMitgliedschaften(existing, dto.getMitgliedschaften());
+
+        if (existing.getCountryCode() == null) {
+            existing.setCountryCode(CountryCode.DE);
+        }
+
+        return personMapper.toDetailDTO(existing);
     }
 
     /* =========================================================
@@ -175,23 +144,54 @@ public class PersonServiceImpl implements PersonService {
     public void deletePerson(long id) {
         if (!personRepository.existsById(id)) {
             throw new ResponseStatusException(
-                    NOT_FOUND, "Person not found"
+                    HttpStatus.NOT_FOUND, "Person not found"
             );
         }
         personRepository.deleteById(id);
     }
 
     /* =========================================================
-       SEARCH (UC-P1)
+       SEARCH
        ========================================================= */
 
     @Override
     @Transactional(readOnly = true)
-    public Page<PersonDTO> search(PersonSearchCriteria criteria, Pageable pageable) {
+    public Page<PersonListDTO> searchList(
+            PersonSearchCriteria criteria,
+            Pageable pageable
+    ) {
+        return personRepository
+                .findAll(PersonSpecification.byCriteria(criteria), pageable)
+                .map(personMapper::toListDTO);
+    }
 
-        return personRepository.findAll(
-                PersonSpecification.byCriteria(criteria),
-                pageable
-        ).map(personMapper::toDTO);
+    /* =========================================================
+       Mitgliedschaften synchronisieren
+       ========================================================= */
+
+    private void syncMitgliedschaften(
+            Person person,
+            List<MitgliedSaveDTO> dtos
+    ) {
+        List<Mitglied> target = person.getMitgliedschaften();
+        target.clear();
+
+        if (dtos == null) return;
+
+        for (MitgliedSaveDTO dto : dtos) {
+            Verein verein = vereinRepository.findById(dto.getVereinId())
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.NOT_FOUND,
+                            "Verein not found: " + dto.getVereinId()
+                    ));
+
+            Mitglied m = new Mitglied();
+            m.setPerson(person);
+            m.setVerein(verein);
+            m.setFunktion(dto.getFunktion());
+            m.setHauptVerein(dto.getHauptVerein());
+
+            target.add(m);
+        }
     }
 }

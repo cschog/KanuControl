@@ -1,36 +1,30 @@
 package com.kcserver.validation;
 
-import com.kcserver.dto.PersonDTO;
+import com.kcserver.dto.HasMitgliedschaften;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
 public class ExactlyOneHauptvereinValidator
-        implements ConstraintValidator<ExactlyOneHauptverein, PersonDTO> {
+        implements ConstraintValidator<ExactlyOneHauptverein, HasMitgliedschaften> {
 
     @Override
     public boolean isValid(
-            PersonDTO person,
+            HasMitgliedschaften person,
             ConstraintValidatorContext context
     ) {
 
-        // Person selbst ist null → andere Validatoren greifen
-        if (person == null) {
-            return true;
+        if (person == null) return true;
+
+        var mitgliedschaften = person.getMitgliedschaften();
+        if (mitgliedschaften == null || mitgliedschaften.isEmpty()) {
+            return true; // Person ohne Verein ist erlaubt
         }
 
-        // ✅ KEINE Mitgliedschaften → erlaubt (reine Person-CRUDs!)
-        if (person.getMitgliedschaften() == null
-                || person.getMitgliedschaften().isEmpty()) {
-            return true;
-        }
-
-        long count = person.getMitgliedschaften().stream()
+        long count = mitgliedschaften.stream()
                 .filter(m -> Boolean.TRUE.equals(m.getHauptVerein()))
                 .count();
 
-        if (count == 1) {
-            return true;
-        }
+        if (count == 1) return true;
 
         context.disableDefaultConstraintViolation();
         context.buildConstraintViolationWithTemplate(

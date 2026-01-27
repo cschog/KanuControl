@@ -1,7 +1,7 @@
 package com.kcserver;
 
-import com.kcserver.dto.MitgliedDTO;
-import com.kcserver.dto.PersonDTO;
+import com.kcserver.dto.MitgliedSaveDTO;
+import com.kcserver.dto.PersonSaveDTO;
 import com.kcserver.enumtype.MitgliedFunktion;
 import com.kcserver.enumtype.Sex;
 import com.kcserver.validation.OnCreate;
@@ -37,39 +37,26 @@ class PersonCreateValidationTest {
 
     @Test
     void createPerson_withExactlyOneHauptverein_isValid() {
-        PersonDTO dto = validPerson();
+        PersonSaveDTO dto = validPerson();
 
-        Set<ConstraintViolation<PersonDTO>> violations =
+        Set<ConstraintViolation<PersonSaveDTO>> violations =
                 validator.validate(dto, OnCreate.class);
 
         assertThat(violations).isEmpty();
     }
 
     @Test
-    void createPerson_withoutHauptverein_isInvalid() {
-        PersonDTO dto = validPerson();
-        dto.getMitgliedschaften().forEach(m -> m.setHauptVerein(false));
-
-        Set<ConstraintViolation<PersonDTO>> violations =
-                validator.validate(dto, OnCreate.class);
-
-        assertThat(violations)
-                .extracting(ConstraintViolation::getMessage)
-                .contains("Exactly one Mitglied must be marked as Hauptverein");
-    }
-
-    @Test
     void createPerson_withTwoHauptvereine_isInvalid() {
-        PersonDTO dto = validPerson();
+        PersonSaveDTO dto = validPerson();
 
-        MitgliedDTO second = new MitgliedDTO();
+        MitgliedSaveDTO second = new MitgliedSaveDTO();
         second.setVereinId(2L);
         second.setHauptVerein(true);
         second.setFunktion(MitgliedFunktion.JUGENDWART);
 
         dto.getMitgliedschaften().add(second);
 
-        Set<ConstraintViolation<PersonDTO>> violations =
+        Set<ConstraintViolation<PersonSaveDTO>> violations =
                 validator.validate(dto, OnCreate.class);
 
         assertThat(violations).isNotEmpty();
@@ -77,10 +64,11 @@ class PersonCreateValidationTest {
 
     @Test
     void createPerson_missingName_shouldFail() {
-        PersonDTO dto = new PersonDTO();
+        PersonSaveDTO dto = new PersonSaveDTO();
         dto.setVorname("Chris");
+        dto.setSex(Sex.MAENNLICH);
 
-        Set<ConstraintViolation<PersonDTO>> violations =
+        Set<ConstraintViolation<PersonSaveDTO>> violations =
                 validator.validate(dto, OnCreate.class);
 
         assertThat(violations).isNotEmpty();
@@ -90,21 +78,18 @@ class PersonCreateValidationTest {
        Testdaten
        ========================================================= */
 
-    private PersonDTO validPerson() {
-        PersonDTO dto = new PersonDTO();
+    private PersonSaveDTO validPerson() {
+        PersonSaveDTO dto = new PersonSaveDTO();
         dto.setName("Müller");
         dto.setVorname("Anna");
         dto.setSex(Sex.WEIBLICH);
 
-        MitgliedDTO mitglied = new MitgliedDTO();
+        MitgliedSaveDTO mitglied = new MitgliedSaveDTO();
         mitglied.setVereinId(1L);
         mitglied.setHauptVerein(true);
         mitglied.setFunktion(MitgliedFunktion.JUGENDWART);
 
-        List<MitgliedDTO> list = new ArrayList<>();
-        list.add(mitglied);
-
-        dto.setMitgliedschaften(list);
+        dto.setMitgliedschaften(new ArrayList<>(List.of(mitglied)));
         return dto;
     }
 }

@@ -26,7 +26,9 @@ interface PersonFormViewProps {
   onNeuePerson: () => void;
   btnNeuePerson: boolean;
 
-  onÄndernPerson: () => void;
+  // 🔑 FEHLTE
+  onÄndernPerson: (person: Person) => Promise<void>;
+
   btnÄndernPerson: boolean;
 
   onDeletePerson: () => void;
@@ -82,6 +84,9 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
     });
   }, []);
 
+  console.log("Person für Edit:", selectedPerson);
+  console.log("Mitgliedschaften:", selectedPerson?.mitgliedschaften);
+
   return (
     <>
       <Box maxWidth="lg" mx="auto" p={3} borderRadius={2} boxShadow={3} bgcolor="background.paper">
@@ -102,7 +107,7 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
             <FormFeld label="Name" value={selectedPerson.name} disabled />
             <FormFeld label="Vorname" value={selectedPerson.vorname} disabled />
             <FormFeld label="Sex" value={selectedPerson.sex} disabled />
-            <FormFeld label="Geburtsd." value={selectedPerson.geburtsdatum} disabled />
+            <FormFeld label="Alter" value={selectedPerson.alter ?? "-"} disabled />
             <FormFeld label="Straße" value={selectedPerson.strasse} disabled />
             <FormFeld label="PLZ" value={selectedPerson.plz} disabled />
             <FormFeld label="Ort" value={selectedPerson.ort} disabled />
@@ -141,11 +146,11 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
             <PersonEditForm
               person={selectedPerson}
               vereine={vereineRef}
-              onSave={async () => {
-                await onÄndernPerson();
+              onSave={async (p) => {
+                await onÄndernPerson(p); // 🔑 NUR hochreichen
                 setEditOpen(false);
               }}
-              onCreateMitglied={createMitglied} // ✅ GENAU so
+              onCreateMitglied={createMitglied}
               onCancel={() => setEditOpen(false)}
             />
           </DialogContent>

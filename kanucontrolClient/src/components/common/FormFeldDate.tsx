@@ -8,9 +8,11 @@ interface FormFeldDateProps {
 }
 
 export function FormFeldDate({ label, value, onChange }: FormFeldDateProps) {
+  const safeValue = value ?? ""; // 🔑 HIER
+
   const handleBlur = () => {
-    const normalized = normalizeGermanDate(value);
-    if (normalized) {
+    const normalized = normalizeGermanDate(safeValue);
+    if (normalized !== null) {
       onChange(normalized);
     }
   };
@@ -19,7 +21,7 @@ export function FormFeldDate({ label, value, onChange }: FormFeldDateProps) {
     <TextField
       fullWidth
       label={label}
-      value={value}
+      value={safeValue} // 🔑 NIE null
       onChange={(e) => onChange(e.target.value)}
       onBlur={handleBlur}
       placeholder="TT.MM.JJJJ"
