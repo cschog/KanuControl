@@ -7,6 +7,7 @@ import { navigateToStartMenu } from "@/components/layout/navigateToStartMenue";
 import { PersonList, PersonSave, PersonDetail } from "@/api/types/Person";
 import { getPersonById } from "@/api/services/personApi";
 import apiClient from "@/api/client/apiClient";
+import { toPersonSaveDTO } from "@/api/mappers/personMapper";
 
 import {
   getAllPersonen as dbGetAllPersonen,
@@ -195,9 +196,12 @@ class Personen extends Component<Record<string, never>, PersonenState> {
   };
 
   reloadSelectedPerson = async () => {
-    if (!this.state.selectedPerson) return;
-    const fresh = await getPersonById(this.state.selectedPerson.id);
-    this.setState({ selectedPerson: fresh });
+    const fresh = await getPersonById(this.state.selectedPerson!.id);
+
+    this.setState({
+      selectedPerson: fresh,
+      draftPerson: toPersonSaveDTO(fresh),
+    });
   };
 
   render() {
@@ -233,6 +237,7 @@ class Personen extends Component<Record<string, never>, PersonenState> {
             onStartMenue={this.btnStartMenue}
             btnÄndernPerson={this.state.btnÄndernIsDisabled}
             btnLöschenPerson={this.state.btnLöschenIsDisabled}
+            onReloadPerson={this.reloadSelectedPerson}
           />
         </div>
       </div>

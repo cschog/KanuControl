@@ -21,6 +21,8 @@ import { PersonDetail, PersonSave } from "@/api/types/Person";
 import { Sex } from "@/api/enums/Sex";
 import { CountryCode } from "@/api/enums/CountryCode";
 import { normalizeGermanDate } from "@/utils/dateUtils";
+import apiClient from "@/api/client/apiClient";
+import { VereinRef } from "@/api/types/VereinRef";
 
 /* =========================================================
    Props
@@ -44,6 +46,8 @@ interface PersonFormViewProps {
 
   btnÄndernPerson: boolean;
   btnLöschenPerson: boolean;
+
+  onReloadPerson: () => Promise<void>;
 }
 
 /* =========================================================
@@ -91,9 +95,22 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
   onStartMenue,
   btnÄndernPerson,
   btnLöschenPerson,
+  onReloadPerson,
 }) => {
   const [form, setForm] = useState<PersonSave | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const [addVereinOpen, setAddVereinOpen] = useState(false);
+  const [selectedVereinId, setSelectedVereinId] = useState<number | "">("");
+  const [vereine, setVereine] = useState<VereinRef[]>([]);
+
+  const zugeordneteIds = new Set(personDetail?.mitgliedschaften.map((m) => m.verein.id));
+
+  const verfügbareVereine = vereine.filter((v) => !zugeordneteIds?.has(v.id));
+
+  useEffect(() => {
+    apiClient.get<VereinRef[]>("/verein").then((res) => setVereine(res.data));
+  }, []);
 
   useEffect(() => {
     if (editMode && draftPerson) {
@@ -131,7 +148,6 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
   return (
     <>
       {/* ================= PERSON ================= */}
-
       <Box
         display="grid"
         gridTemplateColumns={{ xs: "1fr", sm: "repeat(2,1fr)", md: "repeat(3,1fr)" }}
@@ -201,10 +217,8 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
           <MenuItem value="BE">Belgien</MenuItem>
         </TextField>
       </Box>
-
       {/* ================= VEREINE ================= */}
-
-      {personDetail && personDetail.mitgliedschaften.length > 0 && (
+      {personDetail?.mitgliedschaften?.length ? (
         <Card sx={{ mt: 3 }}>
           <CardHeader title="Vereine" />
           <CardContent>
@@ -247,13 +261,17 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
             </Stack>
           </CardContent>
         </Card>
-      )}
+      ) : null}
 
       {/* ================= ACTION BAR ================= */}
-
       {editMode ? (
         <BottomActionBar
           left={[
+            {
+              label: "Verein zuordnen",
+              variant: "outlined",
+              onClick: () => setAddVereinOpen(true),
+            },
             {
               label: "Speichern",
               onClick: async () => {
@@ -293,7 +311,6 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
       )}
 
       {/* ================= DELETE ================= */}
-
       <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
         <DialogTitle>Löschen bestätigen</DialogTitle>
         <DialogContent>
@@ -303,6 +320,47 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
           <Button onClick={() => setConfirmOpen(false)}>Abbrechen</Button>
           <Button color="error" onClick={onDeletePerson}>
             Löschen
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog open={addVereinOpen} onClose={() => setAddVereinOpen(false)}>
+        <DialogTitle>Verein zuordnen</DialogTitle>
+
+        <DialogContent>
+          <TextField
+            select
+            fullWidth
+            label="Verein"
+            value={selectedVereinId}
+            onChange={(e) => setSelectedVereinId(Number(e.target.value))}
+            sx={{ mt: 1 }}
+          >
+            {verfügbareVereine.map((v) => (
+              <MenuItem key={v.id} value={v.id}>
+                {v.name}
+              </MenuItem>
+            ))}
+          </TextField>
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={() => setAddVereinOpen(false)}>Abbrechen</Button>
+          <Button
+            disabled={!selectedVereinId}
+            onClick={async () => {
+              await apiClient.post("/mitglied", {
+                personId: personDetail!.id,
+                vereinId: selectedVereinId,
+              });
+
+              setAddVereinOpen(false);
+              setSelectedVereinId("");
+
+              // 🔁 WICHTIG: Detail neu laden
+              await onReloadPerson();
+            }}
+          >
+            Zuordnen
           </Button>
         </DialogActions>
       </Dialog>
