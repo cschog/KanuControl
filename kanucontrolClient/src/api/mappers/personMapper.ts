@@ -1,14 +1,14 @@
 // src/api/mapper/personMapper.ts
 
-import { PersonDetail } from "@/api/types/PersonDetail";
-import { PersonSaveDTO } from "@/api/types/PersonSaveDTO";
+import { PersonDetail, PersonSave } from "@/api/types/Person";
+import { MitgliedSaveInPerson } from "@/api/types/Mitglied";
 
-export function toPersonSaveDTO(person: PersonDetail): PersonSaveDTO {
+export function toPersonSaveDTO(person: PersonDetail): PersonSave {
   return {
     vorname: person.vorname,
     name: person.name,
-    geburtsdatum: person.geburtsdatum,
     sex: person.sex,
+    geburtsdatum: person.geburtsdatum,
     telefon: person.telefon,
     telefonFestnetz: person.telefonFestnetz,
     strasse: person.strasse,
@@ -19,8 +19,8 @@ export function toPersonSaveDTO(person: PersonDetail): PersonSaveDTO {
     iban: person.iban,
 
     mitgliedschaften:
-      person.mitgliedschaften?.map((m) => ({
-        vereinId: m.verein.id, // 🔑 NUR ID
+      person.mitgliedschaften?.map<MitgliedSaveInPerson>((m) => ({
+        vereinId: m.verein.id,
         hauptVerein: m.hauptVerein,
         funktion: m.funktion,
       })) ?? [],

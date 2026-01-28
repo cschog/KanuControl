@@ -1,5 +1,5 @@
 import apiClient from "@/api/client/apiClient";
-import { MitgliedDetail } from "@/api/types/MitgliedDetail";
+import { MitgliedDetail } from "@/api/types/Mitglied";
 
 export const createMitglied = async (
   personId: number,

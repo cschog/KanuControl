@@ -10,12 +10,12 @@ import {
   Stack,
 } from "@mui/material";
 
-import { PersonDetail } from "@/api/types/PersonDetail";
+import { PersonSave } from "@/api/types/Person";
 
 interface PersonCreateDialogProps {
   open: boolean;
   onClose: () => void;
-  onCreate: (person: PersonDetail) => Promise<void>;
+  onCreate: (person: PersonSave) => Promise<void>;
 }
 
 export const PersonCreateDialog: React.FC<PersonCreateDialogProps> = ({
@@ -23,7 +23,7 @@ export const PersonCreateDialog: React.FC<PersonCreateDialogProps> = ({
   onClose,
   onCreate,
 }) => {
-  const [draft, setDraft] = useState<PersonDetail>({
+  const [draft, setDraft] = useState<PersonSave>({
     vorname: "",
     name: "",
     sex: "W",
@@ -33,7 +33,7 @@ export const PersonCreateDialog: React.FC<PersonCreateDialogProps> = ({
     mitgliedschaften: [], // 🔑 leer beim Create
   });
 
-  const update = <K extends keyof PersonDetail>(key: K, value: PersonDetail[K]) =>
+  const update = <K extends keyof PersonSave>(key: K, value: PersonSave[K]) =>
     setDraft((d) => ({ ...d, [key]: value }));
 
   const handleCreate = async () => {

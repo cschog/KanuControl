@@ -4,9 +4,9 @@ import { PersonTable } from "@/components/person/PersonTable";
 import { PersonFormView } from "@/components/person/PersonFormView";
 import { renderLoadingOrError } from "@/components/common/loadingOnErrorUtils";
 import { navigateToStartMenu } from "@/components/layout/navigateToStartMenue";
-import { PersonList } from "@/api/types/PersonList";
-import { PersonDetail } from "@/api/types/PersonDetail";
+import { PersonList, PersonSave, PersonDetail } from "@/api/types/Person";
 import { getPersonById } from "@/api/services/personApi";
+import apiClient from "@/api/client/apiClient";
 
 import {
   getAllPersonen as dbGetAllPersonen,
@@ -17,7 +17,8 @@ import {
 
 interface PersonenState {
   data: PersonList[];
-  selectedPerson: PersonDetail | null;
+  selectedPerson: PersonDetail | null; // 🔑 Detail im UI
+  draftPerson: PersonSave | null; // 🔑 Formularzustand
   loading: boolean;
   error: null | string;
   personFormEditMode: boolean;
@@ -28,9 +29,10 @@ interface PersonenState {
 }
 
 class Personen extends Component<Record<string, never>, PersonenState> {
-  state = {
+  state: PersonenState = {
     data: [],
     selectedPerson: null,
+    draftPerson: null,
     loading: true,
     error: null,
     personFormEditMode: false,
@@ -38,7 +40,7 @@ class Personen extends Component<Record<string, never>, PersonenState> {
     btnLöschenIsDisabled: true,
     btnÄndernIsDisabled: true,
     btnNeuePersonIsDisabled: false,
-  } as PersonenState;
+  };
 
   componentDidMount() {
     this.fetchPersonenData();
@@ -61,6 +63,8 @@ class Personen extends Component<Record<string, never>, PersonenState> {
     }
   };
 
+  // ↓↓↓ alle weiteren Methoden ganz normal ↓↓↓
+
   btnAbbruch = () => {
     this.setState({
       btnLöschenIsDisabled: true,
@@ -69,22 +73,26 @@ class Personen extends Component<Record<string, never>, PersonenState> {
     });
   };
 
-  btnSpeichern = async (person: PersonDetail) => {
+  btnSpeichern = async (person: PersonSave) => {
     try {
-      let response: PersonDetail;
+      let saved: PersonDetail;
 
-      if (person.id) {
-        response = await dbReplacePerson(person);
+      if (this.state.modusNeuePerson) {
+        saved = await dbCreatePerson(person);
       } else {
-        response = await dbCreatePerson(person);
+        if (!this.state.selectedPerson) {
+          throw new Error("No selected person for update");
+        }
+        saved = await dbReplacePerson(this.state.selectedPerson.id, person);
       }
 
       await this.fetchPersonenData();
 
       this.setState({
-        selectedPerson: response,
+        selectedPerson: saved, // 🔑 DAS ist der Fix
         personFormEditMode: false,
         modusNeuePerson: false,
+        draftPerson: null,
         btnÄndernIsDisabled: false,
         btnLöschenIsDisabled: false,
       });
@@ -95,23 +103,23 @@ class Personen extends Component<Record<string, never>, PersonenState> {
   };
 
   btnNeuePerson = () => {
-    const newPerson: PersonDetail = {
+    const newPerson: PersonSave = {
       vorname: "",
       name: "",
       sex: "W",
       aktiv: true,
       geburtsdatum: undefined,
       ort: "",
-      mitgliedschaften: [], // 🔑 extrem wichtig
+      mitgliedschaften: [],
     };
 
     this.setState({
       modusNeuePerson: true,
+      personFormEditMode: true,
+      draftPerson: newPerson, // ✅ Save-Typ
+      selectedPerson: null, // ✅ kein Detail
       btnLöschenIsDisabled: true,
       btnÄndernIsDisabled: true,
-      btnNeuePersonIsDisabled: false,
-      personFormEditMode: true,
-      selectedPerson: newPerson,
     });
   };
 
@@ -161,11 +169,35 @@ class Personen extends Component<Record<string, never>, PersonenState> {
     const detail = await getPersonById(row.id);
 
     this.setState({
-      selectedPerson: detail,
+      selectedPerson: detail, // PersonDetail
+      draftPerson: null,
       btnLöschenIsDisabled: false,
       btnÄndernIsDisabled: false,
       personFormEditMode: false,
     });
+  };
+
+  setHauptverein = async (mitgliedId: number) => {
+    await apiClient.put(`/mitglied/${mitgliedId}/hauptverein`);
+    await this.reloadSelectedPerson();
+  };
+
+  deleteMitglied = async (mitgliedId: number) => {
+    await apiClient.delete(`/mitglied/${mitgliedId}`);
+    await this.reloadSelectedPerson();
+  };
+
+  cancelEdit = () => {
+    this.setState({
+      personFormEditMode: false,
+      draftPerson: null,
+    });
+  };
+
+  reloadSelectedPerson = async () => {
+    if (!this.state.selectedPerson) return;
+    const fresh = await getPersonById(this.state.selectedPerson.id);
+    this.setState({ selectedPerson: fresh });
   };
 
   render() {
@@ -188,13 +220,19 @@ class Personen extends Component<Record<string, never>, PersonenState> {
         <br />
         <div>
           <PersonFormView
-            selectedPerson={selectedPerson}
+            personDetail={this.state.selectedPerson}
+            draftPerson={this.state.draftPerson}
+            editMode={this.state.personFormEditMode}
             onNeuePerson={this.btnNeuePerson}
-            onÄndernPerson={this.btnSpeichern}
-            btnÄndernPerson={this.state.btnÄndernIsDisabled}
+            onEdit={this.editPerson}
+            onCancelEdit={this.cancelEdit}
+            onSpeichern={this.btnSpeichern}
             onDeletePerson={this.deletePerson}
-            btnLöschenPerson={this.state.btnLöschenIsDisabled}
+            onDeleteMitglied={this.deleteMitglied}
+            onSetHauptverein={this.setHauptverein}
             onStartMenue={this.btnStartMenue}
+            btnÄndernPerson={this.state.btnÄndernIsDisabled}
+            btnLöschenPerson={this.state.btnLöschenIsDisabled}
           />
         </div>
       </div>

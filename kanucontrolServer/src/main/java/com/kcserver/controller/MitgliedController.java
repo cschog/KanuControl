@@ -49,8 +49,9 @@ public class MitgliedController {
        ========================================================= */
 
     @GetMapping("/{id}")
-    public MitgliedDTO getById(@PathVariable Long id) {
-        return mitgliedService.getById(id);
+    public MitgliedDetailDTO getById(@PathVariable Long id) {
+        Mitglied mitglied = mitgliedService.getEntityByIdWithVerein(id);
+        return mitgliedMapper.toDetailDTO(mitglied);
     }
 
     @GetMapping("/person/{personId}")
@@ -96,5 +97,11 @@ public class MitgliedController {
     ) {
         Mitglied mitglied = mitgliedService.updateMitgliedEntity(id, dto);
         return mitgliedMapper.toDetailDTO(mitglied);
+    }
+
+    @PutMapping("/{id}/hauptverein")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void setHauptverein(@PathVariable Long id) {
+        mitgliedService.setHauptverein(id);
     }
 }

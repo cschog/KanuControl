@@ -1,10 +1,6 @@
 import apiClient from "@/api/client/apiClient";
 
-import { PersonList } from "@/api/types/PersonList";
-import { PersonDetail } from "@/api/types/PersonDetail";
-import { PersonSearchParams } from "@/api/types/PersonSearchParams";
-
-import { toPersonSaveDTO } from "@/api/mappers/personMapper";
+import { PersonList, PersonSave, PersonDetail, PersonSearchParams } from "@/api/types/Person";
 
 const BASE = "/person";
 
@@ -33,21 +29,24 @@ export const getPersonById = async (id: number): Promise<PersonDetail> => {
  * CREATE
  * ========================= */
 
-export const createPerson = async (person: PersonDetail): Promise<PersonDetail> => {
-  const dto = toPersonSaveDTO(person);
-  const { data } = await apiClient.post<PersonDetail>(BASE, dto);
-  return data;
-};
+export async function createPerson(
+  payload: PersonSave, // ✅
+): Promise<PersonDetail> {
+  const res = await apiClient.post<PersonDetail>("/person", payload);
+  return res.data;
+}
 
 /* =========================
  * UPDATE
  * ========================= */
 
-export const updatePerson = async (person: PersonDetail): Promise<PersonDetail> => {
-  const dto = toPersonSaveDTO(person);
-  const { data } = await apiClient.put<PersonDetail>(`${BASE}/${person.id}`, dto);
-  return data;
-};
+export async function updatePerson(
+  id: number,
+  payload: PersonSave, // ✅ RICHTIG
+): Promise<PersonDetail> {
+  const res = await apiClient.put<PersonDetail>(`/person/${id}`, payload);
+  return res.data;
+}
 
 /* =========================
  * DELETE

@@ -9,7 +9,7 @@ import {
   Stack,
 } from "@mui/material";
 import { BtnEditDeleteBack } from "@/components/common/BtnEditDeleteBack";
-import { Person } from "@/api/types/Person";
+import { PersonDetail } from "@/api/types/Person";
 
 interface ButtonNeuePersonProps {
   onNeuePerson: () => void;
@@ -18,7 +18,7 @@ interface ButtonNeuePersonProps {
   visible: boolean;
   setVisible: React.Dispatch<React.SetStateAction<boolean>>;
 
-  selectedPerson: Person | null;
+  selectedPerson: PersonDetail | null;
 
   accept: () => void;
   reject: () => void;

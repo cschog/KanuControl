@@ -1,7 +1,7 @@
 // PersonTable.tsx
 import { GenericTable } from "@/components/common/GenericTable";
 import { personColumns, PersonWithId } from "@/components/person/personColumns";
-import { PersonList } from "@/api/types/PersonList";
+import { PersonList } from "@/api/types/Person";
 
 interface PersonTableProps {
   data: PersonList[];
