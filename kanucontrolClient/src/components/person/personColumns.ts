@@ -1,6 +1,6 @@
 // src/components/person/personColumns.ts
 import { GridColDef } from "@mui/x-data-grid";
-import { PersonList } from "@/api/types/PersonList";
+import { PersonList } from "@/api/types/Person";
 
 export type PersonWithId = PersonList & { id: number };
 
@@ -22,13 +22,13 @@ export const personColumns: GridColDef<PersonWithId>[] = [
   {
     field: "hauptvereinAbk",
     headerName: "Verein",
-    flex: 0.6,
+    flex: 0.3,
     valueFormatter: (v) => v ?? "-",
   },
   {
     field: "mitgliedschaftenCount",
     headerName: "#",
-    flex: 0.3,
+    flex: 0.1,
     type: "number",
   },
 ];

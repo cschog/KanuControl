@@ -9,6 +9,7 @@ import com.kcserver.mapper.MitgliedMapper;
 import com.kcserver.repository.MitgliedRepository;
 import com.kcserver.repository.PersonRepository;
 import com.kcserver.repository.VereinRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -98,6 +99,14 @@ public class MitgliedService {
     }
 
     @Transactional(readOnly = true)
+    public Mitglied getEntityByIdWithVerein(Long id) {
+        return mitgliedRepository.findByIdWithVerein(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Mitglied not found"
+                ));
+    }
+
+    @Transactional(readOnly = true)
     public List<MitgliedDTO> getByPerson(Long personId, Pageable pageable) {
         return mitgliedRepository
                 .findByPerson_Id(personId, pageable)
@@ -158,10 +167,32 @@ public class MitgliedService {
     public MitgliedDTO updateMitglied(Long id, MitgliedDTO dto) {
         return mitgliedMapper.toDTO(updateMitgliedInternal(id, dto));
     }
+    @Transactional
+    public void setHauptverein(Long mitgliedId) {
+
+        Mitglied neu = mitgliedRepository.findById(mitgliedId)
+                .orElseThrow(() -> new EntityNotFoundException("Mitglied nicht gefunden"));
+
+        Long personId = neu.getPerson().getId();
+
+        // 1️⃣ ALLE Hauptvereine zurücksetzen (DB)
+        mitgliedRepository.unsetHauptvereinByPerson(personId);
+
+        // 2️⃣ Entity explizit neu laden (WICHTIG!)
+        Mitglied refreshed = mitgliedRepository.findById(mitgliedId)
+                .orElseThrow();
+
+        // 3️⃣ neuen Hauptverein setzen
+        refreshed.setHauptVerein(true);
+    }
 
     @Transactional
     public Mitglied updateMitgliedEntity(Long id, MitgliedDTO dto) {
-        return updateMitgliedInternal(id, dto);
+        Mitglied updated = updateMitgliedInternal(id, dto);
+        mitgliedRepository.save(updated);
+
+        return mitgliedRepository.findByIdWithVerein(updated.getId())
+                .orElseThrow();
     }
 
     private Mitglied updateMitgliedInternal(Long id, MitgliedDTO dto) {

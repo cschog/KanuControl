@@ -4,49 +4,42 @@ import {
   Typography,
   Button,
   TextField,
+  Stack,
   Card,
   CardHeader,
-  CardContent,
   MenuItem,
-  Stack,
-  Chip,
+  CardContent,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
 } from "@mui/material";
+import StarIcon from "@mui/icons-material/Star";
 
 import { BottomActionBar } from "@/components/common/BottomActionBar";
-import api from "@/api/client/apiClient";
-
-import { PersonDetail } from "@/api/types/PersonDetail";
+import { PersonDetail, PersonSave } from "@/api/types/Person";
 import { Sex } from "@/api/enums/Sex";
 import { CountryCode } from "@/api/enums/CountryCode";
 import { normalizeGermanDate } from "@/utils/dateUtils";
 
-import { getPersonById } from "@/api/services/personApi";
-import { createMitglied } from "@/api/services/mitgliedServices";
-
 /* =========================================================
-   Types
+   Props
    ========================================================= */
 
-type PersonDraft = Partial<PersonDetail>;
-
-const str = (v?: string | null) => v ?? undefined;
-
-interface VereinRef {
-  id: number;
-  name: string;
-  abk?: string;
-}
-
 interface PersonFormViewProps {
-  selectedPerson: PersonDetail | null;
+  personDetail: PersonDetail | null;
+  draftPerson: PersonSave | null;
+  editMode: boolean;
 
   onNeuePerson: () => void;
-  onÄndernPerson: (person: PersonDetail) => Promise<void>;
+  onEdit: () => void;
+  onCancelEdit: () => void;
+  onSpeichern: (person: PersonSave) => Promise<void>;
+
   onDeletePerson: () => void;
+  onDeleteMitglied: (mitgliedId: number) => Promise<void>;
+  onSetHauptverein: (mitgliedId: number) => Promise<void>;
+
   onStartMenue: () => void;
 
   btnÄndernPerson: boolean;
@@ -54,120 +47,65 @@ interface PersonFormViewProps {
 }
 
 /* =========================================================
-   Reusable Field
+   Helper
    ========================================================= */
 
-const Field: React.FC<{
-  label: string;
-  value?: string;
-  editMode: boolean;
-  onChange?: (v: string) => void;
-}> = ({ label, value, editMode, onChange }) => (
-  <Box
-    sx={{
-      p: 0.75,
-      borderRadius: 1,
-      bgcolor: editMode ? "rgba(194,24,91,0.08)" : "grey.50",
-    }}
-  >
-    <Typography variant="caption" color="text.secondary">
-      {label}
-    </Typography>
-
-    {editMode ? (
-      <TextField
-        value={value ?? ""}
-        variant="standard"
-        size="small"
-        fullWidth
-        onChange={(e) => onChange?.(e.target.value)}
-        InputProps={{ disableUnderline: true }}
-        sx={{ mt: 0.25, fontSize: "0.875rem" }}
-      />
-    ) : (
-      <Typography variant="body2" sx={{ fontWeight: 500 }}>
-        {value || "–"}
-      </Typography>
-    )}
-  </Box>
-);
+function mapDetailToSave(detail: PersonDetail): PersonSave {
+  return {
+    vorname: detail.vorname,
+    name: detail.name,
+    sex: detail.sex,
+    geburtsdatum: detail.geburtsdatum,
+    telefon: detail.telefon,
+    telefonFestnetz: detail.telefonFestnetz,
+    strasse: detail.strasse,
+    plz: detail.plz,
+    ort: detail.ort,
+    countryCode: detail.countryCode,
+    bankName: detail.bankName,
+    iban: detail.iban,
+    aktiv: detail.aktiv,
+    mitgliedschaften: detail.mitgliedschaften.map((m) => ({
+      vereinId: m.verein.id,
+      hauptVerein: m.hauptVerein,
+      funktion: m.funktion,
+    })),
+  };
+}
 
 /* =========================================================
    Component
    ========================================================= */
 
 export const PersonFormView: React.FC<PersonFormViewProps> = ({
-  selectedPerson,
+  personDetail,
+  draftPerson,
+  editMode,
   onNeuePerson,
-  onÄndernPerson,
+  onEdit,
+  onCancelEdit,
+  onSpeichern,
   onDeletePerson,
+  onDeleteMitglied,
+  onSetHauptverein,
   onStartMenue,
   btnÄndernPerson,
   btnLöschenPerson,
 }) => {
-  const [editMode, setEditMode] = useState(false);
-  const [draft, setDraft] = useState<PersonDraft>({});
+  const [form, setForm] = useState<PersonSave | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
-  // Vereins-Dialog
-  const [addVereinOpen, setAddVereinOpen] = useState(false);
-  const [vereine, setVereine] = useState<VereinRef[]>([]);
-  const [selectedVereinId, setSelectedVereinId] = useState<number | "">("");
-
-
-  /* ---------------- Load Vereine ---------------- */
-
   useEffect(() => {
-    api.get<VereinRef[]>("/verein").then((res) => setVereine(res.data));
-  }, []);
+    if (editMode && draftPerson) {
+      setForm(draftPerson);
+    } else if (personDetail) {
+      setForm(mapDetailToSave(personDetail));
+    } else {
+      setForm(null);
+    }
+  }, [editMode, draftPerson, personDetail]);
 
-  /* ---------------- Sync selectedPerson → draft ---------------- */
-
- useEffect(() => {
-   if (!selectedPerson) {
-     setDraft({});
-     setEditMode(false);
-     return;
-   }
-
-  setDraft({ ...selectedPerson });
-   setEditMode(!selectedPerson.id);
- }, [selectedPerson]);
-
-  const mitgliedschaften = draft.mitgliedschaften ?? [];
-  const zugeordneteIds = new Set(mitgliedschaften.map((m) => m.verein.id));
-  const verfügbareVereine = vereine.filter((v) => !zugeordneteIds.has(v.id));
-
-  const normalizedDate = draft.geburtsdatum ? normalizeGermanDate(draft.geburtsdatum) : undefined;
-
-  const update = <K extends keyof PersonDraft>(key: K, value: PersonDraft[K]) =>
-    setDraft((p) => ({ ...p, [key]: value }));
-
-
-  /* ---------------- Mitglied Actions ---------------- */
-
- const reloadSelectedPerson = async () => {
-   if (!selectedPerson?.id) return;
-
-   const fresh = await getPersonById(selectedPerson.id);
-  setDraft(fresh);
- };
-
-  const deleteMitglied = async (mitgliedId: number) => {
-    await api.delete(`/mitglied/${mitgliedId}`);
-    await reloadSelectedPerson();
-  };
-
-  const setHauptverein = async (mitgliedId: number) => {
-    await api.put(`/mitglied/${mitgliedId}/hauptverein`);
-    await reloadSelectedPerson();
-  };
-
-  /* =========================================================
-     Render
-     ========================================================= */
-
-  if (!selectedPerson) {
+  if (!form) {
     return (
       <>
         <Typography align="center" sx={{ mt: 4 }} color="text.secondary">
@@ -184,134 +122,126 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
     );
   }
 
+  const dateValue =
+    form.geburtsdatum && /^\d{4}-\d{2}-\d{2}$/.test(form.geburtsdatum) ? form.geburtsdatum : "";
+
+  const update = <K extends keyof PersonSave>(key: K, value: PersonSave[K]) =>
+    setForm((f) => (f ? { ...f, [key]: value } : f));
+
   return (
     <>
-      {/* ================= DETAILS ================= */}
+      {/* ================= PERSON ================= */}
 
       <Box
         display="grid"
         gridTemplateColumns={{ xs: "1fr", sm: "repeat(2,1fr)", md: "repeat(3,1fr)" }}
         gap={1.25}
       >
-        <Field
-          label="Name"
-          value={draft.name}
-          editMode={editMode}
-          onChange={(v) => update("name", v)}
-        />
-        <Field
+        <TextField
           label="Vorname"
-          value={draft.vorname}
-          editMode={editMode}
-          onChange={(v) => update("vorname", v)}
+          value={form.vorname}
+          onChange={(e) => update("vorname", e.target.value)}
+          disabled={!editMode}
+          required
+        />
+        <TextField
+          label="Name"
+          value={form.name}
+          onChange={(e) => update("name", e.target.value)}
+          disabled={!editMode}
+          required
         />
 
-        <Field
+        <TextField
+          select
           label="Geschlecht"
-          value={draft.sex}
-          editMode={editMode}
-          onChange={(v) => update("sex", v as Sex)}
-        />
+          value={form.sex}
+          onChange={(e) => update("sex", e.target.value as Sex)}
+          disabled={!editMode}
+          fullWidth
+        >
+          <MenuItem value="M">Männlich</MenuItem>
+          <MenuItem value="W">Weiblich</MenuItem>
+          <MenuItem value="D">Divers</MenuItem>
+        </TextField>
 
-        <Field
+        <TextField
+          type="date"
           label="Geburtsdatum"
-          value={draft.geburtsdatum}
-          editMode={editMode}
-          onChange={(v) => update("geburtsdatum", v)}
+          value={dateValue}
+          onChange={(e) =>
+            update("geburtsdatum", e.target.value === "" ? undefined : e.target.value)
+          }
+          disabled={!editMode}
+          InputLabelProps={{ shrink: true }}
+          fullWidth
         />
-
-        <Field
-          label="Straße"
-          value={draft.strasse}
-          editMode={editMode}
-          onChange={(v) => update("strasse", v)}
-        />
-        <Field
-          label="PLZ"
-          value={draft.plz}
-          editMode={editMode}
-          onChange={(v) => update("plz", v)}
-        />
-        <Field
+        <TextField
           label="Ort"
-          value={draft.ort}
-          editMode={editMode}
-          onChange={(v) => update("ort", v)}
+          value={form.ort ?? ""}
+          onChange={(e) => update("ort", e.target.value)}
+          disabled={!editMode}
         />
-
-        <Field
+        <TextField
+          select
           label="Land"
-          value={draft.countryCode}
-          editMode={editMode}
-          onChange={(v) => update("countryCode", v as CountryCode)}
-        />
-
-        <Field
-          label="Telefon"
-          value={str(draft.telefon)}
-          editMode={editMode}
-          onChange={(v) => update("telefon", v)}
-        />
-
-        <Field
-          label="Festnetz"
-          value={draft.telefonFestnetz}
-          editMode={editMode}
-          onChange={(v) => update("telefonFestnetz", v)}
-        />
-        <Field
-          label="Bank"
-          value={draft.bankName}
-          editMode={editMode}
-          onChange={(v) => update("bankName", v)}
-        />
-        <Field
-          label="IBAN"
-          value={draft.iban}
-          editMode={editMode}
-          onChange={(v) => update("iban", v)}
-        />
+          value={form.countryCode ?? ""}
+          onChange={(e) =>
+            update(
+              "countryCode",
+              e.target.value === "" ? undefined : (e.target.value as CountryCode),
+            )
+          }
+          disabled={!editMode}
+          fullWidth
+        >
+          <MenuItem value="">–</MenuItem>
+          <MenuItem value="DE">Deutschland</MenuItem>
+          <MenuItem value="NL">Niederlande</MenuItem>
+          <MenuItem value="BE">Belgien</MenuItem>
+        </TextField>
       </Box>
 
       {/* ================= VEREINE ================= */}
 
-      {mitgliedschaften.length > 0 && (
+      {personDetail && personDetail.mitgliedschaften.length > 0 && (
         <Card sx={{ mt: 3 }}>
           <CardHeader title="Vereine" />
           <CardContent>
             <Stack spacing={1}>
-              {mitgliedschaften.map((m) => (
+              {personDetail.mitgliedschaften.map((m) => (
                 <Box
                   key={m.id}
                   sx={{
                     display: "flex",
                     justifyContent: "space-between",
+                    alignItems: "center",
                     px: 1,
                     py: 0.5,
                     borderRadius: 1,
                     bgcolor: m.hauptVerein ? "action.selected" : "transparent",
                   }}
                 >
-                  <Typography>
-                    {m.verein.name}
-                    {m.verein.abk && ` (${m.verein.abk})`}
-                  </Typography>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    {m.hauptVerein && <StarIcon fontSize="small" color="warning" />}
+                    <Typography>
+                      {m.verein.name}
+                      {m.verein.abk && ` (${m.verein.abk})`}
+                    </Typography>
+                  </Stack>
 
-                  <Stack direction="row" spacing={1}>
-                    {editMode && !m.hauptVerein && (
-                      <Button size="small" onClick={() => setHauptverein(m.id)}>
-                        Als Hauptverein setzen
-                      </Button>
-                    )}
-                    {editMode && (
-                      <Button size="small" color="error" onClick={() => deleteMitglied(m.id)}>
+                  {editMode && (
+                    <Stack direction="row" spacing={1}>
+                      {!m.hauptVerein && (
+                        <Button size="small" onClick={() => onSetHauptverein(m.id)}>
+                          Hauptverein
+                        </Button>
+                      )}
+                      <Button size="small" color="error" onClick={() => onDeleteMitglied(m.id)}>
                         Entfernen
                       </Button>
-                    )}
-                    {!editMode && m.hauptVerein && (
-                      <Chip size="small" label="Hauptverein" color="primary" />
-                    )}
-                  </Stack>
+                    </Stack>
+                  )}
                 </Box>
               ))}
             </Stack>
@@ -319,107 +249,60 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
         </Card>
       )}
 
-      {editMode && (
-        <Button size="small" sx={{ mt: 1 }} onClick={() => setAddVereinOpen(true)}>
-          Verein zuordnen
-        </Button>
-      )}
-
       {/* ================= ACTION BAR ================= */}
 
-      <BottomActionBar
-        left={
-          editMode
-            ? [
-                {
-                  label: "Speichern",
-                  onClick: async () => {
-                    await onÄndernPerson({
-                      ...(draft as PersonDetail),
-                      geburtsdatum: normalizedDate ?? undefined, // 🔑 FIX
-                    });
-                    setEditMode(false);
-                  },
-                },
-                {
-                  label: "Abbrechen",
-                  variant: "outlined",
-                  onClick: () => {
-                    setDraft(selectedPerson);
-                    setEditMode(false);
-                  },
-                },
-              ]
-            : [
-                { label: "Neue Person", onClick: onNeuePerson },
-                {
-                  label: "Bearbeiten",
-                  variant: "outlined",
-                  disabled: btnÄndernPerson,
-                  onClick: () => setEditMode(true),
-                },
-                {
-                  label: "Löschen",
-                  variant: "outlined",
-                  color: "error",
-                  disabled: btnLöschenPerson,
-                  onClick: () => setConfirmOpen(true),
-                },
-                { label: "Zurück", onClick: onStartMenue },
-              ]
-        }
-      />
+      {editMode ? (
+        <BottomActionBar
+          left={[
+            {
+              label: "Speichern",
+              onClick: async () => {
+                await onSpeichern({
+                  ...form,
+                  geburtsdatum: normalizeGermanDate(form.geburtsdatum ?? "") ?? undefined,
+                });
+              },
+            },
+            {
+              label: "Abbrechen",
+              variant: "outlined",
+              onClick: onCancelEdit,
+            },
+          ]}
+        />
+      ) : (
+        <BottomActionBar
+          left={[
+            { label: "Neue Person", onClick: onNeuePerson },
+            {
+              label: "Bearbeiten",
+              variant: "outlined",
+              disabled: btnÄndernPerson,
+              onClick: onEdit,
+            },
+            {
+              label: "Löschen",
+              variant: "outlined",
+              color: "error",
+              disabled: btnLöschenPerson,
+              onClick: () => setConfirmOpen(true),
+            },
+            { label: "Zurück", onClick: onStartMenue },
+          ]}
+        />
+      )}
 
       {/* ================= DELETE ================= */}
 
       <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
         <DialogTitle>Löschen bestätigen</DialogTitle>
         <DialogContent>
-          Soll die Person „{selectedPerson.name}“ wirklich gelöscht werden?
+          Soll die Person „{personDetail?.name}“ wirklich gelöscht werden?
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setConfirmOpen(false)}>Abbrechen</Button>
           <Button color="error" onClick={onDeletePerson}>
             Löschen
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* ================= ADD VEREIN ================= */}
-
-      <Dialog open={addVereinOpen} onClose={() => setAddVereinOpen(false)}>
-        <DialogTitle>Verein zuordnen</DialogTitle>
-        <DialogContent>
-          <TextField
-            select
-            fullWidth
-            label="Verein"
-            value={selectedVereinId}
-            onChange={(e) => setSelectedVereinId(Number(e.target.value))}
-            sx={{ mt: 1 }}
-          >
-            {verfügbareVereine.map((v) => (
-              <MenuItem key={v.id} value={v.id}>
-                {v.name}
-              </MenuItem>
-            ))}
-          </TextField>
-        </DialogContent>
-
-        <DialogActions>
-          <Button onClick={() => setAddVereinOpen(false)}>Abbrechen</Button>
-          <Button
-            disabled={!selectedVereinId}
-            onClick={async () => {
-              await createMitglied(selectedPerson!.id!, selectedVereinId as number);
-
-              setAddVereinOpen(false);
-              setSelectedVereinId("");
-
-              await reloadSelectedPerson(); // 🔑 DAS ist der Re-Render
-            }}
-          >
-            Zuordnen
           </Button>
         </DialogActions>
       </Dialog>

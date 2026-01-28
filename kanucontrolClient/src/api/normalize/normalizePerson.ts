@@ -1,18 +1,8 @@
-// api/normalize/normalizePerson.ts
-import { PersonSave } from "@/api/types/PersonSave";
+// src/api/normalize/normalizePerson.ts
+import { PersonSave } from "@/api/types/Person";
 
-export type PersonMode = "create" | "update";
-
-export function normalizePersonPayload(raw: PersonSave, mode: PersonMode): PersonSave {
+export function normalizePersonPayload(raw: PersonSave): PersonSave {
   const p: PersonSave = { ...raw };
-
-  if (mode === "create") {
-    delete p.id;
-  }
-
-  if (mode === "update" && p.id == null) {
-    throw new Error("normalizePersonPayload(update): id is required");
-  }
 
   const emptyToUndefined = <T>(v: T | "" | null | undefined): T | undefined =>
     v === "" || v === null ? undefined : v;

@@ -15,9 +15,9 @@ import org.mapstruct.ReportingPolicy;
 )
 public interface MitgliedMapper {
 
-    /* ============================
-       Entity → DTO
-       ============================ */
+    /* =====================================================
+       ENTITY → DTO (flach, listenfähig, formularfähig)
+       ===================================================== */
 
     @Mapping(source = "id", target = "id")
     @Mapping(source = "person.id", target = "personId")
@@ -27,20 +27,32 @@ public interface MitgliedMapper {
     @Mapping(source = "hauptVerein", target = "hauptVerein")
     MitgliedDTO toDTO(Mitglied entity);
 
-    /* ============================
-       DTO → Entity
-       ============================ */
+    /* =====================================================
+       ENTITY → DETAIL DTO (nur für Edit / Detail View)
+       ===================================================== */
 
+    @Mapping(source = "id", target = "id")
+    @Mapping(source = "person.id", target = "personId")
+    @Mapping(source = "hauptVerein", target = "hauptVerein")
+    @Mapping(
+            target = "verein",
+            expression = "java(entity.getVerein() == null ? null : toVereinRefDTO(entity.getVerein()))"
+    )
+    MitgliedDetailDTO toDetailDTO(Mitglied entity);
+
+    /* =====================================================
+       DTO → ENTITY (kontrolliert, ohne Relationen)
+       ===================================================== */
+
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "person", ignore = true)
     @Mapping(target = "verein", ignore = true)
+    @Mapping(target = "hauptVerein", ignore = true)
     Mitglied toEntity(MitgliedDTO dto);
 
-    /* ============================
-       NEU: Detail DTO
-       ============================ */
-
-    @Mapping(source = "verein", target = "verein")
-    MitgliedDetailDTO toDetailDTO(Mitglied entity);
+    /* =====================================================
+       SUB-MAPPINGS
+       ===================================================== */
 
     VereinRefDTO toVereinRefDTO(Verein verein);
 }

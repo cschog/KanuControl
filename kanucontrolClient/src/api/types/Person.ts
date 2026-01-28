@@ -1,29 +1,85 @@
 // api/types/Person.ts
 import { Sex } from "@/api/enums/Sex";
 import { CountryCode } from "@/api/enums/CountryCode";
-import { Mitglied } from "@/api/types/Mitglied";
+import { MitgliedDetail, MitgliedSaveInPerson } from "@/api/types/Mitglied";
 
-export interface Person {
-  id?: number;
-
-  name: string;
+/* ============================
+ * LIST
+ * ============================ */
+export interface PersonList {
+  id: number;
   vorname: string;
-  sex: Sex;
-  geburtsdatum?: string;
+  name: string;
   alter?: number;
+  ort?: string;
+  hauptvereinAbk?: string;
+  mitgliedschaftenCount: number;
+}
 
+/* ============================
+ * DETAIL
+ * ============================ */
+export interface PersonDetail {
+  id: number;
+  vorname: string;
+  name: string;
+  sex: Sex;
   aktiv: boolean;
+  geburtsdatum?: string;
 
+  telefon?: string;
+  telefonFestnetz?: string;
   strasse?: string;
   plz?: string;
   ort?: string;
   countryCode?: CountryCode;
+
+  bankName?: string;
+  iban?: string;
+
+  mitgliedschaften: MitgliedDetail[];
+}
+
+/* ============================
+ * SAVE (Create / Update)
+ * ============================ */
+export interface PersonSave {
+  name: string;
+  vorname: string;
+  sex: Sex;
+
+  geburtsdatum?: string;
+  countryCode?: CountryCode;
+
+  strasse?: string;
+  plz?: string;
+  ort?: string;
 
   telefon?: string;
   telefonFestnetz?: string;
   bankName?: string;
   iban?: string;
 
-  // 🔑 NUR UI / READ
-  mitgliedschaften?: Mitglied[];
+  aktiv?: boolean;
+
+  /** Aggregat-Save */
+  mitgliedschaften?: MitgliedSaveInPerson[];
+}
+
+/* ============================
+ * SEARCH
+ * ============================ */
+export interface PersonSearchParams {
+  name?: string;
+  vorname?: string;
+  sex?: Sex;
+  aktiv?: boolean;
+  vereinId?: number;
+  alterMin?: number;
+  alterMax?: number;
+  plz?: string;
+  ort?: string;
+  page?: number;
+  size?: number;
+  sort?: string;
 }

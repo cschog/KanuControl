@@ -11,8 +11,12 @@ import lombok.Setter;
 public class MitgliedDetailDTO {
 
     private Long id;
-    private boolean hauptVerein;
-    private MitgliedFunktion funktion;
-    private VereinRefDTO verein;
 
+    private Long personId;
+
+    private MitgliedFunktion funktion;
+
+    private Boolean hauptVerein;
+
+    private VereinRefDTO verein;
 }

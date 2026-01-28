@@ -1,5 +1,6 @@
 package com.kcserver.mitglied;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.dto.MitgliedDTO;
 import com.kcserver.integration.support.AbstractTenantIntegrationTest;
@@ -14,8 +15,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -31,6 +35,11 @@ class MitgliedDeleteTest extends AbstractTenantIntegrationTest {
     Long vereinId;
     Long mitgliedId;
 
+    Long vereinAId;
+    Long vereinBId;
+    Long mitgliedAId;
+    Long mitgliedBId;
+
     @BeforeEach
     void setup() throws Exception {
 
@@ -44,6 +53,9 @@ class MitgliedDeleteTest extends AbstractTenantIntegrationTest {
                 "EKC_DELETE",
                 "Eschweiler Kanu Club"
         );
+
+        vereinAId = vereine.createIfNotExists("V_A", "Verein A");
+        vereinBId = vereine.createIfNotExists("V_B", "Verein B");
 
         personId = personen.createPerson(
                 "Max",
@@ -71,6 +83,12 @@ class MitgliedDeleteTest extends AbstractTenantIntegrationTest {
 
         mitgliedId =
                 objectMapper.readTree(response).get("id").asLong();
+
+        // Mitglied A = Hauptverein
+        mitgliedAId = createMitglied(personId, vereinAId);
+
+        // Mitglied B = normal
+        mitgliedBId = createMitglied(personId, vereinBId);
     }
 
     /* =========================================================
@@ -97,5 +115,82 @@ class MitgliedDeleteTest extends AbstractTenantIntegrationTest {
                         tenantRequest(delete("/api/mitglied/{id}", 99999L))
                 )
                 .andExpect(status().isNotFound());
+    }
+    @Test
+    void deleteNormalMitglied_keepsExistingHauptverein() throws Exception {
+
+        // B ist Hauptverein → A ist normal
+        mockMvc.perform(
+                tenantRequest(delete("/api/mitglied/{id}", mitgliedAId))
+        ).andExpect(status().isNoContent());
+
+        List<MitgliedDTO> remaining =
+                getMitgliedByPerson(personId);
+
+        MitgliedDTO hauptverein = findHauptverein(remaining);
+
+        assertEquals(vereinBId, hauptverein.getVereinId());
+    }
+
+    @Test
+    void deleteHauptverein_assignsAnyRemainingAsHauptverein() throws Exception {
+
+        mockMvc.perform(
+                tenantRequest(delete("/api/mitglied/{id}", mitgliedBId))
+        ).andExpect(status().isNoContent());
+
+        List<MitgliedDTO> remaining =
+                getMitgliedByPerson(personId);
+
+        MitgliedDTO hauptverein = findHauptverein(remaining);
+
+        // MUSS einer der verbleibenden sein
+        assertTrue(
+                hauptverein.getVereinId().equals(vereinAId)
+                        || hauptverein.getVereinId().equals(vereinId)
+        );
+    }
+
+    private List<MitgliedDTO> getMitgliedByPerson(Long personId) throws Exception {
+        String json = mockMvc.perform(
+                        tenantRequest(
+                                get("/api/mitglied/person/{id}", personId)
+                        )
+                )
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        return objectMapper.readValue(
+                json,
+                new TypeReference<List<MitgliedDTO>>() {}
+        );
+    }
+
+    private Long createMitglied(Long personId, Long vereinId) throws Exception {
+        MitgliedDTO dto = new MitgliedDTO();
+        dto.setPersonId(personId);
+        dto.setVereinId(vereinId);
+
+        String response =
+                mockMvc.perform(
+                                tenantRequest(post("/api/mitglied"))
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(dto))
+                        )
+                        .andExpect(status().isCreated())
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
+
+        return objectMapper.readTree(response).get("id").asLong();
+    }
+
+    private MitgliedDTO findHauptverein(List<MitgliedDTO> list) {
+        return list.stream()
+                .filter(MitgliedDTO::getHauptVerein)
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Kein Hauptverein gefunden"));
     }
 }
