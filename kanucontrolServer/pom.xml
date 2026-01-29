@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.2.2</version>
+		<version>3.5.10</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.example</groupId>
@@ -19,7 +19,19 @@
 		<maven.compiler.target>17</maven.compiler.target>
 		<maven.compiler.compilerVersion>21</maven.compiler.compilerVersion>
 		<postgresql.version>42.7.3</postgresql.version>
+		<!-- Default: Liquibase-Tests AUS -->
+		<junit.jupiter.tags.exclude>liquibase</junit.jupiter.tags.exclude>
+		<junit.jupiter.tags.include></junit.jupiter.tags.include>
 	</properties>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>commons-io</groupId>
+				<artifactId>commons-io</artifactId>
+				<version>2.15.1</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -30,6 +42,20 @@
 					<artifactId>commons-logging</artifactId>
 				</exclusion>
 			</exclusions>
+		</dependency>
+		<!-- Encoding-Erkennung -->
+		<!-- Encoding-Erkennung (UTF-8 / Windows-1252 / ISO-8859-1) -->
+		<dependency>
+			<groupId>com.ibm.icu</groupId>
+			<artifactId>icu4j</artifactId>
+			<version>74.2</version>
+		</dependency>
+
+		<!-- CSV Parser -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-csv</artifactId>
+			<version>1.10.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.mapstruct</groupId>
@@ -177,12 +203,6 @@
 			<version>2.2.222</version>
 			<scope>test</scope>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-surefire-plugin -->
-		<dependency>
-			<groupId>org.apache.maven.plugins</groupId>
-			<artifactId>maven-surefire-plugin</artifactId>
-			<version>3.2.2</version>
-		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-failsafe-plugin -->
 		<dependency>
 			<groupId>org.apache.maven.plugins</groupId>
@@ -202,6 +222,28 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+
+	<profiles>
+		<profile>
+			<id>liquibase-test</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<version>3.5.2</version>
+						<configuration>
+							<systemPropertyVariables>
+								<junit.jupiter.tags.include>liquibase</junit.jupiter.tags.include>
+								<junit.jupiter.tags.exclude></junit.jupiter.tags.exclude>
+							</systemPropertyVariables>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
 
 	<build>
 		<plugins>
@@ -242,8 +284,12 @@
 				</configuration>
 			</plugin>
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>3.5.2</version>
+				<configuration>
+					<excludeTags>liquibase</excludeTags>
+				</configuration>
 			</plugin>
 			<plugin>
 				<artifactId>maven-failsafe-plugin</artifactId>

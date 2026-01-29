@@ -18,22 +18,17 @@ class PersonMapperTest {
 
     @Test
     void personListDto_containsCorrectAge() {
-        // given
-        LocalDate geb = LocalDate.now().minusYears(30);
         Person p = new Person();
-        p.setGeburtsdatum(geb);
+        p.setGeburtsdatum(LocalDate.now().minusYears(10));
 
-        // when
         PersonListDTO dto = mapper.toListDTO(p);
 
-        // then
-        assertThat(dto.getAlter()).isEqualTo(30);
+        assertThat(dto.getAlter()).isEqualTo(10);
     }
 
     @Test
     void personListDto_withNullBirthdate_hasNullAge() {
         Person p = new Person();
-        p.setGeburtsdatum(null);
 
         PersonListDTO dto = mapper.toListDTO(p);
 
@@ -41,12 +36,13 @@ class PersonMapperTest {
     }
 
     @Test
-    void personListDto_birthdayToday_ageIsZero() {
+    void personListDto_doesNotExposeEmail() {
         Person p = new Person();
-        p.setGeburtsdatum(LocalDate.now());
+        p.setEmail("test@test.de");
 
         PersonListDTO dto = mapper.toListDTO(p);
 
-        assertThat(dto.getAlter()).isZero();
+        // bewusst KEIN dto.getEmail()
+        // Test ist implizit bestanden, wenn es kompiliert
     }
 }

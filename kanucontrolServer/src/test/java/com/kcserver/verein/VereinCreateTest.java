@@ -2,7 +2,7 @@ package com.kcserver.verein;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.dto.VereinDTO;
-import jakarta.transaction.Transactional;
+import com.kcserver.integration.support.AbstractTenantIntegrationTest;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,21 +10,15 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @Tag("verein-crud")
 @SpringBootTest
 @AutoConfigureMockMvc
-@Transactional
 @ActiveProfiles("test")
-class VereinCreateTest {
-
-    @Autowired
-    MockMvc mockMvc;
+class VereinCreateTest extends AbstractTenantIntegrationTest {
 
     @Autowired
     ObjectMapper objectMapper;
@@ -37,10 +31,11 @@ class VereinCreateTest {
         dto.setName("Eschweiler Kanu Club");
 
         mockMvc.perform(
-                        post("/api/verein")
-                                .with(jwt())
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(dto))
+                        tenantRequest(
+                                post("/api/verein")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(dto))
+                        )
                 )
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").isNumber())
@@ -55,16 +50,24 @@ class VereinCreateTest {
         dto.setAbk("EKC");
         dto.setName("Eschweiler Kanu Club");
 
-        mockMvc.perform(post("/api/verein")
-                        .with(jwt())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(dto)))
+        // 1️⃣ erster Create → OK
+        mockMvc.perform(
+                        tenantRequest(
+                                post("/api/verein")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(dto))
+                        )
+                )
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(post("/api/verein")
-                        .with(jwt())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(dto)))
+        // 2️⃣ gleicher Verein → Conflict
+        mockMvc.perform(
+                        tenantRequest(
+                                post("/api/verein")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(dto))
+                        )
+                )
                 .andExpect(status().isConflict());
     }
 }

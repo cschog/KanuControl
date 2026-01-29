@@ -7,6 +7,7 @@ import com.kcserver.persistence.converter.CountryCodeConverter;
 import com.kcserver.persistence.converter.SexConverter;
 import com.kcserver.validation.OnCreate;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
@@ -49,6 +50,10 @@ public class Person extends Auditable {
     @Convert(converter = SexConverter.class)
     @Column(length = 1)
     private Sex sex;   // ✅ Enum M/W/D → CHAR(1)
+
+    @Email
+    @Column(length = 255)
+    private String email;
 
     /* =========================
        Adresse & Kontakt

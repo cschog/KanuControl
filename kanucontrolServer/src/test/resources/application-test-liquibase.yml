@@ -1,0 +1,14 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/kanu?currentSchema=kanu
+    username: kcuser
+    password: kcpassword
+
+  liquibase:
+    enabled: true
+    default-schema: kanu
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+
+  jpa:
+    hibernate:
+      ddl-auto: none

@@ -104,4 +104,19 @@ class PersonValidationTest extends AbstractTenantIntegrationTest {
         dto.setAktiv(true);
         return dto;
     }
+    @Test
+    void postPerson_invalidEmail_returns400() throws Exception {
+        mockMvc.perform(
+                post("/api/person")
+                        .with(jwt())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                            {
+                              "vorname": "Max",
+                              "nachname": "Mustermann",
+                              "email": "keine-email"
+                            }
+                        """)
+        ).andExpect(status().isBadRequest());
+    }
 }

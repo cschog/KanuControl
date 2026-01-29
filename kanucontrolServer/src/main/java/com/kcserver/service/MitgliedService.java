@@ -187,6 +187,30 @@ public class MitgliedService {
     }
 
     @Transactional
+    public void ensureMitglied(Long personId, Long vereinId) {
+
+        if (mitgliedRepository.existsByPerson_IdAndVerein_Id(personId, vereinId)) {
+            return;
+        }
+
+        Mitglied mitglied = new Mitglied();
+        mitglied.setPerson(
+                personRepository.findById(personId)
+                        .orElseThrow()
+        );
+        mitglied.setVerein(
+                vereinRepository.findById(vereinId)
+                        .orElseThrow()
+        );
+
+        // neuer Verein wird automatisch Hauptverein
+        mitgliedRepository.unsetHauptvereinByPerson(personId);
+        mitglied.setHauptVerein(true);
+
+        mitgliedRepository.save(mitglied);
+    }
+
+    @Transactional
     public Mitglied updateMitgliedEntity(Long id, MitgliedDTO dto) {
         Mitglied updated = updateMitgliedInternal(id, dto);
         mitgliedRepository.save(updated);
