@@ -23,12 +23,19 @@ export const PersonCreateDialog: React.FC<PersonCreateDialogProps> = ({
   onClose,
   onCreate,
 }) => {
+  console.log("🔥 NEUER PersonCreateDialog", {
+    hasPlz: true,
+    fields: ["vorname", "name", "sex", "geburtsdatum", "plz", "ort", "strasse"],
+  });
+
   const [draft, setDraft] = useState<PersonSave>({
     vorname: "",
     name: "",
     sex: "W",
     geburtsdatum: undefined,
+    plz: "",
     ort: "",
+    strasse: "",
     aktiv: true, // 🔑 automatisch TRUE
     mitgliedschaften: [], // 🔑 leer beim Create
   });
@@ -79,8 +86,15 @@ export const PersonCreateDialog: React.FC<PersonCreateDialogProps> = ({
             type="date"
             label="Geburtsdatum"
             value={draft.geburtsdatum ?? ""}
-            onChange={(e) => update("geburtsdatum", e.target.value ? e.target.value : undefined)}
+            onChange={(e) => update("geburtsdatum", e.target.value || undefined)}
             InputLabelProps={{ shrink: true }}
+            fullWidth
+          />
+
+          <TextField
+            label="PLZ"
+            value={draft.plz ?? ""}
+            onChange={(e) => update("plz", e.target.value)}
             fullWidth
           />
 
@@ -88,6 +102,13 @@ export const PersonCreateDialog: React.FC<PersonCreateDialogProps> = ({
             label="Ort"
             value={draft.ort ?? ""}
             onChange={(e) => update("ort", e.target.value)}
+            fullWidth
+          />
+
+          <TextField
+            label="Straße"
+            value={draft.strasse ?? ""}
+            onChange={(e) => update("strasse", e.target.value)}
             fullWidth
           />
         </Stack>

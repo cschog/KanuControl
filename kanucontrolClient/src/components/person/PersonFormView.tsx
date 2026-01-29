@@ -30,10 +30,9 @@ import { VereinRef } from "@/api/types/VereinRef";
 
 interface PersonFormViewProps {
   personDetail: PersonDetail | null;
-  draftPerson: PersonSave | null;
+
   editMode: boolean;
 
-  onNeuePerson: () => void;
   onEdit: () => void;
   onCancelEdit: () => void;
   onSpeichern: (person: PersonSave) => Promise<void>;
@@ -84,9 +83,7 @@ function mapDetailToSave(detail: PersonDetail): PersonSave {
 
 export const PersonFormView: React.FC<PersonFormViewProps> = ({
   personDetail,
-  draftPerson,
   editMode,
-  onNeuePerson,
   onEdit,
   onCancelEdit,
   onSpeichern,
@@ -114,29 +111,18 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
   }, []);
 
   useEffect(() => {
-    if (editMode && draftPerson) {
-      setForm(draftPerson);
-    } else if (personDetail) {
+    if (personDetail) {
       setForm(mapDetailToSave(personDetail));
     } else {
       setForm(null);
     }
-  }, [editMode, draftPerson, personDetail]);
+  }, [personDetail]);
 
   if (!form) {
     return (
-      <>
-        <Typography align="center" sx={{ mt: 4 }} color="text.secondary">
-          Bitte wählen Sie eine Person aus.
-        </Typography>
-
-        <BottomActionBar
-          left={[
-            { label: "Neue Person", onClick: onNeuePerson },
-            { label: "Zurück", onClick: onStartMenue },
-          ]}
-        />
-      </>
+      <Typography align="center" sx={{ mt: 4 }} color="text.secondary">
+        Bitte wählen Sie eine Person aus.
+      </Typography>
     );
   }
 
@@ -300,7 +286,6 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
       ) : (
         <BottomActionBar
           left={[
-            { label: "Neue Person", onClick: onNeuePerson },
             {
               label: "Bearbeiten",
               variant: "outlined",
