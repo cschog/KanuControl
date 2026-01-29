@@ -165,7 +165,7 @@ Zur Benutzerverwaltung wird Keycloak eingesetzt.
 ### Technologien
 
 - Java 17
-- Spring Boot 3.2.x
+- Spring Boot 3.5.10
 - Spring Data JPA (Hibernate 6)
 - Liquibase
 - PostgreSQL
@@ -198,79 +198,127 @@ und enthält keine Businesslogik.
 
 ## 🗺️ Roadmap
 
-### Phase 0 – Fundament (aktuell)
+### Phase 0 – Fundament → Release 0.1.x
 
-- [x] Backend-Grundstruktur
+**Ziel:** stabile Stammdaten, saubere Architektur, Importfähig  
+**Release-Ziel:** `v0.1.0`
+
+- [x] Backend-Grundstruktur (Spring Boot 3)
 - [x] Mandantenfähigkeit (Schema-per-Tenant)
 - [x] Keycloak-Integration
+- [x] Liquibase + Hibernate (Schema & Migration)
 - [x] CRUD für:
   - [x] Verein
   - [x] Person
-  - [x] Mitglied
-  - [x] Veranstaltung
-  - [x] Teilnehmer
-- [x] Teilnehmerverwaltung
-- [x] Controller- & Integrationstests
+  - [x] Mitglied (Join-Entity)
+- [x] Hauptverein-Logik
 - [x] Fachliche Validierungen
+- [x] Controller- & Integrationstests
+- [x] Frontend:
+  - [x] Personenverwaltung (View / Edit / Create)
+  - [x] Vereinsverwaltung
+  - [x] Mitgliedszuordnung
+- [x] CSV-Import Personen
+  - [x] Mapping-Datei
+  - [x] Dry-Run
+  - [x] Validierung
+  - [x] Fehlerreport
 - [ ] Technische Basis für Datei-Uploads
 
 ---
 
-### Phase 1 – Frontend-Basis
+### Phase 1 – Frontend-Basis & Export → Release 0.2.x
 
-- [ ] Login via Keycloak
-- [ ] CRUD-Oberflächen
-- [ ] Basis-Navigation
-- [ ] Tabellen mit Pagination & Sortierung
+**Ziel:** komfortable Nutzung & Datenexport
+
+- [ ] Login / Session-Flow finalisieren (Keycloak UX)
+- [ ] Einheitliche Basis-Navigation
+- [ ] Tabellen:
+  - [ ] Pagination
+  - [ ] Sortierung
+  - [ ] Filter
 - [ ] CSV-Export (read-only)
-  - [ ] Mitgliederliste
   - [ ] Personenliste
+  - [ ] Mitgliederliste
+  - [ ] Vereinsliste
   - [ ] Filterabhängiger Export
-	- Multipart-Handling
-	- Größenlimits
+- [ ] Technische Basis:
+  - [ ] Multipart-Handling
+  - [ ] Größenlimits
+  - [ ] Fehlerbehandlung
 
 ---
 
-### Phase 2 – Mitglieder & Datenimport
+### Phase 2 – Import & Datenqualität → Release 0.3.x
+
+**Ziel:** robuste Massendatenverarbeitung
 
 - [ ] CSV-Import Mitglieder
   - [ ] Datei-Upload
   - [ ] Vorschau / Dry-Run
   - [ ] Validierung
-    - Pflichtfelder
-    - Fachliche Regeln
-    - Dubletten
+    - [ ] Pflichtfelder
+    - [ ] Fachliche Regeln
+    - [ ] Dublettenprüfung
   - [ ] Fehlerbericht (Zeile + Ursache)
-- [ ] Mapping
+- [ ] Mapping:
   - [ ] Person ↔ Mitglied ↔ Verein
 - [ ] Idempotenter Import
 - [ ] Import-Historie / Protokoll
 
 ---
 
-### Phase 3 – Veranstaltungen
+### Phase 3 – Veranstaltungen & Teilnehmer → Release 0.4.x
 
-- [ ] Veranstaltungsverwaltung
+**Ziel:** Veranstaltungsmanagement vollständig
+
+- [ ] Veranstaltung (CRUD)
+- [ ] Teilnehmer (Join-Entity Person ↔ Veranstaltung)
+- [ ] Teilnehmerstatus
+  - [ ] angemeldet
+  - [ ] bestätigt
+  - [ ] abgesagt
+- [ ] Teilnehmerverwaltung im UI
 - [ ] Teilnehmerlisten
-- [ ] Anmeldestatus
+- [ ] Basis-Auswertungen
 
 ---
 
-### Phase 4 – Abrechnung
+### Phase 4 – Abrechnung → Release 0.5.x
 
-- [ ] Einnahmen / Ausgaben
-- [ ] Reisekosten
+**Ziel:** finanzielle Abwicklung
+
+- [ ] Einnahmen
+- [ ] Ausgaben
+- [ ] Reisekostenabrechnung
 - [ ] Plausibilitätsprüfungen
+- [ ] Summen & Übersichten
 
 ---
 
-### Phase 5 – Dokumente
+### Phase 5 – Dokumente & Formulare → Release 0.6.x
+
+**Ziel:** vollständige Verwaltungsdokumente
 
 - [ ] PDF-Erzeugung
-- [ ] Editierbare Formulare
+- [ ] Editierbare PDF-Formulare
+  - [ ] Teilnehmerliste
+  - [ ] Erhebungsbogen
+  - [ ] Anmeldeformular
+  - [ ] Abrechnungsformular
 - [ ] Dokument-Templates
 - [ ] Archivierung
+
 ---
+
+### Phase 6 – Stabilisierung & Produktivbetrieb → Release 1.0.0
+
+- [ ] Performance-Optimierung
+- [ ] Rollen & Rechte
+- [ ] Logging & Monitoring
+- [ ] Backup & Restore
+- [ ] Deployment / Internetbetrieb
+- [ ] Dokumentation final
 
 ## 🌍 Open-Source & Contributions
 

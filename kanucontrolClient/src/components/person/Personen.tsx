@@ -7,7 +7,9 @@ import { navigateToStartMenu } from "@/components/layout/navigateToStartMenue";
 import { PersonList, PersonSave, PersonDetail } from "@/api/types/Person";
 import { getPersonById } from "@/api/services/personApi";
 import apiClient from "@/api/client/apiClient";
-import { toPersonSaveDTO } from "@/api/mappers/personMapper";
+import { PersonCreateDialog } from "@/components/person/PersonCreateDialog";
+// import { Button } from "@mui/material";
+import { BottomActionBar } from "@/components/common/BottomActionBar";
 
 import {
   getAllPersonen as dbGetAllPersonen,
@@ -23,10 +25,10 @@ interface PersonenState {
   loading: boolean;
   error: null | string;
   personFormEditMode: boolean;
-  modusNeuePerson: boolean;
   btnLöschenIsDisabled: boolean;
   btnÄndernIsDisabled: boolean;
   btnNeuePersonIsDisabled: boolean;
+  createDialogOpen: boolean;
 }
 
 class Personen extends Component<Record<string, never>, PersonenState> {
@@ -37,10 +39,10 @@ class Personen extends Component<Record<string, never>, PersonenState> {
     loading: true,
     error: null,
     personFormEditMode: false,
-    modusNeuePerson: true,
     btnLöschenIsDisabled: true,
     btnÄndernIsDisabled: true,
     btnNeuePersonIsDisabled: false,
+    createDialogOpen: false,
   };
 
   componentDidMount() {
@@ -75,59 +77,29 @@ class Personen extends Component<Record<string, never>, PersonenState> {
   };
 
   btnSpeichern = async (person: PersonSave) => {
-    try {
-      let saved: PersonDetail;
-
-      if (this.state.modusNeuePerson) {
-        saved = await dbCreatePerson(person);
-      } else {
-        if (!this.state.selectedPerson) {
-          throw new Error("No selected person for update");
-        }
-        saved = await dbReplacePerson(this.state.selectedPerson.id, person);
-      }
-
-      await this.fetchPersonenData();
-
-      this.setState({
-        selectedPerson: saved, // 🔑 DAS ist der Fix
-        personFormEditMode: false,
-        modusNeuePerson: false,
-        draftPerson: null,
-        btnÄndernIsDisabled: false,
-        btnLöschenIsDisabled: false,
-      });
-    } catch (e) {
-      console.error(e);
-      alert("Speichern fehlgeschlagen");
+    if (!this.state.selectedPerson) {
+      throw new Error("No selected person for update");
     }
+
+    const saved = await dbReplacePerson(this.state.selectedPerson.id, person);
+
+    await this.fetchPersonenData();
+
+    this.setState({
+      selectedPerson: saved,
+      personFormEditMode: false,
+      btnÄndernIsDisabled: false,
+      btnLöschenIsDisabled: false,
+    });
   };
 
   btnNeuePerson = () => {
-    const newPerson: PersonSave = {
-      vorname: "",
-      name: "",
-      sex: "W",
-      aktiv: true,
-      geburtsdatum: undefined,
-      ort: "",
-      mitgliedschaften: [],
-    };
-
-    this.setState({
-      modusNeuePerson: true,
-      personFormEditMode: true,
-      draftPerson: newPerson, // ✅ Save-Typ
-      selectedPerson: null, // ✅ kein Detail
-      btnLöschenIsDisabled: true,
-      btnÄndernIsDisabled: true,
-    });
+    this.setState({ createDialogOpen: true });
   };
 
   editPerson = () => {
     this.setState({
       personFormEditMode: true,
-      modusNeuePerson: false, // 🔑 EXPLIZIT
       btnLöschenIsDisabled: true,
       btnÄndernIsDisabled: true,
     });
@@ -198,15 +170,12 @@ class Personen extends Component<Record<string, never>, PersonenState> {
   reloadSelectedPerson = async () => {
     const fresh = await getPersonById(this.state.selectedPerson!.id);
 
-    this.setState({
-      selectedPerson: fresh,
-      draftPerson: toPersonSaveDTO(fresh),
-    });
+   this.setState({ selectedPerson: fresh });
   };
 
   render() {
-    const { data, selectedPerson } = this.state;
-    const { loading, error } = this.state;
+    const { data, selectedPerson, loading, error, createDialogOpen } = this.state;
+
     const personAnz = data.length;
 
     // console.log("RENDER Personen – data:", data);
@@ -225,9 +194,7 @@ class Personen extends Component<Record<string, never>, PersonenState> {
         <div>
           <PersonFormView
             personDetail={this.state.selectedPerson}
-            draftPerson={this.state.draftPerson}
             editMode={this.state.personFormEditMode}
-            onNeuePerson={this.btnNeuePerson}
             onEdit={this.editPerson}
             onCancelEdit={this.cancelEdit}
             onSpeichern={this.btnSpeichern}
@@ -239,9 +206,43 @@ class Personen extends Component<Record<string, never>, PersonenState> {
             btnLöschenPerson={this.state.btnLöschenIsDisabled}
             onReloadPerson={this.reloadSelectedPerson}
           />
+          {!selectedPerson && (
+            <BottomActionBar
+              left={[
+                {
+                  label: "Neue Person",
+                  variant: "outlined",
+                  onClick: () => this.setState({ createDialogOpen: true }),
+                },
+                {
+                  label: "Zurück",
+                  variant: "outlined",
+                  onClick: this.btnStartMenue,
+                },
+              ]}
+            />
+          )}
+          ;{/* ✅ CREATE DIALOG */}
+          <PersonCreateDialog
+            open={createDialogOpen}
+            onClose={() => this.setState({ createDialogOpen: false })}
+            onCreate={async (person) => {
+              const saved = await dbCreatePerson(person);
+              await this.fetchPersonenData();
+
+              this.setState({
+                createDialogOpen: false,
+                selectedPerson: saved,
+                personFormEditMode: false,
+                btnÄndernIsDisabled: false,
+                btnLöschenIsDisabled: false,
+              });
+            }}
+          />
         </div>
       </div>
     );
+    
   }
 }
 
