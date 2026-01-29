@@ -27,6 +27,8 @@ export interface PersonDetail {
   aktiv: boolean;
   geburtsdatum?: string;
 
+  email?: string;
+
   telefon?: string;
   telefonFestnetz?: string;
   strasse?: string;
@@ -49,6 +51,7 @@ export interface PersonSave {
   sex: Sex;
 
   geburtsdatum?: string;
+  email?: string;
   countryCode?: CountryCode;
 
   strasse?: string;

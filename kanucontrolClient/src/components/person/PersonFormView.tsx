@@ -59,6 +59,7 @@ function mapDetailToSave(detail: PersonDetail): PersonSave {
     vorname: detail.vorname,
     name: detail.name,
     sex: detail.sex,
+    email: detail.email,
     geburtsdatum: detail.geburtsdatum,
     telefon: detail.telefon,
     telefonFestnetz: detail.telefonFestnetz,
@@ -190,6 +191,14 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
           }
           disabled={!editMode}
           InputLabelProps={{ shrink: true }}
+          fullWidth
+        />
+        <TextField
+          label="E-Mail"
+          type="email"
+          value={form.email ?? ""}
+          onChange={(e) => update("email", e.target.value || undefined)}
+          disabled={!editMode}
           fullWidth
         />
         <TextField

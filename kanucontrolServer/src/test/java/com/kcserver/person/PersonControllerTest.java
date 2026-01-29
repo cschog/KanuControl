@@ -1,43 +1,33 @@
 package com.kcserver.person;
 
-import com.kcserver.config.TestAuditorAware;
-import com.kcserver.controller.PersonController;
-import com.kcserver.exception.GlobalExceptionHandler;
-import com.kcserver.service.PersonService;
+import com.kcserver.integration.support.AbstractTenantIntegrationTest;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.context.ActiveProfiles;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(PersonController.class)
-@Import(TestAuditorAware.class)
-@ContextConfiguration(classes = {
-        PersonController.class,
-        GlobalExceptionHandler.class
-})
-class PersonControllerTest {
-
-    @Autowired
-    MockMvc mockMvc;
-
-    @MockBean
-    PersonService personService; // ✅ DAS fehlt!
+@Tag("person-crud")
+@SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
+class PersonControllerTest extends AbstractTenantIntegrationTest {
 
     @Test
     void postPerson_withInvalidPayload_returns400() throws Exception {
+
+        // absichtlich leeres / ungültiges JSON
         mockMvc.perform(
-                post("/api/person")
-                        .with(jwt())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}")
-        ).andExpect(status().isBadRequest());
+                        tenantRequest(
+                                post("/api/person")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content("{}")
+                        )
+                )
+                .andExpect(status().isBadRequest());
     }
 }

@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
+import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -34,6 +35,9 @@ public class PersonSaveDTO implements HasMitgliedschaften {
 
     @NotNull(groups = {OnCreate.class, OnUpdate.class})
     private Sex sex;
+
+    @Email(groups = {OnCreate.class, OnUpdate.class})
+    private String email;
 
     private String telefon;
     private String telefonFestnetz;

@@ -17,6 +17,7 @@ public class PersonDetailDTO {
     private String vorname;
     private String name;
     private Sex sex;
+    private String email;
     private boolean aktiv;
     private LocalDate geburtsdatum;
 
