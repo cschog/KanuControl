@@ -1,26 +1,15 @@
 import React, { useEffect, useState } from "react";
 import {
-  Box,
-  Typography,
-  Button,
-  TextField,
-  Stack,
-  Card,
-  CardHeader,
-  MenuItem,
-  CardContent,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
+  Typography 
 } from "@mui/material";
-import StarIcon from "@mui/icons-material/Star";
+import { PersonBaseForm } from "@/components/person/form/PersonBaseForm";
+import { PersonMembershipsCard } from "./PersonMembershipsCard";
+import { PersonActionBar } from "@/components/person/PersonActionBar";
+import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
+import { AddMembershipDialog } from "@/components/person/membership/AddMembershipDialog";
+import { usePersonForm } from "@/components/person/hooks/usePersonForm";
 
-import { BottomActionBar } from "@/components/common/BottomActionBar";
 import { PersonDetail, PersonSave } from "@/api/types/Person";
-import { Sex } from "@/api/enums/Sex";
-import { CountryCode } from "@/api/enums/CountryCode";
-import { normalizeGermanDate } from "@/utils/dateUtils";
 import apiClient from "@/api/client/apiClient";
 import { VereinRef } from "@/api/types/VereinRef";
 
@@ -49,33 +38,6 @@ interface PersonFormViewProps {
   onReloadPerson: () => Promise<void>;
 }
 
-/* =========================================================
-   Helper
-   ========================================================= */
-
-function mapDetailToSave(detail: PersonDetail): PersonSave {
-  return {
-    vorname: detail.vorname,
-    name: detail.name,
-    sex: detail.sex,
-    email: detail.email,
-    geburtsdatum: detail.geburtsdatum,
-    telefon: detail.telefon,
-    telefonFestnetz: detail.telefonFestnetz,
-    strasse: detail.strasse,
-    plz: detail.plz,
-    ort: detail.ort,
-    countryCode: detail.countryCode,
-    bankName: detail.bankName,
-    iban: detail.iban,
-    aktiv: detail.aktiv,
-    mitgliedschaften: detail.mitgliedschaften.map((m) => ({
-      vereinId: m.verein.id,
-      hauptVerein: m.hauptVerein,
-      funktion: m.funktion,
-    })),
-  };
-}
 
 /* =========================================================
    Component
@@ -95,11 +57,12 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
   btnLöschenPerson,
   onReloadPerson,
 }) => {
-  const [form, setForm] = useState<PersonSave | null>(null);
+ 
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const { form, update, buildSavePayload } = usePersonForm(personDetail);
 
   const [addVereinOpen, setAddVereinOpen] = useState(false);
-  const [selectedVereinId, setSelectedVereinId] = useState<number | "">("");
+
   const [vereine, setVereine] = useState<VereinRef[]>([]);
 
   const zugeordneteIds = new Set(personDetail?.mitgliedschaften.map((m) => m.verein.id));
@@ -110,15 +73,7 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
     apiClient.get<VereinRef[]>("/verein").then((res) => setVereine(res.data));
   }, []);
 
-  useEffect(() => {
-    if (personDetail) {
-      setForm(mapDetailToSave(personDetail));
-    } else {
-      setForm(null);
-    }
-  }, [personDetail]);
-
-  if (!form) {
+  if (!personDetail || !form) {
     return (
       <Typography align="center" sx={{ mt: 4 }} color="text.secondary">
         Bitte wählen Sie eine Person aus.
@@ -126,238 +81,53 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
     );
   }
 
-  const dateValue =
-    form.geburtsdatum && /^\d{4}-\d{2}-\d{2}$/.test(form.geburtsdatum) ? form.geburtsdatum : "";
-
-  const update = <K extends keyof PersonSave>(key: K, value: PersonSave[K]) =>
-    setForm((f) => (f ? { ...f, [key]: value } : f));
-
   return (
     <>
-      {/* ================= PERSON ================= */}
-      <Box
-        display="grid"
-        gridTemplateColumns={{ xs: "1fr", sm: "repeat(2,1fr)", md: "repeat(3,1fr)" }}
-        gap={1.25}
-      >
-        <TextField
-          label="Vorname"
-          value={form.vorname}
-          onChange={(e) => update("vorname", e.target.value)}
-          disabled={!editMode}
-          required
-        />
-        <TextField
-          label="Name"
-          value={form.name}
-          onChange={(e) => update("name", e.target.value)}
-          disabled={!editMode}
-          required
-        />
+      <PersonBaseForm form={form} editMode={editMode} mode="edit" onChange={update} />
 
-        <TextField
-          select
-          label="Geschlecht"
-          value={form.sex}
-          onChange={(e) => update("sex", e.target.value as Sex)}
-          disabled={!editMode}
-          fullWidth
-        >
-          <MenuItem value="M">Männlich</MenuItem>
-          <MenuItem value="W">Weiblich</MenuItem>
-          <MenuItem value="D">Divers</MenuItem>
-        </TextField>
+      <PersonMembershipsCard
+        person={personDetail}
+        editMode={editMode}
+        onSetHauptverein={onSetHauptverein}
+        onDeleteMitglied={onDeleteMitglied}
+      />
 
-        <TextField
-          type="date"
-          label="Geburtsdatum"
-          value={dateValue}
-          onChange={(e) =>
-            update("geburtsdatum", e.target.value === "" ? undefined : e.target.value)
+      <PersonActionBar
+        editMode={editMode}
+        onEdit={onEdit}
+        onCancelEdit={onCancelEdit}
+        onSave={async () => {
+          const payload = buildSavePayload();
+          if (payload) {
+            await onSpeichern(payload);
           }
-          disabled={!editMode}
-          InputLabelProps={{ shrink: true }}
-          fullWidth
-        />
-        <TextField
-          label="E-Mail"
-          type="email"
-          value={form.email ?? ""}
-          onChange={(e) => update("email", e.target.value || undefined)}
-          disabled={!editMode}
-          fullWidth
-        />
-        <TextField
-          label="Ort"
-          value={form.ort ?? ""}
-          onChange={(e) => update("ort", e.target.value)}
-          disabled={!editMode}
-        />
-        <TextField
-          select
-          label="Land"
-          value={form.countryCode ?? ""}
-          onChange={(e) =>
-            update(
-              "countryCode",
-              e.target.value === "" ? undefined : (e.target.value as CountryCode),
-            )
-          }
-          disabled={!editMode}
-          fullWidth
-        >
-          <MenuItem value="">–</MenuItem>
-          <MenuItem value="DE">Deutschland</MenuItem>
-          <MenuItem value="NL">Niederlande</MenuItem>
-          <MenuItem value="BE">Belgien</MenuItem>
-        </TextField>
-      </Box>
-      {/* ================= VEREINE ================= */}
-      {personDetail?.mitgliedschaften?.length ? (
-        <Card sx={{ mt: 3 }}>
-          <CardHeader title="Vereine" />
-          <CardContent>
-            <Stack spacing={1}>
-              {personDetail.mitgliedschaften.map((m) => (
-                <Box
-                  key={m.id}
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    px: 1,
-                    py: 0.5,
-                    borderRadius: 1,
-                    bgcolor: m.hauptVerein ? "action.selected" : "transparent",
-                  }}
-                >
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    {m.hauptVerein && <StarIcon fontSize="small" color="warning" />}
-                    <Typography>
-                      {m.verein.name}
-                      {m.verein.abk && ` (${m.verein.abk})`}
-                    </Typography>
-                  </Stack>
-
-                  {editMode && (
-                    <Stack direction="row" spacing={1}>
-                      {!m.hauptVerein && (
-                        <Button size="small" onClick={() => onSetHauptverein(m.id)}>
-                          Hauptverein
-                        </Button>
-                      )}
-                      <Button size="small" color="error" onClick={() => onDeleteMitglied(m.id)}>
-                        Entfernen
-                      </Button>
-                    </Stack>
-                  )}
-                </Box>
-              ))}
-            </Stack>
-          </CardContent>
-        </Card>
-      ) : null}
-
-      {/* ================= ACTION BAR ================= */}
-      {editMode ? (
-        <BottomActionBar
-          left={[
-            {
-              label: "Verein zuordnen",
-              variant: "outlined",
-              onClick: () => setAddVereinOpen(true),
-            },
-            {
-              label: "Speichern",
-              onClick: async () => {
-                await onSpeichern({
-                  ...form,
-                  geburtsdatum: normalizeGermanDate(form.geburtsdatum ?? "") ?? undefined,
-                });
-              },
-            },
-            {
-              label: "Abbrechen",
-              variant: "outlined",
-              onClick: onCancelEdit,
-            },
-          ]}
-        />
-      ) : (
-        <BottomActionBar
-          left={[
-            {
-              label: "Bearbeiten",
-              variant: "outlined",
-              disabled: btnÄndernPerson,
-              onClick: onEdit,
-            },
-            {
-              label: "Löschen",
-              variant: "outlined",
-              color: "error",
-              disabled: btnLöschenPerson,
-              onClick: () => setConfirmOpen(true),
-            },
-            { label: "Zurück", onClick: onStartMenue },
-          ]}
-        />
-      )}
+        }}
+        onDelete={() => setConfirmOpen(true)}
+        onBack={onStartMenue}
+        onAddVerein={() => setAddVereinOpen(true)}
+        disableEdit={btnÄndernPerson}
+        disableDelete={btnLöschenPerson}
+      />
 
       {/* ================= DELETE ================= */}
-      <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
-        <DialogTitle>Löschen bestätigen</DialogTitle>
-        <DialogContent>
-          Soll die Person „{personDetail?.name}“ wirklich gelöscht werden?
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setConfirmOpen(false)}>Abbrechen</Button>
-          <Button color="error" onClick={onDeletePerson}>
-            Löschen
-          </Button>
-        </DialogActions>
-      </Dialog>
-      <Dialog open={addVereinOpen} onClose={() => setAddVereinOpen(false)}>
-        <DialogTitle>Verein zuordnen</DialogTitle>
+      <ConfirmDeleteDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={async () => {
+          await onDeletePerson();
+          setConfirmOpen(false);
+        }}
+        description={`Soll die Person „${personDetail.name}“ wirklich gelöscht werden?`}
+      />
 
-        <DialogContent>
-          <TextField
-            select
-            fullWidth
-            label="Verein"
-            value={selectedVereinId}
-            onChange={(e) => setSelectedVereinId(Number(e.target.value))}
-            sx={{ mt: 1 }}
-          >
-            {verfügbareVereine.map((v) => (
-              <MenuItem key={v.id} value={v.id}>
-                {v.name}
-              </MenuItem>
-            ))}
-          </TextField>
-        </DialogContent>
-
-        <DialogActions>
-          <Button onClick={() => setAddVereinOpen(false)}>Abbrechen</Button>
-          <Button
-            disabled={!selectedVereinId}
-            onClick={async () => {
-              await apiClient.post("/mitglied", {
-                personId: personDetail!.id,
-                vereinId: selectedVereinId,
-              });
-
-              setAddVereinOpen(false);
-              setSelectedVereinId("");
-
-              // 🔁 WICHTIG: Detail neu laden
-              await onReloadPerson();
-            }}
-          >
-            Zuordnen
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {/* ================= Add Verein ================= */}
+      <AddMembershipDialog
+        open={addVereinOpen}
+        onClose={() => setAddVereinOpen(false)}
+        personId={personDetail.id}
+        availableVereine={verfügbareVereine}
+        onAdded={onReloadPerson}
+      />
     </>
   );
 };
