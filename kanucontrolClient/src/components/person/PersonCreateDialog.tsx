@@ -1,15 +1,14 @@
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
   Button,
-  MenuItem,
-  Stack,
 } from "@mui/material";
 
+import { PersonBaseForm } from "@/components/person/form/PersonBaseForm";
+import { usePersonForm } from "@/components/person/hooks/usePersonForm";
 import { PersonSave } from "@/api/types/Person";
 
 interface PersonCreateDialogProps {
@@ -23,100 +22,44 @@ export const PersonCreateDialog: React.FC<PersonCreateDialogProps> = ({
   onClose,
   onCreate,
 }) => {
-  console.log("🔥 NEUER PersonCreateDialog", {
-    hasPlz: true,
-    fields: ["vorname", "name", "sex", "geburtsdatum", "plz", "ort", "strasse"],
-  });
+  const { form, update, reset, buildSavePayload } = usePersonForm(undefined);
 
-  const [draft, setDraft] = useState<PersonSave>({
-    vorname: "",
-    name: "",
-    sex: "W",
-    geburtsdatum: undefined,
-    plz: "",
-    ort: "",
-    strasse: "",
-    aktiv: true, // 🔑 automatisch TRUE
-    mitgliedschaften: [], // 🔑 leer beim Create
-  });
+  useEffect(() => {
+    if (open) {
+      reset({
+        vorname: "",
+        name: "",
+        sex: "W",
+        aktiv: true,
+        mitgliedschaften: [],
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
-  const update = <K extends keyof PersonSave>(key: K, value: PersonSave[K]) =>
-    setDraft((d) => ({ ...d, [key]: value }));
-
-  const handleCreate = async () => {
-    await onCreate(draft);
-    onClose();
-  };
+  if (!form) return null;
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="xl" fullWidth>
       <DialogTitle>Neue Person anlegen</DialogTitle>
 
-      <DialogContent>
-        <Stack spacing={2} mt={1}>
-          <TextField
-            label="Vorname"
-            value={draft.vorname}
-            onChange={(e) => update("vorname", e.target.value)}
-            required
-            fullWidth
-          />
-
-          <TextField
-            label="Name"
-            value={draft.name}
-            onChange={(e) => update("name", e.target.value)}
-            required
-            fullWidth
-          />
-
-          <TextField
-            select
-            label="Geschlecht"
-            value={draft.sex}
-            onChange={(e) => update("sex", e.target.value as "M" | "W" | "D")}
-            fullWidth
-          >
-            <MenuItem value="M">Männlich</MenuItem>
-            <MenuItem value="W">Weiblich</MenuItem>
-            <MenuItem value="D">Divers</MenuItem>
-          </TextField>
-
-          <TextField
-            type="date"
-            label="Geburtsdatum"
-            value={draft.geburtsdatum ?? ""}
-            onChange={(e) => update("geburtsdatum", e.target.value || undefined)}
-            InputLabelProps={{ shrink: true }}
-            fullWidth
-          />
-
-          <TextField
-            label="PLZ"
-            value={draft.plz ?? ""}
-            onChange={(e) => update("plz", e.target.value)}
-            fullWidth
-          />
-
-          <TextField
-            label="Ort"
-            value={draft.ort ?? ""}
-            onChange={(e) => update("ort", e.target.value)}
-            fullWidth
-          />
-
-          <TextField
-            label="Straße"
-            value={draft.strasse ?? ""}
-            onChange={(e) => update("strasse", e.target.value)}
-            fullWidth
-          />
-        </Stack>
+      <DialogContent sx={{ mt: 1 }}>
+        <PersonBaseForm form={form} editMode={true} mode="create" onChange={update} />
       </DialogContent>
 
       <DialogActions>
         <Button onClick={onClose}>Abbrechen</Button>
-        <Button variant="contained" onClick={handleCreate} disabled={!draft.vorname || !draft.name}>
+        <Button
+          variant="contained"
+          disabled={!form.vorname || !form.name}
+          onClick={async () => {
+            const payload = buildSavePayload();
+            if (!payload) return;
+
+            await onCreate(payload);
+            onClose();
+          }}
+        >
           Anlegen
         </Button>
       </DialogActions>
