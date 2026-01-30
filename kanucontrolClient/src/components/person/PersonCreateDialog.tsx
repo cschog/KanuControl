@@ -5,6 +5,7 @@ import {
   DialogContent,
   DialogActions,
   Button,
+  Box,
 } from "@mui/material";
 
 import { PersonBaseForm } from "@/components/person/form/PersonBaseForm";
@@ -43,8 +44,18 @@ export const PersonCreateDialog: React.FC<PersonCreateDialogProps> = ({
     <Dialog open={open} onClose={onClose} maxWidth="xl" fullWidth>
       <DialogTitle>Neue Person anlegen</DialogTitle>
 
-      <DialogContent sx={{ mt: 1 }}>
-        <PersonBaseForm form={form} editMode={true} mode="create" onChange={update} />
+      <DialogContent sx={{ mt: 2 }}>
+        <Box
+          display="grid"
+          gridTemplateColumns={{
+            xs: "1fr",
+            sm: "repeat(2, 1fr)",
+            md: "repeat(4, 1fr)",
+          }}
+          gap={2}
+        >
+          <PersonBaseForm form={form} editMode={true} mode="create" onChange={update} />
+        </Box>
       </DialogContent>
 
       <DialogActions>

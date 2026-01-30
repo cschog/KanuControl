@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  Typography 
-} from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { PersonBaseForm } from "@/components/person/form/PersonBaseForm";
 import { PersonMembershipsCard } from "./PersonMembershipsCard";
 import { PersonActionBar } from "@/components/person/PersonActionBar";
@@ -57,17 +55,12 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
   btnLöschenPerson,
   onReloadPerson,
 }) => {
- 
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const { form, update, buildSavePayload } = usePersonForm(personDetail);
-
   const [addVereinOpen, setAddVereinOpen] = useState(false);
 
+  const { form, update, buildSavePayload } = usePersonForm(personDetail);
+
   const [vereine, setVereine] = useState<VereinRef[]>([]);
-
-  const zugeordneteIds = new Set(personDetail?.mitgliedschaften.map((m) => m.verein.id));
-
-  const verfügbareVereine = vereine.filter((v) => !zugeordneteIds?.has(v.id));
 
   useEffect(() => {
     apiClient.get<VereinRef[]>("/verein").then((res) => setVereine(res.data));
@@ -81,26 +74,43 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
     );
   }
 
+  const zugeordneteIds = new Set(personDetail.mitgliedschaften.map((m) => m.verein.id));
+
+  const verfügbareVereine = vereine.filter((v) => !zugeordneteIds.has(v.id));
+
   return (
     <>
-      <PersonBaseForm form={form} editMode={editMode} mode="edit" onChange={update} />
+      <Box 
+        display="grid"
+        gridTemplateColumns={{
+          xs: "1fr",
+          sm: "repeat(2, 1fr)",
+          lg: "repeat(4, 1fr)", // 🔑 HIER die Spalten!
+        }}
+        gap={2}
+        sx={{ mt: 2 }}
+        >
+        <PersonBaseForm form={form} editMode={editMode} mode="edit" onChange={update} />
+      </Box>
 
-      <PersonMembershipsCard
-        person={personDetail}
-        editMode={editMode}
-        onSetHauptverein={onSetHauptverein}
-        onDeleteMitglied={onDeleteMitglied}
-      />
+      {/* MEMBERSHIPS */}
+      <Box maxWidth="xl" mx="auto" sx={{ mt: 3 }}>
+        <PersonMembershipsCard
+          person={personDetail}
+          editMode={editMode}
+          onSetHauptverein={onSetHauptverein}
+          onDeleteMitglied={onDeleteMitglied}
+        />
+      </Box>
 
+      {/* ACTION BAR */}
       <PersonActionBar
         editMode={editMode}
         onEdit={onEdit}
         onCancelEdit={onCancelEdit}
         onSave={async () => {
           const payload = buildSavePayload();
-          if (payload) {
-            await onSpeichern(payload);
-          }
+          if (payload) await onSpeichern(payload);
         }}
         onDelete={() => setConfirmOpen(true)}
         onBack={onStartMenue}
@@ -109,7 +119,7 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
         disableDelete={btnLöschenPerson}
       />
 
-      {/* ================= DELETE ================= */}
+      {/* ======= DELETE ======= */}
       <ConfirmDeleteDialog
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}
@@ -120,7 +130,7 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
         description={`Soll die Person „${personDetail.name}“ wirklich gelöscht werden?`}
       />
 
-      {/* ================= Add Verein ================= */}
+      {/* ======= ADD VEREIN ======= */}
       <AddMembershipDialog
         open={addVereinOpen}
         onClose={() => setAddVereinOpen(false)}

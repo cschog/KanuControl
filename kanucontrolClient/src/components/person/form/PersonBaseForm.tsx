@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, TextField, MenuItem } from "@mui/material";
+import { TextField, MenuItem } from "@mui/material";
 import { PersonSave } from "@/api/types/Person";
 import { Sex } from "@/api/enums/Sex";
 import { CountryCode } from "@/api/enums/CountryCode";
@@ -13,25 +13,11 @@ interface PersonBaseFormProps {
 }
 
 
-export const PersonBaseForm: React.FC<PersonBaseFormProps> = ({
-  form,
-  editMode,
-  mode,
-  onChange,
-}) => {
+export const PersonBaseForm: React.FC<PersonBaseFormProps> = ({ form, editMode, mode, onChange }) => {
   const showExtended = mode === "edit";
 
   return (
-    <Box
-      display="grid"
-      gridTemplateColumns={{
-        xs: "1fr",
-        sm: "repeat(2,1fr)",
-        md: mode === "create" ? "repeat(4,1fr)" : "repeat(3,1fr)",
-        lg: "repeat(4,1fr)",
-      }}
-      gap={1.25}
-    >
+    <>
       {/* Pflichtfelder – CREATE + EDIT */}
       <TextField
         label="Vorname"
@@ -165,6 +151,6 @@ export const PersonBaseForm: React.FC<PersonBaseFormProps> = ({
           />
         </>
       )}
-    </Box>
+    </>
   );
 };

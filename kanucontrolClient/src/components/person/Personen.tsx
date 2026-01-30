@@ -222,7 +222,7 @@ class Personen extends Component<Record<string, never>, PersonenState> {
               ]}
             />
           )}
-          ;{/* ✅ CREATE DIALOG */}
+          {/* ✅ CREATE DIALOG */}
           <PersonCreateDialog
             open={createDialogOpen}
             onClose={() => this.setState({ createDialogOpen: false })}

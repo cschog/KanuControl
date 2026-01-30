@@ -2,12 +2,11 @@ import { Component } from "react";
 import { MenueHeader } from "@/components/layout/MenueHeader";
 import { VereinTable } from "@/components/verein/VereinTable";
 import { VereinFormView } from "@/components/verein/VereinFormView";
-import { VereinEditForm } from "@/components/verein/VereinEditForm";
-import  Verein  from "@/api/types/VereinFormModel";
+import { VereinCreateDialog } from "@/components/verein/VereinCreateDialog";
+import Verein from "@/api/types/VereinFormModel";
 import { renderLoadingOrError } from "@/components/common/loadingOnErrorUtils";
 import { navigateToStartMenu } from "@/components/layout/navigateToStartMenue";
-
-import { MessageSavingEmptyVerein } from "@/api/services/MessageSavingEmptyVerein";
+import { BottomActionBar } from "@/components/common/BottomActionBar";
 
 import {
   getAllVereine as dbGetAllVereine,
@@ -21,12 +20,12 @@ interface VereineState {
   selectedVerein: Verein | null;
   loading: boolean;
   error: null | string;
+
   vereinFormEditMode: boolean;
-  modusNeuerVerein: boolean;
   btnLöschenIsDisabled: boolean;
   btnÄndernIsDisabled: boolean;
-  btnNeuerVereinIsDisabled: boolean;
-  //setModusNeuerVerein: boolean;
+
+  createDialogOpen: boolean;
 }
 
 class Vereine extends Component<Record<string, never>, VereineState> {
@@ -35,20 +34,13 @@ class Vereine extends Component<Record<string, never>, VereineState> {
     selectedVerein: null,
     loading: true,
     error: null,
+
     vereinFormEditMode: false,
-    modusNeuerVerein: true,
     btnLöschenIsDisabled: true,
     btnÄndernIsDisabled: true,
-    btnNeuerVereinIsDisabled: false,
-    // setModusNeuerVerein: false,
-    // setBtnLöschenIsDisabled: false,
-    // setBtnÄndernIsDisabled: false,
-    // setBtnNeuerVereinIsDisabled: true,
-    // setVereinFormEditMode: false,
+
+    createDialogOpen: false,
   };
-  btnNeuerVereinIsDisabled: boolean = false;
-  btnÄndernIsDisabled: boolean = false;
-  btnLöschenIsDisabled: boolean = false;
 
   componentDidMount() {
     this.fetchVereineData();
@@ -57,11 +49,7 @@ class Vereine extends Component<Record<string, never>, VereineState> {
   fetchVereineData = async () => {
     try {
       const vereine = await dbGetAllVereine();
-      this.setState({
-        data: vereine,
-        loading: false,
-        error: null,
-      });
+      this.setState({ data: vereine, loading: false, error: null });
     } catch {
       this.setState({
         data: [],
@@ -69,83 +57,6 @@ class Vereine extends Component<Record<string, never>, VereineState> {
         error: "An error occurred while fetching data.",
       });
     }
-  };
-
-  btnAbbruch = () => {
-    this.setState({
-      btnLöschenIsDisabled: true,
-      vereinFormEditMode: false,
-      selectedVerein: null,
-    });
-  };
-
-  btnSpeichern = async (verein: Verein) => {
-    this.setState({
-      btnLöschenIsDisabled: true,
-      btnÄndernIsDisabled: true,
-    });
-
-    const { modusNeuerVerein, selectedVerein } = this.state;
-
-    try {
-      // Perform validation check here
-      if (
-        (modusNeuerVerein && verein.name.trim() !== "" && verein.abk.trim() !== "") ||
-        (!modusNeuerVerein && selectedVerein)
-      ) {
-        if (modusNeuerVerein) {
-          await dbCreateVerein(verein);
-        } else if (selectedVerein) {
-          verein.id = selectedVerein.id;
-          await dbReplaceVerein(verein);
-        } else {
-          throw new Error("No selected Verein found.");
-        }
-
-        this.fetchVereineData();
-
-        if (!modusNeuerVerein && selectedVerein) {
-          this.setState({
-            selectedVerein: {
-              ...selectedVerein,
-              ...verein,
-            },
-          });
-        }
-
-        this.setState({
-          vereinFormEditMode: false,
-        });
-      } else {
-        MessageSavingEmptyVerein();
-      }
-    } catch (error) {
-      console.error("Error saving verein:", error);
-    }
-  };
-
-  btnNeuerVerein = () => {
-    // erzeuge einen neuen leeren Verein
-
-    const newVerein = {
-      name: "",
-      abk: "",
-      strasse: "",
-      plz: "",
-      ort: "",
-      telefon: "",
-      bankName: "",
-      iban: "",
-    };
-
-    this.setState({
-      modusNeuerVerein: true,
-      btnLöschenIsDisabled: true,
-      btnÄndernIsDisabled: true,
-      btnNeuerVereinIsDisabled: false,
-      vereinFormEditMode: true,
-      selectedVerein: newVerein,
-    });
   };
 
   handleSelectVerein = (verein: Verein | null) => {
@@ -160,6 +71,7 @@ class Vereine extends Component<Record<string, never>, VereineState> {
 
     this.setState({
       selectedVerein: verein,
+      vereinFormEditMode: false,
       btnLöschenIsDisabled: false,
       btnÄndernIsDisabled: false,
     });
@@ -170,42 +82,54 @@ class Vereine extends Component<Record<string, never>, VereineState> {
       vereinFormEditMode: true,
       btnLöschenIsDisabled: true,
       btnÄndernIsDisabled: true,
-      modusNeuerVerein: false,
+    });
+  };
+
+  cancelEdit = () => {
+    this.setState({
+      vereinFormEditMode: false,
+    });
+  };
+
+  saveVerein = async (verein: Verein) => {
+    if (!this.state.selectedVerein?.id) return;
+
+    const saved = await dbReplaceVerein({
+      ...verein,
+      id: this.state.selectedVerein.id,
+    });
+
+    await this.fetchVereineData();
+
+    this.setState({
+      selectedVerein: saved,
+      vereinFormEditMode: false,
+      btnÄndernIsDisabled: false,
+      btnLöschenIsDisabled: false,
     });
   };
 
   deleteVerein = async () => {
     const { selectedVerein } = this.state;
-    if (selectedVerein?.id !== undefined) {
-      // Check if id is defined
-      try {
-        await dbDeleteVerein(selectedVerein.id);
-        // Remove the deleted Verein from the state's data array
-        this.setState((prevState) => ({
-          data: prevState.data.filter((verein) => verein.id !== selectedVerein.id),
-          selectedVerein: null,
-          btnLöschenIsDisabled: true,
-          btnÄndernIsDisabled: true,
-        }));
-      } catch (error) {
-        // Handle error
-        console.error("Error deleting verein:", error);
-      }
-    }
-  };
+    if (!selectedVerein?.id) return;
 
-  btnStartMenue = () => {
-    navigateToStartMenu();
+    await dbDeleteVerein(selectedVerein.id);
+
+    this.setState({
+      selectedVerein: null,
+      btnLöschenIsDisabled: true,
+      btnÄndernIsDisabled: true,
+    });
+
+    await this.fetchVereineData();
   };
 
   render() {
-    const { data, selectedVerein } = this.state;
-    const { loading, error } = this.state;
-    const vereinAnz = data.length;
+    const { data, selectedVerein, loading, error, createDialogOpen } = this.state;
 
     return (
       <div>
-        <MenueHeader headerText={`${vereinAnz} Vereine`} />
+        <MenueHeader headerText={`${data.length} Vereine`} />
         {renderLoadingOrError({ loading, error })}
 
         <VereinTable
@@ -215,26 +139,54 @@ class Vereine extends Component<Record<string, never>, VereineState> {
         />
 
         <br />
-        <div>
-          {this.state.vereinFormEditMode ? (
-            <VereinEditForm
-              onSpeichern={this.btnSpeichern}
-              onAbbruch={this.btnAbbruch}
-              verein={selectedVerein || undefined}
-            />
-          ) : (
-            <VereinFormView
-              onNeuerVerein={this.btnNeuerVerein}
-              btnNeuerVerein={this.btnNeuerVereinIsDisabled}
-              onÄndernVerein={this.editVerein}
-              btnÄndernVerein={this.btnÄndernIsDisabled}
-              onDeleteVerein={this.deleteVerein}
-              btnLöschenVerein={this.btnLöschenIsDisabled}
-              onStartMenue={this.btnStartMenue}
-              selectedVerein={selectedVerein}
-            />
-          )}
-        </div>
+
+        <VereinFormView
+          verein={selectedVerein}
+          editMode={this.state.vereinFormEditMode}
+          onEdit={this.editVerein}
+          onCancelEdit={this.cancelEdit}
+          onSave={this.saveVerein}
+          onDelete={this.deleteVerein}
+          onBack={navigateToStartMenu}
+          onCsvImport={() => {
+            /* später */
+          }}
+          disableEdit={this.state.btnÄndernIsDisabled}
+          disableDelete={this.state.btnLöschenIsDisabled}
+        />
+
+        {!selectedVerein && (
+          <BottomActionBar
+            left={[
+              {
+                label: "Neuer Verein",
+                variant: "outlined",
+                onClick: () => this.setState({ createDialogOpen: true }),
+              },
+              {
+                label: "Zurück",
+                variant: "outlined",
+                onClick: navigateToStartMenu,
+              },
+            ]}
+          />
+        )}
+
+        <VereinCreateDialog
+          open={createDialogOpen}
+          onClose={() => this.setState({ createDialogOpen: false })}
+          onCreate={async (verein) => {
+            const saved = await dbCreateVerein(verein);
+            await this.fetchVereineData();
+
+            this.setState({
+              createDialogOpen: false,
+              selectedVerein: saved,
+              btnÄndernIsDisabled: false,
+              btnLöschenIsDisabled: false,
+            });
+          }}
+        />
       </div>
     );
   }
