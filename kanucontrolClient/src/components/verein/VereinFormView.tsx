@@ -1,138 +1,89 @@
-import React, { useState, useCallback } from "react";
-import {
-  Box,
-  Typography,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Snackbar,
-  Alert,
-} from "@mui/material";
-import { FormFeld } from "@/components/common/FormFeld";
-import  Verein  from "@/api/types/VereinFormModel";
-import { BottomActionBar } from "@/components/common/BottomActionBar";
+import React, { useState } from "react";
+import { Box, Typography } from "@mui/material";
+import Verein from "@/api/types/VereinFormModel";
+import { VereinBaseForm } from "./form/VereinBaseForm";
+import { VereinActionBar } from "./VereinActionBar";
+import { useVereinForm } from "./hooks/useVereinForm";
+import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
 
 interface VereinFormViewProps {
-  onNeuerVerein: () => void;
-  btnNeuerVerein: boolean;
-  onÄndernVerein: () => void;
-  btnÄndernVerein: boolean;
-  onDeleteVerein: () => void;
-  btnLöschenVerein: boolean;
-  onStartMenue: () => void;
-  selectedVerein: Verein | null;
+  verein: Verein | null;
+  editMode: boolean;
+
+  onEdit: () => void;
+  onCancelEdit: () => void;
+  onSave: (verein: Verein) => Promise<void>;
+  onDelete: () => void;
+  onBack: () => void;
+
+  onCsvImport?: () => void;
+
+  disableEdit: boolean;
+  disableDelete: boolean;
 }
 
 export const VereinFormView: React.FC<VereinFormViewProps> = ({
-  onNeuerVerein,
-  btnNeuerVerein,
-  onÄndernVerein,
-  btnÄndernVerein,
-  onDeleteVerein,
-  btnLöschenVerein,
-  onStartMenue,
-  selectedVerein,
+  verein,
+  editMode,
+  onEdit,
+  onCancelEdit,
+  onSave,
+  onDelete,
+  onBack,
+  onCsvImport,
+  disableEdit,
+  disableDelete,
 }) => {
+  const { form, update, buildSavePayload } = useVereinForm(verein);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [snackbar, setSnackbar] = useState<string | null>(null);
 
-  const handleDeleteConfirm = useCallback(() => {
-    if (!selectedVerein) return;
-
-    onDeleteVerein();
-    setConfirmOpen(false);
-    setSnackbar(`${selectedVerein.name} wurde gelöscht`);
-  }, [selectedVerein, onDeleteVerein]);
+  if (!verein || !form) {
+    return (
+      <Typography align="center" sx={{ mt: 4 }} color="text.secondary">
+        Bitte wählen Sie einen Verein aus.
+      </Typography>
+    );
+  }
 
   return (
     <>
-      {/* Container */}
-      <Box maxWidth="lg" mx="auto">
-        <Typography variant="h5" align="center" gutterBottom>
-          Vereinsdetails
-        </Typography>
-
-        {selectedVerein ? (
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: {
-                xs: "1fr",
-                sm: "1fr 1fr",
-                lg: "1fr 1fr 1fr",
-              },
-              gap: 2,
-            }}
-          >
-            <FormFeld label="Abkürzung" value={selectedVerein.abk} disabled />
-            <FormFeld label="Verein" value={selectedVerein.name} disabled />
-            <FormFeld label="Straße" value={selectedVerein.strasse} disabled />
-
-            <FormFeld label="PLZ" value={selectedVerein.plz} disabled />
-            <FormFeld label="Ort" value={selectedVerein.ort} disabled />
-            <FormFeld label="Telefon" value={selectedVerein.telefon} disabled />
-
-            <FormFeld label="Bank" value={selectedVerein.bankName} disabled />
-            <Box sx={{ gridColumn: { xs: "1", lg: "1 / -1" } }}>
-              <FormFeld label="IBAN" value={selectedVerein.iban} disabled />
-            </Box>
-          </Box>
-        ) : (
-          <Typography color="text.secondary" align="center" sx={{ mt: 2 }}>
-            Bitte wählen Sie einen Verein aus der Tabelle aus.
-          </Typography>
-        )}
+      {/* ================= FORM ================= */}
+      <Box
+        display="grid"
+        gridTemplateColumns={{
+          xs: "1fr",
+          sm: "repeat(2, 1fr)",
+          lg: "repeat(4, 1fr)", // 🔑 HIER die Spalten!
+        }}
+        gap={2}
+        sx={{ mt: 2 }}
+      >
+        <VereinBaseForm form={form} editMode={editMode} mode="edit" onChange={update} />
       </Box>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
-        <DialogTitle>Verein löschen?</DialogTitle>
-        <DialogContent>
-          {selectedVerein && `Soll der Verein "${selectedVerein.name}" wirklich gelöscht werden?`}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setConfirmOpen(false)}>Abbrechen</Button>
-          <Button color="error" onClick={handleDeleteConfirm}>
-            Löschen
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <BottomActionBar
-        left={[
-          {
-            label: "Neuer Verein",
-            onClick: onNeuerVerein,
-            disabled: btnNeuerVerein,
-          },
-          {
-            label: "Bearbeiten",
-            onClick: onÄndernVerein,
-            disabled: btnÄndernVerein || !selectedVerein,
-            variant: "outlined",
-          },
-          {
-            label: "Löschen",
-            onClick: onDeleteVerein,
-            disabled: btnLöschenVerein || !selectedVerein,
-            variant: "outlined",
-            color: "error",
-          },
-          {
-            label: "Zurück",
-            onClick: onStartMenue,
-          },
-        ]}
+      {/* ================= ACTION BAR ================= */}
+      <VereinActionBar
+        editMode={editMode}
+        onEdit={onEdit}
+        onCancelEdit={onCancelEdit}
+        onSave={async () => {
+          const payload = buildSavePayload();
+          if (payload) await onSave(payload);
+        }}
+        onDelete={() => setConfirmOpen(true)}
+        onBack={onBack}
+        onCsvImport={onCsvImport}
+        disableEdit={disableEdit}
+        disableDelete={disableDelete}
       />
 
-      {/* Snackbar */}
-      <Snackbar open={!!snackbar} autoHideDuration={4000} onClose={() => setSnackbar(null)}>
-        <Alert severity="info" onClose={() => setSnackbar(null)}>
-          {snackbar}
-        </Alert>
-      </Snackbar>
+      {/* ================= DELETE ================= */}
+      <ConfirmDeleteDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={onDelete}
+        description={`Soll der Verein „${verein.name}“ wirklich gelöscht werden?`}
+      />
     </>
   );
 };

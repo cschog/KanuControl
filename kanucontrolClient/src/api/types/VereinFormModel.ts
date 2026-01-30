@@ -1,13 +1,27 @@
-export interface VereinFormModel {
-  id?: number; // Assuming `id` is a number
+// src/api/types/VereinFormModel.ts
+
+import { PersonRef } from "@/api/types/PersonRef";
+
+export default interface VereinFormModel {
+  /** ID – nur bei READ / EDIT */
+  id?: number;
+
+  /** Pflichtfelder (Backend: @NotNull) */
   name: string;
   abk: string;
-  strasse: string;
-  plz: string;
-  ort: string;
-  telefon: string;
-  bankName: string;
-  iban: string;
-  kontoInhaber?: number;
+
+  /** Adresse */
+  strasse?: string;
+  plz?: string;
+  ort?: string;
+
+  /** Kontakt */
+  telefon?: string;
+
+  /** Bankdaten */
+  bankName?: string;
+  iban?: string;
+
+  /** 🔗 Kontoinhaber (Person) */
+  kontoinhaber?: PersonRef;
 }
-export default VereinFormModel;

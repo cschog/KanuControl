@@ -40,7 +40,7 @@ export const AddMembershipDialog: React.FC<AddMembershipDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={onClose}>
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>Verein zuordnen</DialogTitle>
 
       <DialogContent>
