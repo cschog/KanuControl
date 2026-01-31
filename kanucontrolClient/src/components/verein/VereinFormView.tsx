@@ -5,6 +5,9 @@ import { VereinBaseForm } from "./form/VereinBaseForm";
 import { VereinActionBar } from "./VereinActionBar";
 import { useVereinForm } from "./hooks/useVereinForm";
 import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
+import { KontoinhaberSelectDialog } from "@/components/verein/kontoinhaber/KontoinhaberSelectDialog";
+import { VereinSave } from "@/api/types/VereinSave";
+
 
 interface VereinFormViewProps {
   verein: Verein | null;
@@ -12,7 +15,7 @@ interface VereinFormViewProps {
 
   onEdit: () => void;
   onCancelEdit: () => void;
-  onSave: (verein: Verein) => Promise<void>;
+  onSave: (verein: VereinSave) => Promise<void>;
   onDelete: () => void;
   onBack: () => void;
 
@@ -21,6 +24,7 @@ interface VereinFormViewProps {
   disableEdit: boolean;
   disableDelete: boolean;
 }
+
 
 export const VereinFormView: React.FC<VereinFormViewProps> = ({
   verein,
@@ -36,6 +40,8 @@ export const VereinFormView: React.FC<VereinFormViewProps> = ({
 }) => {
   const { form, update, buildSavePayload } = useVereinForm(verein);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [kontoinhaberDialogOpen, setKontoinhaberDialogOpen] = useState(false);
+  
 
   if (!verein || !form) {
     return (
@@ -44,6 +50,7 @@ export const VereinFormView: React.FC<VereinFormViewProps> = ({
       </Typography>
     );
   }
+  
 
   return (
     <>
@@ -61,6 +68,13 @@ export const VereinFormView: React.FC<VereinFormViewProps> = ({
         <VereinBaseForm form={form} editMode={editMode} mode="edit" onChange={update} />
       </Box>
 
+      {/* ================= KONTOINHABER ================= */}
+      <KontoinhaberSelectDialog
+        open={kontoinhaberDialogOpen}
+        onClose={() => setKontoinhaberDialogOpen(false)}
+        onSelect={(person) => update("kontoinhaber", person)}
+      />
+
       {/* ================= ACTION BAR ================= */}
       <VereinActionBar
         editMode={editMode}
@@ -73,6 +87,7 @@ export const VereinFormView: React.FC<VereinFormViewProps> = ({
         onDelete={() => setConfirmOpen(true)}
         onBack={onBack}
         onCsvImport={onCsvImport}
+        onChangeKontoinhaber={() => setKontoinhaberDialogOpen(true)}
         disableEdit={disableEdit}
         disableDelete={disableDelete}
       />

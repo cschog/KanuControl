@@ -28,6 +28,9 @@ public class VereinDTO {
     private String bankName;
     private String iban;
 
-    /** 👤 Person-ID des Kontoinhabers */
+    /** WRITE */
     private Long kontoinhaberId;
+
+    /** READ */
+    private PersonRefDTO kontoinhaber;
 }

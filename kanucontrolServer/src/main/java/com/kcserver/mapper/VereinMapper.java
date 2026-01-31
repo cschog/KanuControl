@@ -1,16 +1,19 @@
 package com.kcserver.mapper;
 
+import com.kcserver.dto.PersonRefDTO;
 import com.kcserver.dto.VereinDTO;
+import com.kcserver.entity.Person;
 import com.kcserver.entity.Verein;
-import org.mapstruct.*;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.ReportingPolicy;
 
-@Mapper(
-        componentModel = "spring",
-        unmappedTargetPolicy = ReportingPolicy.IGNORE
-)
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface VereinMapper {
 
     @Mapping(source = "kontoinhaber.id", target = "kontoinhaberId")
+    @Mapping(source = "kontoinhaber", target = "kontoinhaber")
     VereinDTO toDTO(Verein verein);
 
     @Mapping(target = "id", ignore = true)
@@ -20,4 +23,15 @@ public interface VereinMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "kontoinhaber", ignore = true)
     void updateFromDTO(VereinDTO dto, @MappingTarget Verein verein);
+
+    // 🔑 Hilfsmapping für Anzeige
+    default PersonRefDTO map(Person person) {
+        if (person == null) return null;
+
+        PersonRefDTO dto = new PersonRefDTO();
+        dto.setId(person.getId());
+        dto.setName(person.getName());
+        dto.setVorname(person.getVorname());
+        return dto;
+    }
 }

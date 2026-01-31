@@ -1,41 +1,61 @@
+// src/components/verein/hooks/useVereinForm.ts
+import { useEffect, useState } from "react";
 import Verein from "@/api/types/VereinFormModel";
 import { VereinSave } from "@/api/types/VereinSave";
-import { useEntityForm } from "@/components/common/hooks/useEntityForm";
+import { PersonRef } from "@/api/types/PersonRef";
 
-function mapDetailToSave(v: Verein): VereinSave {
-  return {
-    id: v.id,
-    name: v.name,
-    abk: v.abk,
-    strasse: v.strasse,
-    plz: v.plz,
-    ort: v.ort,
-    telefon: v.telefon,
-    bankName: v.bankName,
-    iban: v.iban,
-    kontoinhaberId: v.kontoinhaber?.id,
-  };
-}
-
-function emptyVerein(): VereinSave {
+function emptyVerein(): Verein {
   return {
     name: "",
     abk: "",
-    strasse: "",
     plz: "",
     ort: "",
-    telefon: "",
-    bankName: "",
-    iban: "",
+    kontoinhaber: undefined,
   };
 }
 
-export function useVereinForm(initial?: Verein | null) {
-  return useEntityForm<Verein, VereinSave>(
-    initial,
-    mapDetailToSave,
-    emptyVerein,
-    (form) => form,
-    (form) => form.name.trim().length >= 2 && form.abk.trim().length >= 1,
-  );
+export function useVereinForm(initial: Verein | null) {
+  const [form, setForm] = useState<Verein | null>(null);
+
+  useEffect(() => {
+    setForm(initial ? { ...initial } : null);
+  }, [initial]);
+
+  const reset = () => setForm(emptyVerein());
+
+  const update = <K extends keyof Verein>(key: K, value: Verein[K]) => {
+    setForm((f) => (f ? { ...f, [key]: value } : f));
+  };
+
+  const setKontoinhaber = (person?: PersonRef) => {
+    setForm((f) => (f ? { ...f, kontoinhaber: person } : f));
+  };
+
+  const buildSavePayload = (): VereinSave | null => {
+    if (!form) return null;
+
+    return {
+      id: form.id,
+      name: form.name,
+      abk: form.abk,
+      strasse: form.strasse,
+      plz: form.plz,
+      ort: form.ort,
+      telefon: form.telefon,
+      bankName: form.bankName,
+      iban: form.iban,
+      kontoinhaberId: form.kontoinhaber?.id, // 🔑 HIER
+    };
+  };
+
+  const isValid = !!form && form.name.trim().length >= 2 && form.abk.trim().length >= 1;
+
+  return {
+    form,
+    update,
+    reset,
+    setKontoinhaber,
+    buildSavePayload,
+    isValid,
+  };
 }

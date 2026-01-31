@@ -1,46 +1,44 @@
 import React from "react";
-import { TextField, MenuItem } from "@mui/material";
+import { TextField, MenuItem, Checkbox, FormControlLabel } from "@mui/material";
+import { FormFeld } from "@/components/common/FormFeld";
+import { FormFeldDate } from "@/components/common/FormFeldDate";
 import { PersonSave } from "@/api/types/Person";
 import { Sex } from "@/api/enums/Sex";
 import { CountryCode } from "@/api/enums/CountryCode";
-import { Checkbox, FormControlLabel } from "@mui/material";
 
-interface PersonBaseFormProps {
+interface Props {
   form: PersonSave;
   editMode: boolean;
   mode: "create" | "edit";
   onChange: <K extends keyof PersonSave>(key: K, value: PersonSave[K]) => void;
 }
 
-
-export const PersonBaseForm: React.FC<PersonBaseFormProps> = ({ form, editMode, mode, onChange }) => {
+export const PersonBaseForm: React.FC<Props> = ({ form, editMode, mode, onChange }) => {
   const showExtended = mode === "edit";
 
   return (
     <>
-      {/* Pflichtfelder – CREATE + EDIT */}
-      <TextField
+      {/* ================= CREATE + EDIT ================= */}
+
+      <FormFeld
         label="Vorname"
-        margin="normal"
         value={form.vorname}
-        onChange={(e) => onChange("vorname", e.target.value)}
+        onChange={(v) => onChange("vorname", v)}
         disabled={!editMode}
-        required
       />
 
-      <TextField
+      <FormFeld
         label="Name"
-        margin="normal"
         value={form.name}
-        onChange={(e) => onChange("name", e.target.value)}
+        onChange={(v) => onChange("name", v)}
         disabled={!editMode}
-        required
       />
 
       <TextField
         select
+        fullWidth
+        size="small"
         label="Geschlecht"
-        margin="normal"
         value={form.sex}
         onChange={(e) => onChange("sex", e.target.value as Sex)}
         disabled={!editMode}
@@ -50,65 +48,62 @@ export const PersonBaseForm: React.FC<PersonBaseFormProps> = ({ form, editMode, 
         <MenuItem value="D">Divers</MenuItem>
       </TextField>
 
-      <TextField
-        type="date"
+      <FormFeldDate
         label="Geburtsdatum"
-        margin="normal"
         value={form.geburtsdatum ?? ""}
-        onChange={(e) => onChange("geburtsdatum", e.target.value || undefined)}
+        onChange={(v) => onChange("geburtsdatum", v || undefined)}
         disabled={!editMode}
-        InputLabelProps={{ shrink: true }}
       />
 
-      <TextField
+      <FormFeld
         label="Straße"
-        margin="normal"
-        value={form.strasse ?? ""}
-        onChange={(e) => onChange("strasse", e.target.value || undefined)}
+        value={form.strasse}
+        onChange={(v) => onChange("strasse", v || undefined)}
         disabled={!editMode}
       />
 
-      <TextField
+      <FormFeld
         label="PLZ"
-        margin="normal"
-        value={form.plz ?? ""}
-        onChange={(e) => onChange("plz", e.target.value || undefined)}
+        value={form.plz}
+        onChange={(v) => onChange("plz", v || undefined)}
         disabled={!editMode}
       />
 
-      <TextField
+      <FormFeld
         label="Ort"
-        margin="normal"
-        value={form.ort ?? ""}
-        onChange={(e) => onChange("ort", e.target.value || undefined)}
+        value={form.ort}
+        onChange={(v) => onChange("ort", v || undefined)}
         disabled={!editMode}
       />
 
-      {/* NUR IM EDIT */}
+      {/* ================= NUR EDIT ================= */}
       {showExtended && (
         <>
-          <TextField
+          <FormFeld
             label="E-Mail"
-            value={form.email ?? ""}
-            onChange={(e) => onChange("email", e.target.value || undefined)}
+            value={form.email}
+            onChange={(v) => onChange("email", v || undefined)}
             disabled={!editMode}
           />
 
-          <TextField
+          <FormFeld
             label="Telefon"
-            value={form.telefon ?? ""}
-            onChange={(e) => onChange("telefon", e.target.value || undefined)}
+            value={form.telefon}
+            onChange={(v) => onChange("telefon", v || undefined)}
             disabled={!editMode}
           />
 
-          <TextField
+          <FormFeld
             label="Telefon (Festnetz)"
-            value={form.telefonFestnetz ?? ""}
-            onChange={(e) => onChange("telefonFestnetz", e.target.value || undefined)}
+            value={form.telefonFestnetz}
+            onChange={(v) => onChange("telefonFestnetz", v || undefined)}
             disabled={!editMode}
           />
+
           <TextField
             select
+            fullWidth
+            size="small"
             label="Land"
             value={form.countryCode ?? ""}
             onChange={(e) =>
@@ -118,7 +113,6 @@ export const PersonBaseForm: React.FC<PersonBaseFormProps> = ({ form, editMode, 
               )
             }
             disabled={!editMode}
-            fullWidth
           >
             <MenuItem value="">–</MenuItem>
             <MenuItem value="DE">Deutschland</MenuItem>
@@ -126,20 +120,22 @@ export const PersonBaseForm: React.FC<PersonBaseFormProps> = ({ form, editMode, 
             <MenuItem value="BE">Belgien</MenuItem>
           </TextField>
 
-          <TextField
+          <FormFeld
             label="Bank"
-            value={form.bankName ?? ""}
-            onChange={(e) => onChange("bankName", e.target.value || undefined)}
+            value={form.bankName}
+            onChange={(v) => onChange("bankName", v || undefined)}
             disabled={!editMode}
           />
 
-          <TextField
+          <FormFeld
             label="IBAN"
-            value={form.iban ?? ""}
-            onChange={(e) => onChange("iban", e.target.value || undefined)}
+            value={form.iban}
+            onChange={(v) => onChange("iban", v || undefined)}
             disabled={!editMode}
           />
+
           <FormControlLabel
+            label="Aktiv"
             control={
               <Checkbox
                 checked={form.aktiv ?? true}
@@ -147,7 +143,6 @@ export const PersonBaseForm: React.FC<PersonBaseFormProps> = ({ form, editMode, 
                 disabled={!editMode}
               />
             }
-            label="Aktiv"
           />
         </>
       )}
