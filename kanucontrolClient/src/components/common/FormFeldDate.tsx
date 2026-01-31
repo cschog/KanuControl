@@ -1,3 +1,4 @@
+// components/common/FormFeldDate.tsx
 import { TextField } from "@mui/material";
 import { normalizeGermanDate } from "@/utils/dateUtils";
 
@@ -5,12 +6,15 @@ interface FormFeldDateProps {
   label: string;
   value: string;
   onChange: (value: string) => void;
+  disabled?: boolean;
 }
 
-export function FormFeldDate({ label, value, onChange }: FormFeldDateProps) {
-  const safeValue = value ?? ""; // 🔑 HIER
+export function FormFeldDate({ label, value, onChange, disabled = false }: FormFeldDateProps) {
+  const safeValue = value ?? "";
 
   const handleBlur = () => {
+    if (disabled) return;
+
     const normalized = normalizeGermanDate(safeValue);
     if (normalized !== null) {
       onChange(normalized);
@@ -20,13 +24,13 @@ export function FormFeldDate({ label, value, onChange }: FormFeldDateProps) {
   return (
     <TextField
       fullWidth
+      size="small"
       label={label}
-      value={safeValue} // 🔑 NIE null
+      value={safeValue}
+      disabled={disabled}
       onChange={(e) => onChange(e.target.value)}
       onBlur={handleBlur}
       placeholder="TT.MM.JJJJ"
-      helperText="z.B. 28.08.1955 oder 28.8.55"
-      size="small"
     />
   );
 }

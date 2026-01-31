@@ -1,12 +1,13 @@
 import React from "react";
 import { FormFeld } from "@/components/common/FormFeld";
-import { VereinSave } from "@/api/types/VereinSave";
+
+import Verein from "@/api/types/VereinFormModel";
 
 interface Props {
-  form: VereinSave;
+  form: Verein;
   editMode: boolean;
   mode: "create" | "edit";
-  onChange: <K extends keyof VereinSave>(key: K, value: VereinSave[K]) => void;
+  onChange: <K extends keyof Verein>(key: K, value: Verein[K]) => void;
 }
 
 export const VereinBaseForm: React.FC<Props> = ({ form, editMode, mode, onChange }) => {
@@ -14,7 +15,7 @@ export const VereinBaseForm: React.FC<Props> = ({ form, editMode, mode, onChange
 
   return (
     <>
-      {/* CREATE + EDIT */}
+      {/* CREATE */}
       <FormFeld
         label="Abkürzung"
         value={form.abk}
@@ -72,6 +73,14 @@ export const VereinBaseForm: React.FC<Props> = ({ form, editMode, mode, onChange
             value={form.iban ?? ""}
             onChange={(v) => onChange("iban", v)}
             disabled={!editMode}
+          />
+
+          <FormFeld
+            label="Kontoinhaber"
+            value={
+              form.kontoinhaber ? `${form.kontoinhaber.name}, ${form.kontoinhaber.vorname}` : ""
+            }
+            disabled
           />
         </>
       )}

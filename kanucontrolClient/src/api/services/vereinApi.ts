@@ -1,5 +1,6 @@
 import apiClient from "@/api/client/apiClient";
 import Verein from "@/api/types/VereinFormModel";
+import { VereinSave } from "@/api/types/VereinSave";
 
 const BASE = "/verein";
 
@@ -8,18 +9,13 @@ export const getAllVereine = async (): Promise<Verein[]> => {
   return data;
 };
 
-export const createVerein = async (verein: Verein): Promise<Verein> => {
+export const createVerein = async (verein: VereinSave): Promise<Verein> => {
   const { data } = await apiClient.post<Verein>(BASE, verein);
   return data;
 };
 
-export const updateVerein = async (verein: Verein): Promise<Verein> => {
-  if (!verein.id) {
-    throw new Error("Verein ID is missing");
-  }
-
-  const { data } = await apiClient.put<Verein>(`${BASE}/${verein.id}`, verein);
-
+export const updateVerein = async (id: number, payload: VereinSave): Promise<Verein> => {
+  const { data } = await apiClient.put<Verein>(`${BASE}/${id}`, payload);
   return data;
 };
 

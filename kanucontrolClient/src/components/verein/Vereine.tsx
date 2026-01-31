@@ -7,6 +7,7 @@ import Verein from "@/api/types/VereinFormModel";
 import { renderLoadingOrError } from "@/components/common/loadingOnErrorUtils";
 import { navigateToStartMenu } from "@/components/layout/navigateToStartMenue";
 import { BottomActionBar } from "@/components/common/BottomActionBar";
+import { VereinSave } from "@/api/types/VereinSave";
 
 import {
   getAllVereine as dbGetAllVereine,
@@ -91,13 +92,10 @@ class Vereine extends Component<Record<string, never>, VereineState> {
     });
   };
 
-  saveVerein = async (verein: Verein) => {
+  saveVerein = async (verein: VereinSave) => {
     if (!this.state.selectedVerein?.id) return;
 
-    const saved = await dbReplaceVerein({
-      ...verein,
-      id: this.state.selectedVerein.id,
-    });
+    const saved = await dbReplaceVerein(this.state.selectedVerein.id, verein);
 
     await this.fetchVereineData();
 
