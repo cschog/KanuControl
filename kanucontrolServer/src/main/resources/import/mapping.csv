@@ -1,4 +1,13 @@
 csv_column;target_field;converter
+csv_column;target_field;converter
+# Vorname der Person;Vorname;
+# Nachname der Person;Nachname;
+# Geschlecht (M/W/D);Geschlecht;sex_de
+# Geburtsdatum;Geburtsdatum;date_de
+# Straße;Adresse;
+# Postleitzahl;PLZ;
+# Ort;Ort;
+# E-Mail;E-Mail;
 Vorname;vorname;
 Nachname;name;
 Geschlecht;sex;sex_de

@@ -1,7 +1,5 @@
-package com.kcserver.controller;
+package com.kcserver.csv;
 
-import com.kcserver.csv.CsvImportReport;
-import com.kcserver.csv.CsvImportService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -22,14 +20,18 @@ public class CsvImportController {
     public ResponseEntity<CsvImportReport> importCsv(
             @PathVariable Long vereinId,
             @RequestParam("csv") MultipartFile csv,
-            @RequestParam("mapping") MultipartFile mapping,
+
+            // ✅ mapping optional
+            @RequestParam(value = "mapping", required = false)
+            MultipartFile mapping,
+
             @RequestParam(defaultValue = "true") boolean dryRun
     ) throws Exception {
 
         CsvImportReport report =
                 importService.importCsv(
                         csv.getInputStream(),
-                        mapping.getInputStream(),
+                        mapping != null ? mapping.getInputStream() : null,
                         vereinId,
                         dryRun
                 );

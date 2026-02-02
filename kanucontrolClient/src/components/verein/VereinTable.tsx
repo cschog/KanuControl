@@ -1,5 +1,5 @@
 // components/verein/VereinTable.tsx
-import { Verein } from "@/api/types/VereinFormModel";
+import  Verein  from "@/api/types/VereinFormModel";
 import { GenericTable } from "@/components/common/GenericTable";
 import { vereinColumns, VereinWithId } from "./vereinColumns";
 
@@ -29,7 +29,7 @@ export const VereinTable: React.FC<VereinTableProps> = ({
       columns={vereinColumns}
       selectedRow={selectedRow}
       onSelectRow={onSelectVerein}
-      initialSortModel={[{ field: "abk", sort: "asc" }]}
+      initialSortField="abk" // ✅ RICHTIG
     />
   );
 };

@@ -7,13 +7,12 @@ import com.kcserver.dto.PersonSearchCriteria;
 import com.kcserver.service.PersonService;
 import com.kcserver.validation.OnCreate;
 import com.kcserver.validation.OnUpdate;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/person")
@@ -26,24 +25,24 @@ public class PersonController {
     }
 
     /* =========================
-       LIST
+       LIST (PAGINIERT)
        ========================= */
 
     @GetMapping
-    public List<PersonListDTO> getAll(Pageable pageable) {
-        return personService.getAll(pageable).getContent();
+    public Page<PersonListDTO> getAll(Pageable pageable) {
+        return personService.getAll(pageable);
     }
 
     /* =========================
-       SEARCH  ← 🔑 WICHTIG
+       SEARCH (PAGINIERT)
        ========================= */
 
     @GetMapping("/search")
-    public List<PersonListDTO> search(
+    public Page<PersonListDTO> search(
             PersonSearchCriteria criteria,
             Pageable pageable
     ) {
-        return personService.searchList(criteria, pageable).getContent();
+        return personService.searchList(criteria, pageable);
     }
 
     /* =========================
@@ -56,7 +55,7 @@ public class PersonController {
     }
 
     /* =========================
-       CREATE / UPDATE
+       CREATE
        ========================= */
 
     @PostMapping
@@ -67,6 +66,10 @@ public class PersonController {
                 .status(HttpStatus.CREATED)
                 .body(personService.createPerson(dto));
     }
+
+    /* =========================
+       UPDATE
+       ========================= */
 
     @PutMapping("/{id}")
     public PersonDetailDTO updatePerson(

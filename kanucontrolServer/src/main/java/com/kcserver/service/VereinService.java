@@ -57,17 +57,20 @@ public class VereinService {
     @Transactional(readOnly = true)
     public List<VereinDTO> search(String name, String abk, Pageable pageable) {
 
-        Specification<Verein> spec = Specification.where(null);
+        Specification<Verein> spec = Specification.allOf(
+                name != null && !name.isBlank()
+                        ? (root, query, cb) ->
+                        cb.like(
+                                cb.lower(root.get("name")),
+                                "%" + name.toLowerCase() + "%"
+                        )
+                        : null,
 
-        if (name != null && !name.isBlank()) {
-            spec = spec.and((root, query, cb) ->
-                    cb.like(cb.lower(root.get("name")), "%" + name.toLowerCase() + "%"));
-        }
-
-        if (abk != null && !abk.isBlank()) {
-            spec = spec.and((root, query, cb) ->
-                    cb.equal(root.get("abk"), abk));
-        }
+                abk != null && !abk.isBlank()
+                        ? (root, query, cb) ->
+                        cb.equal(root.get("abk"), abk)
+                        : null
+        );
 
         return vereinRepository.findAll(spec, pageable)
                 .map(vereinMapper::toDTO)

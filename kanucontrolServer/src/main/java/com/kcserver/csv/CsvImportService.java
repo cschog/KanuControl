@@ -3,13 +3,17 @@ package com.kcserver.csv;
 import com.kcserver.dto.PersonSaveDTO;
 import com.kcserver.service.MitgliedService;
 import com.kcserver.service.PersonService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVRecord;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import java.io.BufferedInputStream;
 import java.io.InputStream;
+import java.io.Reader;
 import java.util.List;
+import java.util.Set;
 
+@Slf4j
 @Service
 public class CsvImportService {
 
@@ -24,7 +28,6 @@ public class CsvImportService {
         this.mitgliedService = mitgliedService;
     }
 
-    @Transactional
     public CsvImportReport importCsv(
             InputStream csv,
             InputStream mapping,
@@ -34,8 +37,35 @@ public class CsvImportService {
 
         CsvImportReport report = new CsvImportReport();
 
-        CsvMappingConfig config = CsvMappingConfig.load(mapping);
-        List<CSVRecord> records = CsvReader.read(csv);
+        CsvMappingConfig config =
+                mapping != null
+                        ? CsvMappingConfig.load(mapping)
+                        : CsvMappingConfig.defaultMapping();
+
+        InputStream csvStream = new BufferedInputStream(csv);
+
+// 🔑 HIER passiert alles Wichtige
+        Reader reader = CsvEncoding.reader(csvStream);
+
+// 🔑 CsvReader bekommt NUR noch Reader
+        List<CSVRecord> records = CsvReader.read(reader);
+
+        // ✅ 1. Leere CSV abfangen
+        if (records.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Die CSV-Datei enthält keine Mitgliedsdaten. "
+                            + "Bitte prüfen Sie, ob unter der Kopfzeile mindestens eine Datenzeile vorhanden ist."
+            );
+        }
+
+        // ✅ 2. Header-Validierung
+        Set<String> headers = records.get(0).toMap().keySet();
+
+        if (!headers.contains("Vorname")) {
+            throw new IllegalArgumentException(
+                    "CSV-Header ungültig oder unerwartet – Spalte 'Vorname' fehlt"
+            );
+        }
 
         report.setTotalRows(records.size());
 
@@ -56,9 +86,11 @@ public class CsvImportService {
                             created.getId(),
                             vereinId
                     );
-                }
 
-                report.incrementCreated();
+                    report.incrementCreated();
+                } else {
+                    report.incrementSimulated();
+                }
 
             } catch (Exception ex) {
                 report.addError(rowNumber, ex.getMessage());
@@ -70,6 +102,9 @@ public class CsvImportService {
                         - report.getCreated()
                         - report.getErrors()
         );
+
+        log.info("CSV Import abgeschlossen: dryRun={}, created={}, errors={}",
+                dryRun, report.getCreated(), report.getErrors());
 
         return report;
     }

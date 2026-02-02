@@ -59,6 +59,15 @@ public class JwtTenantFilter
         }
     }
 
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+
+        return path.equals("/api/csv-import/mapping-template")
+                || path.startsWith("/actuator")
+                || path.startsWith("/error");
+    }
+
     private String extractTenant(Jwt jwt) {
         // 1️⃣ expliziter Claim
         String tenant = jwt.getClaimAsString("tenant");

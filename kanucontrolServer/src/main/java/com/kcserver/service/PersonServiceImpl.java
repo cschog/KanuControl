@@ -170,9 +170,14 @@ public class PersonServiceImpl implements PersonService {
     ) {
         return personRepository
                 .findAll(PersonSpecification.byCriteria(criteria), pageable)
-                .map(personMapper::toListDTO);
+                .map(p -> {
+                    PersonListDTO dto = personMapper.toListDTO(p);
+                    dto.setMitgliedschaftenCount(
+                            p.getMitgliedschaften() == null ? 0 : p.getMitgliedschaften().size()
+                    );
+                    return dto;
+                });
     }
-
     /* =========================================================
        Mitgliedschaften synchronisieren
        ========================================================= */

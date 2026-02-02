@@ -10,6 +10,40 @@ public class CsvMappingConfig {
 
     private final Map<String, CsvFieldMapping> byTargetField = new HashMap<>();
 
+    /* =====================================================
+       DEFAULT MAPPING
+       ===================================================== */
+
+    public static CsvMappingConfig defaultMapping() {
+
+        CsvMappingConfig cfg = new CsvMappingConfig();
+
+        cfg.put("vorname", "Vorname", null);
+        cfg.put("name", "Nachname", null);
+        cfg.put("sex", "Geschlecht", "sex_de");
+        cfg.put("geburtsdatum", "Geburtsdatum", "date_de");
+
+        cfg.put("telefon", "Telefon Mobil", null);
+        cfg.put("telefonFestnetz", "Telefon Privat", null);
+        cfg.put("email", "E-Mail", null);
+
+        cfg.put("strasse", "Adresse", null);
+        cfg.put("plz", "PLZ", null);
+        cfg.put("ort", "Ort", null);
+
+        return cfg;
+    }
+
+    private void put(String targetField, String csvColumn, String converter) {
+        byTargetField.put(
+                targetField.trim(),
+                new CsvFieldMapping(csvColumn.trim(), targetField.trim(), converter)
+        );
+    }
+
+    /* =====================================================
+       EXISTIERENDER CODE (unverändert)
+       ===================================================== */
     public static CsvMappingConfig load(InputStream mappingCsv) {
 
         CsvMappingConfig cfg = new CsvMappingConfig();

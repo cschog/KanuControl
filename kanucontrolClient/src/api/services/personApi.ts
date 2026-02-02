@@ -1,25 +1,44 @@
 import apiClient from "@/api/client/apiClient";
-
 import { PersonList, PersonSave, PersonDetail, PersonSearchParams } from "@/api/types/Person";
+import { Page } from "@/api/types/Page";
+import { PersonFilterState } from "@/components/person/Personen";
 
 const BASE = "/person";
 
 /* =========================
- * READ
+ * READ (PAGINATED)
  * ========================= */
 
-export const getAllPersonen = async (): Promise<PersonList[]> => {
-  const { data } = await apiClient.get<PersonList[]>(BASE);
+/**
+ * 🔑 Standard-Liste (paginiert)
+ */
+export const getPersonenPage = async (page = 0, size = 20, filters?: PersonFilterState) => {
+  const { data } = await apiClient.get("/person/search", {
+    params: {
+      page,
+      size,
+      ...(filters ?? {}),
+    },
+  });
+
   return data;
 };
 
-export const searchPersons = async (params: PersonSearchParams): Promise<PersonList[]> => {
-  const { data } = await apiClient.get<PersonList[]>(`${BASE}/search`, {
+/**
+ * 🔍 Suche (paginiert)
+ */
+export const searchPersonsPage = async (
+  params: PersonSearchParams & { page?: number; size?: number },
+): Promise<Page<PersonList>> => {
+  const { data } = await apiClient.get<Page<PersonList>>(`${BASE}/search`, {
     params,
   });
   return data;
 };
 
+/**
+ * 🔎 Detail
+ */
 export const getPersonById = async (id: number): Promise<PersonDetail> => {
   const { data } = await apiClient.get<PersonDetail>(`${BASE}/${id}`);
   return data;
@@ -29,24 +48,19 @@ export const getPersonById = async (id: number): Promise<PersonDetail> => {
  * CREATE
  * ========================= */
 
-export async function createPerson(
-  payload: PersonSave, // ✅
-): Promise<PersonDetail> {
-  const res = await apiClient.post<PersonDetail>("/person", payload);
-  return res.data;
-}
+export const createPerson = async (payload: PersonSave): Promise<PersonDetail> => {
+  const { data } = await apiClient.post<PersonDetail>(BASE, payload);
+  return data;
+};
 
 /* =========================
  * UPDATE
  * ========================= */
 
-export async function updatePerson(
-  id: number,
-  payload: PersonSave, // ✅ RICHTIG
-): Promise<PersonDetail> {
-  const res = await apiClient.put<PersonDetail>(`/person/${id}`, payload);
-  return res.data;
-}
+export const updatePerson = async (id: number, payload: PersonSave): Promise<PersonDetail> => {
+  const { data } = await apiClient.put<PersonDetail>(`${BASE}/${id}`, payload);
+  return data;
+};
 
 /* =========================
  * DELETE

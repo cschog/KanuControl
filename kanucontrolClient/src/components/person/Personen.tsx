@@ -8,22 +8,32 @@ import { PersonList, PersonSave, PersonDetail } from "@/api/types/Person";
 import { getPersonById } from "@/api/services/personApi";
 import apiClient from "@/api/client/apiClient";
 import { PersonCreateDialog } from "@/components/person/PersonCreateDialog";
-// import { Button } from "@mui/material";
+import { Box } from "@mui/material";
 import { BottomActionBar } from "@/components/common/BottomActionBar";
+import { VereinRef } from "@/api/types/VereinRef";
+import { PersonFilterBar } from "@/components/person/PersonFilterBar";
 
 import {
-  getAllPersonen as dbGetAllPersonen,
+  getPersonenPage,
   deletePerson as dbDeletePerson,
   createPerson as dbCreatePerson,
   updatePerson as dbReplacePerson,
 } from "@/api/services/personApi";
 
-interface PersonenState {
+export interface PersonenState {
   data: PersonList[];
-  selectedPerson: PersonDetail | null; // 🔑 Detail im UI
-  draftPerson: PersonSave | null; // 🔑 Formularzustand
+  total: number;
+  page: number;
+  pageSize: number;
+
+  vereine: VereinRef[]; // ✅ HIER
+  filters: PersonFilterState; // ✅ HIER
+
+  selectedPerson: PersonDetail | null;
+  draftPerson: PersonSave | null;
   loading: boolean;
   error: null | string;
+
   personFormEditMode: boolean;
   btnLöschenIsDisabled: boolean;
   btnÄndernIsDisabled: boolean;
@@ -31,9 +41,24 @@ interface PersonenState {
   createDialogOpen: boolean;
 }
 
+export interface PersonFilterState {
+  name?: string;
+  vorname?: string;
+  vereinId?: number;
+  aktiv?: boolean;
+}
+
 class Personen extends Component<Record<string, never>, PersonenState> {
-  state: PersonenState = {
+  state: PersonenState & { filters: PersonFilterState } = {
     data: [],
+    total: 0,
+    page: 0,
+    pageSize: 20,
+
+    vereine: [],
+
+    filters: {},
+
     selectedPerson: null,
     draftPerson: null,
     loading: true,
@@ -45,15 +70,24 @@ class Personen extends Component<Record<string, never>, PersonenState> {
     createDialogOpen: false,
   };
 
-  componentDidMount() {
-    this.fetchPersonenData();
+  async componentDidMount() {
+    await Promise.all([this.fetchPersonenData(), this.fetchVereine()]);
   }
 
+  fetchVereine = async () => {
+    const res = await apiClient.get<VereinRef[]>("/verein");
+    this.setState({ vereine: res.data });
+  };
+
   fetchPersonenData = async () => {
+    const { page, pageSize, filters } = this.state;
+
     try {
-      const personen = await dbGetAllPersonen();
+      const res = await getPersonenPage(page, pageSize, filters);
+
       this.setState({
-        data: personen,
+        data: res.content,
+        total: res.totalElements,
         loading: false,
         error: null,
       });
@@ -61,9 +95,17 @@ class Personen extends Component<Record<string, never>, PersonenState> {
       this.setState({
         data: [],
         loading: false,
-        error: "An error occurred while fetching data.",
+        error: "Fehler beim Laden der Personen",
       });
     }
+  };
+
+  handlePageChange = (page: number) => {
+    this.setState({ page, loading: true }, this.fetchPersonenData);
+  };
+
+  handlePageSizeChange = (pageSize: number) => {
+    this.setState({ pageSize, page: 0, loading: true }, this.fetchPersonenData);
   };
 
   // ↓↓↓ alle weiteren Methoden ganz normal ↓↓↓
@@ -169,24 +211,44 @@ class Personen extends Component<Record<string, never>, PersonenState> {
 
   reloadSelectedPerson = async () => {
     const fresh = await getPersonById(this.state.selectedPerson!.id);
-
-   this.setState({ selectedPerson: fresh });
+    this.setState({ selectedPerson: fresh });
   };
 
   render() {
-    const { data, selectedPerson, loading, error, createDialogOpen } = this.state;
+    const { data, total, selectedPerson, loading, error, createDialogOpen } = this.state;
 
-    const personAnz = data.length;
+    const personAnz = typeof total === "number" ? total : 0;
 
     // console.log("RENDER Personen – data:", data);
 
     return (
       <div>
-        <MenueHeader headerText={`${personAnz} Personen`} />
+        <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+          flexWrap="wrap"
+          gap={2}
+          mb={2}
+        >
+          <MenueHeader headerText={`${personAnz} Personen`} />
+          <PersonFilterBar
+            filters={this.state.filters}
+            vereine={this.state.vereine}
+            onChange={(filters: PersonFilterState) =>
+              this.setState({ filters, page: 0, loading: true }, this.fetchPersonenData)
+            }
+          />
+        </Box>
         {renderLoadingOrError({ loading, error })}
 
         <PersonTable
           data={data}
+          total={this.state.total}
+          page={this.state.page}
+          pageSize={this.state.pageSize}
+          onPageChange={this.handlePageChange}
+          onPageSizeChange={this.handlePageSizeChange}
           selectedPersonId={selectedPerson?.id ?? null}
           onSelectPerson={this.handleSelectPerson}
         />
@@ -242,7 +304,6 @@ class Personen extends Component<Record<string, never>, PersonenState> {
         </div>
       </div>
     );
-    
   }
 }
 

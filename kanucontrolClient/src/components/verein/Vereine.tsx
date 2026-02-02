@@ -8,6 +8,7 @@ import { renderLoadingOrError } from "@/components/common/loadingOnErrorUtils";
 import { navigateToStartMenu } from "@/components/layout/navigateToStartMenue";
 import { BottomActionBar } from "@/components/common/BottomActionBar";
 import { VereinSave } from "@/api/types/VereinSave";
+import { VereinCsvImportDialog } from "@/components/verein/import/VereinCsvImportDialog";
 
 import {
   getAllVereine as dbGetAllVereine,
@@ -27,21 +28,23 @@ interface VereineState {
   btnÄndernIsDisabled: boolean;
 
   createDialogOpen: boolean;
+  csvImportOpen: boolean;   // ✅ HIER
 }
 
 class Vereine extends Component<Record<string, never>, VereineState> {
   state: VereineState = {
-    data: [],
-    selectedVerein: null,
-    loading: true,
-    error: null,
+  data: [],
+  selectedVerein: null,
+  loading: true,
+  error: null,
 
-    vereinFormEditMode: false,
-    btnLöschenIsDisabled: true,
-    btnÄndernIsDisabled: true,
+  vereinFormEditMode: false,
+  btnLöschenIsDisabled: true,
+  btnÄndernIsDisabled: true,
 
-    createDialogOpen: false,
-  };
+  createDialogOpen: false,
+  csvImportOpen: false,     // ✅ HIER
+};
 
   componentDidMount() {
     this.fetchVereineData();
@@ -122,8 +125,10 @@ class Vereine extends Component<Record<string, never>, VereineState> {
     await this.fetchVereineData();
   };
 
+
   render() {
     const { data, selectedVerein, loading, error, createDialogOpen } = this.state;
+  
 
     return (
       <div>
@@ -146,9 +151,7 @@ class Vereine extends Component<Record<string, never>, VereineState> {
           onSave={this.saveVerein}
           onDelete={this.deleteVerein}
           onBack={navigateToStartMenu}
-          onCsvImport={() => {
-            /* später */
-          }}
+          onCsvImport={() => this.setState({ csvImportOpen: true })}
           disableEdit={this.state.btnÄndernIsDisabled}
           disableDelete={this.state.btnLöschenIsDisabled}
         />
@@ -167,6 +170,14 @@ class Vereine extends Component<Record<string, never>, VereineState> {
                 onClick: navigateToStartMenu,
               },
             ]}
+          />
+        )}
+
+        {selectedVerein?.id !== undefined && (
+          <VereinCsvImportDialog
+            open={this.state.csvImportOpen}
+            vereinId={selectedVerein.id}
+            onClose={() => this.setState({ csvImportOpen: false })}
           />
         )}
 

@@ -32,8 +32,7 @@ class PersonReadTest extends AbstractTenantIntegrationTest {
     MockMvc mockMvc;
 
     @Autowired
-    ObjectMapper objectMapper; // ✅ DAS fehlte
-
+    ObjectMapper objectMapper;
 
     @Test
     void getAllPersons_returnsList() throws Exception {
@@ -45,15 +44,15 @@ class PersonReadTest extends AbstractTenantIntegrationTest {
                 "Max",
                 "Mustermann",
                 LocalDate.of(1990, 1, 1),
-                null   // 👈 kein Verein nötig für diesen Test
+                null
         );
 
         mockMvc.perform(
                         tenantRequest(get("/api/person"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].vorname").value(hasItem("Max")))
-                .andExpect(jsonPath("$[*].name").value(hasItem("Mustermann")));
+                .andExpect(jsonPath("$.content[*].vorname").value(hasItem("Max")))
+                .andExpect(jsonPath("$.content[*].name").value(hasItem("Mustermann")));
     }
 
     @Test
@@ -96,12 +95,11 @@ class PersonReadTest extends AbstractTenantIntegrationTest {
                         tenantRequest(get("/api/person"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").exists())
-                .andExpect(jsonPath("$[0].vorname").exists())
-                .andExpect(jsonPath("$[0].name").exists())
-                // 🔒 darf NICHT existieren
-                .andExpect(jsonPath("$[0].mitgliedschaften").doesNotExist())
-                .andExpect(jsonPath("$[0].mitgliedschaftenCount").exists());
+                .andExpect(jsonPath("$.content[0].id").exists())
+                .andExpect(jsonPath("$.content[0].vorname").exists())
+                .andExpect(jsonPath("$.content[0].name").exists())
+                .andExpect(jsonPath("$.content[0].mitgliedschaften").doesNotExist())
+                .andExpect(jsonPath("$.content[0].mitgliedschaftenCount").exists());
     }
 
     @Test
@@ -125,7 +123,6 @@ class PersonReadTest extends AbstractTenantIntegrationTest {
                 null
         );
 
-        // Mitglied anlegen
         MitgliedDTO m = new MitgliedDTO();
         m.setPersonId(personId);
         m.setVereinId(vereinId);
@@ -144,8 +141,10 @@ class PersonReadTest extends AbstractTenantIntegrationTest {
                 .andExpect(jsonPath("$.id").value(personId))
                 .andExpect(jsonPath("$.mitgliedschaften").isArray())
                 .andExpect(jsonPath("$.mitgliedschaften[0].verein.id").value(vereinId))
-                .andExpect(jsonPath("$.mitgliedschaften[0].verein.name").value("Eschweiler Kanu Club"));
+                .andExpect(jsonPath("$.mitgliedschaften[0].verein.name")
+                        .value("Eschweiler Kanu Club"));
     }
+
     @Test
     void personList_mustNeverContainVereinIdNull() throws Exception {
 
@@ -153,7 +152,6 @@ class PersonReadTest extends AbstractTenantIntegrationTest {
                         tenantRequest(get("/api/person"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].vereinId").doesNotExist());
+                .andExpect(jsonPath("$.content[*].vereinId").doesNotExist());
     }
-
 }

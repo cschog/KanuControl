@@ -27,8 +27,16 @@ export const personColumns: GridColDef<PersonWithId>[] = [
   },
   {
     field: "mitgliedschaftenCount",
-    headerName: "#",
-    flex: 0.1,
-    type: "number",
+    headerName: "Vereine",
+    width: 90,
+    align: "center",
+    headerAlign: "center",
+
+    valueFormatter: (value) => {
+      if (typeof value !== "number" || value <= 1) {
+        return ""; // ✅ nichts anzeigen bei 0 oder 1
+      }
+      return value;
+    },
   },
 ];

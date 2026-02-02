@@ -16,21 +16,41 @@ public class PersonSpecification {
     public static Specification<Person> byCriteria(PersonSearchCriteria c) {
         return (root, query, cb) -> {
 
-            query.distinct(true);
+            if (query != null && !Long.class.equals(query.getResultType())) {
+                query.distinct(true);
+            }
             Predicate predicate = cb.conjunction();
 
-            // Name
-            if (hasText(c.getName())) {
-                predicate = cb.and(predicate,
-                        cb.like(cb.lower(root.get("name")),
-                                "%" + c.getName().toLowerCase() + "%"));
+            // =========================
+// Name / Vorname (Kombifeld)
+// =========================
+            if (hasText(c.getName()) && !hasText(c.getVorname())) {
+
+                String like = "%" + c.getName().toLowerCase() + "%";
+
+                Predicate nameLike = cb.like(
+                        cb.lower(root.get("name")),
+                        like
+                );
+
+                Predicate vornameLike = cb.like(
+                        cb.lower(root.get("vorname")),
+                        like
+                );
+
+                predicate = cb.and(predicate, cb.or(nameLike, vornameLike));
             }
 
-            // Vorname
+// =========================
+// Vorname separat
+// =========================
             if (hasText(c.getVorname())) {
                 predicate = cb.and(predicate,
-                        cb.like(cb.lower(root.get("vorname")),
-                                "%" + c.getVorname().toLowerCase() + "%"));
+                        cb.like(
+                                cb.lower(root.get("vorname")),
+                                "%" + c.getVorname().toLowerCase() + "%"
+                        )
+                );
             }
 
             // Sex
