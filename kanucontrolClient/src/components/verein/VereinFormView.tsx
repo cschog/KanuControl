@@ -25,7 +25,6 @@ interface VereinFormViewProps {
   disableDelete: boolean;
 }
 
-
 export const VereinFormView: React.FC<VereinFormViewProps> = ({
   verein,
   editMode,
@@ -41,7 +40,6 @@ export const VereinFormView: React.FC<VereinFormViewProps> = ({
   const { form, update, buildSavePayload } = useVereinForm(verein);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [kontoinhaberDialogOpen, setKontoinhaberDialogOpen] = useState(false);
-  
 
   if (!verein || !form) {
     return (

@@ -9,6 +9,7 @@ import java.util.List;
 public class CsvImportReport {
 
     private int totalRows;
+    private int simulated;
     private int created;
     private int skipped;
 
@@ -20,6 +21,10 @@ public class CsvImportReport {
 
     public void incrementCreated() {
         this.created++;
+    }
+
+    public void incrementSimulated() {
+        simulated++;
     }
 
     public void setSkipped(int skipped) {

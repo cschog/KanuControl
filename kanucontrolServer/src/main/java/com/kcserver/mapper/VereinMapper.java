@@ -14,6 +14,7 @@ public interface VereinMapper {
 
     @Mapping(source = "kontoinhaber.id", target = "kontoinhaberId")
     @Mapping(source = "kontoinhaber", target = "kontoinhaber")
+    @Mapping(expression = "java(verein.getMitglieder().size())", target = "mitgliederCount")
     VereinDTO toDTO(Verein verein);
 
     @Mapping(target = "id", ignore = true)

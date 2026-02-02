@@ -26,13 +26,18 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        // ✅ MUSS authenticated sein
+
+                        // ✅ CSV Mapping Template öffentlich erlauben
+                        .requestMatchers(HttpMethod.GET, "/api/csv-import/mapping-template")
+                        .permitAll()
+
+                        // 🔒 alles andere geschützt
                         .requestMatchers("/api/active-schema").authenticated()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
 
-                // ✅ RICHTIG für Spring Boot 3.2.x
+                // Tenant nach Auth
                 .addFilterAfter(
                         tenantFilter,
                         BearerTokenAuthenticationFilter.class

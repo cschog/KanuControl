@@ -33,4 +33,6 @@ public class VereinDTO {
 
     /** READ */
     private PersonRefDTO kontoinhaber;
+
+    private long mitgliederCount;
 }

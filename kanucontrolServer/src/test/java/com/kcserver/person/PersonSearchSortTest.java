@@ -26,8 +26,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Tag("person-crud")
-/*@WithTestTenant("tenant_test_2")
-* aktuell wird immer Schema Kanu verwendet */
 class PersonSearchSortTest extends AbstractTenantIntegrationTest {
 
     @Autowired
@@ -38,10 +36,10 @@ class PersonSearchSortTest extends AbstractTenantIntegrationTest {
 
     @BeforeEach
     void setup() throws Exception {
-        createPerson("Max", "Mustermann", Sex.MAENNLICH, true, LocalDate.of(1990,1,1));
-        createPerson("Erika", "Mustermann", Sex.WEIBLICH, true, LocalDate.of(1991,1,1));
-        createPerson("Paul", "Meier", Sex.MAENNLICH, true, LocalDate.of(1992,1,1));
-        createPerson("Theo", "Becker", Sex.MAENNLICH, true, LocalDate.of(2019,1,1));
+        createPerson("Max", "Mustermann", Sex.MAENNLICH, true, LocalDate.of(1990, 1, 1));
+        createPerson("Erika", "Mustermann", Sex.WEIBLICH, true, LocalDate.of(1991, 1, 1));
+        createPerson("Paul", "Meier", Sex.MAENNLICH, true, LocalDate.of(1992, 1, 1));
+        createPerson("Theo", "Becker", Sex.MAENNLICH, true, LocalDate.of(2019, 1, 1));
     }
 
     /* =========================================================
@@ -74,6 +72,7 @@ class PersonSearchSortTest extends AbstractTenantIntegrationTest {
     /* =========================================================
        TESTS
        ========================================================= */
+
     @Test
     void search_sortedByNameAsc() throws Exception {
 
@@ -83,10 +82,10 @@ class PersonSearchSortTest extends AbstractTenantIntegrationTest {
                                 .param("sort", "name,asc")
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name").value("Becker"))
-                .andExpect(jsonPath("$[1].name").value("Meier"))
-                .andExpect(jsonPath("$[2].name").value("Mustermann"))
-                .andExpect(jsonPath("$[3].name").value("Mustermann"));
+                .andExpect(jsonPath("$.content[0].name").value("Becker"))
+                .andExpect(jsonPath("$.content[1].name").value("Meier"))
+                .andExpect(jsonPath("$.content[2].name").value("Mustermann"))
+                .andExpect(jsonPath("$.content[3].name").value("Mustermann"));
     }
 
     @Test
@@ -98,8 +97,8 @@ class PersonSearchSortTest extends AbstractTenantIntegrationTest {
                                 .param("sort", "name,desc")
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name").value("Mustermann"))
-                .andExpect(jsonPath("$[3].name").value("Becker"));
+                .andExpect(jsonPath("$.content[0].name").value("Mustermann"))
+                .andExpect(jsonPath("$.content[3].name").value("Becker"));
     }
 
     @Test
@@ -111,8 +110,8 @@ class PersonSearchSortTest extends AbstractTenantIntegrationTest {
                                 .param("sort", "vorname,asc")
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].vorname").value("Erika"))
-                .andExpect(jsonPath("$[3].vorname").value("Theo"));
+                .andExpect(jsonPath("$.content[0].vorname").value("Erika"))
+                .andExpect(jsonPath("$.content[3].vorname").value("Theo"));
     }
 
     @Test
@@ -126,7 +125,8 @@ class PersonSearchSortTest extends AbstractTenantIntegrationTest {
                                 .param("size", "2")
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].name").value("Mustermann"));
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.content[0].name").value("Mustermann"))
+                .andExpect(jsonPath("$.totalElements").value(4));
     }
 }

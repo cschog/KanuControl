@@ -24,4 +24,6 @@ export default interface VereinFormModel {
 
   /** 🔗 Kontoinhaber (Person) */
   kontoinhaber?: PersonRef;
+
+  mitgliederCount?: number;
 }

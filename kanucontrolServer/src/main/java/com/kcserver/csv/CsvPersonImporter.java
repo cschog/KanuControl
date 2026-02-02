@@ -25,25 +25,22 @@ public final class CsvPersonImporter {
         dto.setSex((Sex) row.get(cfg.get("sex")));
         dto.setGeburtsdatum((LocalDate) row.get(cfg.get("geburtsdatum")));
 
-        // ✅ NEU: email optional
         CsvFieldMapping emailMapping = cfg.getOptional("email");
         if (emailMapping != null) {
             dto.setEmail((String) row.get(emailMapping));
         }
 
-        dto.setAktiv(true);
-
-        return dto;
-    }
-
-    /* =====================================================
-       Helpers
-       ===================================================== */
-
-    private static String normalizeEmail(String value) {
-        if (value == null || value.isBlank()) {
-            return null;
+        CsvFieldMapping telefonMapping = cfg.getOptional("telefon");
+        if (telefonMapping != null) {
+            dto.setTelefon((String) row.get(telefonMapping));
         }
-        return value.trim().toLowerCase();
+
+        CsvFieldMapping telefonFestnetzMapping = cfg.getOptional("telefonFestnetz");
+        if (telefonFestnetzMapping != null) {
+            dto.setTelefonFestnetz((String) row.get(telefonFestnetzMapping));
+        }
+
+        dto.setAktiv(true);
+        return dto;
     }
 }

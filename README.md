@@ -229,19 +229,14 @@ und enthält keine Businesslogik.
 
 ### Phase 1 – Frontend-Basis & Export → Release 0.2.x
 
-**Ziel:** komfortable Nutzung & Datenexport
+**Ziel:** komfortable Nutzung
 
 - [ ] Login / Session-Flow finalisieren (Keycloak UX)
 - [ ] Einheitliche Basis-Navigation
 - [ ] Tabellen:
   - [ ] Pagination
   - [ ] Sortierung
-  - [ ] Filter
-- [ ] CSV-Export (read-only)
-  - [ ] Personenliste
-  - [ ] Mitgliederliste
-  - [ ] Vereinsliste
-  - [ ] Filterabhängiger Export
+  - [ ] Filtert
 - [ ] Technische Basis:
   - [ ] Multipart-Handling
   - [ ] Größenlimits
@@ -264,7 +259,6 @@ und enthält keine Businesslogik.
 - [ ] Mapping:
   - [ ] Person ↔ Mitglied ↔ Verein
 - [ ] Idempotenter Import
-- [ ] Import-Historie / Protokoll
 
 ---
 
@@ -274,13 +268,13 @@ und enthält keine Businesslogik.
 
 - [ ] Veranstaltung (CRUD)
 - [ ] Teilnehmer (Join-Entity Person ↔ Veranstaltung)
-- [ ] Teilnehmerstatus
-  - [ ] angemeldet
-  - [ ] bestätigt
-  - [ ] abgesagt
 - [ ] Teilnehmerverwaltung im UI
 - [ ] Teilnehmerlisten
 - [ ] Basis-Auswertungen
+  - [ ] Teilnehmerliste
+  - [ ] Anmeldeformular
+  - [ ] Abrechnungsdeckblatt
+  - [ ] Erhebungsbogen
 
 ---
 
@@ -306,8 +300,8 @@ und enthält keine Businesslogik.
   - [ ] Erhebungsbogen
   - [ ] Anmeldeformular
   - [ ] Abrechnungsformular
+  - [ ] Reisekostenformular
 - [ ] Dokument-Templates
-- [ ] Archivierung
 
 ---
 
