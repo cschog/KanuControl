@@ -1,8 +1,8 @@
 package com.kcserver.enumtype;
 
 public enum TeilnehmerRolle implements CodeEnum {
+
     LEITER("L"),
-    TEILNEHMER("T"),
     MITARBEITER("M");
 
     private final String code;
@@ -11,6 +11,7 @@ public enum TeilnehmerRolle implements CodeEnum {
         this.code = code;
     }
 
+    @Override
     public String getCode() {
         return code;
     }

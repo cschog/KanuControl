@@ -1,7 +1,5 @@
 databaseChangeLog:
   - include:
-      file: db/changelog/baseline/001-baseline.yaml
-  - include:
-      file: db/changelog/changes/2026-01-29-add-email-to-person.xml
+      file: db/changelog/baseline/000-baseline.xml
 
 

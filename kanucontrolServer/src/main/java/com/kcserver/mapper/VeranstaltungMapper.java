@@ -1,6 +1,7 @@
 package com.kcserver.mapper;
 
-import com.kcserver.dto.VeranstaltungDTO;
+import com.kcserver.dto.veranstaltung.VeranstaltungDetailDTO;
+import com.kcserver.dto.veranstaltung.VeranstaltungListDTO;
 import com.kcserver.entity.Veranstaltung;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -12,7 +13,19 @@ import org.mapstruct.ReportingPolicy;
 )
 public interface VeranstaltungMapper {
 
+    /* =========================
+       LIST
+       ========================= */
+
+    @Mapping(source = "verein.name", target = "vereinName")
+    @Mapping(source = "leiter.name", target = "leiterName")
+    VeranstaltungListDTO toListDTO(Veranstaltung veranstaltung);
+
+    /* =========================
+       DETAIL
+       ========================= */
+
     @Mapping(source = "verein.id", target = "vereinId")
     @Mapping(source = "leiter.id", target = "leiterId")
-    VeranstaltungDTO toDTO(Veranstaltung veranstaltung);
+    VeranstaltungDetailDTO toDetailDTO(Veranstaltung veranstaltung);
 }

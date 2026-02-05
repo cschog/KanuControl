@@ -1,6 +1,6 @@
 package com.kcserver.csv;
 
-import com.kcserver.dto.PersonSaveDTO;
+import com.kcserver.dto.person.PersonSaveDTO;
 import com.kcserver.enumtype.Sex;
 
 import java.time.LocalDate;

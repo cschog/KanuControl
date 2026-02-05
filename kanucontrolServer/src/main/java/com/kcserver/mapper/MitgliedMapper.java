@@ -1,8 +1,8 @@
 package com.kcserver.mapper;
 
-import com.kcserver.dto.MitgliedDTO;
-import com.kcserver.dto.MitgliedDetailDTO;
-import com.kcserver.dto.VereinRefDTO;
+import com.kcserver.dto.mitglied.MitgliedDTO;
+import com.kcserver.dto.mitglied.MitgliedDetailDTO;
+import com.kcserver.dto.verein.VereinRefDTO;
 import com.kcserver.entity.Mitglied;
 import com.kcserver.entity.Verein;
 import org.mapstruct.Mapper;

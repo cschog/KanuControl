@@ -1,33 +1,33 @@
 package com.kcserver.repository;
 
 import com.kcserver.entity.Veranstaltung;
-import com.kcserver.entity.Verein;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.*;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface VeranstaltungRepository extends JpaRepository<Veranstaltung, Long> {
-
-    /* =========================================================
-       BASIC QUERIES
-       ========================================================= */
-
-    List<Veranstaltung> findByVerein(Verein verein);
-
-    /* =========================================================
-       AKTIVE VERANSTALTUNG
-       ========================================================= */
+public interface VeranstaltungRepository extends
+        JpaRepository<Veranstaltung, Long>,
+        JpaSpecificationExecutor<Veranstaltung> {
 
     Optional<Veranstaltung> findByAktivTrue();
 
-    boolean existsByAktivTrue();
+    @Query("""
+        select v
+        from Veranstaltung v
+        left join fetch v.verein
+        left join fetch v.leiter
+        where v.id = :id
+    """)
+    Optional<Veranstaltung> findByIdWithRelations(@Param("id") Long id);
 
-    /* =========================================================
-       VALIDIERUNGEN / FACHLICHE HILFSMETHODEN
-       ========================================================= */
-
-    boolean existsByNameAndVerein(String name, Verein verein);
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+        update Veranstaltung v
+           set v.aktiv = false
+         where v.aktiv = true
+    """)
+    int unsetAktiveVeranstaltung();
 }

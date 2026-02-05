@@ -1,6 +1,6 @@
 package com.kcserver.service;
 
-import com.kcserver.dto.VereinDTO;
+import com.kcserver.dto.verein.VereinDTO;
 import com.kcserver.entity.Person;
 import com.kcserver.entity.Verein;
 import org.springframework.data.domain.Pageable;

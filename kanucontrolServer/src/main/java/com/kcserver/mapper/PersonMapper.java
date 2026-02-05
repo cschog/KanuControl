@@ -1,6 +1,10 @@
 package com.kcserver.mapper;
 
-import com.kcserver.dto.*;
+import com.kcserver.dto.mitglied.MitgliedDetailDTO;
+import com.kcserver.dto.person.PersonDetailDTO;
+import com.kcserver.dto.person.PersonListDTO;
+import com.kcserver.dto.person.PersonSaveDTO;
+import com.kcserver.dto.verein.VereinRefDTO;
 import com.kcserver.entity.Mitglied;
 import com.kcserver.entity.Person;
 import com.kcserver.entity.Verein;

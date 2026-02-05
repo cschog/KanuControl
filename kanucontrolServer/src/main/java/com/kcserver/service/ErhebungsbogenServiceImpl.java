@@ -75,7 +75,7 @@ public class ErhebungsbogenServiceImpl implements ErhebungsbogenService {
         LocalDate stichtag = bogen.getStichtag();
 
         List<Teilnehmer> teilnehmer =
-                teilnehmerRepository.findByVeranstaltung(bogen.getVeranstaltung());
+                teilnehmerRepository.findAllByVeranstaltung(bogen.getVeranstaltung());
 
         // Reset (wichtig bei Neuberechnung!)
         resetTeilnehmerStatistik(bogen);
@@ -86,7 +86,7 @@ public class ErhebungsbogenServiceImpl implements ErhebungsbogenService {
             long alter = ChronoUnit.YEARS.between(p.getGeburtsdatum(), stichtag);
             Sex sex = p.getSex();
 
-            if (t.getRolle() == TeilnehmerRolle.TEILNEHMER) {
+            if (t.getRolle() == null) {
                 zaehleTeilnehmer(bogen, sex, alter);
             }
 

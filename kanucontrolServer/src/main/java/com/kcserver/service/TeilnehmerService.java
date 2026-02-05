@@ -1,6 +1,7 @@
 package com.kcserver.service;
 
-import com.kcserver.dto.TeilnehmerDTO;
+import com.kcserver.dto.teilnehmer.TeilnehmerDetailDTO;
+import com.kcserver.dto.teilnehmer.TeilnehmerListDTO;
 import com.kcserver.entity.Person;
 import com.kcserver.entity.Teilnehmer;
 import com.kcserver.entity.Veranstaltung;
@@ -10,6 +11,8 @@ import com.kcserver.repository.PersonRepository;
 import com.kcserver.repository.TeilnehmerRepository;
 import com.kcserver.repository.VeranstaltungRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -42,44 +45,48 @@ public class TeilnehmerService {
        READ
        ========================================================= */
 
-    public List<TeilnehmerDTO> getTeilnehmerDerAktivenVeranstaltung() {
+    public Page<TeilnehmerListDTO> getTeilnehmerDerAktivenVeranstaltung(
+            Pageable pageable
+    ) {
         Veranstaltung veranstaltung = getAktiveVeranstaltung();
 
-        return teilnehmerRepository.findByVeranstaltung(veranstaltung)
-                .stream()
-                .map(teilnehmerMapper::toDTO)
-                .toList();
+        return teilnehmerRepository
+                .findWithPersonByVeranstaltung(veranstaltung, pageable)
+                .map(teilnehmerMapper::toListDTO);
     }
 
     /* =========================================================
        CREATE (UC-T1)
        ========================================================= */
 
-    public TeilnehmerDTO addTeilnehmerZurAktivenVeranstaltung(TeilnehmerDTO dto) {
-
+    public TeilnehmerDetailDTO addTeilnehmerZurAktivenVeranstaltung(
+            Long personId
+    ) {
         Veranstaltung veranstaltung = getAktiveVeranstaltung();
-        Person person = getPerson(dto.getPersonId());
+        Person person = getPerson(personId);
 
-        // 🔒 darf nur einmal Teilnehmer sein
         teilnehmerRepository
                 .findByVeranstaltungAndPerson(veranstaltung, person)
-                .ifPresent(existing -> {
+                .ifPresent(t -> {
                     throw new ResponseStatusException(
                             HttpStatus.CONFLICT,
-                            "Person is already Teilnehmer of the active Veranstaltung"
+                            "Person is already Teilnehmer"
                     );
                 });
+
+        if (veranstaltung.getLeiter().getId().equals(personId)) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Leiter ist bereits Teilnehmer der Veranstaltung"
+            );
+        }
 
         Teilnehmer teilnehmer = new Teilnehmer();
         teilnehmer.setVeranstaltung(veranstaltung);
         teilnehmer.setPerson(person);
-        teilnehmer.setRolle(
-                dto.getRolle() != null
-                        ? dto.getRolle()
-                        : TeilnehmerRolle.TEILNEHMER
-        );
+        teilnehmer.setRolle(null); // normaler Teilnehmer
 
-        return teilnehmerMapper.toDTO(
+        return teilnehmerMapper.toDetailDTO(
                 teilnehmerRepository.save(teilnehmer)
         );
     }
@@ -110,11 +117,63 @@ public class TeilnehmerService {
         teilnehmerRepository.delete(teilnehmer);
     }
 
+
+    @Transactional
+    public void removeTeilnehmerBulkVonAktiverVeranstaltung(List<Long> personIds) {
+
+        Veranstaltung aktiveVeranstaltung = veranstaltungRepository
+                .findByAktivTrue()
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Keine aktive Veranstaltung"
+                ));
+
+        Long leiterId = aktiveVeranstaltung.getLeiter().getId();
+
+        List<Long> filtered = personIds.stream()
+                .filter(id -> !id.equals(leiterId))
+                .toList();
+
+        if (filtered.isEmpty()) {
+            return;
+        }
+
+        teilnehmerRepository.deleteByVeranstaltungIdAndPersonIds(
+                aktiveVeranstaltung.getId(),
+                filtered
+        );
+    }
+
+    @Transactional
+    public void removeTeilnehmerBulk(Long veranstaltungId, List<Long> personIds) {
+
+        Veranstaltung v = veranstaltungRepository.findByIdWithRelations(veranstaltungId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Veranstaltung not found"
+                ));
+
+        Long leiterId = v.getLeiter().getId();
+
+        // 🔥 Leiter IMMER ausschließen
+        List<Long> filteredIds = personIds.stream()
+                .filter(id -> !id.equals(leiterId))
+                .toList();
+
+        if (filteredIds.isEmpty()) {
+            return; // nichts zu tun, aber auch kein Fehler
+        }
+
+        teilnehmerRepository.deleteByVeranstaltungIdAndPersonIds(
+                veranstaltungId,
+                filteredIds
+        );
+    }
+
     /* =========================================================
        LEITER
        ========================================================= */
 
-    public TeilnehmerDTO setLeiterDerAktivenVeranstaltung(Long personId) {
+    public TeilnehmerDetailDTO setLeiterDerAktivenVeranstaltung(Long personId) {
 
         Veranstaltung veranstaltung = getAktiveVeranstaltung();
         Person person = getPerson(personId);
@@ -128,7 +187,7 @@ public class TeilnehmerService {
                         TeilnehmerRolle.LEITER
                 )
                 .ifPresent(existing -> {
-                    existing.setRolle(TeilnehmerRolle.TEILNEHMER);
+                    existing.setRolle(null);
                     teilnehmerRepository.save(existing);
                 });
 
@@ -139,13 +198,13 @@ public class TeilnehmerService {
                     Teilnehmer t = new Teilnehmer();
                     t.setVeranstaltung(veranstaltung);
                     t.setPerson(person);
-                    t.setRolle(TeilnehmerRolle.TEILNEHMER);
+                    t.setRolle(null); // erstmal normaler Teilnehmer
                     return t;
                 });
 
         teilnehmer.setRolle(TeilnehmerRolle.LEITER);
 
-        return teilnehmerMapper.toDTO(
+        return teilnehmerMapper.toDetailDTO(
                 teilnehmerRepository.save(teilnehmer)
         );
     }

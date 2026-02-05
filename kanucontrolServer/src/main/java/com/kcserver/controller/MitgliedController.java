@@ -1,7 +1,7 @@
 package com.kcserver.controller;
 
-import com.kcserver.dto.MitgliedDTO;
-import com.kcserver.dto.MitgliedDetailDTO;
+import com.kcserver.dto.mitglied.MitgliedDTO;
+import com.kcserver.dto.mitglied.MitgliedDetailDTO;
 import com.kcserver.entity.Mitglied;
 import com.kcserver.mapper.MitgliedMapper;
 import com.kcserver.service.MitgliedService;

@@ -31,13 +31,13 @@ public class Veranstaltung extends Auditable {
     private String name;
 
     @Convert(converter = VeranstaltungTypConverter.class)
-    @Column(nullable = false, length = 1)
+    @Column(nullable = false, length = 3)
     private VeranstaltungTyp typ;
 
-    @Column(nullable = true, length = 200)
+    @Column(name = "art_der_unterkunft", length = 200)
     private String artDerUnterkunft;
 
-    @Column(nullable = true, length = 200)
+    @Column(name = "art_der_verpflegung", length = 200)
     private String artDerVerpflegung;
 
     @Column(nullable = true)
@@ -46,19 +46,19 @@ public class Veranstaltung extends Auditable {
     @Column(nullable = true)
     private String ort;
 
-    @Column(name = "laender_code", length = 2)
+    @Column(name = "country_code", length = 2)
     private CountryCode laenderCode;
 
-    @Column(nullable = false)
+    @Column(name = "beginn_datum", nullable = false)
     private LocalDate beginnDatum;
 
-    @Column(nullable = false)
+    @Column(name = "beginn_zeit", nullable = false)
     private LocalTime beginnZeit;
 
-    @Column(nullable = false)
+    @Column(name = "ende_datum", nullable = false)
     private LocalDate endeDatum;
 
-    @Column(nullable = false)
+    @Column(name = "ende_zeit", nullable = false)
     private LocalTime endeZeit;
 
     /* =========================
@@ -77,23 +77,22 @@ public class Veranstaltung extends Auditable {
        Plan-Zahlen (Antrag)
        ========================= */
 
-
-    @Column(nullable = true)
+    @Column(name = "geplante_teilnehmer_maennlich")
     private Integer geplanteTeilnehmerMaennlich;
 
-    @Column(nullable = true)
+    @Column(name = "geplante_teilnehmer_weiblich")
     private Integer geplanteTeilnehmerWeiblich;
 
-    @Column(nullable = true)
+    @Column(name = "geplante_teilnehmer_divers")
     private Integer geplanteTeilnehmerDivers;
 
-    @Column(nullable = true)
+    @Column(name = "geplante_mitarbeiter_maennlich")
     private Integer geplanteMitarbeiterMaennlich;
 
-    @Column(nullable = true)
+    @Column(name = "geplante_mitarbeiter_weiblich")
     private Integer geplanteMitarbeiterWeiblich;
 
-    @Column(nullable = true)
+    @Column(name = "geplante_mitarbeiter_divers")
     private Integer geplanteMitarbeiterDivers;
 
     /* =========================

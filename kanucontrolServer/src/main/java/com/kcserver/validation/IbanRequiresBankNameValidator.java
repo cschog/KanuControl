@@ -1,6 +1,6 @@
 package com.kcserver.validation;
 
-import com.kcserver.dto.PersonSaveDTO;
+import com.kcserver.dto.person.PersonSaveDTO;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 

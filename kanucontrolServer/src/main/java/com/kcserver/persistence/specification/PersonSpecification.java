@@ -1,6 +1,6 @@
 package com.kcserver.persistence.specification;
 
-import com.kcserver.dto.PersonSearchCriteria;
+import com.kcserver.dto.person.PersonSearchCriteria;
 import com.kcserver.entity.Mitglied;
 import com.kcserver.entity.Person;
 import jakarta.persistence.criteria.Expression;

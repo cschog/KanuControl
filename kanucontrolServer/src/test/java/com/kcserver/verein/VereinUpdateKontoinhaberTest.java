@@ -1,7 +1,7 @@
 package com.kcserver.verein;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kcserver.dto.VereinDTO;
+import com.kcserver.dto.verein.VereinDTO;
 import com.kcserver.integration.support.AbstractTenantIntegrationTest;
 import com.kcserver.testdata.PersonTestFactory;
 import com.kcserver.testdata.VereinTestFactory;
