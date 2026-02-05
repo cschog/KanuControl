@@ -1,8 +1,11 @@
 package com.kcserver.service;
 
-import com.kcserver.dto.VeranstaltungDTO;
-
-import java.util.List;
+import com.kcserver.dto.veranstaltung.VeranstaltungCreateDTO;
+import com.kcserver.dto.veranstaltung.VeranstaltungDetailDTO;
+import com.kcserver.dto.veranstaltung.VeranstaltungListDTO;
+import com.kcserver.dto.veranstaltung.VeranstaltungUpdateDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface VeranstaltungService {
 
@@ -17,7 +20,7 @@ public interface VeranstaltungService {
      * - Veranstaltung wird automatisch aktiv
      * - Leiter wird automatisch als Teilnehmer (LEITER) angelegt
      */
-    VeranstaltungDTO create(VeranstaltungDTO dto);
+    public VeranstaltungDetailDTO create(VeranstaltungCreateDTO dto);
 
     /* =========================================================
        READ
@@ -26,31 +29,40 @@ public interface VeranstaltungService {
     /**
      * Liefert alle Veranstaltungen (Historie).
      */
-    List<VeranstaltungDTO> getAll();
+    Page<VeranstaltungListDTO> getAll(
+            String name,
+            Boolean aktiv,
+            Pageable pageable
+    );
+
+    Page<VeranstaltungListDTO> getAll(Pageable pageable);
 
     /**
      * Liefert die aktuell aktive Veranstaltung.
      * @throws 404 wenn keine aktiv ist
      */
-    VeranstaltungDTO getActive();
+    VeranstaltungDetailDTO getActive();
 
     /**
      * Liefert eine Veranstaltung per ID.
      */
-    VeranstaltungDTO getById(Long id);
+    VeranstaltungDetailDTO getById(Long id);
+
+
+     /* =========================================================
+       UPDATE
+       ========================================================= */
+     VeranstaltungDetailDTO update(
+             Long id,
+             VeranstaltungUpdateDTO dto
+     );
+
+    VeranstaltungDetailDTO setActive(Long id);
 
     /* =========================================================
-       STATE MANAGEMENT
+       DELETE
        ========================================================= */
 
-    /**
-     * Beendet die aktuell aktive Veranstaltung.
-     */
-    void beenden();
+    void delete(Long id);
 
-    /**
-     * Aktiviert eine bestehende Veranstaltung.
-     * - es darf keine andere aktive geben
-     */
-    void aktivieren(Long id);
 }

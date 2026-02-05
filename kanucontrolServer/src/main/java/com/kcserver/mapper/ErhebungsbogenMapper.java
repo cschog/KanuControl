@@ -1,6 +1,6 @@
 package com.kcserver.mapper;
 
-import com.kcserver.dto.ErhebungsbogenDTO;
+import com.kcserver.dto.erhebungsbogen.ErhebungsbogenDTO;
 import com.kcserver.entity.Erhebungsbogen;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;

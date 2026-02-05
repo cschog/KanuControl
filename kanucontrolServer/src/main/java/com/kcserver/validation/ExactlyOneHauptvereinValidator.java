@@ -1,6 +1,6 @@
 package com.kcserver.validation;
 
-import com.kcserver.dto.HasMitgliedschaften;
+import com.kcserver.dto.mitglied.HasMitgliedschaften;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 

@@ -1,7 +1,7 @@
 package com.kcserver.person;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kcserver.dto.PersonSaveDTO;
+import com.kcserver.dto.person.PersonSaveDTO;
 import com.kcserver.enumtype.Sex;
 import com.kcserver.integration.support.AbstractTenantIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;

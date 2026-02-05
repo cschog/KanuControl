@@ -1,6 +1,6 @@
 package com.kcserver.controller;
 
-import com.kcserver.dto.ErhebungsbogenDTO;
+import com.kcserver.dto.erhebungsbogen.ErhebungsbogenDTO;
 import com.kcserver.mapper.ErhebungsbogenMapper;
 import com.kcserver.service.ErhebungsbogenService;
 import lombok.RequiredArgsConstructor;

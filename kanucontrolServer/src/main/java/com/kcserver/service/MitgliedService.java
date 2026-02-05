@@ -1,6 +1,6 @@
 package com.kcserver.service;
 
-import com.kcserver.dto.MitgliedDTO;
+import com.kcserver.dto.mitglied.MitgliedDTO;
 import com.kcserver.entity.Mitglied;
 import com.kcserver.entity.Person;
 import com.kcserver.entity.Verein;

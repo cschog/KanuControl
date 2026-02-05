@@ -1,6 +1,6 @@
 package com.kcserver.controller;
 
-import com.kcserver.dto.VereinDTO;
+import com.kcserver.dto.verein.VereinDTO;
 import com.kcserver.service.VereinService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;

@@ -44,14 +44,6 @@ public class Teilnehmer extends Auditable {
        ========================= */
 
     @Convert(converter = TeilnehmerRolleConverter.class)
-    @Column(nullable = false, length = 1)
+    @Column(length = 1)
     private TeilnehmerRolle rolle;
-
-    /* =========================
-       Optional für spätere Versionen
-       ========================= */
-
-    @Column(nullable = false)
-    @Builder.Default
-    private boolean aktiv = true;
 }

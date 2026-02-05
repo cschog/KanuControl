@@ -4,7 +4,10 @@ import com.kcserver.tenancy.TenantContext;
 import com.kcserver.tenancy.TenantSchemaProvisioner;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -12,6 +15,9 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import static com.kcserver.integration.support.TestJwtUtils.jwtWithTenant;
 
+@SpringBootTest
+@AutoConfigureMockMvc
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractTenantIntegrationTest {
 
     /**
@@ -52,9 +58,9 @@ public abstract class AbstractTenantIntegrationTest {
         TenantContext.clear();
     }
 
-    /**
-     * ✅ EINZIGE Request-Methode
-     */
+    /* =========================================================
+       🔑 JWT / REQUEST
+       ========================================================= */
 
     protected RequestPostProcessor tenantAuth() {
         return jwtWithTenant(tenant());
@@ -64,5 +70,13 @@ public abstract class AbstractTenantIntegrationTest {
             MockHttpServletRequestBuilder builder
     ) {
         return builder.with(tenantAuth());
+    }
+
+    /* =========================================================
+       ⭐ WICHTIG: für Repository-Zugriffe im Test
+       ========================================================= */
+
+    protected void ensureTenantSchema() {
+        jdbcTemplate.execute("SET search_path TO " + tenant());
     }
 }

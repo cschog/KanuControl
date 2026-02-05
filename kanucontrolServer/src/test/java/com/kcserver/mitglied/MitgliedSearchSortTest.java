@@ -1,7 +1,7 @@
 package com.kcserver.mitglied;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kcserver.dto.MitgliedDTO;
+import com.kcserver.dto.mitglied.MitgliedDTO;
 import com.kcserver.enumtype.MitgliedFunktion;
 import com.kcserver.integration.support.AbstractTenantIntegrationTest;
 import com.kcserver.testdata.PersonTestFactory;

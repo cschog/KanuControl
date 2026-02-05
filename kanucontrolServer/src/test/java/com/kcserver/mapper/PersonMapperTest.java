@@ -1,6 +1,6 @@
 package com.kcserver.mapper;
 
-import com.kcserver.dto.PersonListDTO;
+import com.kcserver.dto.person.PersonListDTO;
 import com.kcserver.entity.Person;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

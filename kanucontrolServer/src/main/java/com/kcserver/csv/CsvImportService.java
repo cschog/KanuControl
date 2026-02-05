@@ -1,6 +1,6 @@
 package com.kcserver.csv;
 
-import com.kcserver.dto.PersonSaveDTO;
+import com.kcserver.dto.person.PersonSaveDTO;
 import com.kcserver.service.MitgliedService;
 import com.kcserver.service.PersonService;
 import lombok.extern.slf4j.Slf4j;

@@ -1,7 +1,7 @@
 package com.kcserver.person;
 
-import com.kcserver.dto.MitgliedSaveDTO;
-import com.kcserver.dto.PersonSaveDTO;
+import com.kcserver.dto.mitglied.MitgliedSaveDTO;
+import com.kcserver.dto.person.PersonSaveDTO;
 import com.kcserver.enumtype.MitgliedFunktion;
 import com.kcserver.enumtype.Sex;
 import com.kcserver.validation.OnCreate;

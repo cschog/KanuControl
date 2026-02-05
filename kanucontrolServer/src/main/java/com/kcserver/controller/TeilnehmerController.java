@@ -1,12 +1,15 @@
 package com.kcserver.controller;
 
-import com.kcserver.dto.TeilnehmerDTO;
+import com.kcserver.dto.teilnehmer.TeilnehmerBulkDeleteDTO;
+import com.kcserver.dto.teilnehmer.TeilnehmerDetailDTO;
+import com.kcserver.dto.teilnehmer.TeilnehmerListDTO;
 import com.kcserver.service.TeilnehmerService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/teilnehmer")
@@ -19,28 +22,30 @@ public class TeilnehmerController {
     }
 
     /* =========================================================
-       READ
+       READ (Paging)
        ========================================================= */
 
     @GetMapping
-    public List<TeilnehmerDTO> getTeilnehmerDerAktivenVeranstaltung() {
-        return teilnehmerService.getTeilnehmerDerAktivenVeranstaltung();
+    public Page<TeilnehmerListDTO> getTeilnehmerDerAktivenVeranstaltung(
+            @PageableDefault(size = 20, sort = "person.name") Pageable pageable
+    ) {
+        return teilnehmerService.getTeilnehmerDerAktivenVeranstaltung(pageable);
     }
 
     /* =========================================================
-       CREATE (UC-T1)
+       CREATE
        ========================================================= */
 
-    @PostMapping
+    @PostMapping("/{personId}")
     @ResponseStatus(HttpStatus.CREATED)
-    public TeilnehmerDTO addTeilnehmer(
-            @RequestBody @Valid TeilnehmerDTO dto
+    public TeilnehmerDetailDTO addTeilnehmer(
+            @PathVariable Long personId
     ) {
-        return teilnehmerService.addTeilnehmerZurAktivenVeranstaltung(dto);
+        return teilnehmerService.addTeilnehmerZurAktivenVeranstaltung(personId);
     }
 
     /* =========================================================
-       DELETE
+       DELETE (single)
        ========================================================= */
 
     @DeleteMapping("/{personId}")
@@ -52,11 +57,26 @@ public class TeilnehmerController {
     }
 
     /* =========================================================
+       DELETE (bulk)
+       ========================================================= */
+
+    @DeleteMapping("/bulk")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removeTeilnehmerBulk(
+            @Valid @RequestBody TeilnehmerBulkDeleteDTO dto
+    ) {
+        teilnehmerService.removeTeilnehmerBulkVonAktiverVeranstaltung(
+                dto.getPersonIds()
+        );
+    }
+
+    /* =========================================================
        LEITER
        ========================================================= */
 
     @PutMapping("/{personId}/leiter")
-    public TeilnehmerDTO setLeiter(
+    @ResponseStatus(HttpStatus.OK)
+    public TeilnehmerDetailDTO setLeiter(
             @PathVariable Long personId
     ) {
         return teilnehmerService.setLeiterDerAktivenVeranstaltung(personId);

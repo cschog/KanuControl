@@ -1,6 +1,9 @@
 package com.kcserver.service;
 
-import com.kcserver.dto.*;
+import com.kcserver.dto.person.PersonDetailDTO;
+import com.kcserver.dto.person.PersonListDTO;
+import com.kcserver.dto.person.PersonSaveDTO;
+import com.kcserver.dto.person.PersonSearchCriteria;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

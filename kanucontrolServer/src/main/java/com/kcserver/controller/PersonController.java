@@ -1,9 +1,9 @@
 package com.kcserver.controller;
 
-import com.kcserver.dto.PersonDetailDTO;
-import com.kcserver.dto.PersonListDTO;
-import com.kcserver.dto.PersonSaveDTO;
-import com.kcserver.dto.PersonSearchCriteria;
+import com.kcserver.dto.person.PersonDetailDTO;
+import com.kcserver.dto.person.PersonListDTO;
+import com.kcserver.dto.person.PersonSaveDTO;
+import com.kcserver.dto.person.PersonSearchCriteria;
 import com.kcserver.service.PersonService;
 import com.kcserver.validation.OnCreate;
 import com.kcserver.validation.OnUpdate;

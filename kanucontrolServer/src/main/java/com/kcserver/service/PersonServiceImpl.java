@@ -1,6 +1,8 @@
 package com.kcserver.service;
 
-import com.kcserver.dto.*;
+import com.kcserver.dto.mitglied.MitgliedSaveDTO;
+import com.kcserver.dto.person.PersonSaveDTO;
+import com.kcserver.dto.person.PersonSearchCriteria;
 import com.kcserver.entity.Mitglied;
 import com.kcserver.entity.Person;
 import com.kcserver.entity.Verein;
@@ -17,8 +19,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-import com.kcserver.dto.PersonListDTO;
-import com.kcserver.dto.PersonDetailDTO;
+import com.kcserver.dto.person.PersonListDTO;
+import com.kcserver.dto.person.PersonDetailDTO;
 
 import java.util.List;
 

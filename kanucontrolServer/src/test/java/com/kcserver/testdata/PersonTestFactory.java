@@ -1,8 +1,8 @@
 package com.kcserver.testdata;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kcserver.dto.MitgliedDTO;
-import com.kcserver.dto.PersonDTO;
+import com.kcserver.dto.mitglied.MitgliedDTO;
+import com.kcserver.dto.person.PersonDTO;
 import com.kcserver.enumtype.MitgliedFunktion;
 import com.kcserver.enumtype.Sex;
 import org.springframework.http.MediaType;
@@ -14,7 +14,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -88,7 +87,6 @@ public class PersonTestFactory {
                 mockMvc.perform(
                                 post("/api/person")
                                         .with(tenant)
-                                        .with(jwt())
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(dto))
                         )
@@ -121,7 +119,6 @@ public class PersonTestFactory {
                 mockMvc.perform(
                                 post("/api/person")
                                         .with(tenant)
-                                        .with(jwt())
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(dto))
                         )
