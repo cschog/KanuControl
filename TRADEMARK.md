@@ -18,4 +18,4 @@ If you distribute modified versions of this software, you must:
 - replace them with your own branding
 
 For permission requests contact:
-chris@kanucontrol.org
+chris.schog@ekc-home.de
