@@ -5,13 +5,17 @@ import com.kcserver.dto.veranstaltung.VeranstaltungCreateDTO;
 import com.kcserver.dto.veranstaltung.VeranstaltungDetailDTO;
 import com.kcserver.dto.veranstaltung.VeranstaltungListDTO;
 import com.kcserver.dto.veranstaltung.VeranstaltungUpdateDTO;
+import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.service.TeilnehmerService;
 import com.kcserver.service.VeranstaltungService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/veranstaltung")
@@ -49,9 +53,17 @@ public class VeranstaltungController {
     public Page<VeranstaltungListDTO> getAll(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) Boolean aktiv,
+            @RequestParam(required = false) Long vereinId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate beginnVon,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate beginnBis,
+            @RequestParam(required = false) VeranstaltungTyp typ,
             Pageable pageable
     ) {
-        return veranstaltungService.getAll(name, aktiv, pageable);
+        return veranstaltungService.getAll(
+                name, aktiv, vereinId, beginnVon, beginnBis, typ, pageable
+        );
     }
 
     /* =========================================================

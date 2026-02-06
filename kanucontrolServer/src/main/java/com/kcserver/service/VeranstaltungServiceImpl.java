@@ -9,6 +9,7 @@ import com.kcserver.entity.Teilnehmer;
 import com.kcserver.entity.Veranstaltung;
 import com.kcserver.entity.Verein;
 import com.kcserver.enumtype.TeilnehmerRolle;
+import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.mapper.VeranstaltungMapper;
 import com.kcserver.repository.*;
 import jakarta.transaction.Transactional;
@@ -121,13 +122,17 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
 
     @Override
     public Page<VeranstaltungListDTO> getAll(Pageable pageable) {
-        return getAll(null, null, pageable);
+        return getAll(null, null, null, null, null, null, pageable);
     }
 
     @Override
     public Page<VeranstaltungListDTO> getAll(
             String name,
             Boolean aktiv,
+            Long vereinId,
+            LocalDate beginnVon,
+            LocalDate beginnBis,
+            VeranstaltungTyp typ,
             Pageable pageable
     ) {
         Specification<Veranstaltung> spec = null;
@@ -135,11 +140,30 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
         if (name != null && !name.isBlank()) {
             spec = VeranstaltungSpecs.nameContains(name);
         }
-
         if (aktiv != null) {
             spec = (spec == null)
                     ? VeranstaltungSpecs.aktivEquals(aktiv)
                     : spec.and(VeranstaltungSpecs.aktivEquals(aktiv));
+        }
+        if (vereinId != null) {
+            spec = (spec == null)
+                    ? VeranstaltungSpecs.vereinEquals(vereinId)
+                    : spec.and(VeranstaltungSpecs.vereinEquals(vereinId));
+        }
+        if (beginnVon != null) {
+            spec = (spec == null)
+                    ? VeranstaltungSpecs.beginnVon(beginnVon)
+                    : spec.and(VeranstaltungSpecs.beginnVon(beginnVon));
+        }
+        if (beginnBis != null) {
+            spec = (spec == null)
+                    ? VeranstaltungSpecs.beginnBis(beginnBis)
+                    : spec.and(VeranstaltungSpecs.beginnBis(beginnBis));
+        }
+        if (typ != null) {
+            spec = (spec == null)
+                    ? VeranstaltungSpecs.typEquals(typ)
+                    : spec.and(VeranstaltungSpecs.typEquals(typ));
         }
 
         return veranstaltungRepository

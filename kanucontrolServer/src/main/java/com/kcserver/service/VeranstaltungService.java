@@ -4,8 +4,11 @@ import com.kcserver.dto.veranstaltung.VeranstaltungCreateDTO;
 import com.kcserver.dto.veranstaltung.VeranstaltungDetailDTO;
 import com.kcserver.dto.veranstaltung.VeranstaltungListDTO;
 import com.kcserver.dto.veranstaltung.VeranstaltungUpdateDTO;
+import com.kcserver.enumtype.VeranstaltungTyp;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+
+import java.time.LocalDate;
 
 public interface VeranstaltungService {
 
@@ -32,6 +35,10 @@ public interface VeranstaltungService {
     Page<VeranstaltungListDTO> getAll(
             String name,
             Boolean aktiv,
+            Long vereinId,
+            LocalDate beginnVon,
+            LocalDate beginnBis,
+            VeranstaltungTyp typ,
             Pageable pageable
     );
 

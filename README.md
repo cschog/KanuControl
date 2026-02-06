@@ -223,7 +223,7 @@ und enthält keine Businesslogik.
   - [x] Dry-Run
   - [x] Validierung
   - [x] Fehlerreport
-- [ ] Technische Basis für Datei-Uploads
+- [x] Technische Basis für Datei-Uploads
 
 ---
 
@@ -248,9 +248,9 @@ und enthält keine Businesslogik.
 
 **Ziel:** robuste Massendatenverarbeitung
 
-- [ ] CSV-Import Mitglieder
-  - [ ] Datei-Upload
-  - [ ] Vorschau / Dry-Run
+- [x] CSV-Import Mitglieder
+  - [x] Datei-Upload
+  - [x] Vorschau / Dry-Run
   - [ ] Validierung
     - [ ] Pflichtfelder
     - [ ] Fachliche Regeln
@@ -266,7 +266,7 @@ und enthält keine Businesslogik.
 
 **Ziel:** Veranstaltungsmanagement vollständig
 
-- [ ] Veranstaltung (CRUD)
+- [x] Veranstaltung (CRUD)
 - [ ] Teilnehmer (Join-Entity Person ↔ Veranstaltung)
 - [ ] Teilnehmerverwaltung im UI
 - [ ] Teilnehmerlisten
@@ -335,21 +335,21 @@ Contribution-Guidelines folgen in einer späteren Version.
 
 ---
 
-## 🛠️ Lokale Entwicklung (Mac)
 
-### Voraussetzungen
+## License
 
-- Docker
-- Java 17
-- Maven
-- Node.js
+This project is licensed under the **Apache License 2.0** – see the [LICENSE](LICENSE) file for details.
 
----
+### Trademark and Branding
 
-## 📄 Lizenz
+The name **KanuControl**, the KanuControl logo, and the KanuControl icon are **not covered by the Apache License** and remain the exclusive property of the project owner.
 
-Die Lizenz wird zu einem späteren Zeitpunkt festgelegt
-(vorgesehen: Open-Source, z. B. MIT oder Apache 2.0).
+You may use, modify, and distribute the software under the terms of the Apache 2.0 license, but you may **not use the KanuControl name, logo, or icon** in redistributed or modified versions without explicit permission.
+
+If you distribute a modified version of this software, you must remove all KanuControl branding.
+
+For trademark permission requests contact:
+**chris.schog@ekc-home.de**
 
 ---
 

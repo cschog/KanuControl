@@ -12,3 +12,12 @@ Thumbs.db
 # General temporary files
 *.swp
 *.tmp
+
+# Keycloak private exports
+*-realm.json
+*-realm-full.json
+*-realm-private.json
+
+# Secrets
+.env
+secrets/
