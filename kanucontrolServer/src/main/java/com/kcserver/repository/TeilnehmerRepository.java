@@ -16,6 +16,8 @@ import java.util.Optional;
 
 public interface TeilnehmerRepository extends JpaRepository<Teilnehmer, Long> {
 
+    long countByVeranstaltungId(Long veranstaltungId);
+
     @Query("""
     select count(t) > 0
     from Teilnehmer t
@@ -55,6 +57,11 @@ public interface TeilnehmerRepository extends JpaRepository<Teilnehmer, Long> {
             Veranstaltung veranstaltung,
             TeilnehmerRolle rolle
     );
+
+    long countByVeranstaltungIdAndRolle(Long veranstaltungId, TeilnehmerRolle rolle);
+
+    long countByVeranstaltungIdAndRolleIsNull(Long veranstaltungId);
+
     /* =========================
        DELETE BULK
        ========================= */

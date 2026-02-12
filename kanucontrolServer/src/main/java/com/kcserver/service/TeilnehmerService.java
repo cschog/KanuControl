@@ -2,6 +2,7 @@ package com.kcserver.service;
 
 import com.kcserver.dto.teilnehmer.TeilnehmerDetailDTO;
 import com.kcserver.dto.teilnehmer.TeilnehmerListDTO;
+import com.kcserver.dto.teilnehmer.TeilnehmerUpdateDTO;
 import com.kcserver.entity.Person;
 import com.kcserver.entity.Teilnehmer;
 import com.kcserver.entity.Veranstaltung;
@@ -45,10 +46,9 @@ public class TeilnehmerService {
        READ
        ========================================================= */
 
-    public Page<TeilnehmerListDTO> getTeilnehmerDerAktivenVeranstaltung(
-            Pageable pageable
-    ) {
-        Veranstaltung veranstaltung = getAktiveVeranstaltung();
+    public Page<TeilnehmerListDTO> getTeilnehmer(Long veranstaltungId, Pageable pageable) {
+        Veranstaltung veranstaltung = veranstaltungRepository.findByIdWithRelations(veranstaltungId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Veranstaltung not found"));
 
         return teilnehmerRepository
                 .findWithPersonByVeranstaltung(veranstaltung, pageable)
@@ -59,10 +59,10 @@ public class TeilnehmerService {
        CREATE (UC-T1)
        ========================================================= */
 
-    public TeilnehmerDetailDTO addTeilnehmerZurAktivenVeranstaltung(
-            Long personId
-    ) {
-        Veranstaltung veranstaltung = getAktiveVeranstaltung();
+    public TeilnehmerDetailDTO addTeilnehmer(Long veranstaltungId, Long personId) {
+        Veranstaltung veranstaltung = veranstaltungRepository.findByIdWithRelations(veranstaltungId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Veranstaltung not found"));
+
         Person person = getPerson(personId);
 
         teilnehmerRepository
@@ -75,37 +75,56 @@ public class TeilnehmerService {
                 });
 
         if (veranstaltung.getLeiter().getId().equals(personId)) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "Leiter ist bereits Teilnehmer der Veranstaltung"
-            );
+            Teilnehmer existing = teilnehmerRepository
+                    .findByVeranstaltungAndPerson(veranstaltung, person)
+                    .orElseThrow();
+            return teilnehmerMapper.toDetailDTO(existing);
         }
 
         Teilnehmer teilnehmer = new Teilnehmer();
         teilnehmer.setVeranstaltung(veranstaltung);
         teilnehmer.setPerson(person);
-        teilnehmer.setRolle(null); // normaler Teilnehmer
+        teilnehmer.setRolle(null);
 
-        return teilnehmerMapper.toDetailDTO(
-                teilnehmerRepository.save(teilnehmer)
-        );
+        Teilnehmer saved = teilnehmerRepository.save(teilnehmer);
+        teilnehmerRepository.flush();
+        return teilnehmerMapper.toDetailDTO(saved);
+    }
+       /* =========================================================
+       UPDATE
+       ========================================================= */
+
+    public TeilnehmerDetailDTO update(Long veranstaltungId, Long id, TeilnehmerUpdateDTO dto) {
+
+        Teilnehmer t = teilnehmerRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        if (!t.getVeranstaltung().getId().equals(veranstaltungId)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Teilnehmer does not belong to Veranstaltung");
+        }
+
+        if (dto.getRolle() != null) {
+            t.setRolle(dto.getRolle());
+        }
+
+        return teilnehmerMapper.toDetailDTO(t);
     }
 
     /* =========================================================
        DELETE
        ========================================================= */
 
-    public void removeTeilnehmerVonAktiverVeranstaltung(Long personId) {
+    public void removeTeilnehmer(Long veranstaltungId, Long teilnehmerId) {
 
-        Veranstaltung veranstaltung = getAktiveVeranstaltung();
-        Person person = getPerson(personId);
-
-        Teilnehmer teilnehmer = teilnehmerRepository
-                .findByVeranstaltungAndPerson(veranstaltung, person)
+        Teilnehmer teilnehmer = teilnehmerRepository.findById(teilnehmerId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Teilnehmer not found"
                 ));
+
+        if (!teilnehmer.getVeranstaltung().getId().equals(veranstaltungId)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Teilnehmer does not belong to Veranstaltung");
+        }
 
         if (teilnehmer.getRolle() == TeilnehmerRolle.LEITER) {
             throw new ResponseStatusException(
@@ -117,32 +136,6 @@ public class TeilnehmerService {
         teilnehmerRepository.delete(teilnehmer);
     }
 
-
-    @Transactional
-    public void removeTeilnehmerBulkVonAktiverVeranstaltung(List<Long> personIds) {
-
-        Veranstaltung aktiveVeranstaltung = veranstaltungRepository
-                .findByAktivTrue()
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Keine aktive Veranstaltung"
-                ));
-
-        Long leiterId = aktiveVeranstaltung.getLeiter().getId();
-
-        List<Long> filtered = personIds.stream()
-                .filter(id -> !id.equals(leiterId))
-                .toList();
-
-        if (filtered.isEmpty()) {
-            return;
-        }
-
-        teilnehmerRepository.deleteByVeranstaltungIdAndPersonIds(
-                aktiveVeranstaltung.getId(),
-                filtered
-        );
-    }
 
     @Transactional
     public void removeTeilnehmerBulk(Long veranstaltungId, List<Long> personIds) {
@@ -173,9 +166,13 @@ public class TeilnehmerService {
        LEITER
        ========================================================= */
 
-    public TeilnehmerDetailDTO setLeiterDerAktivenVeranstaltung(Long personId) {
+    public TeilnehmerDetailDTO setLeiter(Long veranstaltungId, Long personId) {
 
-        Veranstaltung veranstaltung = getAktiveVeranstaltung();
+        Veranstaltung veranstaltung = veranstaltungRepository.findByIdWithRelations(veranstaltungId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Veranstaltung not found"
+                ));
+
         Person person = getPerson(personId);
 
         validateLeiterAge(person);
@@ -189,6 +186,7 @@ public class TeilnehmerService {
                 .ifPresent(existing -> {
                     existing.setRolle(null);
                     teilnehmerRepository.save(existing);
+                    teilnehmerRepository.flush();
                 });
 
         // Leiter muss Teilnehmer sein
@@ -204,22 +202,14 @@ public class TeilnehmerService {
 
         teilnehmer.setRolle(TeilnehmerRolle.LEITER);
 
-        return teilnehmerMapper.toDetailDTO(
-                teilnehmerRepository.save(teilnehmer)
-        );
+        Teilnehmer saved = teilnehmerRepository.save(teilnehmer);
+        teilnehmerRepository.flush();
+        return teilnehmerMapper.toDetailDTO(saved);
     }
 
     /* =========================================================
        HELPER
        ========================================================= */
-
-    private Veranstaltung getAktiveVeranstaltung() {
-        return veranstaltungRepository.findByAktivTrue()
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.CONFLICT,
-                        "No active Veranstaltung found"
-                ));
-    }
 
     private Person getPerson(Long id) {
         return personRepository.findById(id)

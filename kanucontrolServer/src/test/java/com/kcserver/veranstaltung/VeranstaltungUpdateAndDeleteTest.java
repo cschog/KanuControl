@@ -229,4 +229,44 @@ class VeranstaltungUpdateAndDeleteTest extends AbstractTenantIntegrationTest {
                 )
                 .andExpect(status().isNoContent());
     }
+
+      /* =========================================================
+       shouldDelete
+       ========================================================= */
+
+    @Test
+    void shouldDelete() throws Exception {
+
+        mockMvc.perform(
+                tenantRequest(delete("/api/veranstaltung/{id}", veranstaltungId))
+        ).andExpect(status().isNoContent());
+    }
+
+    /* =========================================================
+       shouldReturn404AfterDelete
+       ========================================================= */
+
+    @Test
+    void shouldReturn404AfterDelete() throws Exception {
+
+        mockMvc.perform(
+                tenantRequest(delete("/api/veranstaltung/{id}", veranstaltungId))
+        ).andExpect(status().isNoContent());
+
+        mockMvc.perform(
+                tenantRequest(get("/api/veranstaltung/{id}", veranstaltungId))
+        ).andExpect(status().isNotFound());
+    }
+
+    /* =========================================================
+       shouldFailDeleteNonExisting
+       ========================================================= */
+
+    @Test
+    void shouldFailDeleteNonExisting() throws Exception {
+
+        mockMvc.perform(
+                tenantRequest(delete("/api/veranstaltung/{id}", 999999L))
+        ).andExpect(status().isNotFound());
+    }
 }

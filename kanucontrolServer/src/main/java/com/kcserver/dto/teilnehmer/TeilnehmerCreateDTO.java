@@ -1,7 +1,11 @@
 package com.kcserver.dto.teilnehmer;
 
 import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 public class TeilnehmerCreateDTO {
 
     @NotNull

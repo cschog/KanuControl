@@ -17,4 +17,8 @@ public class VeranstaltungUpdateDTO {
 
     private LocalDate endeDatum;
     private LocalTime endeZeit;
+
+    // ⭐ NEU
+    private Long leiterId;
+    private Long vereinId;
 }

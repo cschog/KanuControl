@@ -127,4 +127,98 @@ class VeranstaltungUpdateTest extends AbstractTenantIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(secondId));
     }
+    @Test
+    void shouldUpdateName() throws Exception {
+
+        VeranstaltungUpdateDTO dto = new VeranstaltungUpdateDTO();
+        dto.setName("Neue Sommerfreizeit");
+
+        mockMvc.perform(
+                        tenantRequest(
+                                put("/api/veranstaltung/{id}", veranstaltungId)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(dto))
+                        )
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Neue Sommerfreizeit"));
+    }
+
+    @Test
+    void shouldChangeLeiter() throws Exception {
+
+        PersonTestFactory personen =
+                new PersonTestFactory(mockMvc, objectMapper, tenantAuth());
+
+        Long newLeiterId = personen.createOrReuse(
+                "Anna",
+                "Leiterin",
+                LocalDate.of(1992, 1, 1),
+                null
+        );
+
+        VeranstaltungUpdateDTO dto = new VeranstaltungUpdateDTO();
+        dto.setLeiterId(newLeiterId);
+
+        mockMvc.perform(
+                        tenantRequest(
+                                put("/api/veranstaltung/{id}", veranstaltungId)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(dto))
+                        )
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.leiterId").value(newLeiterId));
+    }
+    @Test
+    void shouldChangeVerein() throws Exception {
+
+        VereinTestFactory vereine =
+                new VereinTestFactory(mockMvc, objectMapper, tenantAuth());
+
+        Long newVereinId = vereine.createIfNotExists(
+                "KSC",
+                "Kanu Sport Club"
+        );
+
+        VeranstaltungUpdateDTO dto = new VeranstaltungUpdateDTO();
+        dto.setVereinId(newVereinId);
+
+        mockMvc.perform(
+                        tenantRequest(
+                                put("/api/veranstaltung/{id}", veranstaltungId)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(dto))
+                        )
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.vereinId").value(newVereinId));
+    }
+    @Test
+    void shouldFailInvalidLeiterAge() throws Exception {
+
+        PersonTestFactory personen =
+                new PersonTestFactory(mockMvc, objectMapper, tenantAuth());
+
+        // 12 Jahre alt → ungültig
+        Long tooYoungId = personen.createOrReuse(
+                "Tim",
+                "ZuJung",
+                LocalDate.now().minusYears(12),
+                null
+        );
+
+        VeranstaltungUpdateDTO dto = new VeranstaltungUpdateDTO();
+        dto.setLeiterId(tooYoungId);
+
+        mockMvc.perform(
+                        tenantRequest(
+                                put("/api/veranstaltung/{id}", veranstaltungId)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(dto))
+                        )
+                )
+                .andExpect(status().isBadRequest());
+    }
+
 }
