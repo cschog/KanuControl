@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <!-- ========================================================= -->
+    <!-- GENAU EINE AKTIVE VERANSTALTUNG PRO MANDANT -->
+    <!-- PostgreSQL PARTIAL UNIQUE INDEX -->
+    <!-- ========================================================= -->
+    <changeSet id="003b-single-active-veranstaltung" author="chris" dbms="postgresql">
+
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="ux_veranstaltung_single_active"/>
+            </not>
+        </preConditions>
+
+        <sql>
+            CREATE UNIQUE INDEX ux_veranstaltung_single_active
+            ON veranstaltung (aktiv)
+            WHERE aktiv = true;
+        </sql>
+
+    </changeSet>
+
+    <!-- ========================================================= -->
+    <!-- PERFORMANCE INDEX für findByAktivTrue() -->
+    <!-- ========================================================= -->
+    <changeSet id="003c-index-active-lookup" author="chris" dbms="postgresql">
+
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_veranstaltung_active_true"/>
+            </not>
+        </preConditions>
+
+        <sql>
+            CREATE INDEX idx_veranstaltung_active_true
+            ON veranstaltung (id)
+            WHERE aktiv = true;
+        </sql>
+
+    </changeSet>
+
+</databaseChangeLog>

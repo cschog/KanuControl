@@ -30,4 +30,20 @@ public abstract class Auditable {
     @LastModifiedBy
     @Column(name = "last_modified_by")
     private String lastModifiedBy;
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public Instant getLastModifiedAt() {
+        return lastModifiedAt;
+    }
+
+    public String getLastModifiedBy() {
+        return lastModifiedBy;
+    }
 }

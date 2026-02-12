@@ -9,17 +9,16 @@ import org.springframework.stereotype.Component;
 public class TenantIdentifierResolver
         implements CurrentTenantIdentifierResolver<String> {
 
-    private static final String DEFAULT_TENANT = "kanu";
+    private static final String BOOTSTRAP_TENANT = "kanu";   // ← NICHT ekc_test
 
     @Override
     public String resolveCurrentTenantIdentifier() {
 
-        String tenant = TenantContext.getTenant();
+        String tenant = TenantContext.getCurrentTenant();
 
         if (tenant == null || tenant.isBlank()) {
-            // ✅ Bootstrap / Startup / Tests
-            log.debug("No tenant set – using default tenant '{}'", DEFAULT_TENANT);
-            return DEFAULT_TENANT;
+            // Bootstrap / Bean creation / Repository init
+            return BOOTSTRAP_TENANT;
         }
 
         return tenant;

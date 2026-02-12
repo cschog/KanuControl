@@ -22,7 +22,7 @@ public abstract class AbstractTenantIntegrationTest {
 
     /**
      * 🔑 Standard-Test-Tenant
-     * (pro Testklasse überschreibbar)
+     * (kann pro Testklasse überschrieben werden)
      */
     protected String tenant() {
         return "ekc_test";
@@ -37,20 +37,35 @@ public abstract class AbstractTenantIntegrationTest {
     @Autowired
     protected MockMvc mockMvc;
 
+    /* =========================================================
+       TENANT BOOTSTRAP
+       ========================================================= */
+
     @BeforeEach
     void setupTenant() {
         String tenant = tenant();
 
+        // ⭐ Schema sicherstellen
         tenantSchemaProvisioner.createFromBaseline(tenant);
+
+        // ⭐ ThreadLocal für Hibernate Resolver
         TenantContext.setCurrentTenant(tenant);
 
+        // ⭐ DB Schema für direkte Repository Calls im Test
         jdbcTemplate.execute("SET search_path TO " + tenant);
 
+        // ⭐ saubere DB pro Test
         jdbcTemplate.execute("TRUNCATE TABLE teilnehmer CASCADE");
         jdbcTemplate.execute("TRUNCATE TABLE mitglied CASCADE");
         jdbcTemplate.execute("TRUNCATE TABLE person CASCADE");
         jdbcTemplate.execute("TRUNCATE TABLE verein CASCADE");
         jdbcTemplate.execute("TRUNCATE TABLE veranstaltung CASCADE");
+
+        // ⭐ optional: IDs resetten (Postgres)
+        jdbcTemplate.execute("ALTER SEQUENCE person_id_seq RESTART WITH 1");
+        jdbcTemplate.execute("ALTER SEQUENCE verein_id_seq RESTART WITH 1");
+        jdbcTemplate.execute("ALTER SEQUENCE veranstaltung_id_seq RESTART WITH 1");
+        jdbcTemplate.execute("ALTER SEQUENCE teilnehmer_id_seq RESTART WITH 1");
     }
 
     @AfterEach
@@ -59,11 +74,22 @@ public abstract class AbstractTenantIntegrationTest {
     }
 
     /* =========================================================
-       🔑 JWT / REQUEST
+       JWT + TENANT HEADER + THREADLOCAL (entscheidend!)
        ========================================================= */
 
     protected RequestPostProcessor tenantAuth() {
-        return jwtWithTenant(tenant());
+        String tenant = tenant();
+
+        return request -> {
+            // ⭐ WICHTIG: Hibernate Resolver braucht ThreadLocal
+            TenantContext.setCurrentTenant(tenant);
+
+            // ⭐ Tenant Header für TenantFilter
+            request.addHeader("X-Tenant", tenant);
+
+            // ⭐ JWT mit Tenant Claim
+            return jwtWithTenant(tenant).postProcessRequest(request);
+        };
     }
 
     protected MockHttpServletRequestBuilder tenantRequest(
@@ -73,10 +99,13 @@ public abstract class AbstractTenantIntegrationTest {
     }
 
     /* =========================================================
-       ⭐ WICHTIG: für Repository-Zugriffe im Test
+       Für direkte Repository-Zugriffe im Test
        ========================================================= */
 
     protected void ensureTenantSchema() {
-        jdbcTemplate.execute("SET search_path TO " + tenant());
+        String tenant = tenant();
+
+        TenantContext.setCurrentTenant(tenant);
+        jdbcTemplate.execute("SET search_path TO " + tenant);
     }
 }

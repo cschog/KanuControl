@@ -4,8 +4,8 @@ public enum VeranstaltungTyp implements CodeEnum {
 
     JUGENDERHOLUNGSMASSNAHME("JEM"),
     FREIZEITSMASSNAHME("FM"),
-    BILDUNGSVERANSTALTUNG("B"),
-    GROSSVERANSTALTUNG("G");
+    BILDUNGSVERANSTALTUNG("BV"),
+    GROSSVERANSTALTUNG("GV");
 
     private final String code;
 

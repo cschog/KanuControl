@@ -5,30 +5,34 @@ public final class TenantContext {
     private static final ThreadLocal<String> CURRENT_TENANT =
             new ThreadLocal<>();
 
-    private TenantContext() {
-        // utility class
-    }
-
-    /* =========================================================
-       Neue, saubere API
-       ========================================================= */
+    private TenantContext() {}
 
     public static void setCurrentTenant(String tenant) {
+        if (TenantTraceConfig.TRACE) {
+            System.out.println(">>> [CTX] SET TENANT = " + tenant +
+                    " | thread=" + Thread.currentThread().getName());
+        }
         CURRENT_TENANT.set(tenant);
     }
 
     public static String getCurrentTenant() {
-        return CURRENT_TENANT.get();
+        String t = CURRENT_TENANT.get();
+        if (TenantTraceConfig.TRACE) {
+            System.out.println(">>> [CTX] GET TENANT = " + t +
+                    " | thread=" + Thread.currentThread().getName());
+        }
+        return t;
     }
 
     public static void clear() {
+        if (TenantTraceConfig.TRACE) {
+            System.out.println(">>> [CTX] CLEAR TENANT | thread=" +
+                    Thread.currentThread().getName());
+        }
         CURRENT_TENANT.remove();
     }
 
-    /* =========================================================
-       🔁 Legacy-Kompatibilität (wichtig!)
-       ========================================================= */
-
+    // Legacy
     public static void setTenant(String tenant) {
         setCurrentTenant(tenant);
     }

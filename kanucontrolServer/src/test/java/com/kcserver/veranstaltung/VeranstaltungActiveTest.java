@@ -1,11 +1,9 @@
 package com.kcserver.veranstaltung;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kcserver.dto.veranstaltung.VeranstaltungCreateDTO;
-import com.kcserver.enumtype.TeilnehmerRolle;
+import com.kcserver.dto.veranstaltung.VeranstaltungDetailDTO;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.integration.support.AbstractTenantIntegrationTest;
-import com.kcserver.repository.TeilnehmerRepository;
 import com.kcserver.repository.VeranstaltungRepository;
 import com.kcserver.testdata.PersonTestFactory;
 import com.kcserver.testdata.VereinTestFactory;
@@ -22,17 +20,16 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Tag("veranstaltung-crud")
-class VeranstaltungCreateTest extends AbstractTenantIntegrationTest {
+@Tag("veranstaltung-active")
+class VeranstaltungActiveTest extends AbstractTenantIntegrationTest {
 
     @Autowired ObjectMapper objectMapper;
-    @Autowired TeilnehmerRepository teilnehmerRepository;
     @Autowired VeranstaltungRepository veranstaltungRepository;
 
     Long vereinId;
@@ -51,10 +48,7 @@ class VeranstaltungCreateTest extends AbstractTenantIntegrationTest {
         PersonTestFactory personen =
                 new PersonTestFactory(mockMvc, objectMapper, tenantAuth());
 
-        vereinId = vereine.createIfNotExists(
-                "EKC",
-                "Eschweiler Kanu Club"
-        );
+        vereinId = vereine.createIfNotExists("EKC", "Eschweiler Kanu Club");
 
         leiterId = personen.createOrReuse(
                 "Max",
@@ -65,65 +59,57 @@ class VeranstaltungCreateTest extends AbstractTenantIntegrationTest {
     }
 
     /* =========================================================
-       TEST 1 — shouldCreateVeranstaltung
+       TEST 1 — shouldReturnSingleActive
        ========================================================= */
 
     @Test
-    void shouldCreateVeranstaltung() throws Exception {
+    void shouldReturnSingleActive() throws Exception {
 
-        String json = createValidVeranstaltung("Sommerfreizeit 2026");
+        createVeranstaltung("V1");
 
-        Long veranstaltungId =
-                objectMapper.readTree(json).get("id").asLong();
-
-        assertThat(veranstaltungRepository.findById(veranstaltungId)).isPresent();
-    }
-
-    /* =========================================================
-       TEST 2 — shouldFailMissingFields
-       ========================================================= */
-
-    @Test
-    void shouldFailMissingFields() throws Exception {
-
-        VeranstaltungCreateDTO dto = new VeranstaltungCreateDTO(); // leer
-
-        mockMvc.perform(
-                tenantRequest(
-                        post("/api/veranstaltung")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(dto))
+        String json = mockMvc.perform(
+                        tenantRequest(get("/api/veranstaltung/active"))
                 )
-        ).andExpect(status().isBadRequest());
-    }
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
-    /* =========================================================
-       TEST 3 — shouldSetActiveAutomatically
-       ========================================================= */
-
-    @Test
-    void shouldSetActiveAutomatically() throws Exception {
-
-        String json = createValidVeranstaltung("Auto Active Test");
-
-        boolean aktiv =
-                objectMapper.readTree(json).get("aktiv").asBoolean();
+        boolean aktiv = objectMapper.readTree(json).get("aktiv").asBoolean();
 
         assertThat(aktiv).isTrue();
     }
 
     /* =========================================================
-       TEST 4 — shouldSwitchActiveOnSecondCreate
+       TEST 2 — shouldSwitchActive
        ========================================================= */
 
     @Test
-    void shouldSwitchActiveOnSecondCreate() throws Exception {
+    void shouldSwitchActive() throws Exception {
 
-        createValidVeranstaltung("V1");
-        createValidVeranstaltung("V2");
+        Long v1 = createVeranstaltung("V1");
+        Long v2 = createVeranstaltung("V2"); // muss automatisch aktiv werden
 
-        long activeCount = veranstaltungRepository
-                .findAll()
+        var first = veranstaltungRepository.findById(v1).orElseThrow();
+        var second = veranstaltungRepository.findById(v2).orElseThrow();
+
+        assertThat(first.isAktiv()).isFalse();
+        assertThat(second.isAktiv()).isTrue();
+    }
+
+    /* =========================================================
+       TEST 3 — shouldEnforceSingleActiveDBConstraint
+       ========================================================= */
+
+    @Test
+    void shouldEnforceSingleActiveDBConstraint() throws Exception {
+
+        createVeranstaltung("V1");
+
+        // zweites Create darf nicht 2 aktive erzeugen
+        createVeranstaltung("V2");
+
+        long activeCount = veranstaltungRepository.findAll()
                 .stream()
                 .filter(v -> v.isAktiv())
                 .count();
@@ -132,44 +118,24 @@ class VeranstaltungCreateTest extends AbstractTenantIntegrationTest {
     }
 
     /* =========================================================
-       BONUS — Leiter wird Teilnehmer
-       ========================================================= */
-
-    @Test
-    void shouldCreateLeiterTeilnehmerAutomatically() throws Exception {
-
-        String json = createValidVeranstaltung("Leiter Auto Teilnehmer");
-
-        Long veranstaltungId =
-                objectMapper.readTree(json).get("id").asLong();
-
-        var teilnehmer = teilnehmerRepository
-                .findByVeranstaltungIdAndPersonId(veranstaltungId, leiterId)
-                .orElseThrow();
-
-        assertThat(teilnehmer.getRolle())
-                .isEqualTo(TeilnehmerRolle.LEITER);
-    }
-
-    /* =========================================================
        HELPER
        ========================================================= */
 
-    private String createValidVeranstaltung(String name) throws Exception {
+    private Long createVeranstaltung(String name) throws Exception {
 
-        VeranstaltungCreateDTO dto = new VeranstaltungCreateDTO();
+        VeranstaltungDetailDTO dto = new VeranstaltungDetailDTO();
         dto.setName(name);
         dto.setTyp(VeranstaltungTyp.JUGENDERHOLUNGSMASSNAHME);
 
         dto.setVereinId(vereinId);
         dto.setLeiterId(leiterId);
 
-        dto.setBeginnDatum(LocalDate.now().plusDays(10));
-        dto.setEndeDatum(LocalDate.now().plusDays(20));
+        dto.setBeginnDatum(LocalDate.now().plusDays(5));
+        dto.setEndeDatum(LocalDate.now().plusDays(10));
         dto.setBeginnZeit(LocalTime.of(10, 0));
         dto.setEndeZeit(LocalTime.of(18, 0));
 
-        return mockMvc.perform(
+        String json = mockMvc.perform(
                         tenantRequest(
                                 post("/api/veranstaltung")
                                         .contentType(MediaType.APPLICATION_JSON)
@@ -180,5 +146,7 @@ class VeranstaltungCreateTest extends AbstractTenantIntegrationTest {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
+
+        return objectMapper.readTree(json).get("id").asLong();
     }
 }

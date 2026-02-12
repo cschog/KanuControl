@@ -84,11 +84,22 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
 
         Veranstaltung saved = veranstaltungRepository.save(veranstaltung);
 
-        Teilnehmer leiterTeilnehmer = new Teilnehmer();
-        leiterTeilnehmer.setVeranstaltung(saved);
-        leiterTeilnehmer.setPerson(leiter);
-        leiterTeilnehmer.setRolle(TeilnehmerRolle.LEITER);
-        teilnehmerRepository.save(leiterTeilnehmer);
+        // Leiter MUSS exakt 1 Teilnehmer sein (Domain Invariant)
+        teilnehmerRepository
+                .findByVeranstaltungAndPerson(saved, leiter)
+                .ifPresentOrElse(
+                        existing -> {
+                            existing.setRolle(TeilnehmerRolle.LEITER);
+                            teilnehmerRepository.save(existing);
+                        },
+                        () -> {
+                            Teilnehmer t = new Teilnehmer();
+                            t.setVeranstaltung(saved);
+                            t.setPerson(leiter);
+                            t.setRolle(TeilnehmerRolle.LEITER);
+                            teilnehmerRepository.save(t);
+                        }
+                );
 
         return veranstaltungMapper.toDetailDTO(
                 veranstaltungRepository.findByIdWithRelations(saved.getId()).orElseThrow()
@@ -200,6 +211,55 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
         if (dto.getEndeZeit() != null) {
             veranstaltung.setEndeZeit(dto.getEndeZeit());
         }
+
+        // -------- Leiter -------------------
+        if (dto.getLeiterId() != null) {
+
+            Person newLeiter = personRepository.findById(dto.getLeiterId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Leiter not found"));
+
+            validateLeiterAge(newLeiter);
+
+            Person oldLeiter = veranstaltung.getLeiter();
+
+            // 1️⃣ alten Leiter zurücksetzen
+            teilnehmerRepository
+                    .findByVeranstaltungAndPerson(veranstaltung, oldLeiter)
+                    .ifPresent(t -> {
+                        t.setRolle(null);
+                        teilnehmerRepository.save(t);
+                    });
+
+            // 2️⃣ neuen Leiter als Teilnehmer holen/erzeugen
+            Teilnehmer newLeiterTeilnehmer = teilnehmerRepository
+                    .findByVeranstaltungAndPerson(veranstaltung, newLeiter)
+                    .orElseGet(() -> {
+                        Teilnehmer t = new Teilnehmer();
+                        t.setVeranstaltung(veranstaltung);
+                        t.setPerson(newLeiter);
+                        t.setRolle(null);
+                        return teilnehmerRepository.save(t);
+                    });
+
+            // 3️⃣ Rolle setzen
+            newLeiterTeilnehmer.setRolle(TeilnehmerRolle.LEITER);
+            teilnehmerRepository.save(newLeiterTeilnehmer);
+
+            // 4️⃣ Veranstaltung updaten
+            veranstaltung.setLeiter(newLeiter);
+        }
+
+        // ------- Verein -------------------
+
+        if (dto.getVereinId() != null) {
+
+            Verein newVerein = vereinRepository.findById(dto.getVereinId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Verein not found"));
+
+            veranstaltung.setVerein(newVerein);
+        }
+
+
 
         return veranstaltungMapper.toDetailDTO(veranstaltung);
     }
