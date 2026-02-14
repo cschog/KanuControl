@@ -49,10 +49,10 @@ public class JwtTenantFilter
             return;
         }
 
+        TenantContext.setCurrentTenant(tenant);
         tenantSchemaService.initializeTenant(tenant);
 
         try {
-            TenantContext.setCurrentTenant(tenant);
             filterChain.doFilter(request, response);
         } finally {
             TenantContext.clear();

@@ -1,8 +1,10 @@
 package com.kcserver.controller;
 
 import com.kcserver.dto.verein.VereinDTO;
+import com.kcserver.dto.verein.VereinRefDTO;
 import com.kcserver.service.VereinService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -37,6 +39,14 @@ public class VereinController {
     ) {
         return vereinService.search(name, abk, pageable);
     }
+    @GetMapping("/search/ref")
+    public Page<VereinRefDTO> searchRef(
+            @RequestParam(required = false) String search,
+            Pageable pageable
+    ) {
+        return vereinService.searchRef(search, pageable);
+    }
+
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

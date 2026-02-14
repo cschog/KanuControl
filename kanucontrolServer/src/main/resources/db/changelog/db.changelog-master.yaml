@@ -3,5 +3,7 @@ databaseChangeLog:
       file: db/changelog/baseline/000-baseline.xml
   - include:
       file: db/changelog/changes/003b-veranstaltung-active-index.xml
+  - include:
+      file: db/changelog/changes/2026-02-13-01-veranstaltung-gebuehren.yaml
 
 

@@ -1,6 +1,8 @@
 import apiClient from "@/api/client/apiClient";
 import Verein from "@/api/types/VereinFormModel";
 import { VereinSave } from "@/api/types/VereinSave";
+import { VereinRef } from "@/api/types/VereinRef";
+import { Page } from "@/api/types/Page";
 
 const BASE = "/verein";
 
@@ -22,3 +24,14 @@ export const updateVerein = async (id: number, payload: VereinSave): Promise<Ver
 export const deleteVerein = async (vereinId: number): Promise<void> => {
   await apiClient.delete(`${BASE}/${vereinId}`);
 };
+
+export async function searchVereinePage(params: {
+  search?: string;
+  page?: number;
+  size?: number;
+}): Promise<Page<VereinRef>> {
+  const { data } = await apiClient.get("/verein/search/ref", {
+    params,
+  });
+  return data;
+}

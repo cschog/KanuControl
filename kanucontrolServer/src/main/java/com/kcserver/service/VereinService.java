@@ -1,12 +1,14 @@
 package com.kcserver.service;
 
 import com.kcserver.dto.verein.VereinDTO;
+import com.kcserver.dto.verein.VereinRefDTO;
 import com.kcserver.entity.Person;
 import com.kcserver.entity.Verein;
-import org.springframework.data.domain.Pageable;
 import com.kcserver.mapper.VereinMapper;
 import com.kcserver.repository.PersonRepository;
 import com.kcserver.repository.VereinRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -75,6 +77,27 @@ public class VereinService {
         return vereinRepository.findAll(spec, pageable)
                 .map(vereinMapper::toDTO)
                 .getContent();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<VereinRefDTO> searchRef(String search, Pageable pageable) {
+
+        Page<Verein> page;
+
+        if (search == null || search.isBlank()) {
+            page = vereinRepository.findAll(pageable);
+        } else {
+            page = vereinRepository
+                    .findByNameContainingIgnoreCaseOrAbkContainingIgnoreCase(
+                            search, search, pageable
+                    );
+        }
+
+        return page.map(v -> new VereinRefDTO(
+                v.getId(),
+                v.getName(),
+                v.getAbk()
+        ));
     }
 
     /* =========================================================

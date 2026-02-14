@@ -294,6 +294,8 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
 
         return veranstaltungMapper.toDetailDTO(refreshed);
     }
+
+
     /* =========================================================
        DELETE
        ========================================================= */

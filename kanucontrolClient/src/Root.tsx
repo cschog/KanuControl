@@ -3,6 +3,9 @@ import theme from "@/theme";
 import { useAuth } from "@/auth/useAuth";
 import Public from "@/pages/Public";
 import App from "@/App";
+import { LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import "dayjs/locale/de";
 
 export default function Root() {
   const { initialized, authenticated } = useAuth();
@@ -14,7 +17,9 @@ export default function Root() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      {authenticated ? <App /> : <Public />}
+      <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="de">
+        {authenticated ? <App /> : <Public />}
+      </LocalizationProvider>
     </ThemeProvider>
   );
 }

@@ -73,7 +73,7 @@ class VeranstaltungUpdateAndDeleteTest extends AbstractTenantIntegrationTest {
 
         VeranstaltungCreateDTO createDTO = new VeranstaltungCreateDTO();
         createDTO.setName("Sommerfreizeit");
-        createDTO.setTyp(VeranstaltungTyp.JUGENDERHOLUNGSMASSNAHME);
+        createDTO.setTyp(VeranstaltungTyp.JEM);
         createDTO.setVereinId(vereinId);
         createDTO.setLeiterId(leiterId);
         createDTO.setBeginnDatum(LocalDate.now().plusDays(5));

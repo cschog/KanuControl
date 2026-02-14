@@ -3,10 +3,10 @@ package com.kcserver.entity;
 import com.kcserver.audit.Auditable;
 import com.kcserver.enumtype.CountryCode;
 import com.kcserver.enumtype.VeranstaltungTyp;
-import com.kcserver.persistence.converter.VeranstaltungTypConverter;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
@@ -30,7 +30,7 @@ public class Veranstaltung extends Auditable {
     @Column(nullable = false, length = 200)
     private String name;
 
-    @Convert(converter = VeranstaltungTypConverter.class)
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 3)
     private VeranstaltungTyp typ;
 
@@ -60,6 +60,13 @@ public class Veranstaltung extends Auditable {
 
     @Column(name = "ende_zeit", nullable = false)
     private LocalTime endeZeit;
+
+    @Builder.Default
+    @Column(name = "individuelle_gebuehren", nullable = false)
+    private boolean individuelleGebuehren = false;
+
+    @Column(name = "standard_gebuehr", precision = 10, scale = 2)
+    private BigDecimal standardGebuehr;
 
     /* =========================
        Beziehungen

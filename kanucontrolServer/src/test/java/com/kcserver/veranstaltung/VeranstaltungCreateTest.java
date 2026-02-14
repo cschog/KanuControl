@@ -159,7 +159,7 @@ class VeranstaltungCreateTest extends AbstractTenantIntegrationTest {
 
         VeranstaltungCreateDTO dto = new VeranstaltungCreateDTO();
         dto.setName(name);
-        dto.setTyp(VeranstaltungTyp.JUGENDERHOLUNGSMASSNAHME);
+        dto.setTyp(VeranstaltungTyp.JEM);
 
         dto.setVereinId(vereinId);
         dto.setLeiterId(leiterId);

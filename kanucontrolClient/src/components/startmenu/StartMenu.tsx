@@ -1,25 +1,18 @@
-import { useEffect, useState } from "react";
-import { Box, Button, Typography, Alert } from "@mui/material";
+import { Box, Button, Alert } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import { useNavigate } from "react-router-dom";
-import apiClient from "@/api/client/apiClient";
+import { MenueHeader } from "@/components/layout/MenueHeader";
+import { useAppContext } from "@/context/AppContext";
 
 const StartMenue = () => {
-  const [activeSchema, setActiveSchema] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const { schema, active, loading } = useAppContext();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchSchema = async () => {
-      try {
-        const response = await apiClient.get("/active-schema");
-        setActiveSchema(response.data);
-      } catch {
-        setError("Mandant konnte nicht geladen werden");
-      }
-    };
-    fetchSchema();
-  }, []);
+  const contextText = active
+    ? `Mandant: ${schema} · ${active.name} · ${active.leiter?.vorname ?? ""} ${
+        active.leiter?.name ?? ""
+      }`
+    : `Mandant: ${schema}`;
 
   const buttons = [
     { label: "Vereine", path: "/vereine" },
@@ -37,32 +30,14 @@ const StartMenue = () => {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
-        KanuControl
-      </Typography>
+      <MenueHeader contextText={contextText} />
 
-      <Typography variant="subtitle1" sx={{ mb: 2 }}>
-        Mandant:{" "}
-        <Typography component="span" fontWeight="bold">
-          {activeSchema || "Lädt…"}
-        </Typography>
-      </Typography>
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
-        </Alert>
-      )}
+      {loading && <Alert severity="info">Lade Kontext…</Alert>}
 
       <Grid container spacing={2}>
         {buttons.map((btn) => (
           <Grid key={btn.label} size={{ xs: 12, sm: 6, md: 4 }}>
-            <Button
-              fullWidth
-              size="large"
-              variant="contained"
-              onClick={() => navigate(btn.path)}
-            >
+            <Button fullWidth size="large" variant="contained" onClick={() => navigate(btn.path)}>
               {btn.label}
             </Button>
           </Grid>

@@ -23,7 +23,7 @@ public class TeilnehmerTestFactory extends AbstractApiTestFactory {
 
         var dto = new java.util.HashMap<String, Object>();
         dto.put("name", "Test Veranstaltung");
-        dto.put("typ", "JUGENDERHOLUNGSMASSNAHME");
+        dto.put("typ", "JEM");
         dto.put("aktiv", true);
         dto.put("vereinId", vereinId);
         dto.put("leiterId", leiterId);

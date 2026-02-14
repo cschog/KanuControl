@@ -53,7 +53,7 @@ class Personen extends Component<Record<string, never>, PersonenState> {
     data: [],
     total: 0,
     page: 0,
-    pageSize: 20,
+    pageSize: 8,
 
     vereine: [],
 

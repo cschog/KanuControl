@@ -91,6 +91,11 @@ public class VeranstaltungController {
         return veranstaltungService.update(id, dto);
     }
 
+    @PostMapping("/{id}/activate")
+    public VeranstaltungDetailDTO activate(@PathVariable Long id) {
+        return veranstaltungService.setActive(id);
+    }
+
      /* =========================================================
        DELETE
        ========================================================= */

@@ -8,6 +8,7 @@ import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.math.BigDecimal;
 
 @Data
 public class VeranstaltungDetailDTO {
@@ -33,6 +34,9 @@ public class VeranstaltungDetailDTO {
 
     private LocalDate endeDatum;
     private LocalTime endeZeit;
+
+    private Boolean individuelleGebuehren;
+    private BigDecimal standardGebuehr;
 
     /* =========================
        Beziehungen

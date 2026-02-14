@@ -16,13 +16,11 @@ public class LoginService {
     }
 
     public void login(String tenant) {
-
-        TenantContext.setCurrentTenant(tenant);
         try {
-            // ganz normal JPA verwenden
-            personRepository.findAll();
+            TenantContext.setCurrentTenant(tenant);
+            personRepository.count();   // leichter als findAll
         } finally {
-            TenantContext.clear();
+            TenantContext.clear();      // MUSS bleiben
         }
     }
 }
