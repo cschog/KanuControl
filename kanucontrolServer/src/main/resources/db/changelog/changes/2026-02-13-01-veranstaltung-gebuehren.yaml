@@ -1,0 +1,33 @@
+databaseChangeLog:
+  - changeSet:
+      id: 2026-02-13-01-veranstaltung-gebuehren
+      author: chris
+
+      changes:
+
+        - addColumn:
+            tableName: veranstaltung
+            columns:
+
+              - column:
+                  name: individuelle_gebuehren
+                  type: boolean
+                  defaultValueBoolean: false
+                  remarks: "false = eine Gebühr für alle"
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: standard_gebuehr
+                  type: decimal(10,2)
+                  remarks: "Standard Teilnehmergebühr"
+
+      rollback:
+
+        - dropColumn:
+            tableName: veranstaltung
+            columnName: standard_gebuehr
+
+        - dropColumn:
+            tableName: veranstaltung
+            columnName: individuelle_gebuehren

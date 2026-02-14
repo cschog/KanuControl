@@ -1,7 +1,5 @@
-// src/components/veranstaltung/VeranstaltungActionBar.tsx
 import React from "react";
 import { BottomActionBar } from "@/components/common/BottomActionBar";
-import { BottomAction } from "@/components/common/BottomActionBar";
 
 interface Props {
   aktiv: boolean;
@@ -10,58 +8,63 @@ interface Props {
   onEdit: () => void;
   onCancelEdit: () => void;
   onSave: () => void;
-  onBeenden: () => void;
-  onAktivieren: () => void;
+  onDelete: () => void; // ⭐ FEHLTE
   onBack: () => void;
+  onActivate: () => void;
 
-  disableEdit?: boolean;
+  disableEdit: boolean;
+  disableDelete: boolean;
 }
 
 export const VeranstaltungActionBar: React.FC<Props> = ({
+  aktiv,
   editMode,
   onEdit,
   onCancelEdit,
   onSave,
-  onBeenden,
-  onAktivieren,
+  onDelete,
   onBack,
+  onActivate,
   disableEdit,
+  disableDelete,
 }) => {
-  const left: BottomAction[] = editMode
-    ? [{ label: "Abbrechen", variant: "outlined", onClick: onCancelEdit }]
-    : [{ label: "Zurück", variant: "outlined", onClick: onBack }];
-
-  const right: BottomAction[] = [];
-
-  if (!editMode) {
-    right.push({
-      label: "Bearbeiten",
-      variant: "outlined",
-      onClick: onEdit,
-      disabled: disableEdit,
-    });
-  }
-
   if (editMode) {
-    right.push({
-      label: "Speichern",
-      variant: "contained",
-      onClick: onSave,
-    });
+    return (
+      <BottomActionBar
+        left={[
+          { label: "Speichern", onClick: onSave, variant: "contained" },
+          { label: "Abbrechen", onClick: onCancelEdit, variant: "outlined" },
+        ]}
+      />
+    );
   }
 
-  right.push(
-    {
-      label: "Beenden",
-      variant: "outlined",
-      onClick: onBeenden,
-    },
-    {
-      label: "Aktivieren",
-      variant: "outlined",
-      onClick: onAktivieren,
-    },
+  return (
+    <BottomActionBar
+      left={[
+        {
+          label: "Ändern",
+          onClick: onEdit,
+          variant: "contained",
+          disabled: disableEdit,
+        },
+        {
+          label: "Löschen",
+          onClick: onDelete,
+          variant: "outlined",
+          disabled: disableDelete,
+        },
+        {
+          label: aktiv ? "Aktiv" : "Aktiv setzen",
+          onClick: onActivate,
+          variant: aktiv ? "contained" : "outlined",
+        },
+        {
+          label: "Zurück",
+          onClick: onBack,
+          variant: "outlined",
+        },
+      ]}
+    />
   );
-
-  return <BottomActionBar left={left} right={right} />;
 };

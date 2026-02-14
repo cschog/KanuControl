@@ -90,7 +90,7 @@ class VeranstaltungReadTest extends AbstractTenantIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(veranstaltungId))
                 .andExpect(jsonPath("$.name").value("Sommerfreizeit 2026"))
-                .andExpect(jsonPath("$.typ").value("JUGENDERHOLUNGSMASSNAHME"))
+                .andExpect(jsonPath("$.typ").value("JEM"))
                 .andExpect(jsonPath("$.aktiv").value(true))
 
                 // Beziehungen (IDs)
@@ -110,7 +110,7 @@ class VeranstaltungReadTest extends AbstractTenantIntegrationTest {
     private Object createDto() {
         return new Object() {
             public final String name = "Sommerfreizeit 2026";
-            public final VeranstaltungTyp typ = VeranstaltungTyp.JUGENDERHOLUNGSMASSNAHME;
+            public final VeranstaltungTyp typ = VeranstaltungTyp.JEM;
             public final Long vereinId = VeranstaltungReadTest.this.vereinId;
             public final Long leiterId = VeranstaltungReadTest.this.leiterId;
             public final LocalDate beginnDatum = LocalDate.now().plusDays(10);

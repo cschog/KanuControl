@@ -6,6 +6,7 @@ import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.math.BigDecimal;
 
 @Data
 public class VeranstaltungCreateDTO {
@@ -33,6 +34,9 @@ public class VeranstaltungCreateDTO {
 
     @NotNull
     private LocalTime endeZeit;
+
+    private Boolean individuelleGebuehren;
+    private BigDecimal standardGebuehr;
 
     /* =========================
        PLAN-ZAHLEN

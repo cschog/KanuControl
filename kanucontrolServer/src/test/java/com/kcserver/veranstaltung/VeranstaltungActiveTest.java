@@ -125,7 +125,7 @@ class VeranstaltungActiveTest extends AbstractTenantIntegrationTest {
 
         VeranstaltungDetailDTO dto = new VeranstaltungDetailDTO();
         dto.setName(name);
-        dto.setTyp(VeranstaltungTyp.JUGENDERHOLUNGSMASSNAHME);
+        dto.setTyp(VeranstaltungTyp.JEM);
 
         dto.setVereinId(vereinId);
         dto.setLeiterId(leiterId);

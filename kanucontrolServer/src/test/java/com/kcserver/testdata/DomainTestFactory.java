@@ -18,7 +18,7 @@ public class DomainTestFactory {
     ) {
         Veranstaltung v = new Veranstaltung();
         v.setName("Test Veranstaltung");
-        v.setTyp(VeranstaltungTyp.JUGENDERHOLUNGSMASSNAHME);
+        v.setTyp(VeranstaltungTyp.JEM);
 
         v.setBeginnDatum(LocalDate.now());
         v.setBeginnZeit(LocalTime.of(10, 0));

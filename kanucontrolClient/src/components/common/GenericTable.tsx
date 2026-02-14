@@ -57,7 +57,7 @@ export function GenericTable<T extends WithId>({
   const headerHeight = 56;
   const footerHeight = paginationMode === "server" ? 56 : 0;
 
-  const visibleRows = isMobile ? 6 : isTablet ? 8 : 11;
+  const visibleRows = isMobile ? 4 : isTablet ? 6 : 8;
 
   const calculatedHeight = headerHeight + footerHeight + visibleRows * rowHeight;
 

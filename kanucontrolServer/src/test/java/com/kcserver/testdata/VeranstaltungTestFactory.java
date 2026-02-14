@@ -31,7 +31,7 @@ public class VeranstaltungTestFactory extends AbstractApiTestFactory {
 
         VeranstaltungCreateDTO dto = new VeranstaltungCreateDTO();
         dto.setName(name);
-        dto.setTyp(VeranstaltungTyp.JUGENDERHOLUNGSMASSNAHME);
+        dto.setTyp(VeranstaltungTyp.JEM);
         dto.setVereinId(vereinId);
         dto.setLeiterId(leiterId);
 
@@ -78,7 +78,7 @@ public class VeranstaltungTestFactory extends AbstractApiTestFactory {
 
         VeranstaltungCreateDTO dto = new VeranstaltungCreateDTO();
         dto.setName(name);
-        dto.setTyp(VeranstaltungTyp.JUGENDERHOLUNGSMASSNAHME);
+        dto.setTyp(VeranstaltungTyp.JEM);
         dto.setVereinId(vereinId);
         dto.setLeiterId(leiterId);
 

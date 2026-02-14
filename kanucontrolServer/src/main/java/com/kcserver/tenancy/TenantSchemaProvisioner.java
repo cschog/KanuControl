@@ -59,23 +59,19 @@ public class TenantSchemaProvisioner {
     public void createFromBaselineIfNeeded(String tenantSchema) {
 
         if (initializedTenants.contains(tenantSchema)) {
-            logger.debug(
-                    "Tenant schema '{}' already initialized (runtime cache)",
-                    tenantSchema
-            );
             return;
         }
 
         synchronized (this) {
             if (initializedTenants.contains(tenantSchema)) {
-                logger.debug(
-                        "Tenant schema '{}' already initialized (double-check)",
-                        tenantSchema
-                );
                 return;
             }
 
-            createFromBaseline(tenantSchema);
+            // ⭐ NEU: Nur wenn Schema NICHT existiert
+            if (!schemaExists(tenantSchema)) {
+                createFromBaseline(tenantSchema);
+            }
+
             initializedTenants.add(tenantSchema);
         }
     }
@@ -119,5 +115,15 @@ public class TenantSchemaProvisioner {
             logger.debug("Creating table {}.{}", tenantSchema, table);
             jdbcTemplate.execute(sql);
         }
+    }
+
+    // ----- Helper ------------
+    private boolean schemaExists(String schema) {
+        Integer count = jdbcTemplate.queryForObject(
+                "select count(*) from information_schema.schemata where schema_name = ?",
+                Integer.class,
+                schema
+        );
+        return count != null && count > 0;
     }
 }
