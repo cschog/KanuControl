@@ -1,9 +1,7 @@
 package com.kcserver.controller;
 
-import com.kcserver.dto.teilnehmer.TeilnehmerBulkDeleteDTO;
-import com.kcserver.dto.teilnehmer.TeilnehmerDetailDTO;
-import com.kcserver.dto.teilnehmer.TeilnehmerListDTO;
-import com.kcserver.dto.teilnehmer.TeilnehmerUpdateDTO;
+import com.kcserver.dto.person.PersonListDTO;
+import com.kcserver.dto.teilnehmer.*;
 import com.kcserver.service.TeilnehmerService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -11,6 +9,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/veranstaltung/{veranstaltungId}/teilnehmer")
@@ -35,7 +35,33 @@ public class TeilnehmerController {
     }
 
     /* =========================================================
-       CREATE
+       AVAILABLE PERSONS (nicht Teilnehmer)
+       ========================================================= */
+
+    @GetMapping("/available")
+    public Page<PersonListDTO> getAvailablePersons(
+            @PathVariable Long veranstaltungId,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String vorname,
+            @RequestParam(required = false) String verein,
+            Pageable pageable
+    ) {
+        return teilnehmerService.getAvailablePersons(veranstaltungId, name, vorname, verein, pageable);
+    }
+
+    /* =========================================================
+       ASSIGNED PERSONS (alle Teilnehmer ohne Paging)
+       ========================================================= */
+
+    @GetMapping("/assigned")
+    public List<PersonListDTO> getAssigned(
+            @PathVariable Long veranstaltungId
+    ) {
+        return teilnehmerService.getAssignedPersons(veranstaltungId);
+    }
+
+    /* =========================================================
+       CREATE (single)
        ========================================================= */
 
     @PostMapping("/{personId}")
@@ -46,6 +72,20 @@ public class TeilnehmerController {
     ) {
         return teilnehmerService.addTeilnehmer(veranstaltungId, personId);
     }
+
+    /* =========================================================
+       CREATE (bulk)
+       ========================================================= */
+
+    @PostMapping("/bulk")
+    @ResponseStatus(HttpStatus.CREATED)
+    public void addBulk(
+            @PathVariable Long veranstaltungId,
+            @RequestBody TeilnehmerAddBulkDTO dto
+    ) {
+        teilnehmerService.addTeilnehmerBulk(veranstaltungId, dto.getPersonIds());
+    }
+
     /* =========================================================
        UPDATE
        ========================================================= */
@@ -86,7 +126,7 @@ public class TeilnehmerController {
     }
 
     /* =========================================================
-       LEITER
+       SET LEITER
        ========================================================= */
 
     @PutMapping("/{personId}/leiter")

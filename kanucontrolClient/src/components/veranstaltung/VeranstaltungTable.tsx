@@ -22,8 +22,6 @@ export function VeranstaltungTable({
   total,
   page,
   pageSize,
-  selectedId,
-  onSelect,
   onPageChange,
   onPageSizeChange,
 }: Props) {
@@ -31,8 +29,6 @@ export function VeranstaltungTable({
     <GenericTable<VeranstaltungList>
       rows={data}
       columns={veranstaltungColumns}
-      selectedRow={data.find((v) => v.id === selectedId) ?? null}
-      onSelectRow={onSelect}
       paginationMode="server"
       rowCount={total}
       page={page}

@@ -1,5 +1,6 @@
 package com.kcserver.service;
 
+import com.kcserver.dto.person.PersonListDTO;
 import com.kcserver.dto.teilnehmer.TeilnehmerDetailDTO;
 import com.kcserver.dto.teilnehmer.TeilnehmerListDTO;
 import com.kcserver.dto.teilnehmer.TeilnehmerUpdateDTO;
@@ -7,6 +8,7 @@ import com.kcserver.entity.Person;
 import com.kcserver.entity.Teilnehmer;
 import com.kcserver.entity.Veranstaltung;
 import com.kcserver.enumtype.TeilnehmerRolle;
+import com.kcserver.mapper.PersonMapper;
 import com.kcserver.mapper.TeilnehmerMapper;
 import com.kcserver.repository.PersonRepository;
 import com.kcserver.repository.TeilnehmerRepository;
@@ -29,17 +31,20 @@ public class TeilnehmerService {
     private final VeranstaltungRepository veranstaltungRepository;
     private final PersonRepository personRepository;
     private final TeilnehmerMapper teilnehmerMapper;
+    private final PersonMapper personMapper;
 
     public TeilnehmerService(
             TeilnehmerRepository teilnehmerRepository,
             VeranstaltungRepository veranstaltungRepository,
             PersonRepository personRepository,
-            TeilnehmerMapper teilnehmerMapper
+            TeilnehmerMapper teilnehmerMapper,
+            PersonMapper personMapper     // 👈 NEU
     ) {
         this.teilnehmerRepository = teilnehmerRepository;
         this.veranstaltungRepository = veranstaltungRepository;
         this.personRepository = personRepository;
         this.teilnehmerMapper = teilnehmerMapper;
+        this.personMapper = personMapper;   // 👈 NEU
     }
 
     /* =========================================================
@@ -160,6 +165,80 @@ public class TeilnehmerService {
                 veranstaltungId,
                 filteredIds
         );
+    }
+
+    /* =========================================================
+        AVAILABLE PERSONS (für Dual-List UI)
+       ========================================================= */
+
+    @Transactional
+    public Page<PersonListDTO> getAvailablePersons(
+            Long veranstaltungId,
+            String name,
+            String vorname,
+            String verein,
+            Pageable pageable
+    ) {
+
+        // prüfen ob Veranstaltung existiert
+        veranstaltungRepository.findById(veranstaltungId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Veranstaltung not found"
+                ));
+
+        return teilnehmerRepository
+                .findAvailablePersonsFiltered(veranstaltungId, name, vorname, verein, pageable)
+                .map(personMapper::toListDTO);
+    }
+
+    /* =========================================================
+   ASSIGNED PERSONS
+   ========================================================= */
+
+    @Transactional
+    public List<PersonListDTO> getAssignedPersons(Long veranstaltungId) {
+
+        return teilnehmerRepository
+                .findByVeranstaltungWithPerson(veranstaltungId)
+                .stream()
+                .map(t -> personMapper.toListDTO(t.getPerson()))
+                .toList();
+    }
+
+    /* =========================================================
+   ADD BULK
+   ========================================================= */
+
+    @Transactional
+    public void addTeilnehmerBulk(Long veranstaltungId, List<Long> personIds) {
+
+        Veranstaltung veranstaltung = veranstaltungRepository.findByIdWithRelations(veranstaltungId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Veranstaltung not found"
+                ));
+
+        for (Long personId : personIds) {
+
+            Person person = personRepository.findById(personId)
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.NOT_FOUND,
+                            "Person not found"
+                    ));
+
+            boolean exists = teilnehmerRepository
+                    .findByVeranstaltungAndPerson(veranstaltung, person)
+                    .isPresent();
+
+            if (!exists) {
+                Teilnehmer t = new Teilnehmer();
+                t.setVeranstaltung(veranstaltung);
+                t.setPerson(person);
+                t.setRolle(null);
+                teilnehmerRepository.save(t);
+            }
+        }
     }
 
     /* =========================================================
