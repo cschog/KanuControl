@@ -1,5 +1,6 @@
 package com.kcserver.service;
 
+import com.kcserver.dto.person.PersonListDTO;
 import com.kcserver.dto.veranstaltung.VeranstaltungCreateDTO;
 import com.kcserver.dto.veranstaltung.VeranstaltungDetailDTO;
 import com.kcserver.dto.veranstaltung.VeranstaltungListDTO;
@@ -9,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public interface VeranstaltungService {
 
@@ -55,6 +57,23 @@ public interface VeranstaltungService {
      */
     VeranstaltungDetailDTO getById(Long id);
 
+    /* =========================================================
+       AVAILABE
+       ========================================================= */
+
+    Page<PersonListDTO> getAvailablePersons(
+            Long veranstaltungId,
+            String name,
+            String vorname,
+            String verein,
+            Pageable pageable
+    );
+
+    List<PersonListDTO> getAssignedPersons(Long veranstaltungId);
+
+    void addTeilnehmerBulk(Long veranstaltungId, List<Long> personIds);
+
+    void removeTeilnehmerBulk(Long veranstaltungId, List<Long> personIds);
 
      /* =========================================================
        UPDATE

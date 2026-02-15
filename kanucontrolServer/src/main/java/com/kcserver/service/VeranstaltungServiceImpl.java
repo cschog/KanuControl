@@ -1,5 +1,6 @@
 package com.kcserver.service;
 
+import com.kcserver.dto.person.PersonListDTO;
 import com.kcserver.dto.veranstaltung.VeranstaltungCreateDTO;
 import com.kcserver.dto.veranstaltung.VeranstaltungDetailDTO;
 import com.kcserver.dto.veranstaltung.VeranstaltungListDTO;
@@ -10,18 +11,20 @@ import com.kcserver.entity.Veranstaltung;
 import com.kcserver.entity.Verein;
 import com.kcserver.enumtype.TeilnehmerRolle;
 import com.kcserver.enumtype.VeranstaltungTyp;
+import com.kcserver.mapper.PersonMapper;
 import com.kcserver.mapper.VeranstaltungMapper;
 import com.kcserver.repository.*;
-import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -33,19 +36,22 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
     private final PersonRepository personRepository;
     private final TeilnehmerRepository teilnehmerRepository;
     private final VeranstaltungMapper veranstaltungMapper;
+    private final PersonMapper personMapper;
 
     public VeranstaltungServiceImpl(
             VeranstaltungRepository veranstaltungRepository,
             VereinRepository vereinRepository,
             PersonRepository personRepository,
             TeilnehmerRepository teilnehmerRepository,
-            VeranstaltungMapper veranstaltungMapper
+            VeranstaltungMapper veranstaltungMapper,
+            PersonMapper personMapper   // 👈 NEU
     ) {
         this.veranstaltungRepository = veranstaltungRepository;
         this.vereinRepository = vereinRepository;
         this.personRepository = personRepository;
         this.teilnehmerRepository = teilnehmerRepository;
         this.veranstaltungMapper = veranstaltungMapper;
+        this.personMapper = personMapper;   // 👈 NEU
     }
 
     /* =========================================================
@@ -180,6 +186,111 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
         return veranstaltungRepository
                 .findAll(spec, pageable)
                 .map(veranstaltungMapper::toListDTO);
+    }
+    /* =========================================================
+       AVAILABLE
+       ========================================================= */
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PersonListDTO> getAvailablePersons(
+            Long veranstaltungId,
+            String name,
+            String vorname,
+            String verein,
+            Pageable pageable
+    ) {
+
+        veranstaltungRepository.findById(veranstaltungId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Veranstaltung not found"
+                ));
+
+        return teilnehmerRepository
+                .findAvailablePersonsFiltered(
+                        veranstaltungId,
+                        name,
+                        vorname,
+                        verein,
+                        pageable
+                )
+                .map(personMapper::toListDTO);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PersonListDTO> getAssignedPersons(Long veranstaltungId) {
+
+        return teilnehmerRepository
+                .findByVeranstaltungWithPerson(veranstaltungId)
+                .stream()
+                .map(t -> personMapper.toListDTO(t.getPerson()))
+                .toList();
+    }
+
+
+    @Override
+    @Transactional
+    public void addTeilnehmerBulk(Long veranstaltungId, List<Long> personIds) {
+
+        Veranstaltung v = veranstaltungRepository.findById(veranstaltungId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        for (Long personId : personIds) {
+
+            Person p = personRepository.findById(personId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+            boolean exists = teilnehmerRepository
+                    .findByVeranstaltungAndPerson(v, p)
+                    .isPresent();
+
+            if (!exists) {
+                Teilnehmer t = new Teilnehmer();
+                t.setVeranstaltung(v);
+                t.setPerson(p);
+                teilnehmerRepository.save(t);
+            }
+        }
+    }
+
+    @Override
+    @Transactional
+    public void removeTeilnehmerBulk(Long veranstaltungId, List<Long> personIds) {
+
+        if (personIds == null || personIds.isEmpty()) {
+            return;
+        }
+
+        Veranstaltung v = veranstaltungRepository.findById(veranstaltungId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Veranstaltung not found"
+                ));
+
+        for (Long personId : personIds) {
+
+            Person p = personRepository.findById(personId)
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.NOT_FOUND,
+                            "Person not found"
+                    ));
+
+            teilnehmerRepository
+                    .findByVeranstaltungAndPerson(v, p)
+                    .ifPresent(t -> {
+
+                        // ❗ Domain-Regel: Leiter darf nicht entfernt werden
+                        if (t.getRolle() == TeilnehmerRolle.LEITER) {
+                            throw new ResponseStatusException(
+                                    HttpStatus.CONFLICT,
+                                    "Leiter cannot be removed from Teilnehmer"
+                            );
+                        }
+
+                        teilnehmerRepository.delete(t);
+                    });
+        }
     }
 
     /* =========================================================

@@ -45,6 +45,43 @@ public interface TeilnehmerRepository extends JpaRepository<Teilnehmer, Long> {
     );
 
     /* =========================
+       AVAILABLE (Paging)
+       ========================= */
+
+    @Query("""
+select distinct p
+from Person p
+left join p.mitgliedschaften m
+left join m.verein v
+where p.id not in (
+    select t.person.id
+    from Teilnehmer t
+    where t.veranstaltung.id = :veranstaltungId
+)
+and (:name is null or lower(p.name) like lower(concat('%', cast(:name as string), '%')))
+and (:vorname is null or lower(p.vorname) like lower(concat('%', cast(:vorname as string), '%')))
+and (:verein is null or lower(v.abk) like lower(concat('%', cast(:verein as string), '%')))
+""")
+    Page<Person> findAvailablePersonsFiltered(
+            @Param("veranstaltungId") Long veranstaltungId,
+            @Param("name") String name,
+            @Param("vorname") String vorname,
+            @Param("verein") String verein,
+            Pageable pageable
+    );
+
+
+    @Query("""
+select distinct t
+from Teilnehmer t
+join fetch t.person p
+left join fetch p.mitgliedschaften m
+left join fetch m.verein
+where t.veranstaltung.id = :veranstaltungId
+""")
+    List<Teilnehmer> findByVeranstaltungWithPerson(Long veranstaltungId);
+
+    /* =========================
        FACHLICHE CHECKS / LOGIK
        ========================= */
 

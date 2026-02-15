@@ -1,6 +1,8 @@
 import * as React from "react";
-import { DataGrid, GridColDef, GridRowSelectionModel, useGridApiRef } from "@mui/x-data-grid";
+import { DataGrid, GridColDef, useGridApiRef } from "@mui/x-data-grid";
 import { Box, useMediaQuery, useTheme } from "@mui/material";
+
+/* ========================================================= */
 
 export interface WithId {
   id: number;
@@ -10,8 +12,12 @@ interface GenericTableProps<T extends WithId> {
   rows: T[];
   columns: GridColDef<T>[];
 
-  selectedRow: T | null;
-  onSelectRow: (row: T | null) => void;
+  checkboxSelection?: boolean;
+  selectedRows?: T[]; // ⭐ MUSS EXISTIEREN
+  onSelectionChange?: (rows: T[]) => void;
+
+  selectedRow?: T | null;
+  onSelectRow?: (row: T | null) => void;
 
   initialSortField?: keyof T;
 
@@ -25,11 +31,13 @@ interface GenericTableProps<T extends WithId> {
   height?: number;
 }
 
+/* ========================================================= */
+
 export function GenericTable<T extends WithId>({
   rows,
   columns,
-  selectedRow,
-  onSelectRow,
+  checkboxSelection,
+  onSelectionChange,
   initialSortField,
   paginationMode,
   rowCount,
@@ -39,15 +47,9 @@ export function GenericTable<T extends WithId>({
   onPageSizeChange,
   height,
 }: GenericTableProps<T>) {
-  /* =========================
-     Grid API
-     ========================= */
-
   const apiRef = useGridApiRef();
 
-  /* =========================
-     Responsive Höhe
-     ========================= */
+  /* ================= Height ================= */
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -58,47 +60,21 @@ export function GenericTable<T extends WithId>({
   const footerHeight = paginationMode === "server" ? 56 : 0;
 
   const visibleRows = isMobile ? 4 : isTablet ? 6 : 8;
+  const tableHeight = height ?? headerHeight + footerHeight + visibleRows * rowHeight;
 
-  const calculatedHeight = headerHeight + footerHeight + visibleRows * rowHeight;
+  /* ================= Selection Handler ================= */
 
-  const tableHeight = height ?? calculatedHeight;
+const handleSelectionChange = React.useCallback(() => {
+  if (!checkboxSelection) return;
+  if (!apiRef.current) return;
 
-  /* =========================
-     Selection
-     ========================= */
+  const selectedMap = apiRef.current.getSelectedRows();
+  const selected = Array.from(selectedMap.values()) as T[];
 
-  const handleSelectionChange = (selection: GridRowSelectionModel) => {
-    const id = selection.ids.size > 0 ? [...selection.ids][0] : null;
-    const row = rows.find((r) => r.id === id) ?? null;
-    onSelectRow(row);
-  };
+  onSelectionChange?.(selected);
+}, [apiRef, checkboxSelection, onSelectionChange]);
 
-  /* =========================
-     🔥 Auto-Scroll zur selektierten Zeile
-     ========================= */
-
-React.useEffect(() => {
-  if (!selectedRow) return;
-
-  const rowIndex = rows.findIndex((r) => r.id === selectedRow.id);
-  if (rowIndex === -1) return;
-
-  const api = apiRef.current;
-  if (!api) return;
-
-  const renderContext = api.state.virtualization?.renderContext;
-  if (!renderContext) return;
-
-  const { firstRowIndex, lastRowIndex } = renderContext;
-
-  if (rowIndex < firstRowIndex || rowIndex > lastRowIndex) {
-    api.scrollToIndexes({ rowIndex });
-  }
-}, [selectedRow, rows, apiRef]);
-
-  /* =========================
-     Render
-     ========================= */
+  /* ================= Render ================= */
 
   return (
     <Box sx={{ width: "100%", height: tableHeight }}>
@@ -108,24 +84,24 @@ React.useEffect(() => {
         columns={columns}
         getRowId={(row) => row.id}
         density="compact"
-        disableMultipleRowSelection
+        checkboxSelection={checkboxSelection}
+        disableMultipleRowSelection={false}
+        onRowSelectionModelChange={handleSelectionChange}
         hideFooter={paginationMode !== "server"}
         paginationMode={paginationMode}
         rowCount={rowCount}
-        pageSizeOptions={[10, 20, 50, 100]}
+        pageSizeOptions={[8, 20, 50, 100]}
         paginationModel={
           paginationMode === "server" && page != null && pageSize != null
             ? { page, pageSize }
             : undefined
         }
         onPaginationModelChange={(model) => {
-          if (model.page !== page) {
-            onPageChange?.(model.page);
-          }
-          if (model.pageSize !== pageSize) {
-            onPageSizeChange?.(model.pageSize);
-          }
+          if (model.page !== page) onPageChange?.(model.page);
+          if (model.pageSize !== pageSize) onPageSizeChange?.(model.pageSize);
         }}
+        rowHeight={rowHeight}
+        columnHeaderHeight={headerHeight}
         initialState={
           initialSortField
             ? {
@@ -135,11 +111,6 @@ React.useEffect(() => {
               }
             : undefined
         }
-        rowSelectionModel={{
-          type: "include",
-          ids: selectedRow ? new Set([selectedRow.id]) : new Set(),
-        }}
-        onRowSelectionModelChange={handleSelectionChange}
       />
     </Box>
   );

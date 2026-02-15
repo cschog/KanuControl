@@ -45,6 +45,19 @@ public interface TeilnehmerMapper {
         dto.setId(person.getId());
         dto.setVorname(person.getVorname());
         dto.setName(person.getName());
+
+        // ⭐ Hauptverein bestimmen
+        if (person.getMitgliedschaften() != null) {
+            person.getMitgliedschaften().stream()
+                    .filter(m -> Boolean.TRUE.equals(m.getHauptVerein()))
+                    .findFirst()
+                    .ifPresent(m -> {
+                        if (m.getVerein() != null) {
+                            dto.setHauptvereinAbk(m.getVerein().getAbk());
+                        }
+                    });
+        }
+
         return dto;
     }
 }
