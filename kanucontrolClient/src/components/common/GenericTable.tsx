@@ -1,8 +1,6 @@
 import * as React from "react";
-import { DataGrid, GridColDef, useGridApiRef } from "@mui/x-data-grid";
+import { DataGrid, GridColDef, GridRowSelectionModel, GridRowParams } from "@mui/x-data-grid";
 import { Box, useMediaQuery, useTheme } from "@mui/material";
-
-/* ========================================================= */
 
 export interface WithId {
   id: number;
@@ -12,11 +10,11 @@ interface GenericTableProps<T extends WithId> {
   rows: T[];
   columns: GridColDef<T>[];
 
+  /** Multi Select */
   checkboxSelection?: boolean;
-  selectedRows?: T[]; // ⭐ MUSS EXISTIEREN
   onSelectionChange?: (rows: T[]) => void;
 
-  selectedRow?: T | null;
+  /** Single Select */
   onSelectRow?: (row: T | null) => void;
 
   initialSortField?: keyof T;
@@ -31,13 +29,12 @@ interface GenericTableProps<T extends WithId> {
   height?: number;
 }
 
-/* ========================================================= */
-
 export function GenericTable<T extends WithId>({
   rows,
   columns,
   checkboxSelection,
   onSelectionChange,
+  onSelectRow,
   initialSortField,
   paginationMode,
   rowCount,
@@ -47,10 +44,6 @@ export function GenericTable<T extends WithId>({
   onPageSizeChange,
   height,
 }: GenericTableProps<T>) {
-  const apiRef = useGridApiRef();
-
-  /* ================= Height ================= */
-
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
@@ -62,31 +55,52 @@ export function GenericTable<T extends WithId>({
   const visibleRows = isMobile ? 4 : isTablet ? 6 : 8;
   const tableHeight = height ?? headerHeight + footerHeight + visibleRows * rowHeight;
 
-  /* ================= Selection Handler ================= */
+  /* ================= Multi Select ================= */
 
-const handleSelectionChange = React.useCallback(() => {
-  if (!checkboxSelection) return;
-  if (!apiRef.current) return;
+  const handleSelectionChange = React.useCallback(
+    (model: GridRowSelectionModel) => {
+      
+      if (!checkboxSelection) return;
 
-  const selectedMap = apiRef.current.getSelectedRows();
-  const selected = Array.from(selectedMap.values()) as T[];
+   let selected: T[] = [];
 
-  onSelectionChange?.(selected);
-}, [apiRef, checkboxSelection, onSelectionChange]);
+   if (model.type === "include") {
+     const ids = Array.from(model.ids ?? []) as number[];
+     selected = rows.filter((r) => ids.includes(r.id));
+   }
 
-  /* ================= Render ================= */
+   if (model.type === "exclude") {
+     const excluded = new Set(Array.from(model.ids ?? []) as number[]);
+     selected = rows.filter((r) => !excluded.has(r.id));
+   }
+
+   onSelectionChange?.(selected);
+    },
+    [checkboxSelection, rows, onSelectionChange],
+  );
+
+  /* ================= Single Select ================= */
+
+  const handleRowClick = React.useCallback(
+    (params: GridRowParams<T>) => {
+      if (checkboxSelection) return;
+      onSelectRow?.(params.row);
+    },
+    [checkboxSelection, onSelectRow],
+  );
 
   return (
     <Box sx={{ width: "100%", height: tableHeight }}>
       <DataGrid
-        apiRef={apiRef}
         rows={rows}
         columns={columns}
         getRowId={(row) => row.id}
         density="compact"
         checkboxSelection={checkboxSelection}
-        disableMultipleRowSelection={false}
+        disableMultipleRowSelection={!checkboxSelection}
         onRowSelectionModelChange={handleSelectionChange}
+        onRowClick={handleRowClick}
+        disableRowSelectionOnClick={checkboxSelection}
         hideFooter={paginationMode !== "server"}
         paginationMode={paginationMode}
         rowCount={rowCount}
