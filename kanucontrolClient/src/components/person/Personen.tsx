@@ -80,16 +80,22 @@ class Personen extends Component<Record<string, never>, PersonenState> {
   };
 
   fetchPersonenData = async () => {
-    const { page, pageSize, filters } = this.state;
+    const { page, pageSize, filters, selectedPerson } = this.state;
 
     try {
       const res = await getPersonenPage(page, pageSize, filters);
+
+      const stillExists =
+        selectedPerson && res.content.some((p: PersonList) => p.id === selectedPerson.id);
 
       this.setState({
         data: res.content,
         total: res.totalElements,
         loading: false,
         error: null,
+
+        // ❗ Detail nur löschen wenn Person im Ergebnis NICHT mehr vorhanden
+        selectedPerson: stillExists ? selectedPerson : null,
       });
     } catch {
       this.setState({
@@ -109,6 +115,17 @@ class Personen extends Component<Record<string, never>, PersonenState> {
   };
 
   // ↓↓↓ alle weiteren Methoden ganz normal ↓↓↓
+
+  resetFilters = () => {
+    this.setState(
+      {
+        filters: {},
+        page: 0,
+        loading: true,
+      },
+      this.fetchPersonenData,
+    );
+  };
 
   btnAbbruch = () => {
     this.setState({
@@ -235,9 +252,10 @@ class Personen extends Component<Record<string, never>, PersonenState> {
           <PersonFilterBar
             filters={this.state.filters}
             vereine={this.state.vereine}
-            onChange={(filters: PersonFilterState) =>
+            onChange={(filters) =>
               this.setState({ filters, page: 0, loading: true }, this.fetchPersonenData)
             }
+            onReset={this.resetFilters}
           />
         </Box>
         {renderLoadingOrError({ loading, error })}
@@ -289,15 +307,16 @@ class Personen extends Component<Record<string, never>, PersonenState> {
             open={createDialogOpen}
             onClose={() => this.setState({ createDialogOpen: false })}
             onCreate={async (person) => {
-              const saved = await dbCreatePerson(person);
+              await dbCreatePerson(person);
               await this.fetchPersonenData();
 
+              // ❗ KEIN Detail-Mode nach Create
               this.setState({
-                createDialogOpen: false,
-                selectedPerson: saved,
+                createDialogOpen: true,
+                selectedPerson: null,
                 personFormEditMode: false,
-                btnÄndernIsDisabled: false,
-                btnLöschenIsDisabled: false,
+                btnÄndernIsDisabled: true,
+                btnLöschenIsDisabled: true,
               });
             }}
           />

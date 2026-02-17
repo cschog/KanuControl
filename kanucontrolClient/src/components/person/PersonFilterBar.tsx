@@ -1,4 +1,4 @@
-import { Box, TextField, MenuItem, Select, FormControl, InputLabel } from "@mui/material";
+import { Box, Button, TextField, MenuItem, Select, FormControl, InputLabel } from "@mui/material";
 import { VereinRef } from "@/api/types/VereinRef";
 import { PersonFilterState } from "@/components/person/Personen";
 
@@ -7,11 +7,12 @@ interface Props {
   filters: PersonFilterState;
   vereine: VereinRef[];
   onChange: (filters: PersonFilterState) => void;
+  onReset?: () => void;
 }
 
 type AktivSelectValue = "" | "true" | "false";
 
-export function PersonFilterBar({ filters, vereine, onChange }: Props) {
+export function PersonFilterBar({ filters, vereine, onChange, onReset }: Props) {
   return (
     <Box display="flex" gap={2} flexWrap="wrap" mb={2}>
       <TextField
@@ -66,6 +67,9 @@ export function PersonFilterBar({ filters, vereine, onChange }: Props) {
           <MenuItem value="false">Inaktiv</MenuItem>
         </Select>
       </FormControl>
+      <Button size="small" onClick={onReset}>
+        Reset
+      </Button>
     </Box>
   );
 }
