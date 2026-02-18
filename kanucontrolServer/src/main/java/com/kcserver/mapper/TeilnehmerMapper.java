@@ -32,6 +32,10 @@ public interface TeilnehmerMapper {
     @Mapping(source = "person", target = "person")
     // rolle: null = normaler Teilnehmer
     @Mapping(source = "rolle", target = "rolle")
+
+    @Mapping(source = "person.geburtsdatum", target = "geburtsdatum")
+    @Mapping(source = "person.plz", target = "plz")
+    @Mapping(source = "person.sex", target = "sex")
     TeilnehmerDetailDTO toDetailDTO(Teilnehmer teilnehmer);
 
     /* =========================

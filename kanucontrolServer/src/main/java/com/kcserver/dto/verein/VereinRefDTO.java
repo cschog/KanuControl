@@ -13,5 +13,7 @@ public class VereinRefDTO {
     private String name;
     private String abk;
 
+    private String ort;
+
     // getters / setters
 }
