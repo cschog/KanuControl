@@ -196,123 +196,220 @@ und enthält keine Businesslogik.
 
 ---
 
-## 🗺️ Roadmap
+# 🗺️ KanuControl – Roadmap
 
-### Phase 0 – Fundament → Release 0.1.x
+Stand: **Release v0.4.0**  
+Status: **Core-System funktionsfähig – Übergang zu Business-Features**
 
-**Ziel:** stabile Stammdaten, saubere Architektur, Importfähig  
-**Release-Ziel:** `v0.1.0`
+---
 
-- [x] Backend-Grundstruktur (Spring Boot 3)
-- [x] Mandantenfähigkeit (Schema-per-Tenant)
-- [x] Keycloak-Integration
-- [x] Liquibase + Hibernate (Schema & Migration)
-- [x] CRUD für:
-  - [x] Verein
-  - [x] Person
-  - [x] Mitglied (Join-Entity)
+# 📊 Gesamtfortschritt
+
+**≈ 70 % bis v1.0**
+
+- 🟢 Architektur stabil
+- 🟢 Stammdaten vollständig
+- 🟢 Veranstaltungen & Teilnehmer nahezu komplett
+- 🟡 Import & Datenqualität teilweise
+- 🟡 Abrechnung begonnen
+- ⚪ Stabilisierung & Produktion offen
+
+---
+
+# Phase 0 – Fundament → Release 0.1.x ✅
+
+**Ziel:** stabile Architektur & Stammdaten  
+**Status:** abgeschlossen
+
+## Backend
+- [x] Spring Boot 3 Basis
+- [x] Multi-Tenant (Schema-per-Tenant)
+- [x] Keycloak Integration
+- [x] Liquibase Migration
+- [x] Hibernate Runtime Schema Switching
+
+## Domäne
+- [x] Verein CRUD
+- [x] Person CRUD
+- [x] Mitglied (Join Entity)
 - [x] Hauptverein-Logik
 - [x] Fachliche Validierungen
-- [x] Controller- & Integrationstests
-- [x] Frontend:
-  - [x] Personenverwaltung (View / Edit / Create)
-  - [x] Vereinsverwaltung
-  - [x] Mitgliedszuordnung
-- [x] CSV-Import Personen
-  - [x] Mapping-Datei
-  - [x] Dry-Run
-  - [x] Validierung
-  - [x] Fehlerreport
-- [x] Technische Basis für Datei-Uploads
+
+## Frontend
+- [x] Vereinsverwaltung
+- [x] Personenverwaltung
+- [x] Mitgliedszuordnung
+
+## Import
+- [x] CSV Import Personen
+- [x] Mapping-Datei
+- [x] Dry-Run
+- [x] Fehleranzeige
+- [x] Upload-Infrastruktur
 
 ---
 
-### Phase 1 – Frontend-Basis & Export → Release 0.2.x
+# Phase 1 – Frontend & Nutzung → Release 0.2.x 🟡
 
-**Ziel:** komfortable Nutzung
+**Ziel:** komfortable Bedienung
 
-- [ ] Login / Session-Flow finalisieren (Keycloak UX)
-- [ ] Einheitliche Basis-Navigation
-- [ ] Tabellen:
-  - [ ] Pagination
-  - [ ] Sortierung
-  - [ ] Filtert
-- [ ] Technische Basis:
-  - [ ] Multipart-Handling
-  - [ ] Größenlimits
-  - [ ] Fehlerbehandlung
+## UI
+- [x] Navigation
+- [x] Pagination
+- [x] Sortierung
+- [x] Filter
+- [ ] Keycloak UX verbessern
+
+## Technik
+- [ ] Multipart Handling finalisieren
+- [ ] Upload Limits
+- [ ] Global Error Handling verbessern
 
 ---
 
-### Phase 2 – Import & Datenqualität → Release 0.3.x
+# Phase 2 – Import & Datenqualität → Release 0.3.x 🟡
 
-**Ziel:** robuste Massendatenverarbeitung
+**Ziel:** robuste Massendaten
 
-- [x] CSV-Import Mitglieder
-  - [x] Datei-Upload
-  - [x] Vorschau / Dry-Run
-  - [ ] Validierung
-    - [ ] Pflichtfelder
-    - [ ] Fachliche Regeln
-    - [ ] Dublettenprüfung
-  - [ ] Fehlerbericht (Zeile + Ursache)
-- [ ] Mapping:
-  - [ ] Person ↔ Mitglied ↔ Verein
+## CSV Import Mitglieder
+- [x] Upload
+- [x] Dry-Run
+- [ ] Pflichtfeld Validierung
+- [ ] Fachliche Regeln
+- [ ] Dublettenprüfung
+- [ ] Fehlerreport (Zeile + Ursache)
+
+## Mapping
+- [ ] Person ↔ Mitglied ↔ Verein
+
+## Stabilität
 - [ ] Idempotenter Import
 
 ---
 
-### Phase 3 – Veranstaltungen & Teilnehmer → Release 0.4.x
+# Phase 3 – Veranstaltungen & Teilnehmer → Release 0.4.x 🟢
 
 **Ziel:** Veranstaltungsmanagement vollständig
 
-- [x] Veranstaltung (CRUD)
-- [ ] Teilnehmer (Join-Entity Person ↔ Veranstaltung)
-- [ ] Teilnehmerverwaltung im UI
-- [ ] Teilnehmerlisten
-- [ ] Basis-Auswertungen
-  - [ ] Teilnehmerliste
-  - [ ] Anmeldeformular
-  - [ ] Abrechnungsdeckblatt
-  - [ ] Erhebungsbogen
+## Veranstaltung
+- [x] CRUD
+- [x] Aktiv-Status
+- [x] Leiter Domain-Regel
+
+## Teilnehmer
+- [x] Join-Entity
+- [x] Rollen (L / M)
+- [x] Bulk Add / Remove
+- [x] Leiter immer Teilnehmer
+- [x] Sortierung (Leiter zuerst)
+
+## UI
+- [x] Teilnehmerverwaltung
+- [x] Dual-List Auswahl
+- [x] Multi-Select stabil
+- [x] SelectAll stabil
+- [x] Filter Reset
+
+## Teilnehmerliste PDF
+- [x] Mehrseitig
+- [x] Editierbares Formular
+- [x] Alter zum Veranstaltungsbeginn
+- [x] Header / Footer / Zeitraum
+- [x] Checkbox Mapping (JEM/FM/BM)
+- [x] Sortierung (Leiter → Verein → Name)
+- [x] Dynamischer Dateiname
+- [x] Download im FE
+
+## Offen
+- [ ] Anmeldeformular PDF
+- [ ] Abrechnungsdeckblatt PDF
+- [ ] Erhebungsbogen PDF
 
 ---
 
-### Phase 4 – Abrechnung → Release 0.5.x
+# Phase 4 – Abrechnung → Release 0.5.x 🟡
 
 **Ziel:** finanzielle Abwicklung
 
+## Finanzen
 - [ ] Einnahmen
 - [ ] Ausgaben
-- [ ] Reisekostenabrechnung
+- [ ] Teilnehmergebühren
+- [ ] Reisekosten
+
+## Logik
 - [ ] Plausibilitätsprüfungen
-- [ ] Summen & Übersichten
+- [ ] Summen & Reports
+- [ ] Abschlusslogik Veranstaltung
 
 ---
 
-### Phase 5 – Dokumente & Formulare → Release 0.6.x
+# Phase 5 – Dokumente & Formulare → Release 0.6.x 🟡
 
 **Ziel:** vollständige Verwaltungsdokumente
 
-- [ ] PDF-Erzeugung
-- [ ] Editierbare PDF-Formulare
-  - [ ] Teilnehmerliste
-  - [ ] Erhebungsbogen
-  - [ ] Anmeldeformular
-  - [ ] Abrechnungsformular
-  - [ ] Reisekostenformular
-- [ ] Dokument-Templates
+## PDF Engine
+- [x] Formular-basierte PDFs
+- [x] Mehrseitig
+- [x] Editierbar
+- [ ] Template-System
+
+## Dokumente
+- [x] Teilnehmerliste
+- [ ] Anmeldung
+- [ ] Erhebungsbogen
+- [ ] Abrechnung
+- [ ] Reisekosten
 
 ---
 
-### Phase 6 – Stabilisierung & Produktivbetrieb → Release 1.0.0
+# Phase 6 – Stabilisierung → Release 1.0.0 ⚪
 
-- [ ] Performance-Optimierung
+## Qualität
+- [ ] Performance
+- [ ] Memory / PDF Optimierung
+- [ ] Query Optimierung
+
+## Sicherheit
 - [ ] Rollen & Rechte
-- [ ] Logging & Monitoring
+- [ ] Audit Logging
+
+## Betrieb
+- [ ] Monitoring
 - [ ] Backup & Restore
-- [ ] Deployment / Internetbetrieb
-- [ ] Dokumentation final
+- [ ] Deployment
+- [ ] Dokumentation
+
+---
+
+# 🎯 Nächste Meilensteine
+
+## → v0.5 Fokus
+- Abrechnung starten
+- Anmeldung PDF
+- Erhebungsbogen PDF
+- Import Validierung
+- Fehlerreport CSV
+
+## → v0.6 Fokus
+- Alle Dokumente fertig
+- Template System
+- PDF Engine stabilisieren
+
+## → v1.0 Fokus
+- Stabilität
+- Performance
+- Security
+- Produktivbetrieb
+
+---
+
+# 🧭 Projektstatus
+
+**KanuControl ist jetzt ein funktionsfähiges Fachsystem.**  
+Die nächsten Releases bringen Vollständigkeit, Stabilität und Produktionsreife.
+
+---
 
 ## 🌍 Open-Source & Contributions
 
