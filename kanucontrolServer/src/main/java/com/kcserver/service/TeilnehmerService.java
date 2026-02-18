@@ -13,7 +13,7 @@ import com.kcserver.mapper.TeilnehmerMapper;
 import com.kcserver.repository.PersonRepository;
 import com.kcserver.repository.TeilnehmerRepository;
 import com.kcserver.repository.VeranstaltungRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -95,6 +95,25 @@ public class TeilnehmerService {
         teilnehmerRepository.flush();
         return teilnehmerMapper.toDetailDTO(saved);
     }
+        /* =========================================================
+        READ ohne Paging
+        ========================================================= */
+        @Transactional(readOnly = true)
+        public List<TeilnehmerDetailDTO> getTeilnehmerForVeranstaltung(Long veranstaltungId) {
+
+            veranstaltungRepository.findById(veranstaltungId)
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.NOT_FOUND,
+                            "Veranstaltung not found"
+                    ));
+
+            return teilnehmerRepository
+                    .findByVeranstaltungWithPerson(veranstaltungId)   // ⭐ ID statt Entity
+                    .stream()
+                    .map(teilnehmerMapper::toDetailDTO)
+                    .toList();
+        }
+
        /* =========================================================
        UPDATE
        ========================================================= */

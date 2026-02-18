@@ -20,6 +20,16 @@ export function getVeranstaltungenPage(page: number, size: number) {
     .then((r) => r.data);
 }
 
+/* ================= PDF Teilnehmerliste ================= */
+
+export async function downloadTeilnehmerPdf(veranstaltungId: number) {
+  const response = await apiClient.get(`/veranstaltung/${veranstaltungId}/teilnehmer/pdf`, {
+    responseType: "blob", // ⭐ wichtig für PDF
+  });
+
+  return response;
+}
+
 /* =========================================================
    DETAIL
    ========================================================= */

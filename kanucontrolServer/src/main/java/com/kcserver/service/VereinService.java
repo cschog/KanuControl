@@ -96,7 +96,8 @@ public class VereinService {
         return page.map(v -> new VereinRefDTO(
                 v.getId(),
                 v.getName(),
-                v.getAbk()
+                v.getAbk(),
+                v.getOrt()
         ));
     }
 
