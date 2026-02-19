@@ -25,4 +25,20 @@ public class VeranstaltungUpdateDTO {
     // ⭐ NEU
     private Long leiterId;
     private Long vereinId;
+
+    /* ================= Detailfelder ================= */
+
+    private String plz;
+    private String ort;
+
+    private String artDerUnterkunft;
+    private String artDerVerpflegung;
+
+    private Integer geplanteTeilnehmerMaennlich;
+    private Integer geplanteTeilnehmerWeiblich;
+    private Integer geplanteTeilnehmerDivers;
+
+    private Integer geplanteMitarbeiterMaennlich;
+    private Integer geplanteMitarbeiterWeiblich;
+    private Integer geplanteMitarbeiterDivers;
 }

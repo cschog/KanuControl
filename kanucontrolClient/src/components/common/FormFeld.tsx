@@ -1,4 +1,5 @@
 // components/common/FormFeld.tsx
+import React from "react";
 import { TextField } from "@mui/material";
 
 type FormValue = string | number | boolean | null | undefined;
@@ -8,6 +9,7 @@ interface FormFeldProps {
   value: FormValue;
   disabled?: boolean;
   onChange?: (value: string) => void;
+  type?: React.InputHTMLAttributes<HTMLInputElement>["type"];
 }
 
 export const FormFeld: React.FC<FormFeldProps> = ({
@@ -15,11 +17,9 @@ export const FormFeld: React.FC<FormFeldProps> = ({
   value,
   disabled = false,
   onChange,
+  type = "text",
 }) => {
-  const displayValue =
-    typeof value === "boolean"
-      ? value ? "Ja" : "Nein"
-      : value ?? "";
+  const displayValue = typeof value === "boolean" ? (value ? "Ja" : "Nein") : value ?? "";
 
   return (
     <TextField
@@ -28,11 +28,8 @@ export const FormFeld: React.FC<FormFeldProps> = ({
       label={label}
       value={displayValue}
       disabled={disabled}
-      onChange={
-        onChange
-          ? (e) => onChange(e.target.value)
-          : undefined
-      }
+      type={type}
+      onChange={onChange ? (e) => onChange(e.target.value) : undefined}
     />
   );
 };

@@ -1,5 +1,5 @@
 import React from "react";
-import { MenuItem, TextField } from "@mui/material";
+import { MenuItem, TextField, FormControlLabel, Switch } from "@mui/material";
 import { VeranstaltungFormModel } from "@/api/types/VeranstaltungFormModel";
 import { VeranstaltungTyp } from "@/api/enums/VeranstaltungTyp";
 import { VereinAutocomplete } from "@/components/verein/VereinAutocomplete";
@@ -12,13 +12,19 @@ import { FormFeldTimePicker } from "@/components/common/FormFeldTimePicker";
 interface Props {
   form: VeranstaltungFormModel;
   editMode: boolean;
+  detailMode?: boolean; // ⭐ NEU
   onChange: <K extends keyof VeranstaltungFormModel>(
     key: K,
     value: VeranstaltungFormModel[K],
   ) => void;
 }
 
-export const VeranstaltungBaseForm: React.FC<Props> = ({ form, editMode, onChange }) => {
+export const VeranstaltungBaseForm: React.FC<Props> = ({
+  form,
+  editMode,
+  detailMode = false, // ⭐ Default
+  onChange,
+}) => {
   return (
     <>
       {/* ================= Name ================= */}
@@ -47,6 +53,7 @@ export const VeranstaltungBaseForm: React.FC<Props> = ({ form, editMode, onChang
 
       {/* ================= Leiter ================= */}
       <PersonAutocomplete
+        label="Leitung"
         value={form.leiter}
         disabled={!editMode}
         onChange={(v) => onChange("leiter", v)}
@@ -64,14 +71,14 @@ export const VeranstaltungBaseForm: React.FC<Props> = ({ form, editMode, onChang
         label="Beginn Datum"
         value={form.beginnDatum}
         disabled={!editMode}
-        onChange={(v) => onChange("beginnDatum", v)}
+        onChange={(v) => onChange("beginnDatum", v ?? "")}
       />
 
       <FormFeldTimePicker
         label="Beginn Zeit"
         value={form.beginnZeit}
         disabled={!editMode}
-        onChange={(v) => onChange("beginnZeit", v)}
+        onChange={(v) => onChange("beginnZeit", v ?? "")}
       />
 
       {/* Ende */}
@@ -79,15 +86,93 @@ export const VeranstaltungBaseForm: React.FC<Props> = ({ form, editMode, onChang
         label="Ende Datum"
         value={form.endeDatum}
         disabled={!editMode}
-        onChange={(v) => onChange("endeDatum", v)}
+        onChange={(v) => onChange("endeDatum", v ?? "")}
       />
 
       <FormFeldTimePicker
         label="Ende Zeit"
         value={form.endeZeit}
         disabled={!editMode}
-        onChange={(v) => onChange("endeZeit", v)}
+        onChange={(v) => onChange("endeZeit", v ?? "")}
       />
+      {detailMode && (
+        <>
+          {/* ================= Unterkunft ================= */}
+          <FormFeld
+            label="Art der Unterkunft"
+            value={form.artDerUnterkunft ?? ""}
+            disabled={!editMode}
+            onChange={(v) => onChange("artDerUnterkunft", v || undefined)}
+          />
+
+          {/* ================= Verpflegung ================= */}
+          <FormFeld
+            label="Art der Verpflegung"
+            value={form.artDerVerpflegung ?? ""}
+            disabled={!editMode}
+            onChange={(v) => onChange("artDerVerpflegung", v || undefined)}
+          />
+
+          {/* ================= Ort ================= */}
+          <FormFeld
+            label="PLZ"
+            value={form.plz ?? ""}
+            disabled={!editMode}
+            onChange={(v) => onChange("plz", v || undefined)}
+          />
+
+          <FormFeld
+            label="Ort"
+            value={form.ort ?? ""}
+            disabled={!editMode}
+            onChange={(v) => onChange("ort", v || undefined)}
+          />
+
+          {/* ================= Individuelle Gebühren ================= */}
+          <FormControlLabel
+            control={
+              <Switch
+                checked={form.individuelleGebuehren ?? false}
+                disabled={!editMode}
+                onChange={(e) => onChange("individuelleGebuehren", e.target.checked)}
+              />
+            }
+            label="Individuelle Gebühren"
+          />
+          <FormFeld
+            label="Standardgebühr"
+            value={form.standardGebuehr ?? ""}
+            disabled={!editMode}
+            onChange={(v) => onChange("standardGebuehr", Number(v))}
+            type="number"
+          />
+
+          {/* ================= Planung ================= */}
+          <FormFeld
+            label="Geplante TN männlich"
+            value={form.geplanteTeilnehmerMaennlich ?? ""}
+            disabled={!editMode}
+            onChange={(v) => onChange("geplanteTeilnehmerMaennlich", Number(v))}
+            type="number"
+          />
+
+          <FormFeld
+            label="Geplante TN weiblich"
+            value={form.geplanteTeilnehmerWeiblich ?? ""}
+            disabled={!editMode}
+            onChange={(v) => onChange("geplanteTeilnehmerWeiblich", Number(v))}
+            type="number"
+          />
+
+          <FormFeld
+            label="Geplante TN divers"
+            value={form.geplanteTeilnehmerDivers ?? ""}
+            disabled={!editMode}
+            onChange={(v) => onChange("geplanteTeilnehmerDivers", Number(v))}
+            type="number"
+          />
+        </>
+      )}
     </>
   );
 };

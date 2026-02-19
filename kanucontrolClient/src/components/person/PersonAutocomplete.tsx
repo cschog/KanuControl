@@ -5,13 +5,14 @@ import { searchPersonsPage } from "@/api/services/personApi";
 interface Props {
   value?: PersonRef;
   disabled?: boolean;
+  label?: string; // ⭐ HINZUFÜGEN
   onChange: (value?: PersonRef) => void;
 }
 
 export function PersonAutocomplete({ value, disabled, onChange }: Props) {
   return (
     <EntityAutocomplete<PersonRef>
-      label="Person"
+      label="Leitung"
       value={value}
       disabled={disabled}
       fetch={searchPersonsPage}

@@ -35,8 +35,14 @@ public class VeranstaltungCreateDTO {
     @NotNull
     private LocalTime endeZeit;
 
+    private String plz;
+    private String ort;
+
     private Boolean individuelleGebuehren;
     private BigDecimal standardGebuehr;
+
+    private String artDerUnterkunft;
+    private String artDerVerpflegung;
 
     /* =========================
        PLAN-ZAHLEN

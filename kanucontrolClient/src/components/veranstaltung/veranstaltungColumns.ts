@@ -37,8 +37,13 @@ export const veranstaltungColumns: GridColDef<VeranstaltungList>[] = [
     flex: 1.5,
   },
   {
-    field: "leiterName",
-    headerName: "Leiter",
-    flex: 1.5,
+    field: "leitung",
+    headerName: "Leitung",
+    flex: 1,
+    valueGetter: (_value, row) => {
+      if (!row.leiterName) return "";
+      if (!row.leiterVorname) return row.leiterName;
+      return `${row.leiterName}, ${row.leiterVorname}`;
+    },
   },
 ];

@@ -20,9 +20,26 @@ function emptyVeranstaltung(): VeranstaltungFormModel {
     endeDatum: today,
     endeZeit: "18:00",
 
-    // 🔑 KEINE IDs im Form
     verein: undefined,
     leiter: undefined,
+
+    /* ===== Detailfelder ===== */
+
+    plz: "",
+    ort: "",
+    artDerUnterkunft: "",
+    artDerVerpflegung: "",
+
+    individuelleGebuehren: false,
+    standardGebuehr: undefined,
+
+    geplanteTeilnehmerMaennlich: undefined,
+    geplanteTeilnehmerWeiblich: undefined,
+    geplanteTeilnehmerDivers: undefined,
+
+    geplanteMitarbeiterMaennlich: undefined,
+    geplanteMitarbeiterWeiblich: undefined,
+    geplanteMitarbeiterDivers: undefined,
   };
 }
 
@@ -38,7 +55,32 @@ export function useVeranstaltungForm(initial: VeranstaltungFormModel | null) {
      ========================= */
 
   useEffect(() => {
-    setForm(initial ? { ...initial } : null);
+    if (!initial) {
+      setForm(null);
+      return;
+    }
+
+    setForm({
+      ...initial,
+
+      /* ===== Null → Default ===== */
+
+      plz: initial.plz ?? "",
+      ort: initial.ort ?? "",
+      artDerUnterkunft: initial.artDerUnterkunft ?? "",
+      artDerVerpflegung: initial.artDerVerpflegung ?? "",
+
+      individuelleGebuehren: initial.individuelleGebuehren ?? false,
+      standardGebuehr: initial.standardGebuehr ?? undefined,
+
+      geplanteTeilnehmerMaennlich: initial.geplanteTeilnehmerMaennlich ?? undefined,
+      geplanteTeilnehmerWeiblich: initial.geplanteTeilnehmerWeiblich ?? undefined,
+      geplanteTeilnehmerDivers: initial.geplanteTeilnehmerDivers ?? undefined,
+
+      geplanteMitarbeiterMaennlich: initial.geplanteMitarbeiterMaennlich ?? undefined,
+      geplanteMitarbeiterWeiblich: initial.geplanteMitarbeiterWeiblich ?? undefined,
+      geplanteMitarbeiterDivers: initial.geplanteMitarbeiterDivers ?? undefined,
+    });
   }, [initial]);
 
   /* =========================
@@ -62,36 +104,54 @@ export function useVeranstaltungForm(initial: VeranstaltungFormModel | null) {
      BUILD SAVE PAYLOAD
      ========================= */
 
- const buildSavePayload = (): VeranstaltungSave | null => {
-   if (!form) return null;
+  const buildSavePayload = (): VeranstaltungSave | null => {
+    if (!form) return null;
 
-   if (
-     !form.typ ||
-     !form.beginnDatum ||
-     !form.beginnZeit ||
-     !form.endeDatum ||
-     !form.endeZeit ||
-     !form.verein ||
-     !form.leiter
-   ) {
-     return null;
-   }
+    if (
+      !form.typ ||
+      !form.beginnDatum ||
+      !form.beginnZeit ||
+      !form.endeDatum ||
+      !form.endeZeit ||
+      !form.verein ||
+      !form.leiter
+    ) {
+      return null;
+    }
 
-   return {
-     id: form.id,
-     name: form.name,
-     typ: form.typ,
+    return {
+      id: form.id,
+      name: form.name,
+      typ: form.typ,
 
-     beginnDatum: form.beginnDatum,
-     beginnZeit: form.beginnZeit,
+      beginnDatum: form.beginnDatum,
+      beginnZeit: form.beginnZeit,
 
-     endeDatum: form.endeDatum,
-     endeZeit: form.endeZeit,
+      endeDatum: form.endeDatum,
+      endeZeit: form.endeZeit,
 
-     vereinId: form.verein.id,
-     leiterId: form.leiter.id,
-   };
- };
+      vereinId: form.verein.id,
+      leiterId: form.leiter.id,
+
+      /* ===== Detailfelder ===== */
+
+      plz: form.plz || undefined,
+      ort: form.ort || undefined,
+      artDerUnterkunft: form.artDerUnterkunft || undefined,
+      artDerVerpflegung: form.artDerVerpflegung || undefined,
+
+      individuelleGebuehren: form.individuelleGebuehren ?? false,
+      standardGebuehr: form.standardGebuehr ?? undefined,
+
+      geplanteTeilnehmerMaennlich: form.geplanteTeilnehmerMaennlich ?? undefined,
+      geplanteTeilnehmerWeiblich: form.geplanteTeilnehmerWeiblich ?? undefined,
+      geplanteTeilnehmerDivers: form.geplanteTeilnehmerDivers ?? undefined,
+
+      geplanteMitarbeiterMaennlich: form.geplanteMitarbeiterMaennlich ?? undefined,
+      geplanteMitarbeiterWeiblich: form.geplanteMitarbeiterWeiblich ?? undefined,
+      geplanteMitarbeiterDivers: form.geplanteMitarbeiterDivers ?? undefined,
+    };
+  };
 
   /* =========================
      VALIDATION (MINIMAL)

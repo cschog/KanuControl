@@ -185,7 +185,9 @@ public class PDFTeilnehmerlisteService {
 
         /* ================= GESCHLECHT ================= */
         if (tn.getSex() != null) {
-            set(form, "geschlecht_" + row, tn.getSex().getCode());
+            set(form, "geschlecht_" + row,
+                    tn.getSex().getCode().toLowerCase()
+            );
         }
     }
 

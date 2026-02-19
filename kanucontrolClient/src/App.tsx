@@ -8,7 +8,7 @@ import Veranstaltungen from "@/components/veranstaltung/Veranstaltungen";
 import TeilnehmerScreen from "@/components/teilnehmer/TeilnehmerScreen";
 import Kosten from "./Platzhalter/Kosten";
 import Reisekosten from "./Platzhalter/Reisekosten";
-import Teilnehmerliste from "./Platzhalter/Teilnehmerliste";
+import Teilnehmerliste from "./components/teilnehmer/Teilnehmerliste";
 import Erhebungsbogen from "./Platzhalter/Erhebungsbogen";
 import Anmeldung from "./Platzhalter/Anmeldung";
 import Abrechnung from "./Platzhalter/Abrechnung";
