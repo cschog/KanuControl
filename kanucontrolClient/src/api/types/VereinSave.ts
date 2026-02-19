@@ -9,5 +9,5 @@ export interface VereinSave {
   telefon?: string;
   bankName?: string;
   iban?: string;
-  kontoinhaberId?: number; // 👈 genau das, was das Backend braucht
+  kontoinhaberId?: number; 
 }

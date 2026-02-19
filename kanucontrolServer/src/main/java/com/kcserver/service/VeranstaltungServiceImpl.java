@@ -84,6 +84,26 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
         veranstaltung.setBeginnZeit(dto.getBeginnZeit());
         veranstaltung.setEndeDatum(dto.getEndeDatum());
         veranstaltung.setEndeZeit(dto.getEndeZeit());
+        veranstaltung.setPlz(dto.getPlz());
+        veranstaltung.setOrt(dto.getOrt());
+        veranstaltung.setArtDerUnterkunft(dto.getArtDerUnterkunft());
+        veranstaltung.setArtDerVerpflegung(dto.getArtDerVerpflegung());
+
+        veranstaltung.setIndividuelleGebuehren(
+                dto.getIndividuelleGebuehren() != null
+                        ? dto.getIndividuelleGebuehren()
+                        : false
+        );
+
+        veranstaltung.setStandardGebuehr(dto.getStandardGebuehr());
+
+        veranstaltung.setGeplanteTeilnehmerMaennlich(dto.getGeplanteTeilnehmerMaennlich());
+        veranstaltung.setGeplanteTeilnehmerWeiblich(dto.getGeplanteTeilnehmerWeiblich());
+        veranstaltung.setGeplanteTeilnehmerDivers(dto.getGeplanteTeilnehmerDivers());
+
+        veranstaltung.setGeplanteMitarbeiterMaennlich(dto.getGeplanteMitarbeiterMaennlich());
+        veranstaltung.setGeplanteMitarbeiterWeiblich(dto.getGeplanteMitarbeiterWeiblich());
+        veranstaltung.setGeplanteMitarbeiterDivers(dto.getGeplanteMitarbeiterDivers());
         veranstaltung.setVerein(verein);
         veranstaltung.setLeiter(leiter);
         veranstaltung.setAktiv(true);
@@ -369,6 +389,43 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
 
             veranstaltung.setVerein(newVerein);
         }
+
+        /* ================= DETAILFELDER ================= */
+
+        if (dto.getPlz() != null) {
+            veranstaltung.setPlz(dto.getPlz());
+        }
+
+        if (dto.getOrt() != null) {
+            veranstaltung.setOrt(dto.getOrt());
+        }
+
+        if (dto.getArtDerUnterkunft() != null) {
+            veranstaltung.setArtDerUnterkunft(dto.getArtDerUnterkunft());
+        }
+
+        if (dto.getArtDerVerpflegung() != null) {
+            veranstaltung.setArtDerVerpflegung(dto.getArtDerVerpflegung());
+        }
+
+        /* Gebühren */
+        veranstaltung.setIndividuelleGebuehren(
+                dto.getIndividuelleGebuehren() != null
+                        ? dto.getIndividuelleGebuehren()
+                        : false
+        );
+
+        veranstaltung.setStandardGebuehr(dto.getStandardGebuehr());
+
+        /* Planung Teilnehmer */
+        veranstaltung.setGeplanteTeilnehmerMaennlich(dto.getGeplanteTeilnehmerMaennlich());
+        veranstaltung.setGeplanteTeilnehmerWeiblich(dto.getGeplanteTeilnehmerWeiblich());
+        veranstaltung.setGeplanteTeilnehmerDivers(dto.getGeplanteTeilnehmerDivers());
+
+        /* Planung Mitarbeiter */
+        veranstaltung.setGeplanteMitarbeiterMaennlich(dto.getGeplanteMitarbeiterMaennlich());
+        veranstaltung.setGeplanteMitarbeiterWeiblich(dto.getGeplanteMitarbeiterWeiblich());
+        veranstaltung.setGeplanteMitarbeiterDivers(dto.getGeplanteMitarbeiterDivers());
 
 
 

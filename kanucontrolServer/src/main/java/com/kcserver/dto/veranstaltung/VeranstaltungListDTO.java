@@ -20,4 +20,5 @@ public class VeranstaltungListDTO {
     // Anzeige
     private String vereinName;
     private String leiterName;
+    private String leiterVorname;
 }

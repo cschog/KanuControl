@@ -1,5 +1,3 @@
-// src/api/types/veranstaltung/VeranstaltungFormModel.ts
-
 import { VeranstaltungTyp } from "@/api/enums/VeranstaltungTyp";
 import { VereinRef } from "@/api/types/VereinRef";
 import { PersonRef } from "@/api/types/PersonRef";
@@ -7,35 +5,30 @@ import { PersonRef } from "@/api/types/PersonRef";
 export interface VeranstaltungFormModel {
   id?: number;
 
-  /* =========================
-     Stammdaten
-     ========================= */
+  /* ================= Stammdaten ================= */
 
   name: string;
-  typ?: VeranstaltungTyp;
+  typ: VeranstaltungTyp;
 
-  artDerUnterkunft?: string;
-  artDerVerpflegung?: string;
+  beginnDatum: string;
+  beginnZeit: string;
 
-  plz?: string;
-  ort?: string;
-
-  beginnDatum?: string; // ISO-Date für DatePicker
-  beginnZeit?: string; // HH:mm
-
-  endeDatum?: string;
-  endeZeit?: string;
-
-  /* =========================
-     Beziehungen (Refs!)
-     ========================= */
+  endeDatum: string;
+  endeZeit: string;
 
   verein?: VereinRef;
   leiter?: PersonRef;
 
-  /* =========================
-     Plan-Zahlen
-     ========================= */
+  /* ================= Detailfelder ================= */
+
+  plz?: string;
+  ort?: string;
+
+  artDerUnterkunft?: string;
+  artDerVerpflegung?: string;
+
+  individuelleGebuehren?: boolean;
+  standardGebuehr?: number;
 
   geplanteTeilnehmerMaennlich?: number;
   geplanteTeilnehmerWeiblich?: number;
@@ -44,10 +37,4 @@ export interface VeranstaltungFormModel {
   geplanteMitarbeiterMaennlich?: number;
   geplanteMitarbeiterWeiblich?: number;
   geplanteMitarbeiterDivers?: number;
-
-  /* =========================
-     Status
-     ========================= */
-
-  aktiv?: boolean;
 }

@@ -10,6 +10,9 @@ export interface VeranstaltungSave {
   artDerUnterkunft?: string;
   artDerVerpflegung?: string;
 
+  individuelleGebuehren?: boolean; 
+  standardGebuehr?: number;
+
   plz?: string;
   ort?: string;
 

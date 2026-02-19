@@ -19,6 +19,7 @@ public interface VeranstaltungMapper {
 
     @Mapping(source = "verein.name", target = "vereinName")
     @Mapping(source = "leiter.name", target = "leiterName")
+    @Mapping(source = "leiter.vorname", target = "leiterVorname")
     VeranstaltungListDTO toListDTO(Veranstaltung veranstaltung);
 
     /* =========================

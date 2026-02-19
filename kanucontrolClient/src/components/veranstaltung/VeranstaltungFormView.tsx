@@ -59,7 +59,12 @@ export const VeranstaltungFormView: React.FC<Props> = ({
         gap={2}
         sx={{ mt: 2 }}
       >
-        <VeranstaltungBaseForm form={form} editMode={editMode} onChange={update} />
+        <VeranstaltungBaseForm
+          form={form}
+          editMode={editMode}
+          detailMode={true}
+          onChange={update}
+        />
       </Box>
 
       {/* ================= ACTION BAR ================= */}

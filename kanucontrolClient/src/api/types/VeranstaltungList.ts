@@ -10,6 +10,7 @@ export interface VeranstaltungList {
 
   vereinName: string;
   leiterName: string;
+  leiterVorname: string;
 
   aktiv: boolean;
 }
