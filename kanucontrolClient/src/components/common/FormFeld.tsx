@@ -10,6 +10,7 @@ interface FormFeldProps {
   disabled?: boolean;
   onChange?: (value: string) => void;
   type?: React.InputHTMLAttributes<HTMLInputElement>["type"];
+  helperText?: string;
 }
 
 export const FormFeld: React.FC<FormFeldProps> = ({
@@ -18,6 +19,7 @@ export const FormFeld: React.FC<FormFeldProps> = ({
   disabled = false,
   onChange,
   type = "text",
+  helperText,
 }) => {
   const displayValue = typeof value === "boolean" ? (value ? "Ja" : "Nein") : value ?? "";
 
@@ -29,6 +31,7 @@ export const FormFeld: React.FC<FormFeldProps> = ({
       value={displayValue}
       disabled={disabled}
       type={type}
+      helperText={helperText}
       onChange={onChange ? (e) => onChange(e.target.value) : undefined}
     />
   );

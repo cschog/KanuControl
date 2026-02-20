@@ -1,8 +1,10 @@
-import { Box, Button, Alert } from "@mui/material";
+import { Box, Alert } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import { useNavigate } from "react-router-dom";
 import { MenueHeader } from "@/components/layout/MenueHeader";
 import { useAppContext } from "@/context/AppContext";
+import { ModuleButton } from "@/components/common/ModuleButton";
+import { moduleTypeMap } from "@/theme/moduleMap";
 
 const StartMenue = () => {
   const { schema, active, loading } = useAppContext();
@@ -14,19 +16,21 @@ const StartMenue = () => {
       }`
     : `Mandant: ${schema}`;
 
-  const buttons = [
-    { label: "Vereine", path: "/vereine" },
-    { label: "Mitglieder", path: "/personen" },
-    { label: "Veranstaltungen", path: "/veranstaltungen" },
-    { label: "Teilnehmer", path: "/teilnehmer" },
-    { label: "Kosten", path: "/kosten" },
-    { label: "Reisekosten", path: "/reisekosten" },
-    { label: "Anmeldung", path: "/anmeldung" },
-    { label: "Abrechnung", path: "/abrechnung" },
-    { label: "Teilnehmerliste", path: "/teilnehmerliste" },
-    { label: "Reisekosten Ausgabe", path: "/ausgabeReisekosten" },
-    { label: "Erhebungsbogen", path: "/erhebungsbogen" },
-  ] as const;
+ const buttons = [
+   { key: "vereine", label: "Vereine", path: "/vereine" },
+   { key: "mitglieder", label: "Mitglieder", path: "/personen" },
+   { key: "veranstaltungen", label: "Veranstaltungen", path: "/veranstaltungen" },
+   { key: "teilnehmer", label: "Teilnehmer", path: "/teilnehmer" },
+
+   { key: "finanzen", label: "Finanzen", path: "/kosten" },
+   { key: "reisekosten", label: "Reisekosten", path: "/reisekosten" },
+
+   { key: "anmeldung", label: "Anmeldung", path: "/anmeldung" },
+   { key: "abrechnung", label: "Abrechnung", path: "/abrechnung" },
+   { key: "teilnehmerliste", label: "Teilnehmerliste", path: "/teilnehmerliste" },
+   { key: "reisekostenausgabe", label: "Reisekosten Ausgabe", path: "/ausgabeReisekosten" },
+   { key: "erhebungsbogen", label: "Erhebungsbogen", path: "/erhebungsbogen" },
+ ] as const;
 
   return (
     <Box>
@@ -36,10 +40,12 @@ const StartMenue = () => {
 
       <Grid container spacing={2}>
         {buttons.map((btn) => (
-          <Grid key={btn.label} size={{ xs: 12, sm: 6, md: 4 }}>
-            <Button fullWidth size="large" variant="contained" onClick={() => navigate(btn.path)}>
-              {btn.label}
-            </Button>
+          <Grid key={btn.key} size={{ xs: 12, sm: 6, md: 4 }}>
+            <ModuleButton
+              label={btn.label}
+              moduleType={moduleTypeMap[btn.key]}
+              onClick={() => navigate(btn.path)}
+            />
           </Grid>
         ))}
       </Grid>

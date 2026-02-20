@@ -5,6 +5,7 @@ import com.kcserver.dto.teilnehmer.TeilnehmerDetailDTO;
 import com.kcserver.dto.veranstaltung.VeranstaltungDetailDTO;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.springframework.core.io.ClassPathResource;
@@ -69,7 +70,26 @@ public class PDFTeilnehmerlisteService {
         merger.setDestinationStream(resultOut);
         merger.mergeDocuments(null);
 
-        return resultOut.toByteArray();
+/* =========================================================
+   PDF METADATA (Tab-Titel im Browser)
+   ========================================================= */
+
+        String filename =
+                LocalDate.now() + "_TN_" +
+                        sanitizeFilename(v.getName()) + ".pdf";
+
+        try (PDDocument resultDoc = PDDocument.load(resultOut.toByteArray())) {
+
+            PDDocumentInformation info = resultDoc.getDocumentInformation();
+            info.setTitle(filename);          // ⭐ Browser Tab Titel
+            info.setAuthor("KanuControl");
+            info.setCreator("KanuControl");
+
+            ByteArrayOutputStream finalOut = new ByteArrayOutputStream();
+            resultDoc.save(finalOut);
+
+            return finalOut.toByteArray();
+        }
     }
 
     /* =========================================================
@@ -241,5 +261,12 @@ public class PDFTeilnehmerlisteService {
         if (field != null) {
             field.setValue(checked ? "Ja" : "Off");
         }
+    }
+    private String sanitizeFilename(String name) {
+        if (name == null) return "Veranstaltung";
+        return name
+                .replaceAll("[\\\\/:*?\"<>|]", "")
+                .replaceAll("\\s+", "_")
+                .trim();
     }
 }

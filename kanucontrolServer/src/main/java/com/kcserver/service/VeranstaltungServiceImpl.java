@@ -84,6 +84,7 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
         veranstaltung.setBeginnZeit(dto.getBeginnZeit());
         veranstaltung.setEndeDatum(dto.getEndeDatum());
         veranstaltung.setEndeZeit(dto.getEndeZeit());
+        veranstaltung.setLaenderCode(dto.getLaenderCode());
         veranstaltung.setPlz(dto.getPlz());
         veranstaltung.setOrt(dto.getOrt());
         veranstaltung.setArtDerUnterkunft(dto.getArtDerUnterkunft());
@@ -392,6 +393,10 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
 
         /* ================= DETAILFELDER ================= */
 
+        if (dto.getLaenderCode() != null) {
+            veranstaltung.setLaenderCode(dto.getLaenderCode());
+        }
+
         if (dto.getPlz() != null) {
             veranstaltung.setPlz(dto.getPlz());
         }
@@ -493,7 +498,23 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
             );
         }
 
+        boolean wasActive = v.isAktiv();
+
         veranstaltungRepository.delete(v);
+
+/* =========================================================
+   AUTO-AKTIVIERUNG FALLS NÖTIG
+   ========================================================= */
+
+        if (wasActive) {
+
+            veranstaltungRepository
+                    .findTopByOrderByBeginnDatumDesc()
+                    .ifPresent(neu -> {
+                        neu.setAktiv(true);
+                        veranstaltungRepository.save(neu);
+                    });
+        }
     }
 
 

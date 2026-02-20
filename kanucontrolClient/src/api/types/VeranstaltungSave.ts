@@ -1,5 +1,6 @@
 // src/api/types/veranstaltung/VeranstaltungSave.ts
 import { VeranstaltungTyp } from "@/api/enums/VeranstaltungTyp";
+import { CountryCode } from "@/api/enums/CountryCode";
 
 export interface VeranstaltungSave {
   id?: number;
@@ -10,9 +11,10 @@ export interface VeranstaltungSave {
   artDerUnterkunft?: string;
   artDerVerpflegung?: string;
 
-  individuelleGebuehren?: boolean; 
+  individuelleGebuehren?: boolean;
   standardGebuehr?: number;
 
+  laenderCode?: CountryCode;
   plz?: string;
   ort?: string;
 

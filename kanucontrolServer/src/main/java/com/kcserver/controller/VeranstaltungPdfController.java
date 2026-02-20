@@ -5,6 +5,7 @@ import com.kcserver.dto.veranstaltung.VeranstaltungDetailDTO;
 import com.kcserver.service.TeilnehmerService;
 import com.kcserver.service.VeranstaltungService;
 import com.kcserver.service.pdf.PDFTeilnehmerlisteService;
+import com.kcserver.service.pdf.PDFErhebungsbogenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -28,6 +29,7 @@ public class VeranstaltungPdfController {
     private final PDFTeilnehmerlisteService pdfService;
     private final VeranstaltungService veranstaltungService;
     private final TeilnehmerService teilnehmerService;
+    private final PDFErhebungsbogenService erhebungsbogenService;
 
     /* =========================================================
        PDF DOWNLOAD
@@ -68,6 +70,36 @@ public class VeranstaltungPdfController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
                         "attachment; filename=\"" + filename + "\"; filename*=UTF-8''" + encodedFilename)
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdf);
+    }
+    @GetMapping("/{id}/erhebungsbogen/pdf")
+    public ResponseEntity<byte[]> downloadErhebungsbogen(@PathVariable Long id) throws Exception {
+
+        VeranstaltungDetailDTO v = veranstaltungService.getById(id);
+        List<TeilnehmerDetailDTO> tn = teilnehmerService.getTeilnehmerForVeranstaltung(id);
+
+        byte[] pdf = erhebungsbogenService.generate(v, tn);
+
+        String date = LocalDate.now().format(DateTimeFormatter.ISO_DATE);
+
+        String rawName = v.getName() == null ? "Veranstaltung" : v.getName();
+
+        String cleanName = rawName
+                .replace("ä","ae").replace("ö","oe").replace("ü","ue")
+                .replace("Ä","Ae").replace("Ö","Oe").replace("Ü","Ue")
+                .replace("ß","ss")
+                .replaceAll("[^a-zA-Z0-9]", "");
+
+        String filename = date + "_EB_" + cleanName + ".pdf";
+
+        String encodedFilename = URLEncoder.encode(filename, StandardCharsets.UTF_8)
+                .replaceAll("\\+", "%20");
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" + filename +
+                                "\"; filename*=UTF-8''" + encodedFilename)
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(pdf);
     }

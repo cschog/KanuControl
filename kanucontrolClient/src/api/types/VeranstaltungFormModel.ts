@@ -1,6 +1,7 @@
 import { VeranstaltungTyp } from "@/api/enums/VeranstaltungTyp";
 import { VereinRef } from "@/api/types/VereinRef";
 import { PersonRef } from "@/api/types/PersonRef";
+import { CountryCode } from "@/api/enums/CountryCode";
 
 export interface VeranstaltungFormModel {
   id?: number;
@@ -21,6 +22,7 @@ export interface VeranstaltungFormModel {
 
   /* ================= Detailfelder ================= */
 
+  laenderCode?: CountryCode;
   plz?: string;
   ort?: string;
 

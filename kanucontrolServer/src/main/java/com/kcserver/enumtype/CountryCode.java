@@ -5,12 +5,62 @@ package com.kcserver.enumtype;
  */
 public enum CountryCode implements CodeEnum {
 
-    AL, AD, AT, BE, BA, BG, HR, CY, CZ, DK, EE, FI, FR, DE,
-    GR, HU, IS, IE, IT, LV, LI, LT, LU, MT, MC, ME, NL, MK,
-    NO, PL, PT, RO, SM, RS, SK, SI, ES, SE, CH, TR, UA, VA, GB;
+    AL("Albanien"),
+    AD("Andorra"),
+    AT("Österreich"),
+    BE("Belgien"),
+    BA("Bosnien und Herzegowina"),
+    BG("Bulgarien"),
+    HR("Kroatien"),
+    CY("Zypern"),
+    CZ("Tschechien"),
+    DK("Dänemark"),
+    EE("Estland"),
+    FI("Finnland"),
+    FR("Frankreich"),
+    DE("Deutschland"),
+    GR("Griechenland"),
+    HU("Ungarn"),
+    IS("Island"),
+    IE("Irland"),
+    IT("Italien"),
+    LV("Lettland"),
+    LI("Liechtenstein"),
+    LT("Litauen"),
+    LU("Luxemburg"),
+    MT("Malta"),
+    MC("Monaco"),
+    ME("Montenegro"),
+    NL("Niederlande"),
+    MK("Nordmazedonien"),
+    NO("Norwegen"),
+    PL("Polen"),
+    PT("Portugal"),
+    RO("Rumänien"),
+    SM("San Marino"),
+    RS("Serbien"),
+    SK("Slowakei"),
+    SI("Slowenien"),
+    ES("Spanien"),
+    SE("Schweden"),
+    CH("Schweiz"),
+    TR("Türkei"),
+    UA("Ukraine"),
+    VA("Vatikanstadt"),
+    GB("Vereinigtes Königreich");
+
+    private final String label;
+
+    CountryCode(String label) {
+        this.label = label;
+    }
 
     @Override
     public String getCode() {
-        return name(); // ← ISO-Code direkt aus Enum-Namen
+        return name();   // 🔒 bleibt exakt gleich
+    }
+
+    public String getLabel() {
+        return label;    // ➕ neue Funktion
     }
 }

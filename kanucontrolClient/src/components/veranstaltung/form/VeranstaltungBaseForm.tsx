@@ -7,6 +7,7 @@ import { PersonAutocomplete } from "@/components/person/PersonAutocomplete";
 import { FormFeld } from "@/components/common/FormFeld";
 import { FormFeldDatePicker } from "@/components/common/FormFeldDatePicker";
 import { FormFeldTimePicker } from "@/components/common/FormFeldTimePicker";
+import { COUNTRIES } from "@/api/enums/CountryCode";
 
 
 interface Props {
@@ -112,6 +113,24 @@ export const VeranstaltungBaseForm: React.FC<Props> = ({
             disabled={!editMode}
             onChange={(v) => onChange("artDerVerpflegung", v || undefined)}
           />
+          <TextField
+            select
+            fullWidth
+            size="small"
+            label="Land"
+            value={form.laenderCode ?? ""}
+            disabled={!editMode}
+            onChange={(e) => {
+              const value = (e.target.value || undefined) as VeranstaltungFormModel["laenderCode"];
+              onChange("laenderCode", value);
+            }}
+          >
+            {COUNTRIES.map((c) => (
+              <MenuItem key={c.code} value={c.code}>
+                {c.label}
+              </MenuItem>
+            ))}
+          </TextField>
 
           {/* ================= Ort ================= */}
           <FormFeld
@@ -134,17 +153,30 @@ export const VeranstaltungBaseForm: React.FC<Props> = ({
               <Switch
                 checked={form.individuelleGebuehren ?? false}
                 disabled={!editMode}
-                onChange={(e) => onChange("individuelleGebuehren", e.target.checked)}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+
+                  onChange("individuelleGebuehren", checked);
+
+                  if (checked) {
+                    onChange("standardGebuehr", undefined);
+                  }
+                }}
               />
             }
             label="Individuelle Gebühren"
           />
           <FormFeld
-            label="Standardgebühr"
+            label="Teilnehmergebühr"
             value={form.standardGebuehr ?? ""}
-            disabled={!editMode}
-            onChange={(v) => onChange("standardGebuehr", Number(v))}
+            disabled={!editMode || form.individuelleGebuehren}
+            onChange={(v) => onChange("standardGebuehr", v ? Number(v) : undefined)}
             type="number"
+            helperText={
+              form.individuelleGebuehren
+                ? "Gebühr wird individuell pro Teilnehmer erfasst"
+                : undefined
+            }
           />
 
           {/* ================= Planung ================= */}

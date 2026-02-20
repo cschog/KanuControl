@@ -4,7 +4,7 @@ import { FormFeld } from "@/components/common/FormFeld";
 import { FormFeldDate } from "@/components/common/FormFeldDate";
 import { PersonSave } from "@/api/types/Person";
 import { Sex } from "@/api/enums/Sex";
-import { CountryCode } from "@/api/enums/CountryCode";
+import { COUNTRIES } from "@/api/enums/CountryCode";
 
 interface Props {
   form: PersonSave;
@@ -105,19 +105,18 @@ export const PersonBaseForm: React.FC<Props> = ({ form, editMode, mode, onChange
             fullWidth
             size="small"
             label="Land"
-            value={form.countryCode ?? ""}
-            onChange={(e) =>
-              onChange(
-                "countryCode",
-                e.target.value === "" ? undefined : (e.target.value as CountryCode),
-              )
-            }
+            value={form.laenderCode ?? ""}
             disabled={!editMode}
+            onChange={(e) => {
+              const value = (e.target.value || undefined) as PersonSave["laenderCode"];
+              onChange("laenderCode", value);
+            }}
           >
-            <MenuItem value="">–</MenuItem>
-            <MenuItem value="DE">Deutschland</MenuItem>
-            <MenuItem value="NL">Niederlande</MenuItem>
-            <MenuItem value="BE">Belgien</MenuItem>
+            {COUNTRIES.map((c) => (
+              <MenuItem key={c.code} value={c.code}>
+                {c.label}
+              </MenuItem>
+            ))}
           </TextField>
 
           <FormFeld
