@@ -1,12 +1,13 @@
 package com.kcserver.dto.veranstaltung;
 
+import com.kcserver.enumtype.CountryCode;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.math.BigDecimal;
 
 @Data
 public class VeranstaltungCreateDTO {
@@ -34,6 +35,8 @@ public class VeranstaltungCreateDTO {
 
     @NotNull
     private LocalTime endeZeit;
+
+    private CountryCode laenderCode;
 
     private String plz;
     private String ort;

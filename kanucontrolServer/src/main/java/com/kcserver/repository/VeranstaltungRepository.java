@@ -14,6 +14,8 @@ public interface VeranstaltungRepository extends
 
     Optional<Veranstaltung> findByAktivTrue();
 
+    Optional<Veranstaltung> findTopByOrderByBeginnDatumDesc();
+
     @Query("""
         select v
         from Veranstaltung v

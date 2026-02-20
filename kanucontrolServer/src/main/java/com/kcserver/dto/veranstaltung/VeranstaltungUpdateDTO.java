@@ -1,11 +1,12 @@
 package com.kcserver.dto.veranstaltung;
 
+import com.kcserver.enumtype.CountryCode;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.math.BigDecimal;
 
 @Data
 public class VeranstaltungUpdateDTO {
@@ -28,6 +29,7 @@ public class VeranstaltungUpdateDTO {
 
     /* ================= Detailfelder ================= */
 
+    private CountryCode laenderCode;
     private String plz;
     private String ort;
 

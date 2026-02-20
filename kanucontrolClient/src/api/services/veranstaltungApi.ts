@@ -24,7 +24,17 @@ export function getVeranstaltungenPage(page: number, size: number) {
 
 export async function downloadTeilnehmerPdf(veranstaltungId: number) {
   const response = await apiClient.get(`/veranstaltung/${veranstaltungId}/teilnehmer/pdf`, {
-    responseType: "blob", // ⭐ wichtig für PDF
+    responseType: "blob",
+  });
+
+  return response;
+}
+
+/* ================= PDF Erhebungsbogen ================= */
+
+export async function downloadErhebungsbogenPdf(veranstaltungId: number) {
+  const response = await apiClient.get(`/veranstaltung/${veranstaltungId}/erhebungsbogen/pdf`, {
+    responseType: "blob",
   });
 
   return response;
@@ -64,8 +74,6 @@ export async function getActiveVeranstaltung(): Promise<VeranstaltungDetail | nu
 export function setActiveVeranstaltung(id: number) {
   return apiClient.post<VeranstaltungDetail>(`/veranstaltung/${id}/activate`).then((r) => r.data);
 }
-
-
 
 /* =========================================================
    CREATE

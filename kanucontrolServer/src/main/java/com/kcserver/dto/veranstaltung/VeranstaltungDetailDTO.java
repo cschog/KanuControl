@@ -1,14 +1,14 @@
 package com.kcserver.dto.veranstaltung;
 
-import com.kcserver.dto.person.PersonRefDTO;
-import com.kcserver.dto.verein.VereinRefDTO;
+import com.kcserver.dto.person.PersonDetailDTO;
+import com.kcserver.dto.verein.VereinDTO;
 import com.kcserver.enumtype.CountryCode;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.math.BigDecimal;
 
 @Data
 public class VeranstaltungDetailDTO {
@@ -46,8 +46,8 @@ public class VeranstaltungDetailDTO {
     private Long leiterId;
 
     // optional für Anzeige
-    private VereinRefDTO verein;
-    private PersonRefDTO leiter;
+    private VereinDTO verein;
+    private PersonDetailDTO leiter;
 
     /* =========================
        Plan-Zahlen

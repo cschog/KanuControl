@@ -3,6 +3,7 @@ import { VeranstaltungFormModel } from "@/api/types/VeranstaltungFormModel";
 import { VeranstaltungSave } from "@/api/types/VeranstaltungSave";
 import { VeranstaltungTyp } from "@/api/enums/VeranstaltungTyp";
 
+
 /* =========================================================
    EMPTY FACTORY (CREATE DEFAULTS)
    ========================================================= */
@@ -25,6 +26,7 @@ function emptyVeranstaltung(): VeranstaltungFormModel {
 
     /* ===== Detailfelder ===== */
 
+    laenderCode: undefined,
     plz: "",
     ort: "",
     artDerUnterkunft: "",
@@ -60,27 +62,29 @@ export function useVeranstaltungForm(initial: VeranstaltungFormModel | null) {
       return;
     }
 
-    setForm({
-      ...initial,
+   setForm({
+     ...initial,
 
-      /* ===== Null → Default ===== */
+     /* ===== Null → Default ===== */
 
-      plz: initial.plz ?? "",
-      ort: initial.ort ?? "",
-      artDerUnterkunft: initial.artDerUnterkunft ?? "",
-      artDerVerpflegung: initial.artDerVerpflegung ?? "",
+     laenderCode: initial.laenderCode ?? undefined,
 
-      individuelleGebuehren: initial.individuelleGebuehren ?? false,
-      standardGebuehr: initial.standardGebuehr ?? undefined,
+     plz: initial.plz ?? "",
+     ort: initial.ort ?? "",
+     artDerUnterkunft: initial.artDerUnterkunft ?? "",
+     artDerVerpflegung: initial.artDerVerpflegung ?? "",
 
-      geplanteTeilnehmerMaennlich: initial.geplanteTeilnehmerMaennlich ?? undefined,
-      geplanteTeilnehmerWeiblich: initial.geplanteTeilnehmerWeiblich ?? undefined,
-      geplanteTeilnehmerDivers: initial.geplanteTeilnehmerDivers ?? undefined,
+     individuelleGebuehren: initial.individuelleGebuehren ?? false,
+     standardGebuehr: initial.standardGebuehr ?? undefined,
 
-      geplanteMitarbeiterMaennlich: initial.geplanteMitarbeiterMaennlich ?? undefined,
-      geplanteMitarbeiterWeiblich: initial.geplanteMitarbeiterWeiblich ?? undefined,
-      geplanteMitarbeiterDivers: initial.geplanteMitarbeiterDivers ?? undefined,
-    });
+     geplanteTeilnehmerMaennlich: initial.geplanteTeilnehmerMaennlich ?? undefined,
+     geplanteTeilnehmerWeiblich: initial.geplanteTeilnehmerWeiblich ?? undefined,
+     geplanteTeilnehmerDivers: initial.geplanteTeilnehmerDivers ?? undefined,
+
+     geplanteMitarbeiterMaennlich: initial.geplanteMitarbeiterMaennlich ?? undefined,
+     geplanteMitarbeiterWeiblich: initial.geplanteMitarbeiterWeiblich ?? undefined,
+     geplanteMitarbeiterDivers: initial.geplanteMitarbeiterDivers ?? undefined,
+   });
   }, [initial]);
 
   /* =========================
@@ -135,13 +139,14 @@ export function useVeranstaltungForm(initial: VeranstaltungFormModel | null) {
 
       /* ===== Detailfelder ===== */
 
+      laenderCode: form.laenderCode,
       plz: form.plz || undefined,
       ort: form.ort || undefined,
       artDerUnterkunft: form.artDerUnterkunft || undefined,
       artDerVerpflegung: form.artDerVerpflegung || undefined,
 
       individuelleGebuehren: form.individuelleGebuehren ?? false,
-      standardGebuehr: form.standardGebuehr ?? undefined,
+      standardGebuehr: form.individuelleGebuehren ? undefined : form.standardGebuehr ?? undefined,
 
       geplanteTeilnehmerMaennlich: form.geplanteTeilnehmerMaennlich ?? undefined,
       geplanteTeilnehmerWeiblich: form.geplanteTeilnehmerWeiblich ?? undefined,

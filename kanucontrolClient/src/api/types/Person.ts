@@ -57,6 +57,7 @@ export interface PersonSave {
   strasse?: string;
   plz?: string;
   ort?: string;
+  laenderCode?: CountryCode;
 
   telefon?: string;
   telefonFestnetz?: string;
