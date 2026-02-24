@@ -21,6 +21,8 @@ export default interface VereinFormModel {
   /** Bankdaten */
   bankName?: string;
   iban?: string;
+  bic?: string;
+  schutzkonzept?: string; // ISO Date
 
   /** 🔗 Kontoinhaber (Person) */
   kontoinhaber?: PersonRef;

@@ -187,6 +187,7 @@ Zur Benutzerverwaltung wird Keycloak eingesetzt.
 
 - React
 - Vite
+- node v22.x
 - TypeScript
 - Material UI ab V7.x
 - VS Code

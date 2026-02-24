@@ -3,6 +3,8 @@ import { VereinRef } from "@/api/types/VereinRef";
 import { PersonRef } from "@/api/types/PersonRef";
 import { CountryCode } from "@/api/enums/CountryCode";
 
+import { VeranstaltungScope } from "@/api/enums/VeranstaltungScope";
+
 export interface VeranstaltungFormModel {
   id?: number;
 
@@ -28,6 +30,8 @@ export interface VeranstaltungFormModel {
 
   artDerUnterkunft?: string;
   artDerVerpflegung?: string;
+
+  scope: VeranstaltungScope;
 
   individuelleGebuehren?: boolean;
   standardGebuehr?: number;

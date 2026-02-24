@@ -4,14 +4,11 @@ import com.kcserver.dto.mitglied.HasMitgliedschaften;
 import com.kcserver.dto.mitglied.MitgliedSaveDTO;
 import com.kcserver.enumtype.Sex;
 import com.kcserver.validation.ExactlyOneHauptverein;
-import com.kcserver.validation.IbanRequiresBankName;
 import com.kcserver.validation.OnCreate;
 import com.kcserver.validation.OnUpdate;
+import com.kcserver.validation.ValidIban;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PastOrPresent;
-import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -22,7 +19,6 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@IbanRequiresBankName(groups = {OnCreate.class, OnUpdate.class})
 @ExactlyOneHauptverein(groups = OnCreate.class)
 public class PersonSaveDTO implements HasMitgliedschaften {
 
@@ -50,7 +46,15 @@ public class PersonSaveDTO implements HasMitgliedschaften {
     private String countryCode;
 
     private String bankName;
+
+    @ValidIban
     private String iban;
+    private String bic;
+
+    private LocalDate efz;
+
+    @Size(max = 6)
+    private String kuerzel;
 
     private Boolean aktiv;
 

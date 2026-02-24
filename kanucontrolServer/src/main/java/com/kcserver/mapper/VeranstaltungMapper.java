@@ -30,5 +30,6 @@ public interface VeranstaltungMapper {
     @Mapping(source = "leiter.id", target = "leiterId")
     @Mapping(source = "individuelleGebuehren", target = "individuelleGebuehren")
     @Mapping(source = "standardGebuehr", target = "standardGebuehr")
+    @Mapping(source = "scope", target = "scope")
     VeranstaltungDetailDTO toDetailDTO(Veranstaltung veranstaltung);
 }

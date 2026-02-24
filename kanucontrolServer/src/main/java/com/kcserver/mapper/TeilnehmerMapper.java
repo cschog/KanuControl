@@ -21,6 +21,7 @@ public interface TeilnehmerMapper {
 
     @Mapping(source = "person.id", target = "personId")
     @Mapping(source = "person", target = "person")
+    @Mapping(source = "rolle", target = "rolle")
     TeilnehmerListDTO toListDTO(Teilnehmer teilnehmer);
 
     /* =========================

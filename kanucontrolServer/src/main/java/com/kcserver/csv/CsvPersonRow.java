@@ -36,6 +36,7 @@ public class CsvPersonRow {
         }
 
         return CsvValueConverters.convert(
+                mapping.csvColumn(),   // 👈 Feldname aus CSV
                 mapping.converter(),
                 raw
         );

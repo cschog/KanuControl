@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -153,5 +154,43 @@ where t.veranstaltung.id = :veranstaltungId
 
     List<Teilnehmer> findAllByVeranstaltung(
             Veranstaltung veranstaltung
+    );
+
+        /* =========================
+       STATISTIK /Ehrenamtliche Mitarbeiter
+       ========================= */
+
+    @Query("""
+SELECT
+  SUM(CASE WHEN p.sex = 'W' AND p.geburtsdatum > :age16 THEN 1 ELSE 0 END),
+  SUM(CASE WHEN p.sex = 'M' AND p.geburtsdatum > :age16 THEN 1 ELSE 0 END),
+  SUM(CASE WHEN p.sex = 'D' AND p.geburtsdatum > :age16 THEN 1 ELSE 0 END),
+
+  SUM(CASE WHEN p.sex = 'W' AND p.geburtsdatum BETWEEN :age18 AND :age16 THEN 1 ELSE 0 END),
+  SUM(CASE WHEN p.sex = 'M' AND p.geburtsdatum BETWEEN :age18 AND :age16 THEN 1 ELSE 0 END),
+  SUM(CASE WHEN p.sex = 'D' AND p.geburtsdatum BETWEEN :age18 AND :age16 THEN 1 ELSE 0 END),
+
+  SUM(CASE WHEN p.sex = 'W' AND p.geburtsdatum BETWEEN :age27 AND :age18 THEN 1 ELSE 0 END),
+  SUM(CASE WHEN p.sex = 'M' AND p.geburtsdatum BETWEEN :age27 AND :age18 THEN 1 ELSE 0 END),
+  SUM(CASE WHEN p.sex = 'D' AND p.geburtsdatum BETWEEN :age27 AND :age18 THEN 1 ELSE 0 END),
+
+  SUM(CASE WHEN p.sex = 'W' AND p.geburtsdatum BETWEEN :age45 AND :age27 THEN 1 ELSE 0 END),
+  SUM(CASE WHEN p.sex = 'M' AND p.geburtsdatum BETWEEN :age45 AND :age27 THEN 1 ELSE 0 END),
+  SUM(CASE WHEN p.sex = 'D' AND p.geburtsdatum BETWEEN :age45 AND :age27 THEN 1 ELSE 0 END),
+
+  SUM(CASE WHEN p.sex = 'W' AND p.geburtsdatum < :age45 THEN 1 ELSE 0 END),
+  SUM(CASE WHEN p.sex = 'M' AND p.geburtsdatum < :age45 THEN 1 ELSE 0 END),
+  SUM(CASE WHEN p.sex = 'D' AND p.geburtsdatum < :age45 THEN 1 ELSE 0 END)
+FROM Teilnehmer t
+JOIN t.person p
+WHERE t.veranstaltung.id = :vid
+AND t.rolle IS NOT NULL
+""")
+    Object[] countEhrenamtByAgeAndSex(
+            @Param("vid") Long veranstaltungId,
+            @Param("age16") LocalDate age16,
+            @Param("age18") LocalDate age18,
+            @Param("age27") LocalDate age27,
+            @Param("age45") LocalDate age45
     );
 }

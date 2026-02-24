@@ -12,12 +12,19 @@ public final class CsvPersonImportSchema {
                 new CsvFieldSpec("Nachname", "name", false, null),
                 new CsvFieldSpec("Geschlecht", "sex", true, "sex_de"),
                 new CsvFieldSpec("Geburtsdatum", "geburtsdatum", true, "date_de"),
+
                 new CsvFieldSpec("Telefon Mobil", "telefon", true, null),
                 new CsvFieldSpec("Telefon Privat", "telefonFestnetz", true, null),
                 new CsvFieldSpec("E-Mail", "email", true, null),
+
                 new CsvFieldSpec("Adresse", "strasse", true, null),
                 new CsvFieldSpec("PLZ", "plz", true, null),
-                new CsvFieldSpec("Ort", "ort", true, null)
+                new CsvFieldSpec("Ort", "ort", true, null),
+
+                // 🔹 NEU
+                new CsvFieldSpec("IBAN", "iban", true, "iban"),
+                new CsvFieldSpec("BIC", "bic", true, "bic"),
+                new CsvFieldSpec("eFZ", "efz", true, "date_de")
         );
     }
 }

@@ -3,6 +3,7 @@ package com.kcserver.dto.veranstaltung;
 import com.kcserver.dto.person.PersonDetailDTO;
 import com.kcserver.dto.verein.VereinDTO;
 import com.kcserver.enumtype.CountryCode;
+import com.kcserver.enumtype.VeranstaltungScope;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import lombok.Data;
 
@@ -37,6 +38,8 @@ public class VeranstaltungDetailDTO {
 
     private Boolean individuelleGebuehren;
     private BigDecimal standardGebuehr;
+
+    private VeranstaltungScope scope;
 
     /* =========================
        Beziehungen

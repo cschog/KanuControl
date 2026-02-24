@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Box, Button, Typography, Paper, Grid, TextField } from "@mui/material";
 import { useAppContext } from "@/context/AppContext";
+import { updateTeilnehmerRolle } from "@/api/services/teilnehmerApi";
 
 import {
   getAvailablePersons,
@@ -25,6 +26,7 @@ export default function TeilnehmerScreen() {
 
   const [selAvailable, setSelAvailable] = useState<PersonList[]>([]);
   const [selAssigned, setSelAssigned] = useState<TeilnehmerList[]>([]);
+
 
   /* ================= FILTER ================= */
 
@@ -107,6 +109,22 @@ export default function TeilnehmerScreen() {
     setSelAvailable([]);
     await load();
   };
+
+ const handleRoleChange = async (current: "L" | "M" | null, personId: number) => {
+   if (!active?.id) return;
+
+   console.log("HANDLE ROLE:", current);
+
+   if (current === "L") return;
+
+   const newRole = current === "M" ? null : "M";
+
+   console.log("SENDING ROLE:", newRole);
+
+   await updateTeilnehmerRolle(active.id, personId, newRole);
+
+   await load();
+ };
 
   const handleRemove = async () => {
     if (!active?.id || selAssigned.length === 0) return;
@@ -307,10 +325,56 @@ export default function TeilnehmerScreen() {
                   flex: 1,
                   valueGetter: (_v, row) => row.person.hauptvereinAbk,
                 },
-                { field: "rolle", headerName: "Rolle", flex: 1 },
+                {
+                  field: "rolle",
+                  headerName: "Rolle",
+                  flex: 0.6,
+                  sortable: false,
+                  filterable: false,
+                  disableColumnMenu: true,
+                  align: "center",
+                  headerAlign: "center",
+
+                  renderCell: (params) => {
+                    const value = params.row.rolle as "L" | "M" | null;
+                    const personId = params.row.personId;
+
+                    const clickable = value !== "L";
+
+                    return (
+                      <button
+                        style={{
+                          all: "unset",
+                          width: "100%",
+                          height: "100%",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontWeight: value === "L" ? 600 : 500,
+                          cursor: clickable ? "pointer" : "default",
+                        }}
+                        onMouseDown={(e) => {
+                          e.preventDefault(); // ⭐ verhindert Grid Focus
+                          e.stopPropagation(); // ⭐ verhindert Row Selection
+                        }}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+
+                          console.log("CLICK ROLE:", value);
+
+                          if (!clickable) return;
+
+                          handleRoleChange(value ?? null, personId);
+                        }}
+                      >
+                        {value === "L" || value === "M" ? value : ""}
+                      </button>
+                    );
+                  },
+                },
               ]}
               checkboxSelection
-        
               onSelectionChange={setSelAssigned}
             />
           </Paper>

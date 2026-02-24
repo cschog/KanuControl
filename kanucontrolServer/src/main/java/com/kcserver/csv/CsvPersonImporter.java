@@ -40,6 +40,24 @@ public final class CsvPersonImporter {
             dto.setTelefonFestnetz((String) row.get(telefonFestnetzMapping));
         }
 
+        // IBAN optional
+        CsvFieldMapping ibanMapping = cfg.getOptional("iban");
+        if (ibanMapping != null) {
+            dto.setIban((String) row.get(ibanMapping));
+        }
+
+        // BIC optional
+        CsvFieldMapping bicMapping = cfg.getOptional("bic");
+        if (bicMapping != null) {
+            dto.setBic((String) row.get(bicMapping));
+        }
+
+        // eFZ optional (Date!)
+        CsvFieldMapping efzMapping = cfg.getOptional("efz");
+        if (efzMapping != null) {
+            dto.setEfz((LocalDate) row.get(efzMapping));
+        }
+
         dto.setAktiv(true);
         return dto;
     }

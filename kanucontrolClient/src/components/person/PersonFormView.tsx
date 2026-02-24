@@ -6,6 +6,7 @@ import { PersonActionBar } from "@/components/person/PersonActionBar";
 import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
 import { AddMembershipDialog } from "@/components/person/membership/AddMembershipDialog";
 import { usePersonForm } from "@/components/person/hooks/usePersonForm";
+import { updateMitgliedFunktion } from "@/api/services/mitgliedApi";
 
 import { PersonDetail, PersonSave } from "@/api/types/Person";
 import apiClient from "@/api/client/apiClient";
@@ -35,7 +36,6 @@ interface PersonFormViewProps {
 
   onReloadPerson: () => Promise<void>;
 }
-
 
 /* =========================================================
    Component
@@ -80,7 +80,7 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
 
   return (
     <>
-      <Box 
+      <Box
         display="grid"
         gridTemplateColumns={{
           xs: "1fr",
@@ -89,7 +89,7 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
         }}
         gap={2}
         sx={{ mt: 2 }}
-        >
+      >
         <PersonBaseForm form={form} editMode={editMode} mode="edit" onChange={update} />
       </Box>
 
@@ -100,6 +100,13 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
           editMode={editMode}
           onSetHauptverein={onSetHauptverein}
           onDeleteMitglied={onDeleteMitglied}
+          onChangeFunktion={async (mitgliedId, funktion) => {
+            await updateMitgliedFunktion(
+              mitgliedId,
+              funktion ?? undefined, // ⭐ FIX
+            );
+            await onReloadPerson();
+          }}
         />
       </Box>
 

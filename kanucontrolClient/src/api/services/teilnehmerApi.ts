@@ -67,3 +67,15 @@ export function removeTeilnehmerBulk(veranstaltungId: number, personIds: number[
     data: { personIds },
   });
 }
+
+// teilnehmerApi.ts
+export async function updateTeilnehmerRolle(
+  veranstaltungId: number,
+  personId: number,
+  rolle: "L" | "M" | null,
+) {
+  return apiClient.put(
+    `/veranstaltung/${veranstaltungId}/teilnehmer/${personId}/rolle`,
+    { rolle }, // DTO für Backend bleibt hier
+  );
+}

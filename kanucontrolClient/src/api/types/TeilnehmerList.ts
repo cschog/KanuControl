@@ -9,5 +9,5 @@ export interface TeilnehmerList {
     hauptvereinAbk?: string | null; // ⭐ NEU
   };
 
-  rolle: string | null;
+  rolle?: "L" | "M" | null;
 }

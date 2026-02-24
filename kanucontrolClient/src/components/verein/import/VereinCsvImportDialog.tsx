@@ -10,6 +10,13 @@ import {
   Alert,
   Typography,
   Stack,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  TableContainer,
+  Paper,
 } from "@mui/material";
 import apiClient from "@/api/client/apiClient";
 import { CsvImportReport } from "@/api/types/CsvImportReport";
@@ -120,11 +127,49 @@ export function VereinCsvImportDialog({ open, vereinId, onClose }: Props) {
 
           {/* Report */}
           {report && (
-            <Alert severity={report.errors > 0 ? "warning" : "success"}>
-              {report.created} erstellt, {report.simulated} geprüft, {report.errors} Fehler
-            </Alert>
+            <Stack spacing={2}>
+              <Alert severity={report.errors > 0 ? "warning" : "success"}>
+                {report.created} erstellt, {report.simulated} geprüft, {report.errors} Fehler
+              </Alert>
+
+              {report.errorDetails?.length > 0 && (
+                <Stack spacing={1}>
+                  <Typography variant="subtitle2">Fehlerdetails</Typography>
+
+                  <TableContainer
+                    component={Paper}
+                    sx={{ maxHeight: 300, border: "1px solid #eee" }}
+                  >
+                    <Table size="small" stickyHeader>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Zeile</TableCell>
+                          <TableCell>Feld</TableCell>
+                          <TableCell>Wert</TableCell>
+                          <TableCell>Fehler</TableCell>
+                        </TableRow>
+                      </TableHead>
+
+                      <TableBody>
+                        {report.errorDetails.map((err, i) => (
+                          <TableRow key={i} hover>
+                            <TableCell>{err.row}</TableCell>
+                            <TableCell>{err.field ?? "-"}</TableCell>
+                            <TableCell>
+                              <code>{err.value ?? "-"}</code>
+                            </TableCell>
+                            <TableCell>{err.message}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Stack>
+              )}
+            </Stack>
           )}
-        </Stack>
+        </Stack>{" "}
+        {/* ← dieser gehört zum DialogContent */}
       </DialogContent>
 
       <DialogActions>

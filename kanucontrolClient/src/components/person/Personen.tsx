@@ -3,15 +3,14 @@ import { MenueHeader } from "@/components/layout/MenueHeader";
 import { PersonTable } from "@/components/person/PersonTable";
 import { PersonFormView } from "@/components/person/PersonFormView";
 import { renderLoadingOrError } from "@/components/common/loadingOnErrorUtils";
-import { navigateToStartMenu } from "@/components/layout/navigateToStartMenue";
 import { PersonList, PersonSave, PersonDetail } from "@/api/types/Person";
 import { getPersonById } from "@/api/services/personApi";
 import apiClient from "@/api/client/apiClient";
 import { PersonCreateDialog } from "@/components/person/PersonCreateDialog";
 import { Box } from "@mui/material";
-import { BottomActionBar } from "@/components/common/BottomActionBar";
 import { VereinRef } from "@/api/types/VereinRef";
 import { PersonFilterBar } from "@/components/person/PersonFilterBar";
+import { BottomActionBar } from "@/components/common/BottomActionBar";
 
 import {
   getPersonenPage,
@@ -20,14 +19,26 @@ import {
   updatePerson as dbReplacePerson,
 } from "@/api/services/personApi";
 
+/* ========================================================= */
+
+export interface PersonFilterState {
+  name?: string;
+  vorname?: string;
+  vereinId?: number;
+  aktiv?: boolean;
+}
+
 export interface PersonenState {
   data: PersonList[];
   total: number;
   page: number;
   pageSize: number;
 
-  vereine: VereinRef[]; // ✅ HIER
-  filters: PersonFilterState; // ✅ HIER
+  sortField: string;
+  sortDirection: "asc" | "desc";
+
+  vereine: VereinRef[];
+  filters: PersonFilterState;
 
   selectedPerson: PersonDetail | null;
   draftPerson: PersonSave | null;
@@ -41,34 +52,34 @@ export interface PersonenState {
   createDialogOpen: boolean;
 }
 
-export interface PersonFilterState {
-  name?: string;
-  vorname?: string;
-  vereinId?: number;
-  aktiv?: boolean;
-}
+/* ========================================================= */
 
 class Personen extends Component<Record<string, never>, PersonenState> {
-  state: PersonenState & { filters: PersonFilterState } = {
+  state: PersonenState = {
     data: [],
     total: 0,
     page: 0,
     pageSize: 8,
 
-    vereine: [],
+    sortField: "name",
+    sortDirection: "asc",
 
+    vereine: [],
     filters: {},
 
     selectedPerson: null,
     draftPerson: null,
     loading: true,
     error: null,
+
     personFormEditMode: false,
     btnLöschenIsDisabled: true,
     btnÄndernIsDisabled: true,
     btnNeuePersonIsDisabled: false,
     createDialogOpen: false,
   };
+
+  /* ========================================================= */
 
   async componentDidMount() {
     await Promise.all([this.fetchPersonenData(), this.fetchVereine()]);
@@ -79,11 +90,15 @@ class Personen extends Component<Record<string, never>, PersonenState> {
     this.setState({ vereine: res.data });
   };
 
+  /* ========================================================= */
+  /* 🔎 LOAD DATA (Paging + Sorting + Filter) */
+  /* ========================================================= */
+
   fetchPersonenData = async () => {
-    const { page, pageSize, filters, selectedPerson } = this.state;
+    const { page, pageSize, filters, sortField, sortDirection, selectedPerson } = this.state;
 
     try {
-      const res = await getPersonenPage(page, pageSize, filters);
+      const res = await getPersonenPage(page, pageSize, filters, sortField, sortDirection);
 
       const stillExists =
         selectedPerson && res.content.some((p: PersonList) => p.id === selectedPerson.id);
@@ -93,8 +108,6 @@ class Personen extends Component<Record<string, never>, PersonenState> {
         total: res.totalElements,
         loading: false,
         error: null,
-
-        // ❗ Detail nur löschen wenn Person im Ergebnis NICHT mehr vorhanden
         selectedPerson: stillExists ? selectedPerson : null,
       });
     } catch {
@@ -106,6 +119,10 @@ class Personen extends Component<Record<string, never>, PersonenState> {
     }
   };
 
+  /* ========================================================= */
+  /* Paging */
+  /* ========================================================= */
+
   handlePageChange = (page: number) => {
     this.setState({ page, loading: true }, this.fetchPersonenData);
   };
@@ -114,12 +131,15 @@ class Personen extends Component<Record<string, never>, PersonenState> {
     this.setState({ pageSize, page: 0, loading: true }, this.fetchPersonenData);
   };
 
-  // ↓↓↓ alle weiteren Methoden ganz normal ↓↓↓
+  /* ========================================================= */
+  /* Sorting */
+  /* ========================================================= */
 
-  resetFilters = () => {
+  handleSortChange = (field: string, direction: "asc" | "desc") => {
     this.setState(
       {
-        filters: {},
+        sortField: field,
+        sortDirection: direction,
         page: 0,
         loading: true,
       },
@@ -127,66 +147,15 @@ class Personen extends Component<Record<string, never>, PersonenState> {
     );
   };
 
-  btnAbbruch = () => {
-    this.setState({
-      btnLöschenIsDisabled: true,
-      personFormEditMode: false,
-      selectedPerson: null,
-    });
+  /* ========================================================= */
+
+  resetFilters = () => {
+    this.setState({ filters: {}, page: 0, loading: true }, this.fetchPersonenData);
   };
 
-  btnSpeichern = async (person: PersonSave) => {
-    if (!this.state.selectedPerson) {
-      throw new Error("No selected person for update");
-    }
-
-    const saved = await dbReplacePerson(this.state.selectedPerson.id, person);
-
-    await this.fetchPersonenData();
-
-    this.setState({
-      selectedPerson: saved,
-      personFormEditMode: false,
-      btnÄndernIsDisabled: false,
-      btnLöschenIsDisabled: false,
-    });
-  };
-
-  btnNeuePerson = () => {
-    this.setState({ createDialogOpen: true });
-  };
-
-  editPerson = () => {
-    this.setState({
-      personFormEditMode: true,
-      btnLöschenIsDisabled: true,
-      btnÄndernIsDisabled: true,
-    });
-  };
-
-  deletePerson = async () => {
-    const { selectedPerson } = this.state;
-    if (selectedPerson?.id !== undefined) {
-      // Check if id is defined
-      try {
-        await dbDeletePerson(selectedPerson.id);
-        // Remove the deleted Person from the state's data array
-        this.setState((prevState) => ({
-          data: prevState.data.filter((person) => person.id !== selectedPerson.id),
-          selectedPerson: null,
-          btnLöschenIsDisabled: true,
-          btnÄndernIsDisabled: true,
-        }));
-      } catch (error) {
-        // Handle error
-        console.error("Error deleting person:", error);
-      }
-    }
-  };
-
-  btnStartMenue = () => {
-    navigateToStartMenu();
-  };
+  /* ========================================================= */
+  /* Person Selection */
+  /* ========================================================= */
 
   handleSelectPerson = async (row: PersonList | null) => {
     if (!row) {
@@ -201,7 +170,7 @@ class Personen extends Component<Record<string, never>, PersonenState> {
     const detail = await getPersonById(row.id);
 
     this.setState({
-      selectedPerson: detail, // PersonDetail
+      selectedPerson: detail,
       draftPerson: null,
       btnLöschenIsDisabled: false,
       btnÄndernIsDisabled: false,
@@ -209,14 +178,44 @@ class Personen extends Component<Record<string, never>, PersonenState> {
     });
   };
 
-  setHauptverein = async (mitgliedId: number) => {
-    await apiClient.put(`/mitglied/${mitgliedId}/hauptverein`);
-    await this.reloadSelectedPerson();
+  /* ========================================================= */
+  /* CRUD */
+  /* ========================================================= */
+
+  btnSpeichern = async (person: PersonSave) => {
+    if (!this.state.selectedPerson) return;
+
+    const saved = await dbReplacePerson(this.state.selectedPerson.id, person);
+    await this.fetchPersonenData();
+
+    this.setState({
+      selectedPerson: saved,
+      personFormEditMode: false,
+      btnÄndernIsDisabled: false,
+      btnLöschenIsDisabled: false,
+    });
   };
 
-  deleteMitglied = async (mitgliedId: number) => {
-    await apiClient.delete(`/mitglied/${mitgliedId}`);
-    await this.reloadSelectedPerson();
+  deletePerson = async () => {
+    const { selectedPerson } = this.state;
+    if (!selectedPerson) return;
+
+    await dbDeletePerson(selectedPerson.id);
+    await this.fetchPersonenData();
+
+    this.setState({
+      selectedPerson: null,
+      btnLöschenIsDisabled: true,
+      btnÄndernIsDisabled: true,
+    });
+  };
+
+  editPerson = () => {
+    this.setState({
+      personFormEditMode: true,
+      btnLöschenIsDisabled: true,
+      btnÄndernIsDisabled: true,
+    });
   };
 
   cancelEdit = () => {
@@ -226,29 +225,36 @@ class Personen extends Component<Record<string, never>, PersonenState> {
     });
   };
 
+  btnStartMenue = () => {
+    window.location.href = "/startmenue";
+  };
+
+  deleteMitglied = async (mitgliedId: number) => {
+    await apiClient.delete(`/mitglied/${mitgliedId}`);
+    await this.reloadSelectedPerson();
+  };
+
+  setHauptverein = async (mitgliedId: number) => {
+    await apiClient.put(`/mitglied/${mitgliedId}/hauptverein`);
+    await this.reloadSelectedPerson();
+  };
+
   reloadSelectedPerson = async () => {
-    const fresh = await getPersonById(this.state.selectedPerson!.id);
+    if (!this.state.selectedPerson) return;
+    const fresh = await getPersonById(this.state.selectedPerson.id);
     this.setState({ selectedPerson: fresh });
   };
+
+  /* ========================================================= */
 
   render() {
     const { data, total, selectedPerson, loading, error, createDialogOpen } = this.state;
 
-    const personAnz = typeof total === "number" ? total : 0;
-
-    // console.log("RENDER Personen – data:", data);
-
     return (
       <div>
-        <Box
-          display="flex"
-          alignItems="center"
-          justifyContent="space-between"
-          flexWrap="wrap"
-          gap={2}
-          mb={2}
-        >
-          <MenueHeader headerText={`${personAnz} Personen`} />
+        <Box display="flex" justifyContent="space-between" gap={2} mb={2}>
+          <MenueHeader headerText={`${total} Personen`} />
+
           <PersonFilterBar
             filters={this.state.filters}
             vereine={this.state.vereine}
@@ -258,6 +264,7 @@ class Personen extends Component<Record<string, never>, PersonenState> {
             onReset={this.resetFilters}
           />
         </Box>
+
         {renderLoadingOrError({ loading, error })}
 
         <PersonTable
@@ -269,58 +276,59 @@ class Personen extends Component<Record<string, never>, PersonenState> {
           onPageSizeChange={this.handlePageSizeChange}
           selectedPersonId={selectedPerson?.id ?? null}
           onSelectPerson={this.handleSelectPerson}
+          sortField={this.state.sortField}
+          sortDirection={this.state.sortDirection}
+          onSortChange={this.handleSortChange}
         />
-        <br />
-        <div>
-          <PersonFormView
-            personDetail={this.state.selectedPerson}
-            editMode={this.state.personFormEditMode}
-            onEdit={this.editPerson}
-            onCancelEdit={this.cancelEdit}
-            onSpeichern={this.btnSpeichern}
-            onDeletePerson={this.deletePerson}
-            onDeleteMitglied={this.deleteMitglied}
-            onSetHauptverein={this.setHauptverein}
-            onStartMenue={this.btnStartMenue}
-            btnÄndernPerson={this.state.btnÄndernIsDisabled}
-            btnLöschenPerson={this.state.btnLöschenIsDisabled}
-            onReloadPerson={this.reloadSelectedPerson}
-          />
-          {!selectedPerson && (
-            <BottomActionBar
-              left={[
-                {
-                  label: "Neue Person",
-                  variant: "outlined",
-                  onClick: () => this.setState({ createDialogOpen: true }),
-                },
-                {
-                  label: "Zurück",
-                  variant: "outlined",
-                  onClick: this.btnStartMenue,
-                },
-              ]}
-            />
-          )}
-          {/* ✅ CREATE DIALOG */}
-          <PersonCreateDialog
-            open={createDialogOpen}
-            onClose={() => this.setState({ createDialogOpen: false })}
-            onCreate={async (person) => {
-              await dbCreatePerson(person);
-              await this.fetchPersonenData();
 
-              // ❗ KEIN Detail-Mode nach Create
-              this.setState({
-                createDialogOpen: true,
-                selectedPerson: null,
-                personFormEditMode: false,
-                btnÄndernIsDisabled: true,
-                btnLöschenIsDisabled: true,
-              });
-            }}
+        <br />
+
+        <PersonFormView
+          personDetail={this.state.selectedPerson}
+          editMode={this.state.personFormEditMode}
+          onEdit={this.editPerson}
+          onCancelEdit={this.cancelEdit}
+          onSpeichern={this.btnSpeichern}
+          onDeletePerson={this.deletePerson}
+          onDeleteMitglied={this.deleteMitglied}
+          onSetHauptverein={this.setHauptverein}
+          onStartMenue={this.btnStartMenue}
+          onReloadPerson={this.reloadSelectedPerson}
+          btnÄndernPerson={this.state.btnÄndernIsDisabled}
+          btnLöschenPerson={this.state.btnLöschenIsDisabled}
+        />
+        {!selectedPerson && (
+          <BottomActionBar
+            left={[
+              {
+                label: "Neue Person",
+                variant: "outlined",
+                onClick: () => this.setState({ createDialogOpen: true }),
+              },
+              {
+                label: "Zurück",
+                variant: "outlined",
+                onClick: this.btnStartMenue,
+              },
+            ]}
           />
-        </div>
+        )}
+
+        <PersonCreateDialog
+          open={createDialogOpen}
+          onClose={() => this.setState({ createDialogOpen: false })}
+          onCreate={async (person) => {
+            const saved = await dbCreatePerson(person);
+            await this.fetchPersonenData();
+
+            this.setState({
+              createDialogOpen: false,
+              selectedPerson: saved, // ⭐ exakt wie Verein
+              btnÄndernIsDisabled: false,
+              btnLöschenIsDisabled: false,
+            });
+          }}
+        />
       </div>
     );
   }

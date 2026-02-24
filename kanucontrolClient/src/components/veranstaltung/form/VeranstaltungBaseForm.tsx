@@ -2,6 +2,7 @@ import React from "react";
 import { MenuItem, TextField, FormControlLabel, Switch } from "@mui/material";
 import { VeranstaltungFormModel } from "@/api/types/VeranstaltungFormModel";
 import { VeranstaltungTyp } from "@/api/enums/VeranstaltungTyp";
+import { VeranstaltungScope } from "@/api/enums/VeranstaltungScope";
 import { VereinAutocomplete } from "@/components/verein/VereinAutocomplete";
 import { PersonAutocomplete } from "@/components/person/PersonAutocomplete";
 import { FormFeld } from "@/components/common/FormFeld";
@@ -66,6 +67,19 @@ export const VeranstaltungBaseForm: React.FC<Props> = ({
         disabled={!editMode}
         onChange={(v) => onChange("verein", v)}
       />
+
+      <TextField
+        select
+        fullWidth
+        size="small"
+        label="Scope"
+        value={form.scope ?? ""}
+        disabled={!editMode}
+        onChange={(e) => onChange("scope", e.target.value as VeranstaltungScope)}
+      >
+        <MenuItem value={VeranstaltungScope.VERBAND}>Verband</MenuItem>
+        <MenuItem value={VeranstaltungScope.VEREIN}>Verein</MenuItem>
+      </TextField>
 
       {/* Beginn */}
       <FormFeldDatePicker

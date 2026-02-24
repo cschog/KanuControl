@@ -42,7 +42,7 @@ public interface MitgliedRepository extends JpaRepository<Mitglied, Long> {
        ========================= */
 
     boolean existsByPerson_IdAndVerein_Id(Long personId, Long vereinId);
-
+    boolean existsByPerson_IdAndFunktionIsNotNull(Long personId);
     boolean existsByPerson_IdAndHauptVereinTrue(Long personId);
 
     /* =========================

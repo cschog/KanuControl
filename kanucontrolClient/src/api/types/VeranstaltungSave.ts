@@ -2,6 +2,8 @@
 import { VeranstaltungTyp } from "@/api/enums/VeranstaltungTyp";
 import { CountryCode } from "@/api/enums/CountryCode";
 
+export type VeranstaltungScope = "VERBAND" | "VEREIN";
+
 export interface VeranstaltungSave {
   id?: number;
 
@@ -13,6 +15,8 @@ export interface VeranstaltungSave {
 
   individuelleGebuehren?: boolean;
   standardGebuehr?: number;
+
+  scope: VeranstaltungScope;
 
   laenderCode?: CountryCode;
   plz?: string;

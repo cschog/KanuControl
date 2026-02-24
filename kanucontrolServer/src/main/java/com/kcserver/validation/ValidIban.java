@@ -5,15 +5,14 @@ import jakarta.validation.Payload;
 
 import java.lang.annotation.*;
 
-@Documented
-@Constraint(validatedBy = IbanRequiresBankNameValidator.class)
-@Target(ElementType.TYPE)
+@Target({ ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
-public @interface IbanRequiresBankName {
+@Constraint(validatedBy = IbanValidator.class)
+@Documented
+public @interface ValidIban {
 
-    String message() default "IBAN requires bank name";
+    String message() default "Ungültige IBAN";
 
     Class<?>[] groups() default {};
-
     Class<? extends Payload>[] payload() default {};
 }

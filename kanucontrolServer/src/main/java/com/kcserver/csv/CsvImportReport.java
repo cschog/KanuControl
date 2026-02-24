@@ -35,7 +35,7 @@ public class CsvImportReport {
         return errorDetails.size();
     }
 
-    public void addError(int row, String message) {
-        errorDetails.add(new CsvImportError(row, message));
+    public void addError(int row, String field, String value, String message) {
+        errorDetails.add(new CsvImportError(row, field, value, message));
     }
 }

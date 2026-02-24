@@ -87,6 +87,20 @@ export const PersonBaseForm: React.FC<Props> = ({ form, editMode, mode, onChange
           />
 
           <FormFeld
+            label="Kürzel"
+            value={form.kuerzel}
+            onChange={(v) => onChange("kuerzel", v || undefined)}
+            disabled={!editMode}
+          />
+
+          <FormFeld
+            label="eFZ"
+            value={form.efz}
+            onChange={(v) => onChange("efz", v || undefined)}
+            disabled={!editMode}
+          />
+
+          <FormFeld
             label="Telefon"
             value={form.telefon}
             onChange={(v) => onChange("telefon", v || undefined)}
@@ -130,6 +144,13 @@ export const PersonBaseForm: React.FC<Props> = ({ form, editMode, mode, onChange
             label="IBAN"
             value={form.iban}
             onChange={(v) => onChange("iban", v || undefined)}
+            disabled={!editMode}
+          />
+
+          <FormFeld
+            label="BIC"
+            value={form.bic}
+            onChange={(v) => onChange("bic", v || undefined)}
             disabled={!editMode}
           />
 
