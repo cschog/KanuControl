@@ -2,6 +2,7 @@ package com.kcserver.controller;
 
 import com.kcserver.dto.person.PersonListDTO;
 import com.kcserver.dto.teilnehmer.*;
+import com.kcserver.enumtype.TeilnehmerRolle;
 import com.kcserver.service.TeilnehmerService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -9,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -87,16 +89,21 @@ public class TeilnehmerController {
     }
 
     /* =========================================================
-       UPDATE
-       ========================================================= */
+   UPDATE (für Tests & API)
+   ========================================================= */
 
     @PutMapping("/{teilnehmerId}")
+    @ResponseStatus(HttpStatus.OK)
     public TeilnehmerDetailDTO update(
             @PathVariable Long veranstaltungId,
             @PathVariable Long teilnehmerId,
             @RequestBody TeilnehmerUpdateDTO dto
     ) {
-        return teilnehmerService.update(veranstaltungId, teilnehmerId, dto);
+        return teilnehmerService.update(
+                veranstaltungId,
+                teilnehmerId,
+                dto
+        );
     }
 
     /* =========================================================
@@ -136,5 +143,30 @@ public class TeilnehmerController {
             @PathVariable Long personId
     ) {
         return teilnehmerService.setLeiter(veranstaltungId, personId);
+    }
+
+    /* =========================================================
+          SET ROLLE
+          ========================================================= */
+    @PutMapping("/{personId}/rolle")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void updateRolle(
+            @PathVariable Long veranstaltungId,
+            @PathVariable Long personId,
+            @RequestBody RolleDTO dto
+    ) {
+
+        if (dto.getRolle() == TeilnehmerRolle.LEITER) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Leiter must be set via Veranstaltung"
+            );
+        }
+
+        teilnehmerService.updateRolle(
+                veranstaltungId,
+                personId,
+                dto.getRolle()
+        );
     }
 }

@@ -16,7 +16,7 @@ public class TestTenantSchemaService implements TenantSchemaService {
 
     @Override
     public void initializeTenant(String tenantId) {
-        // 🔥 DAS ist entscheidend
+        jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS " + tenantId);
         jdbcTemplate.execute("SET search_path TO " + tenantId);
     }
 }

@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,6 +43,11 @@ public class Verein extends Auditable {
     private String bankName;
 
     private String iban;
+
+    @Column(length = 20)
+    private String bic;
+
+    private LocalDate schutzkonzept;
 
     /** 🔗 NEU: Kontoinhaber als Person */
     @OneToOne(optional = true)

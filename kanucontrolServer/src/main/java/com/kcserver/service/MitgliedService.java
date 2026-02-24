@@ -243,9 +243,9 @@ public class MitgliedService {
             );
         }
 
-        if (dto.getFunktion() != null) {
-            mitglied.setFunktion(dto.getFunktion());
-        }
+
+        mitglied.setFunktion(dto.getFunktion());
+
 
         if (Boolean.TRUE.equals(dto.getHauptVerein())
                 && !mitglied.getHauptVerein()) {
@@ -254,13 +254,6 @@ public class MitgliedService {
                     mitglied.getPerson().getId()
             );
             mitglied.setHauptVerein(true);
-        }
-
-        if (Boolean.FALSE.equals(dto.getHauptVerein())) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "A person must always have exactly one Hauptverein"
-            );
         }
 
         return mitglied;

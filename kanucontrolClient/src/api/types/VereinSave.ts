@@ -9,5 +9,7 @@ export interface VereinSave {
   telefon?: string;
   bankName?: string;
   iban?: string;
-  kontoinhaberId?: number; 
+  bic?: string;
+  schutzkonzept?: string; // ISO Date
+  kontoinhaberId?: number;
 }

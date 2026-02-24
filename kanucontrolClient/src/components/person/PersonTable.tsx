@@ -1,17 +1,24 @@
-// PersonTable.tsx
+import React from "react";
 import { GenericTable } from "@/components/common/GenericTable";
 import { personColumns, PersonWithId } from "@/components/person/personColumns";
 import { PersonList } from "@/api/types/Person";
 
 interface PersonTableProps {
-  data?: PersonList[]; // 👈 optional!
+  data?: PersonList[];
   total: number;
   page: number;
   pageSize: number;
+
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;
+
   selectedPersonId: number | null;
   onSelectPerson: (row: PersonList | null) => void;
+
+  // ⭐ OPTIONAL machen
+  sortField?: string;
+  sortDirection?: "asc" | "desc";
+  onSortChange?: (field: string, direction: "asc" | "desc") => void;
 }
 
 export const PersonTable: React.FC<PersonTableProps> = ({
@@ -23,28 +30,33 @@ export const PersonTable: React.FC<PersonTableProps> = ({
   onPageSizeChange,
   selectedPersonId,
   onSelectPerson,
+  sortField,
+  sortDirection,
+  onSortChange,
 }) => {
   const rows: PersonWithId[] = data.filter((p): p is PersonWithId => typeof p.id === "number");
-
-  const selectedRow =
-    selectedPersonId != null ? rows.find((r) => r.id === selectedPersonId) ?? null : null;
-
-  const serverPaginationEnabled = typeof total === "number";
 
   return (
     <GenericTable<PersonWithId>
       rows={rows}
       columns={personColumns}
-      selectedRow={selectedRow}
+      /* Single Select */
+      selectedRowId={selectedPersonId}
       onSelectRow={onSelectPerson}
-      initialSortField="name"
-      /* ✅ NUR setzen, wenn vollständig */
-      paginationMode={serverPaginationEnabled ? "server" : undefined}
-      rowCount={serverPaginationEnabled ? total : undefined}
-      page={serverPaginationEnabled ? page : undefined}
-      pageSize={serverPaginationEnabled ? pageSize : undefined}
-      onPageChange={serverPaginationEnabled ? onPageChange : undefined}
-      onPageSizeChange={serverPaginationEnabled ? onPageSizeChange : undefined}
+      /* Server Paging */
+      paginationMode="server"
+      rowCount={total}
+      page={page}
+      pageSize={pageSize}
+      onPageChange={onPageChange}
+      onPageSizeChange={onPageSizeChange}
+      /* Server Sorting — KEIN Mapping mehr nötig */
+      sortField={sortField}
+      sortDirection={sortDirection}
+      onSortChange={(field, dir) => {
+        onSortChange?.(field, dir);
+        onPageChange(0);
+      }}
     />
   );
 };

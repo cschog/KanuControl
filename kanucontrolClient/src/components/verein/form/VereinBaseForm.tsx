@@ -1,5 +1,6 @@
 import React from "react";
 import { FormFeld } from "@/components/common/FormFeld";
+import { FormFeldDate } from "@/components/common/FormFeldDate";
 
 import Verein from "@/api/types/VereinFormModel";
 
@@ -76,11 +77,25 @@ export const VereinBaseForm: React.FC<Props> = ({ form, editMode, mode, onChange
           />
 
           <FormFeld
+            label="BIC"
+            value={form.iban ?? ""}
+            onChange={(v) => onChange("bic", v)}
+            disabled={!editMode}
+          />
+
+          <FormFeld
             label="Kontoinhaber"
             value={
               form.kontoinhaber ? `${form.kontoinhaber.name}, ${form.kontoinhaber.vorname}` : ""
             }
             disabled
+          />
+
+          <FormFeldDate
+            label="Schutzkonzept"
+            value={form.schutzkonzept ?? ""}
+            onChange={(v) => onChange("schutzkonzept", v || undefined)}
+            disabled={!editMode}
           />
         </>
       )}

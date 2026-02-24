@@ -2,6 +2,7 @@ package com.kcserver.entity;
 
 import com.kcserver.audit.Auditable;
 import com.kcserver.enumtype.CountryCode;
+import com.kcserver.enumtype.VeranstaltungScope;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import jakarta.persistence.*;
 import lombok.*;
@@ -67,6 +68,10 @@ public class Veranstaltung extends Auditable {
 
     @Column(name = "standard_gebuehr", precision = 10, scale = 2)
     private BigDecimal standardGebuehr;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private VeranstaltungScope scope;
 
     /* =========================
        Beziehungen

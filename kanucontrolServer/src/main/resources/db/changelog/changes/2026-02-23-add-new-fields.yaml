@@ -1,0 +1,50 @@
+databaseChangeLog:
+  - changeSet:
+      id: 2026-02-verein-person-veranstaltung-fields
+      author: chris
+
+      changes:
+
+        # ===============================
+        # Verein
+        # ===============================
+        - addColumn:
+            tableName: verein
+            columns:
+              - column:
+                  name: bic
+                  type: varchar(20)
+
+              - column:
+                  name: schutzkonzept
+                  type: date
+
+
+        # ===============================
+        # Person
+        # ===============================
+        - addColumn:
+            tableName: person
+            columns:
+              - column:
+                  name: bic
+                  type: varchar(20)
+
+              - column:
+                  name: efz
+                  type: date
+
+              - column:
+                  name: kuerzel
+                  type: varchar(6)
+
+
+        # ===============================
+        # Veranstaltung
+        # ===============================
+        - addColumn:
+            tableName: veranstaltung
+            columns:
+              - column:
+                  name: scope
+                  type: varchar(20)

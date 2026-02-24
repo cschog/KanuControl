@@ -19,7 +19,7 @@ const Navigation = () => {
   const { schema, active, loading } = useAppContext();
 
   const handleHome = () => navigate("/startmenue");
-  const handleLogout = () => keycloak.logout({ redirectUri: "http://localhost:5173" });
+ const handleLogout = () => keycloak.logout({ redirectUri: window.location.origin });
 
   const contextText = active
     ? `${schema} · ${active.name} · ${
@@ -28,14 +28,14 @@ const Navigation = () => {
     : schema;
 
   return (
-    <AppBar position="static">
+    <AppBar position="static" sx={{ bgcolor: "#6B7280" }}>
       <Toolbar>
         {/* 🔰 Logo */}
         <Box
           component="img"
           src="https://i.ibb.co/wM20B9N/logo-Kanu-Control200px.png"
           alt="KanuControl"
-          sx={{ height: 32, mr: 2 }}
+          sx={{ height: 50, mr: 2 }}
         />
 
         {/* 📌 Titel + Kontext */}

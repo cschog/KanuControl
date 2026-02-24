@@ -31,6 +31,11 @@ public class CsvMappingConfig {
         cfg.put("plz", "PLZ", null);
         cfg.put("ort", "Ort", null);
 
+        // ⭐ NEU
+        cfg.put("iban", "IBAN", "iban");
+        cfg.put("bic", "BIC", "bic");
+        cfg.put("efz", "eFZ", "date_de");
+
         return cfg;
     }
 

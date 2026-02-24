@@ -81,6 +81,14 @@ public class Person extends Auditable {
 
     private String iban;
 
+    @Column(length = 20)
+    private String bic;
+
+    private LocalDate efz;
+
+    @Column(length = 6)
+    private String kuerzel;
+
     /* aktiv = true
     „Diese Person soll standardmäßig bei der
     Auswahl von Teilnehmern sichtbar sein“

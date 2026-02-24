@@ -1,7 +1,7 @@
 import axios, { InternalAxiosRequestConfig, AxiosResponse } from "axios";
 import keycloak from "@/auth/keycloak";
 
-const baseURL = import.meta.env.VITE_API_URL || "http://localhost:8090/api";
+const baseURL = "/api";
 
 const apiClient = axios.create({
   baseURL,

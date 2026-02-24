@@ -180,9 +180,9 @@ public class PDFErhebungsbogenService {
 
                 try {
                     field.setValue(value);
-                    System.out.println("Radiobutton gesetzt auf: " + value);
+                  //  System.out.println("Radiobutton gesetzt auf: " + value);
                 } catch (Exception ex) {
-                    System.out.println("Radiobutton Fehler: " + ex.getMessage());
+                   // System.out.println("Radiobutton Fehler: " + ex.getMessage());
                 }
             }
         }
@@ -203,6 +203,9 @@ public class PDFErhebungsbogenService {
         // 3 18-26
         // 4 >=27
 
+        int[][] ehrenamt = new int[3][5];
+
+
         for (TeilnehmerDetailDTO t : list) {
 
             if (t.getSex() == null) continue;
@@ -222,7 +225,22 @@ public class PDFErhebungsbogenService {
             else if (age < 27) ageGroup = 3;
             else ageGroup = 4;
 
+            // ===== normale Teilnehmer =====
             stats[sexIndex][ageGroup]++;
+
+            // ===== EHRENAMT (nur L + M) =====
+            if (t.getRolle() != null) {
+
+                int ageGroupEA;
+
+                if (age < 16) ageGroupEA = 0;
+                else if (age < 18) ageGroupEA = 1;
+                else if (age < 27) ageGroupEA = 2;
+                else if (age < 45) ageGroupEA = 3;
+                else ageGroupEA = 4;
+
+                ehrenamt[sexIndex][ageGroupEA]++;
+            }
         }
 
         /* ================= WEIBLICH ================= */
@@ -248,6 +266,28 @@ public class PDFErhebungsbogenService {
         set(form, "14_bis_unter_18_Jahre_divers", String.valueOf(stats[2][2]));
         set(form, "18_bis_unter_27_Jahre_divers", String.valueOf(stats[2][3]));
         set(form, "27_Jahre_und_aelter_divers", String.valueOf(stats[2][4]));
+
+        /* ================= EHRENAMT ================= */
+
+        set(form, "unter_16_Jahre_ehrenamt_weiblich", String.valueOf(ehrenamt[0][0]));
+        set(form, "unter_16_Jahre_ehrenamt_maennlich", String.valueOf(ehrenamt[1][0]));
+        set(form, "unter_16_Jahre_ehrenamt_divers", String.valueOf(ehrenamt[2][0]));
+
+        set(form, "16_bis_unter_18_Jahre_ehrenamt_weiblich", String.valueOf(ehrenamt[0][1]));
+        set(form, "16_bis_unter_18_Jahre_ehrenamt_maennlich", String.valueOf(ehrenamt[1][1]));
+        set(form, "16_bis_unter_18_Jahre_ehrenamt_divers", String.valueOf(ehrenamt[2][1]));
+
+        set(form, "18_bis_unter_27_Jahre_ehrenamt_weiblich", String.valueOf(ehrenamt[0][2]));
+        set(form, "18_bis_unter_27_Jahre_ehrenamt_maennlich", String.valueOf(ehrenamt[1][2]));
+        set(form, "18_bis_unter_27_Jahre_ehrenamt_divers", String.valueOf(ehrenamt[2][2]));
+
+        set(form, "27_bis_unter_45_Jahre_ehrenamt_weiblich", String.valueOf(ehrenamt[0][3]));
+        set(form, "27_bis_unter_45_Jahre_ehrenamt_maennlich", String.valueOf(ehrenamt[1][3]));
+        set(form, "27_bis_unter_45_Jahre_ehrenamt_divers", String.valueOf(ehrenamt[2][3]));
+
+        set(form, "45_Jahre_und_aelter_ehrenamt_weiblich", String.valueOf(ehrenamt[0][4]));
+        set(form, "45_Jahre_und_aelter_ehrenamt_maennlich", String.valueOf(ehrenamt[1][4]));
+        set(form, "45_Jahre_und_aelter_ehrenamt_divers", String.valueOf(ehrenamt[2][4]));
     }
 
     private void set(PDAcroForm form, String field, String value) throws IOException {

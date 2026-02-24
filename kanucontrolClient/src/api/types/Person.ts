@@ -63,6 +63,9 @@ export interface PersonSave {
   telefonFestnetz?: string;
   bankName?: string;
   iban?: string;
+  bic?: string;
+  efz?: string; // ISO Date
+  kuerzel?: string;
 
   aktiv?: boolean;
 
