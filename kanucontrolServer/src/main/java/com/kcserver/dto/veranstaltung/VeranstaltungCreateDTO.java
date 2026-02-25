@@ -1,6 +1,7 @@
 package com.kcserver.dto.veranstaltung;
 
 import com.kcserver.enumtype.CountryCode;
+import com.kcserver.enumtype.VeranstaltungScope;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -43,6 +44,7 @@ public class VeranstaltungCreateDTO {
 
     private Boolean individuelleGebuehren;
     private BigDecimal standardGebuehr;
+    private VeranstaltungScope scope;
 
     private String artDerUnterkunft;
     private String artDerVerpflegung;

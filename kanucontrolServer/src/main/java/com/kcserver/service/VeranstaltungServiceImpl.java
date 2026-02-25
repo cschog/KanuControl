@@ -97,6 +97,7 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
         );
 
         veranstaltung.setStandardGebuehr(dto.getStandardGebuehr());
+        veranstaltung.setScope(dto.getScope());
 
         veranstaltung.setGeplanteTeilnehmerMaennlich(dto.getGeplanteTeilnehmerMaennlich());
         veranstaltung.setGeplanteTeilnehmerWeiblich(dto.getGeplanteTeilnehmerWeiblich());
@@ -421,6 +422,10 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
         );
 
         veranstaltung.setStandardGebuehr(dto.getStandardGebuehr());
+        
+        if (dto.getScope() != null) {
+            veranstaltung.setScope(dto.getScope());
+        }
 
         /* Planung Teilnehmer */
         veranstaltung.setGeplanteTeilnehmerMaennlich(dto.getGeplanteTeilnehmerMaennlich());
