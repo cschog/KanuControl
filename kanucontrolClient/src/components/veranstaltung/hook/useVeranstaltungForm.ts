@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { VeranstaltungFormModel } from "@/api/types/VeranstaltungFormModel";
 import { VeranstaltungSave } from "@/api/types/VeranstaltungSave";
 import { VeranstaltungTyp } from "@/api/enums/VeranstaltungTyp";
+import { VeranstaltungScope } from "@/api/enums/VeranstaltungScope";
 
 
 /* =========================================================
@@ -34,6 +35,7 @@ function emptyVeranstaltung(): VeranstaltungFormModel {
 
     individuelleGebuehren: false,
     standardGebuehr: undefined,
+    scope: VeranstaltungScope.VEREIN,
 
     geplanteTeilnehmerMaennlich: undefined,
     geplanteTeilnehmerWeiblich: undefined,
@@ -76,6 +78,7 @@ export function useVeranstaltungForm(initial: VeranstaltungFormModel | null) {
 
      individuelleGebuehren: initial.individuelleGebuehren ?? false,
      standardGebuehr: initial.standardGebuehr ?? undefined,
+     scope: initial.scope ?? undefined,
 
      geplanteTeilnehmerMaennlich: initial.geplanteTeilnehmerMaennlich ?? undefined,
      geplanteTeilnehmerWeiblich: initial.geplanteTeilnehmerWeiblich ?? undefined,
@@ -147,6 +150,7 @@ export function useVeranstaltungForm(initial: VeranstaltungFormModel | null) {
 
       individuelleGebuehren: form.individuelleGebuehren ?? false,
       standardGebuehr: form.individuelleGebuehren ? undefined : form.standardGebuehr ?? undefined,
+      scope: form.scope,
 
       geplanteTeilnehmerMaennlich: form.geplanteTeilnehmerMaennlich ?? undefined,
       geplanteTeilnehmerWeiblich: form.geplanteTeilnehmerWeiblich ?? undefined,

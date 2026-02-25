@@ -1,5 +1,6 @@
 // src/api/types/veranstaltung/VeranstaltungDetail.ts
 import { VeranstaltungTyp } from "@/api/enums/VeranstaltungTyp";
+import { VeranstaltungScope } from "@/api/enums/VeranstaltungScope";
 import { VereinRef } from "@/api/types/VereinRef";
 import { PersonRef } from "@/api/types/PersonRef";
 
@@ -22,6 +23,11 @@ export interface VeranstaltungDetail {
 
   verein: VereinRef;
   leiter: PersonRef;
+
+  scope: VeranstaltungScope;
+
+  individuelleGebuehren: boolean;
+  standardGebuehr: number;
 
   geplanteTeilnehmerMaennlich?: number;
   geplanteTeilnehmerWeiblich?: number;

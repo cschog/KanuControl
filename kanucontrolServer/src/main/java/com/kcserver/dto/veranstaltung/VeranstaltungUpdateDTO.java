@@ -1,6 +1,7 @@
 package com.kcserver.dto.veranstaltung;
 
 import com.kcserver.enumtype.CountryCode;
+import com.kcserver.enumtype.VeranstaltungScope;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import lombok.Data;
 
@@ -22,6 +23,8 @@ public class VeranstaltungUpdateDTO {
 
     private Boolean individuelleGebuehren;
     private BigDecimal standardGebuehr;
+
+    private VeranstaltungScope scope;
 
     // ⭐ NEU
     private Long leiterId;

@@ -36,6 +36,7 @@ export interface VeranstaltungFormModel {
   individuelleGebuehren?: boolean;
   standardGebuehr?: number;
 
+
   geplanteTeilnehmerMaennlich?: number;
   geplanteTeilnehmerWeiblich?: number;
   geplanteTeilnehmerDivers?: number;
