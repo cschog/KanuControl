@@ -15,9 +15,16 @@ function mapDetailToSave(detail: PersonDetail): PersonSave {
     plz: detail.plz,
     ort: detail.ort,
     countryCode: detail.countryCode,
+
     bankName: detail.bankName,
     iban: detail.iban,
+    bic: detail.bic, // ⭐ FEHLTE → jetzt im Payload
+
+    efz: detail.efz, // (falls du nutzt)
+    kuerzel: detail.kuerzel, // (falls du nutzt)
+
     aktiv: detail.aktiv,
+
     mitgliedschaften: detail.mitgliedschaften.map((m) => ({
       vereinId: m.verein.id,
       hauptVerein: m.hauptVerein,

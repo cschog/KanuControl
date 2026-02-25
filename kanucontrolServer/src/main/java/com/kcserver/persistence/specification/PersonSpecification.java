@@ -61,14 +61,13 @@ public class PersonSpecification {
 
             // Aktiv (Default: true)
             Boolean aktiv = c.getAktiv();
-            if (aktiv == null) {
-                aktiv = true;
+            // Aktiv (nur filtern wenn gesetzt)
+            if (c.getAktiv() != null) {
+                predicate = cb.and(
+                        predicate,
+                        cb.equal(root.get("aktiv"), c.getAktiv())
+                );
             }
-
-            predicate = cb.and(
-                    predicate,
-                    cb.equal(root.get("aktiv"), aktiv)
-            );
 
             // Unvollständig
             if (Boolean.TRUE.equals(c.getUnvollstaendig())) {

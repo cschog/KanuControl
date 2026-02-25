@@ -39,6 +39,26 @@ public class PersonController {
     }
 
     /* =========================
+   LIST (OHNE PAGING)
+   ========================= */
+
+    @GetMapping("/all")
+    public List<PersonListDTO> getAll(
+            PersonSearchCriteria criteria,
+            @RequestParam(required = false) String sort
+    ) {
+        Sort s = Sort.unsorted();
+
+        if (sort != null) {
+            String[] parts = sort.split(",");
+            s = Sort.by(Sort.Direction.fromString(parts[1]), parts[0]);
+        }
+
+        return personService.getAll(s, criteria);
+    }
+
+
+    /* =========================
        SEARCH (PAGINIERT)
        ========================= */
 

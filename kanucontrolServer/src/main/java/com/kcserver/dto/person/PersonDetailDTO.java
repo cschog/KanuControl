@@ -30,6 +30,10 @@ public class PersonDetailDTO {
     private String countryCode;
     private String bankName;
     private String iban;
+    private String bic;
+
+    private String efz;
+    private String kuerzel;
 
     private List<MitgliedDetailDTO> mitgliedschaften;
 

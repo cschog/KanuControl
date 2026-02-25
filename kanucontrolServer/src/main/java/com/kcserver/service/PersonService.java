@@ -6,6 +6,9 @@ import com.kcserver.dto.person.PersonSaveDTO;
 import com.kcserver.dto.person.PersonSearchCriteria;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+
+import java.util.List;
 
 public interface PersonService {
 
@@ -14,6 +17,7 @@ public interface PersonService {
        ========================= */
     Page<PersonListDTO> getAll(Pageable pageable);
 
+    List<PersonListDTO> getAll(Sort sort, PersonSearchCriteria criteria);
     /* =========================
        DETAIL
        ========================= */

@@ -38,6 +38,10 @@ export interface PersonDetail {
 
   bankName?: string;
   iban?: string;
+  bic?: string;
+
+  efz?: string;
+  kuerzel?: string;
 
   mitgliedschaften: MitgliedDetail[];
 }

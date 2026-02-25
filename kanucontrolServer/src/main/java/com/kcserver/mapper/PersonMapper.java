@@ -16,7 +16,7 @@ import java.util.List;
 
 @Mapper(
         componentModel = "spring",
-        unmappedTargetPolicy = ReportingPolicy.IGNORE
+        unmappedTargetPolicy = ReportingPolicy.ERROR
 )
 public interface PersonMapper {
 
@@ -37,16 +37,22 @@ public interface PersonMapper {
     @Mapping(target = "mitgliedschaften", source = "mitgliedschaften")
     PersonDetailDTO toDetailDTO(Person person);
 
+    @Mapping(target = "personId", ignore = true)
     MitgliedDetailDTO toMitgliedDetailDTO(Mitglied mitglied);
     VereinRefDTO toVereinRefDTO(Verein verein);
 
     /* WRITE */
+    /* WRITE */
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "mitgliedschaften", ignore = true)
+    @Mapping(target = "countryCode", expression = "java(mapCountryCode(dto.getCountryCode()))")
+    @Mapping(target = "bic", source = "bic")
     Person toNewEntity(PersonSaveDTO dto);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "mitgliedschaften", ignore = true)
+    @Mapping(target = "countryCode", expression = "java(mapCountryCode(dto.getCountryCode()))")
+    @Mapping(target = "bic", source = "bic")
     void updateFromDTO(PersonSaveDTO dto, @MappingTarget Person entity);
 
     @AfterMapping
@@ -74,4 +80,15 @@ public interface PersonMapper {
                 .findFirst()
                 .orElse(null);
     }
+
+    default com.kcserver.enumtype.CountryCode mapCountryCode(String code) {
+        if (code == null || code.isBlank()) return null;
+        return com.kcserver.enumtype.CountryCode.valueOf(code);
+    }
+
+    @Mapping(
+            target = "hauptvereinAbk",
+            expression = "java(resolveHauptvereinAbk(person))"
+    )
+    com.kcserver.dto.person.PersonRefDTO toPersonRefDTO(Person person);
 }

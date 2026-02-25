@@ -1,6 +1,8 @@
 package com.kcserver.service;
 
 import com.kcserver.dto.mitglied.MitgliedSaveDTO;
+import com.kcserver.dto.person.PersonDetailDTO;
+import com.kcserver.dto.person.PersonListDTO;
 import com.kcserver.dto.person.PersonSaveDTO;
 import com.kcserver.dto.person.PersonSearchCriteria;
 import com.kcserver.entity.Mitglied;
@@ -15,12 +17,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-import com.kcserver.dto.person.PersonListDTO;
-import com.kcserver.dto.person.PersonDetailDTO;
 
 import java.util.List;
 
@@ -76,6 +77,26 @@ public class PersonServiceImpl implements PersonService {
                     return dto;
                 });
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PersonListDTO> getAll(Sort sort, PersonSearchCriteria criteria) {
+
+        return personRepository
+                .findAll(PersonSpecification.byCriteria(criteria), sort)
+                .stream()
+                .map(p -> {
+                    PersonListDTO dto = personMapper.toListDTO(p);
+                    dto.setMitgliedschaftenCount(
+                            p.getMitgliedschaften() == null
+                                    ? 0
+                                    : p.getMitgliedschaften().size()
+                    );
+                    return dto;
+                })
+                .toList();
+    }
+
 
     /* =========================================================
        CREATE

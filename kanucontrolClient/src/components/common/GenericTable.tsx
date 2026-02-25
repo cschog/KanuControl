@@ -51,11 +51,6 @@ export function GenericTable<T extends WithId>({
   sortDirection,
   onSortChange,
   paginationMode,
-  rowCount,
-  page,
-  pageSize,
-  onPageChange,
-  onPageSizeChange,
   initialSortField,
   height,
 }: GenericTableProps<T>) {
@@ -134,23 +129,11 @@ export function GenericTable<T extends WithId>({
         onRowSelectionModelChange={handleSelectionChange}
         disableRowSelectionOnClick={checkboxSelection}
         /* Sorting */
-        sortingMode={paginationMode === "server" ? "server" : "client"}
+        sortingMode={onSortChange ? "server" : "client"}
         sortModel={sortField ? [{ field: sortField, sort: sortDirection ?? "asc" }] : undefined}
         onSortModelChange={handleSortChange}
-        /* Paging */
-        paginationMode={paginationMode}
-        rowCount={rowCount}
-        hideFooter={paginationMode !== "server"}
-        pageSizeOptions={[8, 20, 50, 100]}
-        paginationModel={
-          paginationMode === "server" && page != null && pageSize != null
-            ? { page, pageSize }
-            : undefined
-        }
-        onPaginationModelChange={(model) => {
-          if (model.page !== page) onPageChange?.(model.page);
-          if (model.pageSize !== pageSize) onPageSizeChange?.(model.pageSize);
-        }}
+        /* Paging AUS → nur Scroll */
+        hideFooter
         rowHeight={rowHeight}
         columnHeaderHeight={headerHeight}
         initialState={
