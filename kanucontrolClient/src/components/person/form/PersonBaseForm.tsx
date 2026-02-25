@@ -93,9 +93,9 @@ export const PersonBaseForm: React.FC<Props> = ({ form, editMode, mode, onChange
             disabled={!editMode}
           />
 
-          <FormFeld
+          <FormFeldDate
             label="eFZ"
-            value={form.efz}
+            value={form.efz ?? ""}
             onChange={(v) => onChange("efz", v || undefined)}
             disabled={!editMode}
           />
@@ -119,11 +119,11 @@ export const PersonBaseForm: React.FC<Props> = ({ form, editMode, mode, onChange
             fullWidth
             size="small"
             label="Land"
-            value={form.laenderCode ?? ""}
+            value={form.countryCode ?? ""}
             disabled={!editMode}
             onChange={(e) => {
-              const value = (e.target.value || undefined) as PersonSave["laenderCode"];
-              onChange("laenderCode", value);
+              const value = (e.target.value || undefined) as PersonSave["countryCode"];
+              onChange("countryCode", value);
             }}
           >
             {COUNTRIES.map((c) => (

@@ -5,17 +5,17 @@ import { PersonList } from "@/api/types/Person";
 
 interface PersonTableProps {
   data?: PersonList[];
-  total: number;
-  page: number;
-  pageSize: number;
 
-  onPageChange: (page: number) => void;
-  onPageSizeChange: (size: number) => void;
+  /* Paging OPTIONAL */
+  total?: number;
+  page?: number;
+  pageSize?: number;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (size: number) => void;
 
   selectedPersonId: number | null;
   onSelectPerson: (row: PersonList | null) => void;
 
-  // ⭐ OPTIONAL machen
   sortField?: string;
   sortDirection?: "asc" | "desc";
   onSortChange?: (field: string, direction: "asc" | "desc") => void;
@@ -23,40 +23,27 @@ interface PersonTableProps {
 
 export const PersonTable: React.FC<PersonTableProps> = ({
   data = [],
-  total,
-  page,
-  pageSize,
-  onPageChange,
-  onPageSizeChange,
+
   selectedPersonId,
   onSelectPerson,
-  sortField,
-  sortDirection,
-  onSortChange,
 }) => {
   const rows: PersonWithId[] = data.filter((p): p is PersonWithId => typeof p.id === "number");
+
+  /* 🔑 Server Paging nur wenn alle Werte vorhanden */
 
   return (
     <GenericTable<PersonWithId>
       rows={rows}
       columns={personColumns}
-      /* Single Select */
+      /* ❗ KEIN Server Paging */
+      paginationMode={undefined}
+      /* ❗ KEIN Server Sorting */
+      sortField={undefined}
+      sortDirection={undefined}
+      onSortChange={undefined}
+      /* Selection */
       selectedRowId={selectedPersonId}
       onSelectRow={onSelectPerson}
-      /* Server Paging */
-      paginationMode="server"
-      rowCount={total}
-      page={page}
-      pageSize={pageSize}
-      onPageChange={onPageChange}
-      onPageSizeChange={onPageSizeChange}
-      /* Server Sorting — KEIN Mapping mehr nötig */
-      sortField={sortField}
-      sortDirection={sortDirection}
-      onSortChange={(field, dir) => {
-        onSortChange?.(field, dir);
-        onPageChange(0);
-      }}
     />
   );
 };

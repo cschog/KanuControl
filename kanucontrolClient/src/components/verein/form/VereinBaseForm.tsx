@@ -78,7 +78,7 @@ export const VereinBaseForm: React.FC<Props> = ({ form, editMode, mode, onChange
 
           <FormFeld
             label="BIC"
-            value={form.iban ?? ""}
+            value={form.bic ?? ""}
             onChange={(v) => onChange("bic", v)}
             disabled={!editMode}
           />

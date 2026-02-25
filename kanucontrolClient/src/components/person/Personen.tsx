@@ -13,7 +13,7 @@ import { PersonFilterBar } from "@/components/person/PersonFilterBar";
 import { BottomActionBar } from "@/components/common/BottomActionBar";
 
 import {
-  getPersonenPage,
+  getAllPersons,
   deletePerson as dbDeletePerson,
   createPerson as dbCreatePerson,
   updatePerson as dbReplacePerson,
@@ -95,20 +95,18 @@ class Personen extends Component<Record<string, never>, PersonenState> {
   /* ========================================================= */
 
   fetchPersonenData = async () => {
-    const { page, pageSize, filters, sortField, sortDirection, selectedPerson } = this.state;
+    const { filters, sortField, sortDirection } = this.state;
 
     try {
-      const res = await getPersonenPage(page, pageSize, filters, sortField, sortDirection);
+      const all = await getAllPersons(filters, sortField, sortDirection);
 
-      const stillExists =
-        selectedPerson && res.content.some((p: PersonList) => p.id === selectedPerson.id);
+      console.log("Rows FE:", all.length);
 
       this.setState({
-        data: res.content,
-        total: res.totalElements,
+        data: all,
+        total: all.length,
         loading: false,
         error: null,
-        selectedPerson: stillExists ? selectedPerson : null,
       });
     } catch {
       this.setState({
@@ -145,6 +143,16 @@ class Personen extends Component<Record<string, never>, PersonenState> {
       },
       this.fetchPersonenData,
     );
+  };
+
+  backToList = () => {
+    this.setState({
+      selectedPerson: null,
+      personFormEditMode: false,
+      draftPerson: null,
+      btnÄndernIsDisabled: true,
+      btnLöschenIsDisabled: true,
+    });
   };
 
   /* ========================================================= */
@@ -269,11 +277,6 @@ class Personen extends Component<Record<string, never>, PersonenState> {
 
         <PersonTable
           data={data}
-          total={this.state.total}
-          page={this.state.page}
-          pageSize={this.state.pageSize}
-          onPageChange={this.handlePageChange}
-          onPageSizeChange={this.handlePageSizeChange}
           selectedPersonId={selectedPerson?.id ?? null}
           onSelectPerson={this.handleSelectPerson}
           sortField={this.state.sortField}
@@ -292,7 +295,7 @@ class Personen extends Component<Record<string, never>, PersonenState> {
           onDeletePerson={this.deletePerson}
           onDeleteMitglied={this.deleteMitglied}
           onSetHauptverein={this.setHauptverein}
-          onStartMenue={this.btnStartMenue}
+          onBack={this.backToList}
           onReloadPerson={this.reloadSelectedPerson}
           btnÄndernPerson={this.state.btnÄndernIsDisabled}
           btnLöschenPerson={this.state.btnLöschenIsDisabled}

@@ -32,6 +32,11 @@ public class PersonDTO {
     private String telefon;
     private String bankName;
     private String iban;
+    private String bic;
+
+    private LocalDate efz;
+
+    private String kuerzel;
     private Boolean aktiv;
 
     // READ ONLY

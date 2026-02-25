@@ -29,7 +29,7 @@ interface PersonFormViewProps {
   onDeleteMitglied: (mitgliedId: number) => Promise<void>;
   onSetHauptverein: (mitgliedId: number) => Promise<void>;
 
-  onStartMenue: () => void;
+  onBack: () => void;
 
   btnÄndernPerson: boolean;
   btnLöschenPerson: boolean;
@@ -50,7 +50,7 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
   onDeletePerson,
   onDeleteMitglied,
   onSetHauptverein,
-  onStartMenue,
+  onBack,
   btnÄndernPerson,
   btnLöschenPerson,
   onReloadPerson,
@@ -120,7 +120,7 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
           if (payload) await onSpeichern(payload);
         }}
         onDelete={() => setConfirmOpen(true)}
-        onBack={onStartMenue}
+        onBack={onBack}
         onAddVerein={() => setAddVereinOpen(true)}
         disableEdit={btnÄndernPerson}
         disableDelete={btnLöschenPerson}

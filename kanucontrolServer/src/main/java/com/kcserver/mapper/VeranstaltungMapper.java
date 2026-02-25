@@ -9,7 +9,8 @@ import org.mapstruct.ReportingPolicy;
 
 @Mapper(
         componentModel = "spring",
-        unmappedTargetPolicy = ReportingPolicy.IGNORE
+        unmappedTargetPolicy = ReportingPolicy.ERROR,
+        uses = { PersonMapper.class, VereinMapper.class }
 )
 public interface VeranstaltungMapper {
 
