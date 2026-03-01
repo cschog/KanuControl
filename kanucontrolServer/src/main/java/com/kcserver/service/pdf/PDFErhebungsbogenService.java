@@ -1,134 +1,166 @@
 package com.kcserver.service.pdf;
 
-import com.kcserver.dto.teilnehmer.TeilnehmerDetailDTO;
-import com.kcserver.dto.veranstaltung.VeranstaltungDetailDTO;
+import com.kcserver.entity.Person;
+import com.kcserver.entity.Teilnehmer;
+import com.kcserver.entity.Veranstaltung;
+import com.kcserver.enumtype.Sex;
+import com.kcserver.repository.TeilnehmerRepository;
+import com.kcserver.repository.VeranstaltungRepository;
+import lombok.RequiredArgsConstructor;
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StreamUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.Period;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.Calendar;
+import java.util.EnumMap;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+
+import static com.kcserver.util.StringUtils.formatDate;
 
 @Service
+@RequiredArgsConstructor
 public class PDFErhebungsbogenService {
 
-    public byte[] generate(
-            VeranstaltungDetailDTO v,
-            List<TeilnehmerDetailDTO> tnList
+    private final VeranstaltungRepository veranstaltungRepository;
+    private final TeilnehmerRepository teilnehmerRepository;
+
+    /* =========================================================
+       PUBLIC ENTRY
+       ========================================================= */
+
+    public byte[] generate(Long veranstaltungId) {
+
+        Veranstaltung v = veranstaltungRepository
+                .findByIdWithRelations(veranstaltungId)
+                .orElseThrow();
+
+        List<Teilnehmer> teilnehmer =
+                teilnehmerRepository.findByVeranstaltungWithPerson(veranstaltungId);
+
+        try {
+            return generatePdf(v, teilnehmer);
+        } catch (Exception e) {
+            throw new RuntimeException("Erhebungsbogen PDF Fehler", e);
+        }
+    }
+
+    /* =========================================================
+       STATISTIK BERECHNEN
+       ========================================================= */
+
+    private Statistik berechneStatistik(
+            List<Teilnehmer> teilnehmer,
+            LocalDate stichtag
+    ) {
+
+        Statistik s = new Statistik();
+
+        for (Teilnehmer t : teilnehmer) {
+
+            Person p = t.getPerson();
+            if (p.getGeburtsdatum() == null || p.getSex() == null)
+                continue;
+
+            int alter =
+                    Period.between(p.getGeburtsdatum(), stichtag).getYears();
+
+            Altersgruppe gruppe = ermittleAltersgruppe(alter);
+
+            s.increment(p.getSex(), gruppe);
+        }
+
+        return s;
+    }
+
+    private Altersgruppe ermittleAltersgruppe(int alter) {
+
+        if (alter < 10) return Altersgruppe.UNTER_10;
+        if (alter <= 13) return Altersgruppe.ZEHN_BIS_13;
+        if (alter <= 17) return Altersgruppe.VIERZEHN_BIS_17;
+        if (alter <= 26) return Altersgruppe.ACHTZEHN_BIS_26;
+        return Altersgruppe.SIEBENUNDZWANZIG_PLUS;
+    }
+
+    /* =========================================================
+       PDF GENERATION
+       ========================================================= */
+
+    private byte[] generatePdf(
+            Veranstaltung v,
+            List<Teilnehmer> teilnehmer
     ) throws IOException {
 
-        try (PDDocument doc = PDDocument.load(
-                new ClassPathResource("pdf/erhebungsbogen_template.pdf").getInputStream()
+        try (PDDocument doc = Loader.loadPDF(
+                StreamUtils.copyToByteArray(
+                        new ClassPathResource("pdf/erhebungsbogen_template.pdf")
+                                .getInputStream()
+                )
         )) {
-
-            /* ===== PDF METADATEN ===== */
-
-            String date = LocalDate.now().format(DateTimeFormatter.ISO_DATE);
-
-            String rawName = v.getName() == null ? "Veranstaltung" : v.getName();
-
-            /* Dateisystem-sichere Variante wie beim Download */
-            String cleanName = rawName
-                    .replace("ä","ae").replace("ö","oe").replace("ü","ue")
-                    .replace("Ä","Ae").replace("Ö","Oe").replace("Ü","Ue")
-                    .replace("ß","ss")
-                    .replaceAll("[^a-zA-Z0-9]", "");
-
-            String pdfTitle = date + "_EB_" + cleanName;
-
-            PDDocumentInformation info = doc.getDocumentInformation();
-
-            info.setTitle(pdfTitle);
-            info.setAuthor("KanuControl");
-            info.setSubject("Erhebungsbogen");
-            info.setCreator("KanuControl System");
-            info.setProducer("Apache PDFBox");
-            info.setCreationDate(Calendar.getInstance());
 
             PDAcroForm form = doc.getDocumentCatalog().getAcroForm();
             form.setNeedAppearances(true);
 
             fillVeranstaltung(form, v);
-            fillStatistik(form, v, tnList);
+            fillStatistik(form, v, teilnehmer);
 
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             doc.save(out);
             return out.toByteArray();
         }
     }
-    private void fillVeranstaltung(PDAcroForm form, VeranstaltungDetailDTO v) throws IOException {
 
-        if (v.getBeginnDatum() != null) {
-            set(form, "veranstaltungsjahr",
-                    String.valueOf(v.getBeginnDatum().getYear()));
-        }
+    /* =========================================================
+       PDF FELDER FÜLLEN
+       ========================================================= */
+
+    private void fillVeranstaltung(PDAcroForm form,
+                                   Veranstaltung v) throws IOException {
+
+        set(form, "veranstaltungsjahr",
+                String.valueOf(v.getBeginnDatum().getYear()));
 
         set(form, "veranstaltung_name", v.getName());
-        // set(form, "veranstaltung_name#1", v.getName());
 
-        /* ================= Leiter ================= */
+        /* ================= Leitung ================= */
 
         if (v.getLeiter() != null) {
 
-            String leitung = Stream.of(
-                            v.getLeiter().getVorname(),
-                            v.getLeiter().getName()
-                    )
-                    .filter(s -> s != null && !s.isBlank())
-                    .collect(Collectors.joining(" "));
+            var l = v.getLeiter();
 
-            if (!leitung.isBlank()) {
-                set(form, "leitung", leitung);
-            }
+            String name = concat(l.getVorname(), l.getName());
+            set(form, "leitung_name", name);
 
-            if (v.getLeiter().getTelefon() != null &&
-                    !v.getLeiter().getTelefon().isBlank()) {
+            set(form, "leitung_anschrift", l.getStrasse());
 
-                set(form, "telefon", v.getLeiter().getTelefon());
-            }
+            String plzOrt = concat(l.getPlz(), l.getOrt());
+            set(form, "leitung_plz_ort", plzOrt);
+
+            set(form, "leitung_telefon", l.getTelefon());
         }
 
         /* ================= Träger ================= */
 
         if (v.getVerein() != null) {
 
-            if (v.getVerein().getName() != null)
-                set(form, "traeger", v.getVerein().getName());
+            var verein = v.getVerein();
 
-            if (v.getVerein().getAbk() != null)
-                set(form, "traeger_abk", v.getVerein().getAbk());
-
-            if (v.getVerein().getPlz() != null)
-                set(form, "plz_traeger", v.getVerein().getPlz());
+            set(form, "traeger", verein.getName());
+            set(form, "traeger_abk", verein.getAbk());
+            set(form, "plz_traeger", verein.getPlz());
         }
 
         /* ================= Datum ================= */
 
-        set(form, "beginnDatum", format(v.getBeginnDatum()));
-        set(form, "endeDatum", format(v.getEndeDatum()));
-
-        /* ================= PLZ + Ort ================= */
-
-        if ((v.getPlz() != null && !v.getPlz().isBlank()) ||
-                (v.getOrt() != null && !v.getOrt().isBlank())) {
-
-            String plzOrt = Stream.of(v.getPlz(), v.getOrt())
-                    .filter(s -> s != null && !s.isBlank())
-                    .collect(Collectors.joining(" "));
-
-            set(form, "plz_ort", plzOrt);
-        }
+        set(form, "beginnDatum", formatDate(v.getBeginnDatum()));
+        set(form, "endeDatum", formatDate(v.getEndeDatum()));
 
         /* ================= Land / Typ ================= */
 
@@ -180,59 +212,52 @@ public class PDFErhebungsbogenService {
 
                 try {
                     field.setValue(value);
-                  //  System.out.println("Radiobutton gesetzt auf: " + value);
+                    //  System.out.println("Radiobutton gesetzt auf: " + value);
                 } catch (Exception ex) {
-                   // System.out.println("Radiobutton Fehler: " + ex.getMessage());
+                    // System.out.println("Radiobutton Fehler: " + ex.getMessage());
                 }
             }
         }
     }
+
+
+
     private void fillStatistik(
             PDAcroForm form,
-            VeranstaltungDetailDTO v,
-            List<TeilnehmerDetailDTO> list
+            Veranstaltung v,
+            List<Teilnehmer> list
     ) throws IOException {
 
         int[][] stats = new int[3][5];
-        // [Geschlecht][Altersgruppe]
-        // 0 = weiblich, 1 = maennlich, 2 = divers
-        // Altersgruppen:
-        // 0 <10
-        // 1 10-13
-        // 2 14-17
-        // 3 18-26
-        // 4 >=27
-
         int[][] ehrenamt = new int[3][5];
 
+        for (Teilnehmer t : list) {
 
-        for (TeilnehmerDetailDTO t : list) {
+            Person p = t.getPerson();
+            if (p == null || p.getGeburtsdatum() == null || p.getSex() == null)
+                continue;
 
-            if (t.getSex() == null) continue;
-
-            int sexIndex = switch (t.getSex()) {
+            int sexIndex = switch (p.getSex()) {
                 case WEIBLICH -> 0;
                 case MAENNLICH -> 1;
                 case DIVERS -> 2;
             };
 
-            int age = calcAge(t.getGeburtsdatum(), v.getBeginnDatum());
-            int ageGroup;
+            int age = calcAge(p.getGeburtsdatum(), v.getBeginnDatum());
 
+            int ageGroup;
             if (age < 10) ageGroup = 0;
             else if (age < 14) ageGroup = 1;
             else if (age < 18) ageGroup = 2;
             else if (age < 27) ageGroup = 3;
             else ageGroup = 4;
 
-            // ===== normale Teilnehmer =====
             stats[sexIndex][ageGroup]++;
 
-            // ===== EHRENAMT (nur L + M) =====
+            // Ehrenamt nur bei Rolle gesetzt
             if (t.getRolle() != null) {
 
                 int ageGroupEA;
-
                 if (age < 16) ageGroupEA = 0;
                 else if (age < 18) ageGroupEA = 1;
                 else if (age < 27) ageGroupEA = 2;
@@ -244,7 +269,6 @@ public class PDFErhebungsbogenService {
         }
 
         /* ================= WEIBLICH ================= */
-
         set(form, "unter_10_Jahre_weiblich", String.valueOf(stats[0][0]));
         set(form, "10_bis_unter_14_Jahre_weiblich", String.valueOf(stats[0][1]));
         set(form, "14_bis_unter_18_Jahre_weiblich", String.valueOf(stats[0][2]));
@@ -252,7 +276,6 @@ public class PDFErhebungsbogenService {
         set(form, "27_Jahre_und_aelter_weiblich", String.valueOf(stats[0][4]));
 
         /* ================= MAENNLICH ================= */
-
         set(form, "unter_10_Jahre_maennlich", String.valueOf(stats[1][0]));
         set(form, "10_bis_unter_14_Jahre_maennlich", String.valueOf(stats[1][1]));
         set(form, "14_bis_unter_18_Jahre_maennlich", String.valueOf(stats[1][2]));
@@ -260,7 +283,6 @@ public class PDFErhebungsbogenService {
         set(form, "27_Jahre_und_aelter_maennlich", String.valueOf(stats[1][4]));
 
         /* ================= DIVERS ================= */
-
         set(form, "unter_10_Jahre_divers", String.valueOf(stats[2][0]));
         set(form, "10_bis_unter_14_Jahre_divers", String.valueOf(stats[2][1]));
         set(form, "14_bis_unter_18_Jahre_divers", String.valueOf(stats[2][2]));
@@ -268,7 +290,6 @@ public class PDFErhebungsbogenService {
         set(form, "27_Jahre_und_aelter_divers", String.valueOf(stats[2][4]));
 
         /* ================= EHRENAMT ================= */
-
         set(form, "unter_16_Jahre_ehrenamt_weiblich", String.valueOf(ehrenamt[0][0]));
         set(form, "unter_16_Jahre_ehrenamt_maennlich", String.valueOf(ehrenamt[1][0]));
         set(form, "unter_16_Jahre_ehrenamt_divers", String.valueOf(ehrenamt[2][0]));
@@ -290,20 +311,59 @@ public class PDFErhebungsbogenService {
         set(form, "45_Jahre_und_aelter_ehrenamt_divers", String.valueOf(ehrenamt[2][4]));
     }
 
-    private void set(PDAcroForm form, String field, String value) throws IOException {
+    private void set(PDAcroForm form,
+                     String field,
+                     String value) throws IOException {
+
         PDField f = form.getField(field);
-        if (f != null && value != null) {
-            f.setValue(value);
+        if (f != null) f.setValue(value);
+    }
+
+    class Statistik {
+
+        private final EnumMap<Sex, EnumMap<Altersgruppe, Integer>> data =
+                new EnumMap<>(Sex.class);
+
+        Statistik() {
+            for (Sex s : Sex.values()) {
+                EnumMap<Altersgruppe, Integer> map =
+                        new EnumMap<>(Altersgruppe.class);
+                for (Altersgruppe a : Altersgruppe.values()) {
+                    map.put(a, 0);
+                }
+                data.put(s, map);
+            }
+        }
+
+        void increment(Sex sex, Altersgruppe gruppe) {
+            data.get(sex).put(gruppe,
+                    data.get(sex).get(gruppe) + 1);
+        }
+
+        String get(Sex sex, Altersgruppe gruppe) {
+            return String.valueOf(data.get(sex).get(gruppe));
         }
     }
 
-    private String format(LocalDate d) {
-        if (d == null) return "";
-        return d.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+    enum Altersgruppe {
+        UNTER_10,
+        ZEHN_BIS_13,
+        VIERZEHN_BIS_17,
+        ACHTZEHN_BIS_26,
+        SIEBENUNDZWANZIG_PLUS
     }
+
+    private String concat(String a, String b) {
+        String s1 = a == null ? "" : a.trim();
+        String s2 = b == null ? "" : b.trim();
+        return (s1 + " " + s2).trim();
+    }
+
 
     private int calcAge(LocalDate birth, LocalDate ref) {
         if (birth == null || ref == null) return 0;
         return Period.between(birth, ref).getYears();
     }
+
+
 }

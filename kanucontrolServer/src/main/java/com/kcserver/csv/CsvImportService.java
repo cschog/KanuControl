@@ -3,6 +3,7 @@ package com.kcserver.csv;
 import com.kcserver.dto.person.PersonSaveDTO;
 import com.kcserver.service.MitgliedService;
 import com.kcserver.service.PersonService;
+import com.kcserver.validation.OnCreate;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
@@ -77,7 +78,7 @@ public class CsvImportService {
                         CsvPersonImporter.toPersonSaveDTO(row, config);
 
                 // ✅ Bean Validation auch im DryRun
-                var violations = validator.validate(dto);
+                var violations = validator.validate(dto, OnCreate.class);
                 if (!violations.isEmpty()) {
                     for (ConstraintViolation<PersonSaveDTO> v : violations) {
                         report.addError(

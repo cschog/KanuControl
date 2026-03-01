@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { Box, Button, Typography, Paper } from "@mui/material";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
-
-import { getActiveVeranstaltung, downloadTeilnehmerPdf } from "@/api/services/veranstaltungApi";
+import {
+  getActiveVeranstaltung,
+  downloadTeilnehmerlistePdf,
+} from "@/api/services/veranstaltungApi";
 
 import { VeranstaltungDetail } from "@/api/types/VeranstaltungDetail";
 
 const Teilnehmerliste: React.FC = () => {
   const [veranstaltung, setVeranstaltung] = useState<VeranstaltungDetail | null>(null);
-
-  const [loading, setLoading] = useState(false);
 
   /* ================= Load aktive Veranstaltung ================= */
 
@@ -24,44 +24,15 @@ const Teilnehmerliste: React.FC = () => {
     })();
   }, []);
 
-  /* ================= PDF Download ================= */
-
-  const handleDownload = async () => {
+  /* ================= PDF Öffnen ================= */
+  const handleOpen = async () => {
     if (!veranstaltung?.id) return;
 
-    setLoading(true);
+    const res = await downloadTeilnehmerlistePdf(veranstaltung.id);
 
-    try {
-      const res = await downloadTeilnehmerPdf(veranstaltung.id);
-
-      const blob = new Blob([res.data], { type: "application/pdf" });
-
-    const disposition = res.headers["content-disposition"];
-    let filename = "Teilnehmerliste.pdf";
-
-    if (disposition) {
-      // RFC5987 (filename*=UTF-8'')
-      const utfMatch = disposition.match(/filename\*=UTF-8''([^;]+)/);
-      if (utfMatch?.[1]) {
-        filename = decodeURIComponent(utfMatch[1]);
-      } else {
-        // Fallback filename=""
-       const asciiMatch = disposition.match(/filename="?([^";]+)"?/);
-        if (asciiMatch?.[1]) filename = asciiMatch[1];
-      }
-    }
-
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-    } finally {
-      setLoading(false);
-    }
+    const blob = new Blob([res.data], { type: "application/pdf" });
+    const url = window.URL.createObjectURL(blob);
+    window.open(url, "_blank");
   };
 
   /* ================= UI ================= */
@@ -79,13 +50,8 @@ const Teilnehmerliste: React.FC = () => {
               Veranstaltung: <b>{veranstaltung.name}</b>
             </Typography>
 
-            <Button
-              variant="contained"
-              startIcon={<PictureAsPdfIcon />}
-              onClick={handleDownload}
-              disabled={loading}
-            >
-              Teilnehmerliste als PDF erzeugen
+            <Button variant="contained" startIcon={<PictureAsPdfIcon />} onClick={handleOpen}>
+              Teilnehmerliste im neuen Tab öffnen
             </Button>
           </>
         ) : (

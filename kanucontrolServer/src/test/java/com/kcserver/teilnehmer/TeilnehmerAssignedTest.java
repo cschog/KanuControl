@@ -42,7 +42,7 @@ class TeilnehmerAssignedTest extends AbstractTenantIntegrationTest {
 
         mockMvc.perform(
                 tenantRequest(
-                        get("/api/veranstaltung/{id}/teilnehmer/assigned", veranstaltungId)
+                        get("/api/veranstaltungen/{id}/teilnehmer/assigned", veranstaltungId)
                 )
         ).andExpect(status().isOk());
     }

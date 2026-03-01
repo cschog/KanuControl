@@ -81,7 +81,7 @@ public class VeranstaltungSearchSortTest
         // WHEN
         String response = mockMvc.perform(
                         tenantRequest(
-                                get("/api/veranstaltung")
+                                get("/api/veranstaltungen")
                                         .param("sort", "beginnDatum,asc")
                                         .accept(MediaType.APPLICATION_JSON)
                         )
@@ -119,7 +119,7 @@ public class VeranstaltungSearchSortTest
 
         String response = mockMvc.perform(
                         tenantRequest(
-                                get("/api/veranstaltung")
+                                get("/api/veranstaltungen")
                                         .param("sort", "beginnDatum,desc")
                                         .accept(MediaType.APPLICATION_JSON)
                         )
@@ -145,7 +145,7 @@ public class VeranstaltungSearchSortTest
 
         String response = mockMvc.perform(
                         tenantRequest(
-                                get("/api/veranstaltung")
+                                get("/api/veranstaltungen")
                                         .param("page", "1")
                                         .param("size", "2")
                                         .param("sort", "beginnDatum,asc")
@@ -170,7 +170,7 @@ public class VeranstaltungSearchSortTest
 
         String response = mockMvc.perform(
                         tenantRequest(
-                                get("/api/veranstaltung")
+                                get("/api/veranstaltungen")
                                         .param("sort", "beginnDatum,asc")
                                         .param("sort", "name,asc")
                                         .accept(MediaType.APPLICATION_JSON)
@@ -192,7 +192,7 @@ public class VeranstaltungSearchSortTest
 
         String response = mockMvc.perform(
                         tenantRequest(
-                                get("/api/veranstaltung")
+                                get("/api/veranstaltungen")
                                         .param("name", "Sommer")
                                         .accept(MediaType.APPLICATION_JSON)
                         )
@@ -214,7 +214,7 @@ public class VeranstaltungSearchSortTest
 
         String response = mockMvc.perform(
                         tenantRequest(
-                                get("/api/veranstaltung")
+                                get("/api/veranstaltungen")
                                         .param("aktiv", "true")
                                         .accept(MediaType.APPLICATION_JSON)
                         )
@@ -234,7 +234,7 @@ public class VeranstaltungSearchSortTest
 
         String response = mockMvc.perform(
                         tenantRequest(
-                                get("/api/veranstaltung")
+                                get("/api/veranstaltungen")
                                         .param("name", "XYZ_NOT_FOUND")
                                         .accept(MediaType.APPLICATION_JSON)
                         )
@@ -256,7 +256,7 @@ public class VeranstaltungSearchSortTest
 
         String response = mockMvc.perform(
                         tenantRequest(
-                                get("/api/veranstaltung")
+                                get("/api/veranstaltungen")
                                         .param("sort", "beginnDatum,asc")
                                         .param("sort", "id,asc")
                                         .accept(MediaType.APPLICATION_JSON)

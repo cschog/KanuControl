@@ -1,10 +1,7 @@
 package com.kcserver.controller;
 
 import com.kcserver.dto.teilnehmer.TeilnehmerBulkDeleteDTO;
-import com.kcserver.dto.veranstaltung.VeranstaltungCreateDTO;
-import com.kcserver.dto.veranstaltung.VeranstaltungDetailDTO;
-import com.kcserver.dto.veranstaltung.VeranstaltungListDTO;
-import com.kcserver.dto.veranstaltung.VeranstaltungUpdateDTO;
+import com.kcserver.dto.veranstaltung.*;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.service.TeilnehmerService;
 import com.kcserver.service.VeranstaltungService;
@@ -18,20 +15,19 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 
 @RestController
-@RequestMapping("/api/veranstaltung")
+@RequestMapping("/api/veranstaltungen")   // ⭐ PLURAL – EINHEITLICH
 public class VeranstaltungController {
 
     private final VeranstaltungService veranstaltungService;
-    private final TeilnehmerService teilnehmerService;   // ⭐ HINZUFÜGEN
+    private final TeilnehmerService teilnehmerService;
 
     public VeranstaltungController(
             VeranstaltungService veranstaltungService,
-            TeilnehmerService teilnehmerService           // ⭐ HINZUFÜGEN
+            TeilnehmerService teilnehmerService
     ) {
         this.veranstaltungService = veranstaltungService;
-        this.teilnehmerService = teilnehmerService;       // ⭐ HINZUFÜGEN
+        this.teilnehmerService = teilnehmerService;
     }
-
 
     /* =========================================================
        CREATE
@@ -46,7 +42,7 @@ public class VeranstaltungController {
     }
 
     /* =========================================================
-       READ (LIST)
+       LIST
        ========================================================= */
 
     @GetMapping
@@ -67,7 +63,7 @@ public class VeranstaltungController {
     }
 
     /* =========================================================
-       READ (DETAIL)
+       DETAIL
        ========================================================= */
 
     @GetMapping("/active")
@@ -83,20 +79,21 @@ public class VeranstaltungController {
     /* =========================================================
        UPDATE
        ========================================================= */
+
     @PutMapping("/{id}")
     public VeranstaltungDetailDTO update(
             @PathVariable Long id,
-            @RequestBody @Valid VeranstaltungUpdateDTO dto
+            @Valid @RequestBody VeranstaltungUpdateDTO dto
     ) {
         return veranstaltungService.update(id, dto);
     }
 
-    @PostMapping("/{id}/activate")
-    public VeranstaltungDetailDTO activate(@PathVariable Long id) {
+    @PutMapping("/{id}/aktiv")
+    public VeranstaltungDetailDTO setActive(@PathVariable Long id) {
         return veranstaltungService.setActive(id);
     }
 
-     /* =========================================================
+    /* =========================================================
        DELETE
        ========================================================= */
 
@@ -106,6 +103,10 @@ public class VeranstaltungController {
         veranstaltungService.delete(id);
     }
 
+    /* =========================================================
+       TEILNEHMER BULK DELETE
+       ========================================================= */
+
     @DeleteMapping("/{id}/teilnehmer")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteTeilnehmerBulk(
@@ -113,16 +114,5 @@ public class VeranstaltungController {
             @RequestBody TeilnehmerBulkDeleteDTO dto
     ) {
         teilnehmerService.removeTeilnehmerBulk(id, dto.getPersonIds());
-    }
-
-    /* =========================================================
-       ACTIVATE
-       ========================================================= */
-
-    @PutMapping("/{id}/aktiv")
-    public VeranstaltungDetailDTO setActive(
-            @PathVariable Long id
-    ) {
-        return veranstaltungService.setActive(id);
     }
 }

@@ -92,6 +92,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleGeneric(Exception ex) {
 
         log.error("Unhandled exception", ex);
+        ex.printStackTrace();
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                 ApiError.simple(

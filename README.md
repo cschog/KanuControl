@@ -170,6 +170,7 @@ Zur Benutzerverwaltung wird Keycloak eingesetzt.
 - Liquibase
 - PostgreSQL
 - Maven
+- Apache pdfbox V3.02
 
 ### Architekturprinzipien
 

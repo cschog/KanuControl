@@ -11,7 +11,7 @@ export async function getAvailablePersons(
   verein?: string,
 ) {
   const res = await apiClient.get(
-    `/veranstaltung/${veranstaltungId}/teilnehmer/available`,
+    `/veranstaltungen/${veranstaltungId}/teilnehmer/available`,
     {
       params: {
         page,
@@ -37,7 +37,7 @@ export async function getTeilnehmer(
   verein?: string,
 ) {
   const res = await apiClient.get(
-    `/veranstaltung/${veranstaltungId}/teilnehmer`,
+    `/veranstaltungen/${veranstaltungId}/teilnehmer`,
     {
       params: {
         page,
@@ -55,7 +55,7 @@ export async function getTeilnehmer(
 /* ================= ADD BULK ================= */
 
 export function addTeilnehmerBulk(veranstaltungId: number, personIds: number[]) {
-  return apiClient.post(`/veranstaltung/${veranstaltungId}/teilnehmer/bulk`, {
+  return apiClient.post(`/veranstaltungen/${veranstaltungId}/teilnehmer/bulk`, {
     personIds,
   });
 }
@@ -63,7 +63,7 @@ export function addTeilnehmerBulk(veranstaltungId: number, personIds: number[]) 
 /* ================= REMOVE BULK ================= */
 
 export function removeTeilnehmerBulk(veranstaltungId: number, personIds: number[]) {
-  return apiClient.delete(`/veranstaltung/${veranstaltungId}/teilnehmer/bulk`, {
+  return apiClient.delete(`/veranstaltungen/${veranstaltungId}/teilnehmer/bulk`, {
     data: { personIds },
   });
 }
@@ -75,7 +75,9 @@ export async function updateTeilnehmerRolle(
   rolle: "L" | "M" | null,
 ) {
   return apiClient.put(
-    `/veranstaltung/${veranstaltungId}/teilnehmer/${personId}/rolle`,
+    `/veranstaltungen/${veranstaltungId}/teilnehmer/${personId}/rolle`,
     { rolle }, // DTO für Backend bleibt hier
   );
 }
+
+

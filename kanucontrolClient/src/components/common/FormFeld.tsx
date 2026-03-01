@@ -8,6 +8,7 @@ interface FormFeldProps {
   label: string;
   value: FormValue;
   disabled?: boolean;
+  maxLength?: number;
   onChange?: (value: string) => void;
   type?: React.InputHTMLAttributes<HTMLInputElement>["type"];
   helperText?: string;
@@ -17,6 +18,7 @@ export const FormFeld: React.FC<FormFeldProps> = ({
   label,
   value,
   disabled = false,
+  maxLength,
   onChange,
   type = "text",
   helperText,
@@ -31,6 +33,9 @@ export const FormFeld: React.FC<FormFeldProps> = ({
       value={displayValue}
       disabled={disabled}
       type={type}
+      inputProps={{
+        maxLength,
+      }}
       helperText={helperText}
       onChange={onChange ? (e) => onChange(e.target.value) : undefined}
     />

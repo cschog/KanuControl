@@ -45,7 +45,7 @@ class TeilnehmerLeiterChangeTest extends AbstractTenantIntegrationTest {
 
         mockMvc.perform(
                 tenantRequest(
-                        put("/api/veranstaltung/{vId}/teilnehmer/{personId}/leiter",
+                        put("/api/veranstaltungen/{vId}/teilnehmer/{personId}/leiter",
                                 veranstaltungId, leiter2)
                 )
         ).andExpect(status().isOk());

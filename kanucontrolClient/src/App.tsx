@@ -6,13 +6,13 @@ import Vereine from "./components/verein/Vereine";
 import Personen from "./components/person/Personen";
 import Veranstaltungen from "@/components/veranstaltung/Veranstaltungen";
 import TeilnehmerScreen from "@/components/teilnehmer/TeilnehmerScreen";
-import Kosten from "./Platzhalter/Kosten";
+import Kosten from "./components/pdfAusgaben/Kosten";
 import Reisekosten from "./Platzhalter/Reisekosten";
 import Teilnehmerliste from "./components/pdfAusgaben/Teilnehmerliste";
 import Erhebungsbogen from "./components/pdfAusgaben/Erhebungsbogen";
-import Anmeldung from "./Platzhalter/Anmeldung";
-import Abrechnung from "./Platzhalter/Abrechnung";
-import AusgabeReisekosten from "./Platzhalter/AusgabeReisekosten";
+import Anmeldung from "./components/pdfAusgaben/Anmeldung";
+import Abrechnung from "./components/pdfAusgaben/Abrechnung";
+import AusgabeReisekosten from "./components/pdfAusgaben/AusgabeReisekosten";
 import AppLayout from "@/components/layout/AppLayout";
 
 const App: React.FC = () => {

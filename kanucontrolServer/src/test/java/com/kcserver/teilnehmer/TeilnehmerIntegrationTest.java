@@ -89,11 +89,11 @@ class TeilnehmerIntegrationTest extends AbstractTenantIntegrationTest {
     void shouldReturnPagedTeilnehmer() throws Exception {
 
         mockMvc.perform(
-                tenantRequest(post("/api/veranstaltung/{vId}/teilnehmer/{personId}", veranstaltungId, personId))
+                tenantRequest(post("/api/veranstaltungen/{vId}/teilnehmer/{personId}", veranstaltungId, personId))
         ).andExpect(status().isCreated());
 
         mockMvc.perform(
-                        tenantRequest(get("/api/veranstaltung/{vId}/teilnehmer?page=0&size=10", veranstaltungId))
+                        tenantRequest(get("/api/veranstaltungen/{vId}/teilnehmer?page=0&size=10", veranstaltungId))
                 )
                 .andExpect(status().isOk());
     }
@@ -104,16 +104,21 @@ class TeilnehmerIntegrationTest extends AbstractTenantIntegrationTest {
 
     @Test
     void shouldUpdateTeilnehmer() throws Exception {
+
         Long id = factory.addTeilnehmer(veranstaltungId, personId);
 
         TeilnehmerUpdateDTO dto = new TeilnehmerUpdateDTO();
         dto.setRolle(TeilnehmerRolle.MITARBEITER);
 
         mockMvc.perform(
-                        tenantRequest(put("/api/veranstaltung/{vId}/teilnehmer/{id}", veranstaltungId, id))
+                tenantRequest(
+                        put("/api/veranstaltungen/{vId}/teilnehmer/{id}",
+                                veranstaltungId,
+                                id)
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(dto)))
-                .andExpect(status().isOk());
+                                .content(objectMapper.writeValueAsString(dto))
+                )
+        ).andExpect(status().isOk());
     }
 
     /* =========================================================
@@ -125,7 +130,7 @@ class TeilnehmerIntegrationTest extends AbstractTenantIntegrationTest {
 
         Long id = factory.addTeilnehmer(veranstaltungId, personId);
         mockMvc.perform(
-                        tenantRequest(delete("/api/veranstaltung/{vId}/teilnehmer/{id}", veranstaltungId, id)))
+                        tenantRequest(delete("/api/veranstaltungen/{vId}/teilnehmer/{id}", veranstaltungId, id)))
                 .andExpect(status().isNoContent());
 
         ensureTenantSchema();
@@ -141,7 +146,7 @@ class TeilnehmerIntegrationTest extends AbstractTenantIntegrationTest {
 
         factory.addTeilnehmer(veranstaltungId, personId);
         mockMvc.perform(
-                        tenantRequest(post("/api/veranstaltung/{vId}/teilnehmer/{personId}", veranstaltungId, personId)))
+                        tenantRequest(post("/api/veranstaltungen/{vId}/teilnehmer/{personId}", veranstaltungId, personId)))
                 .andExpect(status().isConflict());
     }
 }

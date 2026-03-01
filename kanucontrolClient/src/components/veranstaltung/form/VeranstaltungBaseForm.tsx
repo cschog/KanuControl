@@ -195,7 +195,7 @@ export const VeranstaltungBaseForm: React.FC<Props> = ({
 
           {/* ================= Planung ================= */}
           <FormFeld
-            label="Geplante TN männlich"
+            label="Plan: geförderte TN männlich"
             value={form.geplanteTeilnehmerMaennlich ?? ""}
             disabled={!editMode}
             onChange={(v) => onChange("geplanteTeilnehmerMaennlich", Number(v))}
@@ -203,7 +203,7 @@ export const VeranstaltungBaseForm: React.FC<Props> = ({
           />
 
           <FormFeld
-            label="Geplante TN weiblich"
+            label="Plan: geförderte TN weiblich"
             value={form.geplanteTeilnehmerWeiblich ?? ""}
             disabled={!editMode}
             onChange={(v) => onChange("geplanteTeilnehmerWeiblich", Number(v))}
@@ -211,10 +211,42 @@ export const VeranstaltungBaseForm: React.FC<Props> = ({
           />
 
           <FormFeld
-            label="Geplante TN divers"
+            label="Plan: geförderte TN divers"
             value={form.geplanteTeilnehmerDivers ?? ""}
             disabled={!editMode}
             onChange={(v) => onChange("geplanteTeilnehmerDivers", Number(v))}
+            type="number"
+          />
+
+          <FormFeld
+            label="Plan: Mitarbeiter männlich"
+            value={form.geplanteMitarbeiterMaennlich ?? ""}
+            disabled={!editMode}
+            onChange={(v) =>
+              onChange("geplanteMitarbeiterMaennlich", v === "" ? undefined : Number(v))
+            }
+            type="number"
+          />
+
+          <FormFeld
+            label="Plan: Mitarbeiter weiblich"
+            value={form.geplanteMitarbeiterWeiblich ?? ""}
+            disabled={!editMode}
+            onChange={(v) =>
+              onChange("geplanteMitarbeiterWeiblich", v === "" ? undefined : Number(v))
+            }
+            type="number"
+          />
+
+          <FormFeld
+            label="Plan: Mitarbeiter divers"
+            value={form.geplanteMitarbeiterDivers ?? ""}
+            disabled={!editMode}
+            onChange={(v) =>
+              onChange(
+                "geplanteMitarbeiterDivers", 
+                v === "" ? undefined : Number(v))
+            }
             type="number"
           />
         </>

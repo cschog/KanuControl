@@ -49,7 +49,9 @@ public class Verein extends Auditable {
 
     private LocalDate schutzkonzept;
 
-    /** 🔗 NEU: Kontoinhaber als Person */
+    /**
+     * 🔗 NEU: Kontoinhaber als Person
+     */
     @OneToOne(optional = true)
     @JoinColumn(name = "kontoinhaber_id", nullable = true)
     private Person kontoinhaber;

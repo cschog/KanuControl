@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+    <changeSet id="2026-02-27-foerdersatz-exclusion"
+           author="chris"
+           dbms="postgresql">
+
+    <sql><![CDATA[
+        CREATE EXTENSION IF NOT EXISTS btree_gist;
+    ]]></sql>
+
+    <sql><![CDATA[
+        ALTER TABLE foerdersatz
+        ADD CONSTRAINT foerdersatz_no_overlap
+        EXCLUDE USING gist (
+            daterange(gueltig_von, gueltig_bis, '[]') WITH &&
+        );
+    ]]></sql>
+
+    </changeSet>
+</databaseChangeLog>

@@ -89,7 +89,8 @@ export const PersonBaseForm: React.FC<Props> = ({ form, editMode, mode, onChange
           <FormFeld
             label="Kürzel"
             value={form.kuerzel}
-            onChange={(v) => onChange("kuerzel", v || undefined)}
+            maxLength={6}
+            onChange={(v) => onChange("kuerzel", v.toLowerCase())}
             disabled={!editMode}
           />
 

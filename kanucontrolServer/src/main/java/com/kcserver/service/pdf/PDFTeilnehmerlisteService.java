@@ -3,6 +3,7 @@ package com.kcserver.service.pdf;
 import com.kcserver.dto.person.PersonRefDTO;
 import com.kcserver.dto.teilnehmer.TeilnehmerDetailDTO;
 import com.kcserver.dto.veranstaltung.VeranstaltungDetailDTO;
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
@@ -10,8 +11,8 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StreamUtils;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
@@ -23,84 +24,87 @@ public class PDFTeilnehmerlisteService {
 
     private static final int TN_PER_PAGE = 15;
 
-
     /* =========================================================
        PUBLIC ENTRY
        ========================================================= */
 
-    public byte[] generate(VeranstaltungDetailDTO v, List<TeilnehmerDetailDTO> tnList) throws IOException {
+    public byte[] generate(VeranstaltungDetailDTO v,
+                           List<TeilnehmerDetailDTO> tnList) {
 
-        tnList = sortTeilnehmer(tnList, v.getLeiterId());
+        try {
 
-        PDFMergerUtility merger = new PDFMergerUtility();
-        ByteArrayOutputStream resultOut = new ByteArrayOutputStream();
+            tnList = sortTeilnehmer(tnList, v.getLeiterId());
 
-        int pages = (int) Math.ceil((double) tnList.size() / TN_PER_PAGE);
+            PDDocument masterDoc = new PDDocument();
+            PDFMergerUtility merger = new PDFMergerUtility();
 
-        for (int p = 0; p < pages; p++) {
+            int pages = (int) Math.ceil((double) tnList.size() / TN_PER_PAGE);
 
-            try (PDDocument template = PDDocument.load(
-                    new ClassPathResource("pdf/teilnehmer_template.pdf").getInputStream()
-            )) {
+            for (int p = 0; p < pages; p++) {
 
-                PDAcroForm form = template.getDocumentCatalog().getAcroForm();
-                form.setNeedAppearances(true);
+                try (PDDocument template = Loader.loadPDF(
+                        StreamUtils.copyToByteArray(
+                                new ClassPathResource("pdf/teilnehmer_template.pdf")
+                                        .getInputStream()
+                        )
+                )) {
 
-                fillHeader(form, v);
+                    PDAcroForm form = template.getDocumentCatalog().getAcroForm();
+                    if (form != null) {
+                        form.setNeedAppearances(true);
+                    }
 
-                int start = p * TN_PER_PAGE;
-                int end = Math.min(start + TN_PER_PAGE, tnList.size());
+                    fillHeader(form, v);
 
-                set(form, "seite_nr", String.valueOf(p + 1));
-                set(form, "seite_total", String.valueOf(pages));
+                    int start = p * TN_PER_PAGE;
+                    int end = Math.min(start + TN_PER_PAGE, tnList.size());
 
-                for (int i = start; i < end; i++) {
-                    int globalNr = i + 1;
-                    int row = i - start + 1;
-                    fillTeilnehmer(form, tnList.get(i), row, v, globalNr);
+                    set(form, "seite_nr", String.valueOf(p + 1));
+                    set(form, "seite_total", String.valueOf(pages));
+
+                    for (int i = start; i < end; i++) {
+                        int globalNr = i + 1;
+                        int row = i - start + 1;
+                        fillTeilnehmer(form, tnList.get(i), row, v, globalNr);
+                    }
+
+                    merger.appendDocument(masterDoc, template);
                 }
-
-                ByteArrayOutputStream pageOut = new ByteArrayOutputStream();
-                template.save(pageOut);
-
-                merger.addSource(new ByteArrayInputStream(pageOut.toByteArray()));
             }
-        }
 
-        merger.setDestinationStream(resultOut);
-        merger.mergeDocuments(null);
+            String filename =
+                    LocalDate.now() + "_TN_" +
+                            sanitizeFilename(v.getName()) + ".pdf";
 
-/* =========================================================
-   PDF METADATA (Tab-Titel im Browser)
-   ========================================================= */
-
-        String filename =
-                LocalDate.now() + "_TN_" +
-                        sanitizeFilename(v.getName()) + ".pdf";
-
-        try (PDDocument resultDoc = PDDocument.load(resultOut.toByteArray())) {
-
-            PDDocumentInformation info = resultDoc.getDocumentInformation();
-            info.setTitle(filename);          // ⭐ Browser Tab Titel
+            PDDocumentInformation info = masterDoc.getDocumentInformation();
+            info.setTitle(filename);
             info.setAuthor("KanuControl");
             info.setCreator("KanuControl");
 
-            ByteArrayOutputStream finalOut = new ByteArrayOutputStream();
-            resultDoc.save(finalOut);
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            masterDoc.save(out);
+            masterDoc.close();
 
-            return finalOut.toByteArray();
+            return out.toByteArray();
+
+        } catch (IOException e) {
+            throw new RuntimeException(
+                    "Teilnehmerliste PDF konnte nicht erzeugt werden", e);
         }
     }
 
     /* =========================================================
-       HEADER FILL  ← DEINE METHODE GEHÖRT GENAU HIERHIN
+       HEADER
        ========================================================= */
 
-    private void fillHeader(PDAcroForm form, VeranstaltungDetailDTO v) throws IOException {
+    private void fillHeader(PDAcroForm form,
+                            VeranstaltungDetailDTO v) throws IOException {
 
-        /* ================= Veranstaltung ================= */
+        if (form == null) return;
 
         set(form, "veranstaltung_name", v.getName());
+
+        set(form, "veranstaltung_ort", v.getOrt());
 
         String von = formatDate(v.getBeginnDatum());
         String bis = formatDate(v.getEndeDatum());
@@ -108,61 +112,38 @@ public class PDFTeilnehmerlisteService {
         set(form, "veranstaltung_von", von);
         set(form, "veranstaltung_bis", bis);
 
-        /* ================= Zeitraum (zusammengesetzt) ================= */
-
-        if (!von.isEmpty() && !bis.isEmpty()) {
+        if (!von.isEmpty() && !bis.isEmpty())
             set(form, "zeitraum", von + " - " + bis);
-        } else if (!von.isEmpty()) {
-            set(form, "zeitraum", von);
-        } else if (!bis.isEmpty()) {
-            set(form, "zeitraum", bis);
-        }
-
-        /* ================= Träger = Vereinsname ================= */
 
         if (v.getVerein() != null) {
             set(form, "traeger", v.getVerein().getName());
-        }
 
-        /* ================= Leiter ================= */
+            String ort = v.getVerein().getOrt();
+            String heute = formatDate(LocalDate.now());
+
+            set(form, "footer_ortdatum",
+                    (ort != null && !ort.isBlank())
+                            ? ort + ", " + heute
+                            : heute);
+        }
 
         if (v.getLeiter() != null) {
             set(form, "leiter_name",
                     v.getLeiter().getVorname() + " " + v.getLeiter().getName());
         }
 
-        /* ================= Footer Ort + Datum ================= */
-
-        if (v.getVerein() != null) {
-
-            String ort = v.getVerein().getOrt();   // Vereinsort
-            String heute = formatDate(LocalDate.now());
-
-            if (ort != null && !ort.isBlank()) {
-                set(form, "footer_ortdatum", ort + ", " + heute);
-            } else {
-                set(form, "footer_ortdatum", heute);
-            }
-        }
-
-        /* ================= CHECKBOXEN ================= */
-
         if (v.getTyp() != null) {
-
             switch (v.getTyp()) {
-
                 case JEM, FM -> {
                     setCheckbox(form, "jem_fm_control", true);
                     setCheckbox(form, "bm_control", false);
                     setCheckbox(form, "qm_control", false);
                 }
-
                 case BM -> {
                     setCheckbox(form, "bm_control", true);
                     setCheckbox(form, "jem_fm_control", false);
                     setCheckbox(form, "qm_control", false);
                 }
-
                 default -> {
                     setCheckbox(form, "jem_fm_control", false);
                     setCheckbox(form, "bm_control", false);
@@ -173,7 +154,7 @@ public class PDFTeilnehmerlisteService {
     }
 
     /* =========================================================
-       TEILNEHMER FILL
+       TEILNEHMER
        ========================================================= */
 
     private void fillTeilnehmer(PDAcroForm form,
@@ -182,43 +163,52 @@ public class PDFTeilnehmerlisteService {
                                 VeranstaltungDetailDTO v,
                                 int globalNr) throws IOException {
 
+        if (form == null || tn.getPerson() == null) return;
+
         PersonRefDTO p = tn.getPerson();
-        if (p == null) return;
 
-        /* ================= NR ================= */
         set(form, "nr_" + row, String.valueOf(globalNr));
+        set(form, "name_" + row, p.getName() + ", " + p.getVorname());
 
-        /* ================= NAME ================= */
-        set(form, "name_" + row, (p.getName()) + ", " + p.getVorname()) ;
-
-        /* ================= ROLLE ================= */
-        if (tn.getRolle() != null) {
+        if (tn.getRolle() != null)
             set(form, "rolle_" + row, tn.getRolle().getCode());
-        }
 
-        /* ================= ALTER (zum Beginn) ================= */
         set(form, "alter_" + row,
                 calcAgeAtDate(tn.getGeburtsdatum(), v.getBeginnDatum()));
 
-        /* ================= PLZ ================= */
-        set(form, "plz_" + row, tn.getPlz() != null ? tn.getPlz() : "");
+        set(form, "plz_" + row,
+                tn.getPlz() != null ? tn.getPlz() : "");
 
-        /* ================= GESCHLECHT ================= */
-        if (tn.getSex() != null) {
+        if (tn.getSex() != null)
             set(form, "geschlecht_" + row,
-                    tn.getSex().getCode().toLowerCase()
-            );
-        }
+                    tn.getSex().getCode().toLowerCase());
     }
 
     /* =========================================================
        HELPER
        ========================================================= */
 
-    private void set(PDAcroForm form, String field, String value) throws IOException {
+    private void set(PDAcroForm form,
+                     String field,
+                     String value) throws IOException {
+
+        if (form == null) return;
+
         PDField f = form.getField(field);
         if (f != null && value != null) {
             f.setValue(value);
+        }
+    }
+
+    private void setCheckbox(PDAcroForm form,
+                             String fieldName,
+                             boolean checked) throws IOException {
+
+        if (form == null) return;
+
+        PDField field = form.getField(fieldName);
+        if (field != null) {
+            field.setValue(checked ? "Ja" : "Off");
         }
     }
 
@@ -227,41 +217,44 @@ public class PDFTeilnehmerlisteService {
         return d.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
     }
 
-    private String calcAgeAtDate(LocalDate birth, LocalDate refDate) {
+    private String calcAgeAtDate(LocalDate birth,
+                                 LocalDate refDate) {
+
         if (birth == null || refDate == null) return "";
-        return String.valueOf(java.time.Period.between(birth, refDate).getYears());
+        return String.valueOf(
+                java.time.Period.between(birth, refDate).getYears()
+        );
     }
 
     private List<TeilnehmerDetailDTO> sortTeilnehmer(
             List<TeilnehmerDetailDTO> list,
-            Long leiterId
-    ) {
+            Long leiterId) {
+
         return list.stream()
                 .sorted((a, b) -> {
 
-                    // Leiter immer zuerst
                     if (a.getPersonId().equals(leiterId)) return -1;
                     if (b.getPersonId().equals(leiterId)) return 1;
 
-                    String vereinA = a.getPerson().getHauptvereinAbk() == null ? "" : a.getPerson().getHauptvereinAbk();
-                    String vereinB = b.getPerson().getHauptvereinAbk() == null ? "" : b.getPerson().getHauptvereinAbk();
+                    String vereinA = a.getPerson().getHauptvereinAbk() == null
+                            ? "" : a.getPerson().getHauptvereinAbk();
+
+                    String vereinB = b.getPerson().getHauptvereinAbk() == null
+                            ? "" : b.getPerson().getHauptvereinAbk();
 
                     int v = vereinA.compareToIgnoreCase(vereinB);
                     if (v != 0) return v;
 
-                    int n = a.getPerson().getName().compareToIgnoreCase(b.getPerson().getName());
+                    int n = a.getPerson().getName()
+                            .compareToIgnoreCase(b.getPerson().getName());
                     if (n != 0) return n;
 
-                    return a.getPerson().getVorname().compareToIgnoreCase(b.getPerson().getVorname());
+                    return a.getPerson().getVorname()
+                            .compareToIgnoreCase(b.getPerson().getVorname());
                 })
                 .toList();
     }
-    private void setCheckbox(PDAcroForm form, String fieldName, boolean checked) throws IOException {
-        PDField field = form.getField(fieldName);
-        if (field != null) {
-            field.setValue(checked ? "Ja" : "Off");
-        }
-    }
+
     private String sanitizeFilename(String name) {
         if (name == null) return "Veranstaltung";
         return name

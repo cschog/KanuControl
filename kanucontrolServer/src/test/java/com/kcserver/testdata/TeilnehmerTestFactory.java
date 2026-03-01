@@ -33,7 +33,7 @@ public class TeilnehmerTestFactory extends AbstractApiTestFactory {
         dto.put("endeZeit", "18:00:00");
 
         MvcResult result = mockMvc.perform(
-                        req(post("/api/veranstaltung"))
+                        req(post("/api/veranstaltungen"))
                                 .content(objectMapper.writeValueAsString(dto))
                 )
                 .andExpect(status().isCreated())
@@ -46,7 +46,7 @@ public class TeilnehmerTestFactory extends AbstractApiTestFactory {
     public Long addTeilnehmer(Long veranstaltungId, Long personId) throws Exception {
 
         MvcResult result = mockMvc.perform(
-                        req(post("/api/veranstaltung/" + veranstaltungId + "/teilnehmer/" + personId))
+                        req(post("/api/veranstaltungen/" + veranstaltungId + "/teilnehmer/" + personId))
                 )
                 .andExpect(status().isCreated())
                 .andReturn();
@@ -59,7 +59,7 @@ public class TeilnehmerTestFactory extends AbstractApiTestFactory {
 
         mockMvc.perform(
                 req(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
-                        .delete("/api/veranstaltung/" + veranstaltungId + "/teilnehmer/" + teilnehmerId))
+                        .delete("/api/veranstaltungen/" + veranstaltungId + "/teilnehmer/" + teilnehmerId))
         ).andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isNoContent());
     }
 }

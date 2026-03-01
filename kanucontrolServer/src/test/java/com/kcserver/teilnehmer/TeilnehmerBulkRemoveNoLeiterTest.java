@@ -45,7 +45,7 @@ class TeilnehmerBulkRemoveNoLeiterTest extends AbstractTenantIntegrationTest {
         // Teilnehmer über Endpoint hinzufügen
         mockMvc.perform(
                 tenantRequest(
-                        post("/api/veranstaltung/{vId}/teilnehmer/{personId}",
+                        post("/api/veranstaltungen/{vId}/teilnehmer/{personId}",
                                 veranstaltungId, p1)
                 )
         ).andExpect(status().isCreated());
@@ -59,7 +59,7 @@ class TeilnehmerBulkRemoveNoLeiterTest extends AbstractTenantIntegrationTest {
 
         mockMvc.perform(
                 tenantRequest(
-                        delete("/api/veranstaltung/{id}/teilnehmer/bulk", veranstaltungId)
+                        delete("/api/veranstaltungen/{id}/teilnehmer/bulk", veranstaltungId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(dto))
                 )
