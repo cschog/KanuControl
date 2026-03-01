@@ -55,7 +55,7 @@ class TeilnehmerBulkAddTest extends AbstractTenantIntegrationTest {
 
         mockMvc.perform(
                 tenantRequest(
-                        post("/api/veranstaltung/{id}/teilnehmer/bulk", veranstaltungId)
+                        post("/api/veranstaltungen/{id}/teilnehmer/bulk", veranstaltungId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(dto))
                 )
@@ -72,14 +72,14 @@ class TeilnehmerBulkAddTest extends AbstractTenantIntegrationTest {
 
         // first
         mockMvc.perform(tenantRequest(
-                post("/api/veranstaltung/{id}/teilnehmer/bulk", veranstaltungId)
+                post("/api/veranstaltungen/{id}/teilnehmer/bulk", veranstaltungId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto))
         )).andExpect(status().isCreated());
 
         // second (same persons)
         mockMvc.perform(tenantRequest(
-                post("/api/veranstaltung/{id}/teilnehmer/bulk", veranstaltungId)
+                post("/api/veranstaltungen/{id}/teilnehmer/bulk", veranstaltungId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto))
         )).andExpect(status().isCreated());

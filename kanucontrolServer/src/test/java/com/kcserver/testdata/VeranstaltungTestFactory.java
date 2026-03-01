@@ -41,7 +41,7 @@ public class VeranstaltungTestFactory extends AbstractApiTestFactory {
         dto.setEndeZeit(LocalTime.of(18, 0));
 
         String json = mockMvc.perform(
-                        req(post("/api/veranstaltung"))
+                        req(post("/api/veranstaltungen"))
                                 .content(objectMapper.writeValueAsString(dto))
                 )
                 .andExpect(status().isCreated())
@@ -59,7 +59,7 @@ public class VeranstaltungTestFactory extends AbstractApiTestFactory {
     public void addTeilnehmer(Long veranstaltungId, Long personId) throws Exception {
 
         mockMvc.perform(
-                post("/api/veranstaltung/{vId}/teilnehmer/{personId}",
+                post("/api/veranstaltungen/{vId}/teilnehmer/{personId}",
                         veranstaltungId, personId)
                         .with(auth)
         ).andExpect(status().isCreated());
@@ -88,7 +88,7 @@ public class VeranstaltungTestFactory extends AbstractApiTestFactory {
         dto.setEndeZeit(LocalTime.of(18, 0));
 
         String json = mockMvc.perform(
-                        req(post("/api/veranstaltung"))
+                        req(post("/api/veranstaltungen"))
                                 .content(objectMapper.writeValueAsString(dto))
                 )
                 .andExpect(status().isCreated())
@@ -113,7 +113,7 @@ public class VeranstaltungTestFactory extends AbstractApiTestFactory {
         Long newId = create(vereinId, leiterId, name);
 
         mockMvc.perform(
-                req(put("/api/veranstaltung/{id}/aktiv", aktivBleibenId))
+                req(put("/api/veranstaltungen/{id}/aktiv", aktivBleibenId))
         ).andExpect(status().isOk());
 
         return newId;

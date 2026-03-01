@@ -20,6 +20,8 @@ function emptyVerein(): Verein {
     telefon: "",
     bankName: "",
     iban: "",
+    bic: "",
+    schutzkonzept: "",
     kontoinhaber: undefined,
   };
 }
@@ -80,6 +82,8 @@ export function useVereinForm(initial: Verein | null) {
       telefon: form.telefon?.trim(),
       bankName: form.bankName?.trim(),
       iban: form.iban?.trim(),
+      bic: form.bic?.trim(),
+      schutzkonzept: form.schutzkonzept || undefined,
       kontoinhaberId: form.kontoinhaber?.id,
     };
   }, [form]);

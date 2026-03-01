@@ -90,7 +90,7 @@ class VeranstaltungCreateTest extends AbstractTenantIntegrationTest {
 
         mockMvc.perform(
                 tenantRequest(
-                        post("/api/veranstaltung")
+                        post("/api/veranstaltungen")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(dto))
                 )
@@ -171,7 +171,7 @@ class VeranstaltungCreateTest extends AbstractTenantIntegrationTest {
 
         return mockMvc.perform(
                         tenantRequest(
-                                post("/api/veranstaltung")
+                                post("/api/veranstaltungen")
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(dto))
                         )

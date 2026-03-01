@@ -15,7 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/veranstaltung/{veranstaltungId}/teilnehmer")
+@RequestMapping("/api/veranstaltungen/{veranstaltungId}/teilnehmer")
 public class TeilnehmerController {
 
     private final TeilnehmerService teilnehmerService;

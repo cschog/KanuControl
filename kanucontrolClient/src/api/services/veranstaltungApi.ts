@@ -10,7 +10,7 @@ import { VeranstaltungSave } from "@/api/types/VeranstaltungSave";
 
 export function getVeranstaltungenPage(page: number, size: number) {
   return apiClient
-    .get<Page<VeranstaltungList>>("/veranstaltung", {
+    .get<Page<VeranstaltungList>>("/veranstaltungen", {
       params: {
         page,
         size,
@@ -23,7 +23,7 @@ export function getVeranstaltungenPage(page: number, size: number) {
 /* ================= PDF Teilnehmerliste ================= */
 
 export async function downloadTeilnehmerPdf(veranstaltungId: number) {
-  const response = await apiClient.get(`/veranstaltung/${veranstaltungId}/teilnehmer/pdf`, {
+  const response = await apiClient.get(`/veranstaltungen/${veranstaltungId}/teilnehmer/pdf`, {
     responseType: "blob",
   });
 
@@ -33,19 +33,30 @@ export async function downloadTeilnehmerPdf(veranstaltungId: number) {
 /* ================= PDF Erhebungsbogen ================= */
 
 export async function downloadErhebungsbogenPdf(veranstaltungId: number) {
-  const response = await apiClient.get(`/veranstaltung/${veranstaltungId}/erhebungsbogen/pdf`, {
+  const response = await apiClient.get(`/veranstaltungen/${veranstaltungId}/erhebungsbogen/pdf`, {
     responseType: "blob",
   });
 
   return response;
 }
 
+/* ================= PDF Anmeldung fm-jem ================= */
+
+export async function downloadFmJemReport(id: number): Promise<Blob> {
+  const response = await apiClient.get(`/veranstaltungen/${id}/fm-jem-report`, {
+    responseType: "blob",
+  });
+
+  return response.data;
+}
+
+
 /* =========================================================
    DETAIL
    ========================================================= */
 
 export function getVeranstaltung(id: number) {
-  return apiClient.get<VeranstaltungDetail>(`/veranstaltung/${id}`).then((r) => r.data);
+  return apiClient.get<VeranstaltungDetail>(`/veranstaltungen/${id}`).then((r) => r.data);
 }
 
 /* =========================================================
@@ -54,7 +65,7 @@ export function getVeranstaltung(id: number) {
 
 export async function getActiveVeranstaltung(): Promise<VeranstaltungDetail | null> {
   try {
-    const { data } = await apiClient.get<VeranstaltungDetail>("/veranstaltung/active");
+    const { data } = await apiClient.get<VeranstaltungDetail>("/veranstaltungen/active");
     return data;
   } catch (e: unknown) {
     if (
@@ -72,7 +83,7 @@ export async function getActiveVeranstaltung(): Promise<VeranstaltungDetail | nu
 }
 
 export function setActiveVeranstaltung(id: number) {
-  return apiClient.post<VeranstaltungDetail>(`/veranstaltung/${id}/activate`).then((r) => r.data);
+  return apiClient.post<VeranstaltungDetail>(`/veranstaltungen/${id}/activate`).then((r) => r.data);
 }
 
 /* =========================================================
@@ -80,7 +91,7 @@ export function setActiveVeranstaltung(id: number) {
    ========================================================= */
 
 export function createVeranstaltung(payload: VeranstaltungSave) {
-  return apiClient.post<VeranstaltungDetail>("/veranstaltung", payload).then((r) => r.data);
+  return apiClient.post<VeranstaltungDetail>("/veranstaltungen", payload).then((r) => r.data);
 }
 
 /* =========================================================
@@ -88,7 +99,7 @@ export function createVeranstaltung(payload: VeranstaltungSave) {
    ========================================================= */
 
 export function updateVeranstaltung(id: number, payload: VeranstaltungSave) {
-  return apiClient.put<VeranstaltungDetail>(`/veranstaltung/${id}`, payload).then((r) => r.data);
+  return apiClient.put<VeranstaltungDetail>(`/veranstaltungen/${id}`, payload).then((r) => r.data);
 }
 
 /* =========================================================
@@ -96,5 +107,17 @@ export function updateVeranstaltung(id: number, payload: VeranstaltungSave) {
    ========================================================= */
 
 export function deleteVeranstaltung(id: number) {
-  return apiClient.delete(`/veranstaltung/${id}`);
+  return apiClient.delete(`/veranstaltungen/${id}`);
+}
+
+export async function downloadTeilnehmerlistePdf(id: number) {
+  return apiClient.get(`/veranstaltungen/${id}/teilnehmer/pdf`, {
+    responseType: "blob",
+  });
+}
+export async function downloadAbrechnungPdf(id: number) {
+  const res = await apiClient.get(`/veranstaltungen/${id}/abrechnung/pdf`, {
+    responseType: "blob",
+  });
+  return res.data;
 }

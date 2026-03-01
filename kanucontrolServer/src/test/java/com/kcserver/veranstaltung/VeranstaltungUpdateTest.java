@@ -74,7 +74,7 @@ class VeranstaltungUpdateTest extends AbstractTenantIntegrationTest {
 
         String json = mockMvc.perform(
                         tenantRequest(
-                                post("/api/veranstaltung")
+                                post("/api/veranstaltungen")
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(createDTO))
                         )
@@ -101,7 +101,7 @@ class VeranstaltungUpdateTest extends AbstractTenantIntegrationTest {
 
         mockMvc.perform(
                         tenantRequest(
-                                put("/api/veranstaltung/{id}", veranstaltungId)
+                                put("/api/veranstaltungen/{id}", veranstaltungId)
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(updateDTO))
                         )
@@ -122,7 +122,7 @@ class VeranstaltungUpdateTest extends AbstractTenantIntegrationTest {
         Long secondId = veranstaltungFactory.create(vereinId, leiterId, "Herbst");
 
         mockMvc.perform(
-                        tenantRequest(get("/api/veranstaltung/active"))
+                        tenantRequest(get("/api/veranstaltungen/active"))
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(secondId));
@@ -135,7 +135,7 @@ class VeranstaltungUpdateTest extends AbstractTenantIntegrationTest {
 
         mockMvc.perform(
                         tenantRequest(
-                                put("/api/veranstaltung/{id}", veranstaltungId)
+                                put("/api/veranstaltungen/{id}", veranstaltungId)
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(dto))
                         )
@@ -162,7 +162,7 @@ class VeranstaltungUpdateTest extends AbstractTenantIntegrationTest {
 
         mockMvc.perform(
                         tenantRequest(
-                                put("/api/veranstaltung/{id}", veranstaltungId)
+                                put("/api/veranstaltungen/{id}", veranstaltungId)
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(dto))
                         )
@@ -186,7 +186,7 @@ class VeranstaltungUpdateTest extends AbstractTenantIntegrationTest {
 
         mockMvc.perform(
                         tenantRequest(
-                                put("/api/veranstaltung/{id}", veranstaltungId)
+                                put("/api/veranstaltungen/{id}", veranstaltungId)
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(dto))
                         )
@@ -213,7 +213,7 @@ class VeranstaltungUpdateTest extends AbstractTenantIntegrationTest {
 
         mockMvc.perform(
                         tenantRequest(
-                                put("/api/veranstaltung/{id}", veranstaltungId)
+                                put("/api/veranstaltungen/{id}", veranstaltungId)
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(dto))
                         )

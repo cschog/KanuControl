@@ -59,7 +59,7 @@ class VeranstaltungReadTest extends AbstractTenantIntegrationTest {
         // Veranstaltung anlegen
         String json = mockMvc.perform(
                         tenantRequest(
-                                post("/api/veranstaltung")
+                                post("/api/veranstaltungen")
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(
                                                 createDto()
@@ -84,7 +84,7 @@ class VeranstaltungReadTest extends AbstractTenantIntegrationTest {
 
         mockMvc.perform(
                         tenantRequest(
-                                get("/api/veranstaltung/{id}", veranstaltungId)
+                                get("/api/veranstaltungen/{id}", veranstaltungId)
                         )
                 )
                 .andExpect(status().isOk())

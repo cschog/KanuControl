@@ -422,7 +422,7 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
         );
 
         veranstaltung.setStandardGebuehr(dto.getStandardGebuehr());
-        
+
         if (dto.getScope() != null) {
             veranstaltung.setScope(dto.getScope());
         }
@@ -483,13 +483,12 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
 
         Veranstaltung v = veranstaltungRepository.findByIdWithRelations(id)
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Veranstaltung not found"
+                        HttpStatus.NOT_FOUND,
+                        "Veranstaltung not found"
                 ));
 
         Long veranstaltungId = v.getId();
-        Long leiterId = v.getLeiter().getId();
 
-        // ❗ gibt es Teilnehmer außer Leiter?
         boolean hasOtherTeilnehmer =
                 teilnehmerRepository.existsNichtLeiterTeilnehmer(
                         veranstaltungId,
@@ -507,12 +506,7 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
 
         veranstaltungRepository.delete(v);
 
-/* =========================================================
-   AUTO-AKTIVIERUNG FALLS NÖTIG
-   ========================================================= */
-
         if (wasActive) {
-
             veranstaltungRepository
                     .findTopByOrderByBeginnDatumDesc()
                     .ifPresent(neu -> {

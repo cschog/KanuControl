@@ -9,8 +9,6 @@ import { VeranstaltungDetail } from "@/api/types/VeranstaltungDetail";
 const Erhebungsbogen: React.FC = () => {
   const [veranstaltung, setVeranstaltung] = useState<VeranstaltungDetail | null>(null);
 
-  const [loading, setLoading] = useState(false);
-
   /* ================= Aktive Veranstaltung laden ================= */
 
   useEffect(() => {
@@ -26,37 +24,15 @@ const Erhebungsbogen: React.FC = () => {
 
   /* ================= PDF Download ================= */
 
-  const handleDownload = async () => {
-    if (!veranstaltung?.id) return;
+ const handleOpen = async () => {
+   if (!veranstaltung?.id) return;
 
-    setLoading(true);
+   const res = await downloadErhebungsbogenPdf(veranstaltung.id);
 
-    try {
-      const res = await downloadErhebungsbogenPdf(veranstaltung.id);
-
-      const blob = new Blob([res.data], { type: "application/pdf" });
-
-      /* Dateiname aus Header */
-      let filename = "Erhebungsbogen.pdf";
-      const disposition = res.headers["content-disposition"];
-
-      if (disposition) {
-        const match = disposition.match(/filename="?(.+)"?/);
-        if (match?.[1]) filename = match[1];
-      }
-
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-    } finally {
-      setLoading(false);
-    }
-  };
+   const blob = new Blob([res.data], { type: "application/pdf" });
+   const url = window.URL.createObjectURL(blob);
+   window.open(url, "_blank");
+ };
 
   /* ================= UI ================= */
 
@@ -76,10 +52,10 @@ const Erhebungsbogen: React.FC = () => {
             <Button
               variant="contained"
               startIcon={<PictureAsPdfIcon />}
-              onClick={handleDownload}
-              disabled={loading}
+              onClick={handleOpen}
+         
             >
-              Erhebungsbogen als PDF erzeugen
+              Erhebungsbogen in neuem Tab öffnen
             </Button>
           </>
         ) : (

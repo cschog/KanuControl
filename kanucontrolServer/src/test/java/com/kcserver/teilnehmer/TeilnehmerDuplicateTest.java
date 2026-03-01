@@ -46,12 +46,12 @@ class TeilnehmerDuplicateTest extends AbstractTenantIntegrationTest {
 
         // 1. add ok
         mockMvc.perform(
-                tenantRequest(post("/api/veranstaltung/{v}/teilnehmer/{p}", veranstaltungId, personId))
+                tenantRequest(post("/api/veranstaltungen/{v}/teilnehmer/{p}", veranstaltungId, personId))
         ).andExpect(status().isCreated());
 
         // 2. add again → CONFLICT
         mockMvc.perform(
-                tenantRequest(post("/api/veranstaltung/{v}/teilnehmer/{p}", veranstaltungId, personId))
+                tenantRequest(post("/api/veranstaltungen/{v}/teilnehmer/{p}", veranstaltungId, personId))
         ).andExpect(status().isConflict());
     }
 }

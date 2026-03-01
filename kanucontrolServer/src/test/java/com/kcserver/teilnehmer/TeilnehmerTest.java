@@ -80,7 +80,7 @@ class TeilnehmerTest extends AbstractTenantIntegrationTest {
 
         mockMvc.perform(
                 tenantRequest(
-                        post("/api/veranstaltung/{vId}/teilnehmer/{personId}",
+                        post("/api/veranstaltungen/{vId}/teilnehmer/{personId}",
                                 veranstaltungId, personId)
                 )
         ).andExpect(status().isCreated());
@@ -95,7 +95,7 @@ class TeilnehmerTest extends AbstractTenantIntegrationTest {
 
         mockMvc.perform(
                 tenantRequest(
-                        post("/api/veranstaltung/{vId}/teilnehmer/{personId}",
+                        post("/api/veranstaltungen/{vId}/teilnehmer/{personId}",
                                 veranstaltungId, personId)
                 )
         ).andExpect(status().isCreated());
@@ -108,7 +108,7 @@ class TeilnehmerTest extends AbstractTenantIntegrationTest {
 
         mockMvc.perform(
                 tenantRequest(
-                        delete("/api/veranstaltung/{vId}/teilnehmer/{id}",
+                        delete("/api/veranstaltungen/{vId}/teilnehmer/{id}",
                                 veranstaltungId, teilnehmerId)
                 )
         ).andExpect(status().isNoContent());
@@ -129,7 +129,7 @@ class TeilnehmerTest extends AbstractTenantIntegrationTest {
 
         mockMvc.perform(
                 tenantRequest(
-                        delete("/api/veranstaltung/{vId}/teilnehmer/{id}",
+                        delete("/api/veranstaltungen/{vId}/teilnehmer/{id}",
                                 veranstaltungId, leiterTeilnehmerId)
                 )
         ).andExpect(status().isConflict());
@@ -144,7 +144,7 @@ class TeilnehmerTest extends AbstractTenantIntegrationTest {
 
         mockMvc.perform(
                 tenantRequest(
-                        post("/api/veranstaltung/{vId}/teilnehmer/{personId}",
+                        post("/api/veranstaltungen/{vId}/teilnehmer/{personId}",
                                 veranstaltungId, personId)
                 )
         ).andExpect(status().isCreated());
@@ -154,7 +154,7 @@ class TeilnehmerTest extends AbstractTenantIntegrationTest {
 
         mockMvc.perform(
                 tenantRequest(
-                        delete("/api/veranstaltung/{vId}/teilnehmer/bulk", veranstaltungId)
+                        delete("/api/veranstaltungen/{vId}/teilnehmer/bulk", veranstaltungId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(dto))
                 )
@@ -170,7 +170,7 @@ class TeilnehmerTest extends AbstractTenantIntegrationTest {
 
         mockMvc.perform(
                 tenantRequest(
-                        post("/api/veranstaltung/{vId}/teilnehmer/{personId}",
+                        post("/api/veranstaltungen/{vId}/teilnehmer/{personId}",
                                 veranstaltungId, personId)
                 )
         ).andExpect(status().isCreated());
@@ -186,7 +186,7 @@ class TeilnehmerTest extends AbstractTenantIntegrationTest {
 
         mockMvc.perform(
                 tenantRequest(
-                        put("/api/veranstaltung/{vId}/teilnehmer/{id}",
+                        put("/api/veranstaltungen/{vId}/teilnehmer/{id}",
                                 veranstaltungId, teilnehmerId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(dto))
