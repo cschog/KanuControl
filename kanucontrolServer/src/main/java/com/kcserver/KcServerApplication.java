@@ -8,9 +8,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 @EnableJpaAuditing
 @SpringBootApplication
-public class KC_Server {
+public class KcServerApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(KC_Server.class, args);
+		SpringApplication.run(KcServerApplication.class, args);
 	}
 }

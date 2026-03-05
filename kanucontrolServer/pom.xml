@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.5.10</version>
+		<version>3.5.9</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.example</groupId>
@@ -20,7 +20,11 @@
 
 		<!-- Default: Liquibase-Tests AUS -->
 		<junit.jupiter.tags.exclude>liquibase</junit.jupiter.tags.exclude>
-		<junit.jupiter.tags.include></junit.jupiter.tags.include>
+
+		<sonar.coverage.jacoco.xmlReportPaths>
+			target/site/jacoco/jacoco.xml
+		</sonar.coverage.jacoco.xmlReportPaths>
+
 	</properties>
 	<dependencyManagement>
 		<dependencies>
@@ -51,10 +55,26 @@
 		</dependency>
 
 		<!-- CSV Parser -->
+		<!-- Source: https://mvnrepository.com/artifact/org.apache.commons/commons-compress -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-compress</artifactId>
+			<version>1.28.0</version>
+			<scope>compile</scope>
+		</dependency>
+		<!-- Source: https://mvnrepository.com/artifact/org.apache.commons/commons-lang3 -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.20.0</version>
+			<scope>compile</scope>
+		</dependency>
+		<!-- Source: https://mvnrepository.com/artifact/org.apache.commons/commons-csv -->
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-csv</artifactId>
 			<version>1.10.0</version>
+			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.mapstruct</groupId>
@@ -93,7 +113,7 @@
 		<dependency>
 			<groupId>org.keycloak</groupId>
 			<artifactId>keycloak-admin-client</artifactId>
-			<version>24.0.2</version>
+			<version>26.0.2</version>
 			<exclusions>
 				<exclusion>
 					<groupId>commons-logging</groupId>
@@ -104,7 +124,7 @@
 		<dependency>
 			<groupId>org.keycloak</groupId>
 			<artifactId>keycloak-core</artifactId>
-			<version>24.0.2</version>
+			<version>26.0.2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -239,17 +259,29 @@
 						<artifactId>maven-surefire-plugin</artifactId>
 						<version>3.5.4</version>
 						<configuration>
+							<argLine>-javaagent:${settings.localRepository}/net/bytebuddy/byte-buddy-agent/1.17.8/byte-buddy-agent-1.17.8.jar</argLine>
 							<parallel>none</parallel>
 							<forkCount>1</forkCount>
 							<reuseForks>false</reuseForks>
 							<systemPropertyVariables>
 								<junit.jupiter.tags.include>liquibase</junit.jupiter.tags.include>
-								<junit.jupiter.tags.exclude></junit.jupiter.tags.exclude>
 							</systemPropertyVariables>
 						</configuration>
 					</plugin>
 				</plugins>
 			</build>
+		</profile>
+		<profile>
+			<id>sonar</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<properties>
+				<!-- URL deines SonarQube-Servers -->
+				<sonar.host.url>http://localhost:9000</sonar.host.url>
+				<!-- optional: Project Key/Name -->
+				<sonar.projectName>KanuControlServer</sonar.projectName>
+			</properties>
 		</profile>
 	</profiles>
 
@@ -308,7 +340,7 @@
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>0.8.10</version>
+				<version>0.8.11</version>
 				<executions>
 					<execution>
 						<goals>
@@ -317,12 +349,18 @@
 					</execution>
 					<execution>
 						<id>report</id>
-						<phase>test</phase>
+						<phase>verify</phase>
 						<goals>
 							<goal>report</goal>
 						</goals>
 					</execution>
 				</executions>
+			</plugin>
+			<!-- SonarQube Scanner für Maven -->
+			<plugin>
+				<groupId>org.sonarsource.scanner.maven</groupId>
+				<artifactId>sonar-maven-plugin</artifactId>
+				<version>3.10.0.2594</version>
 			</plugin>
 		</plugins>
 	</build>

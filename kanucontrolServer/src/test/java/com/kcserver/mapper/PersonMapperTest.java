@@ -40,12 +40,27 @@ class PersonMapperTest {
 
     @Test
     void personListDto_doesNotExposeEmail() {
+
         Person p = new Person();
         p.setEmail("test@test.de");
 
         PersonListDTO dto = mapper.toListDTO(p);
 
-        // bewusst KEIN dto.getEmail()
-        // Test ist implizit bestanden, wenn es kompiliert
+        assertThat(dto).isNotNull();
+
+        assertThat(PersonListDTO.class.getDeclaredFields())
+                .extracting("name")
+                .doesNotContain("email");
+    }
+
+    @Test
+    void personListDto_mapsName() {
+
+        Person p = new Person();
+        p.setName("Mustermann");
+
+        PersonListDTO dto = mapper.toListDTO(p);
+
+        assertThat(dto.getName()).isEqualTo("Mustermann");
     }
 }

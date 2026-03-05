@@ -24,6 +24,9 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDate;
 import java.util.List;
 
+import static com.kcserver.exception.EntityFinder.getOr404;
+import static com.kcserver.exception.ErrorMessages.*;
+
 @Service
 @Transactional
 public class TeilnehmerService {
@@ -34,6 +37,7 @@ public class TeilnehmerService {
     private final TeilnehmerMapper teilnehmerMapper;
     private final PersonMapper personMapper;
     private final MitgliedRepository mitgliedRepository;
+
 
     public TeilnehmerService(
             TeilnehmerRepository teilnehmerRepository,
@@ -57,10 +61,11 @@ public class TeilnehmerService {
     @Transactional(readOnly = true)
     public Page<TeilnehmerListDTO> getTeilnehmer(Long veranstaltungId, Pageable pageable) {
 
-        Veranstaltung veranstaltung = veranstaltungRepository.findByIdWithRelations(veranstaltungId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Veranstaltung not found"
-                ));
+        Veranstaltung veranstaltung =
+                getOr404(
+                        veranstaltungRepository.findById(veranstaltungId),
+                        VERANSTALTUNG_NOT_FOUND
+                );
 
         return teilnehmerRepository
                 .findWithPersonByVeranstaltung(veranstaltung, pageable)
@@ -74,9 +79,9 @@ public class TeilnehmerService {
     @Transactional(readOnly = true)
     public List<TeilnehmerDetailDTO> getTeilnehmerForVeranstaltung(Long veranstaltungId) {
 
-        veranstaltungRepository.findById(veranstaltungId)
+        Veranstaltung veranstaltung = veranstaltungRepository.findById(veranstaltungId)
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Veranstaltung not found"
+                        HttpStatus.NOT_FOUND, VERANSTALTUNG_NOT_FOUND
                 ));
 
         return teilnehmerRepository
@@ -94,7 +99,7 @@ public class TeilnehmerService {
 
         Veranstaltung veranstaltung = veranstaltungRepository.findByIdWithRelations(veranstaltungId)
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Veranstaltung not found"
+                        HttpStatus.NOT_FOUND, VERANSTALTUNG_NOT_FOUND
                 ));
 
         Person person = getPerson(personId);
@@ -106,7 +111,7 @@ public class TeilnehmerService {
 
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "Person is already Teilnehmer"
+                    "Person ist bereits Teilnehmer"
             );
         }
 
@@ -137,7 +142,7 @@ public class TeilnehmerService {
 
         Veranstaltung veranstaltung = veranstaltungRepository.findByIdWithRelations(veranstaltungId)
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Veranstaltung not found"
+                        HttpStatus.NOT_FOUND, VERANSTALTUNG_NOT_FOUND
                 ));
 
         for (Long personId : personIds) {
@@ -208,7 +213,7 @@ public class TeilnehmerService {
         Teilnehmer t = teilnehmerRepository
                 .findByVeranstaltungIdAndPersonId(veranstaltungId, personId)
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Teilnehmer not found"
+                        HttpStatus.NOT_FOUND, TEILNEHMER_NOT_FOUND
                 ));
 
         // ❗ Leiter darf NICHT überschrieben werden
@@ -235,7 +240,7 @@ public class TeilnehmerService {
 
         Teilnehmer teilnehmer = teilnehmerRepository.findById(teilnehmerId)
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Teilnehmer not found"
+                        HttpStatus.NOT_FOUND, TEILNEHMER_NOT_FOUND
                 ));
 
         if (!teilnehmer.getVeranstaltung().getId().equals(veranstaltungId)) {
@@ -260,10 +265,11 @@ public class TeilnehmerService {
 
     public void removeTeilnehmerBulk(Long veranstaltungId, List<Long> personIds) {
 
-        Veranstaltung v = veranstaltungRepository.findByIdWithRelations(veranstaltungId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Veranstaltung not found"
-                ));
+        Veranstaltung v =
+                getOr404(
+                        veranstaltungRepository.findById(veranstaltungId),
+                        VERANSTALTUNG_NOT_FOUND
+                );
 
         Long leiterId = v.getLeiter().getId();
 
@@ -292,10 +298,11 @@ public class TeilnehmerService {
             Pageable pageable
     ) {
 
-        veranstaltungRepository.findById(veranstaltungId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Veranstaltung not found"
-                ));
+        Veranstaltung veranstaltung =
+                getOr404(
+                        veranstaltungRepository.findById(veranstaltungId),
+                        VERANSTALTUNG_NOT_FOUND
+                );
 
         return teilnehmerRepository
                 .findAvailablePersonsFiltered(veranstaltungId, name, vorname, verein, pageable)
@@ -309,10 +316,11 @@ public class TeilnehmerService {
     @Transactional(readOnly = true)
     public List<PersonListDTO> getAssignedPersons(Long veranstaltungId) {
 
-        veranstaltungRepository.findById(veranstaltungId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Veranstaltung not found"
-                ));
+        Veranstaltung veranstaltung =
+                getOr404(
+                        veranstaltungRepository.findById(veranstaltungId),
+                        VERANSTALTUNG_NOT_FOUND
+                );
 
         return teilnehmerRepository
                 .findByVeranstaltungWithPerson(veranstaltungId)
@@ -327,10 +335,11 @@ public class TeilnehmerService {
 
     public TeilnehmerDetailDTO setLeiter(Long veranstaltungId, Long personId) {
 
-        Veranstaltung veranstaltung = veranstaltungRepository.findByIdWithRelations(veranstaltungId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Veranstaltung not found"
-                ));
+        Veranstaltung veranstaltung =
+                getOr404(
+                        veranstaltungRepository.findById(veranstaltungId),
+                        VERANSTALTUNG_NOT_FOUND
+                );
 
         Person person = getPerson(personId);
 
@@ -369,7 +378,7 @@ public class TeilnehmerService {
     private Person getPerson(Long id) {
         return personRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Person not found"
+                        HttpStatus.NOT_FOUND, PERSON_NOT_FOUND
                 ));
     }
 
@@ -388,7 +397,7 @@ public class TeilnehmerService {
 
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Leiter must be at least 18 years old"
+                    "Leiter muss mindest 18 Jahre alt sein"
             );
         }
     }

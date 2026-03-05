@@ -6,6 +6,8 @@ import com.kcserver.persistence.converter.TeilnehmerRolleConverter;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(
         name = "teilnehmer",
@@ -46,4 +48,7 @@ public class Teilnehmer extends Auditable {
     @Convert(converter = TeilnehmerRolleConverter.class)
     @Column(length = 1)
     private TeilnehmerRolle rolle;
+
+    @Column(name = "individueller_beitrag", precision = 10, scale = 2)
+    private BigDecimal individuellerBeitrag;
 }

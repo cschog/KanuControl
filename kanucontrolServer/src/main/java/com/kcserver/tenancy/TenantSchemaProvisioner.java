@@ -41,7 +41,12 @@ public class TenantSchemaProvisioner {
             "veranstaltung",
             "teilnehmer",
             "erhebungsbogen",
-            "mitglied"
+            "mitglied",
+            "abrechnung",
+            "abrechnung_buchung",
+            "foerdersatz",
+            "planung",
+            "planung_position"
     );
 
     public TenantSchemaProvisioner(DataSource dataSource) {

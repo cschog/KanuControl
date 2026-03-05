@@ -241,6 +241,9 @@ public class PDFErhebungsbogenService {
                 case WEIBLICH -> 0;
                 case MAENNLICH -> 1;
                 case DIVERS -> 2;
+                default -> throw new IllegalStateException(
+                        "Unbekannter Wert für Sex: " + p.getSex()
+                );
             };
 
             int age = calcAge(p.getGeburtsdatum(), v.getBeginnDatum());

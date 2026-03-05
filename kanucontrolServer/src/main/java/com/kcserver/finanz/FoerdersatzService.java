@@ -1,4 +1,4 @@
-package com.kcserver.service;
+package com.kcserver.finanz;
 
 import com.kcserver.entity.Foerdersatz;
 import com.kcserver.repository.FoerdersatzRepository;
