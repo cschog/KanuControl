@@ -6,7 +6,7 @@ import Vereine from "./components/verein/Vereine";
 import Personen from "./components/person/Personen";
 import Veranstaltungen from "@/components/veranstaltung/Veranstaltungen";
 import TeilnehmerScreen from "@/components/teilnehmer/TeilnehmerScreen";
-import Kosten from "./components/pdfAusgaben/Kosten";
+import Finanzen from "./pages/Finanzen";
 import Reisekosten from "./Platzhalter/Reisekosten";
 import Teilnehmerliste from "./components/pdfAusgaben/Teilnehmerliste";
 import Erhebungsbogen from "./components/pdfAusgaben/Erhebungsbogen";
@@ -26,7 +26,7 @@ const App: React.FC = () => {
           <Route path="/personen" element={<Personen />} />
           <Route path="/veranstaltungen" element={<Veranstaltungen />} />
           <Route path="/teilnehmer" element={<TeilnehmerScreen />} />
-          <Route path="/kosten" element={<Kosten />} />
+          <Route path="/finanzen" element={<Finanzen />} />
           <Route path="/reisekosten" element={<Reisekosten />} />
           <Route path="/teilnehmerliste" element={<Teilnehmerliste />} />
           <Route path="/erhebungsbogen" element={<Erhebungsbogen />} />

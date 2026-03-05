@@ -22,7 +22,7 @@ const StartMenue = () => {
    { key: "veranstaltungen", label: "Veranstaltungen", path: "/veranstaltungen" },
    { key: "teilnehmer", label: "Teilnehmer", path: "/teilnehmer" },
 
-   { key: "finanzen", label: "Finanzen", path: "/kosten" },
+   { key: "finanzen", label: "Finanzen", path: "/finanzen" },
    { key: "reisekosten", label: "Reisekosten", path: "/reisekosten" },
 
    { key: "anmeldung", label: "Anmeldung", path: "/anmeldung" },
