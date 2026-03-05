@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <!-- ========================================================= -->
+    <!-- 1. PLANUNG -->
+    <!-- ========================================================= -->
+
+    <changeSet id="2026-03-01-create-planung" author="kc">
+
+        <createTable tableName="planung">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="veranstaltung_id" type="BIGINT">
+                <constraints nullable="false" unique="true"/>
+            </column>
+
+            <column name="eingereicht" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="planung"
+                baseColumnNames="veranstaltung_id"
+                referencedTableName="veranstaltung"
+                referencedColumnNames="id"
+                constraintName="fk_planung_veranstaltung"/>
+
+    </changeSet>
+
+
+    <!-- ========================================================= -->
+    <!-- 2. PLANUNG_POSITION -->
+    <!-- ========================================================= -->
+
+    <changeSet id="2026-03-02-create-planung-position" author="kc">
+
+        <createTable tableName="planung_position">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="planung_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="kategorie" type="VARCHAR(40)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="betrag" type="DECIMAL(12,2)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="kommentar" type="VARCHAR(500)"/>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="planung_position"
+                baseColumnNames="planung_id"
+                referencedTableName="planung"
+                referencedColumnNames="id"
+                constraintName="fk_planung_position_planung"/>
+
+        <addUniqueConstraint
+                tableName="planung_position"
+                columnNames="planung_id,kategorie"
+                constraintName="uk_planung_kategorie"/>
+
+    </changeSet>
+
+
+    <!-- ========================================================= -->
+    <!-- 3. ABRECHNUNG -->
+    <!-- ========================================================= -->
+
+    <changeSet id="2026-03-03-create-abrechnung" author="kc">
+
+        <createTable tableName="abrechnung">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="veranstaltung_id" type="BIGINT">
+                <constraints nullable="false" unique="true"/>
+            </column>
+
+            <column name="status" type="VARCHAR(30)" defaultValue="OFFEN">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="abrechnung"
+                baseColumnNames="veranstaltung_id"
+                referencedTableName="veranstaltung"
+                referencedColumnNames="id"
+                constraintName="fk_abrechnung_veranstaltung"/>
+
+    </changeSet>
+
+
+    <!-- ========================================================= -->
+    <!-- 4. ABRECHNUNG_BUCHUNG -->
+    <!-- ========================================================= -->
+
+    <changeSet id="2026-03-04-create-abrechnung-buchung" author="kc">
+
+        <createTable tableName="abrechnung_buchung">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="abrechnung_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="person_id" type="BIGINT"/>
+
+            <column name="kategorie" type="VARCHAR(40)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="betrag" type="DECIMAL(12,2)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="datum" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="beschreibung" type="VARCHAR(500)"/>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="abrechnung_buchung"
+                baseColumnNames="abrechnung_id"
+                referencedTableName="abrechnung"
+                referencedColumnNames="id"
+                constraintName="fk_abrechnung_buchung_abrechnung"/>
+
+        <addForeignKeyConstraint
+                baseTableName="abrechnung_buchung"
+                baseColumnNames="person_id"
+                referencedTableName="person"
+                referencedColumnNames="id"
+                constraintName="fk_abrechnung_buchung_person"/>
+
+    </changeSet>
+
+
+    <!-- ========================================================= -->
+    <!-- 5. TEILNEHMER ERWEITERUNG -->
+    <!-- ========================================================= -->
+
+    <changeSet id="2026-03-05-add-individueller-beitrag" author="kc">
+
+        <addColumn tableName="teilnehmer">
+            <column name="individueller_beitrag" type="DECIMAL(10,2)"/>
+        </addColumn>
+
+    </changeSet>
+
+</databaseChangeLog>

@@ -5,10 +5,7 @@ import com.kcserver.dto.veranstaltung.VeranstaltungCreateDTO;
 import com.kcserver.dto.veranstaltung.VeranstaltungDetailDTO;
 import com.kcserver.dto.veranstaltung.VeranstaltungListDTO;
 import com.kcserver.dto.veranstaltung.VeranstaltungUpdateDTO;
-import com.kcserver.entity.Person;
-import com.kcserver.entity.Teilnehmer;
-import com.kcserver.entity.Veranstaltung;
-import com.kcserver.entity.Verein;
+import com.kcserver.entity.*;
 import com.kcserver.enumtype.TeilnehmerRolle;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.mapper.PersonMapper;
@@ -37,21 +34,24 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
     private final TeilnehmerRepository teilnehmerRepository;
     private final VeranstaltungMapper veranstaltungMapper;
     private final PersonMapper personMapper;
+    private final PlanungRepository planungRepository;
 
     public VeranstaltungServiceImpl(
             VeranstaltungRepository veranstaltungRepository,
             VereinRepository vereinRepository,
             PersonRepository personRepository,
             TeilnehmerRepository teilnehmerRepository,
+            PlanungRepository planungRepository,   // 👈 hinzufügen
             VeranstaltungMapper veranstaltungMapper,
-            PersonMapper personMapper   // 👈 NEU
+            PersonMapper personMapper
     ) {
         this.veranstaltungRepository = veranstaltungRepository;
         this.vereinRepository = vereinRepository;
         this.personRepository = personRepository;
         this.teilnehmerRepository = teilnehmerRepository;
+        this.planungRepository = planungRepository;   // 👈 hinzufügen
         this.veranstaltungMapper = veranstaltungMapper;
-        this.personMapper = personMapper;   // 👈 NEU
+        this.personMapper = personMapper;
     }
 
     /* =========================================================
@@ -222,10 +222,9 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
             Pageable pageable
     ) {
 
-        veranstaltungRepository.findById(veranstaltungId)
+        Veranstaltung veranstaltung = veranstaltungRepository.findById(veranstaltungId)
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Veranstaltung not found"
+                        HttpStatus.NOT_FOUND, "Veranstaltung not found"
                 ));
 
         return teilnehmerRepository
@@ -504,7 +503,12 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
 
         boolean wasActive = v.isAktiv();
 
+        planungRepository.findByVeranstaltungId(id)
+                .ifPresent(planungRepository::delete);
+
         veranstaltungRepository.delete(v);
+
+
 
         if (wasActive) {
             veranstaltungRepository

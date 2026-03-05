@@ -21,6 +21,7 @@ import java.time.LocalDate;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Integration tests for creating Person entities.
@@ -47,9 +48,11 @@ class PersonCreateTest extends AbstractTenantIntegrationTest {
 
     @Test
     void auditCheck() {
-        System.out.println("Auditor bean = " + auditorAware);
-        System.out.println("Auditor value = " +
-                (auditorAware == null ? "NULL" : auditorAware.getCurrentAuditor()));
+
+        assertThat(auditorAware).isNotNull();
+
+        assertThat(auditorAware.getCurrentAuditor())
+                .isPresent();
     }
 
     @Test

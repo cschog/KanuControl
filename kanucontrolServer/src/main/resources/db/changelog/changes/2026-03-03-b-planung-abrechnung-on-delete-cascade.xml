@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+        http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <!-- ========================================================= -->
+    <!-- ON DELETE CASCADE für Planung -->
+    <!-- ========================================================= -->
+
+    <changeSet id="2026-03-03-planung-on-delete-cascade" author="chris">
+
+        <!-- Bestehende FK entfernen -->
+        <dropForeignKeyConstraint
+                baseTableName="planung"
+                constraintName="fk_planung_veranstaltung"/>
+
+        <!-- Neue FK mit ON DELETE CASCADE -->
+        <addForeignKeyConstraint
+                baseTableName="planung"
+                baseColumnNames="veranstaltung_id"
+                constraintName="fk_planung_veranstaltung"
+                referencedTableName="veranstaltung"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+
+        <rollback>
+            <dropForeignKeyConstraint
+                    baseTableName="planung"
+                    constraintName="fk_planung_veranstaltung"/>
+
+            <addForeignKeyConstraint
+                    baseTableName="planung"
+                    baseColumnNames="veranstaltung_id"
+                    constraintName="fk_planung_veranstaltung"
+                    referencedTableName="veranstaltung"
+                    referencedColumnNames="id"/>
+        </rollback>
+
+    </changeSet>
+
+
+    <!-- ========================================================= -->
+    <!-- ON DELETE CASCADE für Abrechnung -->
+    <!-- ========================================================= -->
+
+    <changeSet id="2026-03-03-abrechnung-on-delete-cascade" author="chris">
+
+        <!-- Bestehende FK entfernen -->
+        <dropForeignKeyConstraint
+                baseTableName="abrechnung"
+                constraintName="fk_abrechnung_veranstaltung"/>
+
+        <!-- Neue FK mit ON DELETE CASCADE -->
+        <addForeignKeyConstraint
+                baseTableName="abrechnung"
+                baseColumnNames="veranstaltung_id"
+                constraintName="fk_abrechnung_veranstaltung"
+                referencedTableName="veranstaltung"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+
+        <rollback>
+            <dropForeignKeyConstraint
+                    baseTableName="abrechnung"
+                    constraintName="fk_abrechnung_veranstaltung"/>
+
+            <addForeignKeyConstraint
+                    baseTableName="abrechnung"
+                    baseColumnNames="veranstaltung_id"
+                    constraintName="fk_abrechnung_veranstaltung"
+                    referencedTableName="veranstaltung"
+                    referencedColumnNames="id"/>
+        </rollback>
+
+    </changeSet>
+
+</databaseChangeLog>

@@ -35,57 +35,57 @@ public class PDFTeilnehmerlisteService {
 
             tnList = sortTeilnehmer(tnList, v.getLeiterId());
 
-            PDDocument masterDoc = new PDDocument();
-            PDFMergerUtility merger = new PDFMergerUtility();
+            try (PDDocument masterDoc = new PDDocument()) {
 
-            int pages = (int) Math.ceil((double) tnList.size() / TN_PER_PAGE);
+                PDFMergerUtility merger = new PDFMergerUtility();
+                int pages = (int) Math.ceil((double) tnList.size() / TN_PER_PAGE);
 
-            for (int p = 0; p < pages; p++) {
+                for (int p = 0; p < pages; p++) {
 
-                try (PDDocument template = Loader.loadPDF(
-                        StreamUtils.copyToByteArray(
-                                new ClassPathResource("pdf/teilnehmer_template.pdf")
-                                        .getInputStream()
-                        )
-                )) {
+                    try (PDDocument template = Loader.loadPDF(
+                            StreamUtils.copyToByteArray(
+                                    new ClassPathResource("pdf/teilnehmer_template.pdf")
+                                            .getInputStream()
+                            )
+                    )) {
 
-                    PDAcroForm form = template.getDocumentCatalog().getAcroForm();
-                    if (form != null) {
-                        form.setNeedAppearances(true);
+                        PDAcroForm form = template.getDocumentCatalog().getAcroForm();
+                        if (form != null) {
+                            form.setNeedAppearances(true);
+                        }
+
+                        fillHeader(form, v);
+
+                        int start = p * TN_PER_PAGE;
+                        int end = Math.min(start + TN_PER_PAGE, tnList.size());
+
+                        set(form, "seite_nr", String.valueOf(p + 1));
+                        set(form, "seite_total", String.valueOf(pages));
+
+                        for (int i = start; i < end; i++) {
+                            int globalNr = i + 1;
+                            int row = i - start + 1;
+                            fillTeilnehmer(form, tnList.get(i), row, v, globalNr);
+                        }
+
+                        merger.appendDocument(masterDoc, template);
                     }
+                }
 
-                    fillHeader(form, v);
+                String filename =
+                        LocalDate.now() + "_TN_" +
+                                sanitizeFilename(v.getName()) + ".pdf";
 
-                    int start = p * TN_PER_PAGE;
-                    int end = Math.min(start + TN_PER_PAGE, tnList.size());
+                PDDocumentInformation info = masterDoc.getDocumentInformation();
+                info.setTitle(filename);
+                info.setAuthor("KanuControl");
+                info.setCreator("KanuControl");
 
-                    set(form, "seite_nr", String.valueOf(p + 1));
-                    set(form, "seite_total", String.valueOf(pages));
-
-                    for (int i = start; i < end; i++) {
-                        int globalNr = i + 1;
-                        int row = i - start + 1;
-                        fillTeilnehmer(form, tnList.get(i), row, v, globalNr);
-                    }
-
-                    merger.appendDocument(masterDoc, template);
+                try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+                    masterDoc.save(out);
+                    return out.toByteArray();
                 }
             }
-
-            String filename =
-                    LocalDate.now() + "_TN_" +
-                            sanitizeFilename(v.getName()) + ".pdf";
-
-            PDDocumentInformation info = masterDoc.getDocumentInformation();
-            info.setTitle(filename);
-            info.setAuthor("KanuControl");
-            info.setCreator("KanuControl");
-
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            masterDoc.save(out);
-            masterDoc.close();
-
-            return out.toByteArray();
 
         } catch (IOException e) {
             throw new RuntimeException(
