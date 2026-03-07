@@ -9,6 +9,7 @@ public enum FinanzKategorie {
     HONORARE(FinanzTyp.KOSTEN),
     FAHRTKOSTEN(FinanzTyp.KOSTEN),
     VERBRAUCHSMATERIAL(FinanzTyp.KOSTEN),
+    KULTUR(FinanzTyp.KOSTEN),
     MIETE(FinanzTyp.KOSTEN),
     SONSTIGE_KOSTEN(FinanzTyp.KOSTEN),
 

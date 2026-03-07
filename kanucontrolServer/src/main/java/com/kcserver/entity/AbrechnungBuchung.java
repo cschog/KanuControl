@@ -56,10 +56,4 @@ public class AbrechnungBuchung implements FinanzPosition {
     public BigDecimal getBetrag() {
         return betrag != null ? betrag : BigDecimal.ZERO;
     }
-
-    /* ================= Derived ================= */
-
-    public String getKuerzel() {
-        return person != null ? person.getKuerzel() : null;
-    }
 }

@@ -5,6 +5,7 @@ import type { SyntheticEvent } from "react";
 import FinanzenDashboard from "@/components/finanzen/FinanzenDashboard";
 import PlanungPage from "@/components/finanzen/PlanungPage";
 import KostenPage from "@/components/finanzen/KostenPage";
+import FinanzMatrix from "@/components/finanzen/FinanzMatrix";
 
 const Finanzen = () => {
   const [tab, setTab] = useState(0);
@@ -19,13 +20,13 @@ const Finanzen = () => {
         <Tab label="Dashboard" />
         <Tab label="Planung" />
         <Tab label="Kosten" />
-        <Tab label="Abrechnung" />
+        <Tab label="Überblick" />
       </Tabs>
 
       {tab === 0 && <FinanzenDashboard />}
       {tab === 1 && <PlanungPage />}
       {tab === 2 && <KostenPage />}
-      {tab === 3 && <div>Abrechnung</div>}
+      {tab === 3 && <FinanzMatrix />}
     </Box>
   );
 };

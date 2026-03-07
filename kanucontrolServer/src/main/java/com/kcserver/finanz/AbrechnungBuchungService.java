@@ -41,12 +41,6 @@ public class AbrechnungBuchungService {
         b.setDatum(dto.getDatum());
         b.setBeschreibung(dto.getBeschreibung());
 
-        if (dto.getPersonId() != null) {
-            Person person = getPerson(dto.getPersonId());
-            validateKuerzel(person);
-            b.setPerson(person);
-        }
-
         a.addBuchung(b);
 
         buchungRepository.save(b);
@@ -77,14 +71,6 @@ public class AbrechnungBuchungService {
         b.setBetrag(dto.getBetrag());
         b.setDatum(dto.getDatum());
         b.setBeschreibung(dto.getBeschreibung());
-
-        if (dto.getPersonId() != null) {
-            Person person = getPerson(dto.getPersonId());
-            validateKuerzel(person);
-            b.setPerson(person);
-        } else {
-            b.setPerson(null);
-        }
 
         return mapper.toDTO(b);
     }
@@ -155,16 +141,6 @@ public class AbrechnungBuchungService {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
                     "Abrechnung ist abgeschlossen und nicht mehr änderbar"
-            );
-        }
-    }
-
-    private void validateKuerzel(Person person) {
-
-        if (person.getKuerzel() == null || person.getKuerzel().isBlank()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Person hat kein Kürzel hinterlegt"
             );
         }
     }

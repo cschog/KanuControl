@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="2026-01-finanzgruppe-create" author="chris">
+
+        <createTable tableName="finanz_gruppe">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="kuerzel" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="veranstaltung_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex
+                tableName="finanz_gruppe"
+                indexName="idx_finanzgruppe_veranstaltung">
+
+            <column name="veranstaltung_id"/>
+
+        </createIndex>
+
+        <addForeignKeyConstraint
+                baseTableName="finanz_gruppe"
+                baseColumnNames="veranstaltung_id"
+                referencedTableName="veranstaltung"
+                referencedColumnNames="id"
+                constraintName="fk_finanzgruppe_veranstaltung"/>
+
+        <addUniqueConstraint
+                tableName="finanz_gruppe"
+                columnNames="veranstaltung_id, kuerzel"
+                constraintName="uk_finanzgruppe_veranstaltung_kuerzel"/>
+
+    </changeSet>
+
+</databaseChangeLog>

@@ -19,6 +19,5 @@ public class AbrechnungBuchungDTO {
 
     private Long personId;
 
-    private String kuerzel;   // derived
     private String beschreibung;
 }

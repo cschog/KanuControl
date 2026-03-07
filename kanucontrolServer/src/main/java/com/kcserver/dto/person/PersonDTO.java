@@ -3,7 +3,6 @@ package com.kcserver.dto.person;
 import com.kcserver.dto.mitglied.MitgliedDTO;
 import com.kcserver.enumtype.CountryCode;
 import com.kcserver.enumtype.Sex;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -37,8 +36,6 @@ public class PersonDTO {
 
     private LocalDate efz;
 
-    @Size(max = 6, message = "Kürzel darf maximal 6 Zeichen lang sein")
-    private String kuerzel;
     private Boolean aktiv;
 
     // READ ONLY
