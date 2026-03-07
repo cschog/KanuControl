@@ -86,9 +86,6 @@ public class Person extends Auditable {
 
     private LocalDate efz;
 
-    @Column(length = 6)
-    private String kuerzel;
-
     /* aktiv = true
     „Diese Person soll standardmäßig bei der
     Auswahl von Teilnehmern sichtbar sein“

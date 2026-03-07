@@ -53,9 +53,6 @@ public class PersonSaveDTO implements HasMitgliedschaften {
 
     private LocalDate efz;
 
-    @Size(max = 6, message = "Kürzel darf maximal 6 Zeichen lang sein")
-    private String kuerzel;
-
     private Boolean aktiv;
 
     @Valid

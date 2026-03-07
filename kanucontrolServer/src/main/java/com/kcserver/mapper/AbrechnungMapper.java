@@ -55,11 +55,6 @@ public class AbrechnungMapper {
         dto.setDatum(b.getDatum());
         dto.setBeschreibung(b.getBeschreibung());
 
-        if (b.getPerson() != null) {
-            dto.setPersonId(b.getPerson().getId());
-            dto.setKuerzel(b.getPerson().getKuerzel());
-        }
-
         return dto;
     }
 }
