@@ -49,6 +49,22 @@ public class Verein extends Auditable {
 
     private LocalDate schutzkonzept;
 
+    // KiK-Zertifikat
+    @Column(name = "kik_zertifiziert_seit")
+    private LocalDate kikZertifiziertSeit;
+
+    @Column(name = "kik_zertifiziert_bis")
+    private LocalDate kikZertifiziertBis;
+
+    public boolean isKikZertifiziertAm(LocalDate datum) {
+        if (kikZertifiziertSeit == null) return false;
+
+        boolean startOk = !datum.isBefore(kikZertifiziertSeit);
+        boolean endOk = kikZertifiziertBis == null || !datum.isAfter(kikZertifiziertBis);
+
+        return startOk && endOk;
+    }
+
     /**
      * 🔗 NEU: Kontoinhaber als Person
      */

@@ -7,6 +7,7 @@ import com.kcserver.dto.foerder.FoerdersatzCreateUpdateDTO;
 import com.kcserver.dto.foerder.FoerdersatzDTO;
 import com.kcserver.entity.Abrechnung;
 import com.kcserver.enumtype.FinanzKategorie;
+import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.repository.AbrechnungRepository;
 import com.kcserver.service.FoerdersatzService;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,8 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -43,9 +43,17 @@ class FoerdersatzIntegrationTest extends AbstractFinanzIntegrationTest {
     Long veranstaltungId;
     Long teilnehmerId;
 
+    private static final LocalDate TEST_DATE = LocalDate.of(2026, 5, 1);
+
     @BeforeEach
     void setup() {
-        veranstaltungId = createTestVeranstaltung();
+
+        // Veranstaltung beginnt fix in 2026 → deterministisch
+        veranstaltungId = createTestVeranstaltung(
+                VeranstaltungTyp.JEM,
+                TEST_DATE
+        );
+
         createOpenAbrechnung(veranstaltungId);
 
         var veranstaltung = veranstaltungRepository
@@ -63,40 +71,71 @@ class FoerdersatzIntegrationTest extends AbstractFinanzIntegrationTest {
     void shouldCreateFoerdersatz() {
 
         FoerdersatzCreateUpdateDTO dto = new FoerdersatzCreateUpdateDTO();
+        dto.setTyp(VeranstaltungTyp.JEM);
         dto.setGueltigVon(LocalDate.of(2026, 1, 1));
         dto.setGueltigBis(null);
-        dto.setBetragProTeilnehmer(new BigDecimal("42.00"));
+        dto.setFoerdersatz(new BigDecimal("42.00"));
+        dto.setFoerderdeckel(new BigDecimal("50.00"));
         dto.setBeschluss("Beschluss 2026");
 
         FoerdersatzDTO created = foerdersatzService.create(dto);
 
         assertThat(created.getId()).isNotNull();
-        assertThat(created.getBetragProTeilnehmer())
-                .isEqualByComparingTo("42.00");
+        assertThat(created.getTyp()).isEqualTo(VeranstaltungTyp.JEM);
+        assertThat(created.getFoerdersatz()).isEqualByComparingTo("42.00");
+        assertThat(created.getFoerderdeckel()).isEqualByComparingTo("50.00");
     }
 
     /* =========================================================
-       OVERLAP PREVENTION
+       OVERLAP PREVENTION (typabhängig!)
        ========================================================= */
 
     @Test
-    void shouldPreventOverlappingFoerdersatz() {
+    void shouldPreventOverlappingFoerdersatzSameTyp() {
 
         FoerdersatzCreateUpdateDTO dto1 = new FoerdersatzCreateUpdateDTO();
+        dto1.setTyp(VeranstaltungTyp.FM);
         dto1.setGueltigVon(LocalDate.of(2026, 1, 1));
-        dto1.setGueltigBis(null);
-        dto1.setBetragProTeilnehmer(new BigDecimal("40.00"));
+        dto1.setFoerdersatz(new BigDecimal("40.00"));
+        dto1.setFoerderdeckel(new BigDecimal("50.00"));
 
         foerdersatzService.create(dto1);
 
         FoerdersatzCreateUpdateDTO dto2 = new FoerdersatzCreateUpdateDTO();
+        dto2.setTyp(VeranstaltungTyp.FM);
         dto2.setGueltigVon(LocalDate.of(2026, 6, 1));
-        dto2.setGueltigBis(null);
-        dto2.setBetragProTeilnehmer(new BigDecimal("50.00"));
+        dto2.setFoerdersatz(new BigDecimal("50.00"));
+        dto2.setFoerderdeckel(new BigDecimal("60.00"));
 
         assertThatThrownBy(() ->
                 foerdersatzService.create(dto2)
         ).isInstanceOf(ResponseStatusException.class);
+    }
+
+    /* =========================================================
+       OVERLAP ERLAUBT BEI ANDEREM TYP
+       ========================================================= */
+
+    @Test
+    void shouldAllowSamePeriodForDifferentTyp() {
+
+        FoerdersatzCreateUpdateDTO dto1 = new FoerdersatzCreateUpdateDTO();
+        dto1.setTyp(VeranstaltungTyp.FM);
+        dto1.setGueltigVon(LocalDate.of(2026, 1, 1));
+        dto1.setFoerdersatz(new BigDecimal("40.00"));
+        dto1.setFoerderdeckel(new BigDecimal("50.00"));
+
+        foerdersatzService.create(dto1);
+
+        FoerdersatzCreateUpdateDTO dto2 = new FoerdersatzCreateUpdateDTO();
+        dto2.setTyp(VeranstaltungTyp.BM);
+        dto2.setGueltigVon(LocalDate.of(2026, 1, 1));
+        dto2.setFoerdersatz(new BigDecimal("30.00"));
+        dto2.setFoerderdeckel(new BigDecimal("45.00"));
+
+        FoerdersatzDTO created = foerdersatzService.create(dto2);
+
+        assertThat(created.getTyp()).isEqualTo(VeranstaltungTyp.BM);
     }
 
     /* =========================================================
@@ -107,16 +146,21 @@ class FoerdersatzIntegrationTest extends AbstractFinanzIntegrationTest {
     void shouldFindValidFoerdersatzForDate() {
 
         FoerdersatzCreateUpdateDTO dto = new FoerdersatzCreateUpdateDTO();
+        dto.setTyp(VeranstaltungTyp.FM);
         dto.setGueltigVon(LocalDate.of(2026, 1, 1));
         dto.setGueltigBis(LocalDate.of(2026, 12, 31));
-        dto.setBetragProTeilnehmer(new BigDecimal("55.00"));
+        dto.setFoerdersatz(new BigDecimal("55.00"));
+        dto.setFoerderdeckel(new BigDecimal("60.00"));
 
         foerdersatzService.create(dto);
 
-        FoerdersatzDTO found =
-                foerdersatzService.findGueltigAm(LocalDate.of(2026, 5, 1));
+        var entity =
+                foerdersatzService.findEntityGueltigFuerTypAm(
+                        VeranstaltungTyp.FM,
+                        TEST_DATE
+                );
 
-        assertThat(found.getBetragProTeilnehmer())
+        assertThat(entity.getFoerdersatz())
                 .isEqualByComparingTo("55.00");
     }
 
@@ -127,19 +171,17 @@ class FoerdersatzIntegrationTest extends AbstractFinanzIntegrationTest {
     @Test
     void shouldStoreFoerdersatzSnapshotWhenClosing() {
 
-        // Fördersatz anlegen
         FoerdersatzCreateUpdateDTO dto = new FoerdersatzCreateUpdateDTO();
+        dto.setTyp(VeranstaltungTyp.JEM);
         dto.setGueltigVon(LocalDate.of(2026, 1, 1));
-        dto.setGueltigBis(null);
-        dto.setBetragProTeilnehmer(new BigDecimal("60.00"));
+        dto.setFoerdersatz(new BigDecimal("60.00"));
+        dto.setFoerderdeckel(new BigDecimal("80.00"));
 
         foerdersatzService.create(dto);
 
-        // Abrechnung ausgleichen
         addPosition(FinanzKategorie.UNTERKUNFT, "100.00");
         addPosition(FinanzKategorie.TEILNEHMERBEITRAG, "100.00");
 
-        // Abschließen
         abrechnungService.abschliessen(veranstaltungId);
 
         Abrechnung a = abrechnungRepository
@@ -158,7 +200,7 @@ class FoerdersatzIntegrationTest extends AbstractFinanzIntegrationTest {
 
         AbrechnungBelegCreateDTO belegDTO = new AbrechnungBelegCreateDTO();
         belegDTO.setBelegnummer("FS-TEST");
-        belegDTO.setDatum(LocalDate.now());
+        belegDTO.setDatum(TEST_DATE);
         belegDTO.setBeschreibung("Test");
 
         AbrechnungBelegDTO beleg =
@@ -171,7 +213,7 @@ class FoerdersatzIntegrationTest extends AbstractFinanzIntegrationTest {
         posDTO.setKuerzel("X1");
         posDTO.setKategorie(kat);
         posDTO.setBetrag(new BigDecimal(betrag));
-        posDTO.setDatum(LocalDate.now());
+        posDTO.setDatum(TEST_DATE);
 
         belegService.addPosition(
                 veranstaltungId,

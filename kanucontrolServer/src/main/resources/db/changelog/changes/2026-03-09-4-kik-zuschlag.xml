@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="2026-03-09-kik-zuschlag" author="chris">
+
+        <createTable tableName="kik_zuschlag">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="gueltig_von" type="date">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="gueltig_bis" type="date"/>
+
+            <column name="kik_zuschlag" type="numeric(10,2)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="beschluss" type="varchar(255)"/>
+        </createTable>
+
+        <!-- Optional: Überlappung verhindern -->
+        <sql>
+            CREATE EXTENSION IF NOT EXISTS btree_gist;
+        </sql>
+
+        <sql><![CDATA[
+    ALTER TABLE kik_zuschlag
+    ADD CONSTRAINT kik_zuschlag_no_overlap
+    EXCLUDE USING gist (
+        daterange(gueltig_von, gueltig_bis, '[]') WITH &&
+    );
+]]></sql>
+
+    </changeSet>
+
+</databaseChangeLog>

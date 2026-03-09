@@ -36,19 +36,20 @@ public class TenantSchemaProvisioner {
      * Reihenfolge ist WICHTIG wegen Foreign Keys
      */
     private static final List<String> TABLES_IN_ORDER = List.of(
-            "person",
-            "verein",
-            "veranstaltung",
-            "teilnehmer",
-            "erhebungsbogen",
-            "mitglied",
             "abrechnung",
+            "abrechnung_beleg",
             "abrechnung_buchung",
+            "erhebungsbogen",
+            "finanz_gruppe",
             "foerdersatz",
+            "kik_zuschlag",
+            "mitglied",
+            "person",
             "planung",
             "planung_position",
-            "finanz_gruppe",
-            "abrechnung_beleg"
+            "teilnehmer",
+            "veranstaltung",
+            "verein"
     );
 
     public TenantSchemaProvisioner(DataSource dataSource) {

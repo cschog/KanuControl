@@ -110,6 +110,16 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
         veranstaltung.setLeiter(leiter);
         veranstaltung.setAktiv(true);
 
+        if (dto.getBeginnDatum() != null &&
+                dto.getEndeDatum() != null &&
+                dto.getBeginnDatum().getYear() != dto.getEndeDatum().getYear()) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Veranstaltung darf nicht über den Jahreswechsel gehen"
+            );
+        }
+
         Veranstaltung saved = veranstaltungRepository.save(veranstaltung);
 
         // Leiter MUSS exakt 1 Teilnehmer sein (Domain Invariant)
@@ -342,6 +352,16 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
         }
         if (dto.getEndeZeit() != null) {
             veranstaltung.setEndeZeit(dto.getEndeZeit());
+        }
+
+        if (dto.getBeginnDatum() != null &&
+                dto.getEndeDatum() != null &&
+                dto.getBeginnDatum().getYear() != dto.getEndeDatum().getYear()) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Veranstaltung darf nicht über den Jahreswechsel gehen"
+            );
         }
 
         // -------- Leiter -------------------

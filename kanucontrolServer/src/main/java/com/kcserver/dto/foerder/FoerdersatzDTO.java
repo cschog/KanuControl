@@ -1,5 +1,6 @@
 package com.kcserver.dto.foerder;
 
+import com.kcserver.enumtype.VeranstaltungTyp;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,6 +14,8 @@ public class FoerdersatzDTO {
     private Long id;
     private LocalDate gueltigVon;
     private LocalDate gueltigBis;
-    private BigDecimal betragProTeilnehmer;
+    private VeranstaltungTyp typ;
+    private BigDecimal foerdersatz;
+    private BigDecimal foerderdeckel;
     private String beschluss;
 }

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="2026-03-09-foerdersatz-refactor" author="chris">
+
+        <!-- 1️⃣ typ-Spalte hinzufügen (nullable) -->
+        <addColumn tableName="foerdersatz">
+            <column name="typ" type="varchar(20)"/>
+        </addColumn>
+
+        <!-- 2️⃣ Bestehende Datensätze migrieren -->
+        <update tableName="foerdersatz">
+            <column name="typ" value="FM"/>
+        </update>
+
+        <!-- 3️⃣ NOT NULL setzen -->
+        <addNotNullConstraint
+                tableName="foerdersatz"
+                columnName="typ"
+                columnDataType="varchar(20)"/>
+
+        <!-- 4️⃣ alten Betrag umbenennen -->
+        <renameColumn
+                tableName="foerdersatz"
+                oldColumnName="betrag_pro_teilnehmer"
+                newColumnName="foerdersatz"
+                columnDataType="numeric(10,2)"/>
+
+        <!-- 5️⃣ foerderdeckel hinzufügen -->
+        <addColumn tableName="foerdersatz">
+            <column name="foerderdeckel"
+                    type="numeric(10,2)"
+                    defaultValueNumeric="15.00"/>
+        </addColumn>
+
+        <addNotNullConstraint
+                tableName="foerdersatz"
+                columnName="foerderdeckel"
+                columnDataType="numeric(10,2)"/>
+
+        <!-- 6️⃣ Alten EXCLUDE-Constraint sicher entfernen -->
+        <!-- 6️⃣ Alten EXCLUDE-Constraint sicher entfernen -->
+        <sql>
+            ALTER TABLE foerdersatz
+            DROP CONSTRAINT IF EXISTS foerdersatz_no_overlap;
+        </sql>
+
+        <!-- 7️⃣ Extension sicherstellen -->
+        <sql><![CDATA[
+            CREATE EXTENSION IF NOT EXISTS btree_gist;
+        ]]></sql>
+
+        <!-- 8️⃣ Typabhängigen EXCLUDE-Constraint anlegen -->
+        <sql><![CDATA[
+            ALTER TABLE foerdersatz
+            ADD CONSTRAINT foerdersatz_typ_no_overlap
+            EXCLUDE USING gist (
+                typ WITH =,
+                daterange(gueltig_von, gueltig_bis, '[]') WITH &&
+            );
+        ]]></sql>
+
+        <!-- 9️⃣ Unique Constraint -->
+        <addUniqueConstraint
+                tableName="foerdersatz"
+                columnNames="typ, gueltig_von"
+                constraintName="uk_foerdersatz_typ_gueltigkeit"/>
+
+    </changeSet>
+
+</databaseChangeLog>

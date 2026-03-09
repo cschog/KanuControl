@@ -39,3 +39,9 @@ databaseChangeLog:
       file: db/changelog/changes/2026-03-09-01-add-verwendeter-foerdersatz.xml
   - include:
       file: db/changelog/changes/2026-03-09-02-make-gueltig-bis-nullable.xml
+  - include:
+      file: db/changelog/changes/2026-03-09-3-foerdersatz-refactor.xml
+  - include:
+      file: db/changelog/changes/2026-03-09-4-kik-zuschlag.xml
+  - include:
+      file: db/changelog/changes/2026-03-09-5-verein-kik-zertifikat.xml
