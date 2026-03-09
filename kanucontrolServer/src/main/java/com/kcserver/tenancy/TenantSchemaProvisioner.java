@@ -46,7 +46,9 @@ public class TenantSchemaProvisioner {
             "abrechnung_buchung",
             "foerdersatz",
             "planung",
-            "planung_position"
+            "planung_position",
+            "finanz_gruppe",
+            "abrechnung_beleg"
     );
 
     public TenantSchemaProvisioner(DataSource dataSource) {

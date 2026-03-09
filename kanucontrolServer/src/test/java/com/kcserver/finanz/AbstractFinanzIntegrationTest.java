@@ -25,7 +25,7 @@ public abstract class AbstractFinanzIntegrationTest
     @Autowired protected PlanungPositionService planungPositionService;
 
     @Autowired protected AbrechnungService abrechnungService;
-    @Autowired protected AbrechnungBuchungService buchungService;
+    @Autowired protected AbrechnungBelegService abrechnungBelegService;
 
     protected Long createTestVeranstaltung() {
 

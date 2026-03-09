@@ -1,6 +1,8 @@
 package com.kcserver.finanz;
 
 import com.kcserver.entity.Abrechnung;
+import com.kcserver.entity.AbrechnungBeleg;
+import com.kcserver.entity.AbrechnungBuchung;
 import com.kcserver.entity.Veranstaltung;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,7 +26,6 @@ class AbrechnungTeilnehmerBerechnungTest
     void setup() {
 
         veranstaltungId = createTestVeranstaltung();
-
         createOpenAbrechnung(veranstaltungId);
     }
 
@@ -48,9 +49,21 @@ class AbrechnungTeilnehmerBerechnungTest
                 .findByVeranstaltungId(veranstaltungId)
                 .orElseThrow();
 
-        assertThat(a.getBuchungen()).hasSize(1);
+        // 🔹 Es sollte genau ein Auto-Beleg existieren
+        assertThat(a.getBelege()).hasSize(1);
 
-        assertThat(a.getBuchungen().get(0).getBetrag())
+        AbrechnungBeleg beleg = a.getBelege().get(0);
+
+        // 🔹 Zwei Teilnehmer → zwei Positionen
+        assertThat(beleg.getPositionen()).hasSize(2);
+
+        // 🔹 Summe der Positionen = 100 €
+        BigDecimal summe = beleg.getPositionen()
+                .stream()
+                .map(AbrechnungBuchung::getBetrag)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        assertThat(summe)
                 .isEqualByComparingTo("100.00");
     }
 }

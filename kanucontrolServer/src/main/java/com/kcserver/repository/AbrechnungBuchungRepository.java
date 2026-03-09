@@ -8,5 +8,7 @@ import java.util.List;
 public interface AbrechnungBuchungRepository
         extends JpaRepository<AbrechnungBuchung, Long> {
 
-    List<AbrechnungBuchung> findByAbrechnungId(Long abrechnungId);
+    boolean existsByFinanzGruppeId(Long finanzGruppeId);
+
+    List<AbrechnungBuchung> findByBeleg_Abrechnung_Id(Long abrechnungId);
 }

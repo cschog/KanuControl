@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="2026-04-abrechnung-finanzgruppe" author="chris">
+
+        <addColumn tableName="abrechnung_buchung">
+            <column name="finanz_gruppe_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <addForeignKeyConstraint
+                baseTableName="abrechnung_buchung"
+                baseColumnNames="finanz_gruppe_id"
+                referencedTableName="finanz_gruppe"
+                referencedColumnNames="id"
+                constraintName="fk_buchung_finanzgruppe"/>
+
+        <createIndex
+                tableName="abrechnung_buchung"
+                indexName="idx_buchung_finanzgruppe">
+            <column name="finanz_gruppe_id"/>
+        </createIndex>
+
+    </changeSet>
+
+</databaseChangeLog>

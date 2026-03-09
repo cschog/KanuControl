@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="2026-03-08-add-teilnehmer-to-buchung" author="chris">
+
+        <!-- 1. Spalte hinzufügen -->
+        <addColumn tableName="abrechnung_buchung">
+            <column name="teilnehmer_id" type="bigint"/>
+        </addColumn>
+
+        <!-- 2. FK hinzufügen -->
+        <addForeignKeyConstraint
+                baseTableName="abrechnung_buchung"
+                baseColumnNames="teilnehmer_id"
+                referencedTableName="teilnehmer"
+                referencedColumnNames="id"
+                constraintName="fk_buchung_teilnehmer"/>
+
+        <!-- 3. person_id entfernen -->
+        <dropForeignKeyConstraint
+                baseTableName="abrechnung_buchung"
+                constraintName="fk_abrechnung_buchung_person"/>
+
+        <dropColumn tableName="abrechnung_buchung"
+                    columnName="person_id"/>
+
+        <!-- 4. NOT NULL setzen -->
+        <addNotNullConstraint
+                tableName="abrechnung_buchung"
+                columnName="teilnehmer_id"
+                columnDataType="bigint"/>
+
+    </changeSet>
+
+</databaseChangeLog>

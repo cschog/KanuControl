@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+           http://www.liquibase.org/xml/ns/dbchangelog
+           http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <!-- ===================================================== -->
+    <!-- 01: FK entfernen (nur wenn vorhanden)                 -->
+    <!-- ===================================================== -->
+
+    <changeSet id="2026-03-08-01-drop-fk-abrechnung-buchung"
+               author="chris">
+
+        <preConditions onFail="MARK_RAN" onError="MARK_RAN">
+            <foreignKeyConstraintExists
+                    foreignKeyName="fk_abrechnung_buchung_abrechnung"
+                    foreignKeyTableName="abrechnung_buchung"/>
+        </preConditions>
+
+        <dropForeignKeyConstraint
+                baseTableName="abrechnung_buchung"
+                constraintName="fk_abrechnung_buchung_abrechnung"/>
+    </changeSet>
+
+
+    <!-- ===================================================== -->
+    <!-- 02: Spalte abrechnung_id entfernen (nur wenn vorhanden) -->
+    <!-- ===================================================== -->
+
+    <changeSet id="2026-03-08-02-drop-column-abrechnung-id"
+               author="chris">
+
+        <preConditions onFail="MARK_RAN" onError="MARK_RAN">
+            <columnExists
+                    tableName="abrechnung_buchung"
+                    columnName="abrechnung_id"/>
+        </preConditions>
+
+        <dropColumn
+                tableName="abrechnung_buchung"
+                columnName="abrechnung_id"/>
+    </changeSet>
+
+</databaseChangeLog>

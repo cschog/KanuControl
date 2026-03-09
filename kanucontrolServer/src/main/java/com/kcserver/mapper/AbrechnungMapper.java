@@ -1,11 +1,10 @@
 package com.kcserver.mapper;
 
-import com.kcserver.dto.abrechnung.AbrechnungBuchungDTO;
-import com.kcserver.dto.abrechnung.AbrechnungDetailDTO;
-import com.kcserver.entity.Abrechnung;
-import com.kcserver.entity.AbrechnungBuchung;
+import com.kcserver.dto.abrechnung.*;
+import com.kcserver.entity.*;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
@@ -15,22 +14,26 @@ public class AbrechnungMapper {
        ABRECHNUNG → DTO
        ========================================================= */
 
-    public AbrechnungDetailDTO toDTO(Abrechnung a) {
+    public AbrechnungDetailDTO toDTO(Abrechnung abrechnung) {
 
-        if (a == null) return null;
+        if (abrechnung == null) return null;
 
         AbrechnungDetailDTO dto = new AbrechnungDetailDTO();
 
         dto.setVeranstaltungId(
-                a.getVeranstaltung() != null
-                        ? a.getVeranstaltung().getId()
+                abrechnung.getVeranstaltung() != null
+                        ? abrechnung.getVeranstaltung().getId()
                         : null
         );
 
-        dto.setStatus(a.getStatus());
+        dto.setStatus(abrechnung.getStatus());
 
-        dto.setBuchungen(
-                a.getBuchungen()
+        dto.setVerwendeterFoerdersatz(
+                abrechnung.getVerwendeterFoerdersatz()
+        );
+
+        dto.setBelege(
+                safeList(abrechnung.getBelege())
                         .stream()
                         .map(this::toDTO)
                         .collect(Collectors.toList())
@@ -40,21 +43,64 @@ public class AbrechnungMapper {
     }
 
     /* =========================================================
-       BUCHUNG → DTO
+       BELEG → DTO
        ========================================================= */
 
-    public AbrechnungBuchungDTO toDTO(AbrechnungBuchung b) {
+    public AbrechnungBelegDTO toDTO(AbrechnungBeleg beleg) {
 
-        if (b == null) return null;
+        if (beleg == null) return null;
+
+        AbrechnungBelegDTO dto = new AbrechnungBelegDTO();
+
+        dto.setId(beleg.getId());
+        dto.setBelegnummer(beleg.getBelegnummer());
+        dto.setDatum(beleg.getDatum());
+        dto.setBeschreibung(beleg.getBeschreibung());
+
+        dto.setPositionen(
+                safeList(beleg.getPositionen())
+                        .stream()
+                        .map(this::toDTO)
+                        .collect(Collectors.toList())
+        );
+
+        return dto;
+    }
+
+    /* =========================================================
+       POSITION → DTO
+       ========================================================= */
+
+    public AbrechnungBuchungDTO toDTO(AbrechnungBuchung pos) {
+
+        if (pos == null) return null;
 
         AbrechnungBuchungDTO dto = new AbrechnungBuchungDTO();
 
-        dto.setId(b.getId());
-        dto.setKategorie(b.getKategorie());
-        dto.setBetrag(b.getBetrag());
-        dto.setDatum(b.getDatum());
-        dto.setBeschreibung(b.getBeschreibung());
+        dto.setId(pos.getId());
+
+        dto.setKategorie(pos.getKategorie());
+        dto.setBetrag(pos.getBetrag());
+        dto.setDatum(pos.getDatum());
+        dto.setBeschreibung(pos.getBeschreibung());
+
+
+        if (pos.getTeilnehmer() != null) {
+            dto.setTeilnehmerId(pos.getTeilnehmer().getId());
+        }
+
+        if (pos.getFinanzGruppe() != null) {
+            dto.setKuerzel(pos.getFinanzGruppe().getKuerzel());
+        }
 
         return dto;
+    }
+
+    /* =========================================================
+       HELPER
+       ========================================================= */
+
+    private <T> List<T> safeList(List<T> list) {
+        return list != null ? list : List.of();
     }
 }

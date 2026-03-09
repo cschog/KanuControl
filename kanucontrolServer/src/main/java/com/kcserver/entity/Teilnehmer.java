@@ -41,6 +41,10 @@ public class Teilnehmer extends Auditable {
     @JoinColumn(name = "person_id", nullable = false)
     private Person person;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "finanz_gruppe_id")
+    private FinanzGruppe finanzGruppe;
+
     /* =========================
        Rolle in der Veranstaltung
        ========================= */

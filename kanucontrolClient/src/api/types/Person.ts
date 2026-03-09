@@ -41,7 +41,6 @@ export interface PersonDetail {
   bic?: string;
 
   efz?: string;
-  kuerzel?: string;
 
   mitgliedschaften: MitgliedDetail[];
 }
@@ -69,7 +68,6 @@ export interface PersonSave {
   iban?: string;
   bic?: string;
   efz?: string; // ISO Date
-  kuerzel?: string;
 
   aktiv?: boolean;
 

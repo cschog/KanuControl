@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="2026-03-08-buchung-add-beleg" author="chris">
+
+        <addColumn tableName="abrechnung_buchung">
+            <column name="beleg_id" type="bigint"/>
+        </addColumn>
+
+        <addForeignKeyConstraint
+                baseTableName="abrechnung_buchung"
+                baseColumnNames="beleg_id"
+                referencedTableName="abrechnung_beleg"
+                referencedColumnNames="id"
+                constraintName="fk_buchung_beleg"/>
+
+        <addNotNullConstraint
+                tableName="abrechnung_buchung"
+                columnName="beleg_id"
+                columnDataType="bigint"/>
+
+    </changeSet>
+
+</databaseChangeLog>

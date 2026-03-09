@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="2026-03-08-create-beleg" author="chris">
+
+        <createTable tableName="abrechnung_beleg">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+
+            <column name="abrechnung_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="beleg_nummer" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="rechnungsnummer" type="varchar(100)"/>
+
+            <column name="datum" type="date">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="beschreibung" type="varchar(500)"/>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="abrechnung_beleg"
+                baseColumnNames="abrechnung_id"
+                referencedTableName="abrechnung"
+                referencedColumnNames="id"
+                constraintName="fk_beleg_abrechnung"/>
+
+    </changeSet>
+
+</databaseChangeLog>
