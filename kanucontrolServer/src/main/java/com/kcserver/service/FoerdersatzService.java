@@ -3,6 +3,7 @@ package com.kcserver.service;
 import com.kcserver.dto.foerder.FoerdersatzCreateUpdateDTO;
 import com.kcserver.dto.foerder.FoerdersatzDTO;
 import com.kcserver.entity.Foerdersatz;
+import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.repository.FoerdersatzRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -26,6 +27,7 @@ public class FoerdersatzService {
 
         validateNoOverlap(
                 null,
+                dto.getTyp(),
                 dto.getGueltigVon(),
                 dto.getGueltigBis()
         );
@@ -49,6 +51,7 @@ public class FoerdersatzService {
 
         validateNoOverlap(
                 id,
+                dto.getTyp(),
                 dto.getGueltigVon(),
                 dto.getGueltigBis()
         );
@@ -60,28 +63,9 @@ public class FoerdersatzService {
 
     /* ========================================================= */
 
-    public void delete(Long id) {
-        repository.deleteById(id);
-    }
-
-    /* ========================================================= */
-
-    @Transactional(readOnly = true)
-    public FoerdersatzDTO findGueltigAm(LocalDate datum) {
-
-        return repository.findGueltigAm(datum)
-                .map(this::toDTO)
-                .orElseThrow(() ->
-                        new ResponseStatusException(
-                                HttpStatus.NOT_FOUND,
-                                "Kein gültiger Fördersatz gefunden"
-                        ));
-    }
-
-    /* ========================================================= */
-
     private void validateNoOverlap(
             Long ignoreId,
+            VeranstaltungTyp typ,
             LocalDate von,
             LocalDate bis
     ) {
@@ -94,6 +78,7 @@ public class FoerdersatzService {
         }
 
         boolean exists = repository.existsOverlapping(
+                typ,
                 von,
                 bis,
                 ignoreId
@@ -110,33 +95,58 @@ public class FoerdersatzService {
     /* ========================================================= */
 
     private void apply(FoerdersatzCreateUpdateDTO dto, Foerdersatz entity) {
+
+        entity.setTyp(dto.getTyp());
         entity.setGueltigVon(dto.getGueltigVon());
         entity.setGueltigBis(dto.getGueltigBis());
-        entity.setBetragProTeilnehmer(dto.getBetragProTeilnehmer());
+        entity.setFoerdersatz(dto.getFoerdersatz());
+        entity.setFoerderdeckel(dto.getFoerderdeckel());
         entity.setBeschluss(dto.getBeschluss());
     }
 
-    private FoerdersatzDTO toDTO(Foerdersatz entity) {
+    /* ========================================================= */
+
+    public FoerdersatzDTO toDTO(Foerdersatz entity) {
 
         FoerdersatzDTO dto = new FoerdersatzDTO();
+
         dto.setId(entity.getId());
+        dto.setTyp(entity.getTyp());
         dto.setGueltigVon(entity.getGueltigVon());
         dto.setGueltigBis(entity.getGueltigBis());
-        dto.setBetragProTeilnehmer(entity.getBetragProTeilnehmer());
+        dto.setFoerdersatz(entity.getFoerdersatz());
+        dto.setFoerderdeckel(entity.getFoerderdeckel());
         dto.setBeschluss(entity.getBeschluss());
 
         return dto;
     }
+
+    /* ========================================================= */
+
+    @Transactional(readOnly = true)
+    public Foerdersatz findEntityGueltigFuerTypAm(
+            VeranstaltungTyp typ,
+            LocalDate datum
+    ) {
+        return repository.findGueltigFuerTypAm(typ, datum)
+                .orElseThrow(() ->
+                        new ResponseStatusException(
+                                HttpStatus.NOT_FOUND,
+                                "Kein gültiger Fördersatz für Typ gefunden"
+                        ));
+    }
+
     @Transactional(readOnly = true)
     public FoerdersatzDTO getById(Long id) {
 
-        return repository.findById(id)
-                .map(this::toDTO)
+        Foerdersatz entity = repository.findById(id)
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
                                 "Fördersatz nicht gefunden"
                         ));
+
+        return toDTO(entity);
     }
     @Transactional(readOnly = true)
     public List<FoerdersatzDTO> getAll() {
@@ -145,5 +155,17 @@ public class FoerdersatzService {
                 .stream()
                 .map(this::toDTO)
                 .toList();
+    }
+
+    public void delete(Long id) {
+
+        if (!repository.existsById(id)) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Fördersatz nicht gefunden"
+            );
+        }
+
+        repository.deleteById(id);
     }
 }

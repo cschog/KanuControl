@@ -1,11 +1,13 @@
 package com.kcserver.finanz;
 
+import com.kcserver.dto.veranstaltung.VeranstaltungCreateDTO;
 import com.kcserver.entity.*;
 import com.kcserver.enumtype.AbrechnungsStatus;
 import com.kcserver.enumtype.Sex;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.integration.support.AbstractTenantIntegrationTest;
 import com.kcserver.repository.*;
+import com.kcserver.service.VeranstaltungService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
@@ -24,14 +26,21 @@ public abstract class AbstractFinanzIntegrationTest
     @Autowired protected PlanungService planungService;
     @Autowired protected PlanungPositionService planungPositionService;
 
+    @Autowired
+    VeranstaltungService veranstaltungService;
+
     @Autowired protected AbrechnungService abrechnungService;
     @Autowired protected AbrechnungBelegService abrechnungBelegService;
 
+    private static int counter = 1;
+
     protected Long createTestVeranstaltung() {
 
+        String suffix = String.valueOf(counter++); // 1,2,3,...
+
         Verein verein = new Verein();
-        verein.setName("Testverein");
-        verein.setAbk("TV");
+        verein.setName("Testverein_" + suffix);
+        verein.setAbk("TV" + suffix); // <= 10 Zeichen!
         verein = vereinRepository.save(verein);
 
         Person leiter = new Person();
@@ -53,6 +62,39 @@ public abstract class AbstractFinanzIntegrationTest
         v.setAktiv(true);
 
         return veranstaltungRepository.save(v).getId();
+    }
+
+    protected Long createTestVeranstaltung(
+            VeranstaltungTyp typ,
+            LocalDate start
+    ) {
+
+        String suffix = String.valueOf(counter++);  // 1,2,3,...
+
+        Verein verein = new Verein();
+        verein.setName("TV" + suffix);          // kurz & gültig
+        verein.setAbk("TV" + suffix);           // max 10 Zeichen garantiert
+        verein = vereinRepository.save(verein);
+
+        Person leiter = new Person();
+        leiter.setVorname("Max" + suffix);           // 🔥 eindeutig
+        leiter.setName("Mustermann" + suffix);
+        leiter.setSex(Sex.WEIBLICH);
+        leiter.setGeburtsdatum(LocalDate.now().minusYears(30)); // wichtig!
+        leiter.setAktiv(true);
+        leiter = personRepository.save(leiter);
+
+        VeranstaltungCreateDTO dto = new VeranstaltungCreateDTO();
+        dto.setName("Finanztest");
+        dto.setTyp(typ);
+        dto.setBeginnDatum(start);
+        dto.setEndeDatum(start.plusDays(1));
+        dto.setBeginnZeit(LocalTime.NOON);
+        dto.setEndeZeit(LocalTime.MIDNIGHT);
+        dto.setVereinId(verein.getId());
+        dto.setLeiterId(leiter.getId());
+
+        return veranstaltungService.create(dto).getId();
     }
 
     protected Abrechnung createOpenAbrechnung(Long veranstaltungId) {

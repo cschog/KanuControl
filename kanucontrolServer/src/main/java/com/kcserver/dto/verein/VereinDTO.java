@@ -33,6 +33,9 @@ public class VereinDTO {
     private String bic;
     private LocalDate schutzkonzept;
 
+    private LocalDate kikZertifiziertSeit;
+    private LocalDate kikZertifiziertBis;
+
     /** WRITE */
     private Long kontoinhaberId;
 

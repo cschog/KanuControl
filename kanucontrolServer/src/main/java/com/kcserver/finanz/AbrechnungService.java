@@ -6,6 +6,7 @@ import com.kcserver.dto.foerder.FoerdersatzDTO;
 import com.kcserver.entity.*;
 import com.kcserver.enumtype.AbrechnungsStatus;
 import com.kcserver.enumtype.FinanzKategorie;
+import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.mapper.AbrechnungMapper;
 import com.kcserver.repository.AbrechnungRepository;
 import com.kcserver.repository.FinanzGruppeRepository;
@@ -133,9 +134,9 @@ public class AbrechnungService {
             );
         }
 
-        /* ================================
-           SALDO PRÜFEN
-           ================================ */
+    /* ================================
+       SALDO PRÜFEN
+       ================================ */
 
         BigDecimal saldo = abrechnung.getBelege()
                 .stream()
@@ -157,17 +158,24 @@ public class AbrechnungService {
             );
         }
 
-        /* ================================
-           FÖRDERSATZ SNAPSHOT
-           ================================ */
+    /* ================================
+       FÖRDERSATZ SNAPSHOT
+       ================================ */
 
+        Veranstaltung veranstaltung = abrechnung.getVeranstaltung();
         LocalDate veranstaltungsDatum =
                 abrechnung.getVeranstaltung().getBeginnDatum();
 
-        FoerdersatzDTO fs = null;
+        VeranstaltungTyp typ =
+                abrechnung.getVeranstaltung().getTyp();
+
+        Foerdersatz fs = null;
 
         try {
-            fs = foerdersatzService.findGueltigAm(veranstaltungsDatum);
+            fs = foerdersatzService.findEntityGueltigFuerTypAm(
+                    typ,
+                    veranstaltungsDatum
+            );
         } catch (ResponseStatusException ex) {
             if (ex.getStatusCode() != HttpStatus.NOT_FOUND) {
                 throw ex;
@@ -176,13 +184,13 @@ public class AbrechnungService {
 
         if (fs != null) {
             abrechnung.setVerwendeterFoerdersatzIfOpen(
-                    fs.getBetragProTeilnehmer()
+                    fs.getFoerdersatz()
             );
         }
 
-        /* ================================
-           STATUS ÄNDERN
-           ================================ */
+    /* ================================
+       STATUS ÄNDERN
+       ================================ */
 
         abrechnung.setStatus(AbrechnungsStatus.ABGESCHLOSSEN);
     }

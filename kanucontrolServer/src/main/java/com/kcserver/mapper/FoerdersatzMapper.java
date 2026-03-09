@@ -8,26 +8,41 @@ import org.springframework.stereotype.Component;
 @Component
 public class FoerdersatzMapper {
 
+    /* =========================================================
+       ENTITY → DTO
+       ========================================================= */
+
     public FoerdersatzDTO toDTO(Foerdersatz entity) {
+
+        if (entity == null) return null;
 
         FoerdersatzDTO dto = new FoerdersatzDTO();
 
         dto.setId(entity.getId());
+        dto.setTyp(entity.getTyp());
         dto.setGueltigVon(entity.getGueltigVon());
         dto.setGueltigBis(entity.getGueltigBis());
-        dto.setBetragProTeilnehmer(entity.getBetragProTeilnehmer());
+        dto.setFoerdersatz(entity.getFoerdersatz());
+        dto.setFoerderdeckel(entity.getFoerderdeckel());
         dto.setBeschluss(entity.getBeschluss());
 
         return dto;
     }
 
-    public void updateEntity(
+    /* =========================================================
+       CREATE/UPDATE DTO → ENTITY
+       ========================================================= */
+
+    public void applyToEntity(
             FoerdersatzCreateUpdateDTO dto,
             Foerdersatz entity
     ) {
+
+        entity.setTyp(dto.getTyp());
         entity.setGueltigVon(dto.getGueltigVon());
         entity.setGueltigBis(dto.getGueltigBis());
-        entity.setBetragProTeilnehmer(dto.getBetragProTeilnehmer());
+        entity.setFoerdersatz(dto.getFoerdersatz());
+        entity.setFoerderdeckel(dto.getFoerderdeckel());
         entity.setBeschluss(dto.getBeschluss());
     }
 }
