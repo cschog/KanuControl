@@ -7,7 +7,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-
 import java.time.LocalDate;
 
 @Entity
@@ -20,17 +19,17 @@ public class AbrechnungBuchung implements FinanzPosition {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /* ================= Beziehung ================= */
-
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "abrechnung_id", nullable = false)
-    private Abrechnung abrechnung;
+    @JoinColumn(name = "beleg_id", nullable = false)
+    private AbrechnungBeleg beleg;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "person_id")
-    private Person person; // optional, aber wenn gesetzt → Kürzel muss existieren
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "teilnehmer_id", nullable = false)
+    private Teilnehmer teilnehmer;
 
-    /* ================= Fachliche Daten ================= */
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "finanz_gruppe_id", nullable = false)
+    private FinanzGruppe finanzGruppe;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -45,8 +44,6 @@ public class AbrechnungBuchung implements FinanzPosition {
     @Column(length = 500)
     private String beschreibung;
 
-    /* ================= Interface ================= */
-
     @Override
     public FinanzKategorie getKategorie() {
         return kategorie;
@@ -54,6 +51,6 @@ public class AbrechnungBuchung implements FinanzPosition {
 
     @Override
     public BigDecimal getBetrag() {
-        return betrag != null ? betrag : BigDecimal.ZERO;
+        return betrag;
     }
 }

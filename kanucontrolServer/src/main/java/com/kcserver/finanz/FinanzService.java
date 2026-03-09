@@ -162,4 +162,22 @@ public class FinanzService {
         return summe.setScale(2, RoundingMode.HALF_UP);
     }
 
+    public BigDecimal berechneGebuehrFuerTeilnehmer(
+            Veranstaltung veranstaltung,
+            Teilnehmer teilnehmer) {
+
+        if (!veranstaltung.isIndividuelleGebuehren()) {
+            return safe(veranstaltung.getStandardGebuehr());
+        }
+
+        if (teilnehmer.getIndividuellerBeitrag() == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Individueller Beitrag fehlt für Teilnehmer ID=" + teilnehmer.getId()
+            );
+        }
+
+        return teilnehmer.getIndividuellerBeitrag();
+    }
+
 }

@@ -48,7 +48,7 @@ public class Person extends Auditable {
 
     @NotNull(groups = OnCreate.class)
     @Convert(converter = SexConverter.class)
-    @Column(length = 1)
+    @Column(nullable = false, length = 1)
     private Sex sex;   // ✅ Enum M/W/D → CHAR(1)
 
     @Email

@@ -21,7 +21,7 @@ function mapDetailToSave(detail: PersonDetail): PersonSave {
     bic: detail.bic, // ⭐ FEHLTE → jetzt im Payload
 
     efz: detail.efz, // (falls du nutzt)
-    kuerzel: detail.kuerzel, // (falls du nutzt)
+   
 
     aktiv: detail.aktiv,
 

@@ -1,6 +1,8 @@
 package com.kcserver.dto.abrechnung;
 
 import com.kcserver.enumtype.FinanzKategorie;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -9,10 +11,20 @@ import java.time.LocalDate;
 @Data
 public class AbrechnungBuchungCreateDTO {
 
-    private FinanzKategorie kategorie;
-    private BigDecimal betrag;
-    private LocalDate datum;
-    private String beschreibung;
+    @NotNull
+    private Long teilnehmerId;
 
-    private Long personId; // optional
+    @NotBlank
+    private String kuerzel;
+
+    @NotNull
+    private FinanzKategorie kategorie;
+
+    @NotNull
+    private BigDecimal betrag;
+
+    @NotNull
+    private LocalDate datum;
+
+    private String beschreibung;
 }

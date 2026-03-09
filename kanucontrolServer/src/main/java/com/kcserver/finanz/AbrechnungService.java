@@ -2,16 +2,16 @@ package com.kcserver.finanz;
 
 import com.kcserver.dto.abrechnung.AbrechnungDetailDTO;
 import com.kcserver.dto.finanz.FinanzSummaryDTO;
-import com.kcserver.entity.Abrechnung;
-import com.kcserver.entity.AbrechnungBuchung;
-import com.kcserver.entity.Teilnehmer;
-import com.kcserver.entity.Veranstaltung;
+import com.kcserver.dto.foerder.FoerdersatzDTO;
+import com.kcserver.entity.*;
 import com.kcserver.enumtype.AbrechnungsStatus;
 import com.kcserver.enumtype.FinanzKategorie;
 import com.kcserver.mapper.AbrechnungMapper;
 import com.kcserver.repository.AbrechnungRepository;
+import com.kcserver.repository.FinanzGruppeRepository;
 import com.kcserver.repository.TeilnehmerRepository;
 import com.kcserver.repository.VeranstaltungRepository;
+import com.kcserver.service.FoerdersatzService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -22,6 +22,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+import static org.springframework.http.HttpStatus.CONFLICT;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -30,8 +33,10 @@ public class AbrechnungService {
     private final AbrechnungRepository abrechnungRepository;
     private final VeranstaltungRepository veranstaltungRepository;
     private final TeilnehmerRepository teilnehmerRepository;
+    private final FinanzGruppeRepository finanzGruppeRepository;
     private final AbrechnungMapper mapper;
     private final FinanzService finanzService;
+    private final FoerdersatzService foerdersatzService;   // ✅ neu
 
     /* =========================================================
        GET OR CREATE
@@ -47,7 +52,7 @@ public class AbrechnungService {
 
         FinanzSummaryDTO summary =
                 finanzService.buildSummary(
-                        a.getBuchungen(),
+                        getAllPositionen(a),
                         teilnehmerRepository.countByVeranstaltungId(veranstaltungId)
                 );
 
@@ -63,7 +68,6 @@ public class AbrechnungService {
     public void berechneTeilnehmerEinnahmen(Long veranstaltungId) {
 
         Abrechnung abrechnung = getEntity(veranstaltungId);
-
         checkEditable(abrechnung);
 
         Veranstaltung veranstaltung = abrechnung.getVeranstaltung();
@@ -71,18 +75,47 @@ public class AbrechnungService {
         List<Teilnehmer> teilnehmer =
                 teilnehmerRepository.findByVeranstaltungWithPerson(veranstaltungId);
 
-        BigDecimal summe =
-                finanzService.berechneTeilnehmerSumme(veranstaltung, teilnehmer);
+        // Alte automatische Belege entfernen
+        abrechnung.getBelege().removeIf(beleg ->
+                "__AUTO_TEILNEHMER__".equals(beleg.getBelegnummer())
+        );
 
-        removeAutomatischeTeilnehmerBuchung(abrechnung);
+        AbrechnungBeleg beleg = new AbrechnungBeleg();
+        beleg.setAbrechnung(abrechnung);
+        beleg.setBelegnummer("__AUTO_TEILNEHMER__");
+        beleg.setDatum(LocalDate.now());
+        beleg.setBeschreibung("Automatisch berechnete Teilnehmerbeiträge");
 
-        AbrechnungBuchung buchung = new AbrechnungBuchung();
-        buchung.setKategorie(FinanzKategorie.TEILNEHMERBEITRAG);
-        buchung.setBetrag(summe);
-        buchung.setDatum(LocalDate.now());
-        buchung.setBeschreibung("Automatisch berechnete Teilnehmerbeiträge");
+        for (Teilnehmer t : teilnehmer) {
 
-        abrechnung.addBuchung(buchung);
+            BigDecimal betrag =
+                    finanzService.berechneGebuehrFuerTeilnehmer(veranstaltung, t);
+
+            if (betrag == null || betrag.compareTo(BigDecimal.ZERO) == 0) {
+                continue;
+            }
+
+            FinanzGruppe gruppe = t.getFinanzGruppe();
+
+            if (gruppe == null) {
+                gruppe = getOrCreateSystemGroup(veranstaltung);
+                t.setFinanzGruppe(gruppe);
+            }
+
+            AbrechnungBuchung pos = new AbrechnungBuchung();
+            pos.setBeleg(beleg);
+            pos.setTeilnehmer(t);
+            pos.setFinanzGruppe(gruppe);
+            pos.setKategorie(FinanzKategorie.TEILNEHMERBEITRAG);
+            pos.setDatum(LocalDate.now());
+            pos.setBetrag(betrag);
+
+            beleg.getPositionen().add(pos);
+        }
+
+        if (!beleg.getPositionen().isEmpty()) {
+            abrechnung.getBelege().add(beleg);
+        }
     }
 
     /* =========================================================
@@ -93,9 +126,63 @@ public class AbrechnungService {
 
         Abrechnung abrechnung = getEntity(veranstaltungId);
 
-        checkEditable(abrechnung);
+        if (abrechnung.getStatus() == AbrechnungsStatus.ABGESCHLOSSEN) {
+            throw new ResponseStatusException(
+                    CONFLICT,
+                    "Abrechnung ist bereits abgeschlossen"
+            );
+        }
 
-        finanzService.validateAusgeglichen(abrechnung.getBuchungen());
+        /* ================================
+           SALDO PRÜFEN
+           ================================ */
+
+        BigDecimal saldo = abrechnung.getBelege()
+                .stream()
+                .flatMap(b -> b.getPositionen().stream())
+                .map(p -> switch (p.getKategorie()) {
+
+                    case TEILNEHMERBEITRAG,
+                         KJFP_ZUSCHUSS,
+                         PFAND -> p.getBetrag();
+
+                    default -> p.getBetrag().negate();
+                })
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        if (saldo.compareTo(BigDecimal.ZERO) != 0) {
+            throw new ResponseStatusException(
+                    CONFLICT,
+                    "Abrechnung ist nicht ausgeglichen"
+            );
+        }
+
+        /* ================================
+           FÖRDERSATZ SNAPSHOT
+           ================================ */
+
+        LocalDate veranstaltungsDatum =
+                abrechnung.getVeranstaltung().getBeginnDatum();
+
+        FoerdersatzDTO fs = null;
+
+        try {
+            fs = foerdersatzService.findGueltigAm(veranstaltungsDatum);
+        } catch (ResponseStatusException ex) {
+            if (ex.getStatusCode() != HttpStatus.NOT_FOUND) {
+                throw ex;
+            }
+        }
+
+        if (fs != null) {
+            abrechnung.setVerwendeterFoerdersatzIfOpen(
+                    fs.getBetragProTeilnehmer()
+            );
+        }
+
+        /* ================================
+           STATUS ÄNDERN
+           ================================ */
 
         abrechnung.setStatus(AbrechnungsStatus.ABGESCHLOSSEN);
     }
@@ -104,12 +191,20 @@ public class AbrechnungService {
        HELPER
        ========================================================= */
 
+    private List<AbrechnungBuchung> getAllPositionen(Abrechnung a) {
+
+        return a.getBelege()
+                .stream()
+                .flatMap(beleg -> beleg.getPositionen().stream())
+                .toList();
+    }
+
     private Abrechnung createAbrechnung(Long veranstaltungId) {
 
         Veranstaltung veranstaltung = veranstaltungRepository
                 .findById(veranstaltungId)
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
+                        NOT_FOUND,
                         "Veranstaltung nicht gefunden"
                 ));
 
@@ -125,7 +220,7 @@ public class AbrechnungService {
         return abrechnungRepository
                 .findByVeranstaltungId(veranstaltungId)
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
+                        NOT_FOUND,
                         "Abrechnung nicht gefunden"
                 ));
     }
@@ -134,15 +229,27 @@ public class AbrechnungService {
 
         if (abrechnung.getStatus() == AbrechnungsStatus.ABGESCHLOSSEN) {
             throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
+                    CONFLICT,
                     "Abrechnung ist abgeschlossen und nicht mehr änderbar"
             );
         }
     }
 
-    private void removeAutomatischeTeilnehmerBuchung(Abrechnung abrechnung) {
+    private FinanzGruppe getOrCreateSystemGroup(Veranstaltung veranstaltung) {
 
-        abrechnung.getBuchungen().removeIf(b ->
-                b.getKategorie() == FinanzKategorie.TEILNEHMERBEITRAG);
+        return finanzGruppeRepository
+                .findByVeranstaltungIdAndKuerzel(
+                        veranstaltung.getId(),
+                        "__SYSTEM__"
+                )
+                .orElseGet(() -> {
+
+                    FinanzGruppe g = FinanzGruppe.builder()
+                            .kuerzel("__SYSTEM__")
+                            .veranstaltung(veranstaltung)
+                            .build();
+
+                    return finanzGruppeRepository.save(g);
+                });
     }
 }

@@ -11,13 +11,11 @@ public class AbrechnungBuchungDTO {
 
     private Long id;
 
+    private Long teilnehmerId;
+    private String kuerzel;
+
     private FinanzKategorie kategorie;
-
     private BigDecimal betrag;
-
     private LocalDate datum;
-
-    private Long personId;
-
     private String beschreibung;
 }

@@ -1,10 +1,14 @@
 package com.kcserver.finanz;
 
+import com.kcserver.dto.abrechnung.AbrechnungBelegCreateDTO;
+import com.kcserver.dto.abrechnung.AbrechnungBelegDTO;
 import com.kcserver.dto.abrechnung.AbrechnungBuchungCreateDTO;
 import com.kcserver.dto.planung.PlanungPositionCreateDTO;
+import com.kcserver.entity.Teilnehmer;
 import com.kcserver.enumtype.FinanzKategorie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,21 +18,30 @@ import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-
-
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
 class UltimateFinanzFlowTest extends AbstractFinanzIntegrationTest {
 
     Long veranstaltungId;
+    Long teilnehmerId;
+
+    @Autowired
+    AbrechnungBelegService belegService;
 
     @BeforeEach
     void setup() {
 
         veranstaltungId = createTestVeranstaltung();
 
-        // garantiert offene Abrechnung
+        Teilnehmer teilnehmer = createTeilnehmer(
+                veranstaltungRepository.findById(veranstaltungId).orElseThrow(),
+                null
+        );
+
+        // 🔥 Wichtig: Feld setzen, keine neue Variable deklarieren!
+        this.teilnehmerId = teilnehmer.getId();
+
         createOpenAbrechnung(veranstaltungId);
     }
 
@@ -53,18 +66,32 @@ class UltimateFinanzFlowTest extends AbstractFinanzIntegrationTest {
         planungService.einreichen(veranstaltungId);
 
         /* =========================================================
-           ABRECHNUNG
+           ABRECHNUNG (Beleg + Position)
            ========================================================= */
 
-        buchungService.addBuchung(
+        AbrechnungBelegCreateDTO belegDTO = new AbrechnungBelegCreateDTO();
+        belegDTO.setBelegnummer("FLOW-1");
+        belegDTO.setDatum(LocalDate.now());
+        belegDTO.setBeschreibung("Test-Beleg");
+
+        AbrechnungBelegDTO beleg =
+                belegService.createBeleg(veranstaltungId, belegDTO);
+
+        belegService.addPosition(
                 veranstaltungId,
-                createBuchung(FinanzKategorie.UNTERKUNFT, "200")
+                beleg.getId(),
+                createPosition(FinanzKategorie.UNTERKUNFT, "200")
         );
 
-        buchungService.addBuchung(
+        belegService.addPosition(
                 veranstaltungId,
-                createBuchung(FinanzKategorie.KJFP_ZUSCHUSS, "200")
+                beleg.getId(),
+                createPosition(FinanzKategorie.KJFP_ZUSCHUSS, "200")
         );
+
+        /* =========================================================
+           ABSCHLIESSEN
+           ========================================================= */
 
         abrechnungService.abschliessen(veranstaltungId);
 
@@ -79,13 +106,15 @@ class UltimateFinanzFlowTest extends AbstractFinanzIntegrationTest {
        HELPER
        ========================================================= */
 
-    private AbrechnungBuchungCreateDTO createBuchung(
+    private AbrechnungBuchungCreateDTO createPosition(
             FinanzKategorie kat,
             String betrag
     ) {
 
         AbrechnungBuchungCreateDTO dto = new AbrechnungBuchungCreateDTO();
 
+        dto.setTeilnehmerId(teilnehmerId);
+        dto.setKuerzel("FLOW1");
         dto.setKategorie(kat);
         dto.setBetrag(new BigDecimal(betrag));
         dto.setDatum(LocalDate.now());

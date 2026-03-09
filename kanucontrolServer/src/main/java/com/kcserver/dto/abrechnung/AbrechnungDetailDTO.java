@@ -2,23 +2,20 @@ package com.kcserver.dto.abrechnung;
 
 import com.kcserver.dto.finanz.FinanzSummaryDTO;
 import com.kcserver.enumtype.AbrechnungsStatus;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 import java.util.List;
+import java.math.BigDecimal;
 
-@Getter
-@Setter
+@Data
 public class AbrechnungDetailDTO {
 
-    private Long id;
-
     private Long veranstaltungId;
-
     private AbrechnungsStatus status;
 
-    private List<AbrechnungBuchungDTO> buchungen;
+    private List<AbrechnungBelegDTO> belege;
 
     private FinanzSummaryDTO finanz;
 
+    private BigDecimal verwendeterFoerdersatz;   // ✅ neu
 }

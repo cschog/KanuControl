@@ -15,16 +15,16 @@ interface Props {
   onClose: () => void;
 }
 
-const personen = [
-  { id: 1, kuerzel: "MS" },
-  { id: 2, kuerzel: "AB" },
-];
+// const personen = [
+//   { id: 1 },
+//   { id: 2},
+// ];
 
 const kategorien = ["UNTERKUNFT", "VERPFLEGUNG", "MATERIAL", "TEILNEHMERBEITRAG", "KJFP_ZUSCHUSS"];
 
 const KostenDialog = ({ open, onClose }: Props) => {
   const [datum, setDatum] = useState("");
-  const [person, setPerson] = useState("");
+  // const [person, setPerson] = useState("");
   const [kategorie, setKategorie] = useState("");
   const [betrag, setBetrag] = useState("");
   const [kommentar, setKommentar] = useState("");
@@ -32,7 +32,7 @@ const KostenDialog = ({ open, onClose }: Props) => {
   const handleSave = () => {
     const data = {
       datum,
-      person,
+      // person,
       kategorie,
       betrag,
       kommentar,
@@ -57,7 +57,7 @@ const KostenDialog = ({ open, onClose }: Props) => {
             onChange={(e) => setDatum(e.target.value)}
           />
 
-          <TextField
+          {/* <TextField
             label="Person"
             select
             value={person}
@@ -70,7 +70,7 @@ const KostenDialog = ({ open, onClose }: Props) => {
                 {p.kuerzel}
               </MenuItem>
             ))}
-          </TextField>
+          </TextField> */}
 
           <TextField
             label="Kategorie"

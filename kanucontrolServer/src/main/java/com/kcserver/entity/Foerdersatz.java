@@ -17,11 +17,14 @@ public class Foerdersatz {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private LocalDate gueltigVon;
+
     private LocalDate gueltigBis;
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal betragProTeilnehmer;
 
+    @Column(length = 255)
     private String beschluss;
 }

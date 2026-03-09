@@ -1,11 +1,12 @@
 package com.kcserver.finanz;
 
+import com.kcserver.dto.abrechnung.AbrechnungBelegCreateDTO;
+import com.kcserver.dto.abrechnung.AbrechnungBelegDTO;
 import com.kcserver.dto.abrechnung.AbrechnungBuchungCreateDTO;
 import com.kcserver.entity.Abrechnung;
 import com.kcserver.enumtype.AbrechnungsStatus;
 import com.kcserver.enumtype.FinanzKategorie;
 import com.kcserver.integration.support.AbstractTenantIntegrationTest;
-import com.kcserver.repository.AbrechnungBuchungRepository;
 import com.kcserver.repository.AbrechnungRepository;
 import com.kcserver.testsupport.TestDataFactory;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,18 +32,16 @@ class AbrechnungServiceTest extends AbstractTenantIntegrationTest {
     AbrechnungService abrechnungService;
 
     @Autowired
-    AbrechnungBuchungService buchungService;
+    AbrechnungBelegService belegService;
 
     @Autowired
     AbrechnungRepository abrechnungRepository;
 
     @Autowired
-    AbrechnungBuchungRepository buchungRepository;
-
-    @Autowired
     TestDataFactory factory;
 
     Long veranstaltungId;
+    Long teilnehmerId;
 
     /* ========================================================= */
 
@@ -50,6 +49,7 @@ class AbrechnungServiceTest extends AbstractTenantIntegrationTest {
     void setup() {
 
         veranstaltungId = factory.createTestVeranstaltung();
+        teilnehmerId = factory.createTeilnehmer(veranstaltungId);
 
         abrechnungService.getOrCreate(veranstaltungId);
 
@@ -58,7 +58,6 @@ class AbrechnungServiceTest extends AbstractTenantIntegrationTest {
                 .orElseThrow();
 
         a.setStatus(AbrechnungsStatus.OFFEN);
-
         abrechnungRepository.save(a);
     }
 
@@ -67,8 +66,8 @@ class AbrechnungServiceTest extends AbstractTenantIntegrationTest {
     @Test
     void shouldCloseBalancedAbrechnung() {
 
-        addBuchung(FinanzKategorie.UNTERKUNFT, "100.00");
-        addBuchung(FinanzKategorie.TEILNEHMERBEITRAG, "100.00");
+        addPosition(FinanzKategorie.UNTERKUNFT, "100.00");
+        addPosition(FinanzKategorie.TEILNEHMERBEITRAG, "100.00");
 
         abrechnungService.abschliessen(veranstaltungId);
 
@@ -85,7 +84,7 @@ class AbrechnungServiceTest extends AbstractTenantIntegrationTest {
     @Test
     void shouldPreventCloseWhenNotBalanced() {
 
-        addBuchung(FinanzKategorie.UNTERKUNFT, "100.00");
+        addPosition(FinanzKategorie.UNTERKUNFT, "100.00");
 
         assertThatThrownBy(() ->
                 abrechnungService.abschliessen(veranstaltungId)
@@ -97,8 +96,8 @@ class AbrechnungServiceTest extends AbstractTenantIntegrationTest {
     @Test
     void shouldPreventDoubleClose() {
 
-        addBuchung(FinanzKategorie.UNTERKUNFT, "100.00");
-        addBuchung(FinanzKategorie.TEILNEHMERBEITRAG, "100.00");
+        addPosition(FinanzKategorie.UNTERKUNFT, "100.00");
+        addPosition(FinanzKategorie.TEILNEHMERBEITRAG, "100.00");
 
         abrechnungService.abschliessen(veranstaltungId);
 
@@ -110,33 +109,47 @@ class AbrechnungServiceTest extends AbstractTenantIntegrationTest {
     /* ========================================================= */
 
     @Test
-    void shouldNotAllowAddWhenClosed() {
+    void shouldNotAllowChangesWhenClosed() {
 
-        addBuchung(FinanzKategorie.UNTERKUNFT, "100.00");
-        addBuchung(FinanzKategorie.TEILNEHMERBEITRAG, "100.00");
+        addPosition(FinanzKategorie.UNTERKUNFT, "100.00");
+        addPosition(FinanzKategorie.TEILNEHMERBEITRAG, "100.00");
 
         abrechnungService.abschliessen(veranstaltungId);
 
-        AbrechnungBuchungCreateDTO dto = new AbrechnungBuchungCreateDTO();
-        dto.setKategorie(FinanzKategorie.UNTERKUNFT);
-        dto.setBetrag(new BigDecimal("50.00"));
-        dto.setDatum(LocalDate.now());
+        AbrechnungBelegCreateDTO belegDTO = new AbrechnungBelegCreateDTO();
+        belegDTO.setBelegnummer("TEST-2");
+        belegDTO.setDatum(LocalDate.now());
 
+        // 🔥 Bereits Beleg-Erstellung muss scheitern
         assertThatThrownBy(() ->
-                buchungService.addBuchung(veranstaltungId, dto)
+                belegService.createBeleg(veranstaltungId, belegDTO)
         ).isInstanceOf(ResponseStatusException.class);
     }
 
     /* ========================================================= */
 
-    private void addBuchung(FinanzKategorie kategorie, String betrag) {
+    private void addPosition(FinanzKategorie kategorie, String betrag) {
 
-        AbrechnungBuchungCreateDTO dto = new AbrechnungBuchungCreateDTO();
+        AbrechnungBelegCreateDTO belegDTO = new AbrechnungBelegCreateDTO();
+        belegDTO.setBelegnummer("TEST");
+        belegDTO.setDatum(LocalDate.now());
 
-        dto.setKategorie(kategorie);
-        dto.setBetrag(new BigDecimal(betrag));
-        dto.setDatum(LocalDate.now());
+        AbrechnungBelegDTO beleg =
+                belegService.createBeleg(veranstaltungId, belegDTO);
 
-        buchungService.addBuchung(veranstaltungId, dto);
+        AbrechnungBuchungCreateDTO posDTO =
+                new AbrechnungBuchungCreateDTO();
+
+        posDTO.setTeilnehmerId(teilnehmerId);
+        posDTO.setKuerzel("X1");
+        posDTO.setKategorie(kategorie);
+        posDTO.setBetrag(new BigDecimal(betrag));
+        posDTO.setDatum(LocalDate.now());
+
+        belegService.addPosition(
+                veranstaltungId,
+                beleg.getId(),
+                posDTO
+        );
     }
 }

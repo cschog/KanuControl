@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+           http://www.liquibase.org/xml/ns/dbchangelog
+           http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="2026-03-09-01-add-verwendeter-foerdersatz"
+               author="chris">
+
+        <preConditions onFail="MARK_RAN" onError="MARK_RAN">
+            <not>
+                <columnExists
+                        tableName="abrechnung"
+                        columnName="verwendeter_foerdersatz"/>
+            </not>
+        </preConditions>
+
+        <addColumn tableName="abrechnung">
+            <column name="verwendeter_foerdersatz"
+                    type="numeric(10,2)"/>
+        </addColumn>
+
+    </changeSet>
+
+</databaseChangeLog>
