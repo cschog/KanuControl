@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Period;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
@@ -36,13 +37,17 @@ public class FoerderBerechnungsService {
         LocalDate start = veranstaltung.getBeginnDatum();
         LocalDate end = veranstaltung.getEndeDatum();
 
-        long tage = start.until(end).getDays() + 1;
+        long tage = ChronoUnit.DAYS.between(start, end) + 1;
 
         Foerdersatz fs =
-                foerdersatzService.findEntityGueltigFuerTypAm(
+                foerdersatzService.findOptionalGueltigFuerTypAm(
                         veranstaltung.getTyp(),
                         start
                 );
+
+        if (fs == null) {
+            return BigDecimal.ZERO;
+        }
 
         BigDecimal foerdersatz = fs.getFoerdersatz();
         BigDecimal deckel = fs.getFoerderdeckel();

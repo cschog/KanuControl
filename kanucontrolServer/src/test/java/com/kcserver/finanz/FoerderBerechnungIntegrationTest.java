@@ -219,4 +219,97 @@ class FoerderBerechnungIntegrationTest extends AbstractFinanzIntegrationTest {
 
         vereinRepository.save(veranstaltung.getVerein());
     }
+    @Test
+    void shouldReturnZeroIfNoFoerdersatzExists() {
+
+        createTeilnehmerMitAlter(5, 12);
+
+        BigDecimal result =
+                foerderService.berechneFoerderung(veranstaltungId);
+
+        assertThat(result).isEqualByComparingTo("0.00");
+    }
+    @Test
+    void shouldCalculateWithoutKikIfNoKikZuschlagExists() {
+
+        createFoerdersatz(VeranstaltungTyp.FM, "14.00", "30.00");
+
+        setVereinKikZertifiziert(true);
+        // KEIN createKikZuschlag()
+
+        createTeilnehmerMitAlter(5, 10);
+
+        BigDecimal result =
+                foerderService.berechneFoerderung(veranstaltungId);
+
+        // 2 Tage × 5 × 14 €
+        assertThat(result).isEqualByComparingTo("140.00");
+    }
+    @Test
+    void shouldIgnoreKikIfVereinNotCertified() {
+
+        createFoerdersatz(VeranstaltungTyp.FM, "14.00", "30.00");
+        createKikZuschlag("3.00");
+
+        // kein setVereinKikZertifiziert(true)
+
+        createTeilnehmerMitAlter(5, 10);
+
+        BigDecimal result =
+                foerderService.berechneFoerderung(veranstaltungId);
+
+        // nur 14 €
+        assertThat(result).isEqualByComparingTo("140.00");
+    }
+    @Test
+    void shouldNotReduceIfExactlyOnFoerderdeckel() {
+
+        createFoerdersatz(VeranstaltungTyp.FM, "15.00", "15.00");
+
+        createTeilnehmerMitAlter(5, 10);
+
+        BigDecimal result =
+                foerderService.berechneFoerderung(veranstaltungId);
+
+        // 2 Tage × 5 × 15 €
+        assertThat(result).isEqualByComparingTo("150.00");
+    }
+    @Test
+    void shouldIgnoreTeilnehmerWithoutGeburtsdatum() {
+
+        createFoerdersatz(VeranstaltungTyp.FM, "10.00", "20.00");
+
+        // 2 gültige Teilnehmer
+        createTeilnehmerMitAlter(2, 10);
+
+        // 1 ohne Geburtsdatum
+        createTeilnehmerOhneGeburtsdatum();
+
+        BigDecimal result =
+                foerderService.berechneFoerderung(veranstaltungId);
+
+        // nur 2 zählen
+        // 2 Tage × 2 × 10 €
+        assertThat(result).isEqualByComparingTo("40.00");
+    }
+    private void createTeilnehmerOhneGeburtsdatum() {
+
+        var veranstaltung = veranstaltungRepository
+                .findById(veranstaltungId)
+                .orElseThrow();
+
+        Person p = new Person();
+        p.setVorname("NoBirth");
+        p.setName("Test" + System.nanoTime());
+        p.setAktiv(true);
+        p.setSex(Sex.WEIBLICH); // NOT NULL beachten
+
+        p = personRepository.save(p);
+
+        Teilnehmer t = new Teilnehmer();
+        t.setVeranstaltung(veranstaltung);
+        t.setPerson(p);
+
+        teilnehmerRepository.save(t);
+    }
 }
