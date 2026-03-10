@@ -168,4 +168,13 @@ public class FoerdersatzService {
 
         repository.deleteById(id);
     }
+    @Transactional(readOnly = true)
+    public Foerdersatz findOptionalGueltigFuerTypAm(
+            VeranstaltungTyp typ,
+            LocalDate datum
+    ) {
+        return repository
+                .findGueltigFuerTypAm(typ, datum)
+                .orElse(null);
+    }
 }
