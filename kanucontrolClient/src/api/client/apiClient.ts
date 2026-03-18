@@ -15,21 +15,19 @@ const apiClient = axios.create({
 ========================= */
 apiClient.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
-    // 🔐 Keycloak Token
-    if (keycloak.authenticated) {
-      await keycloak.updateToken(30);
-
-      config.headers = config.headers ?? {};
-      config.headers.Authorization = `Bearer ${keycloak.token}`;
+    // Wenn noch nicht authenticated → warten
+    if (!keycloak.authenticated) {
+      await keycloak.init({
+        onLoad: "login-required",
+        checkLoginIframe: false,
+      });
     }
 
-    // 🔍 REQUEST LOG
-    // console.groupCollapsed("➡️ API REQUEST");
-    // console.log("URL:", `${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
-    // console.log("PARAMS:", config.params);
-    // console.log("DATA:", config.data);
-    // console.log("HEADERS:", config.headers);
-    // console.groupEnd();
+    // Token aktualisieren
+    await keycloak.updateToken(30);
+
+    config.headers = config.headers ?? {};
+    config.headers.Authorization = `Bearer ${keycloak.token}`;
 
     return config;
   },
@@ -60,10 +58,7 @@ apiClient.interceptors.response.use(
 
       // 🔐 401 → Logout
       if (error.response?.status === 401) {
-        console.warn("401 – Session expired, logging out");
-        await keycloak.logout({
-          redirectUri: window.location.origin,
-        });
+        console.warn("401 received");
       }
     } else {
       console.error("❌ Non-Axios error", error);
