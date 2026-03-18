@@ -14,9 +14,6 @@ public class AbrechnungBuchungCreateDTO {
     @NotNull
     private Long teilnehmerId;
 
-    @NotBlank
-    private String kuerzel;
-
     @NotNull
     private FinanzKategorie kategorie;
 

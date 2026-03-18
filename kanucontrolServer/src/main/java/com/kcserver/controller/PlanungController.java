@@ -3,6 +3,7 @@ package com.kcserver.controller;
 import com.kcserver.dto.planung.PlanungDetailDTO;
 import com.kcserver.finanz.PlanungService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -26,7 +27,14 @@ public class PlanungController {
        ========================================================= */
 
     @PostMapping("/einreichen")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void einreichen(@PathVariable Long veranstaltungId) {
         planungService.einreichen(veranstaltungId);
+    }
+
+    @PostMapping("/wieder-oeffnen")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void wiederOeffnen(@PathVariable Long veranstaltungId) {
+        planungService.wiederOeffnen(veranstaltungId);
     }
 }

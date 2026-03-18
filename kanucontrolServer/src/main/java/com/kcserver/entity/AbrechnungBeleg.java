@@ -22,6 +22,10 @@ public class AbrechnungBeleg {
     @JoinColumn(name = "abrechnung_id", nullable = false)
     private Abrechnung abrechnung;
 
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "finanz_gruppe_id", nullable = false)
+    private FinanzGruppe finanzGruppe;
+
     @OneToMany(mappedBy = "beleg",
             cascade = CascadeType.ALL,
             orphanRemoval = true)

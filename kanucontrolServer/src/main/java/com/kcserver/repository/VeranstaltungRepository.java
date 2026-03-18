@@ -1,10 +1,12 @@
 package com.kcserver.repository;
 
+import com.kcserver.entity.Teilnehmer;
 import com.kcserver.entity.Veranstaltung;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository

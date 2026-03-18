@@ -193,4 +193,6 @@ AND t.rolle IS NOT NULL
             @Param("age27") LocalDate age27,
             @Param("age45") LocalDate age45
     );
+
+    List<Teilnehmer> findByVeranstaltungIdAndFinanzGruppeIsNull(Long veranstaltungId);
 }
