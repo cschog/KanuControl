@@ -8,11 +8,17 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/verein")
+@Tag(name = "Verein", description = "Verwaltung von Vereinen")
+@SecurityRequirement(name = "bearerAuth")
 public class VereinController {
 
     private final VereinService vereinService;
@@ -27,6 +33,12 @@ public class VereinController {
     }
 
     @GetMapping("/{id}")
+    @Operation(
+            summary = "Verein nach ID laden",
+            description = "Lädt einen Verein anhand seiner ID."
+    )
+    @ApiResponse(responseCode = "200", description = "Verein gefunden")
+    @ApiResponse(responseCode = "404", description = "Verein nicht gefunden")
     public VereinDTO getById(@PathVariable Long id) {
         return vereinService.getById(id);
     }

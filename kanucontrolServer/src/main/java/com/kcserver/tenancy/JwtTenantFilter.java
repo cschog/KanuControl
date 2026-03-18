@@ -65,7 +65,12 @@ public class JwtTenantFilter
 
         return path.equals("/api/csv-import/mapping-template")
                 || path.startsWith("/actuator")
-                || path.startsWith("/error");
+                || path.startsWith("/error")
+
+                // 🔥 Swagger erlauben
+                || path.startsWith("/v3/api-docs")
+                || path.startsWith("/swagger-ui")
+                || path.equals("/swagger-ui.html");
     }
 
     private String extractTenant(Jwt jwt) {

@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface VeranstaltungService {
 
@@ -90,5 +91,7 @@ public interface VeranstaltungService {
        ========================================================= */
 
     void delete(Long id);
+
+    Optional<VeranstaltungDetailDTO> getActiveOptional();
 
 }

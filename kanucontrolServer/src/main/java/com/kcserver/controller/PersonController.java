@@ -44,17 +44,11 @@ public class PersonController {
 
     @GetMapping("/all")
     public List<PersonListDTO> getAll(
-            PersonSearchCriteria criteria,
-            @RequestParam(required = false) String sort
+            @ModelAttribute PersonSearchCriteria criteria,
+            Pageable pageable
     ) {
-        Sort s = Sort.unsorted();
-
-        if (sort != null) {
-            String[] parts = sort.split(",");
-            s = Sort.by(Sort.Direction.fromString(parts[1]), parts[0]);
-        }
-
-        return personService.getAll(s, criteria);
+        Pageable mapped = mapSort(pageable);
+        return personService.getAll(mapped.getSort(), criteria);
     }
 
 

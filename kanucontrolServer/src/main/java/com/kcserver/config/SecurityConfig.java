@@ -25,19 +25,29 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .authorizeHttpRequests(auth -> auth
+
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // ✅ CSV Mapping Template öffentlich erlauben
-                        .requestMatchers(HttpMethod.GET, "/api/csv-import/mapping-template")
-                        .permitAll()
+                        // Swagger erlauben ✅
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html"
+                        ).permitAll()
+
+                        // CSV Template öffentlich
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/csv-import/mapping-template"
+                        ).permitAll()
+
+                        .requestMatchers("/api/active-schema").authenticated()
 
                         // 🔒 alles andere geschützt
-                        .requestMatchers("/api/active-schema").authenticated()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
 
-                // Tenant nach Auth
                 .addFilterAfter(
                         tenantFilter,
                         BearerTokenAuthenticationFilter.class

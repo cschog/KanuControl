@@ -6,28 +6,31 @@ import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.service.TeilnehmerService;
 import com.kcserver.service.VeranstaltungService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import com.kcserver.dto.teilnehmer.TeilnehmerKurzDTO;
+import java.util.List;
 import org.springframework.web.bind.annotation.*;
+import com.kcserver.finanz.FinanzGruppeService;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 
+@RequiredArgsConstructor
 @RestController
-@RequestMapping("/api/veranstaltungen")   // ⭐ PLURAL – EINHEITLICH
+@RequestMapping("/api/veranstaltungen")
 public class VeranstaltungController {
 
     private final VeranstaltungService veranstaltungService;
     private final TeilnehmerService teilnehmerService;
+    private final FinanzGruppeService finanzGruppeService;
 
-    public VeranstaltungController(
-            VeranstaltungService veranstaltungService,
-            TeilnehmerService teilnehmerService
-    ) {
-        this.veranstaltungService = veranstaltungService;
-        this.teilnehmerService = teilnehmerService;
-    }
+
+
 
     /* =========================================================
        CREATE
@@ -68,7 +71,9 @@ public class VeranstaltungController {
 
     @GetMapping("/active")
     public VeranstaltungDetailDTO getActive() {
-        return veranstaltungService.getActive();
+        return veranstaltungService.getActiveOptional()
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
     @GetMapping("/{id}")
@@ -114,5 +119,26 @@ public class VeranstaltungController {
             @RequestBody TeilnehmerBulkDeleteDTO dto
     ) {
         teilnehmerService.removeTeilnehmerBulk(id, dto.getPersonIds());
+    }
+
+    @PutMapping("/{veranstaltungId}/teilnehmer/{teilnehmerId}/kuerzel")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void assignKuerzel(
+            @PathVariable Long veranstaltungId,
+            @PathVariable Long teilnehmerId,
+            @RequestParam String kuerzel
+    ) {
+
+        finanzGruppeService.assignKuerzel(
+                veranstaltungId,
+                teilnehmerId,
+                kuerzel
+        );
+    }
+    @GetMapping("/{veranstaltungId}/teilnehmer/ohne-kuerzel")
+    public List<TeilnehmerKurzDTO> findOhneKuerzel(
+            @PathVariable Long veranstaltungId) {
+
+        return teilnehmerService.findOhneKuerzel(veranstaltungId);
     }
 }

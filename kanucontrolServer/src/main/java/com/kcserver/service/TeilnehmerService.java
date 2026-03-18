@@ -2,6 +2,7 @@ package com.kcserver.service;
 
 import com.kcserver.dto.person.PersonListDTO;
 import com.kcserver.dto.teilnehmer.TeilnehmerDetailDTO;
+import com.kcserver.dto.teilnehmer.TeilnehmerKurzDTO;
 import com.kcserver.dto.teilnehmer.TeilnehmerListDTO;
 import com.kcserver.dto.teilnehmer.TeilnehmerUpdateDTO;
 import com.kcserver.entity.Person;
@@ -400,5 +401,15 @@ public class TeilnehmerService {
                     "Leiter muss mindest 18 Jahre alt sein"
             );
         }
+    }
+
+    @Transactional(readOnly = true)
+    public List<TeilnehmerKurzDTO> findOhneKuerzel(Long veranstaltungId) {
+
+        return teilnehmerRepository
+                .findByVeranstaltungIdAndFinanzGruppeIsNull(veranstaltungId)
+                .stream()
+                .map(teilnehmerMapper::toKurzDTO)
+                .toList();
     }
 }

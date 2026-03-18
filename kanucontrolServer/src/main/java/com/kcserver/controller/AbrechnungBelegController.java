@@ -2,6 +2,7 @@ package com.kcserver.controller;
 
 import com.kcserver.dto.abrechnung.*;
 import com.kcserver.finanz.AbrechnungBelegService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +22,7 @@ public class AbrechnungBelegController {
     @ResponseStatus(HttpStatus.CREATED)
     public AbrechnungBelegDTO createBeleg(
             @PathVariable Long veranstaltungId,
-            @RequestBody AbrechnungBelegCreateDTO dto
+            @RequestBody @Valid AbrechnungBelegCreateDTO dto
     ) {
         return service.createBeleg(veranstaltungId, dto);
     }
@@ -77,5 +78,15 @@ public class AbrechnungBelegController {
             @PathVariable Long belegId
     ) {
         service.deleteBeleg(veranstaltungId, belegId);
+    }
+
+    @PutMapping("/{belegId}/kuerzel")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void changeKuerzel(
+            @PathVariable Long veranstaltungId,
+            @PathVariable Long belegId,
+            @RequestParam String kuerzel
+    ) {
+        service.changeKuerzel(veranstaltungId, belegId, kuerzel);
     }
 }

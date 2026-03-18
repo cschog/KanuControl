@@ -22,6 +22,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -538,6 +539,13 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
                         veranstaltungRepository.save(neu);
                     });
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<VeranstaltungDetailDTO> getActiveOptional() {
+        return veranstaltungRepository.findByAktivTrue()
+                .map(veranstaltungMapper::toDetailDTO);
     }
 
 

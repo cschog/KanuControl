@@ -10,6 +10,8 @@ public class AbrechnungBelegCreateDTO {
 
     private String belegnummer;
 
+    private String kuerzel;
+
     @NotNull
     private LocalDate datum;
 
