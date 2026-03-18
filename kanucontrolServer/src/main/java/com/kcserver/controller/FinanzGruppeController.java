@@ -2,8 +2,11 @@ package com.kcserver.controller;
 
 import com.kcserver.dto.finanz.FinanzGruppeCreateDTO;
 import com.kcserver.dto.finanz.FinanzGruppeDTO;
+import com.kcserver.dto.finanz.FinanzGruppeDetailDTO;
+import com.kcserver.dto.finanz.FinanzGruppeOverviewDTO;
 import com.kcserver.entity.FinanzGruppe;
-import com.kcserver.mapper.FinanzGruppeMapper;
+import com.kcserver.finanz.FinanzGruppeQueryService;
+import com.kcserver.mapper.FinanzGruppeDetailMapper;
 import com.kcserver.finanz.FinanzGruppeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,21 +20,29 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FinanzGruppeController {
 
-    private final FinanzGruppeService service;
-    private final FinanzGruppeMapper mapper;
+    private final FinanzGruppeService commandService;
+    private final FinanzGruppeQueryService queryService;
 
     /* =========================
-       GET
+       OVERVIEW (KürzelPage)
        ========================= */
 
     @GetMapping
-    public List<FinanzGruppeDTO> findAll(
+    public List<FinanzGruppeOverviewDTO> findAll(
             @PathVariable Long veranstaltungId) {
 
-        return service.findAll(veranstaltungId)
-                .stream()
-                .map(mapper::toDTO)
-                .toList();
+        return queryService.getOverview(veranstaltungId);
+    }
+
+    /* =========================
+       DETAIL
+       ========================= */
+
+    @GetMapping("/{gruppeId}")
+    public FinanzGruppeDetailDTO findOne(
+            @PathVariable Long gruppeId) {
+
+        return queryService.getDetail(gruppeId);
     }
 
     /* =========================
@@ -40,14 +51,14 @@ public class FinanzGruppeController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public FinanzGruppeDTO create(
+    public FinanzGruppeDetailDTO create(
             @PathVariable Long veranstaltungId,
             @Valid @RequestBody FinanzGruppeCreateDTO dto) {
 
         FinanzGruppe g =
-                service.create(veranstaltungId, dto.kuerzel());
+                commandService.create(veranstaltungId, dto.kuerzel());
 
-        return mapper.toDTO(g);
+        return queryService.getDetail(g.getId());
     }
 
     /* =========================
@@ -55,15 +66,14 @@ public class FinanzGruppeController {
        ========================= */
 
     @PutMapping("/{gruppeId}")
-    public FinanzGruppeDTO update(
+    public FinanzGruppeDetailDTO update(
             @PathVariable Long veranstaltungId,
             @PathVariable Long gruppeId,
             @Valid @RequestBody FinanzGruppeCreateDTO dto) {
 
-        FinanzGruppe g =
-                service.update(veranstaltungId, gruppeId, dto.kuerzel());
+        commandService.update(veranstaltungId, gruppeId, dto.kuerzel());
 
-        return mapper.toDTO(g);
+        return queryService.getDetail(gruppeId);
     }
 
     /* =========================
@@ -76,6 +86,24 @@ public class FinanzGruppeController {
             @PathVariable Long veranstaltungId,
             @PathVariable Long gruppeId) {
 
-        service.delete(veranstaltungId, gruppeId);
+        commandService.delete(veranstaltungId, gruppeId);
+    }
+
+    /* =========================
+       ASSIGN TEILNEHMER
+       ========================= */
+
+    @PutMapping("/{gruppeId}/teilnehmer")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void assignTeilnehmerBulk(
+            @PathVariable Long veranstaltungId,
+            @PathVariable Long gruppeId,
+            @RequestBody List<Long> teilnehmerIds
+    ) {
+        commandService.assignTeilnehmerBulk(
+                veranstaltungId,
+                gruppeId,
+                teilnehmerIds
+        );
     }
 }

@@ -32,6 +32,9 @@ class AbrechnungServiceTest extends AbstractTenantIntegrationTest {
     AbrechnungService abrechnungService;
 
     @Autowired
+    FinanzGruppeService finanzGruppeService;
+
+    @Autowired
     AbrechnungBelegService belegService;
 
     @Autowired
@@ -119,6 +122,7 @@ class AbrechnungServiceTest extends AbstractTenantIntegrationTest {
         AbrechnungBelegCreateDTO belegDTO = new AbrechnungBelegCreateDTO();
         belegDTO.setBelegnummer("TEST-2");
         belegDTO.setDatum(LocalDate.now());
+        belegDTO.setKuerzel("X1");
 
         // 🔥 Bereits Beleg-Erstellung muss scheitern
         assertThatThrownBy(() ->
@@ -130,9 +134,17 @@ class AbrechnungServiceTest extends AbstractTenantIntegrationTest {
 
     private void addPosition(FinanzKategorie kategorie, String betrag) {
 
+        // 🔥 Erst Kürzel vergeben
+        finanzGruppeService.assignKuerzel(
+                veranstaltungId,
+                teilnehmerId,
+                "X1"
+        );
+
         AbrechnungBelegCreateDTO belegDTO = new AbrechnungBelegCreateDTO();
         belegDTO.setBelegnummer("TEST");
         belegDTO.setDatum(LocalDate.now());
+        belegDTO.setKuerzel("X1"); // 🔥 WICHTIG
 
         AbrechnungBelegDTO beleg =
                 belegService.createBeleg(veranstaltungId, belegDTO);
@@ -141,7 +153,6 @@ class AbrechnungServiceTest extends AbstractTenantIntegrationTest {
                 new AbrechnungBuchungCreateDTO();
 
         posDTO.setTeilnehmerId(teilnehmerId);
-        posDTO.setKuerzel("X1");
         posDTO.setKategorie(kategorie);
         posDTO.setBetrag(new BigDecimal(betrag));
         posDTO.setDatum(LocalDate.now());

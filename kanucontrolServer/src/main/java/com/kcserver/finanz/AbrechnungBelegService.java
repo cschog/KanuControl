@@ -39,10 +39,24 @@ public class AbrechnungBelegService {
         Abrechnung abrechnung = getAbrechnung(veranstaltungId);
         checkEditable(abrechnung);
 
+        if (dto.getKuerzel() == null || dto.getKuerzel().isBlank()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Kürzel ist Pflicht");
+        }
+
+        FinanzGruppe gruppe = finanzGruppeRepository
+                .findByVeranstaltungIdAndKuerzel(veranstaltungId, dto.getKuerzel())
+                .orElseThrow(() ->
+                        new ResponseStatusException(
+                                HttpStatus.NOT_FOUND,
+                                "FinanzGruppe nicht gefunden"));
+
         AbrechnungBeleg beleg = new AbrechnungBeleg();
         beleg.setBelegnummer(dto.getBelegnummer());
         beleg.setDatum(dto.getDatum() != null ? dto.getDatum() : LocalDate.now());
         beleg.setBeschreibung(dto.getBeschreibung());
+        beleg.setFinanzGruppe(gruppe);
 
         abrechnung.addBeleg(beleg);
 
@@ -50,7 +64,7 @@ public class AbrechnungBelegService {
     }
 
     /* =========================================================
-       POSITION HINZUFÜGEN (Splitbuchung möglich)
+       POSITION HINZUFÜGEN
        ========================================================= */
 
     public AbrechnungBuchungDTO addPosition(
@@ -72,31 +86,24 @@ public class AbrechnungBelegService {
                     "Teilnehmer gehört nicht zu dieser Veranstaltung");
         }
 
-        if (dto.getKuerzel() == null || dto.getKuerzel().isBlank()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Kürzel ist Pflicht");
-        }
-
-        FinanzGruppe gruppe = getOrCreateFinanzGruppe(
-                veranstaltungId,
-                dto.getKuerzel(),
-                beleg.getAbrechnung().getVeranstaltung()
-        );
-
-        // Teilnehmer bekommt ggf. erstmalig Gruppe
         if (teilnehmer.getFinanzGruppe() == null) {
-            teilnehmer.setFinanzGruppe(gruppe);
-        } else if (!teilnehmer.getFinanzGruppe().getId().equals(gruppe.getId())) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "Teilnehmer hat bereits ein anderes Kürzel");
+                    "Teilnehmer hat kein Kürzel");
+        }
+
+        // Teilnehmer muss zur gleichen Gruppe gehören wie der Beleg
+        if (!teilnehmer.getFinanzGruppe().getId()
+                .equals(beleg.getFinanzGruppe().getId())) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Teilnehmer gehört nicht zum Kürzel des Belegs");
         }
 
         AbrechnungBuchung position = new AbrechnungBuchung();
         position.setBeleg(beleg);
         position.setTeilnehmer(teilnehmer);
-        position.setFinanzGruppe(gruppe);
         position.setKategorie(dto.getKategorie());
         position.setBetrag(dto.getBetrag());
         position.setDatum(dto.getDatum());
@@ -149,7 +156,6 @@ public class AbrechnungBelegService {
         checkEditable(pos.getBeleg().getAbrechnung());
 
         pos.getBeleg().removePosition(pos);
-
         buchungRepository.delete(pos);
     }
 
@@ -165,8 +171,41 @@ public class AbrechnungBelegService {
         checkEditable(beleg.getAbrechnung());
 
         beleg.getAbrechnung().removeBeleg(beleg);
-
         belegRepository.delete(beleg);
+    }
+
+    public void changeKuerzel(
+            Long veranstaltungId,
+            Long belegId,
+            String newKuerzel) {
+
+        if (newKuerzel == null || newKuerzel.isBlank()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Kürzel ist Pflicht");
+        }
+
+        AbrechnungBeleg beleg = getBeleg(belegId);
+
+        validateVeranstaltung(veranstaltungId, beleg);
+        checkEditable(beleg.getAbrechnung());
+
+        FinanzGruppe neueGruppe = finanzGruppeRepository
+                .findByVeranstaltungIdAndKuerzel(
+                        veranstaltungId,
+                        newKuerzel)
+                .orElseThrow(() ->
+                        new ResponseStatusException(
+                                HttpStatus.NOT_FOUND,
+                                "Kürzel nicht gefunden"));
+
+        // 🔥 Wechsel nur durchführen wenn es wirklich ein Wechsel ist
+        if (beleg.getFinanzGruppe().getId()
+                .equals(neueGruppe.getId())) {
+            return;
+        }
+
+        beleg.setFinanzGruppe(neueGruppe);
     }
 
     /* =========================================================
@@ -213,20 +252,5 @@ public class AbrechnungBelegService {
                     HttpStatus.CONFLICT,
                     "Abrechnung ist abgeschlossen und nicht mehr änderbar");
         }
-    }
-
-    private FinanzGruppe getOrCreateFinanzGruppe(
-            Long veranstaltungId,
-            String kuerzel,
-            Veranstaltung veranstaltung) {
-
-        return finanzGruppeRepository
-                .findByVeranstaltungIdAndKuerzel(veranstaltungId, kuerzel)
-                .orElseGet(() -> {
-                    FinanzGruppe g = new FinanzGruppe();
-                    g.setKuerzel(kuerzel);
-                    g.setVeranstaltung(veranstaltung);
-                    return finanzGruppeRepository.save(g);
-                });
     }
 }
