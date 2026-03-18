@@ -78,19 +78,24 @@ public class AbrechnungMapper {
         AbrechnungBuchungDTO dto = new AbrechnungBuchungDTO();
 
         dto.setId(pos.getId());
-
         dto.setKategorie(pos.getKategorie());
         dto.setBetrag(pos.getBetrag());
         dto.setDatum(pos.getDatum());
         dto.setBeschreibung(pos.getBeschreibung());
 
-
         if (pos.getTeilnehmer() != null) {
             dto.setTeilnehmerId(pos.getTeilnehmer().getId());
         }
 
-        if (pos.getFinanzGruppe() != null) {
-            dto.setKuerzel(pos.getFinanzGruppe().getKuerzel());
+        // 🔥 Gruppe kommt jetzt vom Beleg
+        if (pos.getBeleg() != null &&
+                pos.getBeleg().getFinanzGruppe() != null) {
+
+            dto.setKuerzel(
+                    pos.getBeleg()
+                            .getFinanzGruppe()
+                            .getKuerzel()
+            );
         }
 
         return dto;

@@ -29,6 +29,9 @@ class UltimateFinanzFlowTest extends AbstractFinanzIntegrationTest {
     @Autowired
     AbrechnungBelegService belegService;
 
+    @Autowired
+    FinanzGruppeService finanzGruppeService;
+
     @BeforeEach
     void setup() {
 
@@ -39,10 +42,16 @@ class UltimateFinanzFlowTest extends AbstractFinanzIntegrationTest {
                 null
         );
 
-        // 🔥 Wichtig: Feld setzen, keine neue Variable deklarieren!
         this.teilnehmerId = teilnehmer.getId();
 
         createOpenAbrechnung(veranstaltungId);
+
+        // ✅ Kürzel einmalig vergeben
+        finanzGruppeService.assignKuerzel(
+                veranstaltungId,
+                teilnehmerId,
+                "FLOW1"
+        );
     }
 
     @Test
@@ -73,6 +82,7 @@ class UltimateFinanzFlowTest extends AbstractFinanzIntegrationTest {
         belegDTO.setBelegnummer("FLOW-1");
         belegDTO.setDatum(LocalDate.now());
         belegDTO.setBeschreibung("Test-Beleg");
+        belegDTO.setKuerzel("FLOW1");
 
         AbrechnungBelegDTO beleg =
                 belegService.createBeleg(veranstaltungId, belegDTO);
@@ -114,7 +124,6 @@ class UltimateFinanzFlowTest extends AbstractFinanzIntegrationTest {
         AbrechnungBuchungCreateDTO dto = new AbrechnungBuchungCreateDTO();
 
         dto.setTeilnehmerId(teilnehmerId);
-        dto.setKuerzel("FLOW1");
         dto.setKategorie(kat);
         dto.setBetrag(new BigDecimal(betrag));
         dto.setDatum(LocalDate.now());

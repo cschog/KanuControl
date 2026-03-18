@@ -86,6 +86,8 @@ public class AbrechnungService {
         beleg.setBelegnummer("__AUTO_TEILNEHMER__");
         beleg.setDatum(LocalDate.now());
         beleg.setBeschreibung("Automatisch berechnete Teilnehmerbeiträge");
+        FinanzGruppe systemGruppe = getOrCreateSystemGroup(veranstaltung);
+        beleg.setFinanzGruppe(systemGruppe);
 
         for (Teilnehmer t : teilnehmer) {
 
@@ -96,17 +98,9 @@ public class AbrechnungService {
                 continue;
             }
 
-            FinanzGruppe gruppe = t.getFinanzGruppe();
-
-            if (gruppe == null) {
-                gruppe = getOrCreateSystemGroup(veranstaltung);
-                t.setFinanzGruppe(gruppe);
-            }
-
             AbrechnungBuchung pos = new AbrechnungBuchung();
             pos.setBeleg(beleg);
             pos.setTeilnehmer(t);
-            pos.setFinanzGruppe(gruppe);
             pos.setKategorie(FinanzKategorie.TEILNEHMERBEITRAG);
             pos.setDatum(LocalDate.now());
             pos.setBetrag(betrag);

@@ -37,6 +37,8 @@ class FoerdersatzIntegrationTest extends AbstractFinanzIntegrationTest {
     @Autowired
     AbrechnungRepository abrechnungRepository;
 
+    @Autowired FinanzGruppeService finanzGruppeService;
+
     @Autowired
     AbrechnungBelegService belegService;
 
@@ -198,10 +200,18 @@ class FoerdersatzIntegrationTest extends AbstractFinanzIntegrationTest {
 
     private void addPosition(FinanzKategorie kat, String betrag) {
 
+        // 🔥 Erst Kürzel vergeben
+        finanzGruppeService.assignKuerzel(
+                veranstaltungId,
+                teilnehmerId,
+                "X1"
+        );
+
         AbrechnungBelegCreateDTO belegDTO = new AbrechnungBelegCreateDTO();
         belegDTO.setBelegnummer("FS-TEST");
         belegDTO.setDatum(TEST_DATE);
         belegDTO.setBeschreibung("Test");
+        belegDTO.setKuerzel("X1");   // 🔥 NEU
 
         AbrechnungBelegDTO beleg =
                 belegService.createBeleg(veranstaltungId, belegDTO);
@@ -210,7 +220,6 @@ class FoerdersatzIntegrationTest extends AbstractFinanzIntegrationTest {
                 new AbrechnungBuchungCreateDTO();
 
         posDTO.setTeilnehmerId(teilnehmerId);
-        posDTO.setKuerzel("X1");
         posDTO.setKategorie(kat);
         posDTO.setBetrag(new BigDecimal(betrag));
         posDTO.setDatum(TEST_DATE);

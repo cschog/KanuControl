@@ -1,4 +1,4 @@
-package com.kcserver.testdata;
+package com.kcserver.support;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.MediaType;

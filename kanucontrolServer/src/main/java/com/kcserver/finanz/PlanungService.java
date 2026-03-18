@@ -73,6 +73,17 @@ public class PlanungService {
         p.setEingereicht(true);
     }
 
+    @Transactional
+    public void wiederOeffnen(Long veranstaltungId) {
+        Planung planung = planungRepository.findByVeranstaltungId(veranstaltungId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Planung not found"
+                ));
+
+        planung.setEingereicht(false);
+    }
+
     /* =========================================================
        HELPER
        ========================================================= */

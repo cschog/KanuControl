@@ -2,6 +2,7 @@ package com.kcserver.mapper;
 
 import com.kcserver.dto.person.PersonRefDTO;
 import com.kcserver.dto.teilnehmer.TeilnehmerDetailDTO;
+import com.kcserver.dto.teilnehmer.TeilnehmerKurzDTO;
 import com.kcserver.dto.teilnehmer.TeilnehmerListDTO;
 import com.kcserver.entity.Person;
 import com.kcserver.entity.Teilnehmer;
@@ -38,6 +39,15 @@ public interface TeilnehmerMapper {
     @Mapping(source = "person.plz", target = "plz")
     @Mapping(source = "person.sex", target = "sex")
     TeilnehmerDetailDTO toDetailDTO(Teilnehmer teilnehmer);
+
+    /* =========================
+   ENTITY → KURZ DTO
+   ========================= */
+
+    @Mapping(source = "id", target = "id")
+    @Mapping(source = "person.vorname", target = "vorname")
+    @Mapping(source = "person.name", target = "nachname")
+    TeilnehmerKurzDTO toKurzDTO(Teilnehmer teilnehmer);
 
     /* =========================
        HILFSMAPPING

@@ -4,6 +4,7 @@ import com.kcserver.entity.Abrechnung;
 import com.kcserver.entity.AbrechnungBeleg;
 import com.kcserver.entity.AbrechnungBuchung;
 import com.kcserver.entity.Veranstaltung;
+import com.kcserver.integration.AbstractFinanzIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
