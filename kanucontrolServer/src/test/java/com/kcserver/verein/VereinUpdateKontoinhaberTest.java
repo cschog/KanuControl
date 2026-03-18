@@ -2,9 +2,9 @@ package com.kcserver.verein;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.dto.verein.VereinDTO;
-import com.kcserver.integration.support.AbstractTenantIntegrationTest;
-import com.kcserver.testdata.PersonTestFactory;
-import com.kcserver.testdata.VereinTestFactory;
+import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
+import com.kcserver.support.data.PersonTestFactory;
+import com.kcserver.support.data.VereinTestFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;

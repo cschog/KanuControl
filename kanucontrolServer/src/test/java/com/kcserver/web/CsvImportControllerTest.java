@@ -1,8 +1,8 @@
-package com.kcserver.csv;
+package com.kcserver.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kcserver.integration.support.AbstractTenantIntegrationTest;
-import com.kcserver.testdata.VereinTestFactory;
+import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
+import com.kcserver.support.data.VereinTestFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

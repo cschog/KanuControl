@@ -1,4 +1,4 @@
-package com.kcserver.testdata;
+package com.kcserver.support.data;
 
 public final class TestIds {
 

@@ -1,4 +1,4 @@
-package com.kcserver.finanz;
+package com.kcserver.unit;
 
 import com.kcserver.dto.planung.PlanungPositionCreateDTO;
 import com.kcserver.entity.Person;
@@ -8,7 +8,8 @@ import com.kcserver.entity.Verein;
 import com.kcserver.enumtype.FinanzKategorie;
 import com.kcserver.enumtype.Sex;
 import com.kcserver.enumtype.VeranstaltungTyp;
-import com.kcserver.integration.support.AbstractTenantIntegrationTest;
+import com.kcserver.finanz.PlanungPositionService;
+import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
 import com.kcserver.repository.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +28,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Transactional
 class PlanungPositionServiceTest extends AbstractTenantIntegrationTest {
 
-    @Autowired PlanungPositionService service;
+    @Autowired
+    PlanungPositionService service;
     @Autowired PlanungPositionRepository positionRepository;
     @Autowired
     VeranstaltungRepository veranstaltungRepository;

@@ -1,8 +1,9 @@
-package com.kcserver.finanz;
+package com.kcserver.web;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.dto.finanz.FinanzGruppeCreateDTO;
+import com.kcserver.integration.AbstractFinanzIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

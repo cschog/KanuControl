@@ -1,9 +1,11 @@
-package com.kcserver.finanz;
+package com.kcserver.unit;
 
 import com.kcserver.dto.planung.PlanungPositionCreateDTO;
 import com.kcserver.enumtype.FinanzKategorie;
-import com.kcserver.integration.support.AbstractTenantIntegrationTest;
-import com.kcserver.testsupport.TestDataFactory;
+import com.kcserver.finanz.PlanungPositionService;
+import com.kcserver.finanz.PlanungService;
+import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
+import com.kcserver.support.data.TestDataFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,8 +22,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Transactional
 class PlanungServiceTest extends AbstractTenantIntegrationTest {
 
-    @Autowired PlanungService service;
-    @Autowired PlanungPositionService positionService;
+    @Autowired
+    PlanungService service;
+    @Autowired
+    PlanungPositionService positionService;
     @Autowired TestDataFactory factory;
 
     Long veranstaltungId;

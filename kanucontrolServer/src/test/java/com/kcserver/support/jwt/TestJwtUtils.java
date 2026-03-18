@@ -1,4 +1,4 @@
-package com.kcserver.integration.support;
+package com.kcserver.support.jwt;
 
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 

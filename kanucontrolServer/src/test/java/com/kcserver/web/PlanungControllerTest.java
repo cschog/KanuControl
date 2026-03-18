@@ -1,4 +1,4 @@
-package com.kcserver.finanz;
+package com.kcserver.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.dto.planung.PlanungPositionCreateDTO;
@@ -8,7 +8,7 @@ import com.kcserver.entity.Verein;
 import com.kcserver.enumtype.FinanzKategorie;
 import com.kcserver.enumtype.Sex;
 import com.kcserver.enumtype.VeranstaltungTyp;
-import com.kcserver.integration.support.AbstractTenantIntegrationTest;
+import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
 import com.kcserver.repository.PersonRepository;
 import com.kcserver.repository.VeranstaltungRepository;
 import com.kcserver.repository.VereinRepository;

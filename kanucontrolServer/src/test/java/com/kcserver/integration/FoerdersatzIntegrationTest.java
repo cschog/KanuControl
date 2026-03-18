@@ -1,4 +1,4 @@
-package com.kcserver.finanz;
+package com.kcserver.integration;
 
 import com.kcserver.dto.abrechnung.AbrechnungBelegCreateDTO;
 import com.kcserver.dto.abrechnung.AbrechnungBelegDTO;
@@ -8,6 +8,9 @@ import com.kcserver.dto.foerder.FoerdersatzDTO;
 import com.kcserver.entity.Abrechnung;
 import com.kcserver.enumtype.FinanzKategorie;
 import com.kcserver.enumtype.VeranstaltungTyp;
+import com.kcserver.finanz.AbrechnungBelegService;
+import com.kcserver.finanz.AbrechnungService;
+import com.kcserver.finanz.FinanzGruppeService;
 import com.kcserver.repository.AbrechnungRepository;
 import com.kcserver.service.FoerdersatzService;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,7 +40,8 @@ class FoerdersatzIntegrationTest extends AbstractFinanzIntegrationTest {
     @Autowired
     AbrechnungRepository abrechnungRepository;
 
-    @Autowired FinanzGruppeService finanzGruppeService;
+    @Autowired
+    FinanzGruppeService finanzGruppeService;
 
     @Autowired
     AbrechnungBelegService belegService;

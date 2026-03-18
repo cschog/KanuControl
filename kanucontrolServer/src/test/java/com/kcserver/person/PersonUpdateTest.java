@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.dto.person.PersonDTO;
 import com.kcserver.dto.person.PersonSaveDTO;
 import com.kcserver.enumtype.Sex;
-import com.kcserver.integration.support.AbstractTenantIntegrationTest;
+import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

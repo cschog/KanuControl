@@ -1,4 +1,4 @@
-package com.kcserver.integration.support;
+package com.kcserver.support.tenant;
 
 import com.kcserver.tenancy.TenantSchemaProvisioner;
 import org.junit.jupiter.api.BeforeAll;

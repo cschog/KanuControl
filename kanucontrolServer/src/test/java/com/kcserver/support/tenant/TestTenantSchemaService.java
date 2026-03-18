@@ -1,5 +1,6 @@
-package com.kcserver.tenancy;
+package com.kcserver.support.tenant;
 
+import com.kcserver.tenancy.TenantSchemaService;
 import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;

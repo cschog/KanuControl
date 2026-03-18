@@ -1,11 +1,15 @@
-package com.kcserver.finanz;
+package com.kcserver.integration;
 
 import com.kcserver.dto.veranstaltung.VeranstaltungCreateDTO;
 import com.kcserver.entity.*;
 import com.kcserver.enumtype.AbrechnungsStatus;
 import com.kcserver.enumtype.Sex;
 import com.kcserver.enumtype.VeranstaltungTyp;
-import com.kcserver.integration.support.AbstractTenantIntegrationTest;
+import com.kcserver.finanz.AbrechnungBelegService;
+import com.kcserver.finanz.AbrechnungService;
+import com.kcserver.finanz.PlanungPositionService;
+import com.kcserver.finanz.PlanungService;
+import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
 import com.kcserver.repository.*;
 import com.kcserver.service.VeranstaltungService;
 import org.springframework.beans.factory.annotation.Autowired;

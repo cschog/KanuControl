@@ -1,4 +1,4 @@
-package com.kcserver.test;
+package com.kcserver.support.tenant;
 
 import com.kcserver.tenancy.TenantContext;
 import org.junit.jupiter.api.extension.*;

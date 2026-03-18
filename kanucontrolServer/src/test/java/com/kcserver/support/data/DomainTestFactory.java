@@ -1,4 +1,4 @@
-package com.kcserver.support;
+package com.kcserver.support.data;
 
 import com.kcserver.entity.Person;
 import com.kcserver.entity.Teilnehmer;
