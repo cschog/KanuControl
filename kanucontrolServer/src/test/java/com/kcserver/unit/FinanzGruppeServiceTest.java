@@ -1,4 +1,4 @@
-package com.kcserver.finanz;
+package com.kcserver.unit;
 
 import com.kcserver.dto.abrechnung.AbrechnungBelegCreateDTO;
 import com.kcserver.dto.abrechnung.AbrechnungBelegDTO;
@@ -6,6 +6,9 @@ import com.kcserver.dto.abrechnung.AbrechnungBuchungCreateDTO;
 import com.kcserver.entity.FinanzGruppe;
 import com.kcserver.entity.Teilnehmer;
 import com.kcserver.enumtype.FinanzKategorie;
+import com.kcserver.finanz.AbrechnungBelegService;
+import com.kcserver.integration.AbstractFinanzIntegrationTest;
+import com.kcserver.finanz.FinanzGruppeService;
 import com.kcserver.repository.FinanzGruppeRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

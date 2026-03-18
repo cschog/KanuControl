@@ -1,4 +1,4 @@
-package com.kcserver.finanz;
+package com.kcserver.integration;
 
 import com.kcserver.entity.*;
 import com.kcserver.enumtype.Sex;

@@ -1,5 +1,6 @@
-package com.kcserver.tenancy;
+package com.kcserver.support.tenant;
 
+import com.kcserver.tenancy.TenantFilter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

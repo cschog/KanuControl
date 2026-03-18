@@ -1,4 +1,4 @@
-package com.kcserver.finanz;
+package com.kcserver.integration;
 
 import com.kcserver.dto.abrechnung.AbrechnungBelegCreateDTO;
 import com.kcserver.dto.abrechnung.AbrechnungBelegDTO;
@@ -6,6 +6,8 @@ import com.kcserver.dto.abrechnung.AbrechnungBuchungCreateDTO;
 import com.kcserver.dto.planung.PlanungPositionCreateDTO;
 import com.kcserver.entity.Teilnehmer;
 import com.kcserver.enumtype.FinanzKategorie;
+import com.kcserver.finanz.AbrechnungBelegService;
+import com.kcserver.finanz.FinanzGruppeService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

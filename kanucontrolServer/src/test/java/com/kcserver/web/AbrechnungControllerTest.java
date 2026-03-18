@@ -1,7 +1,8 @@
-package com.kcserver.finanz;
+package com.kcserver.web;
 
-import com.kcserver.integration.support.AbstractTenantIntegrationTest;
-import com.kcserver.testsupport.TestDataFactory;
+import com.kcserver.finanz.AbrechnungService;
+import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
+import com.kcserver.support.data.TestDataFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +21,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class AbrechnungControllerTest extends AbstractTenantIntegrationTest {
 
     @Autowired TestDataFactory factory;
-    @Autowired AbrechnungService abrechnungService;
+    @Autowired
+    AbrechnungService abrechnungService;
 
     Long veranstaltungId;
 

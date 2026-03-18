@@ -1,4 +1,4 @@
-package com.kcserver.finanz;
+package com.kcserver.unit;
 
 import com.kcserver.dto.abrechnung.AbrechnungBelegCreateDTO;
 import com.kcserver.dto.abrechnung.AbrechnungBelegDTO;
@@ -6,9 +6,12 @@ import com.kcserver.dto.abrechnung.AbrechnungBuchungCreateDTO;
 import com.kcserver.entity.Abrechnung;
 import com.kcserver.enumtype.AbrechnungsStatus;
 import com.kcserver.enumtype.FinanzKategorie;
-import com.kcserver.integration.support.AbstractTenantIntegrationTest;
+import com.kcserver.finanz.AbrechnungBelegService;
+import com.kcserver.finanz.AbrechnungService;
+import com.kcserver.finanz.FinanzGruppeService;
+import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
 import com.kcserver.repository.AbrechnungRepository;
-import com.kcserver.testsupport.TestDataFactory;
+import com.kcserver.support.data.TestDataFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

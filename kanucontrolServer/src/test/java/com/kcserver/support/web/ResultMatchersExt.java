@@ -1,4 +1,4 @@
-package com.kcserver.support.data;
+package com.kcserver.support.web;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

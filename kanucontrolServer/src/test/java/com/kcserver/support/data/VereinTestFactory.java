@@ -1,4 +1,4 @@
-package com.kcserver.testdata;
+package com.kcserver.support.data;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.dto.verein.VereinDTO;

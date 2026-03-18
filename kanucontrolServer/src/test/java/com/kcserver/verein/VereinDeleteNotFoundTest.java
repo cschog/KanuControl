@@ -1,6 +1,6 @@
 package com.kcserver.verein;
 
-import com.kcserver.integration.support.AbstractTenantIntegrationTest;
+import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;

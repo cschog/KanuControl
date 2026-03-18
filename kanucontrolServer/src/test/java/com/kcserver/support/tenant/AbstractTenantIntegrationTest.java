@@ -1,4 +1,4 @@
-package com.kcserver.integration.support;
+package com.kcserver.support.tenant;
 
 import com.kcserver.tenancy.TenantContext;
 import com.kcserver.tenancy.TenantSchemaProvisioner;
@@ -13,7 +13,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
-import static com.kcserver.integration.support.TestJwtUtils.jwtWithTenant;
+import static com.kcserver.support.jwt.TestJwtUtils.jwtWithTenant;
 
 @SpringBootTest
 @AutoConfigureMockMvc
