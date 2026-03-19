@@ -45,6 +45,7 @@ public interface TeilnehmerMapper {
    ========================= */
 
     @Mapping(source = "id", target = "id")
+    @Mapping(source = "person.id", target = "personId")
     @Mapping(source = "person.vorname", target = "vorname")
     @Mapping(source = "person.name", target = "nachname")
     TeilnehmerKurzDTO toKurzDTO(Teilnehmer teilnehmer);

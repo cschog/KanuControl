@@ -25,34 +25,33 @@ public class TeilnehmerController {
     }
 
     /* =========================================================
-       READ (Paging)
+       READ (Paging + optional Search)
        ========================================================= */
 
     @GetMapping
     public Page<TeilnehmerListDTO> getTeilnehmer(
             @PathVariable Long veranstaltungId,
+            @RequestParam(required = false) String search,
             @PageableDefault(size = 20, sort = "person.name") Pageable pageable
     ) {
-        return teilnehmerService.getTeilnehmer(veranstaltungId, pageable);
+        return teilnehmerService.getTeilnehmer(veranstaltungId, search, pageable);
     }
 
     /* =========================================================
-       AVAILABLE PERSONS (nicht Teilnehmer)
+       AVAILABLE
        ========================================================= */
 
     @GetMapping("/available")
     public Page<PersonListDTO> getAvailablePersons(
             @PathVariable Long veranstaltungId,
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false) String vorname,
-            @RequestParam(required = false) String verein,
+            @RequestParam(required = false) String search,
             Pageable pageable
     ) {
-        return teilnehmerService.getAvailablePersons(veranstaltungId, name, vorname, verein, pageable);
+        return teilnehmerService.getAvailablePersons(veranstaltungId, search, pageable);
     }
 
     /* =========================================================
-       ASSIGNED PERSONS (alle Teilnehmer ohne Paging)
+       ASSIGNED
        ========================================================= */
 
     @GetMapping("/assigned")
@@ -89,11 +88,10 @@ public class TeilnehmerController {
     }
 
     /* =========================================================
-   UPDATE (für Tests & API)
-   ========================================================= */
+       UPDATE
+       ========================================================= */
 
     @PutMapping("/{teilnehmerId}")
-    @ResponseStatus(HttpStatus.OK)
     public TeilnehmerDetailDTO update(
             @PathVariable Long veranstaltungId,
             @PathVariable Long teilnehmerId,
@@ -107,7 +105,7 @@ public class TeilnehmerController {
     }
 
     /* =========================================================
-       DELETE (single)
+       DELETE
        ========================================================= */
 
     @DeleteMapping("/{teilnehmerId}")
@@ -120,14 +118,14 @@ public class TeilnehmerController {
     }
 
     /* =========================================================
-       DELETE (bulk)
+       DELETE BULK
        ========================================================= */
 
     @DeleteMapping("/bulk")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeTeilnehmerBulk(
             @PathVariable Long veranstaltungId,
-            @Valid @RequestBody TeilnehmerBulkDeleteDTO dto
+            @RequestBody TeilnehmerBulkDeleteDTO dto
     ) {
         teilnehmerService.removeTeilnehmerBulk(veranstaltungId, dto.getPersonIds());
     }
@@ -137,7 +135,6 @@ public class TeilnehmerController {
        ========================================================= */
 
     @PutMapping("/{personId}/leiter")
-    @ResponseStatus(HttpStatus.OK)
     public TeilnehmerDetailDTO setLeiter(
             @PathVariable Long veranstaltungId,
             @PathVariable Long personId
@@ -146,8 +143,9 @@ public class TeilnehmerController {
     }
 
     /* =========================================================
-          SET ROLLE
-          ========================================================= */
+       SET ROLLE
+       ========================================================= */
+
     @PutMapping("/{personId}/rolle")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void updateRolle(

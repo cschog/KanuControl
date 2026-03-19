@@ -200,21 +200,22 @@ und enthält keine Businesslogik.
 
 # 🗺️ KanuControl – Roadmap
 
-Stand: **Release v0.4.0**  
-Status: **Core-System funktionsfähig – Übergang zu Business-Features**
+Stand: **Release v0.5.9**  
+Status: **Finanzgruppen integriert – Übergang zur Abrechnung**
 
 ---
 
 # 📊 Gesamtfortschritt
 
-**≈ 70 % bis v1.0**
+**≈ 75 % bis v1.0**
 
 - 🟢 Architektur stabil
 - 🟢 Stammdaten vollständig
-- 🟢 Veranstaltungen & Teilnehmer nahezu komplett
+- 🟢 Veranstaltungen & Teilnehmer vollständig
+- 🟢 Finanzgruppen (Kürzel) integriert
+- 🟡 Abrechnung in Aufbau
 - 🟡 Import & Datenqualität teilweise
-- 🟡 Abrechnung begonnen
-- ⚪ Stabilisierung & Produktion offen
+- ⚪ Stabilisierung & Produktionsreife offen
 
 ---
 
@@ -251,9 +252,10 @@ Status: **Core-System funktionsfähig – Übergang zu Business-Features**
 
 ---
 
-# Phase 1 – Frontend & Nutzung → Release 0.2.x 🟡
+# Phase 1 – Frontend & Nutzung → Release 0.2.x ✅
 
-**Ziel:** komfortable Bedienung
+**Ziel:** komfortable Bedienung  
+**Status:** weitgehend abgeschlossen
 
 ## UI
 - [x] Navigation
@@ -271,7 +273,8 @@ Status: **Core-System funktionsfähig – Übergang zu Business-Features**
 
 # Phase 2 – Import & Datenqualität → Release 0.3.x 🟡
 
-**Ziel:** robuste Massendaten
+**Ziel:** robuste Massendaten  
+**Status:** teilweise abgeschlossen
 
 ## CSV Import Mitglieder
 - [x] Upload
@@ -289,9 +292,10 @@ Status: **Core-System funktionsfähig – Übergang zu Business-Features**
 
 ---
 
-# Phase 3 – Veranstaltungen & Teilnehmer → Release 0.4.x 🟢
+# Phase 3 – Veranstaltungen & Teilnehmer → Release 0.4.x ✅
 
-**Ziel:** Veranstaltungsmanagement vollständig
+**Ziel:** Veranstaltungsmanagement vollständig  
+**Status:** abgeschlossen
 
 ## Veranstaltung
 - [x] CRUD
@@ -304,6 +308,8 @@ Status: **Core-System funktionsfähig – Übergang zu Business-Features**
 - [x] Bulk Add / Remove
 - [x] Leiter immer Teilnehmer
 - [x] Sortierung (Leiter zuerst)
+- [x] Search (Server-seitig)
+- [x] Debounced Suche im FE
 
 ## UI
 - [x] Teilnehmerverwaltung
@@ -311,6 +317,7 @@ Status: **Core-System funktionsfähig – Übergang zu Business-Features**
 - [x] Multi-Select stabil
 - [x] SelectAll stabil
 - [x] Filter Reset
+- [x] Confirm Dialog bei Entfernen
 
 ## Teilnehmerliste PDF
 - [x] Mehrseitig
@@ -322,26 +329,29 @@ Status: **Core-System funktionsfähig – Übergang zu Business-Features**
 - [x] Dynamischer Dateiname
 - [x] Download im FE
 
-## Offen
-- [ ] Anmeldeformular PDF
-- [ ] Abrechnungsdeckblatt PDF
-- [ ] Erhebungsbogen PDF
-
 ---
 
-# Phase 4 – Abrechnung → Release 0.5.x 🟡
+# Phase 4 – Finanzgruppen & Abrechnung → Release 0.5.x 🟡
 
-**Ziel:** finanzielle Abwicklung
+**Ziel:** finanzielle Struktur & Vorbereitung Abrechnung  
+**Status:** Finanzgruppen abgeschlossen
 
-## Finanzen
+## Finanzgruppen (Kürzel)
+- [x] Entity FinanzGruppe
+- [x] 1:n Beziehung Teilnehmer → FinanzGruppe
+- [x] Unique Constraint (Veranstaltung + Kürzel)
+- [x] Bulk-Zuweisung
+- [x] Entfernen aus Gruppe
+- [x] Search mit Debounce
+- [x] Confirm Dialog
+- [x] 201 Integrationstests grün
+
+## Abrechnung – Basis
 - [ ] Einnahmen
 - [ ] Ausgaben
 - [ ] Teilnehmergebühren
 - [ ] Reisekosten
-
-## Logik
-- [ ] Plausibilitätsprüfungen
-- [ ] Summen & Reports
+- [ ] Berechnung pro Finanzgruppe
 - [ ] Abschlusslogik Veranstaltung
 
 ---
@@ -371,39 +381,40 @@ Status: **Core-System funktionsfähig – Übergang zu Business-Features**
 - [ ] Performance
 - [ ] Memory / PDF Optimierung
 - [ ] Query Optimierung
+- [ ] Testabdeckung > 90 %
 
 ## Sicherheit
-- [ ] Rollen & Rechte
+- [ ] Rollen & Rechte fein granular
 - [ ] Audit Logging
+- [ ] CSRF / Hardening Review
 
 ## Betrieb
 - [ ] Monitoring
 - [ ] Backup & Restore
-- [ ] Deployment
-- [ ] Dokumentation
+- [ ] Docker Deployment
+- [ ] Produktionsdokumentation
 
 ---
 
 # 🎯 Nächste Meilensteine
 
-## → v0.5 Fokus
-- Abrechnung starten
-- Anmeldung PDF
-- Erhebungsbogen PDF
-- Import Validierung
-- Fehlerreport CSV
-
 ## → v0.6 Fokus
-- Alle Dokumente fertig
-- Template System
-- PDF Engine stabilisieren
+- Abrechnung starten
+- Einnahmen / Ausgaben Domain
+- Finanzgruppen-Berechnung
+- Erhebungsbogen PDF
+- Anmeldung PDF
+
+## → v0.7 Fokus
+- Abschlusslogik Veranstaltung
+- Abrechnungs-PDF
+- Plausibilitätsprüfungen
 
 ## → v1.0 Fokus
 - Stabilität
 - Performance
 - Security
 - Produktivbetrieb
-
 ---
 
 # 🧭 Projektstatus

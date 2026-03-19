@@ -48,26 +48,40 @@ public interface TeilnehmerRepository extends JpaRepository<Teilnehmer, Long> {
     /* =========================
        AVAILABLE (Paging)
        ========================= */
+    @Query("""
+SELECT p
+FROM Person p
+WHERE
+    (LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%'))
+     OR LOWER(p.vorname) LIKE LOWER(CONCAT('%', :search, '%')))
+AND NOT EXISTS (
+    SELECT 1 FROM Teilnehmer t
+    WHERE t.person = p
+    AND t.veranstaltung.id = :veranstaltungId
+)
+""")
+    Page<Person> findAvailablePersons(
+            @Param("veranstaltungId") Long veranstaltungId,
+            @Param("search") String search,
+            Pageable pageable
+    );
+
 
     @Query("""
-select distinct p
-from Person p
-left join p.mitgliedschaften m
-left join m.verein v
-where p.id not in (
-    select t.person.id
-    from Teilnehmer t
-    where t.veranstaltung.id = :veranstaltungId
+SELECT t
+FROM Teilnehmer t
+JOIN t.person p
+WHERE t.veranstaltung.id = :veranstaltungId
+AND (
+    :search IS NULL
+    OR :search = ''
+    OR LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%'))
+    OR LOWER(p.vorname) LIKE LOWER(CONCAT('%', :search, '%'))
 )
-and (:name is null or lower(p.name) like lower(concat('%', cast(:name as string), '%')))
-and (:vorname is null or lower(p.vorname) like lower(concat('%', cast(:vorname as string), '%')))
-and (:verein is null or lower(v.abk) like lower(concat('%', cast(:verein as string), '%')))
 """)
-    Page<Person> findAvailablePersonsFiltered(
+    Page<Teilnehmer> findByVeranstaltungWithSearch(
             @Param("veranstaltungId") Long veranstaltungId,
-            @Param("name") String name,
-            @Param("vorname") String vorname,
-            @Param("verein") String verein,
+            @Param("search") String search,
             Pageable pageable
     );
 
@@ -96,13 +110,15 @@ where t.veranstaltung.id = :veranstaltungId
             TeilnehmerRolle rolle
     );
 
+    Optional<Teilnehmer> findByIdAndVeranstaltung_Id(
+            Long id,
+            Long veranstaltungId
+    );
+
     long countByVeranstaltungIdAndRolle(Long veranstaltungId, TeilnehmerRolle rolle);
 
     long countByVeranstaltungIdAndRolleIsNull(Long veranstaltungId);
 
-    /* =========================
-       DELETE BULK
-       ========================= */
     /* =========================================================
        BULK DELETE (ohne Leiter)
        ========================================================= */

@@ -1,4 +1,4 @@
-package com.kcserver.teilnehmer;
+package com.kcserver.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.dto.teilnehmer.TeilnehmerUpdateDTO;
