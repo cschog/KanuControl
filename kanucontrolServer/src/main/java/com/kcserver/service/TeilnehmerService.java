@@ -55,23 +55,6 @@ public class TeilnehmerService {
         this.teilnehmerMapper = teilnehmerMapper;
         this.personMapper = personMapper;
     }
-    /* =========================================================
-       READ (Paged)
-       ========================================================= */
-
-    @Transactional(readOnly = true)
-    public Page<TeilnehmerListDTO> getTeilnehmer(Long veranstaltungId, Pageable pageable) {
-
-        Veranstaltung veranstaltung =
-                getOr404(
-                        veranstaltungRepository.findById(veranstaltungId),
-                        VERANSTALTUNG_NOT_FOUND
-                );
-
-        return teilnehmerRepository
-                .findWithPersonByVeranstaltung(veranstaltung, pageable)
-                .map(teilnehmerMapper::toListDTO);
-    }
 
     /* =========================================================
        READ (Full List)
@@ -289,25 +272,40 @@ public class TeilnehmerService {
     /* =========================================================
        AVAILABLE PERSONS
        ========================================================= */
-
     @Transactional(readOnly = true)
     public Page<PersonListDTO> getAvailablePersons(
             Long veranstaltungId,
-            String name,
-            String vorname,
-            String verein,
+            String search,
             Pageable pageable
     ) {
 
-        Veranstaltung veranstaltung =
-                getOr404(
-                        veranstaltungRepository.findById(veranstaltungId),
+        veranstaltungRepository.findById(veranstaltungId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
                         VERANSTALTUNG_NOT_FOUND
-                );
+                ));
+        String safeSearch = (search == null) ? "" : search;
 
         return teilnehmerRepository
-                .findAvailablePersonsFiltered(veranstaltungId, name, vorname, verein, pageable)
+                .findAvailablePersons(veranstaltungId, safeSearch, pageable)
                 .map(personMapper::toListDTO);
+    }
+
+
+       /* =========================================================
+       READ (Paged)
+       ========================================================= */
+
+    @Transactional(readOnly = true)
+    public Page<TeilnehmerListDTO> getTeilnehmer(
+            Long veranstaltungId,
+            String search,
+            Pageable pageable
+    ) {
+
+        return teilnehmerRepository
+                .findByVeranstaltungWithSearch(veranstaltungId, search, pageable)
+                .map(teilnehmerMapper::toListDTO);
     }
 
     /* =========================================================

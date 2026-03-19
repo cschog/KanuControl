@@ -62,11 +62,9 @@ public interface VeranstaltungService {
        AVAILABE
        ========================================================= */
 
-    Page<PersonListDTO> getAvailablePersons(
+    public Page<PersonListDTO> getAvailablePersons(
             Long veranstaltungId,
-            String name,
-            String vorname,
-            String verein,
+            String search,
             Pageable pageable
     );
 

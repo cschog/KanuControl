@@ -227,25 +227,18 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
     @Transactional(readOnly = true)
     public Page<PersonListDTO> getAvailablePersons(
             Long veranstaltungId,
-            String name,
-            String vorname,
-            String verein,
+            String search,
             Pageable pageable
     ) {
 
-        Veranstaltung veranstaltung = veranstaltungRepository.findById(veranstaltungId)
+        veranstaltungRepository.findById(veranstaltungId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Veranstaltung not found"
                 ));
+        String safeSearch = (search == null) ? "" : search;
 
         return teilnehmerRepository
-                .findAvailablePersonsFiltered(
-                        veranstaltungId,
-                        name,
-                        vorname,
-                        verein,
-                        pageable
-                )
+                .findAvailablePersons(veranstaltungId, safeSearch, pageable)
                 .map(personMapper::toListDTO);
     }
 

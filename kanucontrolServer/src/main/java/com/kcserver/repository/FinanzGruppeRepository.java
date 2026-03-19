@@ -26,23 +26,13 @@ public interface FinanzGruppeRepository
             Long veranstaltungId
     );
     @Query("""
-    SELECT new com.kcserver.dto.finanz.FinanzGruppeOverviewDTO(
-        fg.id,
-        fg.kuerzel,
-        COUNT(DISTINCT t.id),
-        (
-            SELECT COUNT(b.id)
-            FROM AbrechnungBeleg b
-            WHERE b.finanzGruppe.id = fg.id
-        )
-    )
-    FROM FinanzGruppe fg
-    LEFT JOIN fg.teilnehmer t
-    WHERE fg.veranstaltung.id = :veranstaltungId
-    GROUP BY fg.id, fg.kuerzel
-    ORDER BY fg.kuerzel
+SELECT DISTINCT fg
+FROM FinanzGruppe fg
+LEFT JOIN FETCH fg.teilnehmer t
+LEFT JOIN FETCH t.person
+WHERE fg.veranstaltung.id = :veranstaltungId
 """)
-    List<FinanzGruppeOverviewDTO> findOverviewByVeranstaltungId(Long veranstaltungId);
+    List<FinanzGruppe> findWithTeilnehmerByVeranstaltungId(Long veranstaltungId);
 
     @Query("""
     SELECT fg

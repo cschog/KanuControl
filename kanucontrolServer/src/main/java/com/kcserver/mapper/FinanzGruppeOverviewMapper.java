@@ -1,6 +1,6 @@
 package com.kcserver.mapper;
 
-import com.kcserver.dto.finanz.FinanzGruppeDetailDTO;
+import com.kcserver.dto.finanz.FinanzGruppeOverviewDTO;
 import com.kcserver.dto.teilnehmer.TeilnehmerKurzDTO;
 import com.kcserver.entity.FinanzGruppe;
 import org.springframework.stereotype.Component;
@@ -8,9 +8,12 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
-public class FinanzGruppeDetailMapper {
+public class FinanzGruppeOverviewMapper {
 
-    public FinanzGruppeDetailDTO toDetailDTO(FinanzGruppe g) {
+    public FinanzGruppeOverviewDTO toDTO(
+            FinanzGruppe g,
+            long belegCount
+    ) {
 
         List<TeilnehmerKurzDTO> teilnehmer =
                 g.getTeilnehmer().stream()
@@ -22,10 +25,11 @@ public class FinanzGruppeDetailMapper {
                         ))
                         .toList();
 
-        return new FinanzGruppeDetailDTO(
+        return new FinanzGruppeOverviewDTO(
                 g.getId(),
                 g.getKuerzel(),
-                teilnehmer
+                teilnehmer,
+                belegCount
         );
     }
 }

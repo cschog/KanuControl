@@ -14,6 +14,7 @@
 	<name>KanuControlServer</name>
 	<description>Project KanuControlServer for Spring Boot</description>
 	<properties>
+		<version>0.5.9</version>
 		<java.version>21</java.version>
 		<maven.compiler.release>21</maven.compiler.release>
 		<postgresql.version>42.7.3</postgresql.version>

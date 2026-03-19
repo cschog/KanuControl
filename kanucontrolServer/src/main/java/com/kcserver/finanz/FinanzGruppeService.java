@@ -228,7 +228,7 @@ public class FinanzGruppeService {
     public void assignTeilnehmerBulk(
             Long veranstaltungId,
             Long gruppeId,
-            List<Long> teilnehmerIds
+            List<Long> teilnehmerIds   // ← WIEDER TeilnehmerIds
     ) {
 
         FinanzGruppe gruppe = repository
@@ -247,20 +247,43 @@ public class FinanzGruppeService {
             );
         }
 
-        List<Teilnehmer> teilnehmer =
-                teilnehmerRepository.findAllById(teilnehmerIds);
+        for (Long teilnehmerId : teilnehmerIds) {
 
-        for (Teilnehmer t : teilnehmer) {
+            Teilnehmer teilnehmer = teilnehmerRepository
+                    .findByIdAndVeranstaltung_Id(teilnehmerId, veranstaltungId)
+                    .orElseThrow(() ->
+                            new ResponseStatusException(
+                                    HttpStatus.NOT_FOUND,
+                                    "Teilnehmer nicht gefunden"
+                            )
+                    );
 
-            if (!t.getVeranstaltung().getId().equals(veranstaltungId)) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        "Teilnehmer gehört nicht zur Veranstaltung"
-                );
-            }
-
-            t.setFinanzGruppe(gruppe);
+            teilnehmer.setFinanzGruppe(gruppe);
         }
+    }
+
+    @Transactional
+    public void assignTeilnehmerBulkByPersonIds(
+            Long veranstaltungId,
+            Long gruppeId,
+            List<Long> personIds
+    ) {
+
+        List<Long> teilnehmerIds = personIds.stream()
+                .map(personId ->
+                        teilnehmerRepository
+                                .findByVeranstaltungIdAndPersonId(veranstaltungId, personId)
+                                .orElseThrow(() ->
+                                        new ResponseStatusException(
+                                                HttpStatus.NOT_FOUND,
+                                                "Teilnehmer nicht gefunden"
+                                        )
+                                )
+                                .getId()
+                )
+                .toList();
+
+        assignTeilnehmerBulk(veranstaltungId, gruppeId, teilnehmerIds);
     }
     /* ========================================================= */
 
@@ -331,6 +354,42 @@ public class FinanzGruppeService {
 
             t.setFinanzGruppe(null);
         }
+    }
+
+    @Transactional
+    public void removeTeilnehmerFromGruppe(
+            Long veranstaltungId,
+            Long gruppeId,
+            Long personId
+    ) {
+
+        FinanzGruppe gruppe = repository
+                .findById(gruppeId)
+                .orElseThrow(() ->
+                        new ResponseStatusException(
+                                HttpStatus.NOT_FOUND,
+                                "Finanzgruppe nicht gefunden"
+                        )
+                );
+
+        if (!gruppe.getVeranstaltung().getId().equals(veranstaltungId)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Gruppe gehört nicht zur Veranstaltung"
+            );
+        }
+
+        Teilnehmer teilnehmer = teilnehmerRepository
+                .findByVeranstaltungIdAndPersonId(veranstaltungId, personId)
+                .orElseThrow(() ->
+                        new ResponseStatusException(
+                                HttpStatus.NOT_FOUND,
+                                "Teilnehmer nicht gefunden"
+                        )
+                );
+
+        // 🔥 WICHTIG
+        teilnehmer.setFinanzGruppe(null);
     }
 
     private FinanzGruppe getGruppe(Long veranstaltungId, Long gruppeId) {

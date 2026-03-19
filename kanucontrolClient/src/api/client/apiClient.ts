@@ -1,4 +1,4 @@
-import axios, { InternalAxiosRequestConfig, AxiosResponse } from "axios";
+import axios, { InternalAxiosRequestConfig } from "axios";
 import keycloak from "@/auth/keycloak";
 
 const baseURL = "/api";
@@ -37,31 +37,18 @@ apiClient.interceptors.request.use(
 /* =========================
    RESPONSE INTERCEPTOR
 ========================= */
+
+
 apiClient.interceptors.response.use(
-  (response: AxiosResponse) => {
-    // 🔍 RESPONSE LOG
-    // console.groupCollapsed("⬅️ API RESPONSE");
-    // console.log("URL:", response.config.url);
-    // console.log("STATUS:", response.status);
-    // console.log("DATA:", response.data);
-    // console.groupEnd();
-
-    return response;
-  },
-  async (error: unknown) => {
-    if (axios.isAxiosError(error)) {
-      // console.groupCollapsed("❌ API ERROR");
-      // console.log("URL:", error.config?.url);
-      // console.log("STATUS:", error.response?.status);
-      // console.log("DATA:", error.response?.data);
-      // console.groupEnd();
-
-      // 🔐 401 → Logout
-      if (error.response?.status === 401) {
-        console.warn("401 received");
+  (response) => response,
+  async (error) => {
+    if (error.response?.status === 401) {
+      try {
+        await keycloak.updateToken(0);
+        return apiClient(error.config); // retry request
+      } catch {
+        keycloak.login();
       }
-    } else {
-      console.error("❌ Non-Axios error", error);
     }
 
     return Promise.reject(error);

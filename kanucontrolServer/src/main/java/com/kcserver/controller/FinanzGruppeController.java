@@ -89,6 +89,20 @@ public class FinanzGruppeController {
         commandService.delete(veranstaltungId, gruppeId);
     }
 
+    @DeleteMapping("/{gruppeId}/teilnehmer/{personId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removeTeilnehmer(
+            @PathVariable Long veranstaltungId,
+            @PathVariable Long gruppeId,
+            @PathVariable Long personId
+    ) {
+        commandService.removeTeilnehmerFromGruppe(
+                veranstaltungId,
+                gruppeId,
+                personId
+        );
+    }
+
     /* =========================
        ASSIGN TEILNEHMER
        ========================= */
@@ -98,12 +112,12 @@ public class FinanzGruppeController {
     public void assignTeilnehmerBulk(
             @PathVariable Long veranstaltungId,
             @PathVariable Long gruppeId,
-            @RequestBody List<Long> teilnehmerIds
+            @RequestBody List<Long> personIds
     ) {
-        commandService.assignTeilnehmerBulk(
+        commandService.assignTeilnehmerBulkByPersonIds(
                 veranstaltungId,
                 gruppeId,
-                teilnehmerIds
+                personIds
         );
     }
 }
