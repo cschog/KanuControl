@@ -1,23 +1,23 @@
 package com.kcserver.support.tenant;
 
+import com.kcserver.support.config.MockMvcTestConfig;
 import com.kcserver.tenancy.TenantContext;
 import com.kcserver.tenancy.TenantSchemaProvisioner;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.springframework.test.web.servlet.request.RequestPostProcessor;
-
-import static com.kcserver.support.jwt.TestJwtUtils.jwtWithTenant;
+import com.kcserver.support.config.TestSecurityConfig;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@ActiveProfiles("test")
+@Import(TestSecurityConfig.class)   // 🔥 HIER
 public abstract class AbstractTenantIntegrationTest {
 
     /**
@@ -55,47 +55,29 @@ public abstract class AbstractTenantIntegrationTest {
         jdbcTemplate.execute("SET search_path TO " + tenant);
 
         // ⭐ saubere DB pro Test
-        jdbcTemplate.execute("TRUNCATE TABLE teilnehmer CASCADE");
-        jdbcTemplate.execute("TRUNCATE TABLE mitglied CASCADE");
-        jdbcTemplate.execute("TRUNCATE TABLE person CASCADE");
-        jdbcTemplate.execute("TRUNCATE TABLE verein CASCADE");
-        jdbcTemplate.execute("TRUNCATE TABLE veranstaltung CASCADE");
-
-        // ⭐ optional: IDs resetten (Postgres)
-        jdbcTemplate.execute("ALTER SEQUENCE person_id_seq RESTART WITH 1");
-        jdbcTemplate.execute("ALTER SEQUENCE verein_id_seq RESTART WITH 1");
-        jdbcTemplate.execute("ALTER SEQUENCE veranstaltung_id_seq RESTART WITH 1");
-        jdbcTemplate.execute("ALTER SEQUENCE teilnehmer_id_seq RESTART WITH 1");
+        jdbcTemplate.execute("""
+        TRUNCATE TABLE
+                        teilnehmer,
+                        mitglied,
+                        person,
+                        verein,
+                        veranstaltung,
+                        planung,
+                        planung_position,
+                        abrechnung,
+                        abrechnung_beleg,
+                        abrechnung_buchung,
+                        erhebungsbogen,
+                        finanz_gruppe,
+                        foerdersatz,
+                        kik_zuschlag
+                    RESTART IDENTITY CASCADE
+        """);
     }
 
     @AfterEach
     void clearTenant() {
         TenantContext.clear();
-    }
-
-    /* =========================================================
-       JWT + TENANT HEADER + THREADLOCAL (entscheidend!)
-       ========================================================= */
-
-    protected RequestPostProcessor tenantAuth() {
-        String tenant = tenant();
-
-        return request -> {
-            // ⭐ WICHTIG: Hibernate Resolver braucht ThreadLocal
-            TenantContext.setCurrentTenant(tenant);
-
-            // ⭐ Tenant Header für TenantFilter
-            request.addHeader("X-Tenant", tenant);
-
-            // ⭐ JWT mit Tenant Claim
-            return jwtWithTenant(tenant).postProcessRequest(request);
-        };
-    }
-
-    protected MockHttpServletRequestBuilder tenantRequest(
-            MockHttpServletRequestBuilder builder
-    ) {
-        return builder.with(tenantAuth());
     }
 
     /* =========================================================
@@ -107,5 +89,13 @@ public abstract class AbstractTenantIntegrationTest {
 
         TenantContext.setCurrentTenant(tenant);
         jdbcTemplate.execute("SET search_path TO " + tenant);
+    }
+
+    protected org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder req(
+            org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder builder
+    ) {
+        return builder.with(
+                com.kcserver.support.security.TestSecurity.tenantUser(tenant())
+        );
     }
 }

@@ -6,9 +6,9 @@ import com.kcserver.dto.veranstaltung.VeranstaltungCreateDTO;
 import com.kcserver.dto.veranstaltung.VeranstaltungUpdateDTO;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
-import com.kcserver.support.data.PersonTestFactory;
-import com.kcserver.support.data.VeranstaltungTestFactory;
-import com.kcserver.support.data.VereinTestFactory;
+import com.kcserver.support.api.PersonTestFactory;
+import com.kcserver.support.api.VeranstaltungTestFactory;
+import com.kcserver.support.api.VereinTestFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,26 +49,26 @@ class VeranstaltungUpdateAndDeleteTest extends AbstractTenantIntegrationTest {
     void setup() throws Exception {
 
         VereinTestFactory vereine =
-                new VereinTestFactory(mockMvc, objectMapper, tenantAuth());
+                new VereinTestFactory(mockMvc, objectMapper);
 
         PersonTestFactory personen =
-                new PersonTestFactory(mockMvc, objectMapper, tenantAuth());
+                new PersonTestFactory(mockMvc, objectMapper);
 
         veranstaltungFactory =
-                new VeranstaltungTestFactory(mockMvc, objectMapper, tenantAuth());
+                new VeranstaltungTestFactory(mockMvc, objectMapper);
 
         vereinId = vereine.createIfNotExists("EKC", "Eschweiler Kanu Club");
 
-        leiterId = personen.createOrReuse(
-                "Max", "Mustermann",
-                LocalDate.of(1990, 1, 1),
-                null
+        leiterId = personen.create(b ->
+                b.withVorname("Max")
+                        .withName("Mustermann")
+                        .withGeburtsdatum(LocalDate.of(1990, 1, 1))
         );
 
-        teilnehmerId = personen.createOrReuse(
-                "Erika", "Musterfrau",
-                LocalDate.of(2001, 5, 5),
-                null
+        teilnehmerId = personen.create(b ->
+                b.withVorname("Erika")
+                        .withName("Musterfrau")
+                        .withGeburtsdatum(LocalDate.of(2001, 5, 5))
         );
 
         VeranstaltungCreateDTO createDTO = new VeranstaltungCreateDTO();
@@ -83,7 +83,7 @@ class VeranstaltungUpdateAndDeleteTest extends AbstractTenantIntegrationTest {
 
         String json =
                 mockMvc.perform(
-                                tenantRequest(post("/api/veranstaltungen"))
+                                post("/api/veranstaltungen")
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(createDTO))
                         )
@@ -107,11 +107,11 @@ class VeranstaltungUpdateAndDeleteTest extends AbstractTenantIntegrationTest {
         updateDTO.setEndeDatum(LocalDate.now().plusDays(12));
 
         mockMvc.perform(
-                        tenantRequest(
+
                                 put("/api/veranstaltungen/{id}", veranstaltungId)
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(updateDTO))
-                        )
+
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Sommerfreizeit 2026"))
@@ -129,7 +129,7 @@ class VeranstaltungUpdateAndDeleteTest extends AbstractTenantIntegrationTest {
         Long secondId = veranstaltungFactory.create(vereinId, leiterId, "Herbst");
 
         mockMvc.perform(
-                        tenantRequest(get("/api/veranstaltungen/active"))
+                        get("/api/veranstaltungen/active")
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(secondId));
@@ -143,12 +143,12 @@ class VeranstaltungUpdateAndDeleteTest extends AbstractTenantIntegrationTest {
     void deleteVeranstaltung_onlyLeiter_allowsDelete() throws Exception {
 
         mockMvc.perform(
-                        tenantRequest(delete("/api/veranstaltungen/{id}", veranstaltungId))
+                        delete("/api/veranstaltungen/{id}", veranstaltungId)
                 )
                 .andExpect(status().isNoContent());
 
         mockMvc.perform(
-                        tenantRequest(get("/api/veranstaltungen/{id}", veranstaltungId))
+                        get("/api/veranstaltungen/{id}", veranstaltungId)
                 )
                 .andExpect(status().isNotFound());
     }
@@ -157,17 +157,17 @@ class VeranstaltungUpdateAndDeleteTest extends AbstractTenantIntegrationTest {
     void deleteActiveVeranstaltung_resultsInNoActiveVeranstaltung() throws Exception {
 
         mockMvc.perform(
-                        tenantRequest(get("/api/veranstaltungen/active"))
+                        get("/api/veranstaltungen/active")
                 )
                 .andExpect(status().isOk());
 
         mockMvc.perform(
-                        tenantRequest(delete("/api/veranstaltungen/{id}", veranstaltungId))
+                        delete("/api/veranstaltungen/{id}", veranstaltungId)
                 )
                 .andExpect(status().isNoContent());
 
         mockMvc.perform(
-                        tenantRequest(get("/api/veranstaltungen/active"))
+                        get("/api/veranstaltungen/active")
                 )
                 .andExpect(status().isNotFound());
     }
@@ -176,7 +176,7 @@ class VeranstaltungUpdateAndDeleteTest extends AbstractTenantIntegrationTest {
     void deleteNonExistingVeranstaltung_returns404() throws Exception {
 
         mockMvc.perform(
-                        tenantRequest(delete("/api/veranstaltungen/{id}", 999999L))
+                        delete("/api/veranstaltungen/{id}", 999999L)
                 )
                 .andExpect(status().isNotFound());
     }
@@ -197,7 +197,7 @@ class VeranstaltungUpdateAndDeleteTest extends AbstractTenantIntegrationTest {
         );
 
         mockMvc.perform(
-                        tenantRequest(delete("/api/veranstaltungen/{id}", veranstaltungId))
+                        delete("/api/veranstaltungen/{id}", veranstaltungId)
                 )
                 .andExpect(status().isConflict());
     }
@@ -221,10 +221,10 @@ class VeranstaltungUpdateAndDeleteTest extends AbstractTenantIntegrationTest {
         dto.setPersonIds(List.of(leiterId, teilnehmerId));
 
         mockMvc.perform(
-                        tenantRequest(
+
                                 delete("/api/veranstaltungen/{id}/teilnehmer", veranstaltungId)
                                         .contentType(MediaType.APPLICATION_JSON)
-                                        .content(objectMapper.writeValueAsString(dto))
+                                        .content(objectMapper.writeValueAsString(dto)
                         )
                 )
                 .andExpect(status().isNoContent());
@@ -238,7 +238,7 @@ class VeranstaltungUpdateAndDeleteTest extends AbstractTenantIntegrationTest {
     void shouldDelete() throws Exception {
 
         mockMvc.perform(
-                tenantRequest(delete("/api/veranstaltungen/{id}", veranstaltungId))
+                delete("/api/veranstaltungen/{id}", veranstaltungId)
         ).andExpect(status().isNoContent());
     }
 
@@ -250,11 +250,11 @@ class VeranstaltungUpdateAndDeleteTest extends AbstractTenantIntegrationTest {
     void shouldReturn404AfterDelete() throws Exception {
 
         mockMvc.perform(
-                tenantRequest(delete("/api/veranstaltungen/{id}", veranstaltungId))
+                delete("/api/veranstaltungen/{id}", veranstaltungId)
         ).andExpect(status().isNoContent());
 
         mockMvc.perform(
-                tenantRequest(get("/api/veranstaltungen/{id}", veranstaltungId))
+                get("/api/veranstaltungen/{id}", veranstaltungId)
         ).andExpect(status().isNotFound());
     }
 
@@ -266,7 +266,7 @@ class VeranstaltungUpdateAndDeleteTest extends AbstractTenantIntegrationTest {
     void shouldFailDeleteNonExisting() throws Exception {
 
         mockMvc.perform(
-                tenantRequest(delete("/api/veranstaltungen/{id}", 999999L))
+                delete("/api/veranstaltungen/{id}", 999999L)
         ).andExpect(status().isNotFound());
     }
 }

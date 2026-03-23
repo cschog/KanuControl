@@ -11,5 +11,8 @@ public final class ErrorMessages {
     public static final String TEILNEHMER_NOT_FOUND =
             "Teilnehmer not found";
 
+    public static final String VEREIN_NOT_FOUND =
+            "Verein nicht gefunden";
+
     private ErrorMessages() {}
 }

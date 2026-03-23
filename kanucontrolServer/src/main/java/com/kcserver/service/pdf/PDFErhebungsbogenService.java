@@ -43,7 +43,7 @@ public class PDFErhebungsbogenService {
                 .orElseThrow();
 
         List<Teilnehmer> teilnehmer =
-                teilnehmerRepository.findByVeranstaltungWithPerson(veranstaltungId);
+                teilnehmerRepository.findAllWithPerson(veranstaltungId);
 
         try {
             return generatePdf(v, teilnehmer);

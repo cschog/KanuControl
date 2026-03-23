@@ -22,4 +22,19 @@ public interface AbrechnungBelegRepository
     GROUP BY b.finanzGruppe.id
 """)
     List<Object[]> countByVeranstaltungGrouped(Long veranstaltungId);
+
+    @Query("""
+    SELECT COUNT(b)
+    FROM AbrechnungBeleg b
+    WHERE b.abrechnung.veranstaltung.id = :veranstaltungId
+      AND b.finanzGruppe.id = :gruppeId
+""")
+    long countByVeranstaltungAndGruppe(Long veranstaltungId, Long gruppeId);
+
+    @Query("""
+    SELECT COALESCE(MAX(b.lfdNr), 0)
+    FROM AbrechnungBeleg b
+    WHERE b.abrechnung.id = :abrechnungId
+""")
+    Integer findMaxLfdNrByAbrechnungId(Long abrechnungId);
 }

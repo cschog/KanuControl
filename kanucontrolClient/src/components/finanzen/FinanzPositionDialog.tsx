@@ -8,7 +8,9 @@ import {
   MenuItem,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import type { FinanzKategorie, PlanungPosition, PlanungPositionCreate } from "@/api/types/planung";
+
+import { FinanzKategorie } from "@/api/types/finanz";
+import type { PlanungPosition, PlanungPositionCreate } from "@/api/types/planung";
 
 interface Props {
   open: boolean;

@@ -1,10 +1,7 @@
 package com.kcserver.service;
 
 import com.kcserver.dto.person.PersonListDTO;
-import com.kcserver.dto.teilnehmer.TeilnehmerDetailDTO;
-import com.kcserver.dto.teilnehmer.TeilnehmerKurzDTO;
-import com.kcserver.dto.teilnehmer.TeilnehmerListDTO;
-import com.kcserver.dto.teilnehmer.TeilnehmerUpdateDTO;
+import com.kcserver.dto.teilnehmer.*;
 import com.kcserver.entity.Person;
 import com.kcserver.entity.Teilnehmer;
 import com.kcserver.entity.Veranstaltung;
@@ -16,7 +13,6 @@ import com.kcserver.repository.PersonRepository;
 import com.kcserver.repository.TeilnehmerRepository;
 import com.kcserver.repository.VeranstaltungRepository;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +23,7 @@ import java.util.List;
 
 import static com.kcserver.exception.EntityFinder.getOr404;
 import static com.kcserver.exception.ErrorMessages.*;
+import org.springframework.data.domain.Pageable;
 
 @Service
 @Transactional
@@ -54,25 +51,6 @@ public class TeilnehmerService {
         this.mitgliedRepository = mitgliedRepository;
         this.teilnehmerMapper = teilnehmerMapper;
         this.personMapper = personMapper;
-    }
-
-    /* =========================================================
-       READ (Full List)
-       ========================================================= */
-
-    @Transactional(readOnly = true)
-    public List<TeilnehmerDetailDTO> getTeilnehmerForVeranstaltung(Long veranstaltungId) {
-
-        Veranstaltung veranstaltung = veranstaltungRepository.findById(veranstaltungId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, VERANSTALTUNG_NOT_FOUND
-                ));
-
-        return teilnehmerRepository
-                .findByVeranstaltungWithPerson(veranstaltungId)
-                .stream()
-                .map(teilnehmerMapper::toDetailDTO)
-                .toList();
     }
 
     /* =========================================================
@@ -270,64 +248,83 @@ public class TeilnehmerService {
     }
 
     /* =========================================================
-       AVAILABLE PERSONS
-       ========================================================= */
+     SEARCH (UI LIST)
+     ========================================================= */
     @Transactional(readOnly = true)
-    public Page<PersonListDTO> getAvailablePersons(
-            Long veranstaltungId,
-            String search,
-            Pageable pageable
-    ) {
-
-        veranstaltungRepository.findById(veranstaltungId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        VERANSTALTUNG_NOT_FOUND
-                ));
-        String safeSearch = (search == null) ? "" : search;
-
-        return teilnehmerRepository
-                .findAvailablePersons(veranstaltungId, safeSearch, pageable)
-                .map(personMapper::toListDTO);
-    }
-
-
-       /* =========================================================
-       READ (Paged)
-       ========================================================= */
-
-    @Transactional(readOnly = true)
-    public Page<TeilnehmerListDTO> getTeilnehmer(
-            Long veranstaltungId,
-            String search,
-            Pageable pageable
-    ) {
-
-        return teilnehmerRepository
-                .findByVeranstaltungWithSearch(veranstaltungId, search, pageable)
-                .map(teilnehmerMapper::toListDTO);
+    public List<TeilnehmerListDTO> search(Long veranstaltungId, String search) {
+        return teilnehmerRepository.search(veranstaltungId, search)
+                .stream()
+                .map(teilnehmerMapper::toListDTO)
+                .toList();
     }
 
     /* =========================================================
-   ASSIGNED PERSONS (für FE Dual-List)
-   ========================================================= */
+       SEARCH REF (Autocomplete)
+       ========================================================= */
+    @Transactional(readOnly = true)
+    public List<TeilnehmerRefDTO> searchRef(Long veranstaltungId, String search) {
+        return teilnehmerRepository.searchRef(veranstaltungId, search)
+                .stream()
+                .map(teilnehmerMapper::toRefDTO)
+                .toList();
+    }
+
+    /* =========================================================
+       AVAILABLE
+       ========================================================= */
+    @Transactional(readOnly = true)
+    public List<PersonListDTO> findAvailable(Long veranstaltungId, String search) {
+
+        getOr404(
+                veranstaltungRepository.findById(veranstaltungId),
+                VERANSTALTUNG_NOT_FOUND
+        );
+
+        return teilnehmerRepository.findAvailable(veranstaltungId, search)
+                .stream()
+                .map(personMapper::toListDTO)
+                .toList();
+    }
 
     @Transactional(readOnly = true)
-    public List<PersonListDTO> getAssignedPersons(Long veranstaltungId) {
+    public Page<PersonListDTO> findAvailable(
+            Long veranstaltungId,
+            String name,
+            String vorname,
+            String verein,
+            Pageable pageable
+    ) {
 
-        Veranstaltung veranstaltung =
-                getOr404(
-                        veranstaltungRepository.findById(veranstaltungId),
-                        VERANSTALTUNG_NOT_FOUND
-                );
+        getOr404(
+                veranstaltungRepository.findById(veranstaltungId),
+                VERANSTALTUNG_NOT_FOUND
+        );
 
         return teilnehmerRepository
-                .findByVeranstaltungWithPerson(veranstaltungId)
+                .findAvailable(veranstaltungId, name, vorname, verein, pageable)
+                .map(personMapper::toListDTO);
+    }
+
+    /* =========================================================
+       ASSIGNED
+       ========================================================= */
+    @Transactional(readOnly = true)
+    public List<PersonListDTO> getAssigned(Long veranstaltungId) {
+        return teilnehmerRepository.findAllWithPerson(veranstaltungId)
                 .stream()
                 .map(t -> personMapper.toListDTO(t.getPerson()))
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public Page<TeilnehmerListDTO> getAssigned(
+            Long veranstaltungId,
+            Pageable pageable
+    ) {
+        return teilnehmerRepository
+                .findAssignedWithPerson(veranstaltungId, pageable)
+                .map(teilnehmerMapper::toListDTO);
+    }
     /* =========================================================
        SET LEITER
        ========================================================= */
@@ -369,6 +366,12 @@ public class TeilnehmerService {
         );
     }
 
+    public Page<TeilnehmerKurzDTO> getTeilnehmerPaged(Long veranstaltungId, Pageable pageable) {
+        return teilnehmerRepository
+                .findByVeranstaltungId(veranstaltungId, pageable)
+                .map(teilnehmerMapper::toKurzDTO);
+    }
+
 
     /* =========================================================
        HELPER
@@ -408,6 +411,16 @@ public class TeilnehmerService {
                 .findByVeranstaltungIdAndFinanzGruppeIsNull(veranstaltungId)
                 .stream()
                 .map(teilnehmerMapper::toKurzDTO)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<TeilnehmerDetailDTO> findAllDetails(Long veranstaltungId) {
+
+        return teilnehmerRepository
+                .findAllWithPerson(veranstaltungId)
+                .stream()
+                .map(teilnehmerMapper::toDetailDTO)
                 .toList();
     }
 }

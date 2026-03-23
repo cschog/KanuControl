@@ -2,7 +2,7 @@ package com.kcserver.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
-import com.kcserver.support.data.VereinTestFactory;
+import com.kcserver.support.api.VereinTestFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +31,7 @@ class CsvImportControllerTest extends AbstractTenantIntegrationTest {
     void setup() throws Exception {
 
         VereinTestFactory vereine =
-                new VereinTestFactory(mockMvc, objectMapper, tenantAuth());
+                new VereinTestFactory(mockMvc, objectMapper);
 
         vereinId = vereine.createIfNotExists(
                 "TEST",
@@ -43,13 +43,13 @@ class CsvImportControllerTest extends AbstractTenantIntegrationTest {
     void dryRun_import_returnsReport_butPersistsNothing() throws Exception {
 
         mockMvc.perform(
-                        tenantRequest(
+
                                 multipart("/api/csv-import/verein/{id}", vereinId)
                                         .file("csv", load("/import/personen.csv"))
                                         .file("mapping", load("/import/mapping.csv"))
                                         .param("dryRun", "true")
                                         .contentType(MediaType.MULTIPART_FORM_DATA)
-                        )
+
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalRows").isNumber())
@@ -74,13 +74,13 @@ class CsvImportControllerTest extends AbstractTenantIntegrationTest {
     void import_withOptionalEmailColumn_succeeds() throws Exception {
 
         mockMvc.perform(
-                        tenantRequest(
+
                                 multipart("/api/csv-import/verein/{id}", vereinId)
                                         .file("csv", load("/import/personen.csv"))
                                         .file("mapping", load("/import/mapping.csv"))
                                         .param("dryRun", "true")
                                         .contentType(MediaType.MULTIPART_FORM_DATA)
-                        )
+
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.errors").value(0))

@@ -7,8 +7,4 @@ export interface Page<T> {
   totalElements: number;
 }
 
-export type FetchPageFn<T> = (params: {
-  search?: string;
-  page?: number;
-  size?: number;
-}) => Promise<Page<T>>;
+export type FetchPageFn<T> = (params: { search?: string }) => Promise<T[]>;

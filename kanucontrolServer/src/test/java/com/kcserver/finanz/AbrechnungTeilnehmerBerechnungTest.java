@@ -53,7 +53,7 @@ class AbrechnungTeilnehmerBerechnungTest
         // 🔹 Es sollte genau ein Auto-Beleg existieren
         assertThat(a.getBelege()).hasSize(1);
 
-        AbrechnungBeleg beleg = a.getBelege().get(0);
+        AbrechnungBeleg beleg = a.getBelege().getFirst();
 
         // 🔹 Zwei Teilnehmer → zwei Positionen
         assertThat(beleg.getPositionen()).hasSize(2);

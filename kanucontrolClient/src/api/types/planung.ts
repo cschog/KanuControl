@@ -1,18 +1,4 @@
-export type FinanzTyp = "KOSTEN" | "EINNAHME";
-
-export type FinanzKategorie =
-  | "UNTERKUNFT"
-  | "VERPFLEGUNG"
-  | "HONORARE"
-  | "FAHRTKOSTEN"
-  | "VERBRAUCHSMATERIAL"
-  | "KULTUR"
-  | "MIETE"
-  | "SONSTIGE_KOSTEN"
-  | "TEILNEHMERBEITRAG"
-  | "PFAND"
-  | "KJFP_ZUSCHUSS"
-  | "SONSTIGE_EINNAHMEN";
+import { FinanzKategorie } from "@/api/types/finanz";
 
 export interface PlanungPosition {
   id: number;

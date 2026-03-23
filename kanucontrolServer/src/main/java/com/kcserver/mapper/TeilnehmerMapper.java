@@ -4,6 +4,8 @@ import com.kcserver.dto.person.PersonRefDTO;
 import com.kcserver.dto.teilnehmer.TeilnehmerDetailDTO;
 import com.kcserver.dto.teilnehmer.TeilnehmerKurzDTO;
 import com.kcserver.dto.teilnehmer.TeilnehmerListDTO;
+import com.kcserver.dto.teilnehmer.TeilnehmerRefDTO;
+import com.kcserver.entity.Mitglied;
 import com.kcserver.entity.Person;
 import com.kcserver.entity.Teilnehmer;
 import org.mapstruct.Mapper;
@@ -49,6 +51,28 @@ public interface TeilnehmerMapper {
     @Mapping(source = "person.vorname", target = "vorname")
     @Mapping(source = "person.name", target = "nachname")
     TeilnehmerKurzDTO toKurzDTO(Teilnehmer teilnehmer);
+
+    default TeilnehmerRefDTO toRefDTO(Teilnehmer t) {
+        if (t == null || t.getPerson() == null) return null;
+
+        Person p = t.getPerson();
+
+        String hauptverein = null;
+        if (p.getMitgliedschaften() != null) {
+            hauptverein = p.getMitgliedschaften().stream()
+                    .filter(Mitglied::getHauptVerein)
+                    .map(m -> m.getVerein() != null ? m.getVerein().getAbk() : null)
+                    .findFirst()
+                    .orElse(null);
+        }
+
+        return new TeilnehmerRefDTO(
+                p.getId(),
+                p.getVorname(),
+                p.getName(),
+                hauptverein
+        );
+    }
 
     /* =========================
        HILFSMAPPING

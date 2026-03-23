@@ -7,6 +7,7 @@ import com.kcserver.dto.person.PersonSearchCriteria;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import com.kcserver.dto.person.PersonRefDTO;
 
 import java.util.List;
 
@@ -36,4 +37,6 @@ public interface PersonService {
        SEARCH
        ========================= */
     Page<PersonListDTO> searchList(PersonSearchCriteria criteria, Pageable pageable);
+
+    List<PersonRefDTO> searchRefList(String search);
 }

@@ -1,6 +1,7 @@
 package com.kcserver.controller;
 
 import com.kcserver.dto.teilnehmer.TeilnehmerBulkDeleteDTO;
+import com.kcserver.dto.teilnehmer.TeilnehmerUpdateDTO;
 import com.kcserver.dto.veranstaltung.*;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.service.TeilnehmerService;
@@ -8,17 +9,17 @@ import com.kcserver.service.VeranstaltungService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import com.kcserver.dto.teilnehmer.TeilnehmerKurzDTO;
+
+import java.time.LocalDate;
 import java.util.List;
 import org.springframework.web.bind.annotation.*;
 import com.kcserver.finanz.FinanzGruppeService;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.time.LocalDate;
+import org.springframework.data.domain.Pageable;
 
 @RequiredArgsConstructor
 @RestController
@@ -28,9 +29,6 @@ public class VeranstaltungController {
     private final VeranstaltungService veranstaltungService;
     private final TeilnehmerService teilnehmerService;
     private final FinanzGruppeService finanzGruppeService;
-
-
-
 
     /* =========================================================
        CREATE
@@ -45,24 +43,60 @@ public class VeranstaltungController {
     }
 
     /* =========================================================
-       LIST
+       LIST mit paging
        ========================================================= */
 
     @GetMapping
-    public Page<VeranstaltungListDTO> getAll(
+    public Page<VeranstaltungListDTO> search(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) Boolean aktiv,
             @RequestParam(required = false) Long vereinId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-            LocalDate beginnVon,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-            LocalDate beginnBis,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate beginnDatum,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate endeDatum,
             @RequestParam(required = false) VeranstaltungTyp typ,
-            Pageable pageable
+            @PageableDefault(size = 1000) Pageable pageable
     ) {
-        return veranstaltungService.getAll(
-                name, aktiv, vereinId, beginnVon, beginnBis, typ, pageable
-        );
+
+        VeranstaltungFilterDTO filter = new VeranstaltungFilterDTO();
+        filter.setName(name);
+        filter.setAktiv(aktiv);
+        filter.setVereinId(vereinId);
+        filter.setBeginnDatum(beginnDatum);
+        filter.setEndeDatum(endeDatum);
+        filter.setTyp(typ);
+
+        return veranstaltungService.search(filter, pageable);
+    }
+
+    // ohne paging
+
+    @GetMapping("/all")
+    public List<VeranstaltungListDTO> searchAll(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) Boolean aktiv,
+            @RequestParam(required = false) Long vereinId,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate beginnDatum,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate endeDatum,
+            @RequestParam(required = false) VeranstaltungTyp typ
+    ) {
+
+        VeranstaltungFilterDTO filter = new VeranstaltungFilterDTO();
+        filter.setName(name);
+        filter.setAktiv(aktiv);
+        filter.setVereinId(vereinId);
+        filter.setBeginnDatum(beginnDatum);
+        filter.setEndeDatum(endeDatum);
+        filter.setTyp(typ);
+
+        return veranstaltungService.searchAll(filter);
     }
 
     /* =========================================================
@@ -141,4 +175,5 @@ public class VeranstaltungController {
 
         return teilnehmerService.findOhneKuerzel(veranstaltungId);
     }
+
 }

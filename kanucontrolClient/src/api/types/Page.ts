@@ -1,4 +1,3 @@
-// api/types/Page.ts
 export interface Page<T> {
   content: T[];
   totalElements: number;

@@ -15,7 +15,7 @@ import {
   deleteVerein as dbDeleteVerein,
   createVerein as dbCreateVerein,
   updateVerein as dbReplaceVerein,
-} from "@/api/services/vereinApi";
+} from "@/api/client/vereinApi";
 
 interface VereineState {
   data: Verein[];
@@ -28,23 +28,23 @@ interface VereineState {
   btnÄndernIsDisabled: boolean;
 
   createDialogOpen: boolean;
-  csvImportOpen: boolean;   // ✅ HIER
+  csvImportOpen: boolean; // ✅ HIER
 }
 
 class Vereine extends Component<Record<string, never>, VereineState> {
   state: VereineState = {
-  data: [],
-  selectedVerein: null,
-  loading: true,
-  error: null,
+    data: [],
+    selectedVerein: null,
+    loading: true,
+    error: null,
 
-  vereinFormEditMode: false,
-  btnLöschenIsDisabled: true,
-  btnÄndernIsDisabled: true,
+    vereinFormEditMode: false,
+    btnLöschenIsDisabled: true,
+    btnÄndernIsDisabled: true,
 
-  createDialogOpen: false,
-  csvImportOpen: false,     // ✅ HIER
-};
+    createDialogOpen: false,
+    csvImportOpen: false, // ✅ HIER
+  };
 
   componentDidMount() {
     this.fetchVereineData();
@@ -125,10 +125,8 @@ class Vereine extends Component<Record<string, never>, VereineState> {
     await this.fetchVereineData();
   };
 
-
   render() {
     const { data, selectedVerein, loading, error, createDialogOpen } = this.state;
-  
 
     return (
       <div>

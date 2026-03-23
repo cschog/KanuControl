@@ -2,7 +2,7 @@ package com.kcserver.verein;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
-import com.kcserver.support.data.VereinTestFactory;
+import com.kcserver.support.api.VereinTestFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -34,7 +34,7 @@ class VereinDeleteTest extends AbstractTenantIntegrationTest {
     void setup() throws Exception {
 
         VereinTestFactory vereine =
-                new VereinTestFactory(mockMvc, objectMapper, tenantAuth());
+                new VereinTestFactory(mockMvc, objectMapper);
 
         vereinId = vereine.createIfNotExists(
                 "EKC_DELETE",
@@ -46,11 +46,11 @@ class VereinDeleteTest extends AbstractTenantIntegrationTest {
     void deleteVerein_existing_returns204_andRemovesVerein() throws Exception {
 
         mockMvc.perform(
-                tenantRequest(delete("/api/verein/{id}", vereinId))
+               delete("/api/verein/{id}", vereinId)
         ).andExpect(status().isNoContent());
 
         mockMvc.perform(
-                tenantRequest(get("/api/verein/{id}", vereinId))
+                get("/api/verein/{id}", vereinId)
         ).andExpect(status().isNotFound());
     }
 
@@ -58,7 +58,7 @@ class VereinDeleteTest extends AbstractTenantIntegrationTest {
     void deleteVerein_notFound_returns404() throws Exception {
 
         mockMvc.perform(
-                tenantRequest(delete("/api/verein/{id}", 99999L))
+                delete("/api/verein/{id}", 99999L)
         ).andExpect(status().isNotFound());
     }
 }

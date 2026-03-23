@@ -1,7 +1,7 @@
 package com.kcserver.person;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kcserver.dto.person.PersonDTO;
+import com.kcserver.dto.person.PersonSaveDTO;
 import com.kcserver.enumtype.Sex;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,7 +54,7 @@ class PersonSearchSortTest extends AbstractTenantIntegrationTest {
             LocalDate geburtsdatum
     ) throws Exception {
 
-        PersonDTO dto = new PersonDTO();
+        PersonSaveDTO dto = new PersonSaveDTO();
         dto.setVorname(vorname);
         dto.setName(name);
         dto.setSex(sex);

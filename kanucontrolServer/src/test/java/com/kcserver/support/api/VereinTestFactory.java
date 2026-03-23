@@ -1,59 +1,29 @@
-package com.kcserver.support.data;
+package com.kcserver.support.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kcserver.dto.verein.VereinDTO;
 import org.springframework.http.MediaType;
+import com.kcserver.dto.verein.VereinDTO;
+import com.kcserver.support.web.AbstractApiTestFactory;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.RequestPostProcessor;
-
-import java.util.Optional;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import java.util.Optional;
 
 /**
  * Tenant-agnostische Test-Factory für Vereine.
  * Erwartet einen RequestPostProcessor (z.B. jwtWithTenant),
  * damit keine Abhängigkeit zu Test-Basisklassen entsteht.
  */
-public class VereinTestFactory {
-
-    private final MockMvc mockMvc;
-    private final ObjectMapper objectMapper;
-    private final RequestPostProcessor tenant;
+public class VereinTestFactory extends AbstractApiTestFactory {
 
     public VereinTestFactory(
             MockMvc mockMvc,
-            ObjectMapper objectMapper,
-            RequestPostProcessor tenant
+            ObjectMapper objectMapper
     ) {
-        this.mockMvc = mockMvc;
-        this.objectMapper = objectMapper;
-        this.tenant = tenant;
+        super(mockMvc, objectMapper, null);
     }
 
-    /* =========================================================
-       Öffentliche API
-       ========================================================= */
-
-    /**
-     * Legt einen Verein an, falls er noch nicht existiert
-     * (Suche über abk + name).
-     */
-    public Long createIfNotExists(String abk, String name) throws Exception {
-
-        Optional<Long> existing = findVereinId(abk, name);
-        if (existing.isPresent()) {
-            return existing.get();
-        }
-
-        return create(abk, name);
-    }
-
-    /**
-     * Legt immer einen neuen Verein an.
-     */
     public Long create(String abk, String name) throws Exception {
 
         VereinDTO dto = new VereinDTO();
@@ -63,8 +33,7 @@ public class VereinTestFactory {
         var result =
                 mockMvc.perform(
                                 post("/api/verein")
-                                        .with(tenant)
-                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .contentType(MediaType.APPLICATION_JSON) // 🔥 DAS FEHLT
                                         .content(objectMapper.writeValueAsString(dto))
                         )
                         .andExpect(status().isCreated())
@@ -75,21 +44,24 @@ public class VereinTestFactory {
                 .get("id")
                 .asLong();
     }
+    public Long createIfNotExists(String abk, String name) throws Exception {
 
-    /* =========================================================
-       Intern
-       ========================================================= */
+        Optional<Long> existing = findVereinId(abk, name);
+        if (existing.isPresent()) {
+            return existing.get();
+        }
+
+        return create(abk, name);
+    }
 
     private Optional<Long> findVereinId(String abk, String name) throws Exception {
 
         var result =
                 mockMvc.perform(
-                                get("/api/verein/search")
-                                        .with(tenant)
-                                        .param("abk", abk)
-                                        .param("name", name)
-                        )
-                        .andReturn();
+                        (get("/api/verein/search")
+                                .param("abk", abk)
+                                .param("name", name))
+                ).andReturn();
 
         if (result.getResponse().getStatus() != 200) {
             return Optional.empty();
@@ -97,7 +69,7 @@ public class VereinTestFactory {
 
         var tree = objectMapper.readTree(result.getResponse().getContentAsString());
 
-        if (tree.isArray() && tree.size() > 0) {
+        if (tree.isArray() && !tree.isEmpty()) {
             return Optional.of(tree.get(0).get("id").asLong());
         }
 

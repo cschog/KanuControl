@@ -212,7 +212,6 @@ class FoerdersatzIntegrationTest extends AbstractFinanzIntegrationTest {
         );
 
         AbrechnungBelegCreateDTO belegDTO = new AbrechnungBelegCreateDTO();
-        belegDTO.setBelegnummer("FS-TEST");
         belegDTO.setDatum(TEST_DATE);
         belegDTO.setBeschreibung("Test");
         belegDTO.setKuerzel("X1");   // 🔥 NEU

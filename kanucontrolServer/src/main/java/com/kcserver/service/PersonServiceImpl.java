@@ -1,10 +1,7 @@
 package com.kcserver.service;
 
 import com.kcserver.dto.mitglied.MitgliedSaveDTO;
-import com.kcserver.dto.person.PersonDetailDTO;
-import com.kcserver.dto.person.PersonListDTO;
-import com.kcserver.dto.person.PersonSaveDTO;
-import com.kcserver.dto.person.PersonSearchCriteria;
+import com.kcserver.dto.person.*;
 import com.kcserver.entity.Mitglied;
 import com.kcserver.entity.Person;
 import com.kcserver.entity.Verein;
@@ -23,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -76,6 +74,14 @@ public class PersonServiceImpl implements PersonService {
                     );
                     return dto;
                 });
+    }
+
+    @Transactional(readOnly = true)
+    public List<PersonRefDTO> searchRefList(String search) {
+        return personRepository.searchRefList(search)
+                .stream()
+                .map(personMapper::toPersonRefDTO)
+                .toList();
     }
 
     @Override
@@ -135,29 +141,24 @@ public class PersonServiceImpl implements PersonService {
     @Override
     public PersonDetailDTO updatePerson(long id, PersonSaveDTO dto) {
 
+        // 1. LOAD
         Person existing = personRepository.findDetailById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Person not found"
                 ));
 
-        if (dto.getGeburtsdatum() != null) {
-            personRepository
-                    .findByVornameAndNameAndGeburtsdatum(
-                            dto.getVorname(),
-                            dto.getName(),
-                            dto.getGeburtsdatum()
-                    )
-                    .filter(p -> !p.getId().equals(existing.getId()))
-                    .ifPresent(p -> {
-                        throw new ResponseStatusException(
-                                HttpStatus.CONFLICT,
-                                "Eine andere Person mit gleichem Namen und Geburtsdatum existiert bereits"
-                        );
-                    });
-        }
+        // 2. MERGE (finale Werte!)
+        String name = merge(dto.getName(), existing.getName());
+        String vorname = merge(dto.getVorname(), existing.getVorname());
+        LocalDate geburtsdatum = merge(dto.getGeburtsdatum(), existing.getGeburtsdatum());
 
+        // 3. VALIDATE
+        ensureUniquePerson(vorname, name, geburtsdatum, existing.getId());
+
+        // 4. APPLY
         personMapper.updateFromDTO(dto, existing);
 
+        // 5. EXTRA LOGIK
         syncMitgliedschaften(existing, dto.getMitgliedschaften());
 
         if (existing.getCountryCode() == null) {
@@ -266,5 +267,25 @@ public class PersonServiceImpl implements PersonService {
                     m.setHauptVerein(m == haupt)
             );
         }
+    }
+    private <T> T merge(T dtoValue, T entityValue) {
+        return dtoValue != null ? dtoValue : entityValue;
+    }
+
+    private void ensureUniquePerson(
+            String vorname,
+            String name,
+            LocalDate geburtsdatum,
+            Long currentId
+    ) {
+        personRepository
+                .findByVornameAndNameAndGeburtsdatum(vorname, name, geburtsdatum)
+                .filter(p -> !p.getId().equals(currentId))
+                .ifPresent(p -> {
+                    throw new ResponseStatusException(
+                            HttpStatus.CONFLICT,
+                            "Eine andere Person mit gleichem Namen und Geburtsdatum existiert bereits"
+                    );
+                });
     }
 }

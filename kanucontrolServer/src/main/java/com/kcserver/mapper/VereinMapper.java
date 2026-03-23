@@ -8,6 +8,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.ReportingPolicy;
+import com.kcserver.dto.verein.VereinRefDTO;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.ERROR)
 public interface VereinMapper {
@@ -23,6 +24,12 @@ public interface VereinMapper {
     @Mapping(target = "schutzkonzept", source = "schutzkonzept")
     @Mapping(target = "mitglieder", ignore = true)
     Verein toEntity(VereinDTO dto);
+
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "name", source = "name")
+    @Mapping(target = "abk", source = "abk")
+    @Mapping(target = "ort", source = "ort")
+    VereinRefDTO toRefDTO(Verein verein);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "kontoinhaber", ignore = true)

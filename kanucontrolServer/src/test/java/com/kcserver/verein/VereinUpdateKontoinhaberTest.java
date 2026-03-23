@@ -3,8 +3,8 @@ package com.kcserver.verein;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.dto.verein.VereinDTO;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
-import com.kcserver.support.data.PersonTestFactory;
-import com.kcserver.support.data.VereinTestFactory;
+import com.kcserver.support.api.PersonTestFactory;
+import com.kcserver.support.api.VereinTestFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -35,22 +35,22 @@ class VereinUpdateKontoinhaberTest extends AbstractTenantIntegrationTest {
     void setup() throws Exception {
 
         VereinTestFactory vereine =
-                new VereinTestFactory(mockMvc, objectMapper, tenantAuth());
+                new VereinTestFactory(mockMvc, objectMapper);
 
         PersonTestFactory personen =
-                new PersonTestFactory(mockMvc, objectMapper, tenantAuth());
+                new PersonTestFactory(mockMvc, objectMapper);
 
         vereinId = vereine.createIfNotExists(
                 "EKC",
                 "Eschweiler Kanu Club"
         );
 
-        personId = personen.createOrReuse(
-                "Chris",
-                "Schog",
-                LocalDate.of(1980, 1, 1),
-                null
+        personId = personen.create(b ->
+                b.withVorname("Chris")
+                        .withName("Schog")
+                        .withGeburtsdatum(LocalDate.of(1990, 1, 1))
         );
+
     }
 
     /* =========================================================
@@ -66,11 +66,11 @@ class VereinUpdateKontoinhaberTest extends AbstractTenantIntegrationTest {
         update.setKontoinhaberId(personId);
 
         mockMvc.perform(
-                        tenantRequest(
+
                                 put("/api/verein/{id}", vereinId)
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(update))
-                        )
+
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(vereinId))

@@ -1,23 +1,22 @@
-package com.kcserver.support.data;
+package com.kcserver.support.api;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.support.web.AbstractApiTestFactory;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.springframework.http.MediaType;
 
 public class TeilnehmerTestFactory extends AbstractApiTestFactory {
 
     public TeilnehmerTestFactory(
             MockMvc mockMvc,
-            ObjectMapper objectMapper,
-            RequestPostProcessor auth
+            ObjectMapper objectMapper
     ) {
-        super(mockMvc, objectMapper, auth);
+        super(mockMvc, objectMapper, null);
     }
 
     public Long createActiveVeranstaltung(Long vereinId, Long leiterId) throws Exception {
@@ -34,7 +33,8 @@ public class TeilnehmerTestFactory extends AbstractApiTestFactory {
         dto.put("endeZeit", "18:00:00");
 
         MvcResult result = mockMvc.perform(
-                        req(post("/api/veranstaltungen"))
+                        post("/api/veranstaltungen")
+                                .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(dto))
                 )
                 .andExpect(status().isCreated())
@@ -47,7 +47,7 @@ public class TeilnehmerTestFactory extends AbstractApiTestFactory {
     public Long addTeilnehmer(Long veranstaltungId, Long personId) throws Exception {
 
         MvcResult result = mockMvc.perform(
-                        req(post("/api/veranstaltungen/" + veranstaltungId + "/teilnehmer/" + personId))
+                        post("/api/veranstaltungen/" + veranstaltungId + "/teilnehmer/" + personId)
                 )
                 .andExpect(status().isCreated())
                 .andReturn();
@@ -59,7 +59,7 @@ public class TeilnehmerTestFactory extends AbstractApiTestFactory {
     public void removeTeilnehmer(Long veranstaltungId, Long teilnehmerId) throws Exception {
 
         mockMvc.perform(
-                req(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                (org.springframework.test.web.servlet.request.MockMvcRequestBuilders
                         .delete("/api/veranstaltungen/" + veranstaltungId + "/teilnehmer/" + teilnehmerId))
         ).andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isNoContent());
     }

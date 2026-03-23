@@ -4,15 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.dto.teilnehmer.TeilnehmerAddBulkDTO;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
 import com.kcserver.repository.TeilnehmerRepository;
-import com.kcserver.support.data.PersonTestFactory;
-import com.kcserver.support.data.VeranstaltungTestFactory;
-import com.kcserver.support.data.VereinTestFactory;
+import com.kcserver.support.api.PersonTestFactory;
+import com.kcserver.support.api.VeranstaltungTestFactory;
+import com.kcserver.support.api.VereinTestFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 
-import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -32,15 +31,29 @@ class TeilnehmerBulkAddTest extends AbstractTenantIntegrationTest {
     @BeforeEach
     void setup() throws Exception {
 
-        VereinTestFactory vereine = new VereinTestFactory(mockMvc, objectMapper, tenantAuth());
-        PersonTestFactory personen = new PersonTestFactory(mockMvc, objectMapper, tenantAuth());
-        VeranstaltungTestFactory veranstaltungen = new VeranstaltungTestFactory(mockMvc, objectMapper, tenantAuth());
+        VereinTestFactory vereine = new VereinTestFactory(mockMvc, objectMapper);
+        PersonTestFactory personen = new PersonTestFactory(mockMvc, objectMapper);
+        VeranstaltungTestFactory veranstaltungen = new VeranstaltungTestFactory(mockMvc, objectMapper);
 
         Long vereinId = vereine.createIfNotExists("EKC", "Eschweiler Kanu Club");
 
-        leiterId = personen.createOrReuse("Max","Mustermann", LocalDate.of(1990,1,1), null);
-        p1 = personen.createOrReuse("Erika","Musterfrau", LocalDate.of(2000,1,1), null);
-        p2 = personen.createOrReuse("Peter","Muster", LocalDate.of(2001,1,1), null);
+        leiterId = personen.create(b ->
+                b.withVorname("Max")
+                        .withName("Mustermann")
+                        .withGeburtsdatum(java.time.LocalDate.of(1990, 1, 1))
+        );
+
+        p1 = personen.create(b ->
+                b.withVorname("Erika")
+                        .withName("Musterfrau")
+                        .withGeburtsdatum(java.time.LocalDate.of(2000, 1, 1))
+        );
+
+        p2 = personen.create(b ->
+                b.withVorname("Peter")
+                        .withName("Muster")
+                        .withGeburtsdatum(java.time.LocalDate.of(2000, 1, 1))
+        );
 
         veranstaltungId = veranstaltungen.create(vereinId, leiterId, "Test");
 
@@ -54,11 +67,11 @@ class TeilnehmerBulkAddTest extends AbstractTenantIntegrationTest {
         dto.setPersonIds(List.of(p1, p2));
 
         mockMvc.perform(
-                tenantRequest(
+
                         post("/api/veranstaltungen/{id}/teilnehmer/bulk", veranstaltungId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(dto))
-                )
+
         ).andExpect(status().isCreated());
 
         ensureTenantSchema();
@@ -71,17 +84,17 @@ class TeilnehmerBulkAddTest extends AbstractTenantIntegrationTest {
         dto.setPersonIds(List.of(p1, p2));
 
         // first
-        mockMvc.perform(tenantRequest(
+        mockMvc.perform(
                 post("/api/veranstaltungen/{id}/teilnehmer/bulk", veranstaltungId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(dto))
+                        .content(objectMapper.writeValueAsString(dto)
         )).andExpect(status().isCreated());
 
         // second (same persons)
-        mockMvc.perform(tenantRequest(
+        mockMvc.perform(
                 post("/api/veranstaltungen/{id}/teilnehmer/bulk", veranstaltungId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(dto))
+                        .content(objectMapper.writeValueAsString(dto)
         )).andExpect(status().isCreated());
 
         ensureTenantSchema();
