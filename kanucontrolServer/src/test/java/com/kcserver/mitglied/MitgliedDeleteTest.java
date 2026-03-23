@@ -4,8 +4,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.dto.mitglied.MitgliedDTO;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
-import com.kcserver.support.data.PersonTestFactory;
-import com.kcserver.support.data.VereinTestFactory;
+import com.kcserver.support.api.PersonTestFactory;
+import com.kcserver.support.api.VereinTestFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -40,14 +40,15 @@ class MitgliedDeleteTest extends AbstractTenantIntegrationTest {
     Long mitgliedAId;
     Long mitgliedBId;
 
+    private PersonTestFactory personFactory;
+
     @BeforeEach
     void setup() throws Exception {
 
-        VereinTestFactory vereine =
-                new VereinTestFactory(mockMvc, objectMapper, tenantAuth());
+        personFactory = new PersonTestFactory(mockMvc, objectMapper);
 
-        PersonTestFactory personen =
-                new PersonTestFactory(mockMvc, objectMapper, tenantAuth());
+        VereinTestFactory vereine =
+                new VereinTestFactory(mockMvc, objectMapper);
 
         vereinId = vereine.createIfNotExists(
                 "EKC_DELETE",
@@ -57,11 +58,10 @@ class MitgliedDeleteTest extends AbstractTenantIntegrationTest {
         vereinAId = vereine.createIfNotExists("V_A", "Verein A");
         vereinBId = vereine.createIfNotExists("V_B", "Verein B");
 
-        personId = personen.createPerson(
-                "Max",
-                "Mustermann",
-                java.time.LocalDate.of(2000, 1, 1),
-                null
+        personId = personFactory.createWithVerein(vereinId, b ->
+                b.withVorname("Max")
+                        .withName("Mustermann")
+                        .withGeburtsdatum(java.time.LocalDate.of(2000, 1, 1))
         );
 
         // Mitglied anlegen (Setup)
@@ -72,10 +72,10 @@ class MitgliedDeleteTest extends AbstractTenantIntegrationTest {
 
         String response =
                 mockMvc.perform(
-                                tenantRequest(post("/api/mitglied"))
+                                post("/api/mitglied")
                                         .contentType(MediaType.APPLICATION_JSON)
-                                        .content(objectMapper.writeValueAsString(dto))
-                        )
+                                        .content(objectMapper.writeValueAsString(dto)
+                        ))
                         .andExpect(status().isCreated())
                         .andReturn()
                         .getResponse()
@@ -99,9 +99,8 @@ class MitgliedDeleteTest extends AbstractTenantIntegrationTest {
     void deleteMitglied_existing_returns204() throws Exception {
 
         mockMvc.perform(
-                        tenantRequest(delete("/api/mitglied/{id}", mitgliedId))
-                )
-                .andExpect(status().isNoContent());
+                (delete("/api/mitglied/{id}", mitgliedId))
+        ).andExpect(status().isNoContent());
     }
 
     /* =========================================================
@@ -112,7 +111,7 @@ class MitgliedDeleteTest extends AbstractTenantIntegrationTest {
     void deleteMitglied_notExisting_returns404() throws Exception {
 
         mockMvc.perform(
-                        tenantRequest(delete("/api/mitglied/{id}", 99999L))
+                        delete("/api/mitglied/{id}", 99999L)
                 )
                 .andExpect(status().isNotFound());
     }
@@ -121,7 +120,7 @@ class MitgliedDeleteTest extends AbstractTenantIntegrationTest {
 
         // B ist Hauptverein → A ist normal
         mockMvc.perform(
-                tenantRequest(delete("/api/mitglied/{id}", mitgliedAId))
+                (delete("/api/mitglied/{id}", mitgliedAId))
         ).andExpect(status().isNoContent());
 
         List<MitgliedDTO> remaining =
@@ -136,7 +135,7 @@ class MitgliedDeleteTest extends AbstractTenantIntegrationTest {
     void deleteHauptverein_assignsAnyRemainingAsHauptverein() throws Exception {
 
         mockMvc.perform(
-                tenantRequest(delete("/api/mitglied/{id}", mitgliedBId))
+                delete("/api/mitglied/{id}", mitgliedBId)
         ).andExpect(status().isNoContent());
 
         List<MitgliedDTO> remaining =
@@ -153,9 +152,9 @@ class MitgliedDeleteTest extends AbstractTenantIntegrationTest {
 
     private List<MitgliedDTO> getMitgliedByPerson(Long personId) throws Exception {
         String json = mockMvc.perform(
-                        tenantRequest(
-                                get("/api/mitglied/person/{id}", personId)
-                        )
+                (get("/api/mitglied/person/{id}", personId))
+
+
                 )
                 .andExpect(status().isOk())
                 .andReturn()
@@ -169,13 +168,14 @@ class MitgliedDeleteTest extends AbstractTenantIntegrationTest {
     }
 
     private Long createMitglied(Long personId, Long vereinId) throws Exception {
+
         MitgliedDTO dto = new MitgliedDTO();
         dto.setPersonId(personId);
         dto.setVereinId(vereinId);
 
         String response =
                 mockMvc.perform(
-                                tenantRequest(post("/api/mitglied"))
+                                post("/api/mitglied")
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(dto))
                         )

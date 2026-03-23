@@ -9,7 +9,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "abrechnung_beleg")
+@Table(
+        name = "abrechnung_beleg",
+        uniqueConstraints = @UniqueConstraint(
+                columnNames = {"abrechnung_id", "beleg_nummer"}
+        )
+)
 @Getter
 @Setter
 public class AbrechnungBeleg {
@@ -17,6 +22,9 @@ public class AbrechnungBeleg {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "lfd_nr", nullable = false)
+    private Integer lfdNr;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "abrechnung_id", nullable = false)

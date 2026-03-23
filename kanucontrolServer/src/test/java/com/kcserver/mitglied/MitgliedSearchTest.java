@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.dto.mitglied.MitgliedDTO;
 import com.kcserver.enumtype.MitgliedFunktion;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
-import com.kcserver.support.data.PersonTestFactory;
-import com.kcserver.support.data.VereinTestFactory;
+import com.kcserver.support.api.PersonTestFactory;
+import com.kcserver.support.api.VereinTestFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -14,8 +14,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
-
-import java.time.LocalDate;
 
 import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.is;
@@ -29,30 +27,33 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Tag("mitglied-search")
 class MitgliedSearchTest extends AbstractTenantIntegrationTest {
 
+    PersonTestFactory personFactory;
+    VereinTestFactory vereinFactory;
+
     @Autowired
     ObjectMapper objectMapper;
 
     Long personId;
+    Long vereinId;
     Long verein1Id;
     Long verein2Id;
 
     @BeforeEach
     void setup() throws Exception {
 
-        VereinTestFactory vereine =
-                new VereinTestFactory(mockMvc, objectMapper, tenantAuth());
+        personFactory = new PersonTestFactory(mockMvc, objectMapper);
+        vereinFactory = new VereinTestFactory(mockMvc, objectMapper);
 
-        PersonTestFactory personen =
-                new PersonTestFactory(mockMvc, objectMapper, tenantAuth());
+        VereinTestFactory vereine =
+                new VereinTestFactory(mockMvc, objectMapper);
 
         verein1Id = vereine.createIfNotExists("EKC_M", "Eschweiler Kanu Club");
         verein2Id = vereine.createIfNotExists("BKV_M", "Bonner Kanu Verein");
 
-        personId = personen.createPerson(
-                "Anna",
-                "Müller",
-                LocalDate.of(1995, 1, 1),
-                null
+        personId = personFactory.createWithVerein(vereinId, b ->
+                b.withVorname("Anna")
+                        .withName("Müller")
+                        .withGeburtsdatum(java.time.LocalDate.of(1995, 1, 1))
         );
 
         createMitglied(personId, verein1Id,  MitgliedFunktion.BOOTSHAUSWART);
@@ -67,9 +68,9 @@ class MitgliedSearchTest extends AbstractTenantIntegrationTest {
     void getMitgliederByPerson_returnsAllMemberships() throws Exception {
 
         mockMvc.perform(
-                        tenantRequest(
+
                                 get("/api/mitglied/person/{personId}", personId)
-                        )
+
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
@@ -85,9 +86,9 @@ class MitgliedSearchTest extends AbstractTenantIntegrationTest {
     void getMitgliederByVerein_returnsMembers() throws Exception {
 
         mockMvc.perform(
-                        tenantRequest(
+
                                 get("/api/mitglied/verein/{vereinId}", verein1Id)
-                        )
+
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
@@ -103,9 +104,9 @@ class MitgliedSearchTest extends AbstractTenantIntegrationTest {
     void getHauptvereinByPerson_returnsSingleMembership() throws Exception {
 
         mockMvc.perform(
-                        tenantRequest(
+
                                 get("/api/mitglied/person/{personId}/hauptverein", personId)
-                        )
+
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.vereinId").value(verein2Id));
@@ -133,7 +134,7 @@ class MitgliedSearchTest extends AbstractTenantIntegrationTest {
         dto.setFunktion(funktion);
 
         mockMvc.perform(
-                        tenantRequest(post("/api/mitglied"))
+                        post("/api/mitglied")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(dto))
                 )

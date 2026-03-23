@@ -64,7 +64,7 @@ public class ReportController {
                 veranstaltungService.getById(veranstaltungId);
 
         List<TeilnehmerDetailDTO> teilnehmer =
-                teilnehmerService.getTeilnehmerForVeranstaltung(veranstaltungId);
+                teilnehmerService.findAllDetails(veranstaltungId);
 
         byte[] pdf = teilnehmerlisteService.generate(
                 veranstaltung,

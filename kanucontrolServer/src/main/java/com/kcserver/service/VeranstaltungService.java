@@ -1,17 +1,13 @@
 package com.kcserver.service;
 
 import com.kcserver.dto.person.PersonListDTO;
-import com.kcserver.dto.veranstaltung.VeranstaltungCreateDTO;
-import com.kcserver.dto.veranstaltung.VeranstaltungDetailDTO;
-import com.kcserver.dto.veranstaltung.VeranstaltungListDTO;
-import com.kcserver.dto.veranstaltung.VeranstaltungUpdateDTO;
-import com.kcserver.enumtype.VeranstaltungTyp;
+import com.kcserver.dto.veranstaltung.*;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Pageable;
+
 
 public interface VeranstaltungService {
 
@@ -26,31 +22,15 @@ public interface VeranstaltungService {
      * - Veranstaltung wird automatisch aktiv
      * - Leiter wird automatisch als Teilnehmer (LEITER) angelegt
      */
-    public VeranstaltungDetailDTO create(VeranstaltungCreateDTO dto);
+    VeranstaltungDetailDTO create(VeranstaltungCreateDTO dto);
 
     /* =========================================================
        READ
        ========================================================= */
 
     /**
-     * Liefert alle Veranstaltungen (Historie).
-     */
-    Page<VeranstaltungListDTO> getAll(
-            String name,
-            Boolean aktiv,
-            Long vereinId,
-            LocalDate beginnVon,
-            LocalDate beginnBis,
-            VeranstaltungTyp typ,
-            Pageable pageable
-    );
-
-    Page<VeranstaltungListDTO> getAll(Pageable pageable);
-
-    /**
      * Liefert die aktuell aktive Veranstaltung.
-     * @throws 404 wenn keine aktiv ist
-     */
+     **/
     VeranstaltungDetailDTO getActive();
 
     /**
@@ -58,15 +38,13 @@ public interface VeranstaltungService {
      */
     VeranstaltungDetailDTO getById(Long id);
 
-    /* =========================================================
-       AVAILABE
-       ========================================================= */
-
-    public Page<PersonListDTO> getAvailablePersons(
-            Long veranstaltungId,
-            String search,
+    Page<VeranstaltungListDTO> search(
+            VeranstaltungFilterDTO filter,
             Pageable pageable
     );
+    /* =========================================================
+       AVAILABLE
+       ========================================================= */
 
     List<PersonListDTO> getAssignedPersons(Long veranstaltungId);
 
@@ -92,4 +70,11 @@ public interface VeranstaltungService {
 
     Optional<VeranstaltungDetailDTO> getActiveOptional();
 
+    List<VeranstaltungListDTO> getAll();
+
+    List<PersonListDTO> getAvailablePersons(Long veranstaltungId, String search);
+
+    List<VeranstaltungListDTO> searchAll(
+            VeranstaltungFilterDTO filter
+    );
 }

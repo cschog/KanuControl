@@ -1,20 +1,19 @@
 package com.kcserver.service;
 
 import com.kcserver.dto.person.PersonListDTO;
-import com.kcserver.dto.veranstaltung.VeranstaltungCreateDTO;
-import com.kcserver.dto.veranstaltung.VeranstaltungDetailDTO;
-import com.kcserver.dto.veranstaltung.VeranstaltungListDTO;
-import com.kcserver.dto.veranstaltung.VeranstaltungUpdateDTO;
+import com.kcserver.dto.veranstaltung.*;
 import com.kcserver.entity.*;
 import com.kcserver.enumtype.TeilnehmerRolle;
-import com.kcserver.enumtype.VeranstaltungTyp;
+import com.kcserver.repository.VeranstaltungSpecs;
+
 import com.kcserver.mapper.PersonMapper;
 import com.kcserver.mapper.VeranstaltungMapper;
 import com.kcserver.repository.*;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
+import static com.kcserver.exception.ErrorMessages.*;
+
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,16 +32,16 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
     private final VereinRepository vereinRepository;
     private final PersonRepository personRepository;
     private final TeilnehmerRepository teilnehmerRepository;
+    private final PlanungRepository planungRepository;
     private final VeranstaltungMapper veranstaltungMapper;
     private final PersonMapper personMapper;
-    private final PlanungRepository planungRepository;
 
     public VeranstaltungServiceImpl(
             VeranstaltungRepository veranstaltungRepository,
             VereinRepository vereinRepository,
             PersonRepository personRepository,
             TeilnehmerRepository teilnehmerRepository,
-            PlanungRepository planungRepository,   // 👈 hinzufügen
+            PlanungRepository planungRepository,
             VeranstaltungMapper veranstaltungMapper,
             PersonMapper personMapper
     ) {
@@ -50,7 +49,7 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
         this.vereinRepository = vereinRepository;
         this.personRepository = personRepository;
         this.teilnehmerRepository = teilnehmerRepository;
-        this.planungRepository = planungRepository;   // 👈 hinzufügen
+        this.planungRepository = planungRepository;
         this.veranstaltungMapper = veranstaltungMapper;
         this.personMapper = personMapper;
     }
@@ -60,89 +59,40 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
        ========================================================= */
 
     @Override
-    @Transactional
     public VeranstaltungDetailDTO create(VeranstaltungCreateDTO dto) {
 
-        // ⭐ GENAU WIE BEI MITGLIED
         veranstaltungRepository.unsetAktiveVeranstaltung();
+        veranstaltungRepository.flush();
 
         Verein verein = vereinRepository.findById(dto.getVereinId())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Verein not found"
-                ));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         Person leiter = personRepository.findById(dto.getLeiterId())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Leiter not found"
-                ));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         validateLeiterAge(leiter);
 
-        Veranstaltung veranstaltung = new Veranstaltung();
-        veranstaltung.setName(dto.getName());
-        veranstaltung.setTyp(dto.getTyp());
-        veranstaltung.setBeginnDatum(dto.getBeginnDatum());
-        veranstaltung.setBeginnZeit(dto.getBeginnZeit());
-        veranstaltung.setEndeDatum(dto.getEndeDatum());
-        veranstaltung.setEndeZeit(dto.getEndeZeit());
-        veranstaltung.setLaenderCode(dto.getLaenderCode());
-        veranstaltung.setPlz(dto.getPlz());
-        veranstaltung.setOrt(dto.getOrt());
-        veranstaltung.setArtDerUnterkunft(dto.getArtDerUnterkunft());
-        veranstaltung.setArtDerVerpflegung(dto.getArtDerVerpflegung());
+        Veranstaltung v = new Veranstaltung();
+        v.setName(dto.getName());
+        v.setTyp(dto.getTyp());
+        v.setBeginnDatum(dto.getBeginnDatum());
+        v.setEndeDatum(dto.getEndeDatum());
+        v.setBeginnZeit(dto.getBeginnZeit());
+        v.setEndeZeit(dto.getEndeZeit());
+        v.setVerein(verein);
+        v.setLeiter(leiter);
+        v.setAktiv(true);
 
-        veranstaltung.setIndividuelleGebuehren(
-                dto.getIndividuelleGebuehren() != null
-                        ? dto.getIndividuelleGebuehren()
-                        : false
-        );
+        Veranstaltung saved = veranstaltungRepository.save(v);
 
-        veranstaltung.setStandardGebuehr(dto.getStandardGebuehr());
-        veranstaltung.setScope(dto.getScope());
+        // Leiter als Teilnehmer sicherstellen
+        Teilnehmer t = new Teilnehmer();
+        t.setVeranstaltung(saved);
+        t.setPerson(leiter);
+        t.setRolle(TeilnehmerRolle.LEITER);
+        teilnehmerRepository.save(t);
 
-        veranstaltung.setGeplanteTeilnehmerMaennlich(dto.getGeplanteTeilnehmerMaennlich());
-        veranstaltung.setGeplanteTeilnehmerWeiblich(dto.getGeplanteTeilnehmerWeiblich());
-        veranstaltung.setGeplanteTeilnehmerDivers(dto.getGeplanteTeilnehmerDivers());
-
-        veranstaltung.setGeplanteMitarbeiterMaennlich(dto.getGeplanteMitarbeiterMaennlich());
-        veranstaltung.setGeplanteMitarbeiterWeiblich(dto.getGeplanteMitarbeiterWeiblich());
-        veranstaltung.setGeplanteMitarbeiterDivers(dto.getGeplanteMitarbeiterDivers());
-        veranstaltung.setVerein(verein);
-        veranstaltung.setLeiter(leiter);
-        veranstaltung.setAktiv(true);
-
-        if (dto.getBeginnDatum() != null &&
-                dto.getEndeDatum() != null &&
-                dto.getBeginnDatum().getYear() != dto.getEndeDatum().getYear()) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Veranstaltung darf nicht über den Jahreswechsel gehen"
-            );
-        }
-
-        Veranstaltung saved = veranstaltungRepository.save(veranstaltung);
-
-        // Leiter MUSS exakt 1 Teilnehmer sein (Domain Invariant)
-        teilnehmerRepository
-                .findByVeranstaltungAndPerson(saved, leiter)
-                .ifPresentOrElse(
-                        existing -> {
-                            existing.setRolle(TeilnehmerRolle.LEITER);
-                            teilnehmerRepository.save(existing);
-                        },
-                        () -> {
-                            Teilnehmer t = new Teilnehmer();
-                            t.setVeranstaltung(saved);
-                            t.setPerson(leiter);
-                            t.setRolle(TeilnehmerRolle.LEITER);
-                            teilnehmerRepository.save(t);
-                        }
-                );
-
-        return veranstaltungMapper.toDetailDTO(
-                veranstaltungRepository.findByIdWithRelations(saved.getId()).orElseThrow()
-        );
+        return veranstaltungMapper.toDetailDTO(saved);
     }
 
     /* =========================================================
@@ -150,96 +100,52 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
        ========================================================= */
 
     @Override
+    @Transactional(readOnly = true)
     public VeranstaltungDetailDTO getById(Long id) {
         return veranstaltungMapper.toDetailDTO(
                 veranstaltungRepository.findByIdWithRelations(id)
-                        .orElseThrow(() -> new ResponseStatusException(
-                                HttpStatus.NOT_FOUND,
-                                "Veranstaltung not found"
-                        ))
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND))
         );
     }
 
     @Override
-    public VeranstaltungDetailDTO getActive() {
-        return veranstaltungRepository.findByAktivTrue()
-                .map(veranstaltungMapper::toDetailDTO)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "No active Veranstaltung"
-                ));
+    @Transactional(readOnly = true)
+    public List<VeranstaltungListDTO> getAll() {
+        return veranstaltungRepository.findAll()
+                .stream()
+                .map(veranstaltungMapper::toListDTO)
+                .toList();
     }
 
-    @Override
-    public Page<VeranstaltungListDTO> getAll(Pageable pageable) {
-        return getAll(null, null, null, null, null, null, pageable);
-    }
-
-    @Override
-    public Page<VeranstaltungListDTO> getAll(
-            String name,
-            Boolean aktiv,
-            Long vereinId,
-            LocalDate beginnVon,
-            LocalDate beginnBis,
-            VeranstaltungTyp typ,
-            Pageable pageable
-    ) {
-        Specification<Veranstaltung> spec = null;
-
-        if (name != null && !name.isBlank()) {
-            spec = VeranstaltungSpecs.nameContains(name);
-        }
-        if (aktiv != null) {
-            spec = (spec == null)
-                    ? VeranstaltungSpecs.aktivEquals(aktiv)
-                    : spec.and(VeranstaltungSpecs.aktivEquals(aktiv));
-        }
-        if (vereinId != null) {
-            spec = (spec == null)
-                    ? VeranstaltungSpecs.vereinEquals(vereinId)
-                    : spec.and(VeranstaltungSpecs.vereinEquals(vereinId));
-        }
-        if (beginnVon != null) {
-            spec = (spec == null)
-                    ? VeranstaltungSpecs.beginnVon(beginnVon)
-                    : spec.and(VeranstaltungSpecs.beginnVon(beginnVon));
-        }
-        if (beginnBis != null) {
-            spec = (spec == null)
-                    ? VeranstaltungSpecs.beginnBis(beginnBis)
-                    : spec.and(VeranstaltungSpecs.beginnBis(beginnBis));
-        }
-        if (typ != null) {
-            spec = (spec == null)
-                    ? VeranstaltungSpecs.typEquals(typ)
-                    : spec.and(VeranstaltungSpecs.typEquals(typ));
-        }
-
-        return veranstaltungRepository
-                .findAll(spec, pageable)
-                .map(veranstaltungMapper::toListDTO);
-    }
-    /* =========================================================
-       AVAILABLE
-       ========================================================= */
     @Override
     @Transactional(readOnly = true)
-    public Page<PersonListDTO> getAvailablePersons(
-            Long veranstaltungId,
-            String search,
+    public Page<VeranstaltungListDTO> search(
+            VeranstaltungFilterDTO filter,
             Pageable pageable
     ) {
+        return veranstaltungRepository.findAll(
+                VeranstaltungSpecs.filter(filter),
+                pageable
+        ).map(veranstaltungMapper::toListDTO);
+    }
 
-        veranstaltungRepository.findById(veranstaltungId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Veranstaltung not found"
-                ));
-        String safeSearch = (search == null) ? "" : search;
+    /* =========================================================
+       AVAILABLE / ASSIGNED
+       ========================================================= */
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PersonListDTO> getAvailablePersons(Long veranstaltungId, String search) {
+
+        checkVeranstaltungExists(veranstaltungId);
+
+        String searchTerm = (search == null || search.isBlank()) ? "" : search.trim();
 
         return teilnehmerRepository
-                .findAvailablePersons(veranstaltungId, safeSearch, pageable)
-                .map(personMapper::toListDTO);
+                .findAvailable(veranstaltungId, safe(searchTerm))
+                .stream()
+                .map(personMapper::toListDTO)
+                .toList();
     }
 
     @Override
@@ -247,24 +153,37 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
     public List<PersonListDTO> getAssignedPersons(Long veranstaltungId) {
 
         return teilnehmerRepository
-                .findByVeranstaltungWithPerson(veranstaltungId)
+                .findAllWithPerson(veranstaltungId)
                 .stream()
                 .map(t -> personMapper.toListDTO(t.getPerson()))
                 .toList();
     }
 
 
+    @Transactional(readOnly = true)
+    public List<VeranstaltungListDTO> searchAll(
+            VeranstaltungFilterDTO filter
+    ) {
+        return veranstaltungRepository.findAll(
+                        VeranstaltungSpecs.filter(filter)
+                )
+                .stream()
+                .map(veranstaltungMapper::toListDTO)
+                .toList();
+    }
+
+    /* =========================================================
+       BULK
+       ========================================================= */
+
     @Override
-    @Transactional
     public void addTeilnehmerBulk(Long veranstaltungId, List<Long> personIds) {
 
-        Veranstaltung v = veranstaltungRepository.findById(veranstaltungId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Veranstaltung v = getVeranstaltungOrThrow(veranstaltungId);
 
-        for (Long personId : personIds) {
+        List<Person> persons = personRepository.findAllById(personIds);
 
-            Person p = personRepository.findById(personId)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        for (Person p : persons) {
 
             boolean exists = teilnehmerRepository
                     .findByVeranstaltungAndPerson(v, p)
@@ -280,37 +199,23 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
     }
 
     @Override
-    @Transactional
     public void removeTeilnehmerBulk(Long veranstaltungId, List<Long> personIds) {
 
-        if (personIds == null || personIds.isEmpty()) {
-            return;
-        }
-
-        Veranstaltung v = veranstaltungRepository.findById(veranstaltungId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Veranstaltung not found"
-                ));
+        Veranstaltung v = getVeranstaltungOrThrow(veranstaltungId);
 
         for (Long personId : personIds) {
 
+            if (personIds == null || personIds.isEmpty()) return;
+
             Person p = personRepository.findById(personId)
-                    .orElseThrow(() -> new ResponseStatusException(
-                            HttpStatus.NOT_FOUND,
-                            "Person not found"
-                    ));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
             teilnehmerRepository
                     .findByVeranstaltungAndPerson(v, p)
                     .ifPresent(t -> {
 
-                        // ❗ Domain-Regel: Leiter darf nicht entfernt werden
                         if (t.getRolle() == TeilnehmerRolle.LEITER) {
-                            throw new ResponseStatusException(
-                                    HttpStatus.CONFLICT,
-                                    "Leiter cannot be removed from Teilnehmer"
-                            );
+                            throw new ResponseStatusException(HttpStatus.CONFLICT);
                         }
 
                         teilnehmerRepository.delete(t);
@@ -319,227 +224,27 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
     }
 
     /* =========================================================
-       UPDATE
-       ========================================================= */
-
-    @Override
-    public VeranstaltungDetailDTO update(
-            Long id,
-            VeranstaltungUpdateDTO dto
-    ) {
-        Veranstaltung veranstaltung = getVeranstaltungOrThrow(id);
-
-        if (dto.getName() != null) {
-            veranstaltung.setName(dto.getName());
-        }
-        if (dto.getTyp() != null) {
-            veranstaltung.setTyp(dto.getTyp());
-        }
-        if (dto.getBeginnDatum() != null) {
-            veranstaltung.setBeginnDatum(dto.getBeginnDatum());
-        }
-        if (dto.getBeginnZeit() != null) {
-            veranstaltung.setBeginnZeit(dto.getBeginnZeit());
-        }
-        if (dto.getEndeDatum() != null) {
-            veranstaltung.setEndeDatum(dto.getEndeDatum());
-        }
-        if (dto.getEndeZeit() != null) {
-            veranstaltung.setEndeZeit(dto.getEndeZeit());
-        }
-
-        if (dto.getBeginnDatum() != null &&
-                dto.getEndeDatum() != null &&
-                dto.getBeginnDatum().getYear() != dto.getEndeDatum().getYear()) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Veranstaltung darf nicht über den Jahreswechsel gehen"
-            );
-        }
-
-        // -------- Leiter -------------------
-        if (dto.getLeiterId() != null) {
-
-            Person newLeiter = personRepository.findById(dto.getLeiterId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Leiter not found"));
-
-            validateLeiterAge(newLeiter);
-
-            Person oldLeiter = veranstaltung.getLeiter();
-
-            // 1️⃣ alten Leiter zurücksetzen
-            teilnehmerRepository
-                    .findByVeranstaltungAndPerson(veranstaltung, oldLeiter)
-                    .ifPresent(t -> {
-                        t.setRolle(null);
-                        teilnehmerRepository.save(t);
-                    });
-
-            // 2️⃣ neuen Leiter als Teilnehmer holen/erzeugen
-            Teilnehmer newLeiterTeilnehmer = teilnehmerRepository
-                    .findByVeranstaltungAndPerson(veranstaltung, newLeiter)
-                    .orElseGet(() -> {
-                        Teilnehmer t = new Teilnehmer();
-                        t.setVeranstaltung(veranstaltung);
-                        t.setPerson(newLeiter);
-                        t.setRolle(null);
-                        return teilnehmerRepository.save(t);
-                    });
-
-            // 3️⃣ Rolle setzen
-            newLeiterTeilnehmer.setRolle(TeilnehmerRolle.LEITER);
-            teilnehmerRepository.save(newLeiterTeilnehmer);
-
-            // 4️⃣ Veranstaltung updaten
-            veranstaltung.setLeiter(newLeiter);
-        }
-
-        // ------- Verein -------------------
-
-        if (dto.getVereinId() != null) {
-
-            Verein newVerein = vereinRepository.findById(dto.getVereinId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Verein not found"));
-
-            veranstaltung.setVerein(newVerein);
-        }
-
-        /* ================= DETAILFELDER ================= */
-
-        if (dto.getLaenderCode() != null) {
-            veranstaltung.setLaenderCode(dto.getLaenderCode());
-        }
-
-        if (dto.getPlz() != null) {
-            veranstaltung.setPlz(dto.getPlz());
-        }
-
-        if (dto.getOrt() != null) {
-            veranstaltung.setOrt(dto.getOrt());
-        }
-
-        if (dto.getArtDerUnterkunft() != null) {
-            veranstaltung.setArtDerUnterkunft(dto.getArtDerUnterkunft());
-        }
-
-        if (dto.getArtDerVerpflegung() != null) {
-            veranstaltung.setArtDerVerpflegung(dto.getArtDerVerpflegung());
-        }
-
-        /* Gebühren */
-        veranstaltung.setIndividuelleGebuehren(
-                dto.getIndividuelleGebuehren() != null
-                        ? dto.getIndividuelleGebuehren()
-                        : false
-        );
-
-        veranstaltung.setStandardGebuehr(dto.getStandardGebuehr());
-
-        if (dto.getScope() != null) {
-            veranstaltung.setScope(dto.getScope());
-        }
-
-        /* Planung Teilnehmer */
-        veranstaltung.setGeplanteTeilnehmerMaennlich(dto.getGeplanteTeilnehmerMaennlich());
-        veranstaltung.setGeplanteTeilnehmerWeiblich(dto.getGeplanteTeilnehmerWeiblich());
-        veranstaltung.setGeplanteTeilnehmerDivers(dto.getGeplanteTeilnehmerDivers());
-
-        /* Planung Mitarbeiter */
-        veranstaltung.setGeplanteMitarbeiterMaennlich(dto.getGeplanteMitarbeiterMaennlich());
-        veranstaltung.setGeplanteMitarbeiterWeiblich(dto.getGeplanteMitarbeiterWeiblich());
-        veranstaltung.setGeplanteMitarbeiterDivers(dto.getGeplanteMitarbeiterDivers());
-
-
-
-        return veranstaltungMapper.toDetailDTO(veranstaltung);
-    }
-    @Override
-    @Transactional
-    public VeranstaltungDetailDTO setActive(Long veranstaltungId) {
-
-        log.info("➡️ setActive called for veranstaltungId={}", veranstaltungId);
-
-        Veranstaltung neu = veranstaltungRepository.findById(veranstaltungId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Veranstaltung not found"
-                ));
-
-        log.info("🔎 Before reset: id={}, aktiv={}", neu.getId(), neu.isAktiv());
-
-        // 1️⃣ ALLE aktiven Veranstaltungen zurücksetzen
-        veranstaltungRepository.unsetAktiveVeranstaltung();
-
-        // 2️⃣ Entity explizit neu laden (WICHTIG!)
-        Veranstaltung refreshed = veranstaltungRepository
-                .findByIdWithRelations(veranstaltungId)
-                .orElseThrow();
-
-        log.info("🔄 After reload: id={}, aktiv={}", refreshed.getId(), refreshed.isAktiv());
-
-        // 3️⃣ neue aktiv setzen
-        refreshed.setAktiv(true);
-        veranstaltungRepository.save(refreshed);
-
-        log.info("✅ After save: id={}, aktiv={}", refreshed.getId(), refreshed.isAktiv());
-
-        return veranstaltungMapper.toDetailDTO(refreshed);
-    }
-
-
-    /* =========================================================
        DELETE
        ========================================================= */
+
     @Override
-    @Transactional
     public void delete(Long id) {
 
-        Veranstaltung v = veranstaltungRepository.findByIdWithRelations(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Veranstaltung not found"
-                ));
+        Veranstaltung v = getVeranstaltungOrThrow(id);
 
-        Long veranstaltungId = v.getId();
+        boolean hasTeilnehmer =
+                teilnehmerRepository.existsNonLeiter(id, TeilnehmerRolle.LEITER);
 
-        boolean hasOtherTeilnehmer =
-                teilnehmerRepository.existsNichtLeiterTeilnehmer(
-                        veranstaltungId,
-                        TeilnehmerRolle.LEITER
-                );
-
-        if (hasOtherTeilnehmer) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "Veranstaltung cannot be deleted while Teilnehmer exist"
-            );
+        if (hasTeilnehmer) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT);
         }
-
-        boolean wasActive = v.isAktiv();
 
         planungRepository.findByVeranstaltungId(id)
                 .ifPresent(planungRepository::delete);
 
         veranstaltungRepository.delete(v);
-
-
-
-        if (wasActive) {
-            veranstaltungRepository
-                    .findTopByOrderByBeginnDatumDesc()
-                    .ifPresent(neu -> {
-                        neu.setAktiv(true);
-                        veranstaltungRepository.save(neu);
-                    });
-        }
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public Optional<VeranstaltungDetailDTO> getActiveOptional() {
-        return veranstaltungRepository.findByAktivTrue()
-                .map(veranstaltungMapper::toDetailDTO);
-    }
 
 
     /* =========================================================
@@ -548,23 +253,127 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
 
     private Veranstaltung getVeranstaltungOrThrow(Long id) {
         return veranstaltungRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Veranstaltung not found"
-                ));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
+    private void checkVeranstaltungExists(Long id) {
+        if (!veranstaltungRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    private String safe(String s) {
+        return s == null ? "" : s;
+    }
 
     private void validateLeiterAge(Person person) {
         if (person.getGeburtsdatum() == null ||
-                person.getGeburtsdatum()
-                        .plusYears(18)
-                        .isAfter(LocalDate.now())) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Leiter must be at least 18 years old"
-            );
+                person.getGeburtsdatum().plusYears(18).isAfter(LocalDate.now())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
+    }
+    @Override
+    @Transactional(readOnly = true)
+    public VeranstaltungDetailDTO getActive() {
+        return veranstaltungRepository.findByAktivTrue()
+                .map(veranstaltungMapper::toDetailDTO)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "No active Veranstaltung"
+                ));
+    }
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<VeranstaltungDetailDTO> getActiveOptional() {
+        return veranstaltungRepository.findByAktivTrue()
+                .map(veranstaltungMapper::toDetailDTO);
+    }
+
+    @Override
+    public VeranstaltungDetailDTO setActive(Long veranstaltungId) {
+
+        Veranstaltung neu = veranstaltungRepository.findById(veranstaltungId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        // alle deaktivieren
+        veranstaltungRepository.unsetAktiveVeranstaltung();
+        veranstaltungRepository.flush();
+
+        // aktiv setzen
+        neu.setAktiv(true);
+        veranstaltungRepository.save(neu);
+
+        // 🔥 ENTSCHEIDEND: neu laden mit JOIN FETCH
+        Veranstaltung loaded = veranstaltungRepository
+                .findByIdWithRelations(neu.getId())
+                .orElseThrow();
+
+        return veranstaltungMapper.toDetailDTO(loaded);
+    }
+
+    @Override
+    @Transactional
+    public VeranstaltungDetailDTO update(Long id, VeranstaltungUpdateDTO dto) {
+
+        Veranstaltung v = veranstaltungRepository.findByIdWithRelations(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, VERANSTALTUNG_NOT_FOUND
+                ));
+
+    /* =========================
+       SIMPLE FIELDS
+       ========================= */
+
+        if (dto.getName() != null) {
+            v.setName(dto.getName());
+        }
+
+        if (dto.getBeginnDatum() != null) {
+            v.setBeginnDatum(dto.getBeginnDatum());
+        }
+
+        if (dto.getEndeDatum() != null) {
+            v.setEndeDatum(dto.getEndeDatum());
+        }
+
+        if (dto.getBeginnZeit() != null) {
+            v.setBeginnZeit(dto.getBeginnZeit());
+        }
+
+        if (dto.getEndeZeit() != null) {
+            v.setEndeZeit(dto.getEndeZeit());
+        }
+
+    /* =========================
+       VEREIN
+       ========================= */
+
+        if (dto.getVereinId() != null) {
+
+            Verein verein = vereinRepository.findById(dto.getVereinId())
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.NOT_FOUND, VEREIN_NOT_FOUND
+                    ));
+
+            v.setVerein(verein);
+        }
+
+    /* =========================
+       LEITER (inkl. Validierung)
+       ========================= */
+
+        if (dto.getLeiterId() != null) {
+
+            Person leiter = personRepository.findById(dto.getLeiterId())
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.NOT_FOUND, PERSON_NOT_FOUND
+                    ));
+
+            validateLeiterAge(leiter);   // ⭐ DAS HAT GEFEHLT
+
+            v.setLeiter(leiter);
+        }
+
+        return veranstaltungMapper.toDetailDTO(v);
     }
 }

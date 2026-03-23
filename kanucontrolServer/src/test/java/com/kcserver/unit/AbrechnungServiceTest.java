@@ -9,14 +9,14 @@ import com.kcserver.enumtype.FinanzKategorie;
 import com.kcserver.finanz.AbrechnungBelegService;
 import com.kcserver.finanz.AbrechnungService;
 import com.kcserver.finanz.FinanzGruppeService;
-import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
 import com.kcserver.repository.AbrechnungRepository;
-import com.kcserver.support.data.TestDataFactory;
+import com.kcserver.support.api.PersonTestFactory;
+import com.kcserver.support.api.VereinTestFactory;
+import com.kcserver.support.api.VeranstaltungTestFactory;
+import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -26,8 +26,6 @@ import java.time.LocalDate;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@SpringBootTest
-@ActiveProfiles("test")
 @Transactional
 class AbrechnungServiceTest extends AbstractTenantIntegrationTest {
 
@@ -44,19 +42,53 @@ class AbrechnungServiceTest extends AbstractTenantIntegrationTest {
     AbrechnungRepository abrechnungRepository;
 
     @Autowired
-    TestDataFactory factory;
+    com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
     Long veranstaltungId;
     Long teilnehmerId;
 
+    // ✅ Factories
+    VereinTestFactory vereinFactory;
+    PersonTestFactory personFactory;
+    VeranstaltungTestFactory veranstaltungFactory;
+
     /* ========================================================= */
 
     @BeforeEach
-    void setup() {
+    void setup() throws Exception {
 
-        veranstaltungId = factory.createTestVeranstaltung();
-        teilnehmerId = factory.createTeilnehmer(veranstaltungId);
+        vereinFactory = new VereinTestFactory(mockMvc, objectMapper);
+        personFactory = new PersonTestFactory(mockMvc, objectMapper);
+        veranstaltungFactory = new VeranstaltungTestFactory(mockMvc, objectMapper);
 
+        // 1️⃣ Verein
+        Long vereinId = vereinFactory.create("TV", "Testverein");
+
+        // 2️⃣ Leiter
+        Long leiterId = personFactory.createWithVerein(vereinId, b ->
+                b.withVorname("Max")
+                        .withName("Mustermann")
+                        .withGeburtsdatum(java.time.LocalDate.of(1990, 1, 1))
+        );
+
+        // 3️⃣ Veranstaltung
+        veranstaltungId = veranstaltungFactory.create(
+                vereinId,
+                leiterId,
+                "Test Abrechnung"
+        );
+
+        // 4️⃣ zusätzlicher Teilnehmer
+        Long personId = personFactory.createWithVerein(vereinId, b ->
+                b.withVorname("Anna")
+                        .withName("Test")
+                        .withGeburtsdatum(java.time.LocalDate.of(2000, 1, 1))
+        );
+
+        veranstaltungFactory.addTeilnehmer(veranstaltungId, personId);
+        teilnehmerId = personId;
+
+        // 5️⃣ Abrechnung vorbereiten
         abrechnungService.getOrCreate(veranstaltungId);
 
         Abrechnung a = abrechnungRepository
@@ -123,11 +155,9 @@ class AbrechnungServiceTest extends AbstractTenantIntegrationTest {
         abrechnungService.abschliessen(veranstaltungId);
 
         AbrechnungBelegCreateDTO belegDTO = new AbrechnungBelegCreateDTO();
-        belegDTO.setBelegnummer("TEST-2");
         belegDTO.setDatum(LocalDate.now());
         belegDTO.setKuerzel("X1");
 
-        // 🔥 Bereits Beleg-Erstellung muss scheitern
         assertThatThrownBy(() ->
                 belegService.createBeleg(veranstaltungId, belegDTO)
         ).isInstanceOf(ResponseStatusException.class);
@@ -137,7 +167,6 @@ class AbrechnungServiceTest extends AbstractTenantIntegrationTest {
 
     private void addPosition(FinanzKategorie kategorie, String betrag) {
 
-        // 🔥 Erst Kürzel vergeben
         finanzGruppeService.assignKuerzel(
                 veranstaltungId,
                 teilnehmerId,
@@ -145,9 +174,8 @@ class AbrechnungServiceTest extends AbstractTenantIntegrationTest {
         );
 
         AbrechnungBelegCreateDTO belegDTO = new AbrechnungBelegCreateDTO();
-        belegDTO.setBelegnummer("TEST");
         belegDTO.setDatum(LocalDate.now());
-        belegDTO.setKuerzel("X1"); // 🔥 WICHTIG
+        belegDTO.setKuerzel("X1");
 
         AbrechnungBelegDTO beleg =
                 belegService.createBeleg(veranstaltungId, belegDTO);

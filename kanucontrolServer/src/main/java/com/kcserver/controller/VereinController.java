@@ -44,19 +44,27 @@ public class VereinController {
     }
 
     @GetMapping("/search")
-    public List<VereinDTO> search(
+    public Page<VereinDTO> search(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String abk,
             Pageable pageable
     ) {
         return vereinService.search(name, abk, pageable);
     }
-    @GetMapping("/search/ref")
-    public Page<VereinRefDTO> searchRef(
-            @RequestParam(required = false) String search,
-            Pageable pageable
+    @GetMapping("/search/all")
+    public List<VereinDTO> searchAll(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String abk
     ) {
-        return vereinService.searchRef(search, pageable);
+        return vereinService.searchAll(name, abk);
+    }
+
+
+    @GetMapping("/search/ref")
+    public List<VereinRefDTO> searchRef(
+            @RequestParam(required = false) String search
+    ) {
+        return vereinService.searchRefList(search);
     }
 
 

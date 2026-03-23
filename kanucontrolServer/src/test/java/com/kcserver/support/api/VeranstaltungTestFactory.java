@@ -1,11 +1,11 @@
-package com.kcserver.support.data;
+package com.kcserver.support.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.dto.veranstaltung.VeranstaltungCreateDTO;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.support.web.AbstractApiTestFactory;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.RequestPostProcessor;
+import org.springframework.http.MediaType;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -13,19 +13,20 @@ import java.time.LocalTime;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+
 
 public class VeranstaltungTestFactory extends AbstractApiTestFactory {
 
     public VeranstaltungTestFactory(
             MockMvc mockMvc,
-            ObjectMapper objectMapper,
-            RequestPostProcessor auth
+            ObjectMapper objectMapper
     ) {
-        super(mockMvc, objectMapper, auth);
+        super(mockMvc, objectMapper, null);
     }
 
     /* =========================================================
-       CREATE (immer aktiv)
+       CREATE
        ========================================================= */
 
     public Long create(Long vereinId, Long leiterId, String name) throws Exception {
@@ -42,9 +43,11 @@ public class VeranstaltungTestFactory extends AbstractApiTestFactory {
         dto.setEndeZeit(LocalTime.of(18, 0));
 
         String json = mockMvc.perform(
-                        req(post("/api/veranstaltungen"))
+                        post("/api/veranstaltungen")
+                                .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(dto))
                 )
+                .andDo(print())
                 .andExpect(status().isCreated())
                 .andReturn()
                 .getResponse()
@@ -54,7 +57,7 @@ public class VeranstaltungTestFactory extends AbstractApiTestFactory {
     }
 
     /* =========================================================
-       ADD NORMALER TEILNEHMER
+       ADD TEILNEHMER
        ========================================================= */
 
     public void addTeilnehmer(Long veranstaltungId, Long personId) throws Exception {
@@ -62,7 +65,6 @@ public class VeranstaltungTestFactory extends AbstractApiTestFactory {
         mockMvc.perform(
                 post("/api/veranstaltungen/{vId}/teilnehmer/{personId}",
                         veranstaltungId, personId)
-                        .with(auth)
         ).andExpect(status().isCreated());
     }
 
@@ -89,7 +91,8 @@ public class VeranstaltungTestFactory extends AbstractApiTestFactory {
         dto.setEndeZeit(LocalTime.of(18, 0));
 
         String json = mockMvc.perform(
-                        req(post("/api/veranstaltungen"))
+                        post("/api/veranstaltungen")
+                                .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(dto))
                 )
                 .andExpect(status().isCreated())
@@ -101,9 +104,14 @@ public class VeranstaltungTestFactory extends AbstractApiTestFactory {
     }
 
     /* =========================================================
-       CREATE INACTIVE
+       SET ACTIVE
        ========================================================= */
 
+    public void setActive(Long id) throws Exception {
+        mockMvc.perform(
+                put("/api/veranstaltungen/{id}/aktiv", id)
+        ).andExpect(status().isOk());
+    }
     public Long createInactive(
             Long vereinId,
             Long leiterId,
@@ -114,8 +122,10 @@ public class VeranstaltungTestFactory extends AbstractApiTestFactory {
         Long newId = create(vereinId, leiterId, name);
 
         mockMvc.perform(
-                req(put("/api/veranstaltungen/{id}/aktiv", aktivBleibenId))
-        ).andExpect(status().isOk());
+                        put("/api/veranstaltungen/{id}/aktiv", aktivBleibenId)
+                )
+                .andDo(print())   // 👈 WICHTIG
+                .andExpect(status().isOk());
 
         return newId;
     }

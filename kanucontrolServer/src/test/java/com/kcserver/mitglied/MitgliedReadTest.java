@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.dto.mitglied.MitgliedDTO;
 import com.kcserver.enumtype.MitgliedFunktion;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
-import com.kcserver.support.data.PersonTestFactory;
-import com.kcserver.support.data.VereinTestFactory;
+import com.kcserver.support.api.PersonTestFactory;
+import com.kcserver.support.api.VereinTestFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,21 +35,20 @@ class MitgliedReadTest extends AbstractTenantIntegrationTest {
     void setup() throws Exception {
 
         VereinTestFactory vereine =
-                new VereinTestFactory(mockMvc, objectMapper, tenantAuth());
+                new VereinTestFactory(mockMvc, objectMapper);
 
         PersonTestFactory personen =
-                new PersonTestFactory(mockMvc, objectMapper, tenantAuth());
+                new PersonTestFactory(mockMvc, objectMapper);
 
         vereinId = vereine.createIfNotExists(
                 "EKC_READ",
                 "Eschweiler Kanu Club"
         );
 
-        personId = personen.createOrReuse(
-                "Max",
-                "Mustermann",
-                java.time.LocalDate.of(2000, 1, 1),
-                null
+        personId = personen.create(b ->
+                b.withVorname("Max")
+                        .withName("Mustermann")
+                        .withGeburtsdatum(java.time.LocalDate.of(2000, 1, 1))
         );
 
         MitgliedDTO dto = new MitgliedDTO();
@@ -60,7 +59,7 @@ class MitgliedReadTest extends AbstractTenantIntegrationTest {
 
         String response =
                 mockMvc.perform(
-                                tenantRequest(post("/api/mitglied"))
+                                post("/api/mitglied")
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(dto))
                         )
@@ -81,7 +80,7 @@ class MitgliedReadTest extends AbstractTenantIntegrationTest {
     void getMitgliedById_returns200() throws Exception {
 
         mockMvc.perform(
-                        tenantRequest(get("/api/mitglied/{id}", mitgliedId))
+                       get("/api/mitglied/{id}", mitgliedId)
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(mitgliedId))
@@ -93,7 +92,7 @@ class MitgliedReadTest extends AbstractTenantIntegrationTest {
     void getMitgliederByPerson_returnsList() throws Exception {
 
         mockMvc.perform(
-                        tenantRequest(get("/api/mitglied/person/{id}", personId))
+                        get("/api/mitglied/person/{id}", personId)
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1));
@@ -103,7 +102,7 @@ class MitgliedReadTest extends AbstractTenantIntegrationTest {
     void getMitgliederByVerein_returnsList() throws Exception {
 
         mockMvc.perform(
-                        tenantRequest(get("/api/mitglied/verein/{id}", vereinId))
+                        get("/api/mitglied/verein/{id}", vereinId)
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1));

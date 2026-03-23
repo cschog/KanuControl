@@ -215,7 +215,6 @@ class FinanzGruppeServiceTest extends AbstractFinanzIntegrationTest {
         createOpenAbrechnung(veranstaltungId);
 
         AbrechnungBelegCreateDTO belegDTO = new AbrechnungBelegCreateDTO();
-        belegDTO.setBelegnummer("T1");
         belegDTO.setDatum(LocalDate.now());
         belegDTO.setKuerzel("A1"); // 🔥 WICHTIG
 

@@ -1,7 +1,4 @@
 package com.kcserver.repository;
-
-import com.kcserver.dto.finanz.FinanzGruppeDTO;
-import com.kcserver.dto.finanz.FinanzGruppeOverviewDTO;
 import com.kcserver.entity.FinanzGruppe;
 import org.springframework.data.jpa.repository.JpaRepository;
 

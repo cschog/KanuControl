@@ -1,5 +1,6 @@
 package com.kcserver.repository;
 
+import com.kcserver.dto.veranstaltung.VeranstaltungFilterDTO;
 import com.kcserver.entity.Veranstaltung;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import org.springframework.data.jpa.domain.Specification;
@@ -39,14 +40,14 @@ public final class VeranstaltungSpecs {
         };
     }
 
-    public static Specification<Veranstaltung> beginnVon(LocalDate von) {
+    public static Specification<Veranstaltung> beginnDatum(LocalDate von) {
         return (root, query, cb) -> {
             if (von == null) return null;
             return cb.greaterThanOrEqualTo(root.get("beginnDatum"), von);
         };
     }
 
-    public static Specification<Veranstaltung> beginnBis(LocalDate bis) {
+    public static Specification<Veranstaltung> endeDatum(LocalDate bis) {
         return (root, query, cb) -> {
             if (bis == null) return null;
             return cb.lessThanOrEqualTo(root.get("beginnDatum"), bis);
@@ -58,5 +59,15 @@ public final class VeranstaltungSpecs {
             if (typ == null) return null;
             return cb.equal(root.get("typ"), typ);
         };
+    }
+    public static Specification<Veranstaltung> filter(VeranstaltungFilterDTO f) {
+        return Specification.allOf(
+                nameContains(f.getName()),
+                aktivEquals(f.getAktiv()),
+                vereinEquals(f.getVereinId()),
+                beginnDatum(f.getBeginnDatum()),
+                endeDatum(f.getEndeDatum()),
+                typEquals(f.getTyp())
+        );
     }
 }

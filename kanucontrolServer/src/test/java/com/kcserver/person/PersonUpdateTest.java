@@ -1,7 +1,6 @@
 package com.kcserver.person;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kcserver.dto.person.PersonDTO;
 import com.kcserver.dto.person.PersonSaveDTO;
 import com.kcserver.enumtype.Sex;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
@@ -43,7 +42,7 @@ class PersonUpdateTest extends AbstractTenantIntegrationTest {
             LocalDate geburtsdatum
     ) throws Exception {
 
-        PersonDTO dto = new PersonDTO();
+        PersonSaveDTO dto = new PersonSaveDTO();
         dto.setVorname(vorname);
         dto.setName(name);
         dto.setGeburtsdatum(geburtsdatum);
@@ -51,7 +50,7 @@ class PersonUpdateTest extends AbstractTenantIntegrationTest {
 
         String response =
                 mockMvc.perform(
-                                tenantRequest(post("/api/person"))
+                                post("/api/person")
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(dto))
                         )
@@ -83,7 +82,7 @@ class PersonUpdateTest extends AbstractTenantIntegrationTest {
         update.setSex(Sex.MAENNLICH);
 
         mockMvc.perform(
-                        tenantRequest(put("/api/person/{id}", id))
+                        put("/api/person/{id}", id)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(update))
                 )
@@ -94,12 +93,14 @@ class PersonUpdateTest extends AbstractTenantIntegrationTest {
     @Test
     void updatePerson_toExistingNameAndBirthdate_returns409() throws Exception {
 
-        Long id1 = createPerson(
+        // 🔹 EXISTIERENDE Ziel-Person
+        createPerson(
                 "Anna",
                 "Meyer",
                 LocalDate.of(1995, 5, 5)
         );
 
+        // 🔹 Person die geändert wird
         Long id2 = createPerson(
                 "Erika",
                 "Schulz",
@@ -113,7 +114,7 @@ class PersonUpdateTest extends AbstractTenantIntegrationTest {
         update.setSex(Sex.WEIBLICH);
 
         mockMvc.perform(
-                        tenantRequest(put("/api/person/{id}", id2))
+                        put("/api/person/{id}", id2)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(update))
                 )
@@ -136,7 +137,7 @@ class PersonUpdateTest extends AbstractTenantIntegrationTest {
         update.setSex(Sex.MAENNLICH);
 
         mockMvc.perform(
-                        tenantRequest(put("/api/person/{id}", id))
+                        put("/api/person/{id}", id)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(update))
                 )
@@ -146,14 +147,13 @@ class PersonUpdateTest extends AbstractTenantIntegrationTest {
     @Test
     void updateNonExistingPerson_returns404() throws Exception {
 
-        PersonDTO update = new PersonDTO();
-        update.setId(9999L);
+        PersonSaveDTO update = new PersonSaveDTO();
         update.setVorname("Ghost");
         update.setName("User");
         update.setSex(Sex.MAENNLICH);
 
         mockMvc.perform(
-                        tenantRequest(put("/api/person/{id}", 9999L))
+                        put("/api/person/{id}", 9999L)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(update))
                 )

@@ -1,3 +1,5 @@
+// api/services/teilnehmerApi.ts
+
 import apiClient from "@/api/client/apiClient";
 
 /* ================= AVAILABLE ================= */
@@ -10,18 +12,15 @@ export async function getAvailablePersons(
   vorname?: string,
   verein?: string,
 ) {
-  const res = await apiClient.get(
-    `/veranstaltungen/${veranstaltungId}/teilnehmer/available`,
-    {
-      params: {
-        page,
-        size,
-        name: name || undefined,
-        vorname: vorname || undefined,
-        verein: verein || undefined,
-      },
+  const res = await apiClient.get(`/veranstaltungen/${veranstaltungId}/teilnehmer/available/paged`, {
+    params: {
+      page,
+      size,
+      name: name || undefined,
+      vorname: vorname || undefined,
+      verein: verein || undefined,
     },
-  );
+  });
 
   return res.data;
 }
@@ -36,18 +35,15 @@ export async function getTeilnehmer(
   vorname?: string,
   verein?: string,
 ) {
-  const res = await apiClient.get(
-    `/veranstaltungen/${veranstaltungId}/teilnehmer`,
-    {
-      params: {
-        page,
-        size,
-        name: name || undefined,
-        vorname: vorname || undefined,
-        verein: verein || undefined,
-      },
+  const res = await apiClient.get(`/veranstaltungen/${veranstaltungId}/teilnehmer/paged`, {
+    params: {
+      page,
+      size,
+      name: name || undefined,
+      vorname: vorname || undefined,
+      verein: verein || undefined,
     },
-  );
+  });
 
   return res.data;
 }
@@ -80,4 +76,24 @@ export async function updateTeilnehmerRolle(
   );
 }
 
+export async function searchTeilnehmer(veranstaltungId: number, search: string) {
+  const res = await apiClient.get(`/veranstaltungen/${veranstaltungId}/teilnehmer`, {
+    params: {
+      search,
+      size: 300,
+      page: 0,
+    },
+  });
 
+  return res.data.content;
+}
+
+export async function removeTeilnehmerFromGruppe(
+  veranstaltungId: number,
+  gruppeId: number,
+  personId: number,
+) {
+  await apiClient.delete(
+    `/veranstaltungen/${veranstaltungId}/finanzgruppen/${gruppeId}/teilnehmer/${personId}`,
+  );
+}

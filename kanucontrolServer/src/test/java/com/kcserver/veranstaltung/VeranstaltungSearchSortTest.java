@@ -3,9 +3,9 @@ package com.kcserver.veranstaltung;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
-import com.kcserver.support.data.PersonTestFactory;
-import com.kcserver.support.data.VeranstaltungTestFactory;
-import com.kcserver.support.data.VereinTestFactory;
+import com.kcserver.support.api.PersonTestFactory;
+import com.kcserver.support.api.VeranstaltungTestFactory;
+import com.kcserver.support.api.VereinTestFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,19 +35,21 @@ public class VeranstaltungSearchSortTest
     void setup() throws Exception {
 
         PersonTestFactory personFactory =
-                new PersonTestFactory(mockMvc, objectMapper, tenantAuth());
+                new PersonTestFactory(mockMvc, objectMapper);
 
         VereinTestFactory vereinFactory =
-                new VereinTestFactory(mockMvc, objectMapper, tenantAuth());
+                new VereinTestFactory(mockMvc, objectMapper);
 
         veranstaltungFactory =
-                new VeranstaltungTestFactory(mockMvc, objectMapper, tenantAuth());
+                new VeranstaltungTestFactory(
+                        mockMvc,
+                        objectMapper
+                );
 
-        leiterId = personFactory.createPerson(
-                "Leiter",
-                "Test",
-                LocalDate.of(2000, 1, 1),
-                null
+        leiterId = personFactory.createWithVerein(vereinId, b ->
+                b.withVorname("leiter")
+                        .withName("Test")
+                        .withGeburtsdatum(java.time.LocalDate.of(2000, 1, 1))
         );
 
         vereinId = vereinFactory.create("TV", "Test Verein");
@@ -80,11 +82,11 @@ public class VeranstaltungSearchSortTest
 
         // WHEN
         String response = mockMvc.perform(
-                        tenantRequest(
+
                                 get("/api/veranstaltungen")
                                         .param("sort", "beginnDatum,asc")
                                         .accept(MediaType.APPLICATION_JSON)
-                        )
+
                 )
                 .andExpect(status().isOk())
                 .andReturn()
@@ -118,11 +120,11 @@ public class VeranstaltungSearchSortTest
                 LocalDate.now().plusDays(20));
 
         String response = mockMvc.perform(
-                        tenantRequest(
+
                                 get("/api/veranstaltungen")
                                         .param("sort", "beginnDatum,desc")
                                         .accept(MediaType.APPLICATION_JSON)
-                        )
+
                 ).andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
@@ -144,13 +146,13 @@ public class VeranstaltungSearchSortTest
         }
 
         String response = mockMvc.perform(
-                        tenantRequest(
+
                                 get("/api/veranstaltungen")
                                         .param("page", "1")
                                         .param("size", "2")
                                         .param("sort", "beginnDatum,asc")
                                         .accept(MediaType.APPLICATION_JSON)
-                        )
+
                 ).andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
@@ -169,12 +171,12 @@ public class VeranstaltungSearchSortTest
                 LocalDate.now().plusDays(10));
 
         String response = mockMvc.perform(
-                        tenantRequest(
+
                                 get("/api/veranstaltungen")
                                         .param("sort", "beginnDatum,asc")
                                         .param("sort", "name,asc")
                                         .accept(MediaType.APPLICATION_JSON)
-                        )
+
                 ).andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
@@ -191,11 +193,11 @@ public class VeranstaltungSearchSortTest
         veranstaltungFactory.create(vereinId, leiterId, "Winterlager");
 
         String response = mockMvc.perform(
-                        tenantRequest(
+
                                 get("/api/veranstaltungen")
                                         .param("name", "Sommer")
                                         .accept(MediaType.APPLICATION_JSON)
-                        )
+
                 ).andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
@@ -213,11 +215,11 @@ public class VeranstaltungSearchSortTest
                 vereinId, leiterId, "Inaktiv", active);
 
         String response = mockMvc.perform(
-                        tenantRequest(
+
                                 get("/api/veranstaltungen")
                                         .param("aktiv", "true")
                                         .accept(MediaType.APPLICATION_JSON)
-                        )
+
                 ).andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
@@ -233,11 +235,11 @@ public class VeranstaltungSearchSortTest
         veranstaltungFactory.create(vereinId, leiterId, "Sommerlager");
 
         String response = mockMvc.perform(
-                        tenantRequest(
+
                                 get("/api/veranstaltungen")
                                         .param("name", "XYZ_NOT_FOUND")
                                         .accept(MediaType.APPLICATION_JSON)
-                        )
+
                 ).andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
@@ -255,12 +257,12 @@ public class VeranstaltungSearchSortTest
         Long v2 = veranstaltungFactory.createWithDate(vereinId, leiterId, "B", sameDate);
 
         String response = mockMvc.perform(
-                        tenantRequest(
+
                                 get("/api/veranstaltungen")
                                         .param("sort", "beginnDatum,asc")
                                         .param("sort", "id,asc")
                                         .accept(MediaType.APPLICATION_JSON)
-                        )
+
                 ).andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 

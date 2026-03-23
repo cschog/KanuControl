@@ -2,15 +2,12 @@ package com.kcserver.teilnehmer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
-import com.kcserver.repository.TeilnehmerRepository;
-import com.kcserver.support.data.PersonTestFactory;
-import com.kcserver.support.data.VeranstaltungTestFactory;
-import com.kcserver.support.data.VereinTestFactory;
+import com.kcserver.support.api.PersonTestFactory;
+import com.kcserver.support.api.VeranstaltungTestFactory;
+import com.kcserver.support.api.VereinTestFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.time.LocalDate;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -18,7 +15,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class TeilnehmerDuplicateTest extends AbstractTenantIntegrationTest {
 
     @Autowired ObjectMapper objectMapper;
-    @Autowired TeilnehmerRepository teilnehmerRepository;
 
     Long veranstaltungId;
     Long leiterId;
@@ -27,14 +23,24 @@ class TeilnehmerDuplicateTest extends AbstractTenantIntegrationTest {
     @BeforeEach
     void setup() throws Exception {
 
-        VereinTestFactory vereine = new VereinTestFactory(mockMvc, objectMapper, tenantAuth());
-        PersonTestFactory personen = new PersonTestFactory(mockMvc, objectMapper, tenantAuth());
-        VeranstaltungTestFactory veranstaltungen = new VeranstaltungTestFactory(mockMvc, objectMapper, tenantAuth());
+        VereinTestFactory vereine = new VereinTestFactory(mockMvc, objectMapper);
+        PersonTestFactory personen = new PersonTestFactory(mockMvc, objectMapper);
+        VeranstaltungTestFactory veranstaltungen = new VeranstaltungTestFactory(mockMvc, objectMapper);
 
         Long vereinId = vereine.createIfNotExists("EKC", "Eschweiler Kanu Club");
 
-        leiterId = personen.createOrReuse("Max","Mustermann", LocalDate.of(1990,1,1), null);
-        personId = personen.createOrReuse("Erika","Musterfrau", LocalDate.of(2000,1,1), null);
+        leiterId = personen.create(b ->
+                b.withVorname("Max")
+                        .withName("Mustermann")
+                        .withGeburtsdatum(java.time.LocalDate.of(1990, 1, 1))
+        );
+
+
+        personId = personen.create(b ->
+                b.withVorname("Erika")
+                        .withName("Musterfrau")
+                        .withGeburtsdatum(java.time.LocalDate.of(2000, 1, 1))
+        );
 
         veranstaltungId = veranstaltungen.create(vereinId, leiterId, "Test");
 
@@ -46,12 +52,12 @@ class TeilnehmerDuplicateTest extends AbstractTenantIntegrationTest {
 
         // 1. add ok
         mockMvc.perform(
-                tenantRequest(post("/api/veranstaltungen/{v}/teilnehmer/{p}", veranstaltungId, personId))
+                post("/api/veranstaltungen/{v}/teilnehmer/{p}", veranstaltungId, personId)
         ).andExpect(status().isCreated());
 
         // 2. add again → CONFLICT
         mockMvc.perform(
-                tenantRequest(post("/api/veranstaltungen/{v}/teilnehmer/{p}", veranstaltungId, personId))
+                post("/api/veranstaltungen/{v}/teilnehmer/{p}", veranstaltungId, personId)
         ).andExpect(status().isConflict());
     }
 }

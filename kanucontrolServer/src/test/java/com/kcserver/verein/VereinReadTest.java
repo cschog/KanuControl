@@ -2,7 +2,7 @@ package com.kcserver.verein;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
-import com.kcserver.support.data.VereinTestFactory;
+import com.kcserver.support.api.VereinTestFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -30,7 +30,7 @@ class VereinReadTest extends AbstractTenantIntegrationTest {
     void setup() throws Exception {
 
         VereinTestFactory vereine =
-                new VereinTestFactory(mockMvc, objectMapper, tenantAuth());
+                new VereinTestFactory(mockMvc, objectMapper);
 
         vereinId = vereine.createIfNotExists(
                 "EKC",
@@ -42,7 +42,7 @@ class VereinReadTest extends AbstractTenantIntegrationTest {
     void getAll_returnsAllVereine() throws Exception {
 
         VereinTestFactory vereine =
-                new VereinTestFactory(mockMvc, objectMapper, tenantAuth());
+                new VereinTestFactory(mockMvc, objectMapper);
 
         vereine.createIfNotExists(
                 "OKC",
@@ -50,7 +50,7 @@ class VereinReadTest extends AbstractTenantIntegrationTest {
         );
 
         mockMvc.perform(
-                        tenantRequest(get("/api/verein"))
+                        get("/api/verein")
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
@@ -62,8 +62,8 @@ class VereinReadTest extends AbstractTenantIntegrationTest {
     void getById_returnsVerein() throws Exception {
 
         mockMvc.perform(
-                        tenantRequest(get("/api/verein/{id}", vereinId))
-                )
+                        get("/api/verein/{id}", vereinId))
+
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(vereinId))
                 .andExpect(jsonPath("$.name").value("Eschweiler Kanu Club"))
@@ -74,7 +74,7 @@ class VereinReadTest extends AbstractTenantIntegrationTest {
     void getById_notFound_returns404() throws Exception {
 
         mockMvc.perform(
-                        tenantRequest(get("/api/verein/{id}", 99999L))
+                        get("/api/verein/{id}", 99999L)
                 )
                 .andExpect(status().isNotFound());
     }

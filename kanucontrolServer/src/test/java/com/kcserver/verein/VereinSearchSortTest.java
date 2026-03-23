@@ -2,7 +2,7 @@ package com.kcserver.verein;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
-import com.kcserver.support.data.VereinTestFactory;
+import com.kcserver.support.api.VereinTestFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -28,7 +28,7 @@ class VereinSearchSortTest extends AbstractTenantIntegrationTest {
     void setup() throws Exception {
 
         VereinTestFactory vereine =
-                new VereinTestFactory(mockMvc, objectMapper, tenantAuth());
+                new VereinTestFactory(mockMvc, objectMapper);
 
         vereine.createIfNotExists("EKC", "Eschweiler Kanu Club");
         vereine.createIfNotExists("OKC", "Oberhausener Kanu Club");
@@ -44,42 +44,42 @@ class VereinSearchSortTest extends AbstractTenantIntegrationTest {
     void search_sortedByNameAsc() throws Exception {
 
         mockMvc.perform(
-                        tenantRequest(
+
                                 get("/api/verein/search")
                                         .param("sort", "name,asc")
-                        )
+
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name").value("Aachener Kanu Verein"))
-                .andExpect(jsonPath("$[3].name").value("Oberhausener Kanu Club"));
+                .andExpect(jsonPath("$.content[0].name").value("Aachener Kanu Verein"))
+                .andExpect(jsonPath("$.content[3].name").value("Oberhausener Kanu Club"));
     }
 
     @Test
     void search_sortedByNameDesc() throws Exception {
 
         mockMvc.perform(
-                        tenantRequest(
+
                                 get("/api/verein/search")
                                         .param("sort", "name,desc")
-                        )
+
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name").value("Oberhausener Kanu Club"))
-                .andExpect(jsonPath("$[3].name").value("Aachener Kanu Verein"));
+                .andExpect(jsonPath("$.content[0].name").value("Oberhausener Kanu Club"))
+                .andExpect(jsonPath("$.content[3].name").value("Aachener Kanu Verein"));
     }
 
     @Test
     void search_sortedByAbkAsc() throws Exception {
 
         mockMvc.perform(
-                        tenantRequest(
+
                                 get("/api/verein/search")
                                         .param("sort", "abk,asc")
-                        )
+
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].abk").value("AKV"))
-                .andExpect(jsonPath("$[3].abk").value("OKC"));
+                .andExpect(jsonPath("$.content[0].abk").value("AKV"))
+                .andExpect(jsonPath("$.content[3].abk").value("OKC"));
     }
 
     /* =========================================================
@@ -90,16 +90,16 @@ class VereinSearchSortTest extends AbstractTenantIntegrationTest {
     void search_withPagingAndSorting_returnsSecondPage() throws Exception {
 
         mockMvc.perform(
-                        tenantRequest(
+
                                 get("/api/verein/search")
                                         .param("sort", "name,asc")
                                         .param("page", "1")
                                         .param("size", "2")
-                        )
+
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].name").value("Eschweiler Kanu Club"))
-                .andExpect(jsonPath("$[1].name").value("Oberhausener Kanu Club"));
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.content[0].name").value("Eschweiler Kanu Club"))
+                .andExpect(jsonPath("$.content[1].name").value("Oberhausener Kanu Club"));
     }
 }
