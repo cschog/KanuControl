@@ -19,13 +19,12 @@ public interface VeranstaltungRepository extends
     Optional<Veranstaltung> findTopByOrderByBeginnDatumDesc();
 
     @Query("""
-        select v
-        from Veranstaltung v
-        left join fetch v.verein
-        left join fetch v.leiter
-        where v.id = :id
-    """)
-    Optional<Veranstaltung> findByIdWithRelations(@Param("id") Long id);
+    select v from Veranstaltung v
+    left join fetch v.verein
+    left join fetch v.leiter
+    where v.id = :id
+""")
+    Optional<Veranstaltung> findByIdWithRelations(Long id);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""

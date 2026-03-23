@@ -1,6 +1,6 @@
 import { EntityAutocomplete } from "@/components/common/reference/EntityAutocomplete";
 import { PersonRef } from "@/api/types/PersonRef";
-import { searchPersonsPage } from "@/api/services/personApi";
+import { searchPersons } from "@/api/services/personApi";
 
 interface Props {
   value?: PersonRef;
@@ -15,7 +15,7 @@ export function PersonAutocomplete({ value, disabled, onChange }: Props) {
       label="Leitung"
       value={value}
       disabled={disabled}
-      fetch={searchPersonsPage}
+      fetch={searchPersons}
       getLabel={(p) => `${p.name}, ${p.vorname}`}
       onChange={onChange}
     />

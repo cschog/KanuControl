@@ -22,11 +22,11 @@ class PersonControllerTest extends AbstractTenantIntegrationTest {
 
         // absichtlich leeres / ungültiges JSON
         mockMvc.perform(
-                        tenantRequest(
+
                                 post("/api/person")
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content("{}")
-                        )
+
                 )
                 .andExpect(status().isBadRequest());
     }

@@ -52,11 +52,22 @@ public class AbrechnungBelegService {
                                 HttpStatus.NOT_FOUND,
                                 "FinanzGruppe nicht gefunden"));
 
+        // 🔥 MAX
+        Integer max = belegRepository
+                .findMaxLfdNrByAbrechnungId(abrechnung.getId());
+
+        int next = (max == null ? 1 : max + 1);
+
+        String belegnummer =
+                gruppe.getKuerzel() + "_" + String.format("%03d", next);
+
         AbrechnungBeleg beleg = new AbrechnungBeleg();
-        beleg.setBelegnummer(dto.getBelegnummer());
+        beleg.setLfdNr(next);
         beleg.setDatum(dto.getDatum() != null ? dto.getDatum() : LocalDate.now());
         beleg.setBeschreibung(dto.getBeschreibung());
         beleg.setFinanzGruppe(gruppe);
+
+        beleg.setBelegnummer(belegnummer);
 
         abrechnung.addBeleg(beleg);
 

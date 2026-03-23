@@ -1,8 +1,8 @@
 import apiClient from "@/api/client/apiClient";
-import { Page } from "@/api/types/Page";
 import { VeranstaltungList } from "@/api/types/VeranstaltungList";
 import { VeranstaltungDetail } from "@/api/types/VeranstaltungDetail";
 import { VeranstaltungSave } from "@/api/types/VeranstaltungSave";
+import { Page } from "@/api/types/Page";
 
 /* =========================================================
    LIST (PAGED)
@@ -17,7 +17,7 @@ export function getVeranstaltungenPage(page: number, size: number) {
         sort: "beginnDatum,desc",
       },
     })
-    .then((r) => r.data);
+    .then((r) => r.data.content);
 }
 
 /* ================= PDF Teilnehmerliste ================= */

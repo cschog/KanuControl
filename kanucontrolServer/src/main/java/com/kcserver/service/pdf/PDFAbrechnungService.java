@@ -38,7 +38,7 @@ public class PDFAbrechnungService {
                 .orElseThrow();
 
         List<Teilnehmer> teilnehmer =
-                teilnehmerRepository.findByVeranstaltungWithPerson(veranstaltungId);
+                teilnehmerRepository.findAllWithPerson(veranstaltungId);
 
         if (v.getTyp() != VeranstaltungTyp.FM
                 && v.getTyp() != VeranstaltungTyp.JEM) {

@@ -6,9 +6,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
+import org.springframework.data.jpa.repository.Query;
 
 public interface PersonRepository
         extends JpaRepository<Person, Long>,
@@ -54,4 +57,19 @@ public interface PersonRepository
             "mitgliedschaften.verein"
     })
     Optional<Person> findDetailById(Long id);
+
+    @Query("""
+SELECT DISTINCT p
+FROM Person p
+LEFT JOIN FETCH p.mitgliedschaften m
+LEFT JOIN FETCH m.verein
+WHERE (
+    :search IS NULL
+    OR :search = ''
+    OR LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%'))
+    OR LOWER(p.vorname) LIKE LOWER(CONCAT('%', :search, '%'))
+)
+ORDER BY p.name, p.vorname
+""")
+    List<Person> searchRefList(@Param("search") String search);
 }

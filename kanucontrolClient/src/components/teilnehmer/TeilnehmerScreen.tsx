@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { Box, Button, Typography, Paper, Grid, TextField } from "@mui/material";
 import { useAppContext } from "@/context/AppContext";
 import { updateTeilnehmerRolle } from "@/api/services/teilnehmerApi";
+import { useDebounce } from "@/components/common/reference/hooks";
 
 import {
   getAvailablePersons,
@@ -30,13 +31,19 @@ export default function TeilnehmerScreen() {
 
   /* ================= FILTER ================= */
 
-  const [fNameL, setFNameL] = useState("");
-  const [fVornameL, setFVornameL] = useState("");
-  const [fVereinL, setFVereinL] = useState("");
+  // FILTER STATES
+const [searchL, setSearchL] = useState("");
+const [fVereinL, setFVereinL] = useState("");
 
-  const [fNameR, setFNameR] = useState("");
-  const [fVornameR, setFVornameR] = useState("");
-  const [fVereinR, setFVereinR] = useState("");
+const [searchR, setSearchR] = useState("");
+const [fVereinR, setFVereinR] = useState("");
+
+// DEBOUNCE DANACH
+const debounceSearchL = useDebounce(searchL, 300);
+const debounceSearchR = useDebounce(searchR, 300);
+
+const debounceVereinL = useDebounce(fVereinL, 300);
+const debounceVereinR = useDebounce(fVereinR, 300);
 
   /* ================= PAGING (LEFT) ================= */
 
@@ -47,41 +54,55 @@ export default function TeilnehmerScreen() {
   /* ================= LOAD ================= */
 
   const load = useCallback(async () => {
-    if (!active?.id) return;
+  if (!active?.id) return;
 
-    // LEFT (Server Paging)
-    const a = await getAvailablePersons(
-      active.id,
-      pageL,
-      sizeL,
-      fNameL || undefined,
-      fVornameL || undefined,
-      fVereinL || undefined,
-    );
+  const a = await getAvailablePersons(
+    active.id,
+    pageL,
+    sizeL,
+    debounceSearchL || undefined,
+    undefined,
+    debounceVereinL || undefined,
+  );
 
-    setAvailable(a.content);
-    setTotalAvailable(a.totalElements);
+ setAvailable(a?.content ?? []); // 🔥 fallback
+ setTotalAvailable(a?.totalElements ?? 0);
 
-    // RIGHT (keine Paging nötig)
-    const b = await getTeilnehmer(
-      active.id,
-      0,
-      500,
-      fNameR || undefined,
-      fVornameR || undefined,
-      fVereinR || undefined,
-    );
+  const b = await getTeilnehmer(
+    active.id,
+    0,
+    500,
+    debounceSearchR || undefined,
+    undefined,
+    debounceVereinR || undefined,
+  );
 
-    setAssigned(b.content);
-  }, [active?.id, pageL, sizeL, fNameL, fVornameL, fVereinL, fNameR, fVornameR, fVereinR]);
+  console.log("AVAILABLE RAW:", a);
+  console.log("ASSIGNED RAW:", b);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  setAssigned(b?.content ?? []);
+}, [
+  active?.id,
+  pageL,
+  sizeL,
+  debounceSearchL,
+  debounceSearchR,
+  debounceVereinL,
+  debounceVereinR,
+]);
+
+
+useEffect(() => {
+  load();
+}, [load]);
+
+
 
   /* ================= COUNTS ================= */
 
-  function countDistinct<T>(arr: T[], getKey: (x: T) => string | null | undefined) {
+  function countDistinct<T>(arr: T[] | undefined, getKey: (x: T) => string | null | undefined) {
+    if (!arr) return 0; // 🔥 wichtig
+
     const set = new Set<string>();
     arr.forEach((x) => {
       const k = getKey(x);
@@ -141,15 +162,13 @@ export default function TeilnehmerScreen() {
   /* ================= RESET FILTER ================= */
 
   const resetLeftFilter = () => {
-    setFNameL("");
-    setFVornameL("");
+    setSearchL("");
     setFVereinL("");
     setPageL(0);
   };
 
   const resetRightFilter = () => {
-    setFNameR("");
-    setFVornameR("");
+    setSearchR("");
     setFVereinR("");
   };
 
@@ -182,24 +201,16 @@ export default function TeilnehmerScreen() {
             </Box>
 
             <Grid container spacing={1} sx={{ mb: 1 }}>
-              <Grid size={4}>
+              <Grid size={8}>
                 <TextField
                   size="small"
-                  label="Name"
-                  value={fNameL}
-                  onChange={(e) => setFNameL(e.target.value)}
+                  label="Name / Vorname"
+                  value={searchL}
+                  onChange={(e) => setSearchL(e.target.value)}
                   fullWidth
                 />
               </Grid>
-              <Grid size={4}>
-                <TextField
-                  size="small"
-                  label="Vorname"
-                  value={fVornameL}
-                  onChange={(e) => setFVornameL(e.target.value)}
-                  fullWidth
-                />
-              </Grid>
+
               <Grid size={4}>
                 <TextField
                   size="small"
@@ -275,24 +286,16 @@ export default function TeilnehmerScreen() {
             </Box>
 
             <Grid container spacing={1} sx={{ mb: 1 }}>
-              <Grid size={4}>
+              <Grid size={8}>
                 <TextField
                   size="small"
-                  label="Name"
-                  value={fNameR}
-                  onChange={(e) => setFNameR(e.target.value)}
+                  label="Name / Vorname"
+                  value={searchR}
+                  onChange={(e) => setSearchR(e.target.value)}
                   fullWidth
                 />
               </Grid>
-              <Grid size={4}>
-                <TextField
-                  size="small"
-                  label="Vorname"
-                  value={fVornameR}
-                  onChange={(e) => setFVornameR(e.target.value)}
-                  fullWidth
-                />
-              </Grid>
+
               <Grid size={4}>
                 <TextField
                   size="small"

@@ -1,7 +1,7 @@
 package com.kcserver.person;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kcserver.dto.person.PersonDTO;
+import com.kcserver.dto.person.PersonSaveDTO;
 import com.kcserver.enumtype.Sex;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
 import org.junit.jupiter.api.Tag;
@@ -34,7 +34,7 @@ class PersonValidationTest extends AbstractTenantIntegrationTest {
     @Test
     void createPerson_withEmptyVorname_returns400() throws Exception {
 
-        PersonDTO dto = validPerson();
+        PersonSaveDTO dto = validPerson();
         dto.setVorname(" ");
 
         mockMvc.perform(
@@ -49,7 +49,7 @@ class PersonValidationTest extends AbstractTenantIntegrationTest {
     @Test
     void createPerson_withEmptyName_returns400() throws Exception {
 
-        PersonDTO dto = validPerson();
+        PersonSaveDTO dto = validPerson();
         dto.setName("");
 
         mockMvc.perform(
@@ -64,7 +64,7 @@ class PersonValidationTest extends AbstractTenantIntegrationTest {
     @Test
     void createPerson_withNullSex_returns400() throws Exception {
 
-        PersonDTO dto = validPerson();
+        PersonSaveDTO dto = validPerson();
         dto.setSex(null);
 
         mockMvc.perform(
@@ -79,7 +79,7 @@ class PersonValidationTest extends AbstractTenantIntegrationTest {
     @Test
     void createPerson_withFutureGeburtsdatum_returns400() throws Exception {
 
-        PersonDTO dto = validPerson();
+        PersonSaveDTO dto = validPerson();
         dto.setGeburtsdatum(LocalDate.now().plusDays(1));
 
         mockMvc.perform(
@@ -95,8 +95,8 @@ class PersonValidationTest extends AbstractTenantIntegrationTest {
        Helper
        ========================================================= */
 
-    private PersonDTO validPerson() {
-        PersonDTO dto = new PersonDTO();
+    private PersonSaveDTO validPerson() {
+        PersonSaveDTO dto = new PersonSaveDTO();
         dto.setVorname("Max");
         dto.setName("Mustermann");
         dto.setSex(Sex.MAENNLICH);

@@ -4,35 +4,66 @@ import com.kcserver.dto.planung.PlanungPositionCreateDTO;
 import com.kcserver.enumtype.FinanzKategorie;
 import com.kcserver.finanz.PlanungPositionService;
 import com.kcserver.finanz.PlanungService;
+import com.kcserver.support.api.PersonTestFactory;
+import com.kcserver.support.api.VeranstaltungTestFactory;
+import com.kcserver.support.api.VereinTestFactory;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
-import com.kcserver.support.data.TestDataFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
-@ActiveProfiles("test")
 @Transactional
 class PlanungServiceTest extends AbstractTenantIntegrationTest {
 
     @Autowired
     PlanungService service;
+
     @Autowired
     PlanungPositionService positionService;
-    @Autowired TestDataFactory factory;
+
+    @Autowired
+    com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
     Long veranstaltungId;
 
+    // ✅ Factories
+    VereinTestFactory vereinFactory;
+    PersonTestFactory personFactory;
+    VeranstaltungTestFactory veranstaltungFactory;
+
     @BeforeEach
-    void setup() {
-        veranstaltungId = factory.createTestVeranstaltung();
+    void setup() throws Exception {
+
+        // Factories initialisieren
+        vereinFactory = new VereinTestFactory(mockMvc, objectMapper);
+        personFactory = new PersonTestFactory(mockMvc, objectMapper);
+        veranstaltungFactory =
+                new VeranstaltungTestFactory(
+                        mockMvc,
+                        objectMapper
+                );
+
+        // 1️⃣ Verein
+        Long vereinId = vereinFactory.create("TV", "Testverein");
+
+        // 2️⃣ Leiter (>=18 wichtig!)
+        Long leiterId = personFactory.createWithVerein(vereinId, b ->
+                b.withVorname("Max")
+                        .withName("Mustermann")
+                        .withGeburtsdatum(java.time.LocalDate.of(1990, 1, 1))
+        );
+
+        // 3️⃣ Veranstaltung
+        veranstaltungId = veranstaltungFactory.create(
+                vereinId,
+                leiterId,
+                "Test Planung"
+        );
     }
 
     @Test

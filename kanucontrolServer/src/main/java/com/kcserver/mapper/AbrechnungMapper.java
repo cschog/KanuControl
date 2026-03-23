@@ -53,7 +53,6 @@ public class AbrechnungMapper {
         AbrechnungBelegDTO dto = new AbrechnungBelegDTO();
 
         dto.setId(beleg.getId());
-        dto.setBelegnummer(beleg.getBelegnummer());
         dto.setDatum(beleg.getDatum());
         dto.setBeschreibung(beleg.getBeschreibung());
 

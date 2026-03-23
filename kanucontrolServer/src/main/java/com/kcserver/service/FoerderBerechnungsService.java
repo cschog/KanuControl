@@ -75,7 +75,7 @@ public class FoerderBerechnungsService {
 
         List<Teilnehmer> teilnehmer =
                 teilnehmerRepository
-                        .findByVeranstaltungWithPerson(veranstaltungId);
+                        .findAllWithPerson(veranstaltungId);
 
         BigDecimal gesamt = BigDecimal.ZERO;
 

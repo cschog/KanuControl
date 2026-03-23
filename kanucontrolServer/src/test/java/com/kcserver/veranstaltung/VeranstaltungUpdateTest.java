@@ -5,10 +5,10 @@ import com.kcserver.dto.veranstaltung.VeranstaltungCreateDTO;
 import com.kcserver.dto.veranstaltung.VeranstaltungUpdateDTO;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
-import com.kcserver.repository.VeranstaltungRepository;
-import com.kcserver.support.data.PersonTestFactory;
-import com.kcserver.support.data.VeranstaltungTestFactory;
-import com.kcserver.support.data.VereinTestFactory;
+
+import com.kcserver.support.api.PersonTestFactory;
+import com.kcserver.support.api.VeranstaltungTestFactory;
+import com.kcserver.support.api.VereinTestFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,9 +32,6 @@ class VeranstaltungUpdateTest extends AbstractTenantIntegrationTest {
     @Autowired
     ObjectMapper objectMapper;
 
-    @Autowired
-    VeranstaltungRepository veranstaltungRepository;
-
     VeranstaltungTestFactory veranstaltungFactory;
 
     Long veranstaltungId;
@@ -45,20 +42,19 @@ class VeranstaltungUpdateTest extends AbstractTenantIntegrationTest {
     void setup() throws Exception {
 
         VereinTestFactory vereine =
-                new VereinTestFactory(mockMvc, objectMapper, tenantAuth());
+                new VereinTestFactory(mockMvc, objectMapper);
         PersonTestFactory personen =
-                new PersonTestFactory(mockMvc, objectMapper, tenantAuth());
+                new PersonTestFactory(mockMvc, objectMapper);
 
         veranstaltungFactory =
-                new VeranstaltungTestFactory(mockMvc, objectMapper, tenantAuth());
+                new VeranstaltungTestFactory(mockMvc, objectMapper);
 
         vereinId = vereine.createIfNotExists("EKC", "Eschweiler Kanu Club");
 
-        leiterId = personen.createOrReuse(
-                "Max",
-                "Mustermann",
-                LocalDate.of(1990, 1, 1),
-                null
+        leiterId = personen.create(b ->
+                b.withVorname("Max")
+                        .withName("Mustermann")
+                        .withGeburtsdatum(java.time.LocalDate.of(1990, 1, 1))
         );
 
         // 🔹 CREATE erste Veranstaltung
@@ -73,11 +69,11 @@ class VeranstaltungUpdateTest extends AbstractTenantIntegrationTest {
         createDTO.setEndeZeit(LocalTime.of(18, 0));
 
         String json = mockMvc.perform(
-                        tenantRequest(
+
                                 post("/api/veranstaltungen")
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(createDTO))
-                        )
+
                 )
                 .andExpect(status().isCreated())
                 .andReturn()
@@ -100,11 +96,11 @@ class VeranstaltungUpdateTest extends AbstractTenantIntegrationTest {
         updateDTO.setEndeDatum(LocalDate.now().plusDays(12));
 
         mockMvc.perform(
-                        tenantRequest(
+
                                 put("/api/veranstaltungen/{id}", veranstaltungId)
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(updateDTO))
-                        )
+
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Sommerfreizeit 2026"))
@@ -122,8 +118,8 @@ class VeranstaltungUpdateTest extends AbstractTenantIntegrationTest {
         Long secondId = veranstaltungFactory.create(vereinId, leiterId, "Herbst");
 
         mockMvc.perform(
-                        tenantRequest(get("/api/veranstaltungen/active"))
-                )
+                        get("/api/veranstaltungen/active"))
+
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(secondId));
     }
@@ -134,11 +130,11 @@ class VeranstaltungUpdateTest extends AbstractTenantIntegrationTest {
         dto.setName("Neue Sommerfreizeit");
 
         mockMvc.perform(
-                        tenantRequest(
+
                                 put("/api/veranstaltungen/{id}", veranstaltungId)
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(dto))
-                        )
+
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Neue Sommerfreizeit"));
@@ -148,24 +144,23 @@ class VeranstaltungUpdateTest extends AbstractTenantIntegrationTest {
     void shouldChangeLeiter() throws Exception {
 
         PersonTestFactory personen =
-                new PersonTestFactory(mockMvc, objectMapper, tenantAuth());
+                new PersonTestFactory(mockMvc, objectMapper);
 
-        Long newLeiterId = personen.createOrReuse(
-                "Anna",
-                "Leiterin",
-                LocalDate.of(1992, 1, 1),
-                null
+        Long newLeiterId = personen.create(b ->
+                b.withVorname("Anna")
+                        .withName("Leiterin")
+                        .withGeburtsdatum(java.time.LocalDate.of(1992, 1, 1))
         );
 
         VeranstaltungUpdateDTO dto = new VeranstaltungUpdateDTO();
         dto.setLeiterId(newLeiterId);
 
         mockMvc.perform(
-                        tenantRequest(
+
                                 put("/api/veranstaltungen/{id}", veranstaltungId)
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(dto))
-                        )
+
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.leiterId").value(newLeiterId));
@@ -174,7 +169,7 @@ class VeranstaltungUpdateTest extends AbstractTenantIntegrationTest {
     void shouldChangeVerein() throws Exception {
 
         VereinTestFactory vereine =
-                new VereinTestFactory(mockMvc, objectMapper, tenantAuth());
+                new VereinTestFactory(mockMvc, objectMapper);
 
         Long newVereinId = vereine.createIfNotExists(
                 "KSC",
@@ -185,11 +180,11 @@ class VeranstaltungUpdateTest extends AbstractTenantIntegrationTest {
         dto.setVereinId(newVereinId);
 
         mockMvc.perform(
-                        tenantRequest(
+
                                 put("/api/veranstaltungen/{id}", veranstaltungId)
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(dto))
-                        )
+
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.vereinId").value(newVereinId));
@@ -198,25 +193,26 @@ class VeranstaltungUpdateTest extends AbstractTenantIntegrationTest {
     void shouldFailInvalidLeiterAge() throws Exception {
 
         PersonTestFactory personen =
-                new PersonTestFactory(mockMvc, objectMapper, tenantAuth());
+                new PersonTestFactory(mockMvc, objectMapper);
 
         // 12 Jahre alt → ungültig
-        Long tooYoungId = personen.createOrReuse(
-                "Tim",
-                "ZuJung",
-                LocalDate.now().minusYears(12),
-                null
+
+
+        Long tooYoungId = personen.create(b ->
+                b.withVorname("Tim")
+                        .withName("ZuJung")
+                        .withGeburtsdatum(java.time.LocalDate.now().minusYears(12))
         );
 
         VeranstaltungUpdateDTO dto = new VeranstaltungUpdateDTO();
         dto.setLeiterId(tooYoungId);
 
         mockMvc.perform(
-                        tenantRequest(
+
                                 put("/api/veranstaltungen/{id}", veranstaltungId)
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(dto))
-                        )
+
                 )
                 .andExpect(status().isBadRequest());
     }

@@ -8,10 +8,7 @@ import com.kcserver.enumtype.AbrechnungsStatus;
 import com.kcserver.enumtype.FinanzKategorie;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.mapper.AbrechnungMapper;
-import com.kcserver.repository.AbrechnungRepository;
-import com.kcserver.repository.FinanzGruppeRepository;
-import com.kcserver.repository.TeilnehmerRepository;
-import com.kcserver.repository.VeranstaltungRepository;
+import com.kcserver.repository.*;
 import com.kcserver.service.FoerdersatzService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -32,6 +29,7 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 public class AbrechnungService {
 
     private final AbrechnungRepository abrechnungRepository;
+    private final AbrechnungBelegRepository abrechnungBelegRepository;
     private final VeranstaltungRepository veranstaltungRepository;
     private final TeilnehmerRepository teilnehmerRepository;
     private final FinanzGruppeRepository finanzGruppeRepository;
@@ -74,20 +72,23 @@ public class AbrechnungService {
         Veranstaltung veranstaltung = abrechnung.getVeranstaltung();
 
         List<Teilnehmer> teilnehmer =
-                teilnehmerRepository.findByVeranstaltungWithPerson(veranstaltungId);
+                teilnehmerRepository.findAllWithPerson(veranstaltungId);
 
         // Alte automatische Belege entfernen
         abrechnung.getBelege().removeIf(beleg ->
-                "__AUTO_TEILNEHMER__".equals(beleg.getBelegnummer())
+                "__AUTO_TEILNEHMER__".equals(beleg.getBeschreibung())
         );
 
         AbrechnungBeleg beleg = new AbrechnungBeleg();
         beleg.setAbrechnung(abrechnung);
-        beleg.setBelegnummer("__AUTO_TEILNEHMER__");
         beleg.setDatum(LocalDate.now());
         beleg.setBeschreibung("Automatisch berechnete Teilnehmerbeiträge");
+
         FinanzGruppe systemGruppe = getOrCreateSystemGroup(veranstaltung);
         beleg.setFinanzGruppe(systemGruppe);
+
+        // 🔥 HIER NUMMER GENERIEREN
+        generateBelegnummer(beleg);
 
         for (Teilnehmer t : teilnehmer) {
 
@@ -253,5 +254,17 @@ public class AbrechnungService {
 
                     return finanzGruppeRepository.save(g);
                 });
+    }
+    private void generateBelegnummer(AbrechnungBeleg beleg) {
+        Integer max = abrechnungBelegRepository
+                .findMaxLfdNrByAbrechnungId(beleg.getAbrechnung().getId());
+
+        int next = (max == null ? 1 : max + 1);
+
+        beleg.setLfdNr(next);
+        beleg.setBelegnummer(
+                beleg.getFinanzGruppe().getKuerzel()
+                        + "_" + String.format("%03d", next)
+        );
     }
 }

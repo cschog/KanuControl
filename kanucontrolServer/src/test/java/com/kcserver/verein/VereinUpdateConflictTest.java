@@ -3,7 +3,7 @@ package com.kcserver.verein;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.dto.verein.VereinDTO;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
-import com.kcserver.support.data.VereinTestFactory;
+import com.kcserver.support.api.VereinTestFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -32,7 +32,7 @@ class VereinUpdateConflictTest extends AbstractTenantIntegrationTest {
     void setup() throws Exception {
 
         VereinTestFactory vereine =
-                new VereinTestFactory(mockMvc, objectMapper, tenantAuth());
+                new VereinTestFactory(mockMvc, objectMapper);
 
         verein1Id = vereine.createIfNotExists(
                 "EKC",
@@ -57,11 +57,11 @@ class VereinUpdateConflictTest extends AbstractTenantIntegrationTest {
         update.setAbk("EKC");
 
         mockMvc.perform(
-                        tenantRequest(
+
                                 put("/api/verein/{id}", verein2Id)
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(update))
-                        )
+
                 )
                 .andExpect(status().isConflict());
     }
@@ -74,11 +74,11 @@ class VereinUpdateConflictTest extends AbstractTenantIntegrationTest {
         update.setAbk("EKC");
 
         mockMvc.perform(
-                        tenantRequest(
+
                                 put("/api/verein/{id}", verein1Id)
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(update))
-                        )
+
                 )
                 .andExpect(status().isOk());
     }

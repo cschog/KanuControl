@@ -8,8 +8,6 @@ import java.time.LocalDate;
 @Data
 public class AbrechnungBelegCreateDTO {
 
-    private String belegnummer;
-
     private String kuerzel;
 
     @NotNull

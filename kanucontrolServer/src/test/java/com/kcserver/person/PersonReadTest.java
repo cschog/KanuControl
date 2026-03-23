@@ -3,8 +3,8 @@ package com.kcserver.person;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.dto.mitglied.MitgliedDTO;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
-import com.kcserver.support.data.PersonTestFactory;
-import com.kcserver.support.data.VereinTestFactory;
+import com.kcserver.support.api.PersonTestFactory;
+import com.kcserver.support.api.VereinTestFactory;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,17 +38,16 @@ class PersonReadTest extends AbstractTenantIntegrationTest {
     void getAllPersons_returnsList() throws Exception {
 
         PersonTestFactory personen =
-                new PersonTestFactory(mockMvc, objectMapper, tenantAuth());
+                new PersonTestFactory(mockMvc, objectMapper);
 
-        personen.createOrReuse(
-                "Max",
-                "Mustermann",
-                LocalDate.of(1990, 1, 1),
-                null
+        personen.create(b ->
+                b.withVorname("Max")
+                        .withName("Mustermann")
+                        .withGeburtsdatum(LocalDate.of(1990, 1, 1))
         );
 
         mockMvc.perform(
-                        tenantRequest(get("/api/person"))
+                        get("/api/person")
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[*].vorname").value(hasItem("Max")))
@@ -59,18 +58,17 @@ class PersonReadTest extends AbstractTenantIntegrationTest {
     void getPersonById_returnsPerson() throws Exception {
 
         PersonTestFactory personen =
-                new PersonTestFactory(mockMvc, objectMapper, tenantAuth());
+                new PersonTestFactory(mockMvc, objectMapper);
 
-        Long personId =
-                personen.createOrReuse(
-                        "Erika",
-                        "Mustermann",
-                        LocalDate.of(1995, 5, 5),
-                        null
-                );
+
+        Long personId = personen.create(b ->
+                b.withVorname("Erika")
+                        .withName("Mustermann")
+                        .withGeburtsdatum(java.time.LocalDate.of(1995, 5, 5))
+        );
 
         mockMvc.perform(
-                        tenantRequest(get("/api/person/{id}", personId))
+                        get("/api/person/{id}", personId)
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(personId))
@@ -82,17 +80,16 @@ class PersonReadTest extends AbstractTenantIntegrationTest {
     void getAllPersons_returnsPersonListDTO_withoutMitgliedschaften() throws Exception {
 
         PersonTestFactory personen =
-                new PersonTestFactory(mockMvc, objectMapper, tenantAuth());
+                new PersonTestFactory(mockMvc, objectMapper);
 
-        personen.createOrReuse(
-                "Max",
-                "Mustermann",
-                LocalDate.of(1990, 1, 1),
-                null
+        personen.create(b ->
+                b.withVorname("Max")
+                        .withName("Mustermann")
+                        .withGeburtsdatum(LocalDate.of(1990, 1, 1))
         );
 
         mockMvc.perform(
-                        tenantRequest(get("/api/person"))
+                        get("/api/person")
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].id").exists())
@@ -106,21 +103,20 @@ class PersonReadTest extends AbstractTenantIntegrationTest {
     void getPersonById_returnsPersonDetail_withVerein() throws Exception {
 
         VereinTestFactory vereine =
-                new VereinTestFactory(mockMvc, objectMapper, tenantAuth());
+                new VereinTestFactory(mockMvc, objectMapper);
 
         PersonTestFactory personen =
-                new PersonTestFactory(mockMvc, objectMapper, tenantAuth());
+                new PersonTestFactory(mockMvc, objectMapper);
 
         Long vereinId = vereine.createIfNotExists(
                 "EKC_TEST",
                 "Eschweiler Kanu Club"
         );
 
-        Long personId = personen.createOrReuse(
-                "Anna",
-                "Müller",
-                LocalDate.of(1995, 1, 1),
-                null
+        Long personId = personen.create(b ->
+                b.withVorname("Anna")
+                        .withName("Müller")
+                        .withGeburtsdatum(java.time.LocalDate.of(1995, 1, 1))
         );
 
         MitgliedDTO m = new MitgliedDTO();
@@ -129,14 +125,14 @@ class PersonReadTest extends AbstractTenantIntegrationTest {
         m.setHauptVerein(true);
 
         mockMvc.perform(
-                tenantRequest(post("/api/mitglied"))
+                post("/api/mitglied")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(m))
         ).andExpect(status().isCreated());
 
         mockMvc.perform(
-                        tenantRequest(get("/api/person/{id}", personId))
-                )
+                        get("/api/person/{id}", personId))
+
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(personId))
                 .andExpect(jsonPath("$.mitgliedschaften").isArray())
@@ -149,8 +145,8 @@ class PersonReadTest extends AbstractTenantIntegrationTest {
     void personList_mustNeverContainVereinIdNull() throws Exception {
 
         mockMvc.perform(
-                        tenantRequest(get("/api/person"))
-                )
+                        get("/api/person"))
+
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[*].vereinId").doesNotExist());
     }

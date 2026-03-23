@@ -87,9 +87,10 @@ class Veranstaltungen extends Component<Props, State> {
 
     try {
       const res = await getVeranstaltungenPage(page, pageSize);
+
       this.setState({
-        data: res.content,
-        total: res.totalElements,
+        data: res, // ✅ direkt das Array
+        total: res.length, // ⚠️ nur lokale Länge!
         loading: false,
         error: null,
       });

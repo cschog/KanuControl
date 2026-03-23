@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import {
+  Alert,
   Box,
   Button,
   Chip,
@@ -18,43 +19,31 @@ import {
   Typography,
 } from "@mui/material";
 
+import { AxiosError } from "axios";
+
 import {
   getFinanzgruppen,
   createFinanzgruppe,
   assignTeilnehmerBulk,
+  deleteFinanzGruppe,
+  FinanzGruppe
 } from "@/api/client/finanzgruppenApi";
 
-import { searchTeilnehmer, removeTeilnehmerFromGruppe } from "@/api/client/teilnehmerApi";
+import { searchTeilnehmer, removeTeilnehmerFromGruppe } from "@/api/services/teilnehmerApi";
 
 /* =========================================================
    TYPES
    ========================================================= */
 
-// 🔹 Für Finanzgruppe-Übersicht (KurzDTO vom Backend)
-type TeilnehmerKurz = {
+type TeilnehmerSearch = {
   id: number;
   personId: number;
-  vorname: string;
-  nachname: string;
-};
-
-// 🔹 Für Search (TeilnehmerListDTO vom Backend)
-type TeilnehmerSearch = {
-  id: number; // Teilnehmer-ID
-  personId: number; // WICHTIG für Zuweisung
   person: {
     id: number;
     vorname: string;
     name: string;
   };
   rolle: string | null;
-};
-
-type FinanzGruppe = {
-  id: number;
-  kuerzel: string;
-  belegCount: number;
-  teilnehmer: TeilnehmerKurz[];
 };
 
 type Props = {
@@ -82,6 +71,10 @@ export default function KuerzelPage({ veranstaltungId }: Props) {
     name: string;
   } | null>(null);
 
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<FinanzGruppe | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
   const inputRef = useRef<HTMLInputElement>(null);
 
   /* ================= LOAD GROUPS ================= */
@@ -100,16 +93,22 @@ export default function KuerzelPage({ veranstaltungId }: Props) {
       setSearchResults([]);
       return;
     }
-    return;
-  }, [search]);
 
-   useEffect(() => {
-     if (dialogOpen) {
-       setTimeout(() => {
-         inputRef.current?.focus();
-       }, 50);
-     }
-   }, [dialogOpen]);
+    const timeout = setTimeout(async () => {
+      const results = await searchTeilnehmer(veranstaltungId, search);
+      setSearchResults(results);
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [search, veranstaltungId]);
+
+  useEffect(() => {
+    if (dialogOpen) {
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 50);
+    }
+  }, [dialogOpen]);
 
   /* ================= CREATE ================= */
 
@@ -119,6 +118,36 @@ export default function KuerzelPage({ veranstaltungId }: Props) {
     await createFinanzgruppe(veranstaltungId, newKuerzel);
     setNewKuerzel("");
     loadGroups();
+  }
+
+  /* ================= DELETE KÜRZEL ================= */
+
+  function openDeleteDialog(gruppe: FinanzGruppe) {
+    setDeleteTarget(gruppe);
+    setDeleteError(null);
+    setDeleteDialogOpen(true);
+  }
+
+  async function handleConfirmDelete() {
+    if (!deleteTarget) return;
+
+    try {
+      await deleteFinanzGruppe(veranstaltungId, deleteTarget.id);
+
+      setDeleteDialogOpen(false);
+      setDeleteTarget(null);
+      loadGroups();
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) {
+        if (error.response?.status === 409) {
+          setDeleteError(error.response.data?.message ?? "Löschen nicht möglich.");
+        } else {
+          setDeleteError("Fehler beim Löschen.");
+        }
+      } else {
+        setDeleteError("Unbekannter Fehler.");
+      }
+    }
   }
 
   /* ================= ADD TEILNEHMER ================= */
@@ -131,19 +160,22 @@ export default function KuerzelPage({ veranstaltungId }: Props) {
     setSearchResults([]);
   }
 
- useEffect(() => {
-   if (!search.trim()) {
-     setSearchResults([]);
-     return;
-   }
+  function toggle(personId: number) {
+    setSelectedIds((prev) =>
+      prev.includes(personId) ? prev.filter((i) => i !== personId) : [...prev, personId],
+    );
+  }
 
-   const timeout = setTimeout(async () => {
-     const results = await searchTeilnehmer(veranstaltungId, search);
-     setSearchResults(results);
-   }, 300);
+  async function handleAssign() {
+    if (!selectedGroup || selectedIds.length === 0) return;
 
-   return () => clearTimeout(timeout);
- }, [search, veranstaltungId]);
+    await assignTeilnehmerBulk(veranstaltungId, selectedGroup, selectedIds);
+
+    setDialogOpen(false);
+    loadGroups();
+  }
+
+  /* ================= REMOVE TEILNEHMER ================= */
 
   function openConfirm(gruppeId: number, personId: number, name: string) {
     setRemoveTarget({ gruppeId, personId, name });
@@ -153,34 +185,11 @@ export default function KuerzelPage({ veranstaltungId }: Props) {
   async function confirmRemove() {
     if (!removeTarget) return;
 
-    await removeTeilnehmerFromGruppe(
-      veranstaltungId,
-      removeTarget.gruppeId,
-      removeTarget.personId, // 🔥 HIER ist es wichtig
-    );
+    await removeTeilnehmerFromGruppe(veranstaltungId, removeTarget.gruppeId, removeTarget.personId);
 
     setConfirmOpen(false);
     setRemoveTarget(null);
     loadGroups();
-  }
-
-  async function handleAssign() {
-    if (!selectedGroup || selectedIds.length === 0) return;
-
-    await assignTeilnehmerBulk(
-      veranstaltungId,
-      selectedGroup,
-      selectedIds, // personIds
-    );
-
-    setDialogOpen(false);
-    loadGroups();
-  }
-
-  function toggle(personId: number) {
-    setSelectedIds((prev) =>
-      prev.includes(personId) ? prev.filter((i) => i !== personId) : [...prev, personId],
-    );
   }
 
   /* ================= UI ================= */
@@ -191,7 +200,6 @@ export default function KuerzelPage({ veranstaltungId }: Props) {
         Kürzel-Verwaltung
       </Typography>
 
-      {/* CREATE */}
       <Paper sx={{ p: 2, mb: 3 }}>
         <Stack direction="row" spacing={2}>
           <TextField
@@ -206,7 +214,6 @@ export default function KuerzelPage({ veranstaltungId }: Props) {
         </Stack>
       </Paper>
 
-      {/* GROUP TABLE */}
       <Paper sx={{ p: 2 }}>
         <Table size="small">
           <TableHead>
@@ -238,9 +245,15 @@ export default function KuerzelPage({ veranstaltungId }: Props) {
                 <TableCell>{g.belegCount}</TableCell>
 
                 <TableCell>
-                  <Button size="small" onClick={() => openDialog(g.id)}>
-                    + Teilnehmer
-                  </Button>
+                  <Stack direction="row" spacing={1}>
+                    <Button size="small" onClick={() => openDialog(g.id)}>
+                      + Teilnehmer
+                    </Button>
+
+                    <Button size="small" color="error" onClick={() => openDeleteDialog(g)}>
+                      Löschen
+                    </Button>
+                  </Stack>
                 </TableCell>
               </TableRow>
             ))}
@@ -253,23 +266,16 @@ export default function KuerzelPage({ veranstaltungId }: Props) {
         <DialogTitle>Teilnehmer hinzufügen</DialogTitle>
 
         <DialogContent>
-          <Box
-            component="form"
-            onSubmit={(e) => {
-              e.preventDefault();
-            }}
-          >
-            <Stack direction="row" spacing={2} mb={2}>
-              <TextField
-                size="small"
-                fullWidth
-                inputRef={inputRef}
-                placeholder="Name suchen..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </Stack>
-          </Box>
+          <Stack direction="row" spacing={2} mb={2}>
+            <TextField
+              size="small"
+              fullWidth
+              inputRef={inputRef}
+              placeholder="Name suchen..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </Stack>
 
           {searchResults.map((t) => (
             <Box
@@ -294,21 +300,44 @@ export default function KuerzelPage({ veranstaltungId }: Props) {
         </DialogActions>
       </Dialog>
 
+      {/* REMOVE TEILNEHMER */}
       <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
         <DialogTitle>Teilnehmer entfernen</DialogTitle>
-
         <DialogContent>
           <Typography>
             Möchten Sie <strong>{removeTarget?.name}</strong> wirklich aus diesem Kürzel entfernen?
           </Typography>
         </DialogContent>
-
         <DialogActions>
           <Button onClick={() => setConfirmOpen(false)}>Abbrechen</Button>
-
           <Button color="error" variant="contained" onClick={confirmRemove}>
             Entfernen
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* DELETE KÜRZEL */}
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+        <DialogTitle>Kürzel löschen</DialogTitle>
+
+        <DialogContent>
+          {deleteError ? (
+            <Alert severity="error">{deleteError}</Alert>
+          ) : (
+            <Typography>
+              Möchten Sie das Kürzel <strong>{deleteTarget?.kuerzel}</strong> wirklich löschen?
+            </Typography>
+          )}
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>Abbrechen</Button>
+
+          {!deleteError && (
+            <Button color="error" variant="contained" onClick={handleConfirmDelete}>
+              Löschen
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
     </Box>

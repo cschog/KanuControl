@@ -27,6 +27,8 @@ import {
 } from "@/api/client/planungApi";
 import FinanzPositionDialog from "@/components/finanzen/FinanzPositionDialog";
 import { PlanungDetail, PlanungPosition, PlanungPositionCreate } from "@/api/types/planung";
+import { kategorieZuTyp } from "@/api/types/finanz";
+
 
 interface Props {
   veranstaltungId: number;
@@ -50,22 +52,8 @@ export default function PlanungPage({ veranstaltungId }: Props) {
 
   if (!planung) return null;
 
-  const kostenKategorien = [
-    "UNTERKUNFT",
-    "VERPFLEGUNG",
-    "HONORARE",
-    "FAHRTKOSTEN",
-    "VERBRAUCHSMATERIAL",
-    "KULTUR",
-    "MIETE",
-    "SONSTIGE_KOSTEN",
-  ];
-
-  const einnahmeKategorien = ["TEILNEHMERBEITRAG", "PFAND", "KJFP_ZUSCHUSS", "SONSTIGE_EINNAHMEN"];
-
-  const kosten = planung.positionen.filter((p) => kostenKategorien.includes(p.kategorie));
-
-  const einnahmen = planung.positionen.filter((p) => einnahmeKategorien.includes(p.kategorie));
+  const kosten = planung.positionen.filter((p) => kategorieZuTyp[p.kategorie] === "KOSTEN");
+  const einnahmen = planung.positionen.filter((p) => kategorieZuTyp[p.kategorie] === "EINNAHME");
 
   const sumKosten = kosten.reduce((a, b) => a + b.betrag, 0);
   const sumEinnahmen = einnahmen.reduce((a, b) => a + b.betrag, 0);

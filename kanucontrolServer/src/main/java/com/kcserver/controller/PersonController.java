@@ -1,9 +1,6 @@
 package com.kcserver.controller;
 
-import com.kcserver.dto.person.PersonDetailDTO;
-import com.kcserver.dto.person.PersonListDTO;
-import com.kcserver.dto.person.PersonSaveDTO;
-import com.kcserver.dto.person.PersonSearchCriteria;
+import com.kcserver.dto.person.*;
 import com.kcserver.service.PersonService;
 import com.kcserver.validation.OnCreate;
 import com.kcserver.validation.OnUpdate;
@@ -170,5 +167,12 @@ public class PersonController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletePerson(@PathVariable long id) {
         personService.deletePerson(id);
+    }
+
+    @GetMapping("/search/ref")
+    public List<PersonRefDTO> searchRef(
+            @RequestParam(required = false) String search
+    ) {
+        return personService.searchRefList(search);
     }
 }

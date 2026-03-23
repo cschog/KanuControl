@@ -57,48 +57,48 @@ public class VereinService {
     }
 
     @Transactional(readOnly = true)
-    public List<VereinDTO> search(String name, String abk, Pageable pageable) {
+    public Page<VereinDTO> search(String name, String abk, Pageable pageable) {
 
-        Specification<Verein> spec = Specification.allOf(
-                name != null && !name.isBlank()
-                        ? (root, query, cb) ->
-                        cb.like(
-                                cb.lower(root.get("name")),
-                                "%" + name.toLowerCase() + "%"
-                        )
-                        : null,
-
-                abk != null && !abk.isBlank()
-                        ? (root, query, cb) ->
-                        cb.equal(root.get("abk"), abk)
-                        : null
-        );
+        Specification<Verein> spec = buildSpec(name, abk);
 
         return vereinRepository.findAll(spec, pageable)
-                .map(vereinMapper::toDTO)
-                .getContent();
+                .map(vereinMapper::toDTO);
     }
 
     @Transactional(readOnly = true)
-    public Page<VereinRefDTO> searchRef(String search, Pageable pageable) {
+    public List<VereinDTO> searchAll(String name, String abk) {
 
-        Page<Verein> page;
+        return vereinRepository.findAll(buildSpec(name, abk))
+                .stream()
+                .map(vereinMapper::toDTO)
+                .toList();
+    }
 
-        if (search == null || search.isBlank()) {
-            page = vereinRepository.findAll(pageable);
-        } else {
-            page = vereinRepository
-                    .findByNameContainingIgnoreCaseOrAbkContainingIgnoreCase(
-                            search, search, pageable
-                    );
+    private Specification<Verein> buildSpec(String name, String abk) {
+
+        Specification<Verein> spec = (root, query, cb) -> cb.conjunction();
+
+        if (name != null && !name.isBlank()) {
+            spec = spec.and((root, query, cb) ->
+                    cb.like(cb.lower(root.get("name")), "%" + name.toLowerCase() + "%")
+            );
         }
 
-        return page.map(v -> new VereinRefDTO(
-                v.getId(),
-                v.getName(),
-                v.getAbk(),
-                v.getOrt()
-        ));
+        if (abk != null && !abk.isBlank()) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(cb.lower(root.get("abk")), abk.toLowerCase())
+            );
+        }
+
+        return spec;
+    }
+
+
+    public List<VereinRefDTO> searchRefList(String search) {
+        return vereinRepository.searchRefList(search)
+                .stream()
+                .map(vereinMapper::toRefDTO)
+                .toList();
     }
 
     /* =========================================================
@@ -110,12 +110,7 @@ public class VereinService {
         normalize(dto);
 
         // 🔒 Fachliche Duplikatsprüfung
-        if (vereinRepository.existsByAbkAndName(dto.getAbk(), dto.getName())) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "Verein mit Abkürzung und Name existiert bereits"
-            );
-        }
+        ensureUniqueVerein(dto.getAbk(), dto.getName(), null);
 
         Verein verein = vereinMapper.toEntity(dto);
 
@@ -132,6 +127,18 @@ public class VereinService {
         );
     }
 
+    private void ensureUniqueVerein(String abk, String name, Long excludeId) {
+        vereinRepository.findByAbkAndName(abk, name)
+                .ifPresent(v -> {
+                    if (!v.getId().equals(excludeId)) {
+                        throw new ResponseStatusException(
+                                HttpStatus.CONFLICT,
+                                "Verein mit Abkürzung und Name existiert bereits"
+                        );
+                    }
+                });
+    }
+
     /* =========================================================
        UPDATE
        ========================================================= */
@@ -146,19 +153,7 @@ public class VereinService {
                 ));
 
         // 🔒 Fachliche Duplikatsprüfung (UPDATE!)
-        if (vereinRepository.existsByAbkAndName(dto.getAbk(), dto.getName())) {
-
-            boolean sameEntity =
-                    verein.getAbk().equals(dto.getAbk()) &&
-                            verein.getName().equals(dto.getName());
-
-            if (!sameEntity) {
-                throw new ResponseStatusException(
-                        HttpStatus.CONFLICT,
-                        "Verein mit Abkürzung und Name existiert bereits"
-                );
-            }
-        }
+        ensureUniqueVerein(dto.getAbk(), dto.getName(), id);
 
         vereinMapper.updateFromDTO(dto, verein);
 

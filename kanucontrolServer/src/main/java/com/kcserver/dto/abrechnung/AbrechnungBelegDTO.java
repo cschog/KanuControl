@@ -14,5 +14,7 @@ public class AbrechnungBelegDTO {
     private LocalDate datum;
     private String beschreibung;
 
+    private String kuerzel;   // 👈 hinzufügen
+
     private List<AbrechnungBuchungDTO> positionen;
 }

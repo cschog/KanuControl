@@ -26,8 +26,6 @@ public class FinanzGruppeService {
     private final TeilnehmerRepository teilnehmerRepository;
     private final AbrechnungBelegRepository belegRepository;
 
-    private static final String SYSTEM_KUERZEL = "__SYSTEM__";
-
     /* =========================================================
        CREATE
        ========================================================= */
@@ -40,12 +38,6 @@ public class FinanzGruppeService {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Kürzel ist Pflicht");
-        }
-
-        if (SYSTEM_KUERZEL.equals(kuerzel)) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Reserviertes Kürzel");
         }
 
         if (repository.existsByVeranstaltungIdAndKuerzel(veranstaltungId, kuerzel)) {
@@ -81,12 +73,6 @@ public class FinanzGruppeService {
                     "Kürzel ist Pflicht");
         }
 
-        if (SYSTEM_KUERZEL.equals(gruppe.getKuerzel())) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "System-Gruppe darf nicht geändert werden");
-        }
-
         if (repository.existsByVeranstaltungIdAndKuerzel(
                 veranstaltungId, newKuerzel)) {
 
@@ -117,24 +103,38 @@ public class FinanzGruppeService {
 
     public void delete(Long veranstaltungId, Long gruppeId) {
 
-        FinanzGruppe gruppe = getGruppe(gruppeId);
+        FinanzGruppe gruppe = repository
+                .findById(gruppeId)
+                .orElseThrow(() ->
+                        new ResponseStatusException(
+                                HttpStatus.NOT_FOUND,
+                                "Finanzgruppe nicht gefunden"
+                        )
+                );
 
-        validateVeranstaltung(gruppe, veranstaltungId);
-
-        if (SYSTEM_KUERZEL.equals(gruppe.getKuerzel())) {
+        if (!gruppe.getVeranstaltung().getId().equals(veranstaltungId)) {
             throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "System-Gruppe darf nicht gelöscht werden");
+                    HttpStatus.BAD_REQUEST,
+                    "Gruppe gehört nicht zur Veranstaltung"
+            );
         }
 
-        boolean hasBelege =
-                belegRepository.existsByFinanzGruppe_Id(gruppeId);
-
-        if (hasBelege) {
+        // 🔒 Teilnehmer prüfen
+        if (teilnehmerRepository.existsByFinanzGruppe_Id(gruppeId)) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "Gruppe enthält Belege");
+                    "Kürzel kann nicht gelöscht werden – Teilnehmer zugeordnet"
+            );
         }
+
+        // 🔒 Belege prüfen
+        if (belegRepository.existsByFinanzGruppe_Id(gruppeId)) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Kürzel kann nicht gelöscht werden – Belege vorhanden"
+            );
+        }
+
 
         repository.delete(gruppe);
     }
