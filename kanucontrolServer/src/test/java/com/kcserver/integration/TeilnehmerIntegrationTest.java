@@ -2,16 +2,14 @@ package com.kcserver.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.dto.teilnehmer.TeilnehmerUpdateDTO;
-import com.kcserver.entity.Person;
-import com.kcserver.entity.Verein;
+
 import com.kcserver.enumtype.TeilnehmerRolle;
+import com.kcserver.support.api.PersonTestFactory;
+import com.kcserver.support.api.VereinTestFactory;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
-import com.kcserver.repository.PersonRepository;
+
 import com.kcserver.repository.TeilnehmerRepository;
-import com.kcserver.repository.VeranstaltungRepository;
-import com.kcserver.repository.VereinRepository;
-import com.kcserver.support.data.DomainTestFactory;
-import com.kcserver.support.data.TeilnehmerTestFactory;
+import com.kcserver.support.api.TeilnehmerTestFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,9 +31,6 @@ class TeilnehmerIntegrationTest extends AbstractTenantIntegrationTest {
     @Autowired ObjectMapper objectMapper;
 
     @Autowired TeilnehmerRepository teilnehmerRepository;
-    @Autowired VeranstaltungRepository veranstaltungRepository;
-    @Autowired PersonRepository personRepository;
-    @Autowired VereinRepository vereinRepository;
 
     Long veranstaltungId;
     Long personId;
@@ -45,27 +40,35 @@ class TeilnehmerIntegrationTest extends AbstractTenantIntegrationTest {
        ========================================================= */
 
     TeilnehmerTestFactory factory;
+    PersonTestFactory personFactory;
+    VereinTestFactory vereinFactory;
 
     @BeforeEach
     void setup() throws Exception {
 
-        // ⭐ garantiert Tenant aktiv
-        ensureTenantSchema();
+        factory = new TeilnehmerTestFactory(mockMvc, objectMapper);
+        personFactory = new PersonTestFactory(mockMvc, objectMapper);
+        vereinFactory = new VereinTestFactory(mockMvc, objectMapper);
 
-        // ⭐ Factory JETZT erzeugen (nicht vorher!)
-        factory = new TeilnehmerTestFactory(mockMvc, objectMapper, tenantAuth());
+        // 1️⃣ Verein
+        Long vereinId = vereinFactory.create("TV", "Testverein");
 
-        ensureTenantSchema();
-        Person leiter = personRepository.save(DomainTestFactory.validPerson());
+        // 2️⃣ Leiter
+        Long leiterId = personFactory.createWithVerein(vereinId, b ->
+                b.withVorname("Max")
+                        .withName("Mustermann")
+                        .withGeburtsdatum(java.time.LocalDate.of(1990, 1, 1))
+        );
 
-        ensureTenantSchema();
-        Verein verein = vereinRepository.save(DomainTestFactory.validVerein());
+        // 3️⃣ Veranstaltung
+        veranstaltungId = factory.createActiveVeranstaltung(vereinId, leiterId);
 
-        veranstaltungId = factory.createActiveVeranstaltung(verein.getId(), leiter.getId());
-
-        ensureTenantSchema();
-        Person p = personRepository.save(DomainTestFactory.validPerson());
-        personId = p.getId();
+        // 4️⃣ Teilnehmer
+        personId = personFactory.createWithVerein(vereinId, b ->
+                b.withVorname("Anna")
+                        .withName("Test")
+                        .withGeburtsdatum(java.time.LocalDate.of(2000, 1, 1))
+        );
     }
 
     /* =========================================================
@@ -89,11 +92,11 @@ class TeilnehmerIntegrationTest extends AbstractTenantIntegrationTest {
     void shouldReturnPagedTeilnehmer() throws Exception {
 
         mockMvc.perform(
-                tenantRequest(post("/api/veranstaltungen/{vId}/teilnehmer/{personId}", veranstaltungId, personId))
+                post("/api/veranstaltungen/{vId}/teilnehmer/{personId}", veranstaltungId, personId)
         ).andExpect(status().isCreated());
 
         mockMvc.perform(
-                        tenantRequest(get("/api/veranstaltungen/{vId}/teilnehmer?page=0&size=10", veranstaltungId))
+                        get("/api/veranstaltungen/{vId}/teilnehmer?page=0&size=10", veranstaltungId)
                 )
                 .andExpect(status().isOk());
     }
@@ -111,12 +114,12 @@ class TeilnehmerIntegrationTest extends AbstractTenantIntegrationTest {
         dto.setRolle(TeilnehmerRolle.MITARBEITER);
 
         mockMvc.perform(
-                tenantRequest(
+
                         put("/api/veranstaltungen/{vId}/teilnehmer/{id}",
                                 veranstaltungId,
                                 id)
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(dto))
+                                .content(objectMapper.writeValueAsString(dto)
                 )
         ).andExpect(status().isOk());
     }
@@ -130,7 +133,7 @@ class TeilnehmerIntegrationTest extends AbstractTenantIntegrationTest {
 
         Long id = factory.addTeilnehmer(veranstaltungId, personId);
         mockMvc.perform(
-                        tenantRequest(delete("/api/veranstaltungen/{vId}/teilnehmer/{id}", veranstaltungId, id)))
+                        delete("/api/veranstaltungen/{vId}/teilnehmer/{id}", veranstaltungId, id))
                 .andExpect(status().isNoContent());
 
         ensureTenantSchema();
@@ -146,7 +149,7 @@ class TeilnehmerIntegrationTest extends AbstractTenantIntegrationTest {
 
         factory.addTeilnehmer(veranstaltungId, personId);
         mockMvc.perform(
-                        tenantRequest(post("/api/veranstaltungen/{vId}/teilnehmer/{personId}", veranstaltungId, personId)))
+                        post("/api/veranstaltungen/{vId}/teilnehmer/{personId}", veranstaltungId, personId))
                 .andExpect(status().isConflict());
     }
 }

@@ -31,11 +31,11 @@ class VereinCreateTest extends AbstractTenantIntegrationTest {
         dto.setName("Eschweiler Kanu Club");
 
         mockMvc.perform(
-                        tenantRequest(
+
                                 post("/api/verein")
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(dto))
-                        )
+
                 )
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").isNumber())
@@ -52,21 +52,21 @@ class VereinCreateTest extends AbstractTenantIntegrationTest {
 
         // 1️⃣ erster Create → OK
         mockMvc.perform(
-                        tenantRequest(
+
                                 post("/api/verein")
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(dto))
-                        )
+
                 )
                 .andExpect(status().isCreated());
 
         // 2️⃣ gleicher Verein → Conflict
         mockMvc.perform(
-                        tenantRequest(
+
                                 post("/api/verein")
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(dto))
-                        )
+
                 )
                 .andExpect(status().isConflict());
     }

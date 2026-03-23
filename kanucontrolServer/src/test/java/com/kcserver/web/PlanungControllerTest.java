@@ -48,9 +48,9 @@ class PlanungControllerTest extends AbstractTenantIntegrationTest {
         Long veranstaltungId = createTestVeranstaltung();
 
         mockMvc.perform(
-                        tenantRequest(
+
                                 get("/api/veranstaltungen/{id}/planung", veranstaltungId)
-                        )
+
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.veranstaltungId").value(veranstaltungId));
@@ -66,11 +66,11 @@ class PlanungControllerTest extends AbstractTenantIntegrationTest {
         dto.setBetrag(new BigDecimal("100.00"));
 
         mockMvc.perform(
-                        tenantRequest(
+
                                 post("/api/veranstaltungen/{id}/planung/positionen", veranstaltungId)
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(dto))
-                        )
+
                 )
                 .andExpect(status().isCreated());
     }

@@ -65,7 +65,7 @@ class PlanungPositionServiceTest extends AbstractTenantIntegrationTest {
 
         service.addPosition(veranstaltungId, dto);
 
-        PlanungPosition pos = positionRepository.findAll().get(0);
+        PlanungPosition pos = positionRepository.findAll().getFirst();
 
         dto.setBetrag(new BigDecimal("150"));
 
@@ -87,7 +87,7 @@ class PlanungPositionServiceTest extends AbstractTenantIntegrationTest {
 
         service.addPosition(veranstaltungId, dto);
 
-        PlanungPosition pos = positionRepository.findAll().get(0);
+        PlanungPosition pos = positionRepository.findAll().getFirst();
 
         service.deletePosition(veranstaltungId, pos.getId());
 

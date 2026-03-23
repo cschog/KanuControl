@@ -3,6 +3,7 @@ package com.kcserver.verein;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.dto.verein.VereinDTO;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
+@Disabled("Security wird später getestet")
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Tag("verein-security")

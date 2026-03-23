@@ -1,31 +1,10 @@
 import apiClient from "@/api/client/apiClient";
-import { PersonList, PersonSave, PersonDetail, PersonSearchParams } from "@/api/types/Person";
-import { Page } from "@/api/types/Page";
+import { PersonList, PersonSave, PersonDetail } from "@/api/types/Person";
 import { PersonFilterState } from "@/components/person/Personen";
 
 const BASE = "/person";
 
-/* =========================
- * PAGED (Table mit Paging)
- * ========================= */
-export const getPersonenPage = async (
-  page = 0,
-  size = 20,
-  filters?: PersonFilterState,
-  sortField?: string,
-  sortDirection?: "asc" | "desc",
-): Promise<Page<PersonList>> => {
-  const { data } = await apiClient.get<Page<PersonList>>(`${BASE}/search`, {
-    params: {
-      page,
-      size,
-      ...(filters ?? {}),
-      sort: sortField ? `${sortField},${sortDirection ?? "asc"}` : undefined,
-    },
-  });
 
-  return data;
-};
 
 /* =========================
  * UNPAGED (Scroll ohne Paging)
@@ -48,19 +27,16 @@ export const getAllPersons = async (
 /* =========================
  * SEARCH (Autocomplete)
  * ========================= */
-type SearchParams = PersonSearchParams & {
-  page?: number;
-  size?: number;
+type SearchParams = {
   search?: string;
 };
 
-export const searchPersonsPage = async (params: SearchParams): Promise<Page<PersonList>> => {
-  const { search, name, ...rest } = params;
+export const searchPersons = async (params: SearchParams): Promise<PersonList[]> => {
+  const { search } = params;
 
-  const { data } = await apiClient.get<Page<PersonList>>(`${BASE}/search`, {
+  const { data } = await apiClient.get<PersonList[]>(`${BASE}/search`, {
     params: {
-      ...rest,
-      name: search ?? name,
+      search,
     },
   });
 

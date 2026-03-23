@@ -64,7 +64,7 @@ class PersonSearchTest extends AbstractTenantIntegrationTest {
         dto.setGeburtsdatum(geburtsdatum);
 
         mockMvc.perform(
-                tenantRequest(post("/api/person"))
+                post("/api/person")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto))
         ).andExpect(status().isCreated());
@@ -78,7 +78,7 @@ class PersonSearchTest extends AbstractTenantIntegrationTest {
     void search_byName_returnsMatchingPersons() throws Exception {
 
         mockMvc.perform(
-                        tenantRequest(get("/api/person/search"))
+                        get("/api/person/search")
                                 .param("name", "Muster")
                 )
                 .andExpect(status().isOk())
@@ -89,7 +89,7 @@ class PersonSearchTest extends AbstractTenantIntegrationTest {
     void search_bySex_filtersCorrectly() throws Exception {
 
         mockMvc.perform(
-                        tenantRequest(get("/api/person/search"))
+                        get("/api/person/search")
                                 .param("sex", "WEIBLICH")
                 )
                 .andExpect(status().isOk())
@@ -101,7 +101,7 @@ class PersonSearchTest extends AbstractTenantIntegrationTest {
     void search_byAktivFalse_returnsOnlyInactive() throws Exception {
 
         mockMvc.perform(
-                        tenantRequest(get("/api/person/search"))
+                        get("/api/person/search")
                                 .param("aktiv", "false")
                 )
                 .andExpect(status().isOk())
@@ -113,7 +113,7 @@ class PersonSearchTest extends AbstractTenantIntegrationTest {
     void search_withPaging_limitsResults() throws Exception {
 
         mockMvc.perform(
-                        tenantRequest(get("/api/person/search"))
+                        get("/api/person/search")
                                 .param("page", "0")
                                 .param("size", "2")
                 )
@@ -129,7 +129,7 @@ class PersonSearchTest extends AbstractTenantIntegrationTest {
     void search_combinedFilters_AND_applied() throws Exception {
 
         mockMvc.perform(
-                        tenantRequest(get("/api/person/search"))
+                        get("/api/person/search")
                                 .param("name", "Muster")
                                 .param("sex", "MAENNLICH")
                 )
@@ -142,7 +142,7 @@ class PersonSearchTest extends AbstractTenantIntegrationTest {
     void searchPersons_returnsPagedPersonListDTO() throws Exception {
 
         mockMvc.perform(
-                        tenantRequest(get("/api/person/search"))
+                        get("/api/person/search")
                                 .param("page", "0")
                                 .param("size", "5")
                                 .param("sort", "name,asc")

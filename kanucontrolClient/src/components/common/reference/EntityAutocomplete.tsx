@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Autocomplete, TextField, CircularProgress } from "@mui/material";
 import { RefBase, FetchPageFn } from "./types";
-import { useDebounced } from "./hooks";
+import { useDebounce } from "./hooks";
 
 interface Props<T extends RefBase> {
   label: string;
@@ -27,27 +27,27 @@ export function EntityAutocomplete<T extends RefBase>({
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const debounced = useDebounced(input, 300);
+  const debounce = useDebounce(input, 300);
 
   /* ================= LOAD ================= */
 
-  useEffect(() => {
-    let active = true;
+useEffect(() => {
+  let active = true;
 
-    (async () => {
-      setLoading(true);
-      try {
-        const res = await fetch({ search: debounced, page: 0, size: 20 });
-        if (active) setOptions(res.content);
-      } finally {
-        if (active) setLoading(false);
-      }
-    })();
+  (async () => {
+    setLoading(true);
+    try {
+      const res = await fetch({ search: debounce });
+      if (active) setOptions(res);
+    } finally {
+      if (active) setLoading(false);
+    }
+  })();
 
-    return () => {
-      active = false;
-    };
-  }, [debounced, fetch]);
+  return () => {
+    active = false;
+  };
+}, [debounce, fetch]);
 
   /* ================= RENDER ================= */
 

@@ -3,14 +3,12 @@ package com.kcserver.teilnehmer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
 import com.kcserver.repository.TeilnehmerRepository;
-import com.kcserver.support.data.PersonTestFactory;
-import com.kcserver.support.data.VeranstaltungTestFactory;
-import com.kcserver.support.data.VereinTestFactory;
+import com.kcserver.support.api.PersonTestFactory;
+import com.kcserver.support.api.VeranstaltungTestFactory;
+import com.kcserver.support.api.VereinTestFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -28,14 +26,23 @@ class TeilnehmerLeiterChangeTest extends AbstractTenantIntegrationTest {
     @BeforeEach
     void setup() throws Exception {
 
-        VereinTestFactory vereine = new VereinTestFactory(mockMvc, objectMapper, tenantAuth());
-        PersonTestFactory personen = new PersonTestFactory(mockMvc, objectMapper, tenantAuth());
-        VeranstaltungTestFactory veranstaltungen = new VeranstaltungTestFactory(mockMvc, objectMapper, tenantAuth());
+        VereinTestFactory vereine = new VereinTestFactory(mockMvc, objectMapper);
+        PersonTestFactory personen = new PersonTestFactory(mockMvc, objectMapper);
+        VeranstaltungTestFactory veranstaltungen = new VeranstaltungTestFactory(mockMvc, objectMapper);
 
         Long vereinId = vereine.createIfNotExists("EKC", "Eschweiler Kanu Club");
 
-        leiter1 = personen.createOrReuse("Max","Altleiter", LocalDate.of(1990,1,1), null);
-        leiter2 = personen.createOrReuse("Peter","Neuleiter", LocalDate.of(1990,1,1), null);
+        leiter1 = personen.create(b ->
+                b.withVorname("Max")
+                        .withName("Altleiter")
+                        .withGeburtsdatum(java.time.LocalDate.of(1990, 1, 1))
+        );
+
+        leiter2 = personen.create(b ->
+                b.withVorname("Peter")
+                        .withName("Neuleiter")
+                        .withGeburtsdatum(java.time.LocalDate.of(2000, 1, 1))
+        );
 
         veranstaltungId = veranstaltungen.create(vereinId, leiter1, "Test");
     }
@@ -44,10 +51,10 @@ class TeilnehmerLeiterChangeTest extends AbstractTenantIntegrationTest {
     void shouldChangeLeiter() throws Exception {
 
         mockMvc.perform(
-                tenantRequest(
+
                         put("/api/veranstaltungen/{vId}/teilnehmer/{personId}/leiter",
                                 veranstaltungId, leiter2)
-                )
+
         ).andExpect(status().isOk());
 
         ensureTenantSchema();

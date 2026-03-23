@@ -3,11 +3,10 @@ package com.kcserver.integration;
 import com.kcserver.entity.*;
 import com.kcserver.enumtype.Sex;
 import com.kcserver.enumtype.VeranstaltungTyp;
-import com.kcserver.repository.AbrechnungRepository;
 import com.kcserver.repository.KikZuschlagRepository;
 import com.kcserver.service.FoerderBerechnungsService;
 import com.kcserver.service.FoerdersatzService;
-import com.kcserver.service.KikZuschlagService;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,12 +25,6 @@ class FoerderBerechnungIntegrationTest extends AbstractFinanzIntegrationTest {
 
     @Autowired
     FoerdersatzService foerdersatzService;
-
-    @Autowired
-    KikZuschlagService kikService;
-
-    @Autowired
-    AbrechnungRepository abrechnungRepository;
 
     @Autowired
     KikZuschlagRepository kikZuschlagRepository;

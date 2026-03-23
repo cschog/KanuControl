@@ -6,15 +6,14 @@ import com.kcserver.dto.teilnehmer.TeilnehmerUpdateDTO;
 import com.kcserver.enumtype.TeilnehmerRolle;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
 import com.kcserver.repository.TeilnehmerRepository;
-import com.kcserver.support.data.PersonTestFactory;
-import com.kcserver.support.data.VeranstaltungTestFactory;
-import com.kcserver.support.data.VereinTestFactory;
+import com.kcserver.support.api.PersonTestFactory;
+import com.kcserver.support.api.VeranstaltungTestFactory;
+import com.kcserver.support.api.VereinTestFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 
-import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -34,24 +33,27 @@ class TeilnehmerTest extends AbstractTenantIntegrationTest {
     void setup() throws Exception {
 
         VereinTestFactory vereine =
-                new VereinTestFactory(mockMvc, objectMapper, tenantAuth());
+                new VereinTestFactory(mockMvc, objectMapper);
 
         PersonTestFactory personen =
-                new PersonTestFactory(mockMvc, objectMapper, tenantAuth());
+                new PersonTestFactory(mockMvc, objectMapper);
 
         VeranstaltungTestFactory veranstaltungen =
-                new VeranstaltungTestFactory(mockMvc, objectMapper, tenantAuth());
+                new VeranstaltungTestFactory(mockMvc, objectMapper);
 
         Long vereinId = vereine.createIfNotExists("EKC", "Eschweiler Kanu Club");
 
-        leiterId = personen.createOrReuse(
-                "Max", "Mustermann",
-                LocalDate.of(1990, 1, 1), null
+        leiterId = personen.create(b ->
+                b.withVorname("Max")
+                        .withName("Mustermann")
+                        .withGeburtsdatum(java.time.LocalDate.of(1990, 1, 1))
         );
 
-        personId = personen.createOrReuse(
-                "Erika", "Musterfrau",
-                LocalDate.of(2002, 5, 5), null
+
+        personId = personen.create(b ->
+                b.withVorname("Erika")
+                        .withName("Musterfrau")
+                        .withGeburtsdatum(java.time.LocalDate.of(2002, 5, 5))
         );
 
         veranstaltungId = veranstaltungen.create(
@@ -79,10 +81,10 @@ class TeilnehmerTest extends AbstractTenantIntegrationTest {
     void shouldAddTeilnehmer() throws Exception {
 
         mockMvc.perform(
-                tenantRequest(
+
                         post("/api/veranstaltungen/{vId}/teilnehmer/{personId}",
                                 veranstaltungId, personId)
-                )
+
         ).andExpect(status().isCreated());
     }
 
@@ -94,10 +96,10 @@ class TeilnehmerTest extends AbstractTenantIntegrationTest {
     void shouldRemoveTeilnehmer() throws Exception {
 
         mockMvc.perform(
-                tenantRequest(
+
                         post("/api/veranstaltungen/{vId}/teilnehmer/{personId}",
                                 veranstaltungId, personId)
-                )
+
         ).andExpect(status().isCreated());
 
         ensureTenantSchema();
@@ -107,10 +109,8 @@ class TeilnehmerTest extends AbstractTenantIntegrationTest {
                 .getId();
 
         mockMvc.perform(
-                tenantRequest(
-                        delete("/api/veranstaltungen/{vId}/teilnehmer/{id}",
-                                veranstaltungId, teilnehmerId)
-                )
+                delete("/api/veranstaltungen/{vId}/teilnehmer/{id}",
+                        veranstaltungId, teilnehmerId)
         ).andExpect(status().isNoContent());
     }
 
@@ -128,10 +128,8 @@ class TeilnehmerTest extends AbstractTenantIntegrationTest {
                 .getId();
 
         mockMvc.perform(
-                tenantRequest(
-                        delete("/api/veranstaltungen/{vId}/teilnehmer/{id}",
+                delete("/api/veranstaltungen/{vId}/teilnehmer/{id}",
                                 veranstaltungId, leiterTeilnehmerId)
-                )
         ).andExpect(status().isConflict());
     }
 
@@ -143,21 +141,21 @@ class TeilnehmerTest extends AbstractTenantIntegrationTest {
     void shouldBulkDeleteTeilnehmer() throws Exception {
 
         mockMvc.perform(
-                tenantRequest(
+
                         post("/api/veranstaltungen/{vId}/teilnehmer/{personId}",
                                 veranstaltungId, personId)
-                )
+
         ).andExpect(status().isCreated());
 
         TeilnehmerBulkDeleteDTO dto = new TeilnehmerBulkDeleteDTO();
         dto.setPersonIds(List.of(personId));
 
         mockMvc.perform(
-                tenantRequest(
+
                         delete("/api/veranstaltungen/{vId}/teilnehmer/bulk", veranstaltungId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(dto))
-                )
+
         ).andExpect(status().isNoContent());
     }
 
@@ -169,10 +167,10 @@ class TeilnehmerTest extends AbstractTenantIntegrationTest {
     void shouldCountByRolle() throws Exception {
 
         mockMvc.perform(
-                tenantRequest(
+
                         post("/api/veranstaltungen/{vId}/teilnehmer/{personId}",
                                 veranstaltungId, personId)
-                )
+
         ).andExpect(status().isCreated());
 
         ensureTenantSchema();
@@ -185,12 +183,12 @@ class TeilnehmerTest extends AbstractTenantIntegrationTest {
         dto.setRolle(TeilnehmerRolle.MITARBEITER);
 
         mockMvc.perform(
-                tenantRequest(
+
                         put("/api/veranstaltungen/{vId}/teilnehmer/{id}",
                                 veranstaltungId, teilnehmerId)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(dto))
-                )
+
         ).andExpect(status().isOk());
 
         ensureTenantSchema();

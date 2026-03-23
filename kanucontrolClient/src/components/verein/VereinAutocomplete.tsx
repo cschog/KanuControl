@@ -1,6 +1,6 @@
 import { EntityAutocomplete } from "@/components/common/reference/EntityAutocomplete";
 import { VereinRef } from "@/api/types/VereinRef";
-import { searchVereinePage } from "@/api/services/vereinApi";
+import { searchVereine } from "@/api/client/vereinApi";
 
 interface Props {
   value?: VereinRef;
@@ -14,7 +14,7 @@ export function VereinAutocomplete({ value, disabled, onChange }: Props) {
       label="Verein"
       value={value}
       disabled={disabled}
-      fetch={searchVereinePage}
+      fetch={searchVereine}
       getLabel={(v) => v.name}
       onChange={onChange}
     />

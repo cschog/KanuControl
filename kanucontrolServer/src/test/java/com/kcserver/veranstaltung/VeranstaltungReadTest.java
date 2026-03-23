@@ -3,8 +3,8 @@ package com.kcserver.veranstaltung;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
-import com.kcserver.support.data.PersonTestFactory;
-import com.kcserver.support.data.VereinTestFactory;
+import com.kcserver.support.api.PersonTestFactory;
+import com.kcserver.support.api.VereinTestFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -39,32 +39,31 @@ class VeranstaltungReadTest extends AbstractTenantIntegrationTest {
     void setup() throws Exception {
 
         VereinTestFactory vereine =
-                new VereinTestFactory(mockMvc, objectMapper, tenantAuth());
+                new VereinTestFactory(mockMvc, objectMapper);
 
         PersonTestFactory personen =
-                new PersonTestFactory(mockMvc, objectMapper, tenantAuth());
+                new PersonTestFactory(mockMvc, objectMapper);
 
         vereinId = vereine.createIfNotExists(
                 "EKC",
                 "Eschweiler Kanu Club"
         );
 
-        leiterId = personen.createOrReuse(
-                "Max",
-                "Mustermann",
-                LocalDate.of(1990, 1, 1),
-                null
+        leiterId = personen.create(b ->
+                b.withVorname("Max")
+                        .withName("Mustermann")
+                        .withGeburtsdatum(java.time.LocalDate.of(1990, 1, 1))
         );
 
         // Veranstaltung anlegen
         String json = mockMvc.perform(
-                        tenantRequest(
+
                                 post("/api/veranstaltungen")
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(
                                                 createDto()
                                         ))
-                        )
+
                 )
                 .andExpect(status().isCreated())
                 .andReturn()
@@ -83,9 +82,9 @@ class VeranstaltungReadTest extends AbstractTenantIntegrationTest {
     void getVeranstaltungById_returnsDetail() throws Exception {
 
         mockMvc.perform(
-                        tenantRequest(
+
                                 get("/api/veranstaltungen/{id}", veranstaltungId)
-                        )
+
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(veranstaltungId))

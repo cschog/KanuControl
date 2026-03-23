@@ -1,8 +1,12 @@
 package com.kcserver.person;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kcserver.dto.person.PersonDTO;
+import com.kcserver.dto.person.PersonSaveDTO;
 import com.kcserver.enumtype.Sex;
+import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
+import com.kcserver.tenancy.TenantContext;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
-class PersonDeleteTest {
+class PersonDeleteTest extends AbstractTenantIntegrationTest {
 
     @Autowired
     MockMvc mockMvc;
@@ -36,7 +40,7 @@ class PersonDeleteTest {
 
     private Long createPerson() throws Exception {
 
-        PersonDTO dto = new PersonDTO();
+        PersonSaveDTO dto = new PersonSaveDTO();
         dto.setVorname("Max");
         dto.setName("Mustermann");
         dto.setGeburtsdatum(LocalDate.of(1990, 1, 1));

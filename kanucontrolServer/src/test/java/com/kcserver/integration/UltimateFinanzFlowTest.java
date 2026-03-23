@@ -81,7 +81,6 @@ class UltimateFinanzFlowTest extends AbstractFinanzIntegrationTest {
            ========================================================= */
 
         AbrechnungBelegCreateDTO belegDTO = new AbrechnungBelegCreateDTO();
-        belegDTO.setBelegnummer("FLOW-1");
         belegDTO.setDatum(LocalDate.now());
         belegDTO.setBeschreibung("Test-Beleg");
         belegDTO.setKuerzel("FLOW1");
