@@ -33,6 +33,28 @@ public interface PersonRepository
        LIST
        ========================= */
 
+    @Query("""
+SELECT p FROM Person p
+WHERE (
+    :cursorName IS NULL OR
+    (p.name > :cursorName) OR
+    (p.name = :cursorName AND p.vorname > :cursorVorname) OR
+    (p.name = :cursorName AND p.vorname = :cursorVorname AND p.id > :cursorId)
+)
+AND (
+    :search IS NULL OR :search = '' OR
+    LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR
+    LOWER(p.vorname) LIKE LOWER(CONCAT('%', :search, '%'))
+)
+ORDER BY p.name ASC, p.vorname ASC, p.id ASC
+""")
+    List<Person> scroll(
+            String cursorName,
+            String cursorVorname,
+            Long cursorId,
+            String search
+    );
+
     @EntityGraph(attributePaths = {
             "mitgliedschaften",
             "mitgliedschaften.verein"

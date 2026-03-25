@@ -1,5 +1,6 @@
 package com.kcserver.service;
 
+import com.kcserver.dto.common.ScrollResponse;
 import com.kcserver.dto.person.PersonDetailDTO;
 import com.kcserver.dto.person.PersonListDTO;
 import com.kcserver.dto.person.PersonSaveDTO;
@@ -16,6 +17,14 @@ public interface PersonService {
     /* =========================
        LIST
        ========================= */
+    ScrollResponse<PersonListDTO> scroll(
+            String cursorName,
+            String cursorVorname,
+            Long cursorId,
+            int size,
+            PersonSearchCriteria criteria
+    );
+
     Page<PersonListDTO> getAll(Pageable pageable);
 
     List<PersonListDTO> getAll(Sort sort, PersonSearchCriteria criteria);

@@ -8,6 +8,8 @@ import lombok.Setter;
 @Setter
 public class PersonSearchCriteria {
 
+    private String search;
+
     private String name;        // contains
     private String vorname;     // contains
     private Long vereinId;      // Mitgliedschaft

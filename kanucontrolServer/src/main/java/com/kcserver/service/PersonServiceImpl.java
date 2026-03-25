@@ -13,6 +13,7 @@ import com.kcserver.repository.VereinRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -22,6 +23,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
+import com.kcserver.dto.common.ScrollResponse;
 
 @Service
 @Transactional
@@ -47,6 +49,35 @@ public class PersonServiceImpl implements PersonService {
     /* =========================================================
        READ
        ========================================================= */
+    @Override
+    @Transactional(readOnly = true)
+    public ScrollResponse<PersonListDTO> scroll(
+            String cursorName,
+            String cursorVorname,
+            Long cursorId,
+            int size,
+            PersonSearchCriteria criteria
+    ) {
+
+        List<Person> result = personRepository.scroll(
+                cursorName,
+                cursorVorname,
+                cursorId,
+                criteria.getSearch()
+        );
+
+        long total = personRepository.count(
+                PersonSpecification.byCriteria(criteria)
+        );
+
+        return new ScrollResponse<>(
+                result.stream()
+                        .limit(size)
+                        .map(personMapper::toListDTO)
+                        .toList(),
+                total
+        );
+    }
 
     @Override
     @Transactional(readOnly = true)

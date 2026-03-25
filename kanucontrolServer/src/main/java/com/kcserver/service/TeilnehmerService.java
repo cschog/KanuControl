@@ -8,11 +8,13 @@ import com.kcserver.entity.Veranstaltung;
 import com.kcserver.enumtype.TeilnehmerRolle;
 import com.kcserver.mapper.PersonMapper;
 import com.kcserver.mapper.TeilnehmerMapper;
+import com.kcserver.persistence.specification.TeilnehmerSpecification;
 import com.kcserver.repository.MitgliedRepository;
 import com.kcserver.repository.PersonRepository;
 import com.kcserver.repository.TeilnehmerRepository;
 import com.kcserver.repository.VeranstaltungRepository;
 import org.springframework.data.domain.Page;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -84,6 +86,9 @@ public class TeilnehmerService {
 // ⭐ Neue Logik
         boolean hasFunktion = mitgliedRepository
                 .existsByPerson_IdAndFunktionIsNotNull(person.getId());
+
+        System.out.println(">>> HAS FUNKTION: " + hasFunktion);
+        System.out.println(">>> SET ROLE: " + (hasFunktion ? "MITARBEITER" : "null"));
 
         if (hasFunktion) {
             teilnehmer.setRolle(TeilnehmerRolle.MITARBEITER);
@@ -177,6 +182,8 @@ public class TeilnehmerService {
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, TEILNEHMER_NOT_FOUND
                 ));
+
+        System.out.println(">>> REQUEST ROLLE: " + rolle);
 
         // ❗ Leiter darf NICHT überschrieben werden
         if (t.getRolle() == TeilnehmerRolle.LEITER) {
@@ -289,8 +296,7 @@ public class TeilnehmerService {
     @Transactional(readOnly = true)
     public Page<PersonListDTO> findAvailable(
             Long veranstaltungId,
-            String name,
-            String vorname,
+            String search,
             String verein,
             Pageable pageable
     ) {
@@ -301,7 +307,7 @@ public class TeilnehmerService {
         );
 
         return teilnehmerRepository
-                .findAvailable(veranstaltungId, name, vorname, verein, pageable)
+                .findAvailable(veranstaltungId, search, verein, pageable)
                 .map(personMapper::toListDTO);
     }
 
@@ -319,10 +325,17 @@ public class TeilnehmerService {
     @Transactional(readOnly = true)
     public Page<TeilnehmerListDTO> getAssigned(
             Long veranstaltungId,
+            TeilnehmerSearchCriteria criteria,
             Pageable pageable
     ) {
+        Specification<Teilnehmer> spec =
+                TeilnehmerSpecification.byCriteria(criteria)
+                        .and((root, query, cb) ->
+                                cb.equal(root.get("veranstaltung").get("id"), veranstaltungId)
+                        );
+
         return teilnehmerRepository
-                .findAssignedWithPerson(veranstaltungId, pageable)
+                .findAll(spec, pageable)
                 .map(teilnehmerMapper::toListDTO);
     }
     /* =========================================================

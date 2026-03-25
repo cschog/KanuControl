@@ -6,6 +6,7 @@ import com.kcserver.entity.Veranstaltung;
 import com.kcserver.enumtype.TeilnehmerRolle;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,7 +16,8 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Pageable;
 
-public interface TeilnehmerRepository extends JpaRepository<Teilnehmer, Long> {
+public interface TeilnehmerRepository extends JpaRepository<Teilnehmer, Long>,
+        JpaSpecificationExecutor<Teilnehmer> {
 
     Page<Teilnehmer> findByVeranstaltungId(Long veranstaltungId, Pageable pageable);
 
@@ -67,53 +69,78 @@ FROM Person p
 LEFT JOIN p.mitgliedschaften m
 LEFT JOIN m.verein v
 WHERE
-    (:name IS NULL OR :name = '' OR LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%')))
-AND (:vorname IS NULL OR :vorname = '' OR LOWER(p.vorname) LIKE LOWER(CONCAT('%', :vorname, '%')))
-AND (:verein IS NULL OR :verein = '' OR LOWER(v.abk) LIKE LOWER(CONCAT('%', :verein, '%')))
+    (:verein IS NULL OR :verein = ''
+        OR LOWER(v.abk) LIKE LOWER(CONCAT('%', :verein, '%'))
+    )
 AND NOT EXISTS (
     SELECT 1 FROM Teilnehmer t
     WHERE t.person = p
     AND t.veranstaltung.id = :veranstaltungId
 )
+AND (
+    (:search IS NULL OR :search = '')
+    OR (
+        LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%'))
+        OR LOWER(p.vorname) LIKE LOWER(CONCAT('%', :search, '%'))
+        OR LOWER(CONCAT(p.vorname, ' ', p.name)) LIKE LOWER(CONCAT('%', :search, '%'))
+        OR LOWER(CONCAT(p.name, ' ', p.vorname)) LIKE LOWER(CONCAT('%', :search, '%'))
+    )
+)
 """)
     Page<Person> findAvailable(
             @Param("veranstaltungId") Long veranstaltungId,
-            @Param("name") String name,
-            @Param("vorname") String vorname,
+            @Param("search") String search,
             @Param("verein") String verein,
             Pageable pageable
     );
 
 
     @Query("""
-  SELECT DISTINCT p
-    FROM Person p
-    WHERE (
-        :search IS NULL
-        OR :search = ''
-        OR LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%'))
-        OR LOWER(p.vorname) LIKE LOWER(CONCAT('%', :search, '%'))
-    )
-    AND NOT EXISTS (
-        SELECT 1 FROM Teilnehmer t
-        WHERE t.person = p
-        AND t.veranstaltung.id = :veranstaltungId
-    )
-    ORDER BY p.name, p.vorname
-    """)
+SELECT p
+FROM Person p
+WHERE (
+    :search IS NULL OR :search = ''
+    OR LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%'))
+    OR LOWER(p.vorname) LIKE LOWER(CONCAT('%', :search, '%'))
+    OR LOWER(CONCAT(p.vorname, ' ', p.name)) LIKE LOWER(CONCAT('%', :search, '%'))
+    OR LOWER(CONCAT(p.name, ' ', p.vorname)) LIKE LOWER(CONCAT('%', :search, '%'))
+)
+AND NOT EXISTS (
+    SELECT 1 FROM Teilnehmer t
+    WHERE t.person = p
+    AND t.veranstaltung.id = :veranstaltungId
+)
+ORDER BY p.name, p.vorname
+""")
     List<Person> findAvailable(Long veranstaltungId, String search);
 
     /* =========================================================
        ASSIGNED
        ========================================================= */
     @Query("""
-SELECT DISTINCT t
+SELECT t
 FROM Teilnehmer t
-JOIN t.person
+JOIN t.person p
+LEFT JOIN p.mitgliedschaften m
+LEFT JOIN m.verein v
 WHERE t.veranstaltung.id = :veranstaltungId
+AND (
+    :search IS NULL OR :search = ''
+    OR LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%'))
+    OR LOWER(p.vorname) LIKE LOWER(CONCAT('%', :search, '%'))
+    OR LOWER(CONCAT(p.vorname, ' ', p.name)) LIKE LOWER(CONCAT('%', :search, '%'))
+    OR LOWER(CONCAT(p.name, ' ', p.vorname)) LIKE LOWER(CONCAT('%', :search, '%'))
+)
+AND (
+    :verein IS NULL OR :verein = ''
+    OR LOWER(v.abk) LIKE LOWER(CONCAT('%', :verein, '%'))
+)
+ORDER BY p.name, p.vorname, t.id
 """)
     Page<Teilnehmer> findAssignedWithPerson(
-            @Param("veranstaltungId") Long veranstaltungId,
+            Long veranstaltungId,
+            String search,
+            String verein,
             Pageable pageable
     );
 
@@ -121,8 +148,9 @@ WHERE t.veranstaltung.id = :veranstaltungId
     @Query("""
     SELECT t
     FROM Teilnehmer t
-    JOIN FETCH t.person
+    JOIN FETCH t.person p
     WHERE t.veranstaltung.id = :veranstaltungId
+    ORDER BY p.name, p.vorname
     """)
     List<Teilnehmer> findAllWithPerson(Long veranstaltungId);
 

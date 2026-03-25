@@ -3,7 +3,7 @@ import { Routes, Route } from "react-router-dom";
 
 import StartMenue from "@/components/startmenu/StartMenu";
 import Vereine from "./components/verein/Vereine";
-import Personen from "./components/person/Personen";
+import Personen from "./components/person/PersonenScreen";
 import Veranstaltungen from "@/components/veranstaltung/Veranstaltungen";
 import TeilnehmerScreen from "@/components/teilnehmer/TeilnehmerScreen";
 import Finanzen from "./pages/Finanzen";

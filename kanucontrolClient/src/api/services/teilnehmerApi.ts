@@ -1,6 +1,8 @@
 // api/services/teilnehmerApi.ts
 
 import apiClient from "@/api/client/apiClient";
+import { TeilnehmerList } from "@/api/types/TeilnehmerList";
+import { mapRoleFromBackend, mapRoleToBackend } from "../mappers/teilnehmerMapper";
 
 /* ================= AVAILABLE ================= */
 
@@ -8,45 +10,61 @@ export async function getAvailablePersons(
   veranstaltungId: number,
   page: number,
   size: number,
-  name?: string,
-  vorname?: string,
+  search?: string,
   verein?: string,
 ) {
-  const res = await apiClient.get(`/veranstaltungen/${veranstaltungId}/teilnehmer/available/paged`, {
-    params: {
-      page,
-      size,
-      name: name || undefined,
-      vorname: vorname || undefined,
-      verein: verein || undefined,
+  const res = await apiClient.get(
+    `/veranstaltungen/${veranstaltungId}/teilnehmer/available/paged`,
+    {
+      params: {
+        page,
+        size,
+        search,
+        verein,
+      },
     },
-  });
+  );
 
   return res.data;
 }
 
 /* ================= ASSIGNED ================= */
 
+type TeilnehmerBackend = Omit<TeilnehmerList, "rolle"> & {
+  rolle: string | null;
+};
+
 export async function getTeilnehmer(
   veranstaltungId: number,
   page: number,
   size: number,
-  name?: string,
-  vorname?: string,
+  search?: string,
   verein?: string,
 ) {
-  const res = await apiClient.get(`/veranstaltungen/${veranstaltungId}/teilnehmer/paged`, {
+  const res = await apiClient.get<{
+    content: TeilnehmerBackend[];
+    totalElements: number;
+  }>(`/veranstaltungen/${veranstaltungId}/teilnehmer/paged`, {
     params: {
       page,
       size,
-      name: name || undefined,
-      vorname: vorname || undefined,
+      search: search || undefined,
       verein: verein || undefined,
     },
   });
 
-  return res.data;
+  // ✅ Mapping hier!
+const content: TeilnehmerList[] = res.data.content.map((t) => ({
+  ...t,
+  rolle: mapRoleFromBackend(t.rolle),
+}));
+
+  return {
+    ...res.data,
+    content,
+  };
 }
+
 
 /* ================= ADD BULK ================= */
 
@@ -70,10 +88,11 @@ export async function updateTeilnehmerRolle(
   personId: number,
   rolle: "L" | "M" | null,
 ) {
-  return apiClient.put(
-    `/veranstaltungen/${veranstaltungId}/teilnehmer/${personId}/rolle`,
-    { rolle }, // DTO für Backend bleibt hier
-  );
+
+  console.log("API CALL", veranstaltungId, personId, rolle);
+  return apiClient.put(`/veranstaltungen/${veranstaltungId}/teilnehmer/${personId}/rolle`, {
+    rolle: mapRoleToBackend(rolle),
+  });
 }
 
 export async function searchTeilnehmer(veranstaltungId: number, search: string) {
