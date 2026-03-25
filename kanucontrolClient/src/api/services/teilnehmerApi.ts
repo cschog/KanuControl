@@ -96,15 +96,14 @@ export async function updateTeilnehmerRolle(
 }
 
 export async function searchTeilnehmer(veranstaltungId: number, search: string) {
-  const res = await apiClient.get(`/veranstaltungen/${veranstaltungId}/teilnehmer`, {
-    params: {
-      search,
-      size: 300,
-      page: 0,
+  const res = await apiClient.get(
+    `/veranstaltungen/${veranstaltungId}/teilnehmer/search`, // ✅ RICHTIG
+    {
+      params: { search },
     },
-  });
+  );
 
-  return res.data.content;
+  return res.data ?? [];
 }
 
 export async function removeTeilnehmerFromGruppe(
