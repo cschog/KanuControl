@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import com.kcserver.dto.common.ScrollResponse;
+
 
 @RestController
 @RequestMapping("/api/person")
@@ -29,6 +31,24 @@ public class PersonController {
     /* =========================
        LIST (PAGINIERT)
        ========================= */
+
+    @GetMapping("/scroll")
+    public ScrollResponse<PersonListDTO> scroll(
+            @RequestParam(required = false) String cursorName,
+            @RequestParam(required = false) String cursorVorname,
+            @RequestParam(required = false) Long cursorId,
+            @RequestParam(defaultValue = "25") int size,
+            @ModelAttribute PersonSearchCriteria criteria
+    ) {
+        return personService.scroll(
+                cursorName,
+                cursorVorname,
+                cursorId,
+                size,
+                criteria
+        );
+    }
+
 
     @GetMapping
     public Page<PersonListDTO> getAll(Pageable pageable) {

@@ -45,15 +45,13 @@ public class TeilnehmerController {
     @GetMapping("/available/paged")
     public Page<PersonListDTO> findAvailablePaged(
             @PathVariable Long veranstaltungId,
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false) String vorname,
+            @RequestParam(required = false) String search,
             @RequestParam(required = false) String verein,
             Pageable pageable
     ) {
         return teilnehmerService.findAvailable(
                 veranstaltungId,
-                name,
-                vorname,
+                search,
                 verein,
                 pageable
         );
@@ -74,9 +72,10 @@ public class TeilnehmerController {
     @GetMapping("/paged")
     public Page<TeilnehmerListDTO> getTeilnehmerPaged(
             @PathVariable Long veranstaltungId,
+            TeilnehmerSearchCriteria criteria,
             Pageable pageable
     ) {
-        return teilnehmerService.getAssigned(veranstaltungId, pageable);
+        return teilnehmerService.getAssigned(veranstaltungId, criteria, pageable);
     }
 
     @GetMapping
@@ -115,6 +114,19 @@ public class TeilnehmerController {
     /* =========================
        UPDATE
        ========================= */
+    @PutMapping("/{personId}/rolle")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void updateRolle(
+            @PathVariable Long veranstaltungId,
+            @PathVariable Long personId,
+            @RequestBody TeilnehmerUpdateDTO dto
+    ) {
+        teilnehmerService.updateRolle(
+                veranstaltungId,
+                personId,
+                dto.getRolle()
+        );
+    }
 
     @PutMapping("/{personId}/leiter")
     public TeilnehmerDetailDTO setLeiter(

@@ -15,8 +15,6 @@ import { GenericTable } from "@/components/common/GenericTable";
 import { PersonList } from "@/api/types/PersonList";
 import { TeilnehmerList } from "@/api/types/TeilnehmerList";
 
-/* ========================================================= */
-
 export default function TeilnehmerScreen() {
   const { active } = useAppContext();
 
@@ -28,80 +26,76 @@ export default function TeilnehmerScreen() {
   const [selAvailable, setSelAvailable] = useState<PersonList[]>([]);
   const [selAssigned, setSelAssigned] = useState<TeilnehmerList[]>([]);
 
-
   /* ================= FILTER ================= */
 
-  // FILTER STATES
-const [searchL, setSearchL] = useState("");
-const [fVereinL, setFVereinL] = useState("");
+  const [searchL, setSearchL] = useState("");
+  const [fVereinL, setFVereinL] = useState("");
 
-const [searchR, setSearchR] = useState("");
-const [fVereinR, setFVereinR] = useState("");
+  const [searchR, setSearchR] = useState("");
+  const [fVereinR, setFVereinR] = useState("");
 
-// DEBOUNCE DANACH
-const debounceSearchL = useDebounce(searchL, 300);
-const debounceSearchR = useDebounce(searchR, 300);
+  const debounceSearchL = useDebounce(searchL, 300);
+  const debounceSearchR = useDebounce(searchR, 300);
 
-const debounceVereinL = useDebounce(fVereinL, 300);
-const debounceVereinR = useDebounce(fVereinR, 300);
+  const debounceVereinL = useDebounce(fVereinL, 300);
+  const debounceVereinR = useDebounce(fVereinR, 300);
 
-  /* ================= PAGING (LEFT) ================= */
+  /* ================= PAGING ================= */
 
   const [pageL, setPageL] = useState(0);
   const [sizeL, setSizeL] = useState(50);
   const [totalAvailable, setTotalAvailable] = useState(0);
 
+  const [pageR, setPageR] = useState(0);
+  const [sizeR, setSizeR] = useState(50);
+  const [totalAssigned, setTotalAssigned] = useState(0);
+
   /* ================= LOAD ================= */
 
   const load = useCallback(async () => {
-  if (!active?.id) return;
+    if (!active?.id) return;
 
-  const a = await getAvailablePersons(
-    active.id,
+    const a = await getAvailablePersons(
+      active.id,
+      pageL,
+      sizeL,
+      debounceSearchL || undefined,
+      debounceVereinL || undefined,
+    );
+
+    setAvailable(a?.content ?? []);
+    setTotalAvailable(a?.totalElements ?? 0);
+
+    const b = await getTeilnehmer(
+      active.id,
+      pageR,
+      sizeR,
+      debounceSearchR || undefined,
+      debounceVereinR || undefined,
+    );
+
+    setAssigned(b?.content ?? []);
+    setTotalAssigned(b?.totalElements ?? 0);
+  }, [
+    active?.id,
     pageL,
     sizeL,
-    debounceSearchL || undefined,
-    undefined,
-    debounceVereinL || undefined,
-  );
+    pageR,
+    sizeR,
+    debounceSearchL,
+    debounceSearchR,
+    debounceVereinL,
+    debounceVereinR,
+  ]);
 
- setAvailable(a?.content ?? []); // 🔥 fallback
- setTotalAvailable(a?.totalElements ?? 0);
-
-  const b = await getTeilnehmer(
-    active.id,
-    0,
-    500,
-    debounceSearchR || undefined,
-    undefined,
-    debounceVereinR || undefined,
-  );
-
-  console.log("AVAILABLE RAW:", a);
-  console.log("ASSIGNED RAW:", b);
-
-  setAssigned(b?.content ?? []);
-}, [
-  active?.id,
-  pageL,
-  sizeL,
-  debounceSearchL,
-  debounceSearchR,
-  debounceVereinL,
-  debounceVereinR,
-]);
-
-
-useEffect(() => {
-  load();
-}, [load]);
-
-
+  useEffect(() => {
+    load();
+  }, [load]);
 
   /* ================= COUNTS ================= */
 
   function countDistinct<T>(arr: T[] | undefined, getKey: (x: T) => string | null | undefined) {
-    if (!arr) return 0; // 🔥 wichtig
+    if (!arr) return 0;
 
     const set = new Set<string>();
     arr.forEach((x) => {
@@ -114,7 +108,7 @@ useEffect(() => {
   const availablePersonCount = totalAvailable;
   const availableVereinCount = countDistinct(available, (p) => p.hauptvereinAbk);
 
-  const assignedPersonCount = assigned.length;
+  const assignedPersonCount = totalAssigned;
   const assignedVereinCount = countDistinct(assigned, (t) => t.person?.hauptvereinAbk);
 
   /* ================= ACTIONS ================= */
@@ -131,22 +125,6 @@ useEffect(() => {
     await load();
   };
 
- const handleRoleChange = async (current: "L" | "M" | null, personId: number) => {
-   if (!active?.id) return;
-
-   console.log("HANDLE ROLE:", current);
-
-   if (current === "L") return;
-
-   const newRole = current === "M" ? null : "M";
-
-   console.log("SENDING ROLE:", newRole);
-
-   await updateTeilnehmerRolle(active.id, personId, newRole);
-
-   await load();
- };
-
   const handleRemove = async () => {
     if (!active?.id || selAssigned.length === 0) return;
 
@@ -159,7 +137,32 @@ useEffect(() => {
     await load();
   };
 
-  /* ================= RESET FILTER ================= */
+  /* ================= ROLE CHANGE (🔥 OPTIMISTIC) ================= */
+
+  const handleRoleChange = async (current: "L" | "M" | null, personId: number) => {
+    if (!active?.id) return;
+    if (current === "L") return;
+
+    const newRole = current === "M" ? null : "M";
+
+    // console.log("CLICK ROLE CHANGE", current, "->", newRole);
+
+    // optimistic UI
+    setAssigned((prev) =>
+      prev.map((t) => (t.personId === personId ? { ...t, rolle: newRole } : t)),
+    );
+
+    try {
+      await updateTeilnehmerRolle(active.id, personId, newRole);
+    } catch {
+      // rollback
+      setAssigned((prev) =>
+        prev.map((t) => (t.personId === personId ? { ...t, rolle: current } : t)),
+      );
+    }
+  };
+
+  /* ================= RESET ================= */
 
   const resetLeftFilter = () => {
     setSearchL("");
@@ -170,6 +173,7 @@ useEffect(() => {
   const resetRightFilter = () => {
     setSearchR("");
     setFVereinR("");
+    setPageR(0);
   };
 
   /* ================= UI ================= */
@@ -185,13 +189,10 @@ useEffect(() => {
       </Typography>
 
       <Grid container spacing={2}>
-        {/* ===================================================== */}
-        {/* LEFT — AVAILABLE PERSONS */}
-        {/* ===================================================== */}
-
+        {/* LEFT */}
         <Grid size={{ xs: 12, md: 5 }}>
           <Paper sx={{ p: 1 }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+            <Box display="flex" justifyContent="space-between" mb={1}>
               <Typography variant="body2">
                 {availablePersonCount} Personen • {availableVereinCount} Vereine
               </Typography>
@@ -204,13 +205,15 @@ useEffect(() => {
               <Grid size={8}>
                 <TextField
                   size="small"
-                  label="Name / Vorname"
+                  label="Suche (Name / Vorname)"
                   value={searchL}
-                  onChange={(e) => setSearchL(e.target.value)}
+                  onChange={(e) => {
+                    setSearchL(e.target.value);
+                    setPageL(0); // ⭐ wichtig
+                  }}
                   fullWidth
                 />
               </Grid>
-
               <Grid size={4}>
                 <TextField
                   size="small"
@@ -244,39 +247,31 @@ useEffect(() => {
           </Paper>
         </Grid>
 
-        {/* ===================================================== */}
-        {/* CENTER — ACTIONS */}
-        {/* ===================================================== */}
-
+        {/* ACTIONS */}
         <Grid
           size={{ xs: 12, md: 2 }}
           display="flex"
           flexDirection="column"
-          justifyContent="center"
-          alignItems="center"
           gap={2}
+          justifyContent="center"
         >
-          <Button variant="contained" disabled={selAvailable.length === 0} onClick={handleAdd}>
+          <Button variant="contained" disabled={!selAvailable.length} onClick={handleAdd}>
             →
           </Button>
-
           <Button
             variant="contained"
             color="error"
-            disabled={selAssigned.length === 0}
+            disabled={!selAssigned.length}
             onClick={handleRemove}
           >
             ←
           </Button>
         </Grid>
 
-        {/* ===================================================== */}
-        {/* RIGHT — ASSIGNED */}
-        {/* ===================================================== */}
-
+        {/* RIGHT */}
         <Grid size={{ xs: 12, md: 5 }}>
           <Paper sx={{ p: 1 }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+            <Box display="flex" justifyContent="space-between" mb={1}>
               <Typography variant="body2">
                 {assignedPersonCount} Teilnehmer • {assignedVereinCount} Vereine
               </Typography>
@@ -289,13 +284,15 @@ useEffect(() => {
               <Grid size={8}>
                 <TextField
                   size="small"
-                  label="Name / Vorname"
+                  label="Suche (Name / Vorname)"
                   value={searchR}
-                  onChange={(e) => setSearchR(e.target.value)}
+                  onChange={(e) => {
+                    setSearchR(e.target.value);
+                    setPageR(0); // ⭐ wichtig
+                  }}
                   fullWidth
                 />
               </Grid>
-
               <Grid size={4}>
                 <TextField
                   size="small"
@@ -332,53 +329,32 @@ useEffect(() => {
                   field: "rolle",
                   headerName: "Rolle",
                   flex: 0.6,
-                  sortable: false,
-                  filterable: false,
-                  disableColumnMenu: true,
-                  align: "center",
-                  headerAlign: "center",
-
-                  renderCell: (params) => {
-                    const value = params.row.rolle as "L" | "M" | null;
-                    const personId = params.row.personId;
-
-                    const clickable = value !== "L";
-
-                    return (
-                      <button
-                        style={{
-                          all: "unset",
-                          width: "100%",
-                          height: "100%",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontWeight: value === "L" ? 600 : 500,
-                          cursor: clickable ? "pointer" : "default",
-                        }}
-                        onMouseDown={(e) => {
-                          e.preventDefault(); // ⭐ verhindert Grid Focus
-                          e.stopPropagation(); // ⭐ verhindert Row Selection
-                        }}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-
-                          console.log("CLICK ROLE:", value);
-
-                          if (!clickable) return;
-
-                          handleRoleChange(value ?? null, personId);
-                        }}
-                      >
-                        {value === "L" || value === "M" ? value : ""}
-                      </button>
-                    );
-                  },
                 },
               ]}
+              // 🔥 HIER HIN!
+              onCellClick={(params) => {
+                if (params.field !== "rolle") return;
+
+                const value = params.row.rolle as "L" | "M" | null;
+                const personId = params.row.personId;
+
+                console.log("CELL CLICK", params);
+
+                if (value !== "L") {
+                  handleRoleChange(value ?? null, personId);
+                }
+              }}
               checkboxSelection
               onSelectionChange={setSelAssigned}
+              paginationMode="server"
+              rowCount={totalAssigned}
+              page={pageR}
+              pageSize={sizeR}
+              onPageChange={setPageR}
+              onPageSizeChange={(s) => {
+                setSizeR(s);
+                setPageR(0);
+              }}
             />
           </Paper>
         </Grid>

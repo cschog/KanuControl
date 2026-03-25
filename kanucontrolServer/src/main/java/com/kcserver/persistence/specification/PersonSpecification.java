@@ -16,6 +16,8 @@ public class PersonSpecification {
     public static Specification<Person> byCriteria(PersonSearchCriteria c) {
         return (root, query, cb) -> {
 
+
+
             if (query != null && !Long.class.equals(query.getResultType())) {
                 query.distinct(true);
             }
@@ -24,27 +26,42 @@ public class PersonSpecification {
             // =========================
 // Name / Vorname (Kombifeld)
 // =========================
-            if (hasText(c.getName()) && !hasText(c.getVorname())) {
+            if (hasText(c.getSearch())) {
 
-                String like = "%" + c.getName().toLowerCase() + "%";
+                String search = c.getSearch().toLowerCase().trim();
+                String[] parts = search.split("\\s+");
 
-                Predicate nameLike = cb.like(
-                        cb.lower(root.get("name")),
-                        like
-                );
+                if (parts.length == 1) {
+                    String s = parts[0];
 
-                Predicate vornameLike = cb.like(
-                        cb.lower(root.get("vorname")),
-                        like
-                );
+                    Predicate nameLike = cb.like(cb.lower(root.get("name")), "%" + s + "%");
+                    Predicate vornameLike = cb.like(cb.lower(root.get("vorname")), "%" + s + "%");
 
-                predicate = cb.and(predicate, cb.or(nameLike, vornameLike));
+                    predicate = cb.and(predicate, cb.or(nameLike, vornameLike));
+                }
+
+                if (parts.length >= 2) {
+                    String a = parts[0];
+                    String b = parts[1];
+
+                    Predicate vornameName = cb.and(
+                            cb.like(cb.lower(root.get("vorname")), "%" + a + "%"),
+                            cb.like(cb.lower(root.get("name")), "%" + b + "%")
+                    );
+
+                    Predicate nameVorname = cb.and(
+                            cb.like(cb.lower(root.get("name")), "%" + a + "%"),
+                            cb.like(cb.lower(root.get("vorname")), "%" + b + "%")
+                    );
+
+                    predicate = cb.and(predicate, cb.or(vornameName, nameVorname));
+                }
             }
 
 // =========================
 // Vorname separat
 // =========================
-            if (hasText(c.getVorname())) {
+            if (!hasText(c.getSearch()) && hasText(c.getVorname())) {
                 predicate = cb.and(predicate,
                         cb.like(
                                 cb.lower(root.get("vorname")),
@@ -52,7 +69,6 @@ public class PersonSpecification {
                         )
                 );
             }
-
             // Sex
             if (c.getSex() != null) {
                 predicate = cb.and(predicate,
