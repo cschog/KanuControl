@@ -65,7 +65,7 @@ export function getVeranstaltung(id: number) {
 
 export async function getActiveVeranstaltung(): Promise<VeranstaltungDetail | null> {
   try {
-    const { data } = await apiClient.get<VeranstaltungDetail>("/veranstaltungen/active");
+    const { data } = await apiClient.get<VeranstaltungDetail>("/veranstaltungen/aktiv");
     return data;
   } catch (e: unknown) {
     if (
@@ -83,7 +83,7 @@ export async function getActiveVeranstaltung(): Promise<VeranstaltungDetail | nu
 }
 
 export function setActiveVeranstaltung(id: number) {
-  return apiClient.post<VeranstaltungDetail>(`/veranstaltungen/${id}/activate`).then((r) => r.data);
+  return apiClient.put<VeranstaltungDetail>(`/veranstaltungen/${id}/aktiv`).then((r) => r.data);
 }
 
 /* =========================================================

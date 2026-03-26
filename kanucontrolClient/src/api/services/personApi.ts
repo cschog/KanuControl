@@ -71,7 +71,7 @@ export async function searchPersons(params: { search?: string }): Promise<Person
     },
   });
 
-  return res.data;
+  return res.data ?? []; // ✅ wichtig!
 }
 
 /* =========================================================

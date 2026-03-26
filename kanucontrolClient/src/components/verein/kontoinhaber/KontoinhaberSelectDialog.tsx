@@ -12,7 +12,6 @@ import {
 
 import apiClient from "@/api/client/apiClient";
 import { PersonRef } from "@/api/types/PersonRef";
-import { Page } from "@/api/types/Page";
 
 interface Props {
   open: boolean;
@@ -36,22 +35,22 @@ export const KontoinhaberSelectDialog: React.FC<Props> = ({ open, onClose, onSel
     let active = true;
     setLoading(true);
 
-    apiClient
-      .get<Page<PersonRef>>("/person/search", {
-        params: {
-          name: inputValue,
-          size: 10,
-          sort: "name,asc",
-        },
-      })
-      .then((res) => {
-        if (active) {
-          setOptions(res.data.content);
-        }
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
+   apiClient
+     .get<PersonRef[]>("/person/search/ref", {
+       params: {
+         search: inputValue, // ✅ statt name
+         size: 10,
+         sort: "name,asc",
+       },
+     })
+     .then((res) => {
+       if (active) {
+         setOptions(res.data ?? []);
+       }
+     })
+     .finally(() => {
+       if (active) setLoading(false);
+     });
 
     return () => {
       active = false;
@@ -65,11 +64,14 @@ export const KontoinhaberSelectDialog: React.FC<Props> = ({ open, onClose, onSel
       <DialogContent sx={{ mt: 2 }}>
         <Autocomplete<PersonRef>
           value={value}
-          options={options}
+          inputValue={inputValue}
+          options={[...options]} // ⭐ wichtig
           loading={loading}
-          filterOptions={(x) => x} // ❗ wichtig: kein Client-Filter
+          filterOptions={(x) => x}
+          freeSolo={false}
+          includeInputInList
           getOptionLabel={(p) => `${p.vorname} ${p.name}`}
-          isOptionEqualToValue={(a, b) => a.id === b.id}
+          isOptionEqualToValue={(a, b) => !!b && a.id === b.id}
           onChange={(_, newValue) => setValue(newValue)}
           onInputChange={(_, newInput) => setInputValue(newInput)}
           renderInput={(params) => (
