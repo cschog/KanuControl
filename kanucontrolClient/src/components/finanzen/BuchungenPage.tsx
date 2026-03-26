@@ -13,26 +13,13 @@ import {
 } from "@mui/material";
 
 import { useEffect, useState, useCallback } from "react";
-
-import {
-  getAbrechnung,
-  addBuchung,
-  updateBuchung,
-  addBeleg,
-} from "@/api/client/abrechnungApi";
-
+import { getAbrechnung, addBuchung, updateBuchung,deleteBuchung, deleteBeleg } from "@/api/client/abrechnungApi";
 import { getFinanzgruppen, FinanzGruppe } from "@/api/client/finanzgruppenApi";
-
 import BuchungDialog from "@/components/finanzen/BuchungDialog";
-import BelegDialog from "@/components/finanzen/BelegDialog";
+import { createBelegWithBuchung } from "@/api/client/abrechnungApi";
+import BelegMitBuchungDialog from "@/components/finanzen/BelegMitBuchungDialog";
 
-import {
-  AbrechnungDetail,
-  AbrechnungBeleg,
-  Buchung,
-  BuchungCreate,
-  BelegCreate,
-} from "@/api/types/abrechnung";
+import { AbrechnungDetail, AbrechnungBeleg, Buchung, BuchungCreate, BelegCreate } from "@/api/types/abrechnung";
 
 import { kategorieZuTyp } from "@/api/types/finanz";
 
@@ -88,8 +75,8 @@ export default function BuchungenPage({ veranstaltungId }: Props) {
     await load();
   };
 
-  const handleAddBeleg = async (data: BelegCreate) => {
-    await addBeleg(veranstaltungId, data);
+  const handleCreate = async (data: { beleg: BelegCreate; buchung: BuchungCreate }) => {
+    await createBelegWithBuchung(veranstaltungId, data);
     setBelegDialogOpen(false);
     await load();
   };
@@ -100,25 +87,42 @@ export default function BuchungenPage({ veranstaltungId }: Props) {
     <Box key={beleg.id} mb={4}>
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
         <Box>
-          <Typography variant="h6">{beleg.belegnummer}</Typography>
+          <Typography variant="h6">
+            {beleg.belegnummer} ({beleg.kuerzel})
+          </Typography>
           <Typography variant="body2" color="text.secondary">
             {beleg.datum} – {beleg.beschreibung}
           </Typography>
         </Box>
 
         {abrechnung.status !== "ABGESCHLOSSEN" && (
-          <Button
-            size="small"
-            variant="contained"
-            onClick={() => {
-              setSelectedBeleg(beleg);
-              setEditing(undefined);
-              setDialogTyp("KOSTEN");
-              setDialogOpen(true);
-            }}
-          >
-            + Position
-          </Button>
+          <Stack direction="row" spacing={1}>
+            <Button
+              size="small"
+              variant="contained"
+              onClick={() => {
+                setSelectedBeleg(beleg);
+                setEditing(undefined);
+                setDialogTyp("KOSTEN");
+                setDialogOpen(true);
+              }}
+            >
+              + Position
+            </Button>
+
+            <Button
+              size="small"
+              color="error"
+              onClick={async () => {
+                if (!confirm("Beleg komplett löschen?")) return;
+
+                await deleteBeleg(veranstaltungId, beleg.id);
+                await load();
+              }}
+            >
+              Löschen
+            </Button>
+          </Stack>
         )}
       </Stack>
 
@@ -128,7 +132,6 @@ export default function BuchungenPage({ veranstaltungId }: Props) {
             <TableRow>
               <TableCell>Datum</TableCell>
               <TableCell>Kategorie</TableCell>
-              <TableCell>Kürzel</TableCell>
               <TableCell>Beschreibung</TableCell>
               <TableCell align="right">Betrag (€)</TableCell>
               {abrechnung.status !== "ABGESCHLOSSEN" && <TableCell />}
@@ -140,7 +143,7 @@ export default function BuchungenPage({ veranstaltungId }: Props) {
               <TableRow key={p.id}>
                 <TableCell>{p.datum}</TableCell>
                 <TableCell>{p.kategorie.replaceAll("_", " ")}</TableCell>
-                <TableCell>{p.kuerzel}</TableCell>
+
                 <TableCell>{p.beschreibung}</TableCell>
                 <TableCell align="right">{p.betrag.toFixed(2)}</TableCell>
 
@@ -156,6 +159,18 @@ export default function BuchungenPage({ veranstaltungId }: Props) {
                       }}
                     >
                       Bearbeiten
+                    </Button>
+                    <Button
+                      size="small"
+                      color="error"
+                      onClick={async () => {
+                        if (!confirm("Position wirklich löschen?")) return;
+
+                        await deleteBuchung(veranstaltungId, beleg.id, p.id);
+                        await load();
+                      }}
+                    >
+                      Löschen
                     </Button>
                   </TableCell>
                 )}
@@ -203,11 +218,11 @@ export default function BuchungenPage({ veranstaltungId }: Props) {
         onSave={handleSave}
       />
 
-      <BelegDialog
+      <BelegMitBuchungDialog
         open={belegDialogOpen}
         kuerzelListe={finanzgruppen.map((g) => g.kuerzel)}
         onClose={() => setBelegDialogOpen(false)}
-        onSave={handleAddBeleg}
+        onSave={handleCreate}
       />
     </Box>
   );

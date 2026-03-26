@@ -164,7 +164,6 @@ class FinanzGruppeIntegrationTest extends AbstractFinanzIntegrationTest {
 
         // 🔹 Buchung erzeugen (Pflicht!)
         AbrechnungBuchung buchung = new AbrechnungBuchung();
-        buchung.setTeilnehmer(teilnehmer);
         buchung.setKategorie(FinanzKategorie.TEILNEHMERBEITRAG);
         buchung.setBetrag(BigDecimal.TEN);
         buchung.setDatum(LocalDate.now());

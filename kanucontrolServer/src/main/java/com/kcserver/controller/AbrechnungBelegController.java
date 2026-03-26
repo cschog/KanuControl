@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/veranstaltungen/{veranstaltungId}/abrechnung/belege")
@@ -18,13 +19,17 @@ public class AbrechnungBelegController {
        BELEG ANLEGEN
        ========================================================= */
 
-    @PostMapping
+    @PostMapping("/mit-buchung")
     @ResponseStatus(HttpStatus.CREATED)
-    public AbrechnungBelegDTO createBeleg(
+    public AbrechnungBelegDTO createBelegMitBuchung(
             @PathVariable Long veranstaltungId,
-            @RequestBody @Valid AbrechnungBelegCreateDTO dto
+            @RequestBody @Valid AbrechnungBelegMitBuchungCreateDTO dto
     ) {
-        return service.createBeleg(veranstaltungId, dto);
+        return service.createBelegMitBuchung(
+                veranstaltungId,
+                dto.getBeleg(),
+                dto.getBuchung()
+        );
     }
 
     /* =========================================================

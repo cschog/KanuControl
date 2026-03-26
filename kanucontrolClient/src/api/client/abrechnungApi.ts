@@ -1,5 +1,5 @@
 import apiClient from "@/api/client/apiClient";
-import { AbrechnungDetail, Buchung, AbrechnungBeleg, BuchungCreate } from "@/api/types/abrechnung";
+import { AbrechnungDetail, Buchung, BelegCreate, BuchungCreate } from "@/api/types/abrechnung";
 
 export const getAbrechnung = async (veranstaltungId: number) => {
   const { data } = await apiClient.get<AbrechnungDetail>(
@@ -14,7 +14,7 @@ export const addBuchung = async (
   payload: BuchungCreate,
 ) => {
   const { data } = await apiClient.post<Buchung>(
-    `/veranstaltungen/${veranstaltungId}/abrechnung/belege/${belegId}/buchungen`,
+    `/veranstaltungen/${veranstaltungId}/abrechnung/belege/${belegId}/positionen`,
     payload,
   );
   return data;
@@ -27,7 +27,7 @@ export const updateBuchung = async (
   payload: BuchungCreate,
 ) => {
   const { data } = await apiClient.put<Buchung>(
-    `/veranstaltungen/${veranstaltungId}/abrechnung/belege/${belegId}/buchungen/${buchungId}`,
+    `/veranstaltungen/${veranstaltungId}/abrechnung/belege/positionen/${buchungId}`,
     payload,
   );
   return data;
@@ -39,7 +39,7 @@ export const deleteBuchung = async (
   buchungId: number,
 ) => {
   await apiClient.delete(
-    `/veranstaltungen/${veranstaltungId}/abrechnung/belege/${belegId}/buchungen/${buchungId}`,
+    `/veranstaltungen/${veranstaltungId}/abrechnung/belege/positionen/${buchungId}`,
   );
 };
 
@@ -51,20 +51,25 @@ export const wiederOeffnenAbrechnung = async (veranstaltungId: number) => {
   await apiClient.post(`/veranstaltungen/${veranstaltungId}/abrechnung/wieder-oeffnen`);
 };
 
-export interface BelegCreate {
-  kuerzel: string;
-  datum: string;
-  beschreibung?: string;
+export async function createBelegWithBuchung(
+  veranstaltungId: number,
+  payload: {
+    beleg: BelegCreate;
+    buchung: BuchungCreate;
+  },
+) {
+  return apiClient.post(`/veranstaltungen/${veranstaltungId}/abrechnung/belege/mit-buchung`, payload);
 }
 
-export async function addBeleg(
-  veranstaltungId: number,
-  payload: BelegCreate,
-): Promise<AbrechnungBeleg> {
-  const res = await apiClient.post<AbrechnungBeleg>(
+export async function addBeleg(veranstaltungId: number, payload: BelegCreate): Promise<BelegCreate> {
+  const res = await apiClient.post<BelegCreate>(
     `/veranstaltungen/${veranstaltungId}/abrechnung/belege`,
     payload,
   );
 
   return res.data;
 }
+
+export const deleteBeleg = async (veranstaltungId: number, belegId: number) => {
+  await apiClient.delete(`/veranstaltungen/${veranstaltungId}/abrechnung/belege/${belegId}`);
+};

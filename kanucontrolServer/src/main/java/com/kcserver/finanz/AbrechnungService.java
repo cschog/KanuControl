@@ -101,7 +101,6 @@ public class AbrechnungService {
 
             AbrechnungBuchung pos = new AbrechnungBuchung();
             pos.setBeleg(beleg);
-            pos.setTeilnehmer(t);
             pos.setKategorie(FinanzKategorie.TEILNEHMERBEITRAG);
             pos.setDatum(LocalDate.now());
             pos.setBetrag(betrag);

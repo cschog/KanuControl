@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="2026-03-26-01-remove-teilnehmer-from-buchung" author="chris">
+
+        <!-- FK entfernen -->
+        <dropForeignKeyConstraint
+                baseTableName="abrechnung_buchung"
+                constraintName="fk_buchung_teilnehmer"/>
+
+        <!-- Spalte entfernen -->
+        <dropColumn
+                tableName="abrechnung_buchung"
+                columnName="teilnehmer_id"/>
+
+    </changeSet>
+
+</databaseChangeLog>
