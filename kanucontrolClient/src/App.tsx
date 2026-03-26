@@ -2,7 +2,7 @@ import React from "react";
 import { Routes, Route } from "react-router-dom";
 
 import StartMenue from "@/components/startmenu/StartMenu";
-import Vereine from "./components/verein/Vereine";
+import Vereine from "./components/verein/VereineScreen";
 import Personen from "./components/person/PersonenScreen";
 import Veranstaltungen from "@/components/veranstaltung/Veranstaltungen";
 import TeilnehmerScreen from "@/components/teilnehmer/TeilnehmerScreen";

@@ -7,6 +7,8 @@ import { VeranstaltungTable } from "./VeranstaltungTable";
 import { VeranstaltungFormView } from "./VeranstaltungFormView";
 import { VeranstaltungCreateDialog } from "./VeranstaltungCreateDialog";
 
+import { Box, Grid, Paper } from "@mui/material";
+
 import {
   getVeranstaltungenPage,
   getVeranstaltung,
@@ -243,35 +245,48 @@ class Veranstaltungen extends Component<Props, State> {
       this.state;
 
     return (
-      <>
+      <Box>
         <MenueHeader headerText={`${total} Veranstaltungen`} />
 
         {renderLoadingOrError({ loading, error })}
 
-        <VeranstaltungTable
-          data={data}
-          total={total}
-          page={this.state.page}
-          pageSize={this.state.pageSize}
-          selectedId={selectedId}
-          onSelect={this.handleSelect}
-          onPageChange={this.handlePageChange}
-          onPageSizeChange={this.handlePageSizeChange}
-        />
+        <Grid container spacing={2}>
+          {/* ================= LEFT ================= */}
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Paper sx={{ p: 2 }}>
+              <VeranstaltungTable
+                data={data}
+                total={total}
+                page={this.state.page}
+                pageSize={this.state.pageSize}
+                selectedId={selectedId}
+                onSelect={this.handleSelect}
+                onPageChange={this.handlePageChange}
+                onPageSizeChange={this.handlePageSizeChange}
+              />
+            </Paper>
+          </Grid>
 
-        <VeranstaltungFormView
-          veranstaltung={selectedVeranstaltung}
-          editMode={this.state.editMode}
-          onEdit={this.handleEdit}
-          onCancelEdit={this.handleCancelEdit}
-          onSave={this.handleSave}
-          onDelete={this.handleDelete}
-          onBack={this.handleBack}
-          onActivate={this.handleActivate}
-          disableEdit={this.state.btnEditDisabled}
-          disableDelete={this.state.btnDeleteDisabled}
-        />
+          {/* ================= RIGHT ================= */}
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Paper sx={{ p: 2 }}>
+              <VeranstaltungFormView
+                veranstaltung={selectedVeranstaltung}
+                editMode={this.state.editMode}
+                onEdit={this.handleEdit}
+                onCancelEdit={this.handleCancelEdit}
+                onSave={this.handleSave}
+                onDelete={this.handleDelete}
+                onBack={this.handleBack}
+                onActivate={this.handleActivate}
+                disableEdit={this.state.btnEditDisabled}
+                disableDelete={this.state.btnDeleteDisabled}
+              />
+            </Paper>
+          </Grid>
+        </Grid>
 
+        {/* ACTION BAR */}
         {!selectedVeranstaltung && (
           <BottomActionBar
             left={[
@@ -286,7 +301,7 @@ class Veranstaltungen extends Component<Props, State> {
           onClose={this.closeCreate}
           onCreate={this.handleCreate}
         />
-      </>
+      </Box>
     );
   }
 }

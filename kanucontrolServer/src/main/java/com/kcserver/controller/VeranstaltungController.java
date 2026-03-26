@@ -103,14 +103,14 @@ public class VeranstaltungController {
        DETAIL
        ========================================================= */
 
-    @GetMapping("/active")
+    @GetMapping("/aktiv")
     public VeranstaltungDetailDTO getActive() {
         return veranstaltungService.getActiveOptional()
                 .orElseThrow(() ->
                         new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public VeranstaltungDetailDTO getById(@PathVariable Long id) {
         return veranstaltungService.getById(id);
     }

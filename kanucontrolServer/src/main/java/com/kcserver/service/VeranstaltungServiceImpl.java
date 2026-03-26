@@ -328,6 +328,10 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
             v.setName(dto.getName());
         }
 
+        if (dto.getTyp() != null) {
+            v.setTyp(dto.getTyp());
+        }
+
         if (dto.getBeginnDatum() != null) {
             v.setBeginnDatum(dto.getBeginnDatum());
         }
@@ -373,6 +377,43 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
 
             v.setLeiter(leiter);
         }
+
+        /* =========================
+   DETAILFELDER
+   ========================= */
+
+        v.setLaenderCode(dto.getLaenderCode());
+        v.setPlz(dto.getPlz());
+        v.setOrt(dto.getOrt());
+
+        v.setArtDerUnterkunft(dto.getArtDerUnterkunft());
+        v.setArtDerVerpflegung(dto.getArtDerVerpflegung());
+
+/* =========================
+   GEBÜHREN
+   ========================= */
+
+        if (dto.getIndividuelleGebuehren() != null) {
+            v.setIndividuelleGebuehren(dto.getIndividuelleGebuehren());
+        }
+
+        v.setStandardGebuehr(dto.getStandardGebuehr());
+
+        if (dto.getScope() != null) {
+            v.setScope(dto.getScope());
+        }
+
+/* =========================
+   PLANUNG
+   ========================= */
+
+        v.setGeplanteTeilnehmerMaennlich(dto.getGeplanteTeilnehmerMaennlich());
+        v.setGeplanteTeilnehmerWeiblich(dto.getGeplanteTeilnehmerWeiblich());
+        v.setGeplanteTeilnehmerDivers(dto.getGeplanteTeilnehmerDivers());
+
+        v.setGeplanteMitarbeiterMaennlich(dto.getGeplanteMitarbeiterMaennlich());
+        v.setGeplanteMitarbeiterWeiblich(dto.getGeplanteMitarbeiterWeiblich());
+        v.setGeplanteMitarbeiterDivers(dto.getGeplanteMitarbeiterDivers());
 
         return veranstaltungMapper.toDetailDTO(v);
     }

@@ -29,25 +29,45 @@ export function EntityAutocomplete<T extends RefBase>({
 
   const debounce = useDebounce(input, 300);
 
+ function isPageResult(res: unknown): res is { content: unknown[] } {
+   return (
+     typeof res === "object" &&
+     res !== null &&
+     "content" in res &&
+     Array.isArray((res as { content: unknown[] }).content)
+   );
+ }
+
   /* ================= LOAD ================= */
 
-useEffect(() => {
-  let active = true;
+  useEffect(() => {
+    let active = true;
 
-  (async () => {
-    setLoading(true);
-    try {
-      const res = await fetch({ search: debounce });
-      if (active) setOptions(res);
-    } finally {
-      if (active) setLoading(false);
+    (async () => {
+      setLoading(true);
+      try {
+        const res = await fetch({ search: debounce });
+
+    if (active) {
+      let safe: T[] = [];
+
+      if (Array.isArray(res)) {
+        safe = res;
+      } else if (isPageResult(res)) {
+        safe = (res as { content: T[] }).content;
+      }
+
+      setOptions(safe);
     }
-  })();
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
 
-  return () => {
-    active = false;
-  };
-}, [debounce, fetch]);
+    return () => {
+      active = false;
+    };
+  }, [debounce, fetch]);
 
   /* ================= RENDER ================= */
 
