@@ -224,7 +224,6 @@ class FinanzGruppeServiceTest extends AbstractFinanzIntegrationTest {
         AbrechnungBuchungCreateDTO posDTO =
                 new AbrechnungBuchungCreateDTO();
 
-        posDTO.setTeilnehmerId(teilnehmerId);
         posDTO.setKategorie(FinanzKategorie.UNTERKUNFT);
         posDTO.setBetrag(new BigDecimal("100"));
         posDTO.setDatum(LocalDate.now());

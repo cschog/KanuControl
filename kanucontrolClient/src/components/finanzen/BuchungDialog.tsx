@@ -27,7 +27,7 @@ export default function BuchungDialog({ open, typ, initialData, onClose, onSave 
   const [betrag, setBetrag] = useState("");
   const [datum, setDatum] = useState("");
   const [beschreibung, setBeschreibung] = useState("");
-  const [teilnehmerId, setTeilnehmerId] = useState<number | "">("");
+
 
   /* =========================================================
      INIT (Neu oder Bearbeiten)
@@ -39,13 +39,13 @@ export default function BuchungDialog({ open, typ, initialData, onClose, onSave 
       setBetrag(initialData.betrag.toString());
       setDatum(initialData.datum);
       setBeschreibung(initialData.beschreibung ?? "");
-      setTeilnehmerId(initialData.teilnehmerId);
+
     } else {
       setKategorie("");
       setBetrag("");
       setDatum("");
       setBeschreibung("");
-      setTeilnehmerId("");
+
     }
   }, [initialData, open]);
 
@@ -62,14 +62,13 @@ export default function BuchungDialog({ open, typ, initialData, onClose, onSave 
   ========================================================= */
 
   const handleSave = async () => {
-    if (!kategorie || !betrag || !datum || !teilnehmerId) return;
+    if (!kategorie || !betrag || !datum ) return;
 
     const payload: BuchungCreate = {
       kategorie,
       betrag: parseFloat(betrag),
       datum,
       beschreibung,
-      teilnehmerId: Number(teilnehmerId),
     };
 
     await onSave(payload);
@@ -122,14 +121,6 @@ export default function BuchungDialog({ open, typ, initialData, onClose, onSave 
             label="Beschreibung"
             value={beschreibung}
             onChange={(e) => setBeschreibung(e.target.value)}
-            fullWidth
-          />
-
-          <TextField
-            label="Teilnehmer ID"
-            type="number"
-            value={teilnehmerId}
-            onChange={(e) => setTeilnehmerId(Number(e.target.value))}
             fullWidth
           />
         </Stack>

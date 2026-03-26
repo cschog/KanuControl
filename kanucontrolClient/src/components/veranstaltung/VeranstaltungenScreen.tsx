@@ -56,7 +56,7 @@ interface State {
    CLASS COMPONENT
    ========================================================= */
 
-class Veranstaltungen extends Component<Props, State> {
+class VeranstaltungenScreen extends Component<Props, State> {
   state: State = {
     data: [],
     total: 0,
@@ -312,7 +312,7 @@ class Veranstaltungen extends Component<Props, State> {
 
 function VeranstaltungenWithContext() {
   const reload = useReloadAppContext();
-  return <Veranstaltungen reloadContext={reload} />;
+  return <VeranstaltungenScreen reloadContext={reload} />;
 }
 
 export default VeranstaltungenWithContext;

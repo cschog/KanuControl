@@ -183,7 +183,6 @@ class AbrechnungServiceTest extends AbstractTenantIntegrationTest {
         AbrechnungBuchungCreateDTO posDTO =
                 new AbrechnungBuchungCreateDTO();
 
-        posDTO.setTeilnehmerId(teilnehmerId);
         posDTO.setKategorie(kategorie);
         posDTO.setBetrag(new BigDecimal(betrag));
         posDTO.setDatum(LocalDate.now());

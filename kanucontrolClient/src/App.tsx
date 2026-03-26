@@ -4,7 +4,7 @@ import { Routes, Route } from "react-router-dom";
 import StartMenue from "@/components/startmenu/StartMenu";
 import Vereine from "./components/verein/VereineScreen";
 import Personen from "./components/person/PersonenScreen";
-import Veranstaltungen from "@/components/veranstaltung/Veranstaltungen";
+import Veranstaltungen from "@/components/veranstaltung/VeranstaltungenScreen";
 import TeilnehmerScreen from "@/components/teilnehmer/TeilnehmerScreen";
 import Finanzen from "./pages/Finanzen";
 import Reisekosten from "./Platzhalter/Reisekosten";

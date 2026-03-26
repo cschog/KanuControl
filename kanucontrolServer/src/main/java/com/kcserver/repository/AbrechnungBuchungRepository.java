@@ -10,7 +10,5 @@ import java.util.Optional;
 public interface AbrechnungBuchungRepository
         extends JpaRepository<AbrechnungBuchung, Long> {
 
-    boolean existsByTeilnehmer_Id(Long teilnehmerId);
-
     List<AbrechnungBuchung> findByBeleg_Abrechnung_Id(Long abrechnungId);
 }

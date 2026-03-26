@@ -12,9 +12,6 @@ import java.time.LocalDate;
 public class AbrechnungBuchungCreateDTO {
 
     @NotNull
-    private Long teilnehmerId;
-
-    @NotNull
     private FinanzKategorie kategorie;
 
     @NotNull

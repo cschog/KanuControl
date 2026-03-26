@@ -23,9 +23,9 @@ public class AbrechnungBuchung implements FinanzPosition {
     @JoinColumn(name = "beleg_id", nullable = false)
     private AbrechnungBeleg beleg;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "teilnehmer_id", nullable = false)
-    private Teilnehmer teilnehmer;
+//    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+//    @JoinColumn(name = "teilnehmer_id", nullable = false)
+//    private Teilnehmer teilnehmer;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

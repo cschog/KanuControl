@@ -56,6 +56,11 @@ public class AbrechnungMapper {
         dto.setDatum(beleg.getDatum());
         dto.setBeschreibung(beleg.getBeschreibung());
 
+        // 🔥 HIER ist das Kürzel richtig
+        if (beleg.getFinanzGruppe() != null) {
+            dto.setKuerzel(beleg.getFinanzGruppe().getKuerzel());
+        }
+
         dto.setPositionen(
                 safeList(beleg.getPositionen())
                         .stream()
@@ -81,21 +86,6 @@ public class AbrechnungMapper {
         dto.setBetrag(pos.getBetrag());
         dto.setDatum(pos.getDatum());
         dto.setBeschreibung(pos.getBeschreibung());
-
-        if (pos.getTeilnehmer() != null) {
-            dto.setTeilnehmerId(pos.getTeilnehmer().getId());
-        }
-
-        // 🔥 Gruppe kommt jetzt vom Beleg
-        if (pos.getBeleg() != null &&
-                pos.getBeleg().getFinanzGruppe() != null) {
-
-            dto.setKuerzel(
-                    pos.getBeleg()
-                            .getFinanzGruppe()
-                            .getKuerzel()
-            );
-        }
 
         return dto;
     }

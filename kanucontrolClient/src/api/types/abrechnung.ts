@@ -6,9 +6,6 @@ export interface Buchung {
   betrag: number;
   datum: string;
   beschreibung?: string;
-  teilnehmerId: number;
-  teilnehmerName: string;
-  kuerzel: string;
 }
 
 export interface BuchungCreate {
@@ -16,7 +13,6 @@ export interface BuchungCreate {
   betrag: number;
   datum: string;
   beschreibung?: string;
-  teilnehmerId: number;
 }
 
 export interface AbrechnungBeleg {

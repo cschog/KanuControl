@@ -74,6 +74,27 @@ public class AbrechnungBelegService {
         return mapper.toDTO(belegRepository.save(beleg));
     }
 
+    public AbrechnungBelegDTO createBelegMitBuchung(
+            Long veranstaltungId,
+            AbrechnungBelegCreateDTO belegDto,
+            AbrechnungBuchungCreateDTO buchungDto
+    ) {
+
+        // 1. Beleg erstellen (deine bestehende Logik!)
+        AbrechnungBelegDTO belegDTO = createBeleg(veranstaltungId, belegDto);
+
+        // 2. Buchung hinzufügen
+        addPosition(veranstaltungId, belegDTO.getId(), buchungDto);
+
+        // 3. OPTIONAL: frisch laden (sauberer für UI)
+        AbrechnungBeleg beleg = belegRepository.findById(belegDTO.getId())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Beleg nicht gefunden nach Erstellung"));
+
+        return mapper.toDTO(beleg);
+    }
+
     /* =========================================================
        POSITION HINZUFÜGEN
        ========================================================= */
@@ -87,34 +108,8 @@ public class AbrechnungBelegService {
         validateVeranstaltung(veranstaltungId, beleg);
         checkEditable(beleg.getAbrechnung());
 
-        Teilnehmer teilnehmer = teilnehmerRepository.findById(dto.getTeilnehmerId())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Teilnehmer nicht gefunden"));
-
-        if (!teilnehmer.getVeranstaltung().getId().equals(veranstaltungId)) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "Teilnehmer gehört nicht zu dieser Veranstaltung");
-        }
-
-        if (teilnehmer.getFinanzGruppe() == null) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "Teilnehmer hat kein Kürzel");
-        }
-
-        // Teilnehmer muss zur gleichen Gruppe gehören wie der Beleg
-        if (!teilnehmer.getFinanzGruppe().getId()
-                .equals(beleg.getFinanzGruppe().getId())) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "Teilnehmer gehört nicht zum Kürzel des Belegs");
-        }
-
         AbrechnungBuchung position = new AbrechnungBuchung();
         position.setBeleg(beleg);
-        position.setTeilnehmer(teilnehmer);
         position.setKategorie(dto.getKategorie());
         position.setBetrag(dto.getBetrag());
         position.setDatum(dto.getDatum());
@@ -163,11 +158,23 @@ public class AbrechnungBelegService {
                                 HttpStatus.NOT_FOUND,
                                 "Position nicht gefunden"));
 
-        validateVeranstaltung(veranstaltungId, pos.getBeleg());
-        checkEditable(pos.getBeleg().getAbrechnung());
+        AbrechnungBeleg beleg = pos.getBeleg();
 
-        pos.getBeleg().removePosition(pos);
+        validateVeranstaltung(veranstaltungId, beleg);
+        checkEditable(beleg.getAbrechnung());
+
+        // 🔹 Beziehung lösen
+        beleg.removePosition(pos);
+
+        // 🔹 Buchung löschen
         buchungRepository.delete(pos);
+
+        // 🔥 WICHTIG: wenn letzte Position → Beleg löschen
+        if (beleg.getPositionen().isEmpty()) {
+
+            beleg.getAbrechnung().removeBeleg(beleg);
+            belegRepository.delete(beleg);
+        }
     }
 
     /* =========================================================

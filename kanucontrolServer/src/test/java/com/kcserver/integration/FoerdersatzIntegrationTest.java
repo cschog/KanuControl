@@ -222,7 +222,6 @@ class FoerdersatzIntegrationTest extends AbstractFinanzIntegrationTest {
         AbrechnungBuchungCreateDTO posDTO =
                 new AbrechnungBuchungCreateDTO();
 
-        posDTO.setTeilnehmerId(teilnehmerId);
         posDTO.setKategorie(kat);
         posDTO.setBetrag(new BigDecimal(betrag));
         posDTO.setDatum(TEST_DATE);

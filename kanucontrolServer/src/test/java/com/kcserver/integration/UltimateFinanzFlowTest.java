@@ -124,7 +124,6 @@ class UltimateFinanzFlowTest extends AbstractFinanzIntegrationTest {
 
         AbrechnungBuchungCreateDTO dto = new AbrechnungBuchungCreateDTO();
 
-        dto.setTeilnehmerId(teilnehmerId);
         dto.setKategorie(kat);
         dto.setBetrag(new BigDecimal(betrag));
         dto.setDatum(LocalDate.now());
