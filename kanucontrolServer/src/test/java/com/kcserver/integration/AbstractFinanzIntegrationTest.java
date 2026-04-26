@@ -101,6 +101,40 @@ public abstract class AbstractFinanzIntegrationTest
         return veranstaltungService.create(dto).getId();
     }
 
+    protected Long createTestVeranstaltung(
+            VeranstaltungTyp typ,
+            LocalDate beginn,
+            LocalDate ende
+    ) {
+
+        Veranstaltung v = new Veranstaltung();
+
+        v.setTyp(typ);
+
+        v.setBeginnDatum(beginn);
+        v.setEndeDatum(ende);
+        v.setBeginnZeit(LocalTime.of(8, 0));
+        v.setEndeZeit(LocalTime.of(18, 0));
+
+        Person leiter = new Person();
+        leiter.setVorname("Test");
+        leiter.setName("Leiter");
+        leiter.setSex(Sex.MAENNLICH);
+        leiter.setAktiv(true);
+
+        leiter = personRepository.save(leiter);
+
+        v.setLeiter(leiter);
+
+        v.setName("Testveranstaltung");
+
+        v.setVerein(vereinRepository.findAll().getFirst());
+
+        v = veranstaltungRepository.save(v);
+
+        return v.getId();
+    }
+
     protected Abrechnung createOpenAbrechnung(Long veranstaltungId) {
 
         abrechnungService.getOrCreate(veranstaltungId);

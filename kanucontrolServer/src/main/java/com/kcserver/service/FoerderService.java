@@ -17,7 +17,7 @@ public class FoerderService {
     private final KikZuschlagService kikZuschlagService;
 
     /**
-     * Berechnet die Förderung pro Tag und Teilnehmer.
+     * Förderung PRO TAG für einen Teilnehmer.
      */
     public BigDecimal berechneFoerderungProTagUndTeilnehmer(
             Veranstaltung veranstaltung,
@@ -26,7 +26,10 @@ public class FoerderService {
 
         LocalDate datum = veranstaltung.getBeginnDatum();
 
-        // 1️⃣ passenden Foerdersatz laden (typ + datum)
+        if (!istFoerderfaehig(veranstaltung, teilnehmer)) {
+            return BigDecimal.ZERO;
+        }
+
         Foerdersatz fs =
                 foerdersatzService.findEntityGueltigFuerTypAm(
                         veranstaltung.getTyp(),
@@ -38,44 +41,59 @@ public class FoerderService {
 
         BigDecimal zuschlag = BigDecimal.ZERO;
 
-        // 2️⃣ KiK nur bei FM/JEM prüfen
-        if (istFmOderJem(veranstaltung)
-                && veranstaltung.getVerein().isKikZertifiziertAm(datum)
-                && istZwischen6Und20(teilnehmer, datum)
-        ) {
+        if (veranstaltung.getVerein()
+                .isKikZertifiziertAm(datum)) {
 
             KikZuschlag kik =
                     kikZuschlagService.findOptionalGueltigAm(datum);
 
-            zuschlag = kik.getKikZuschlag();
+            if (kik != null) {
+                zuschlag = kik.getKikZuschlag();
+            }
         }
 
-        // 3️⃣ Gesamt berechnen
         BigDecimal gesamt = grund.add(zuschlag);
 
-        // 4️⃣ Deckel anwenden (immer!)
-        return gesamt.min(deckel);
+        if (deckel != null) {
+            gesamt = gesamt.min(deckel);
+        }
+
+        return gesamt;
     }
 
-    private boolean istFmOderJem(Veranstaltung v) {
-        VeranstaltungTyp typ = v.getTyp();
-        return typ == VeranstaltungTyp.FM
-                || typ == VeranstaltungTyp.JEM;
-    }
-
-    private boolean istZwischen6Und20(
-            Teilnehmer teilnehmer,
-            LocalDate stichtag
+    /**
+     * Zentrale Förderfähigkeitsprüfung.
+     */
+    public boolean istFoerderfaehig(
+            Veranstaltung veranstaltung,
+            Teilnehmer teilnehmer
     ) {
+
+        if (!istFmOderJem(veranstaltung)) {
+            return false;
+        }
 
         LocalDate geburt =
                 teilnehmer.getPerson().getGeburtsdatum();
 
-        if (geburt == null) return false;
+        if (geburt == null) {
+            return false;
+        }
 
         int alter =
-                Period.between(geburt, stichtag).getYears();
+                Period.between(
+                        geburt,
+                        veranstaltung.getBeginnDatum()
+                ).getYears();
 
         return alter >= 6 && alter <= 20;
+    }
+
+    private boolean istFmOderJem(Veranstaltung veranstaltung) {
+
+        VeranstaltungTyp typ = veranstaltung.getTyp();
+
+        return typ == VeranstaltungTyp.FM
+                || typ == VeranstaltungTyp.JEM;
     }
 }
