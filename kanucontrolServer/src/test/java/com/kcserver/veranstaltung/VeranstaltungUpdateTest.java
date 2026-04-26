@@ -118,7 +118,7 @@ class VeranstaltungUpdateTest extends AbstractTenantIntegrationTest {
         Long secondId = veranstaltungFactory.create(vereinId, leiterId, "Herbst");
 
         mockMvc.perform(
-                        get("/api/veranstaltungen/active"))
+                        get("/api/veranstaltungen/aktiv"))
 
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(secondId));

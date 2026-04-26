@@ -68,7 +68,7 @@ class VeranstaltungActiveTest extends AbstractTenantIntegrationTest {
         createVeranstaltung("V1");
 
         String json = mockMvc.perform(
-                        get("/api/veranstaltungen/active")
+                        get("/api/veranstaltungen/aktiv")
                 )
                 .andExpect(status().isOk())
                 .andReturn()

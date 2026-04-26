@@ -134,6 +134,20 @@ public class PersonSpecification {
                 }
             }
 
+            // =========================
+            // Name separat
+            // =========================
+            if (!hasText(c.getSearch()) && hasText(c.getName())) {
+
+                predicate = cb.and(
+                        predicate,
+                        cb.like(
+                                cb.lower(root.get("name")),
+                                "%" + c.getName().toLowerCase() + "%"
+                        )
+                );
+            }
+
             return predicate;
         };
     }

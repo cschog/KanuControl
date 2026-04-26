@@ -3,6 +3,7 @@ package com.kcserver.person;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.dto.person.PersonSaveDTO;
 import com.kcserver.enumtype.Sex;
+import com.kcserver.repository.PersonRepository;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -13,6 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
@@ -29,6 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestPropertySource(properties = {
         "kcserver.test-tenant=tenant_test_2"
 })
+@Transactional
 class PersonSearchTest extends AbstractTenantIntegrationTest {
 
     @Autowired
@@ -37,8 +40,14 @@ class PersonSearchTest extends AbstractTenantIntegrationTest {
     @Autowired
     ObjectMapper objectMapper;
 
+    @Autowired
+    PersonRepository personRepository;
+
     @BeforeEach
+
     void setup() throws Exception {
+        personRepository.deleteAll();
+
         createPerson("Max", "Mustermann", Sex.MAENNLICH, true, LocalDate.of(1990, 1, 1));
         createPerson("Erika", "Mustermann", Sex.WEIBLICH, true, LocalDate.of(1991, 1, 1));
         createPerson("Paul", "Meier", Sex.MAENNLICH, false, LocalDate.of(1992, 1, 1));

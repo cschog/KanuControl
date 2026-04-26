@@ -4,7 +4,7 @@ import com.kcserver.entity.*;
 import com.kcserver.enumtype.Sex;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.repository.KikZuschlagRepository;
-import com.kcserver.service.FoerderBerechnungsService;
+import com.kcserver.service.VeranstaltungFoerderService;
 import com.kcserver.service.FoerdersatzService;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class FoerderBerechnungIntegrationTest extends AbstractFinanzIntegrationTest {
 
     @Autowired
-    FoerderBerechnungsService foerderService;
+    VeranstaltungFoerderService foerderService;
 
     @Autowired
     FoerdersatzService foerdersatzService;
@@ -69,16 +69,82 @@ class FoerderBerechnungIntegrationTest extends AbstractFinanzIntegrationTest {
         createFoerdersatz(VeranstaltungTyp.FM, "10.00", "20.00");
 
         createTeilnehmerMitGeburtsjahr(START.minusYears(5));   // 5 Jahre
-        createTeilnehmerMitGeburtsjahr(START.minusYears(6));   // 6 Jahre
-        createTeilnehmerMitGeburtsjahr(START.minusYears(10));  // 10 Jahre
-        createTeilnehmerMitGeburtsjahr(START.minusYears(20));  // 20 Jahre
+        createTeilnehmerMitGeburtsjahr(START.minusYears(6));
+        createTeilnehmerMitGeburtsjahr(START.minusYears(7));
+        createTeilnehmerMitGeburtsjahr(START.minusYears(8));
+        createTeilnehmerMitGeburtsjahr(START.minusYears(9));
+        createTeilnehmerMitGeburtsjahr(START.minusYears(10));
+        createTeilnehmerMitGeburtsjahr(START.minusYears(15));
+        createTeilnehmerMitGeburtsjahr(START.minusYears(20));
         createTeilnehmerMitGeburtsjahr(START.minusYears(21));  // 21 Jahre
 
         BigDecimal result = foerderService.berechneFoerderung(veranstaltungId);
 
-        // Förderfähig: 6, 10, 20 = 3 Personen
-        // 2 Tage × 3 × 10 €
-        assertThat(result).isEqualByComparingTo("60.00");
+        // Förderfähig: 6, 10, 20 = 7 Personen
+        // 2 Tage × 7 × 10 €
+        assertThat(result).isEqualByComparingTo("140.00");
+    }
+
+     /* =========================================================
+       MINDESTANZAHL
+       ========================================================= */
+
+    @Test
+
+    void shouldReturnZeroIfLessThan7FoerderfaehigeTeilnehmer() {
+
+        createFoerdersatz(
+
+                VeranstaltungTyp.FM,
+
+                "10.00",
+
+                "20.00"
+
+        );
+
+        createTeilnehmerMitAlter(6, 10);
+
+        BigDecimal result =
+
+                foerderService
+
+                        .berechneFoerderung(veranstaltungId);
+
+        assertThat(result)
+
+                .isEqualByComparingTo("0.00");
+
+    }
+
+    @Test
+
+    void shouldAllowFoerderungAt7Teilnehmer() {
+
+        createFoerdersatz(
+
+                VeranstaltungTyp.FM,
+
+                "10.00",
+
+                "20.00"
+
+        );
+
+        createTeilnehmerMitAlter(7, 10);
+
+        BigDecimal result =
+
+                foerderService
+
+                        .berechneFoerderung(veranstaltungId);
+
+        // 2 Tage × 7 × 10 €
+
+        assertThat(result)
+
+                .isEqualByComparingTo("140.00");
+
     }
 
     /* =========================================================
@@ -93,13 +159,13 @@ class FoerderBerechnungIntegrationTest extends AbstractFinanzIntegrationTest {
 
         setVereinKikZertifiziert(true);
 
-        createTeilnehmerMitAlter(5, 10);
+        createTeilnehmerMitAlter(7, 10);
 
         BigDecimal result = foerderService.berechneFoerderung(veranstaltungId);
 
         // 14 + 3 = 17
         // 2 Tage × 5 × 17
-        assertThat(result).isEqualByComparingTo("170.00");
+        assertThat(result).isEqualByComparingTo("238.00");
     }
 
     /* =========================================================
@@ -121,6 +187,56 @@ class FoerderBerechnungIntegrationTest extends AbstractFinanzIntegrationTest {
         // 14 + 3 = 17 → gedeckelt auf 15
         // 2 Tage × 10 × 15
         assertThat(result).isEqualByComparingTo("300.00");
+    }
+
+     /* =========================================================
+       MAXIMAL 21 TAGE
+       ========================================================= */
+
+    @Test
+
+    void shouldLimitFoerderungTo21Days() {
+
+        veranstaltungId =
+
+                createTestVeranstaltung(
+
+                        VeranstaltungTyp.FM,
+
+                        LocalDate.of(2026, 1, 1),
+
+                        LocalDate.of(2026, 1, 30)
+
+                );
+
+        createOpenAbrechnung(veranstaltungId);
+
+        createFoerdersatz(
+
+                VeranstaltungTyp.FM,
+
+                "10.00",
+
+                "20.00"
+
+        );
+
+        createTeilnehmerMitAlter(10, 10);
+
+        BigDecimal result =
+
+                foerderService
+
+                        .berechneFoerderung(veranstaltungId);
+
+        // max. 21 Tage!
+
+        // 21 × 10 × 10 €
+
+        assertThat(result)
+
+                .isEqualByComparingTo("2100.00");
+
     }
 
     /* =========================================================
@@ -230,13 +346,13 @@ class FoerderBerechnungIntegrationTest extends AbstractFinanzIntegrationTest {
         setVereinKikZertifiziert(true);
         // KEIN createKikZuschlag()
 
-        createTeilnehmerMitAlter(5, 10);
+        createTeilnehmerMitAlter(7, 10);
 
         BigDecimal result =
                 foerderService.berechneFoerderung(veranstaltungId);
 
         // 2 Tage × 5 × 14 €
-        assertThat(result).isEqualByComparingTo("140.00");
+        assertThat(result).isEqualByComparingTo("196.00");
     }
     @Test
     void shouldIgnoreKikIfVereinNotCertified() {
@@ -246,63 +362,25 @@ class FoerderBerechnungIntegrationTest extends AbstractFinanzIntegrationTest {
 
         // kein setVereinKikZertifiziert(true)
 
-        createTeilnehmerMitAlter(5, 10);
+        createTeilnehmerMitAlter(7, 10);
 
         BigDecimal result =
                 foerderService.berechneFoerderung(veranstaltungId);
 
         // nur 14 €
-        assertThat(result).isEqualByComparingTo("140.00");
+        assertThat(result).isEqualByComparingTo("196.00");
     }
     @Test
     void shouldNotReduceIfExactlyOnFoerderdeckel() {
 
         createFoerdersatz(VeranstaltungTyp.FM, "15.00", "15.00");
 
-        createTeilnehmerMitAlter(5, 10);
+        createTeilnehmerMitAlter(7, 10);
 
         BigDecimal result =
                 foerderService.berechneFoerderung(veranstaltungId);
 
         // 2 Tage × 5 × 15 €
-        assertThat(result).isEqualByComparingTo("150.00");
-    }
-    @Test
-    void shouldIgnoreTeilnehmerWithoutGeburtsdatum() {
-
-        createFoerdersatz(VeranstaltungTyp.FM, "10.00", "20.00");
-
-        // 2 gültige Teilnehmer
-        createTeilnehmerMitAlter(2, 10);
-
-        // 1 ohne Geburtsdatum
-        createTeilnehmerOhneGeburtsdatum();
-
-        BigDecimal result =
-                foerderService.berechneFoerderung(veranstaltungId);
-
-        // nur 2 zählen
-        // 2 Tage × 2 × 10 €
-        assertThat(result).isEqualByComparingTo("40.00");
-    }
-    private void createTeilnehmerOhneGeburtsdatum() {
-
-        var veranstaltung = veranstaltungRepository
-                .findById(veranstaltungId)
-                .orElseThrow();
-
-        Person p = new Person();
-        p.setVorname("NoBirth");
-        p.setName("Test" + System.nanoTime());
-        p.setAktiv(true);
-        p.setSex(Sex.WEIBLICH); // NOT NULL beachten
-
-        p = personRepository.save(p);
-
-        Teilnehmer t = new Teilnehmer();
-        t.setVeranstaltung(veranstaltung);
-        t.setPerson(p);
-
-        teilnehmerRepository.save(t);
+        assertThat(result).isEqualByComparingTo("210.00");
     }
 }

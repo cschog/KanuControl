@@ -27,7 +27,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @Transactional
-class AbrechnungServiceTest extends AbstractTenantIntegrationTest {
+class AbrechnungServiceTest
+        extends AbstractTenantIntegrationTest {
 
     @Autowired
     AbrechnungService abrechnungService;
@@ -45,146 +46,240 @@ class AbrechnungServiceTest extends AbstractTenantIntegrationTest {
     com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
     Long veranstaltungId;
-    Long teilnehmerId;
 
-    // ✅ Factories
+    // Factories
     VereinTestFactory vereinFactory;
     PersonTestFactory personFactory;
     VeranstaltungTestFactory veranstaltungFactory;
 
-    /* ========================================================= */
-
     @BeforeEach
     void setup() throws Exception {
 
-        vereinFactory = new VereinTestFactory(mockMvc, objectMapper);
-        personFactory = new PersonTestFactory(mockMvc, objectMapper);
-        veranstaltungFactory = new VeranstaltungTestFactory(mockMvc, objectMapper);
+        vereinFactory =
+                new VereinTestFactory(
+                        mockMvc,
+                        objectMapper
+                );
+
+        personFactory =
+                new PersonTestFactory(
+                        mockMvc,
+                        objectMapper
+                );
+
+        veranstaltungFactory =
+                new VeranstaltungTestFactory(
+                        mockMvc,
+                        objectMapper
+                );
 
         // 1️⃣ Verein
-        Long vereinId = vereinFactory.create("TV", "Testverein");
+        Long vereinId =
+                vereinFactory.create(
+                        "TV",
+                        "Testverein"
+                );
 
         // 2️⃣ Leiter
-        Long leiterId = personFactory.createWithVerein(vereinId, b ->
-                b.withVorname("Max")
-                        .withName("Mustermann")
-                        .withGeburtsdatum(java.time.LocalDate.of(1990, 1, 1))
-        );
+        Long leiterId =
+                personFactory.createWithVerein(
+                        vereinId,
+                        b -> b.withVorname("Max")
+                                .withName("Mustermann")
+                                .withGeburtsdatum(
+                                        LocalDate.of(
+                                                1990,
+                                                1,
+                                                1
+                                        )
+                                )
+                );
 
         // 3️⃣ Veranstaltung
-        veranstaltungId = veranstaltungFactory.create(
-                vereinId,
-                leiterId,
-                "Test Abrechnung"
+        veranstaltungId =
+                veranstaltungFactory.create(
+                        vereinId,
+                        leiterId,
+                        "Test Abrechnung"
+                );
+
+        // 4️⃣ Abrechnung vorbereiten
+        abrechnungService.getOrCreate(
+                veranstaltungId
         );
 
-        // 4️⃣ zusätzlicher Teilnehmer
-        Long personId = personFactory.createWithVerein(vereinId, b ->
-                b.withVorname("Anna")
-                        .withName("Test")
-                        .withGeburtsdatum(java.time.LocalDate.of(2000, 1, 1))
+        Abrechnung a =
+                abrechnungRepository
+                        .findByVeranstaltungId(
+                                veranstaltungId
+                        )
+                        .orElseThrow();
+
+        a.setStatus(
+                AbrechnungsStatus.OFFEN
         );
 
-        veranstaltungFactory.addTeilnehmer(veranstaltungId, personId);
-        teilnehmerId = personId;
-
-        // 5️⃣ Abrechnung vorbereiten
-        abrechnungService.getOrCreate(veranstaltungId);
-
-        Abrechnung a = abrechnungRepository
-                .findByVeranstaltungId(veranstaltungId)
-                .orElseThrow();
-
-        a.setStatus(AbrechnungsStatus.OFFEN);
         abrechnungRepository.save(a);
+
+        // 5️⃣ Finanzgruppe anlegen
+        finanzGruppeService.create(
+                veranstaltungId,
+                "X1"
+        );
     }
 
-    /* ========================================================= */
+    /* =========================================================
+       ABSCHLIESSEN
+       ========================================================= */
 
     @Test
     void shouldCloseBalancedAbrechnung() {
 
-        addPosition(FinanzKategorie.UNTERKUNFT, "100.00");
-        addPosition(FinanzKategorie.TEILNEHMERBEITRAG, "100.00");
+        addPosition(
+                FinanzKategorie.UNTERKUNFT,
+                "100.00"
+        );
 
-        abrechnungService.abschliessen(veranstaltungId);
+        addPosition(
+                FinanzKategorie.TEILNEHMERBEITRAG,
+                "100.00"
+        );
 
-        Abrechnung a = abrechnungRepository
-                .findByVeranstaltungId(veranstaltungId)
-                .orElseThrow();
+        abrechnungService.abschliessen(
+                veranstaltungId
+        );
+
+        Abrechnung a =
+                abrechnungRepository
+                        .findByVeranstaltungId(
+                                veranstaltungId
+                        )
+                        .orElseThrow();
 
         assertThat(a.getStatus())
-                .isEqualTo(AbrechnungsStatus.ABGESCHLOSSEN);
+                .isEqualTo(
+                        AbrechnungsStatus.ABGESCHLOSSEN
+                );
     }
 
-    /* ========================================================= */
+    /* =========================================================
+       NICHT AUSGEGLICHEN
+       ========================================================= */
 
     @Test
     void shouldPreventCloseWhenNotBalanced() {
 
-        addPosition(FinanzKategorie.UNTERKUNFT, "100.00");
+        addPosition(
+                FinanzKategorie.UNTERKUNFT,
+                "100.00"
+        );
 
         assertThatThrownBy(() ->
-                abrechnungService.abschliessen(veranstaltungId)
-        ).isInstanceOf(ResponseStatusException.class);
+                abrechnungService.abschliessen(
+                        veranstaltungId
+                )
+        ).isInstanceOf(
+                ResponseStatusException.class
+        );
     }
 
-    /* ========================================================= */
+    /* =========================================================
+       DOPPELTES ABSCHLIESSEN
+       ========================================================= */
 
     @Test
     void shouldPreventDoubleClose() {
 
-        addPosition(FinanzKategorie.UNTERKUNFT, "100.00");
-        addPosition(FinanzKategorie.TEILNEHMERBEITRAG, "100.00");
+        addPosition(
+                FinanzKategorie.UNTERKUNFT,
+                "100.00"
+        );
 
-        abrechnungService.abschliessen(veranstaltungId);
+        addPosition(
+                FinanzKategorie.TEILNEHMERBEITRAG,
+                "100.00"
+        );
+
+        abrechnungService.abschliessen(
+                veranstaltungId
+        );
 
         assertThatThrownBy(() ->
-                abrechnungService.abschliessen(veranstaltungId)
-        ).isInstanceOf(ResponseStatusException.class);
+                abrechnungService.abschliessen(
+                        veranstaltungId
+                )
+        ).isInstanceOf(
+                ResponseStatusException.class
+        );
     }
 
-    /* ========================================================= */
+    /* =========================================================
+       KEINE ÄNDERUNGEN NACH ABSCHLUSS
+       ========================================================= */
 
     @Test
     void shouldNotAllowChangesWhenClosed() {
 
-        addPosition(FinanzKategorie.UNTERKUNFT, "100.00");
-        addPosition(FinanzKategorie.TEILNEHMERBEITRAG, "100.00");
+        addPosition(
+                FinanzKategorie.UNTERKUNFT,
+                "100.00"
+        );
 
-        abrechnungService.abschliessen(veranstaltungId);
+        addPosition(
+                FinanzKategorie.TEILNEHMERBEITRAG,
+                "100.00"
+        );
 
-        AbrechnungBelegCreateDTO belegDTO = new AbrechnungBelegCreateDTO();
+        abrechnungService.abschliessen(
+                veranstaltungId
+        );
+
+        AbrechnungBelegCreateDTO belegDTO =
+                new AbrechnungBelegCreateDTO();
+
         belegDTO.setDatum(LocalDate.now());
         belegDTO.setKuerzel("X1");
 
         assertThatThrownBy(() ->
-                belegService.createBeleg(veranstaltungId, belegDTO)
-        ).isInstanceOf(ResponseStatusException.class);
+                belegService.createBeleg(
+                        veranstaltungId,
+                        belegDTO
+                )
+        ).isInstanceOf(
+                ResponseStatusException.class
+        );
     }
 
-    /* ========================================================= */
+    /* =========================================================
+       HELPER
+       ========================================================= */
 
-    private void addPosition(FinanzKategorie kategorie, String betrag) {
+    private void addPosition(
+            FinanzKategorie kategorie,
+            String betrag
+    ) {
 
-        finanzGruppeService.assignKuerzel(
-                veranstaltungId,
-                teilnehmerId,
-                "X1"
-        );
+        AbrechnungBelegCreateDTO belegDTO =
+                new AbrechnungBelegCreateDTO();
 
-        AbrechnungBelegCreateDTO belegDTO = new AbrechnungBelegCreateDTO();
         belegDTO.setDatum(LocalDate.now());
         belegDTO.setKuerzel("X1");
 
         AbrechnungBelegDTO beleg =
-                belegService.createBeleg(veranstaltungId, belegDTO);
+                belegService.createBeleg(
+                        veranstaltungId,
+                        belegDTO
+                );
 
         AbrechnungBuchungCreateDTO posDTO =
                 new AbrechnungBuchungCreateDTO();
 
         posDTO.setKategorie(kategorie);
-        posDTO.setBetrag(new BigDecimal(betrag));
+
+        posDTO.setBetrag(
+                new BigDecimal(betrag)
+        );
+
         posDTO.setDatum(LocalDate.now());
 
         belegService.addPosition(
