@@ -10,6 +10,7 @@ import Finanzen from "./pages/Finanzen";
 import Reisekosten from "./Platzhalter/Reisekosten";
 import Teilnehmerliste from "./components/pdfAusgaben/Teilnehmerliste";
 import Erhebungsbogen from "./components/pdfAusgaben/Erhebungsbogen";
+import VerwaltungPage from "@/components/verwaltung/VerwaltungPage";
 import Anmeldung from "./components/pdfAusgaben/Anmeldung";
 import Abrechnung from "./components/pdfAusgaben/Abrechnung";
 import AusgabeReisekosten from "./components/pdfAusgaben/AusgabeReisekosten";
@@ -30,6 +31,7 @@ const App: React.FC = () => {
           <Route path="/reisekosten" element={<Reisekosten />} />
           <Route path="/teilnehmerliste" element={<Teilnehmerliste />} />
           <Route path="/erhebungsbogen" element={<Erhebungsbogen />} />
+          <Route path="/verwaltung" element={<VerwaltungPage />} />
           <Route path="/anmeldung" element={<Anmeldung />} />
           <Route path="/abrechnung" element={<Abrechnung />} />
           <Route path="/ausgabeReisekosten" element={<AusgabeReisekosten />} />

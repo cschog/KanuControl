@@ -23,7 +23,6 @@ public class FoerdersatzMapper {
         dto.setGueltigVon(entity.getGueltigVon());
         dto.setGueltigBis(entity.getGueltigBis());
         dto.setFoerdersatz(entity.getFoerdersatz());
-        dto.setFoerderdeckel(entity.getFoerderdeckel());
         dto.setBeschluss(entity.getBeschluss());
 
         return dto;
@@ -42,7 +41,6 @@ public class FoerdersatzMapper {
         entity.setGueltigVon(dto.getGueltigVon());
         entity.setGueltigBis(dto.getGueltigBis());
         entity.setFoerdersatz(dto.getFoerdersatz());
-        entity.setFoerderdeckel(dto.getFoerderdeckel());
         entity.setBeschluss(dto.getBeschluss());
     }
 }

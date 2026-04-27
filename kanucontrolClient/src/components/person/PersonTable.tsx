@@ -31,19 +31,12 @@ export const PersonTable: React.FC<PersonTableProps> = ({
 
   /* 🔑 Server Paging nur wenn alle Werte vorhanden */
 
-  return (
-    <GenericTable<PersonWithId>
-      rows={rows}
-      columns={personColumns}
-      /* ❗ KEIN Server Paging */
-      paginationMode={undefined}
-      /* ❗ KEIN Server Sorting */
-      sortField={undefined}
-      sortDirection={undefined}
-      onSortChange={undefined}
-      /* Selection */
-      selectedRowId={selectedPersonId}
-      onSelectRow={onSelectPerson}
-    />
-  );
+ return (
+   <GenericTable<PersonWithId>
+     rows={rows}
+     columns={personColumns}
+     selectedRowId={selectedPersonId}
+     onSelectRow={onSelectPerson}
+   />
+ );
 };

@@ -79,6 +79,7 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
         v.setEndeDatum(dto.getEndeDatum());
         v.setBeginnZeit(dto.getBeginnZeit());
         v.setEndeZeit(dto.getEndeZeit());
+        v.setScope(dto.getScope());
         v.setVerein(verein);
         v.setLeiter(leiter);
         v.setAktiv(true);

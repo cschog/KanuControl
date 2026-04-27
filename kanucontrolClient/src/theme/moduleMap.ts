@@ -19,4 +19,6 @@ export const moduleTypeMap: Record<string, ModuleType> = {
   teilnehmerliste: "report",
   erhebungsbogen: "report",
   reisekostenausgabe: "report",
+
+  verwaltung: "admin",
 };

@@ -16,6 +16,5 @@ public class FoerdersatzDTO {
     private LocalDate gueltigBis;
     private VeranstaltungTyp typ;
     private BigDecimal foerdersatz;
-    private BigDecimal foerderdeckel;
     private String beschluss;
 }

@@ -30,6 +30,7 @@ const StartMenue = () => {
    { key: "teilnehmerliste", label: "Teilnehmerliste", path: "/teilnehmerliste" },
    { key: "reisekostenausgabe", label: "Reisekosten Ausgabe", path: "/ausgabeReisekosten" },
    { key: "erhebungsbogen", label: "Erhebungsbogen", path: "/erhebungsbogen" },
+   { key: "verwaltung", label: "Verwaltung", path: "/verwaltung" },
  ] as const;
 
   return (

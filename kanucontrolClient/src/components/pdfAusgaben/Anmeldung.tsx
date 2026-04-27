@@ -6,14 +6,21 @@ import { getActiveVeranstaltung } from "@/api/services/veranstaltungApi";
 const Anmeldung = () => {
   const [veranstaltungId, setVeranstaltungId] = useState<number | null>(null);
 
- useEffect(() => {
-   (async () => {
-     const v = await getActiveVeranstaltung();
+useEffect(() => {
+  const load = async () => {
+    try {
+      const v = await getActiveVeranstaltung();
 
-     if (!v) return; // ⭐ wichtig
-     setVeranstaltungId(v.id);
-   })();
- }, []);
+      if (!v) return;
+
+      setVeranstaltungId(v.id);
+    } catch (err) {
+      console.error("Aktive Veranstaltung konnte nicht geladen werden", err);
+    }
+  };
+
+  load();
+}, []);
 
   const handleReport = async () => {
     if (!veranstaltungId) return;
