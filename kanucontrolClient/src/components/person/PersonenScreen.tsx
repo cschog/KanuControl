@@ -1,9 +1,9 @@
 import { useEffect, useState, useRef } from "react";
 import { Box, Grid, Paper, Typography, TextField, Button } from "@mui/material";
-
 import { GenericTable } from "@/components/common/GenericTable";
 import { PersonFormView } from "@/components/person/PersonFormView";
 import { personColumns } from "@/components/person/personColumns";
+import { deleteMitglied, setHauptverein } from "@/api/services/mitgliedApi";
 
 import {
   getPersonById,
@@ -270,13 +270,32 @@ const resetFilter = () => {
                 }}
                 onSpeichern={handleSave}
                 onDeletePerson={handleDelete}
-                onDeleteMitglied={async () => {}}
-                onSetHauptverein={async () => {}}
+                onDeleteMitglied={async (mitgliedId) => {
+                  await deleteMitglied(mitgliedId);
+
+                  if (selectedId) {
+                    const fresh = await getPersonById(selectedId);
+
+                    setSelectedPerson(fresh);
+                    setEditData(fresh);
+                  }
+                }}
+                onSetHauptverein={async (mitgliedId) => {
+                  await setHauptverein(mitgliedId);
+
+                  if (selectedId) {
+                    const fresh = await getPersonById(selectedId);
+
+                    setSelectedPerson(fresh);
+                    setEditData(fresh);
+                  }
+                }}
                 onBack={() => setSelectedId(null)}
                 onReloadPerson={async () => {
                   if (selectedId) {
                     const fresh = await getPersonById(selectedId);
                     setSelectedPerson(fresh);
+                    setEditData(fresh);
                   }
                 }}
                 btnÄndernPerson={false}

@@ -4,7 +4,11 @@ import com.kcserver.dto.foerder.FoerdersatzCreateUpdateDTO;
 import com.kcserver.dto.foerder.FoerdersatzDTO;
 import com.kcserver.entity.Foerdersatz;
 import com.kcserver.enumtype.VeranstaltungTyp;
+import com.kcserver.mapper.FoerdersatzMapper;
 import com.kcserver.service.FoerdersatzService;
+
+import jakarta.validation.Valid;
+
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -15,9 +19,14 @@ import java.util.List;
 public class FoerdersatzController {
 
     private final FoerdersatzService service;
+    private final FoerdersatzMapper mapper;
 
-    public FoerdersatzController(FoerdersatzService service) {
+    public FoerdersatzController(
+            FoerdersatzService service,
+            FoerdersatzMapper mapper
+    ) {
         this.service = service;
+        this.mapper = mapper;
     }
 
     /* =========================================================
@@ -26,7 +35,9 @@ public class FoerdersatzController {
 
     @PostMapping
     public FoerdersatzDTO create(
-            @RequestBody FoerdersatzCreateUpdateDTO dto
+            @Valid
+            @RequestBody
+            FoerdersatzCreateUpdateDTO dto
     ) {
         return service.create(dto);
     }
@@ -38,7 +49,10 @@ public class FoerdersatzController {
     @PutMapping("/{id}")
     public FoerdersatzDTO update(
             @PathVariable Long id,
-            @RequestBody FoerdersatzCreateUpdateDTO dto
+
+            @Valid
+            @RequestBody
+            FoerdersatzCreateUpdateDTO dto
     ) {
         return service.update(id, dto);
     }
@@ -48,7 +62,9 @@ public class FoerdersatzController {
        ========================================================= */
 
     @GetMapping("/{id}")
-    public FoerdersatzDTO get(@PathVariable Long id) {
+    public FoerdersatzDTO get(
+            @PathVariable Long id
+    ) {
         return service.getById(id);
     }
 
@@ -66,7 +82,9 @@ public class FoerdersatzController {
        ========================================================= */
 
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id) {
+    public void delete(
+            @PathVariable Long id
+    ) {
         service.delete(id);
     }
 
@@ -79,9 +97,13 @@ public class FoerdersatzController {
             @RequestParam VeranstaltungTyp typ,
             @RequestParam LocalDate datum
     ) {
-        Foerdersatz entity =
-                service.findEntityGueltigFuerTypAm(typ, datum);
 
-        return service.toDTO(entity);
+        Foerdersatz entity =
+                service.findEntityGueltigFuerTypAm(
+                        typ,
+                        datum
+                );
+
+        return mapper.toDTO(entity);
     }
 }

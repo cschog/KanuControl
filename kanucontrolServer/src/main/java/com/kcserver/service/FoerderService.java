@@ -1,5 +1,6 @@
 package com.kcserver.service;
 
+import com.kcserver.config.FoerderConfig;
 import com.kcserver.entity.*;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +38,7 @@ public class FoerderService {
                 );
 
         BigDecimal grund = fs.getFoerdersatz();
-        BigDecimal deckel = fs.getFoerderdeckel();
+        BigDecimal deckel = FoerderConfig.FOERDERDECKEL;
 
         BigDecimal zuschlag = BigDecimal.ZERO;
 
@@ -69,7 +70,9 @@ public class FoerderService {
             Teilnehmer teilnehmer
     ) {
 
-        if (!istFmOderJem(veranstaltung)) {
+        VeranstaltungTyp typ = veranstaltung.getTyp();
+
+        if (!typ.isFoerderfaehig()) {
             return false;
         }
 
@@ -86,7 +89,8 @@ public class FoerderService {
                         veranstaltung.getBeginnDatum()
                 ).getYears();
 
-        return alter >= 6 && alter <= 20;
+        return alter >= typ.getMindestalter()
+                && alter <= typ.getHoechstalter();
     }
 
     private boolean istFmOderJem(Veranstaltung veranstaltung) {

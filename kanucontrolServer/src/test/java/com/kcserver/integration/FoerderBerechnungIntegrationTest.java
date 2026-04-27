@@ -154,7 +154,7 @@ class FoerderBerechnungIntegrationTest extends AbstractFinanzIntegrationTest {
     @Test
     void shouldAddKikZuschlag() {
 
-        createFoerdersatz(VeranstaltungTyp.FM, "14.00", "30.00");
+        createFoerdersatz(VeranstaltungTyp.FM, "14.00", "15.00");
         createKikZuschlag("3.00");
 
         setVereinKikZertifiziert(true);
@@ -163,9 +163,9 @@ class FoerderBerechnungIntegrationTest extends AbstractFinanzIntegrationTest {
 
         BigDecimal result = foerderService.berechneFoerderung(veranstaltungId);
 
-        // 14 + 3 = 17
-        // 2 Tage × 5 × 17
-        assertThat(result).isEqualByComparingTo("238.00");
+        // 14 + 3 = 17, aber Deckel ist fest auf 15 € gesetzt!!!
+        // 2 Tage × 7 × 17
+        assertThat(result).isEqualByComparingTo("210.00");
     }
 
     /* =========================================================
@@ -271,7 +271,6 @@ class FoerderBerechnungIntegrationTest extends AbstractFinanzIntegrationTest {
         dto.setTyp(typ);
         dto.setGueltigVon(LocalDate.of(2026, 1, 1));
         dto.setFoerdersatz(new BigDecimal(satz));
-        dto.setFoerderdeckel(new BigDecimal(deckel));
 
         foerdersatzService.create(dto);
     }

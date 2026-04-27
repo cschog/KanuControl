@@ -71,7 +71,7 @@ export const PersonMembershipsCard: React.FC<PersonMembershipsCardProps> = ({
               </Stack>
 
               {/* RIGHT */}
-              {editMode && (
+             
                 <Stack direction="row" spacing={1} alignItems="center">
                   {/* FUNKTION */}
                   <Select
@@ -104,7 +104,7 @@ export const PersonMembershipsCard: React.FC<PersonMembershipsCardProps> = ({
                     Entfernen
                   </Button>
                 </Stack>
-              )}
+              
             </Box>
           ))}
         </Stack>

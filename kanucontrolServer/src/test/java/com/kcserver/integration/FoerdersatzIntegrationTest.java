@@ -81,7 +81,6 @@ class FoerdersatzIntegrationTest extends AbstractFinanzIntegrationTest {
         dto.setGueltigVon(LocalDate.of(2026, 1, 1));
         dto.setGueltigBis(null);
         dto.setFoerdersatz(new BigDecimal("42.00"));
-        dto.setFoerderdeckel(new BigDecimal("50.00"));
         dto.setBeschluss("Beschluss 2026");
 
         FoerdersatzDTO created = foerdersatzService.create(dto);
@@ -89,7 +88,6 @@ class FoerdersatzIntegrationTest extends AbstractFinanzIntegrationTest {
         assertThat(created.getId()).isNotNull();
         assertThat(created.getTyp()).isEqualTo(VeranstaltungTyp.JEM);
         assertThat(created.getFoerdersatz()).isEqualByComparingTo("42.00");
-        assertThat(created.getFoerderdeckel()).isEqualByComparingTo("50.00");
     }
 
     /* =========================================================
@@ -103,7 +101,6 @@ class FoerdersatzIntegrationTest extends AbstractFinanzIntegrationTest {
         dto1.setTyp(VeranstaltungTyp.FM);
         dto1.setGueltigVon(LocalDate.of(2026, 1, 1));
         dto1.setFoerdersatz(new BigDecimal("40.00"));
-        dto1.setFoerderdeckel(new BigDecimal("50.00"));
 
         foerdersatzService.create(dto1);
 
@@ -111,7 +108,6 @@ class FoerdersatzIntegrationTest extends AbstractFinanzIntegrationTest {
         dto2.setTyp(VeranstaltungTyp.FM);
         dto2.setGueltigVon(LocalDate.of(2026, 6, 1));
         dto2.setFoerdersatz(new BigDecimal("50.00"));
-        dto2.setFoerderdeckel(new BigDecimal("60.00"));
 
         assertThatThrownBy(() ->
                 foerdersatzService.create(dto2)
@@ -129,7 +125,6 @@ class FoerdersatzIntegrationTest extends AbstractFinanzIntegrationTest {
         dto1.setTyp(VeranstaltungTyp.FM);
         dto1.setGueltigVon(LocalDate.of(2026, 1, 1));
         dto1.setFoerdersatz(new BigDecimal("40.00"));
-        dto1.setFoerderdeckel(new BigDecimal("50.00"));
 
         foerdersatzService.create(dto1);
 
@@ -137,7 +132,6 @@ class FoerdersatzIntegrationTest extends AbstractFinanzIntegrationTest {
         dto2.setTyp(VeranstaltungTyp.BM);
         dto2.setGueltigVon(LocalDate.of(2026, 1, 1));
         dto2.setFoerdersatz(new BigDecimal("30.00"));
-        dto2.setFoerderdeckel(new BigDecimal("45.00"));
 
         FoerdersatzDTO created = foerdersatzService.create(dto2);
 
@@ -156,7 +150,6 @@ class FoerdersatzIntegrationTest extends AbstractFinanzIntegrationTest {
         dto.setGueltigVon(LocalDate.of(2026, 1, 1));
         dto.setGueltigBis(LocalDate.of(2026, 12, 31));
         dto.setFoerdersatz(new BigDecimal("55.00"));
-        dto.setFoerderdeckel(new BigDecimal("60.00"));
 
         foerdersatzService.create(dto);
 
@@ -181,7 +174,6 @@ class FoerdersatzIntegrationTest extends AbstractFinanzIntegrationTest {
         dto.setTyp(VeranstaltungTyp.JEM);
         dto.setGueltigVon(LocalDate.of(2026, 1, 1));
         dto.setFoerdersatz(new BigDecimal("60.00"));
-        dto.setFoerderdeckel(new BigDecimal("80.00"));
 
         foerdersatzService.create(dto);
 

@@ -9,15 +9,22 @@ const Abrechnung = () => {
 
   /* ================= Aktive Veranstaltung laden ================= */
 
-  useEffect(() => {
-    (async () => {
-      const v = await getActiveVeranstaltung();
-      if (!v) return;
+ useEffect(() => {
+   const load = async () => {
+     try {
+       const v = await getActiveVeranstaltung();
 
-      setVeranstaltungId(v.id);
-      setVeranstaltungName(v.name);
-    })();
-  }, []);
+       if (!v) return;
+
+       setVeranstaltungId(v.id);
+       setVeranstaltungName(v.name);
+     } catch (err) {
+       console.error("Aktive Veranstaltung konnte nicht geladen werden", err);
+     }
+   };
+
+   load();
+ }, []);
 
   /* ================= PDF öffnen ================= */
 

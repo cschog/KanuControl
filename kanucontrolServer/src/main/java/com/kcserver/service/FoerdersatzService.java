@@ -4,6 +4,7 @@ import com.kcserver.dto.foerder.FoerdersatzCreateUpdateDTO;
 import com.kcserver.dto.foerder.FoerdersatzDTO;
 import com.kcserver.entity.Foerdersatz;
 import com.kcserver.enumtype.VeranstaltungTyp;
+import com.kcserver.mapper.FoerdersatzMapper;
 import com.kcserver.repository.FoerdersatzRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,6 +21,7 @@ import java.util.List;
 public class FoerdersatzService {
 
     private final FoerdersatzRepository repository;
+    private final FoerdersatzMapper mapper;
 
     /* ========================================================= */
 
@@ -33,14 +35,20 @@ public class FoerdersatzService {
         );
 
         Foerdersatz entity = new Foerdersatz();
-        apply(dto, entity);
 
-        return toDTO(repository.save(entity));
+        mapper.applyToEntity(dto, entity);
+
+        return mapper.toDTO(
+                repository.save(entity)
+        );
     }
 
     /* ========================================================= */
 
-    public FoerdersatzDTO update(Long id, FoerdersatzCreateUpdateDTO dto) {
+    public FoerdersatzDTO update(
+            Long id,
+            FoerdersatzCreateUpdateDTO dto
+    ) {
 
         Foerdersatz entity = repository.findById(id)
                 .orElseThrow(() ->
@@ -56,9 +64,11 @@ public class FoerdersatzService {
                 dto.getGueltigBis()
         );
 
-        apply(dto, entity);
+        mapper.applyToEntity(dto, entity);
 
-        return toDTO(repository.save(entity));
+        return mapper.toDTO(
+                repository.save(entity)
+        );
     }
 
     /* ========================================================= */
@@ -77,48 +87,31 @@ public class FoerdersatzService {
             );
         }
 
-        boolean exists = repository.existsOverlapping(
-                typ,
-                von,
-                bis,
-                ignoreId
-        );
+        List<Foerdersatz> overlaps;
 
-        if (exists) {
+        if (bis == null) {
+
+            overlaps = repository.findOverlappingOpenEnded(
+                    typ,
+                    ignoreId
+            );
+
+        } else {
+
+            overlaps = repository.findOverlapping(
+                    typ,
+                    von,
+                    bis,
+                    ignoreId
+            );
+        }
+
+        if (!overlaps.isEmpty()) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
                     "Zeitraum überschneidet sich mit bestehendem Fördersatz"
             );
         }
-    }
-
-    /* ========================================================= */
-
-    private void apply(FoerdersatzCreateUpdateDTO dto, Foerdersatz entity) {
-
-        entity.setTyp(dto.getTyp());
-        entity.setGueltigVon(dto.getGueltigVon());
-        entity.setGueltigBis(dto.getGueltigBis());
-        entity.setFoerdersatz(dto.getFoerdersatz());
-        entity.setFoerderdeckel(dto.getFoerderdeckel());
-        entity.setBeschluss(dto.getBeschluss());
-    }
-
-    /* ========================================================= */
-
-    public FoerdersatzDTO toDTO(Foerdersatz entity) {
-
-        FoerdersatzDTO dto = new FoerdersatzDTO();
-
-        dto.setId(entity.getId());
-        dto.setTyp(entity.getTyp());
-        dto.setGueltigVon(entity.getGueltigVon());
-        dto.setGueltigBis(entity.getGueltigBis());
-        dto.setFoerdersatz(entity.getFoerdersatz());
-        dto.setFoerderdeckel(entity.getFoerderdeckel());
-        dto.setBeschluss(entity.getBeschluss());
-
-        return dto;
     }
 
     /* ========================================================= */
@@ -146,14 +139,14 @@ public class FoerdersatzService {
                                 "Fördersatz nicht gefunden"
                         ));
 
-        return toDTO(entity);
+        return mapper.toDTO(entity);
     }
     @Transactional(readOnly = true)
     public List<FoerdersatzDTO> getAll() {
 
         return repository.findAll()
                 .stream()
-                .map(this::toDTO)
+                .map(mapper::toDTO)
                 .toList();
     }
 

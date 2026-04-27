@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 public interface FoerdersatzRepository
@@ -36,21 +37,42 @@ public interface FoerdersatzRepository
        ========================================================= */
 
     @Query("""
-    select count(f) > 0
+    select f
     from Foerdersatz f
     where
         f.typ = :typ
     and
         (:ignoreId is null or f.id <> :ignoreId)
     and
-        f.gueltigVon <= coalesce(:bis, f.gueltigVon)
+        (
+            f.gueltigBis is null
+            or f.gueltigVon <= :bis
+        )
     and
-        coalesce(f.gueltigBis, :von) >= :von
+        (
+            f.gueltigBis is null
+            or f.gueltigBis >= :von
+        )
 """)
-    boolean existsOverlapping(
+    List<Foerdersatz> findOverlapping(
             @Param("typ") VeranstaltungTyp typ,
             @Param("von") LocalDate von,
             @Param("bis") LocalDate bis,
+            @Param("ignoreId") Long ignoreId
+    );
+
+    @Query("""
+    select f
+    from Foerdersatz f
+    where
+        f.typ = :typ
+    and
+        (:ignoreId is null or f.id <> :ignoreId)
+    and
+        f.gueltigBis is null
+""")
+    List<Foerdersatz> findOverlappingOpenEnded(
+            @Param("typ") VeranstaltungTyp typ,
             @Param("ignoreId") Long ignoreId
     );
 }

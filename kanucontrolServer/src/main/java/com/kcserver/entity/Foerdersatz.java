@@ -46,8 +46,6 @@ public class Foerdersatz {
     /**
      * Maximal zulässige Förderung pro Tag und Teilnehmer.
      */
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal foerderdeckel;
 
     private String beschluss;
 }
