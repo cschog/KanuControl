@@ -1,6 +1,5 @@
-// components/verwaltung/kik/KikZuschlagTable.tsx
-
 import { Box, Button, IconButton, Stack, Typography } from "@mui/material";
+import { useState } from "react";
 
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 
@@ -10,28 +9,54 @@ import DeleteIcon from "@mui/icons-material/Delete";
 
 import Money from "@/components/common/Money";
 
-const rows = [
-  {
-    id: 1,
-    gueltigVon: "01.01.2026",
-    gueltigBis: "",
-    kikZuschlag: 3,
-    beschluss: "KiK Förderung 2026",
-  },
-];
+import KikZuschlagDialog from "@/components/verwaltung/kik/KikDialog";
+
+import {
+  createKikZuschlag,
+  updateKikZuschlag,
+  deleteKikZuschlag,
+} from "@/api/services/kikZuschlagApi";
+
+import { useKikZuschlag } from "@/hooks/kik/useKikZuschlag";
+
+import { KikDTO } from "@/api/types/Kik";
 
 const KikZuschlagTable = () => {
+  const { data = [], isLoading, refetch } = useKikZuschlag();
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const [editing, setEditing] = useState<KikDTO | null>(null);
+
+  /* =========================================================
+     ACTIONS
+     ========================================================= */
+
   const handleCreate = () => {
-    console.log("create");
+    setEditing(null);
+    setDialogOpen(true);
   };
 
   const handleEdit = (id: number) => {
-    console.log("edit", id);
+    const row = data.find((x) => x.id === id);
+
+    if (!row) return;
+
+    setEditing(row);
+    setDialogOpen(true);
   };
 
-  const handleDelete = (id: number) => {
-    console.log("delete", id);
+  const handleDelete = async (id: number) => {
+    if (!window.confirm("KiK-Zuschlag löschen?")) return;
+
+    await deleteKikZuschlag(id);
+
+    await refetch();
   };
+
+  /* =========================================================
+     COLUMNS
+     ========================================================= */
 
   const columns: GridColDef[] = [
     {
@@ -44,6 +69,7 @@ const KikZuschlagTable = () => {
       field: "gueltigBis",
       headerName: "Gültig bis",
       width: 120,
+
       renderCell: (params) => params.value || "unbegrenzt",
     },
 
@@ -97,6 +123,10 @@ const KikZuschlagTable = () => {
     },
   ];
 
+  /* =========================================================
+     UI
+     ========================================================= */
+
   return (
     <Box>
       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
@@ -109,10 +139,32 @@ const KikZuschlagTable = () => {
 
       <DataGrid
         autoHeight
-        rows={rows}
+        rows={data}
+        loading={isLoading}
         columns={columns}
         disableRowSelectionOnClick
         pageSizeOptions={[10, 25, 50, 100]}
+      />
+
+      <KikZuschlagDialog
+        open={dialogOpen}
+        initialData={editing}
+        onClose={() => {
+          setDialogOpen(false);
+          setEditing(null);
+        }}
+        onSave={async (dto) => {
+          if (editing) {
+            await updateKikZuschlag(editing.id, dto);
+          } else {
+            await createKikZuschlag(dto);
+          }
+
+          await refetch();
+
+          setDialogOpen(false);
+          setEditing(null);
+        }}
       />
     </Box>
   );

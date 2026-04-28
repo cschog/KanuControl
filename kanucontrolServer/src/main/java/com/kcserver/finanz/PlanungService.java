@@ -1,6 +1,6 @@
 package com.kcserver.finanz;
 
-import com.kcserver.dto.finanz.FinanzSummaryDTO;
+import com.kcserver.dto.finanzen.FinanzSummaryDTO;
 import com.kcserver.dto.planung.PlanungDetailDTO;
 import com.kcserver.entity.Planung;
 import com.kcserver.entity.Veranstaltung;

@@ -16,6 +16,17 @@ export interface WithId {
 }
 
 interface GenericTableProps<T extends WithId> {
+  paginationMode?: "client" | "server";
+
+  rowCount?: number;
+
+  page?: number;
+  pageSize?: number;
+
+  onPageChange?: (page: number) => void;
+
+  onPageSizeChange?: (size: number) => void;
+
   rows: T[];
   columns: GridColDef<T>[];
 

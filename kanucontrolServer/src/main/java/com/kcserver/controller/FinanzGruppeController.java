@@ -1,12 +1,10 @@
 package com.kcserver.controller;
 
-import com.kcserver.dto.finanz.FinanzGruppeCreateDTO;
-import com.kcserver.dto.finanz.FinanzGruppeDTO;
-import com.kcserver.dto.finanz.FinanzGruppeDetailDTO;
-import com.kcserver.dto.finanz.FinanzGruppeOverviewDTO;
+import com.kcserver.dto.finanzen.FinanzGruppeCreateDTO;
+import com.kcserver.dto.finanzen.FinanzGruppeDetailDTO;
+import com.kcserver.dto.finanzen.FinanzGruppeOverviewDTO;
 import com.kcserver.entity.FinanzGruppe;
 import com.kcserver.finanz.FinanzGruppeQueryService;
-import com.kcserver.mapper.FinanzGruppeDetailMapper;
 import com.kcserver.finanz.FinanzGruppeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

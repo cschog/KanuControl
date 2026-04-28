@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { deleteFoerdersatz } from "@/api/client/foerdersatzApi";
+import { deleteFoerdersatz } from "@/api/services/foerdersatzApi";
 
 export function useDeleteFoerdersatz() {
   const queryClient = useQueryClient();

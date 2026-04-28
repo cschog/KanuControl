@@ -1,6 +1,6 @@
 package com.kcserver.dto.abrechnung;
 
-import com.kcserver.dto.finanz.FinanzSummaryDTO;
+import com.kcserver.dto.finanzen.FinanzSummaryDTO;
 import com.kcserver.enumtype.AbrechnungsStatus;
 import lombok.Data;
 

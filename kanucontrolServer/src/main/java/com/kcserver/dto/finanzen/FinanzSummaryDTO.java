@@ -1,4 +1,4 @@
-package com.kcserver.dto.finanz;
+package com.kcserver.dto.finanzen;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

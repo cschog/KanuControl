@@ -1,11 +1,18 @@
 // components/verwaltung/foerdersatz/FoerdersatzTable.tsx
 
 import { Box, Button, IconButton, Stack, Typography } from "@mui/material";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { getFoerderdeckel } from "@/api/services/configApi";
+import { FoerdersatzDTO } from "@/api/types/Foerdersatz";
 
 import FoerdersatzDialog from "@/components/verwaltung/foerdersatz/FoerdersatzDialog";
+import {
+  createFoerdersatz,
+  deleteFoerdersatz,
+  updateFoerdersatz,
+} from "@/api/services/foerdersatzApi";
 
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
@@ -15,24 +22,46 @@ import { useFoerdersaetze } from "@/hooks/foerdersatz/useFoerdersaetze";
 import Money from "@/components/common/Money";
 
 const FoerdersatzTable = () => {
+  const { data = [], isLoading, refetch } = useFoerdersaetze();
 
-  const { data = [], isLoading } = useFoerdersaetze();
+  const [foerderdeckel, setFoerderdeckel] = useState<number | null>(null);
+
+  const [editing, setEditing] = useState<FoerdersatzDTO | null>(null);
 
   const [dialogOpen, setDialogOpen] = useState(false);
 
- const handleCreate = () => {
-   setDialogOpen(true);
- };
+  const handleCreate = () => {
+    setDialogOpen(true);
+  };
 
   const handleEdit = (id: number) => {
-    console.log("edit", id);
+    const row = data.find((x) => x.id === id);
+
+    if (!row) return;
+
+    setEditing(row);
+    setDialogOpen(true);
   };
 
-  const handleDelete = (id: number) => {
-    console.log("delete", id);
+  const handleDelete = async (id: number) => {
+    if (!window.confirm("Fördersatz löschen?")) return;
+
+    await deleteFoerdersatz(id);
+
+    await refetch();
   };
+
+  useEffect(() => {
+    getFoerderdeckel().then(setFoerderdeckel);
+  }, []);
 
   const columns: GridColDef[] = [
+    {
+      field: "typ",
+      headerName: "Typ",
+      width: 90,
+    },
+
     {
       field: "gueltigVon",
       headerName: "Gültig von",
@@ -76,7 +105,7 @@ const FoerdersatzTable = () => {
       align: "right",
       headerAlign: "right",
 
-      renderCell: (params) => (
+      renderCell: () => (
         <Box
           sx={{
             height: "100%",
@@ -86,7 +115,7 @@ const FoerdersatzTable = () => {
             width: "100%",
           }}
         >
-          <Money value={params.value} />
+          {foerderdeckel != null && <Money value={foerderdeckel} />}
         </Box>
       ),
     },
@@ -129,10 +158,6 @@ const FoerdersatzTable = () => {
         </Button>
       </Stack>
 
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Gilt für FM und JEM.
-      </Typography>
-
       <DataGrid
         autoHeight
         rows={data}
@@ -143,10 +168,22 @@ const FoerdersatzTable = () => {
       />
       <FoerdersatzDialog
         open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
-        onSave={(dto) => {
-          console.log(dto);
+        initialData={editing}
+        onSave={async (dto) => {
+          if (editing) {
+            await updateFoerdersatz(editing.id, dto);
+          } else {
+            await createFoerdersatz(dto);
+          }
+
+          await refetch();
+
           setDialogOpen(false);
+          setEditing(null);
+        }}
+        onClose={() => {
+          setDialogOpen(false);
+          setEditing(null);
         }}
       />
     </Box>

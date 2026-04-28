@@ -11,5 +11,7 @@ export interface VereinSave {
   iban?: string;
   bic?: string;
   schutzkonzept?: string; // ISO Date
+  kikZertifiziertSeit?: string;
+  kikZertifiziertBis?: string;
   kontoinhaberId?: number;
 }

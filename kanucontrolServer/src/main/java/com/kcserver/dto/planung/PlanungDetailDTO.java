@@ -1,6 +1,6 @@
 package com.kcserver.dto.planung;
 
-import com.kcserver.dto.finanz.FinanzSummaryDTO;
+import com.kcserver.dto.finanzen.FinanzSummaryDTO;
 import lombok.Getter;
 import lombok.Setter;
 

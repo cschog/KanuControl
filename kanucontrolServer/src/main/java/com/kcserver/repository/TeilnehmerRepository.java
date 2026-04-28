@@ -211,5 +211,19 @@ where t.veranstaltung.id = :veranstaltungId
 
     long countByVeranstaltungIdAndRolleIsNull(Long veranstaltungId);
 
+    @Query("""
 
+select count(t)
+from Teilnehmer t
+join t.person p
+where t.veranstaltung.id = :veranstaltungId
+and t.rolle is null
+and p.geburtsdatum is not null
+and p.geburtsdatum between :maxGeburtsdatum and :minGeburtsdatum
+""")
+    long countFoerderfaehigeTeilnehmer(
+            @Param("veranstaltungId") Long veranstaltungId,
+            @Param("minGeburtsdatum") LocalDate minGeburtsdatum,
+            @Param("maxGeburtsdatum") LocalDate maxGeburtsdatum
+    );
 }

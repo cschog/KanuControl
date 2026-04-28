@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { createFoerdersatz } from "@/api/client/foerdersatzApi";
+import { createFoerdersatz } from "@/api/services/foerdersatzApi";
 
 import type { FoerdersatzCreateUpdateDTO } from "@/api/types/Foerdersatz";
 

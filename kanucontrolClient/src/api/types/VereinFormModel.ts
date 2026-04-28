@@ -24,6 +24,10 @@ export default interface VereinFormModel {
   bic?: string;
   schutzkonzept?: string; // ISO Date
 
+  kikZertifiziertSeit?: string;
+
+  kikZertifiziertBis?: string;
+
   /** 🔗 Kontoinhaber (Person) */
   kontoinhaber?: PersonRef;
 

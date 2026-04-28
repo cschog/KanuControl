@@ -13,13 +13,25 @@ import {
 } from "@mui/material";
 
 import { useEffect, useState, useCallback } from "react";
-import { getAbrechnung, addBuchung, updateBuchung,deleteBuchung, deleteBeleg } from "@/api/client/abrechnungApi";
-import { getFinanzgruppen, FinanzGruppe } from "@/api/client/finanzgruppenApi";
+import {
+  getAbrechnung,
+  addBuchung,
+  updateBuchung,
+  deleteBuchung,
+  deleteBeleg,
+} from "@/api/services/abrechnungApi";
+import { getFinanzgruppen, FinanzGruppe } from "@/api/services/finanzgruppenApi";
 import BuchungDialog from "@/components/finanzen/BuchungDialog";
-import { createBelegWithBuchung } from "@/api/client/abrechnungApi";
+import { createBelegWithBuchung } from "@/api/services/abrechnungApi";
 import BelegMitBuchungDialog from "@/components/finanzen/BelegMitBuchungDialog";
 
-import { AbrechnungDetail, AbrechnungBeleg, Buchung, BuchungCreate, BelegCreate } from "@/api/types/abrechnung";
+import {
+  AbrechnungDetail,
+  AbrechnungBeleg,
+  Buchung,
+  BuchungCreate,
+  BelegCreate,
+} from "@/api/types/abrechnung";
 
 import { kategorieZuTyp } from "@/api/types/finanz";
 

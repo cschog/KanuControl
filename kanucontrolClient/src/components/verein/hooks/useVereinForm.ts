@@ -22,6 +22,8 @@ function emptyVerein(): Verein {
     iban: "",
     bic: "",
     schutzkonzept: "",
+    kikZertifiziertSeit: "",
+    kikZertifiziertBis: "",
     kontoinhaber: undefined,
   };
 }
@@ -84,6 +86,8 @@ export function useVereinForm(initial: Verein | null) {
       iban: form.iban?.trim(),
       bic: form.bic?.trim(),
       schutzkonzept: form.schutzkonzept || undefined,
+      kikZertifiziertSeit: form.kikZertifiziertSeit || undefined,
+      kikZertifiziertBis: form.kikZertifiziertBis || undefined,
       kontoinhaberId: form.kontoinhaber?.id,
     };
   }, [form]);

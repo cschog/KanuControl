@@ -1,6 +1,6 @@
 import { EntityAutocomplete } from "@/components/common/reference/EntityAutocomplete";
 import { VereinRef } from "@/api/types/VereinRef";
-import { searchVereine } from "@/api/client/vereinApi";
+import { searchVereine } from "@/api/services/vereinApi";
 
 interface Props {
   value?: VereinRef;

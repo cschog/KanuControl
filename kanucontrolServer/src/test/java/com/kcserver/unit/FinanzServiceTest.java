@@ -1,6 +1,6 @@
 package com.kcserver.unit;
 
-import com.kcserver.dto.finanz.FinanzSummaryDTO;
+import com.kcserver.dto.finanzen.FinanzSummaryDTO;
 import com.kcserver.enumtype.FinanzKategorie;
 import com.kcserver.finanz.FinanzPosition;
 import com.kcserver.finanz.FinanzService;
