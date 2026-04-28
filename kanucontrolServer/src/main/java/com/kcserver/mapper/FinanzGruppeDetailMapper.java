@@ -1,6 +1,6 @@
 package com.kcserver.mapper;
 
-import com.kcserver.dto.finanz.FinanzGruppeDetailDTO;
+import com.kcserver.dto.finanzen.FinanzGruppeDetailDTO;
 import com.kcserver.dto.teilnehmer.TeilnehmerKurzDTO;
 import com.kcserver.entity.FinanzGruppe;
 import org.springframework.stereotype.Component;

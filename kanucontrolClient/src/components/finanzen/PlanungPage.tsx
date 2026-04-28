@@ -24,7 +24,7 @@ import {
   deletePosition,
   einreichen,
   wiederOeffnen,
-} from "@/api/client/planungApi";
+} from "@/api/services/planungApi";
 import FinanzPositionDialog from "@/components/finanzen/FinanzPositionDialog";
 import { PlanungDetail, PlanungPosition, PlanungPositionCreate } from "@/api/types/planung";
 import { kategorieZuTyp } from "@/api/types/finanz";

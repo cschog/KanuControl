@@ -1,4 +1,4 @@
-// src/components/verwaltung/foerdersatz/FoerdersatzDialog.tsx
+// src/components/verwaltung/kik/KikDialog.tsx
 
 import { useEffect, useState } from "react";
 
@@ -8,55 +8,43 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  MenuItem,
   Stack,
   TextField,
 } from "@mui/material";
 
-import InputAdornment from "@mui/material/InputAdornment";
-
 import { DatePicker } from "@mui/x-date-pickers";
-
-import { getFoerderdeckel } from "@/api/services/configApi";
 
 import dayjs, { Dayjs } from "dayjs";
 
 import {
-  FoerdersatzCreateUpdateDTO,
-  FoerdersatzDTO,
-  VeranstaltungTyp,
-} from "@/api/types/Foerdersatz";
+  KikCreateUpdateDTO,
+  KikDTO,
+} from "@/api/types/Kik";
 
 interface Props {
   open: boolean;
 
-  initialData?: FoerdersatzDTO | null;
+  initialData?: KikDTO | null;
 
   onClose: () => void;
 
-  onSave: (dto: FoerdersatzCreateUpdateDTO) => void;
+  onSave: (dto: KikCreateUpdateDTO) => void;
 
   loading?: boolean;
 }
 
-const veranstaltungTypen: VeranstaltungTyp[] = ["FM", "JEM", "BM", "GV"];
-
-const FoerdersatzDialog = ({ open, initialData, onClose, onSave, loading = false }: Props) => {
+const KikDialog = ({ open, initialData, onClose, onSave, loading = false }: Props) => {
   /* =========================================================
      STATE
      ========================================================= */
-
-  const [typ, setTyp] = useState<VeranstaltungTyp>("FM");
 
   const [gueltigVon, setGueltigVon] = useState<Dayjs | null>(dayjs());
 
   const [gueltigBis, setGueltigBis] = useState<Dayjs | null>(null);
 
-  const [foerdersatz, setFoerdersatz] = useState("");
-
   const [beschluss, setBeschluss] = useState("");
 
-  const [foerderdeckel, setFoerderdeckel] = useState<number | null>(null);
+  const [kikZuschlag, setKikZuschlag] = useState("");
 
   /* =========================================================
      EDIT MODE
@@ -64,33 +52,26 @@ const FoerdersatzDialog = ({ open, initialData, onClose, onSave, loading = false
 
   useEffect(() => {
     if (!initialData) {
-      setTyp("FM");
 
       setGueltigVon(dayjs());
 
       setGueltigBis(null);
 
-      setFoerdersatz("");
+      setKikZuschlag("");
 
       setBeschluss("");
 
       return;
     }
 
-    setTyp(initialData.typ);
-
     setGueltigVon(dayjs(initialData.gueltigVon));
 
     setGueltigBis(initialData.gueltigBis ? dayjs(initialData.gueltigBis) : null);
 
-    setFoerdersatz(initialData.foerdersatz.toString());
+    setKikZuschlag(initialData.kikZuschlag.toString());
 
     setBeschluss(initialData.beschluss ?? "");
   }, [initialData, open]);
-
-  useEffect(() => {
-    getFoerderdeckel().then(setFoerderdeckel);
-  }, []);
 
   /* =========================================================
      SAVE
@@ -105,14 +86,13 @@ const FoerdersatzDialog = ({ open, initialData, onClose, onSave, loading = false
         return;
       }
 
-    const dto: FoerdersatzCreateUpdateDTO = {
-      typ,
+    const dto: KikCreateUpdateDTO = {
 
       gueltigVon: gueltigVon.format("YYYY-MM-DD"),
 
       gueltigBis: gueltigBis ? gueltigBis.format("YYYY-MM-DD") : null,
 
-      foerdersatz: Number(foerdersatz),
+      kikZuschlag: Number(kikZuschlag),
 
       beschluss: beschluss || null,
     };
@@ -125,43 +105,20 @@ const FoerdersatzDialog = ({ open, initialData, onClose, onSave, loading = false
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>{initialData ? "Fördersatz bearbeiten" : "Neuer Fördersatz"}</DialogTitle>
+      <DialogTitle>{initialData ? "KiK Zuschlag bearbeiten" : "Neuer Kik Zuschlag"}</DialogTitle>
 
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
-          <TextField
-            select
-            label="Typ"
-            value={typ}
-            onChange={(e) => setTyp(e.target.value as VeranstaltungTyp)}
-          >
-            {veranstaltungTypen.map((t) => (
-              <MenuItem key={t} value={t}>
-                {t}
-              </MenuItem>
-            ))}
-          </TextField>
 
           <DatePicker label="Gültig von" value={gueltigVon} onChange={setGueltigVon} />
 
           <DatePicker label="Gültig bis" value={gueltigBis} onChange={setGueltigBis} />
 
           <TextField
-            label="Fördersatz"
+            label="KiK Zuschlag"
             type="number"
-            value={foerdersatz}
-            onChange={(e) => setFoerdersatz(e.target.value)}
-          />
-
-          <TextField
-            label="Förderdeckel"
-            value={foerderdeckel != null ? foerderdeckel.toFixed(2).replace(".", ",") : ""}
-            slotProps={{
-              input: {
-                readOnly: true,
-                endAdornment: <InputAdornment position="end">€</InputAdornment>,
-              },
-            }}
+            value={kikZuschlag}
+            onChange={(e) => setKikZuschlag(e.target.value)}
           />
 
           <TextField
@@ -185,4 +142,4 @@ const FoerdersatzDialog = ({ open, initialData, onClose, onSave, loading = false
   );
 };
 
-export default FoerdersatzDialog;
+export default KikDialog;

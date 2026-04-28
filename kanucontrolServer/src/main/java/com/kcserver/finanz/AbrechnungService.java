@@ -1,8 +1,7 @@
 package com.kcserver.finanz;
 
 import com.kcserver.dto.abrechnung.AbrechnungDetailDTO;
-import com.kcserver.dto.finanz.FinanzSummaryDTO;
-import com.kcserver.dto.foerder.FoerdersatzDTO;
+import com.kcserver.dto.finanzen.FinanzSummaryDTO;
 import com.kcserver.entity.*;
 import com.kcserver.enumtype.AbrechnungsStatus;
 import com.kcserver.enumtype.FinanzKategorie;

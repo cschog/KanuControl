@@ -1,8 +1,10 @@
 package com.kcserver.persistence.specification;
 
 import com.kcserver.dto.teilnehmer.TeilnehmerSearchCriteria;
+import com.kcserver.entity.Mitglied;
 import com.kcserver.entity.Person;
 import com.kcserver.entity.Teilnehmer;
+import com.kcserver.entity.Verein;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
@@ -65,10 +67,21 @@ public class TeilnehmerSpecification {
                ========================================================= */
 
             if (hasText(c.getVerein())) {
-                predicate = cb.and(predicate,
-                        cb.like(
-                                cb.lower(person.get("hauptvereinAbk")),
-                                "%" + c.getVerein().toLowerCase() + "%"
+
+                Join<Person, Mitglied> mitglied =
+                        person.join("mitgliedschaften", JoinType.LEFT);
+
+                Join<Mitglied, Verein> verein =
+                        mitglied.join("verein", JoinType.LEFT);
+
+                predicate = cb.and(
+                        predicate,
+                        cb.and(
+                                cb.isTrue(mitglied.get("hauptVerein")),
+                                cb.like(
+                                        cb.lower(verein.get("abk")),
+                                        "%" + c.getVerein().toLowerCase() + "%"
+                                )
                         )
                 );
             }

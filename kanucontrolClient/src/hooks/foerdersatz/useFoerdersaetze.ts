@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 
-import { getFoerdersaetze } from "@/api/client/foerdersatzApi";
+import { getFoerdersaetze } from "@/api/services/foerdersatzApi";
 
 export function useFoerdersaetze() {
   return useQuery({

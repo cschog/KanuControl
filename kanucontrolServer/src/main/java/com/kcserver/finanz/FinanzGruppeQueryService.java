@@ -1,7 +1,7 @@
 package com.kcserver.finanz;
 
-import com.kcserver.dto.finanz.FinanzGruppeDetailDTO;
-import com.kcserver.dto.finanz.FinanzGruppeOverviewDTO;
+import com.kcserver.dto.finanzen.FinanzGruppeDetailDTO;
+import com.kcserver.dto.finanzen.FinanzGruppeOverviewDTO;
 import com.kcserver.entity.FinanzGruppe;
 import com.kcserver.mapper.FinanzGruppeDetailMapper;
 import com.kcserver.mapper.FinanzGruppeOverviewMapper;

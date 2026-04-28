@@ -1,10 +1,10 @@
-package com.kcserver.dto.finanz;
+package com.kcserver.dto.finanzen;
 
 import com.kcserver.dto.teilnehmer.TeilnehmerKurzDTO;
 
 import java.util.List;
 
-public record FinanzGruppeDTO(
+public record FinanzGruppeDetailDTO(
         Long id,
         String kuerzel,
         List<TeilnehmerKurzDTO> teilnehmer

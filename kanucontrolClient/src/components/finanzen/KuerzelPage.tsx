@@ -26,8 +26,8 @@ import {
   createFinanzgruppe,
   assignTeilnehmerBulk,
   deleteFinanzGruppe,
-  FinanzGruppe
-} from "@/api/client/finanzgruppenApi";
+  FinanzGruppe,
+} from "@/api/services/finanzgruppenApi";
 
 import { searchTeilnehmer, removeTeilnehmerFromGruppe } from "@/api/services/teilnehmerApi";
 

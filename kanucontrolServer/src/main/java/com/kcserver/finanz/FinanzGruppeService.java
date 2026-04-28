@@ -1,6 +1,5 @@
 package com.kcserver.finanz;
 
-import com.kcserver.dto.finanz.FinanzGruppeDTO;
 import com.kcserver.entity.FinanzGruppe;
 import com.kcserver.entity.Teilnehmer;
 import com.kcserver.entity.Veranstaltung;

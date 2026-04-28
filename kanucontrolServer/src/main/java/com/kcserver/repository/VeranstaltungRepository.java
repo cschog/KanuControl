@@ -33,4 +33,12 @@ public interface VeranstaltungRepository extends
          where v.aktiv = true
     """)
     int unsetAktiveVeranstaltung();
+
+    @Query("""
+select v
+from Veranstaltung v
+join fetch v.verein
+where v.id = :id
+""")
+    Optional<Veranstaltung> findByIdWithVerein(Long id);
 }

@@ -97,6 +97,20 @@ export const VereinBaseForm: React.FC<Props> = ({ form, editMode, mode, onChange
             onChange={(v) => onChange("schutzkonzept", v || undefined)}
             disabled={!editMode}
           />
+
+          <FormFeldDate
+            label="KiK zertifiziert seit"
+            value={form.kikZertifiziertSeit ?? ""}
+            onChange={(v) => onChange("kikZertifiziertSeit", v || undefined)}
+            disabled={!editMode}
+          />
+
+          <FormFeldDate
+            label="KiK zertifiziert bis"
+            value={form.kikZertifiziertBis ?? ""}
+            onChange={(v) => onChange("kikZertifiziertBis", v || undefined)}
+            disabled={!editMode}
+          />
         </>
       )}
     </>

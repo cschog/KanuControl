@@ -1,6 +1,6 @@
 package com.kcserver.finanz;
 
-import com.kcserver.dto.finanz.FinanzSummaryDTO;
+import com.kcserver.dto.finanzen.FinanzSummaryDTO;
 import com.kcserver.entity.Teilnehmer;
 import com.kcserver.entity.Veranstaltung;
 import com.kcserver.enumtype.FinanzKategorie;

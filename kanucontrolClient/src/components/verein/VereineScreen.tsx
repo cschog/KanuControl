@@ -11,7 +11,7 @@ import { BottomActionBar } from "@/components/common/BottomActionBar";
 import { renderLoadingOrError } from "@/components/common/loadingOnErrorUtils";
 import { navigateToStartMenu } from "@/components/layout/navigateToStartMenue";
 
-import { getAllVereine, deleteVerein, createVerein, updateVerein } from "@/api/client/vereinApi";
+import { getAllVereine, deleteVerein, createVerein, updateVerein } from "@/api/services/vereinApi";
 
 import type Verein from "@/api/types/VereinFormModel";
 import type { VereinSave } from "@/api/types/VereinSave";
@@ -108,17 +108,17 @@ export default function VereinScreen() {
   /* CREATE */
   /* ========================================================= */
 
- const handleCreate = async (payload: VereinSave) => {
-   const saved = await createVerein(payload);
+  const handleCreate = async (payload: VereinSave) => {
+    const saved = await createVerein(payload);
 
-   setData((prev) => [...prev, saved]); // ⭐ kein reload nötig
+    setData((prev) => [...prev, saved]); // ⭐ kein reload nötig
 
-   setSelected(saved);
-   setEditMode(false);
-   setEditData(null);
+    setSelected(saved);
+    setEditMode(false);
+    setEditData(null);
 
-   setCreateDialogOpen(false);
- };
+    setCreateDialogOpen(false);
+  };
 
   /* ========================================================= */
   /* DERIVED */
@@ -196,7 +196,7 @@ export default function VereinScreen() {
       <VereinCreateDialog
         open={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}
-        onCreate={handleCreate} 
+        onCreate={handleCreate}
       />
     </Box>
   );

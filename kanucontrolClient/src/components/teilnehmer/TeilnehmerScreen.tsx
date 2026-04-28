@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { Box, Button, Typography, Paper, Grid, TextField } from "@mui/material";
+import { Box, Button, MenuItem, Typography, Paper, Grid, TextField } from "@mui/material";
 import { useAppContext } from "@/context/AppContext";
 import { updateTeilnehmerRolle } from "@/api/services/teilnehmerApi";
 import { useDebounce } from "@/components/common/reference/hooks";
@@ -40,6 +40,14 @@ export default function TeilnehmerScreen() {
   const debounceVereinL = useDebounce(fVereinL, 300);
   const debounceVereinR = useDebounce(fVereinR, 300);
 
+ const availableVereine = Array.from(
+   new Set(available.map((p) => p.hauptvereinAbk).filter((v): v is string => !!v)),
+ );
+
+ const assignedVereine = Array.from(
+   new Set(assigned.map((t) => t.person?.hauptvereinAbk).filter((v): v is string => !!v)),
+ );
+
   /* ================= PAGING ================= */
 
   const [pageL, setPageL] = useState(0);
@@ -62,6 +70,8 @@ export default function TeilnehmerScreen() {
       debounceSearchL || undefined,
       debounceVereinL || undefined,
     );
+
+    
 
     setAvailable(a?.content ?? []);
     setTotalAvailable(a?.totalElements ?? 0);
@@ -216,12 +226,24 @@ export default function TeilnehmerScreen() {
               </Grid>
               <Grid size={4}>
                 <TextField
+                  select
                   size="small"
                   label="Verein"
                   value={fVereinL}
-                  onChange={(e) => setFVereinL(e.target.value)}
+                  onChange={(e) => {
+                    setFVereinL(e.target.value);
+                    setPageL(0);
+                  }}
                   fullWidth
-                />
+                >
+                  <MenuItem value="">Alle</MenuItem>
+
+                  {availableVereine.map((v) => (
+                    <MenuItem key={v} value={v}>
+                      {v}
+                    </MenuItem>
+                  ))}
+                </TextField>
               </Grid>
             </Grid>
 
@@ -295,12 +317,24 @@ export default function TeilnehmerScreen() {
               </Grid>
               <Grid size={4}>
                 <TextField
+                  select
                   size="small"
                   label="Verein"
                   value={fVereinR}
-                  onChange={(e) => setFVereinR(e.target.value)}
+                  onChange={(e) => {
+                    setFVereinR(e.target.value);
+                    setPageR(0);
+                  }}
                   fullWidth
-                />
+                >
+                  <MenuItem value="">Alle</MenuItem>
+
+                  {assignedVereine.map((v) => (
+                    <MenuItem key={v} value={v}>
+                      {v}
+                    </MenuItem>
+                  ))}
+                </TextField>
               </Grid>
             </Grid>
 

@@ -1,20 +1,16 @@
-// src/api/types/Foerdersatz.ts
-
-export type VeranstaltungTyp = "JEM" | "FM" | "BM" | "GV";
+// src/api/types/Kik.ts
 
 /* =========================================================
    DTO
    ========================================================= */
 
-export interface FoerdersatzDTO {
+export interface KikDTO {
   id: number;
-
-  typ: VeranstaltungTyp;
 
   gueltigVon: string;
   gueltigBis: string | null;
 
-  foerdersatz: number;
+  kikZuschlag: number;
 
   beschluss: string | null;
 }
@@ -23,13 +19,11 @@ export interface FoerdersatzDTO {
    CREATE / UPDATE
    ========================================================= */
 
-export interface FoerdersatzCreateUpdateDTO {
-  typ: VeranstaltungTyp;
-
+export interface KikCreateUpdateDTO {
   gueltigVon: string;
   gueltigBis: string | null;
 
-  foerdersatz: number;
+  kikZuschlag: number;
 
   beschluss: string | null;
 }
