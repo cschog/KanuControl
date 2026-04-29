@@ -1,11 +1,34 @@
 # KanuControl
 
 > ⚠️ Hinweis:
-> KanuControl befindet sich aktuell in aktiver Entwicklung und ist noch nicht produktiv einsetzbar.
+> KanuControl befindet sich weiterhin in aktiver Entwicklung.
+> Der fachliche Kern des Systems ist jedoch inzwischen funktionsfähig und vollständig integrierbar.
 
 ---
 
-## 🎯 Ziel von KanuControl
+# 🚀 Release-Status
+
+## Aktueller Stand: v0.6.0.0
+
+**KanuControl ist jetzt ein funktionsfähiges Fachsystem für:**
+
+- Veranstaltungsverwaltung
+- Teilnehmerverwaltung
+- Förderlogik (KJFP)
+- Finanzplanung
+- Abrechnung
+- PDF-Generierung
+- Dashboard & Kennzahlen
+
+Der aktuelle Fokus verschiebt sich damit von Kernfunktionalität hin zu:
+- Stabilisierung
+- UX
+- Performance
+- Produktionsreife
+
+---
+
+# 🎯 Ziel von KanuControl
 
 KanuControl ist eine Webanwendung zur Beantragung, Verwaltung und Abrechnung von Zuschüssen
 aus dem Kinder-, Jugend- und Freizeitplan (KJFP) des Landessportbundes NRW (LSB NRW).
@@ -13,66 +36,159 @@ aus dem Kinder-, Jugend- und Freizeitplan (KJFP) des Landessportbundes NRW (LSB 
 Die Anwendung richtet sich an:
 
 - Kanuvereine
-- Kanuverbände (z. B. KVNRW)
-- Geschäftsstellen, die Förderanträge prüfen und abrechnen
+- Kanuverbände
+- Geschäftsstellen
+- Jugendwarte
+- Kassierer
+- Veranstaltungsleitungen
 
-Ziel ist es, die heute oft manuellen, fehleranfälligen und papierbasierten Prozesse
+Ziel ist es, heute häufig manuelle, fehleranfällige und papierbasierte Prozesse
 durch eine strukturierte, digitale Lösung zu ersetzen.
 
 ---
 
-## 🧭 Fachlicher Ablauf
+# 🧭 Fachlicher Ablauf
 
-### Grunddaten
+## 1. Stammdaten
 
-- Anlegen eines Vereins (falls noch nicht vorhanden)
-- Anlegen von Personen
-- Zuordnung von Personen zu Vereinen (Mitgliedschaften)
-
----
-
-### Antragstellung
-
-- Anlegen einer Jugend-Veranstaltung
-- Erfassen der relevanten Eckdaten
-- Erzeugung von Antragsformularen (später als PDF)
+- Vereine verwalten
+- Personen verwalten
+- Mitgliedschaften pflegen
+- Hauptverein-Logik
+- Kontoinhaber verwalten
+- KiK-Zertifizierung verwalten
 
 ---
 
-### Durchführung der Veranstaltung
+## 2. Veranstaltungen
 
-- Erfassen der Teilnehmer
-  - Personen werden bei Bedarf automatisch angelegt
-  - Zuordnung zur Veranstaltung erfolgt direkt
-- Pflege von Teilnehmerlisten
-
----
-
-### Abrechnung
-
-- Erfassen von:
-  - Einnahmen
-  - Ausgaben
-  - optional Reisekosten
-- Automatische Berechnung relevanter Summen
-- Ausgabe der Abrechnungsunterlagen als PDF:
-  - Deckblatt
-  - Erhebungsbogen
-  - Teilnehmerliste
-  - ggf. Reisekostenübersicht
-
-Hinweis:
-PDF-Erzeugung ist ein späterer Ausbauschritt.
-Fokus liegt zunächst auf stabilen Datenmodellen und Prozessen.
+- Veranstaltungen anlegen
+- FM / JEM / BM / GV
+- Veranstaltungsleitung
+- Unterkunft / Verpflegung
+- Teilnehmerplanung
+- Teilnehmergebühren
+- Länder / Orte
+- Förderfähigkeit automatisch ableitbar
 
 ---
 
-## 🧱 Technische Architektur
+## 3. Teilnehmerverwaltung
+
+- Teilnehmer erfassen
+- Bulk Add / Remove
+- Leiter automatisch Teilnehmer
+- Rollenmodell
+- Finanzgruppen
+- Suche / Filter / Pagination
+
+---
+
+## 4. Finanzplanung
+
+- Planung nach Kategorien
+- Kosten & Einnahmen
+- Automatische Summenbildung
+- Förderfähigkeitsberechnung
+- Dashboard-Kennzahlen
+
+Unterstützte Kategorien:
+
+### Kosten
+- Unterkunft
+- Verpflegung
+- Honorare
+- Fahrtkosten
+- Verbrauchsmaterial
+- Kultur
+- Miete
+- Sonstige Kosten
+
+### Einnahmen
+- Teilnehmerbeiträge
+- Pfand
+- KJFP-Zuschuss
+- Sonstige Einnahmen
+
+---
+
+## 5. Förderung (KJFP)
+
+KanuControl enthält eine zentrale Förderlogik:
+
+- Förderfähigkeitsprüfung
+- Altersgrenzen je Veranstaltungstyp
+- KiK-Zuschläge
+- Förderdeckel
+- Fördersätze historisiert
+- Berechnung pro Teilnehmer / Tag
+- Gesamtförderung
+
+### Fachliche Regeln
+
+Für FM/JEM:
+- Teilnehmer zwischen 6 und einschließlich 20 Jahren förderfähig
+- Mitarbeiter & Leiter nicht förderfähig
+- KiK-Zuschläge automatisch berücksichtigt
+- Deckel automatisch angewendet
+
+---
+
+## 6. Abrechnung
+
+- Erfassung echter Buchungen
+- Einnahmen & Ausgaben
+- Finanzgruppen
+- Automatische Summierung
+- Eigenleistungsberechnung
+- KJFP-Abgleich
+- Dashboard-Auswertung
+
+---
+
+## 7. PDF-Generierung
+
+Bereits integriert:
+
+- Teilnehmerliste
+- FM/JEM Anmeldung
+- FM/JEM Abrechnung
+
+Eigenschaften:
+- editierbare PDF-Formulare
+- automatische Feldbefüllung
+- mehrseitige PDFs
+- dynamische Berechnungen
+- automatische Förderwerte
+
+---
+
+# 📊 Dashboard
+
+Das Finanzdashboard enthält:
+
+- Plan-Kosten
+- Ist-Kosten
+- Plan-Einnahmen
+- Ist-Einnahmen
+- Plan-Saldo
+- Ist-Saldo
+- Abweichungen
+- Förderung
+- Kosten nach Kategorien
+- Einnahmen nach Kategorien
+
+Alle Werte werden serverseitig aggregiert.
+
+---
+
+# 🧱 Technische Architektur
 
 KanuControl ist eine Client-Server-Webanwendung.
 
-### Überblick
-```
+## Überblick
+
+```text
 Browser (React)
    |
    v
@@ -85,12 +201,21 @@ Mapper (DTO <-> Entity)
 Repository (JPA)
    |
 PostgreSQL (Schema-per-Tenant)
-```
+
 ---
 
 ## 🌐 Mandantenfähigkeit
 
 KanuControl ist mandantenfähig (Multi-Tenant) aufgebaut.
+
+### Eigenschaften
+
+* Schema-per-Tenant
+* Datenisolation pro Verein
+* Keycloak-basierte Tenant-Erkennung
+* JWT / Gruppen-basiert
+* Lazy Schema Creation
+* Liquibase-basierte Baseline-Struktur
 
 - Jeder Verein sieht ausschließlich seine eigenen Daten
 - Trennung erfolgt strikt über Schema-per-Tenant
@@ -145,19 +270,15 @@ Zur Benutzerverwaltung wird Keycloak eingesetzt.
 
 ## 🧪 Qualität & Tests
 
-- Controller-Tests (@WebMvcTest)
-- Integrationstests für:
-  - REST-Endpunkte
-  - Mandanten-Initialisierung
-  - Liquibase-Migrationen
-- Smoke-Tests für Systemstart & Grundfunktionen
+Aktueller Stand
 
-### Besonderer Fokus liegt auf der Absicherung der Mandantenarchitektur:
-
-- Baseline-Migrationstests (Liquibase)
-- Smoke-Tests für Tenant-Schema-Provisionierung
-- Verifikation der Schema-Isolation
-
+* 218 Tests grün
+* Controller-Tests
+* Service-Tests
+* Repository-Tests
+* PDF-Tests
+* Multi-Tenant-Tests
+* Förderlogik-Tests
 ---
 
 ## 📦 Backend
@@ -192,6 +313,7 @@ Zur Benutzerverwaltung wird Keycloak eingesetzt.
 - TypeScript
 - Material UI ab V7.x
 - VS Code
+- Axios
 
 Das Frontend kommuniziert ausschließlich über die REST-API
 und enthält keine Businesslogik.
@@ -219,208 +341,49 @@ Status: **Finanzgruppen integriert – Übergang zur Abrechnung**
 
 ---
 
-# Phase 0 – Fundament → Release 0.1.x ✅
+# 🗺️ Roadmap
 
-**Ziel:** stabile Architektur & Stammdaten  
-**Status:** abgeschlossen
+## ✅ v0.6.0.0 – Core Complete
 
-## Backend
-- [x] Spring Boot 3 Basis
-- [x] Multi-Tenant (Schema-per-Tenant)
-- [x] Keycloak Integration
-- [x] Liquibase Migration
-- [x] Hibernate Runtime Schema Switching
+Abgeschlossen:
 
-## Domäne
-- [x] Verein CRUD
-- [x] Person CRUD
-- [x] Mitglied (Join Entity)
-- [x] Hauptverein-Logik
-- [x] Fachliche Validierungen
-
-## Frontend
-- [x] Vereinsverwaltung
-- [x] Personenverwaltung
-- [x] Mitgliedszuordnung
-
-## Import
-- [x] CSV Import Personen
-- [x] Mapping-Datei
-- [x] Dry-Run
-- [x] Fehleranzeige
-- [x] Upload-Infrastruktur
-
----
-
-# Phase 1 – Frontend & Nutzung → Release 0.2.x ✅
-
-**Ziel:** komfortable Bedienung  
-**Status:** weitgehend abgeschlossen
-
-## UI
-- [x] Navigation
-- [x] Pagination
-- [x] Sortierung
-- [x] Filter
-- [ ] Keycloak UX verbessern
-
-## Technik
-- [ ] Multipart Handling finalisieren
-- [ ] Upload Limits
-- [ ] Global Error Handling verbessern
-
----
-
-# Phase 2 – Import & Datenqualität → Release 0.3.x 🟡
-
-**Ziel:** robuste Massendaten  
-**Status:** teilweise abgeschlossen
-
-## CSV Import Mitglieder
-- [x] Upload
-- [x] Dry-Run
-- [ ] Pflichtfeld Validierung
-- [ ] Fachliche Regeln
-- [ ] Dublettenprüfung
-- [ ] Fehlerreport (Zeile + Ursache)
-
-## Mapping
-- [ ] Person ↔ Mitglied ↔ Verein
-
-## Stabilität
-- [ ] Idempotenter Import
-
----
-
-# Phase 3 – Veranstaltungen & Teilnehmer → Release 0.4.x ✅
-
-**Ziel:** Veranstaltungsmanagement vollständig  
-**Status:** abgeschlossen
-
-## Veranstaltung
-- [x] CRUD
-- [x] Aktiv-Status
-- [x] Leiter Domain-Regel
-
-## Teilnehmer
-- [x] Join-Entity
-- [x] Rollen (L / M)
-- [x] Bulk Add / Remove
-- [x] Leiter immer Teilnehmer
-- [x] Sortierung (Leiter zuerst)
-- [x] Search (Server-seitig)
-- [x] Debounced Suche im FE
-
-## UI
-- [x] Teilnehmerverwaltung
-- [x] Dual-List Auswahl
-- [x] Multi-Select stabil
-- [x] SelectAll stabil
-- [x] Filter Reset
-- [x] Confirm Dialog bei Entfernen
-
-## Teilnehmerliste PDF
-- [x] Mehrseitig
-- [x] Editierbares Formular
-- [x] Alter zum Veranstaltungsbeginn
-- [x] Header / Footer / Zeitraum
-- [x] Checkbox Mapping (JEM/FM/BM)
-- [x] Sortierung (Leiter → Verein → Name)
-- [x] Dynamischer Dateiname
-- [x] Download im FE
-
----
-
-# Phase 4 – Finanzgruppen & Abrechnung → Release 0.5.x 🟡
-
-**Ziel:** finanzielle Struktur & Vorbereitung Abrechnung  
-**Status:** Finanzgruppen abgeschlossen
-
-## Finanzgruppen (Kürzel)
-- [x] Entity FinanzGruppe
-- [x] 1:n Beziehung Teilnehmer → FinanzGruppe
-- [x] Unique Constraint (Veranstaltung + Kürzel)
-- [x] Bulk-Zuweisung
-- [x] Entfernen aus Gruppe
-- [x] Search mit Debounce
-- [x] Confirm Dialog
-- [x] 201 Integrationstests grün
-
-## Abrechnung – Basis
-- [ ] Einnahmen
-- [ ] Ausgaben
-- [ ] Teilnehmergebühren
-- [ ] Reisekosten
-- [ ] Berechnung pro Finanzgruppe
-- [ ] Abschlusslogik Veranstaltung
-
----
-
-# Phase 5 – Dokumente & Formulare → Release 0.6.x 🟡
-
-**Ziel:** vollständige Verwaltungsdokumente
-
-## PDF Engine
-- [x] Formular-basierte PDFs
-- [x] Mehrseitig
-- [x] Editierbar
-- [ ] Template-System
-
-## Dokumente
-- [x] Teilnehmerliste
-- [ ] Anmeldung
-- [ ] Erhebungsbogen
-- [ ] Abrechnung
-- [ ] Reisekosten
-
----
-
-# Phase 6 – Stabilisierung → Release 1.0.0 ⚪
-
-## Qualität
-- [ ] Performance
-- [ ] Memory / PDF Optimierung
-- [ ] Query Optimierung
-- [ ] Testabdeckung > 90 %
-
-## Sicherheit
-- [ ] Rollen & Rechte fein granular
-- [ ] Audit Logging
-- [ ] CSRF / Hardening Review
-
-## Betrieb
-- [ ] Monitoring
-- [ ] Backup & Restore
-- [ ] Docker Deployment
-- [ ] Produktionsdokumentation
+* Stammdaten
+* Veranstaltungen
+* Teilnehmer
+* Finanzgruppen
+* Planung
+* Abrechnung
+* Förderlogik
+* Dashboard
+* PDF Anmeldung
+* PDF Abrechnung
+* Teilnehmerliste
+* Multi-Tenant Architektur
 
 ---
 
 # 🎯 Nächste Meilensteine
 
-## → v0.6 Fokus
-- Abrechnung starten
-- Einnahmen / Ausgaben Domain
-- Finanzgruppen-Berechnung
-- Erhebungsbogen PDF
-- Anmeldung PDF
+## 🔜 v0.7 Fokus
 
-## → v0.7 Fokus
-- Abschlusslogik Veranstaltung
-- Abrechnungs-PDF
-- Plausibilitätsprüfungen
+* Abschlusslogik Veranstaltungen
+* Plausibilitätsprüfungen
+* PDF-Feinschliff
+* UX-Optimierung
+* Rechte/Rollen
+* Stabilisierung
 
-## → v1.0 Fokus
-- Stabilität
-- Performance
-- Security
-- Produktivbetrieb
----
+⸻
 
-# 🧭 Projektstatus
+## 🎯 v1.0 Fokus
 
-**KanuControl ist jetzt ein funktionsfähiges Fachsystem.**  
-Die nächsten Releases bringen Vollständigkeit, Stabilität und Produktionsreife.
+* Produktionsreife
+* Backup/Restore
+* Monitoring
+* Docker Deployment
+* Performance
+* Security Hardening
+* Audit Logging
 
 ---
 
