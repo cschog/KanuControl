@@ -201,7 +201,7 @@ Mapper (DTO <-> Entity)
 Repository (JPA)
    |
 PostgreSQL (Schema-per-Tenant)
-
+```
 ---
 
 ## 🌐 Mandantenfähigkeit
