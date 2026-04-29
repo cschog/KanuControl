@@ -36,4 +36,8 @@ export interface FinanzenDashboardDTO {
   kostenNachKategorie: BetragPositionDTO[];
 
   einnahmenNachKategorie: BetragPositionDTO[];
+
+  istKostenNachKategorie: BetragPositionDTO[];
+
+  istEinnahmenNachKategorie: BetragPositionDTO[];
 }

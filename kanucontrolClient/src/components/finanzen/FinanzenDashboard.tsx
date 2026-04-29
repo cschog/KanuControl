@@ -42,6 +42,10 @@ const FinanzenDashboard = () => {
 
   const einnahmen = data?.einnahmenNachKategorie ?? [];
 
+  const istKostenNachKategorie = data?.istKostenNachKategorie ?? [];
+
+  const istEinnahmenNachKategorie = data?.istEinnahmenNachKategorie ?? [];
+
   const handleExport = () => {
     console.log("export");
   };
@@ -296,16 +300,16 @@ const FinanzenDashboard = () => {
       )}
 
       {/* =====================================================
-          DETAILBEREICHE
-          ===================================================== */}
+    DETAILBEREICHE
+    ===================================================== */}
 
       <Grid container spacing={3} sx={{ mt: 0.5 }}>
-        {/* KOSTEN */}
+        {/* PLAN KOSTEN */}
 
         <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ height: "100%" }}>
             <CardContent>
-              <Typography variant="h6">Kosten nach Kategorie</Typography>
+              <Typography variant="h6">Plan Kosten</Typography>
 
               <Divider sx={{ my: 2 }} />
 
@@ -327,16 +331,72 @@ const FinanzenDashboard = () => {
           </Card>
         </Grid>
 
-        {/* EINNAHMEN */}
+        {/* IST KOSTEN */}
 
         <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ height: "100%" }}>
             <CardContent>
-              <Typography variant="h6">Einnahmen</Typography>
+              <Typography variant="h6">Ist Kosten</Typography>
+
+              <Divider sx={{ my: 2 }} />
+
+              {istKostenNachKategorie.map((k) => (
+                <Box
+                  key={k.name}
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    mb: 1.5,
+                  }}
+                >
+                  <Typography>{k.name}</Typography>
+
+                  <Money value={-k.betrag} colorize />
+                </Box>
+              ))}
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      <Grid container spacing={3} sx={{ mt: 0.5 }}>
+        {/* PLAN EINNAHMEN */}
+
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Card sx={{ height: "100%" }}>
+            <CardContent>
+              <Typography variant="h6">Plan Einnahmen</Typography>
 
               <Divider sx={{ my: 2 }} />
 
               {einnahmen.map((e) => (
+                <Box
+                  key={e.name}
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    mb: 1.5,
+                  }}
+                >
+                  <Typography>{e.name}</Typography>
+
+                  <Money value={e.betrag} colorize />
+                </Box>
+              ))}
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* IST EINNAHMEN */}
+
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Card sx={{ height: "100%" }}>
+            <CardContent>
+              <Typography variant="h6">Ist Einnahmen</Typography>
+
+              <Divider sx={{ my: 2 }} />
+
+              {istEinnahmenNachKategorie.map((e) => (
                 <Box
                   key={e.name}
                   sx={{
