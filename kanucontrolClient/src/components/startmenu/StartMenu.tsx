@@ -23,12 +23,12 @@ const StartMenue = () => {
    { key: "teilnehmer", label: "Teilnehmer", path: "/teilnehmer" },
 
    { key: "finanzen", label: "Finanzen", path: `/veranstaltungen/${active?.id}/finanzen` },
-   { key: "reisekosten", label: "Reisekosten", path: "/reisekosten" },
+   // { key: "reisekosten", label: "Reisekosten", path: "/reisekosten" },
 
    { key: "anmeldung", label: "Anmeldung", path: "/anmeldung" },
    { key: "abrechnung", label: "Abrechnung", path: "/abrechnung" },
    { key: "teilnehmerliste", label: "Teilnehmerliste", path: "/teilnehmerliste" },
-   { key: "reisekostenausgabe", label: "Reisekosten Ausgabe", path: "/ausgabeReisekosten" },
+   // { key: "reisekostenausgabe", label: "Reisekosten Ausgabe", path: "/ausgabeReisekosten" },
    { key: "erhebungsbogen", label: "Erhebungsbogen", path: "/erhebungsbogen" },
    { key: "verwaltung", label: "Verwaltung", path: "/verwaltung" },
  ] as const;

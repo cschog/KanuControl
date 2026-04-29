@@ -13,12 +13,19 @@ import java.time.temporal.ChronoUnit;
 
 import static com.kcserver.util.StringUtils.heute;
 import static com.kcserver.util.StringUtils.join;
+import com.kcserver.entity.Planung;
+import com.kcserver.entity.PlanungPosition;
+import com.kcserver.enumtype.FinanzKategorie;
+import com.kcserver.repository.PlanungRepository;
+
+import java.math.BigDecimal;
 
 @Service
 @RequiredArgsConstructor
 public class PDFFmJemReportService {
 
     private final VeranstaltungRepository veranstaltungRepository;
+    private final PlanungRepository planungRepository;
 
     public byte[] generate(Long veranstaltungId) {
 
@@ -150,6 +157,133 @@ public class PDFFmJemReportService {
             set(form, "ort_datum",
                     join(", ", v.getVerein().getOrt(), heute()));
 
+            /* =========================
+   PLAN-KOSTEN / EINNAHMEN
+   ========================= */
+
+            Planung planung =
+                    planungRepository
+                            .findByVeranstaltungIdWithPositionen(v.getId())
+                            .orElse(null);
+
+            if (planung != null) {
+
+                BigDecimal unterkunftVerpflegung = sum(
+                        planung,
+                        FinanzKategorie.UNTERKUNFT,
+                        FinanzKategorie.VERPFLEGUNG
+                );
+
+                BigDecimal honorare = sum(
+                        planung,
+                        FinanzKategorie.HONORARE
+                );
+
+                BigDecimal fahrtkosten = sum(
+                        planung,
+                        FinanzKategorie.FAHRTKOSTEN
+                );
+
+                BigDecimal verbrauchsmaterial = sum(
+                        planung,
+                        FinanzKategorie.VERBRAUCHSMATERIAL
+                );
+
+                BigDecimal mietkosten = sum(
+                        planung,
+                        FinanzKategorie.MIETE
+                );
+
+                BigDecimal sonstigeKosten = sum(
+                        planung,
+                        FinanzKategorie.SONSTIGE_KOSTEN
+                );
+
+                BigDecimal tnBeitrag =
+                        v.getStandardGebuehr() != null
+                                ? v.getStandardGebuehr()
+                                : BigDecimal.ZERO;
+
+                BigDecimal sonstigeEinnahmen = sum(
+                        planung,
+                        FinanzKategorie.SONSTIGE_EINNAHMEN
+                );
+
+                BigDecimal kjfp = sum(
+                        planung,
+                        FinanzKategorie.KJFP_ZUSCHUSS
+                );
+
+                /* ================= PDF FELDER ================= */
+
+                set(form, "unterkunft_und_verpflegung",
+                        unterkunftVerpflegung);
+
+                set(form, "honorare", honorare);
+
+                set(form, "fahrtkosten", fahrtkosten);
+
+                set(form, "verbrauchsmaterial",
+                        verbrauchsmaterial);
+
+                set(form, "mietkosten", mietkosten);
+
+                set(form, "sonstige_kosten",
+                        sonstigeKosten);
+
+                set(form, "tn_beitrag", tnBeitrag);
+
+                set(form, "sonstige_einnahmen",
+                        sonstigeEinnahmen);
+
+                set(form, "kjfp_zuschuss", kjfp);
+
+                /* Teilnehmerbeiträge Gesamt */
+
+                int tn =
+                        (m != null ? m : 0)
+                                + (w != null ? w : 0)
+                                + (v.getGeplanteTeilnehmerDivers() != null
+                                ? v.getGeplanteTeilnehmerDivers()
+                                : 0)
+                                + (mm != null ? mm : 0)
+                                + (mw != null ? mw : 0)
+                                + (v.getGeplanteMitarbeiterDivers() != null
+                                ? v.getGeplanteMitarbeiterDivers()
+                                : 0);
+
+                BigDecimal summeTn =
+                        tnBeitrag.multiply(
+                                BigDecimal.valueOf(tn)
+                        );
+
+                set(form, "anz_tn", tn);
+
+                set(form, "summe_TN_beitraege",
+                        summeTn);
+
+                /* Summen */
+
+                BigDecimal summeAusgaben =
+                        unterkunftVerpflegung
+                                .add(honorare)
+                                .add(fahrtkosten)
+                                .add(verbrauchsmaterial)
+                                .add(mietkosten)
+                                .add(sonstigeKosten);
+
+                BigDecimal summeEinnahmen =
+                        summeTn
+                                .add(sonstigeEinnahmen)
+                                .add(kjfp);
+
+                set(form, "summe_ausgaben",
+                        summeAusgaben);
+
+                set(form, "summe_einnahmen",
+                        summeEinnahmen);
+            }
+
             /* ❗ NICHT flatten → Formular bleibt editierbar */
 
             doc.save(out);
@@ -171,6 +305,30 @@ public class PDFFmJemReportService {
             }
         } catch (Exception ignored) {
         }
+    }
+
+    private BigDecimal sum(
+            Planung planung,
+            FinanzKategorie... kategorien
+    ) {
+
+        BigDecimal result = BigDecimal.ZERO;
+
+        for (PlanungPosition p : planung.getPositionen()) {
+
+            for (FinanzKategorie k : kategorien) {
+
+                if (p.getKategorie() == k
+                        && p.getBetrag() != null) {
+
+                    result = result.add(
+                            p.getBetrag()
+                    );
+                }
+            }
+        }
+
+        return result;
     }
 
 }

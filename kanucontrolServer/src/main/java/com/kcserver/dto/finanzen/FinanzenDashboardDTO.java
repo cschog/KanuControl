@@ -26,6 +26,30 @@ public class FinanzenDashboardDTO {
 
     private List<BetragPositionDTO> einnahmenNachKategorie = new ArrayList<>();
 
+    private List<BetragPositionDTO> istKostenNachKategorie = new ArrayList<>();
+
+    private List<BetragPositionDTO> istEinnahmenNachKategorie = new ArrayList<>();
+
+    public List<BetragPositionDTO> getIstKostenNachKategorie() {
+        return istKostenNachKategorie;
+    }
+
+    public void setIstKostenNachKategorie(
+            List<BetragPositionDTO> istKostenNachKategorie
+    ) {
+        this.istKostenNachKategorie = istKostenNachKategorie;
+    }
+
+    public List<BetragPositionDTO> getIstEinnahmenNachKategorie() {
+        return istEinnahmenNachKategorie;
+    }
+
+    public void setIstEinnahmenNachKategorie(
+            List<BetragPositionDTO> istEinnahmenNachKategorie
+    ) {
+        this.istEinnahmenNachKategorie = istEinnahmenNachKategorie;
+    }
+
     public BigDecimal getPlanKosten() {
         return planKosten;
     }
