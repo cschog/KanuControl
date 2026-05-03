@@ -386,6 +386,22 @@ public class TeilnehmerService {
     }
 
 
+    public List<TeilnehmerListDTO>
+    findAllByVeranstaltungForBeitraege(
+            Long veranstaltungId
+    ) {
+
+        List<Teilnehmer> teilnehmer =
+                teilnehmerRepository
+                        .findAllWithPerson(
+                                veranstaltungId
+                        );
+
+        return teilnehmer.stream()
+                .map(teilnehmerMapper::toListDTO)
+                .toList();
+    }
+
     /* =========================================================
        HELPER
        ========================================================= */

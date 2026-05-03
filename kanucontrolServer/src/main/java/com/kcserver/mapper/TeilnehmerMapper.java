@@ -8,15 +8,22 @@ import com.kcserver.dto.teilnehmer.TeilnehmerRefDTO;
 import com.kcserver.entity.Mitglied;
 import com.kcserver.entity.Person;
 import com.kcserver.entity.Teilnehmer;
+import com.kcserver.service.TeilnehmerBeitragService;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Mapper(
         componentModel = "spring",
-        unmappedTargetPolicy = ReportingPolicy.ERROR
+        unmappedTargetPolicy = ReportingPolicy.ERROR,
+        uses = TeilnehmerBeitragService.class
 )
-public interface TeilnehmerMapper {
+
+public abstract class TeilnehmerMapper {
+
+    @Autowired
+    protected TeilnehmerBeitragService teilnehmerBeitragService;
 
      /* =========================
        ENTITY → LIST DTO
@@ -25,7 +32,20 @@ public interface TeilnehmerMapper {
     @Mapping(source = "person.id", target = "personId")
     @Mapping(source = "person", target = "person")
     @Mapping(source = "rolle", target = "rolle")
-    TeilnehmerListDTO toListDTO(Teilnehmer teilnehmer);
+    @Mapping(
+            target = "effektiverBeitrag",
+            expression = """
+        java(
+            teilnehmerBeitragService.getEffektiverBeitrag(
+                teilnehmer.getVeranstaltung(),
+                teilnehmer
+            )
+        )
+    """
+    )
+    public abstract TeilnehmerListDTO toListDTO(
+            Teilnehmer teilnehmer
+    );
 
     /* =========================
        ENTITY → DETAIL DTO
@@ -40,7 +60,10 @@ public interface TeilnehmerMapper {
     @Mapping(source = "person.geburtsdatum", target = "geburtsdatum")
     @Mapping(source = "person.plz", target = "plz")
     @Mapping(source = "person.sex", target = "sex")
-    TeilnehmerDetailDTO toDetailDTO(Teilnehmer teilnehmer);
+    public abstract TeilnehmerDetailDTO toDetailDTO(
+            Teilnehmer teilnehmer
+
+    );
 
     /* =========================
    ENTITY → KURZ DTO
@@ -50,9 +73,12 @@ public interface TeilnehmerMapper {
     @Mapping(source = "person.id", target = "personId")
     @Mapping(source = "person.vorname", target = "vorname")
     @Mapping(source = "person.name", target = "nachname")
-    TeilnehmerKurzDTO toKurzDTO(Teilnehmer teilnehmer);
+    public abstract TeilnehmerKurzDTO toKurzDTO(
+            Teilnehmer teilnehmer
 
-    default TeilnehmerRefDTO toRefDTO(Teilnehmer t) {
+    );
+
+     public TeilnehmerRefDTO toRefDTO(Teilnehmer t) {
         if (t == null || t.getPerson() == null) return null;
 
         Person p = t.getPerson();
@@ -78,7 +104,7 @@ public interface TeilnehmerMapper {
        HILFSMAPPING
        ========================= */
 
-    default PersonRefDTO map(Person person) {
+     public PersonRefDTO map(Person person) {
         if (person == null) return null;
 
         PersonRefDTO dto = new PersonRefDTO();

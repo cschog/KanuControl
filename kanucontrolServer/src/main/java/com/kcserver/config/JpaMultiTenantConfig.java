@@ -24,7 +24,10 @@ public class JpaMultiTenantConfig {
 
         LocalContainerEntityManagerFactoryBean emf = new LocalContainerEntityManagerFactoryBean();
         emf.setDataSource(dataSource);
-        emf.setPackagesToScan("com.kcserver.entity");
+        emf.setPackagesToScan(
+                "com.kcserver.entity",
+                "com.kcserver.audit.entity"
+        );
 
         HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
         emf.setJpaVendorAdapter(vendorAdapter);
