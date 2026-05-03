@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Entity
 @Table(
@@ -55,4 +56,9 @@ public class Teilnehmer extends Auditable {
 
     @Column(name = "individueller_beitrag", precision = 10, scale = 2)
     private BigDecimal individuellerBeitrag;
+
+    private boolean bezahlt;
+
+    @Column(name = "bezahlt_am")
+    private LocalDate bezahltAm;
 }

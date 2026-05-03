@@ -327,20 +327,6 @@ Status: **Finanzgruppen integriert – Übergang zur Abrechnung**
 
 ---
 
-# 📊 Gesamtfortschritt
-
-**≈ 75 % bis v1.0**
-
-- 🟢 Architektur stabil
-- 🟢 Stammdaten vollständig
-- 🟢 Veranstaltungen & Teilnehmer vollständig
-- 🟢 Finanzgruppen (Kürzel) integriert
-- 🟡 Abrechnung in Aufbau
-- 🟡 Import & Datenqualität teilweise
-- ⚪ Stabilisierung & Produktionsreife offen
-
----
-
 # 🗺️ Roadmap
 
 ## ✅ v0.6.0.0 – Core Complete

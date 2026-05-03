@@ -6,6 +6,7 @@ import { useParams } from "react-router-dom";
 import FinanzenDashboard from "@/components/finanzen/FinanzenDashboard";
 import PlanungPage from "@/components/finanzen/PlanungPage";
 import BuchungenPage from "@/components/finanzen/BuchungenPage";
+import BeitraegePage from "@/components/finanzen/BeitraegePage";
 import AbrechnungPage from "@/components/finanzen/AbrechnungPage";
 import VergleichPage from "@/components/finanzen/VergleichPage";
 import KuerzelPage from "@/components/finanzen/KuerzelPage";
@@ -34,6 +35,7 @@ const Finanzen = () => {
         <Tab label="Dashboard" />
         <Tab label="Planung" />
         <Tab label="Buchungen" />
+        <Tab label="Beiträge" />
         <Tab label="Abrechnung" />
         <Tab label="Vergleich" />
         <Tab label="Kürzel" />
@@ -42,9 +44,10 @@ const Finanzen = () => {
       {tab === 0 && <FinanzenDashboard />}
       {tab === 1 && <PlanungPage veranstaltungId={id} />}
       {tab === 2 && <BuchungenPage veranstaltungId={id} />}
-      {tab === 3 && <AbrechnungPage veranstaltungId={id} />}
-      {tab === 4 && <VergleichPage veranstaltungId={id} />}
-      {tab === 5 && <KuerzelPage veranstaltungId={id} />}
+      {tab === 3 && <BeitraegePage veranstaltungId={id} />}
+      {tab === 4 && <AbrechnungPage veranstaltungId={id} />}
+      {tab === 5 && <VergleichPage veranstaltungId={id} />}
+      {tab === 6 && <KuerzelPage veranstaltungId={id} />}
     </Box>
   );
 };
