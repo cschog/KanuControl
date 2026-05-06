@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="2026-05-04-07-seed-regeln" author="chris">
+
+        <!-- 0-2 Jahre -->
+        <insert tableName="beitragsregel">
+            <column name="beitragsstruktur_id" valueNumeric="1"/>
+            <column name="alter_von" valueNumeric="0"/>
+            <column name="alter_bis" valueNumeric="2"/>
+            <column name="beitrag" valueNumeric="0"/>
+        </insert>
+
+        <!-- 3-10 -->
+        <insert tableName="beitragsregel">
+            <column name="beitragsstruktur_id" valueNumeric="1"/>
+            <column name="alter_von" valueNumeric="3"/>
+            <column name="alter_bis" valueNumeric="10"/>
+            <column name="beitrag" valueNumeric="100"/>
+        </insert>
+
+        <!-- Leiter -->
+        <insert tableName="beitragsregel">
+            <column name="beitragsstruktur_id" valueNumeric="1"/>
+            <column name="rolle" value="L"/>
+            <column name="beitrag" valueNumeric="0"/>
+        </insert>
+
+    </changeSet>
+
+</databaseChangeLog>

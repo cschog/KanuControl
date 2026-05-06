@@ -57,7 +57,7 @@ public class Teilnehmer extends Auditable {
     @Column(name = "individueller_beitrag", precision = 10, scale = 2)
     private BigDecimal individuellerBeitrag;
 
-    private boolean bezahlt;
+    private Boolean bezahlt;
 
     @Column(name = "bezahlt_am")
     private LocalDate bezahltAm;

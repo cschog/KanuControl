@@ -35,12 +35,18 @@ const Navigation = () => {
           component="img"
           src="https://i.ibb.co/wM20B9N/logo-Kanu-Control200px.png"
           alt="KanuControl"
-          sx={{ height: 50, mr: 2 }}
+          sx={{ height: 60, mr: 3 }}
         />
 
         {/* 📌 Titel + Kontext */}
         <Box sx={{ flexGrow: 1, lineHeight: 1.1 }}>
-          <Typography variant="h6" fontWeight={700} sx={{ letterSpacing: 0.3 }}>
+          <Typography
+            variant="h5"
+            fontWeight={800}
+            sx={{
+              letterSpacing: 0.5,
+            }}
+          >
             KanuControl
           </Typography>
 
@@ -56,11 +62,12 @@ const Navigation = () => {
               variant="subtitle1"
               fontWeight={700}
               sx={{
-                opacity: 0.95,
-                fontSize: "0.95rem",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
+                opacity: 0.98,
+                fontSize: "1.35rem",
+                letterSpacing: 0.2,
+                whiteSpace: "normal",
+                wordBreak: "break-word",
+                lineHeight: 1.2,
               }}
             >
               {contextText}

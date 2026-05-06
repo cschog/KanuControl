@@ -85,6 +85,10 @@ public class Veranstaltung extends Auditable {
     @JoinColumn(name = "leiter_id", nullable = false)
     private Person leiter;
 
+    @ManyToOne
+    @JoinColumn(name = "beitragsstruktur_id")
+    private Beitragsstruktur beitragsstruktur;
+
     /* =========================
        Plan-Zahlen (Antrag)
        ========================= */

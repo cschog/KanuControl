@@ -1,0 +1,36 @@
+package com.kcserver.entity;
+
+import com.kcserver.enumtype.TeilnehmerRolle;
+import com.kcserver.persistence.converter.TeilnehmerRolleConverter;
+import jakarta.persistence.*;
+import com.kcserver.audit.Auditable;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.math.BigDecimal;
+
+@Table(name = "beitragsregel")
+@Getter
+@Setter
+@Entity
+public class Beitragsregel extends Auditable {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne
+    private Beitragsstruktur beitragsstruktur;
+
+    @Column(name = "alter_von")
+    private Integer alterVon;
+
+    @Column(name = "alter_bis")
+    private Integer alterBis;
+
+    @Convert(converter = TeilnehmerRolleConverter.class)
+    @Column(length = 1)
+    private TeilnehmerRolle rolle;
+
+    private BigDecimal beitrag;
+}

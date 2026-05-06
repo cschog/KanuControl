@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="2026-05-04-06-seed-template" author="chris">
+
+        <insert tableName="beitragsstruktur">
+            <column name="id" valueNumeric="1"/>
+            <column name="name" value="Standard Jugendmaßnahme"/>
+            <column name="aktiv" valueBoolean="true"/>
+            <column name="is_template" valueBoolean="true"/>
+            <column name="system" valueBoolean="true"/>
+        </insert>
+
+    </changeSet>
+
+</databaseChangeLog>

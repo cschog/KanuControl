@@ -5,20 +5,34 @@ import { VeranstaltungBaseForm } from "@/components/veranstaltung/form/Veranstal
 import { useVeranstaltungForm } from "@/components/veranstaltung/hook/useVeranstaltungForm";
 import { VeranstaltungSave } from "@/api/types/VeranstaltungSave";
 
-interface Props {
-  open: boolean;
-  onClose: () => void;
-  onCreate: (data: VeranstaltungSave) => Promise<void>;
+interface BeitragsstrukturDTO {
+  id: number;
+  name: string;
 }
 
-export const VeranstaltungCreateDialog: React.FC<Props> = ({ open, onClose, onCreate }) => {
+interface Props {
+  open: boolean;
+
+  onClose: () => void;
+
+  onCreate: (data: VeranstaltungSave) => Promise<void>;
+
+  beitragsstrukturen: BeitragsstrukturDTO[];
+}
+
+export const VeranstaltungCreateDialog: React.FC<Props> = ({
+  open,
+  onClose,
+  onCreate,
+  beitragsstrukturen,
+}) => {
   const { form, update, reset, buildSavePayload, isValid } = useVeranstaltungForm(null);
 
   // Dialog öffnen → Form reset
-useEffect(() => {
-  if (open) reset();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [open]);
+  useEffect(() => {
+    if (open) reset();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   if (!form) return null;
 
@@ -36,7 +50,12 @@ useEffect(() => {
           }}
           gap={2}
         >
-          <VeranstaltungBaseForm form={form} editMode={true} onChange={update} />
+          <VeranstaltungBaseForm
+            form={form}
+            editMode={true}
+            beitragsstrukturen={beitragsstrukturen}
+            onChange={update}
+          />
         </Box>
       </DialogContent>
 

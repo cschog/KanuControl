@@ -7,7 +7,16 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(schema = "audit", name = "audit_session")
+@Table(
+        schema = "audit",
+        name = "audit_session",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "unique_session",
+                        columnNames = "session_id"
+                )
+        }
+)
 @Getter
 @Setter
 public class AuditSession {

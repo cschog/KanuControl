@@ -24,6 +24,8 @@ public class VeranstaltungUpdateDTO {
     private Boolean individuelleGebuehren;
     private BigDecimal standardGebuehr;
 
+    private Long beitragsstrukturId;
+
     private VeranstaltungScope scope;
 
     // ⭐ NEU

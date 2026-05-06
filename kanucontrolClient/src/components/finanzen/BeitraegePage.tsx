@@ -1,222 +1,275 @@
-import { Box, Card, CardContent, Chip, Divider, Grid, Stack, Typography } from "@mui/material";
+import {
+  Alert,
+  Box,
+  Card,
+  CardContent,
+  Checkbox,
+  Chip,
+  CircularProgress,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  TextField,
+  Typography,
+} from "@mui/material";
 
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { useEffect, useState } from "react";
+import apiClient from "@/api/client/apiClient";
 
-import Money from "@/components/common/Money";
+type TeilnehmerRolle = "L" | "M" | null;
 
-type Props = {
-  veranstaltungId: number;
-};
-
-type BeitragRow = {
+interface PersonRefDTO {
   id: number;
+  vorname: string;
   name: string;
-  rolle: string;
+  hauptvereinAbk?: string;
+}
 
-  soll: number;
-  bezahlt: number;
-  status: "OFFEN" | "TEILWEISE" | "BEZAHLT";
+interface TeilnehmerListDTO {
+  id: number;
+  personId: number;
+  person: PersonRefDTO;
+  rolle: TeilnehmerRolle;
+  individuellerBeitrag?: number;
+  bezahlt: boolean;
   bezahltAm?: string;
-};
+  alterBeiBeginn?: number;
+  effektiverBeitrag: number;
+}
 
-const rows: BeitragRow[] = [
-  {
-    id: 1,
-    name: "Hannah Rzehak",
-    rolle: "Leitung",
-  
-    soll: 0,
-    bezahlt: 0,
-    status: "BEZAHLT",
-  },
-  {
-    id: 2,
-    name: "Pascal Rzehak",
-    rolle: "Teilnehmer",
-    
-    soll: 400,
-    bezahlt: 400,
-    status: "BEZAHLT",
-    bezahltAm: "12.03.2026",
-  },
-  {
-    id: 3,
-    name: "Ida Rzehak",
-    rolle: "Teilnehmer",
-   
-    soll: 100,
-    bezahlt: 100,
-    status: "BEZAHLT",
-    bezahltAm: "12.03.2026",
-  },
-  {
-    id: 4,
-    name: "Emma Sieren",
-    rolle: "Teilnehmer",
-    soll: 200,
-    bezahlt: 0,
-    status: "OFFEN",
-  },
-  {
-    id: 5,
-    name: "Andreas Molitor",
-    rolle: "Teilnehmer",
+interface TeilnehmerBeitraegeResponseDTO {
+  individuelleGebuehren: boolean;
 
-    soll: 400,
-    bezahlt: 200,
-    status: "TEILWEISE",
-  },
-];
+  teilnehmer: TeilnehmerListDTO[];
+}
+
+interface Props {
+  veranstaltungId: number;
+}
 
 const BeitraegePage = ({ veranstaltungId }: Props) => {
-    void veranstaltungId;
-  /* =========================================================
-     KPI
-     ========================================================= */
+  const [loading, setLoading] = useState(true);
 
-  const gesamtSoll = rows.reduce((a, b) => a + b.soll, 0);
+  const [error, setError] = useState<string | null>(null);
 
-  const gesamtBezahlt = rows.reduce((a, b) => a + b.bezahlt, 0);
+  const [data, setData] = useState<TeilnehmerListDTO[]>([]);
 
-  const offen = gesamtSoll - gesamtBezahlt;
-
-  const offeneTeilnehmer = rows.filter((r) => r.status !== "BEZAHLT").length;
+  const [individuelleGebuehren, setIndividuelleGebuehren] = useState(false);
 
   /* =========================================================
-     GRID
+     LOAD
      ========================================================= */
 
-  const columns: GridColDef[] = [
-    {
-      field: "name",
-      headerName: "Teilnehmer",
-      flex: 1.4,
-    },
-    {
-      field: "rolle",
-      headerName: "Rolle",
-      width: 120,
-    },
-    
-    {
-      field: "soll",
-      headerName: "Soll",
-      width: 140,
-      align: "right",
-      headerAlign: "right",
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
 
-      renderCell: (params) => <Money value={params.value} />,
+        const response = await apiClient.get<TeilnehmerBeitraegeResponseDTO>(
+          `/veranstaltungen/${veranstaltungId}/beitraege`,
+        );
+
+        setData(response.data.teilnehmer);
+
+        setIndividuelleGebuehren(response.data.individuelleGebuehren);
+      } catch (err) {
+        console.error(err);
+
+        setError("Beiträge konnten nicht geladen werden.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
+  }, [veranstaltungId]);
+
+  /* =========================================================
+     SUMMEN
+     ========================================================= */
+
+  const getBeitrag = (t: TeilnehmerListDTO) => t.individuellerBeitrag ?? t.effektiverBeitrag ?? 0;
+
+  const summe = data.reduce((sum, t) => sum + getBeitrag(t), 0);
+
+  const bezahltSumme = data.filter((t) => t.bezahlt).reduce((sum, t) => sum + getBeitrag(t), 0);
+
+  const offenSumme = summe - bezahltSumme;
+
+  const chipStyle = {
+    fontSize: "1.1rem",
+    fontWeight: "bold",
+    height: 52,
+    borderRadius: 3,
+
+    "& .MuiChip-label": {
+      px: 2,
     },
-    {
-      field: "bezahlt",
-      headerName: "Bezahlt",
-      width: 140,
-      align: "right",
-      headerAlign: "right",
+  };
 
-      renderCell: (params) => <Money value={params.value} />,
-    },
-    {
-      field: "status",
-      headerName: "Status",
-      width: 150,
+  /* =========================================================
+     RENDER
+     ========================================================= */
 
-      renderCell: (params) => {
-        if (params.value === "BEZAHLT") {
-          return <Chip label="Bezahlt" color="success" size="small" />;
-        }
+  if (loading) {
+    return (
+      <Box sx={{ p: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
-        if (params.value === "TEILWEISE") {
-          return <Chip label="Teilweise" color="warning" size="small" />;
-        }
+  if (error) {
+    return <Alert severity="error">{error}</Alert>;
+  }
 
-        return <Chip label="Offen" color="error" size="small" />;
-      },
-    },
-    {
-      field: "bezahltAm",
-      headerName: "Bezahlt am",
-      width: 140,
-    },
-  ];
+  const handleBezahltChange = async (id: number, checked: boolean) => {
+    try {
+      await apiClient.patch(`/veranstaltungen/${veranstaltungId}/beitraege/${id}`, {
+        bezahlt: checked,
+      });
 
-  /* ========================================================= */
+      setData((prev) =>
+        prev.map((t) =>
+          t.id === id
+            ? {
+                ...t,
+                bezahlt: checked,
+                bezahltAm: checked ? new Date().toISOString().split("T")[0] : undefined,
+              }
+            : t,
+        ),
+      );
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleBeitragSave = async (id: number, beitrag?: number) => {
+    try {
+      await apiClient.patch(`/veranstaltungen/${veranstaltungId}/beitraege/${id}/betrag`, {
+        individuellerBeitrag: beitrag,
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
-    <Box sx={{ mt: 2 }}>
+    <Stack spacing={2}>
       {/* =====================================================
-          KPI
+          HEADER
           ===================================================== */}
+      <Stack direction="row" spacing={2} flexWrap="wrap">
+        <Chip label={`Teilnehmer: ${data.length}`} color="primary" sx={chipStyle} />
 
-      <Grid container spacing={3}>
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Card sx={{ borderLeft: 6, borderColor: "primary.main" }}>
-            <CardContent>
-              <Typography variant="subtitle2">Beiträge Soll</Typography>
+        <Chip label={`Soll: ${summe.toFixed(2)} €`} color="info" sx={chipStyle} />
 
-              <Money value={gesamtSoll} variant="h5" colorize />
-            </CardContent>
-          </Card>
-        </Grid>
+        <Chip label={`Bezahlt: ${bezahltSumme.toFixed(2)} €`} color="success" sx={chipStyle} />
 
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Card sx={{ borderLeft: 6, borderColor: "success.main" }}>
-            <CardContent>
-              <Typography variant="subtitle2">Bereits bezahlt</Typography>
-
-              <Money value={gesamtBezahlt} variant="h5" colorize />
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Card sx={{ borderLeft: 6, borderColor: "error.main" }}>
-            <CardContent>
-              <Typography variant="subtitle2">Offen</Typography>
-
-              <Money value={offen} variant="h5" colorize />
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Card sx={{ borderLeft: 6, borderColor: "warning.main" }}>
-            <CardContent>
-              <Typography variant="subtitle2">Offene Teilnehmer</Typography>
-
-              <Typography variant="h4">{offeneTeilnehmer}</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+        <Chip label={`Offen: ${offenSumme.toFixed(2)} €`} color="warning" sx={chipStyle} />
+      </Stack>
 
       {/* =====================================================
           TABELLE
           ===================================================== */}
 
-      <Card sx={{ mt: 3 }}>
+      <Card>
         <CardContent>
-          <Stack direction="row" justifyContent="space-between" alignItems="center">
-            <Typography variant="h6">Teilnehmerbeiträge</Typography>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Teilnehmerbeiträge
+          </Typography>
 
-            <Typography variant="body2" color="text.secondary">
-              {rows.length} Teilnehmer
-            </Typography>
-          </Stack>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ fontWeight: "bold" }}>Teilnehmer</TableCell>
 
-          <Divider sx={{ my: 2 }} />
+                <TableCell align="center" sx={{ fontWeight: "bold" }}>
+                  Alter
+                </TableCell>
 
-          <Box sx={{ height: 650 }}>
-            <DataGrid
-              rows={rows}
-              columns={columns}
-              disableRowSelectionOnClick
-              pageSizeOptions={[25, 50, 100]}
-            />
-          </Box>
+                <TableCell sx={{ fontWeight: "bold" }}>Verein</TableCell>
+
+                <TableCell sx={{ fontWeight: "bold" }}>Rolle</TableCell>
+
+                <TableCell align="right" sx={{ fontWeight: "bold" }}>
+                  Beitrag
+                </TableCell>
+
+                <TableCell align="center" sx={{ fontWeight: "bold" }}>
+                  bezahlt
+                </TableCell>
+
+                <TableCell sx={{ fontWeight: "bold" }}>bezahlt am</TableCell>
+              </TableRow>
+            </TableHead>
+
+            <TableBody>
+              {data.map((t) => (
+                <TableRow key={t.id} hover>
+                  <TableCell>
+                    {t.person.name}, {t.person.vorname}
+                  </TableCell>
+
+                  <TableCell align="center">{t.alterBeiBeginn ?? "-"}</TableCell>
+
+                  <TableCell>{t.person.hauptvereinAbk ?? "-"}</TableCell>
+
+                  <TableCell>
+                    {t.rolle === "L" && <Chip size="small" label="Leiter" color="secondary" />}
+
+                    {t.rolle === "M" && <Chip size="small" label="Mitarbeiter" color="default" />}
+                  </TableCell>
+
+                  <TableCell align="right">
+                    {individuelleGebuehren ? (
+                      <TextField
+                        type="number"
+                        size="small"
+                        value={t.individuellerBeitrag ?? t.effektiverBeitrag ?? ""}
+                        onChange={(e) => {
+                          const value = e.target.value;
+
+                          setData((prev) =>
+                            prev.map((x) =>
+                              x.id === t.id
+                                ? {
+                                    ...x,
+                                    individuellerBeitrag: value === "" ? undefined : Number(value),
+                                  }
+                                : x,
+                            ),
+                          );
+                        }}
+                        onBlur={() => handleBeitragSave(t.id, t.individuellerBeitrag)}
+                        sx={{
+                          width: 90,
+                        }}
+                      />
+                    ) : (
+                      <>{t.effektiverBeitrag.toFixed(2)} €</>
+                    )}
+                  </TableCell>
+
+                  <TableCell align="center">
+                    <Checkbox
+                      checked={t.bezahlt}
+                      onChange={(e) => handleBezahltChange(t.id, e.target.checked)}
+                    />
+                  </TableCell>
+
+                  <TableCell>{t.bezahltAm ?? "-"}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
-    </Box>
+    </Stack>
   );
 };
 

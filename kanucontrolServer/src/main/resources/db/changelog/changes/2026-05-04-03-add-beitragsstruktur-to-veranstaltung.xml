@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="2026-05-04-03-add-beitragsstruktur-to-veranstaltung" author="chris">
+
+        <addColumn tableName="veranstaltung">
+
+            <column name="beitragsstruktur_id" type="BIGINT"/>
+
+        </addColumn>
+
+        <addForeignKeyConstraint
+                baseTableName="veranstaltung"
+                baseColumnNames="beitragsstruktur_id"
+                referencedTableName="beitragsstruktur"
+                referencedColumnNames="id"
+                constraintName="fk_veranstaltung_beitragsstruktur"/>
+
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,35 +1,58 @@
 import React from "react";
 import { MenuItem, TextField, FormControlLabel, Switch } from "@mui/material";
+
 import { VeranstaltungFormModel } from "@/api/types/VeranstaltungFormModel";
 import { VeranstaltungTyp } from "@/api/enums/VeranstaltungTyp";
 import { VeranstaltungScope } from "@/api/enums/VeranstaltungScope";
+
 import { VereinAutocomplete } from "@/components/verein/VereinAutocomplete";
 import { PersonAutocomplete } from "@/components/person/PersonAutocomplete";
+
 import { FormFeld } from "@/components/common/FormFeld";
 import { FormFeldDatePicker } from "@/components/common/FormFeldDatePicker";
 import { FormFeldTimePicker } from "@/components/common/FormFeldTimePicker";
+
 import { COUNTRIES } from "@/api/enums/CountryCode";
 
+/* =========================================================
+   TYPES
+   ========================================================= */
+
+interface BeitragsstrukturDTO {
+  id: number;
+  name: string;
+}
 
 interface Props {
   form: VeranstaltungFormModel;
+
   editMode: boolean;
-  detailMode?: boolean; // ⭐ NEU
+
+  detailMode?: boolean;
+
+  beitragsstrukturen: BeitragsstrukturDTO[];
+
   onChange: <K extends keyof VeranstaltungFormModel>(
     key: K,
     value: VeranstaltungFormModel[K],
   ) => void;
 }
 
+/* =========================================================
+   COMPONENT
+   ========================================================= */
+
 export const VeranstaltungBaseForm: React.FC<Props> = ({
   form,
   editMode,
-  detailMode = false, // ⭐ Default
+  detailMode = false,
+  beitragsstrukturen,
   onChange,
 }) => {
   return (
     <>
-      {/* ================= Name ================= */}
+      {/* ================= NAME ================= */}
+
       <FormFeld
         label="Bezeichnung"
         value={form.name}
@@ -37,7 +60,8 @@ export const VeranstaltungBaseForm: React.FC<Props> = ({
         onChange={(v) => onChange("name", v)}
       />
 
-      {/* ================= Typ ================= */}
+      {/* ================= TYP ================= */}
+
       <TextField
         select
         fullWidth
@@ -53,7 +77,8 @@ export const VeranstaltungBaseForm: React.FC<Props> = ({
         <MenuItem value={VeranstaltungTyp.GV}>GV</MenuItem>
       </TextField>
 
-      {/* ================= Leiter ================= */}
+      {/* ================= LEITUNG ================= */}
+
       <PersonAutocomplete
         label="Leitung"
         value={form.leiter}
@@ -61,12 +86,15 @@ export const VeranstaltungBaseForm: React.FC<Props> = ({
         onChange={(v) => onChange("leiter", v)}
       />
 
-      {/* ================= Verein ================= */}
+      {/* ================= VEREIN ================= */}
+
       <VereinAutocomplete
         value={form.verein}
         disabled={!editMode}
         onChange={(v) => onChange("verein", v)}
       />
+
+      {/* ================= SCOPE ================= */}
 
       <TextField
         select
@@ -78,15 +106,26 @@ export const VeranstaltungBaseForm: React.FC<Props> = ({
         onChange={(e) => onChange("scope", e.target.value as VeranstaltungScope)}
       >
         <MenuItem value={VeranstaltungScope.VERBAND}>Verband</MenuItem>
+
         <MenuItem value={VeranstaltungScope.VEREIN}>Verein</MenuItem>
       </TextField>
 
-      {/* Beginn */}
+      {/* ================= BEGINN ================= */}
+
       <FormFeldDatePicker
         label="Beginn Datum"
         value={form.beginnDatum}
         disabled={!editMode}
-        onChange={(v) => onChange("beginnDatum", v ?? "")}
+        onChange={(v) => {
+          const date = v ?? "";
+
+          onChange("beginnDatum", date);
+
+          // Wenn Ende identisch oder leer → mitziehen
+          if (!form.endeDatum || form.endeDatum === form.beginnDatum) {
+            onChange("endeDatum", date);
+          }
+        }}
       />
 
       <FormFeldTimePicker
@@ -96,7 +135,8 @@ export const VeranstaltungBaseForm: React.FC<Props> = ({
         onChange={(v) => onChange("beginnZeit", v ?? "")}
       />
 
-      {/* Ende */}
+      {/* ================= ENDE ================= */}
+
       <FormFeldDatePicker
         label="Ende Datum"
         value={form.endeDatum}
@@ -109,10 +149,22 @@ export const VeranstaltungBaseForm: React.FC<Props> = ({
         value={form.endeZeit}
         disabled={!editMode}
         onChange={(v) => onChange("endeZeit", v ?? "")}
+        error={form.beginnDatum === form.endeDatum && form.endeZeit < form.beginnZeit}
+        helperText={
+          form.beginnDatum === form.endeDatum && form.endeZeit < form.beginnZeit
+            ? "Ende darf nicht vor Beginn liegen"
+            : undefined
+        }
       />
+
+      {/* =====================================================
+         DETAIL MODE
+         ===================================================== */}
+
       {detailMode && (
         <>
-          {/* ================= Unterkunft ================= */}
+          {/* ================= UNTERKUNFT ================= */}
+
           <FormFeld
             label="Art der Unterkunft"
             value={form.artDerUnterkunft ?? ""}
@@ -120,13 +172,17 @@ export const VeranstaltungBaseForm: React.FC<Props> = ({
             onChange={(v) => onChange("artDerUnterkunft", v || undefined)}
           />
 
-          {/* ================= Verpflegung ================= */}
+          {/* ================= VERPFLEGUNG ================= */}
+
           <FormFeld
             label="Art der Verpflegung"
             value={form.artDerVerpflegung ?? ""}
             disabled={!editMode}
             onChange={(v) => onChange("artDerVerpflegung", v || undefined)}
           />
+
+          {/* ================= LAND ================= */}
+
           <TextField
             select
             fullWidth
@@ -136,6 +192,7 @@ export const VeranstaltungBaseForm: React.FC<Props> = ({
             disabled={!editMode}
             onChange={(e) => {
               const value = (e.target.value || undefined) as VeranstaltungFormModel["laenderCode"];
+
               onChange("laenderCode", value);
             }}
           >
@@ -146,13 +203,16 @@ export const VeranstaltungBaseForm: React.FC<Props> = ({
             ))}
           </TextField>
 
-          {/* ================= Ort ================= */}
+          {/* ================= PLZ ================= */}
+
           <FormFeld
             label="PLZ"
             value={form.plz ?? ""}
             disabled={!editMode}
             onChange={(v) => onChange("plz", v || undefined)}
           />
+
+          {/* ================= ORT ================= */}
 
           <FormFeld
             label="Ort"
@@ -161,7 +221,8 @@ export const VeranstaltungBaseForm: React.FC<Props> = ({
             onChange={(v) => onChange("ort", v || undefined)}
           />
 
-          {/* ================= Individuelle Gebühren ================= */}
+          {/* ================= INDIVIDUELLE GEBÜHREN ================= */}
+
           <FormControlLabel
             control={
               <Switch
@@ -172,6 +233,7 @@ export const VeranstaltungBaseForm: React.FC<Props> = ({
 
                   onChange("individuelleGebuehren", checked);
 
+                  // Standardgebühr entfernen
                   if (checked) {
                     onChange("standardGebuehr", undefined);
                   }
@@ -180,6 +242,31 @@ export const VeranstaltungBaseForm: React.FC<Props> = ({
             }
             label="Individuelle Gebühren"
           />
+
+          {/* ================= BEITRAGSSTRUKTUR ================= */}
+
+          <TextField
+            select
+            fullWidth
+            size="small"
+            label="Beitragsstruktur"
+            value={form.beitragsstrukturId ?? ""}
+            disabled={!editMode}
+            onChange={(e) =>
+              onChange("beitragsstrukturId", e.target.value ? Number(e.target.value) : undefined)
+            }
+          >
+            <MenuItem value="">Keine</MenuItem>
+
+            {beitragsstrukturen.map((s) => (
+              <MenuItem key={s.id} value={s.id}>
+                {s.name}
+              </MenuItem>
+            ))}
+          </TextField>
+
+          {/* ================= STANDARDGEBÜHR ================= */}
+
           <FormFeld
             label="Teilnehmergebühr"
             value={form.standardGebuehr ?? ""}
@@ -188,12 +275,13 @@ export const VeranstaltungBaseForm: React.FC<Props> = ({
             type="number"
             helperText={
               form.individuelleGebuehren
-                ? "Gebühr wird individuell pro Teilnehmer erfasst"
+                ? "Gebühr wird individuell pro Teilnehmer berechnet"
                 : undefined
             }
           />
 
-          {/* ================= Planung ================= */}
+          {/* ================= PLANUNG ================= */}
+
           <FormFeld
             label="Plan: geförderte TN männlich"
             value={form.geplanteTeilnehmerMaennlich ?? ""}
@@ -243,9 +331,7 @@ export const VeranstaltungBaseForm: React.FC<Props> = ({
             value={form.geplanteMitarbeiterDivers ?? ""}
             disabled={!editMode}
             onChange={(v) =>
-              onChange(
-                "geplanteMitarbeiterDivers", 
-                v === "" ? undefined : Number(v))
+              onChange("geplanteMitarbeiterDivers", v === "" ? undefined : Number(v))
             }
             type="number"
           />

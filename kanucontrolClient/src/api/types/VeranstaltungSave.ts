@@ -16,6 +16,8 @@ export interface VeranstaltungSave {
   individuelleGebuehren?: boolean;
   standardGebuehr?: number;
 
+  beitragsstrukturId?: number;
+
   scope: VeranstaltungScope;
 
   laenderCode?: CountryCode;

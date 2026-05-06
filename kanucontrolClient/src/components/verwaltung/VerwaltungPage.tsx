@@ -1,21 +1,37 @@
 import { Box, Tab, Tabs } from "@mui/material";
-import { useState } from "react";
+import { useState, Suspense, lazy } from "react";
 
-import FoerdersatzTable from "@/components/verwaltung/foerdersatz/FoerdersatzTable";
-import KikZuschlagTable from "@/components/verwaltung/kik/KikZuschlagTable";
+// ✅ Lazy imports außerhalb der Komponente
+const FoerdersatzTable = lazy(() => import("@/components/verwaltung/foerdersatz/FoerdersatzTable"));
+
+const KikZuschlagTable = lazy(() => import("@/components/verwaltung/kik/KikZuschlagTable"));
+
+const BeitragsStrukturen = lazy(
+  () => import("@/components/verwaltung/beitraege/BeitragsstrukturTable"),
+);
 
 const VerwaltungPage = () => {
-  const [tab, setTab] = useState(0);
+  const [tab, setTab] = useState(() => Number(localStorage.getItem("verwaltungTab")) || 0);
+
+const handleChange = (_event: React.SyntheticEvent, value: number) => {
+  setTab(value);
+  localStorage.setItem("verwaltungTab", String(value));
+};
 
   return (
     <Box>
-      <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2 }}>
+      {/* ✅ nur EIN Tabs */}
+      <Tabs value={tab} onChange={handleChange} sx={{ mb: 2 }}>
         <Tab label="Fördersätze" />
         <Tab label="KiK-Zuschläge" />
+        <Tab label="Beitragsstrukturen" />
       </Tabs>
 
-      {tab === 0 && <FoerdersatzTable />}
-      {tab === 1 && <KikZuschlagTable />}
+      <Suspense fallback={<div>Loading...</div>}>
+        {tab === 0 && <FoerdersatzTable />}
+        {tab === 1 && <KikZuschlagTable />}
+        {tab === 2 && <BeitragsStrukturen />}
+      </Suspense>
     </Box>
   );
 };

@@ -39,6 +39,9 @@ public class VeranstaltungDetailDTO {
     private Boolean individuelleGebuehren;
     private BigDecimal standardGebuehr;
 
+    private Long beitragsstrukturId;
+    private String beitragsstrukturName;
+
     private VeranstaltungScope scope;
 
     /* =========================
