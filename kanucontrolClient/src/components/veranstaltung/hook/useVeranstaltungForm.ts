@@ -12,39 +12,40 @@ import { VeranstaltungScope } from "@/api/enums/VeranstaltungScope";
 function emptyVeranstaltung(): VeranstaltungFormModel {
   const today = new Date().toISOString().slice(0, 10);
 
-  return {
-    name: "",
-    typ: VeranstaltungTyp.JEM,
+return {
+  name: "",
+  typ: VeranstaltungTyp.JEM,
 
-    beginnDatum: today,
-    beginnZeit: "10:00",
+  beginnDatum: today,
+  beginnZeit: "10:00",
 
-    endeDatum: today,
-    endeZeit: "18:00",
+  endeDatum: today,
+  endeZeit: "18:00",
 
-    verein: undefined,
-    leiter: undefined,
+  verein: undefined,
+  leiter: undefined,
 
-    /* ===== Detailfelder ===== */
+  /* ===== Detailfelder ===== */
 
-    laenderCode: undefined,
-    plz: "",
-    ort: "",
-    artDerUnterkunft: "",
-    artDerVerpflegung: "",
+  laenderCode: undefined,
+  plz: "",
+  ort: "",
+  artDerUnterkunft: "",
+  artDerVerpflegung: "",
 
-    individuelleGebuehren: false,
-    standardGebuehr: undefined,
-    scope: VeranstaltungScope.VEREIN,
+  individuelleGebuehren: false,
+  beitragsstrukturId: undefined,
+  standardGebuehr: undefined,
+  scope: VeranstaltungScope.VEREIN,
 
-    geplanteTeilnehmerMaennlich: undefined,
-    geplanteTeilnehmerWeiblich: undefined,
-    geplanteTeilnehmerDivers: undefined,
+  geplanteTeilnehmerMaennlich: undefined,
+  geplanteTeilnehmerWeiblich: undefined,
+  geplanteTeilnehmerDivers: undefined,
 
-    geplanteMitarbeiterMaennlich: undefined,
-    geplanteMitarbeiterWeiblich: undefined,
-    geplanteMitarbeiterDivers: undefined,
-  };
+  geplanteMitarbeiterMaennlich: undefined,
+  geplanteMitarbeiterWeiblich: undefined,
+  geplanteMitarbeiterDivers: undefined,
+};
 }
 
 /* =========================================================
@@ -64,30 +65,31 @@ export function useVeranstaltungForm(initial: VeranstaltungFormModel | null) {
       return;
     }
 
-   setForm({
-     ...initial,
+    setForm({
+      ...initial,
 
-     /* ===== Null → Default ===== */
+      /* ===== Null → Default ===== */
 
-     laenderCode: initial.laenderCode ?? undefined,
+      laenderCode: initial.laenderCode ?? undefined,
 
-     plz: initial.plz ?? "",
-     ort: initial.ort ?? "",
-     artDerUnterkunft: initial.artDerUnterkunft ?? "",
-     artDerVerpflegung: initial.artDerVerpflegung ?? "",
+      plz: initial.plz ?? "",
+      ort: initial.ort ?? "",
+      artDerUnterkunft: initial.artDerUnterkunft ?? "",
+      artDerVerpflegung: initial.artDerVerpflegung ?? "",
 
-     individuelleGebuehren: initial.individuelleGebuehren ?? false,
-     standardGebuehr: initial.standardGebuehr ?? undefined,
-     scope: initial.scope ?? undefined,
+      individuelleGebuehren: initial.individuelleGebuehren ?? false,
+      beitragsstrukturId: initial.beitragsstrukturId ?? undefined,
+      standardGebuehr: initial.standardGebuehr ?? undefined,
+      scope: initial.scope ?? undefined,
 
-     geplanteTeilnehmerMaennlich: initial.geplanteTeilnehmerMaennlich ?? undefined,
-     geplanteTeilnehmerWeiblich: initial.geplanteTeilnehmerWeiblich ?? undefined,
-     geplanteTeilnehmerDivers: initial.geplanteTeilnehmerDivers ?? undefined,
+      geplanteTeilnehmerMaennlich: initial.geplanteTeilnehmerMaennlich ?? undefined,
+      geplanteTeilnehmerWeiblich: initial.geplanteTeilnehmerWeiblich ?? undefined,
+      geplanteTeilnehmerDivers: initial.geplanteTeilnehmerDivers ?? undefined,
 
-     geplanteMitarbeiterMaennlich: initial.geplanteMitarbeiterMaennlich ?? undefined,
-     geplanteMitarbeiterWeiblich: initial.geplanteMitarbeiterWeiblich ?? undefined,
-     geplanteMitarbeiterDivers: initial.geplanteMitarbeiterDivers ?? undefined,
-   });
+      geplanteMitarbeiterMaennlich: initial.geplanteMitarbeiterMaennlich ?? undefined,
+      geplanteMitarbeiterWeiblich: initial.geplanteMitarbeiterWeiblich ?? undefined,
+      geplanteMitarbeiterDivers: initial.geplanteMitarbeiterDivers ?? undefined,
+    });
   }, [initial]);
 
   /* =========================
@@ -149,6 +151,9 @@ export function useVeranstaltungForm(initial: VeranstaltungFormModel | null) {
       artDerVerpflegung: form.artDerVerpflegung || undefined,
 
       individuelleGebuehren: form.individuelleGebuehren ?? false,
+
+      beitragsstrukturId: form.beitragsstrukturId ?? undefined,
+
       standardGebuehr: form.individuelleGebuehren ? undefined : form.standardGebuehr ?? undefined,
       scope: form.scope,
 
@@ -166,6 +171,24 @@ export function useVeranstaltungForm(initial: VeranstaltungFormModel | null) {
      VALIDATION (MINIMAL)
      ========================= */
 
+  /* =========================
+     VALIDATION
+     ========================= */
+
+  const isEndTimeValid = (() => {
+    if (!form || !form.beginnDatum || !form.endeDatum || !form.beginnZeit || !form.endeZeit) {
+      return true;
+    }
+
+    // Unterschiedliche Tage -> erlaubt
+    if (form.beginnDatum !== form.endeDatum) {
+      return true;
+    }
+
+    // Gleicher Tag -> Ende >= Beginn
+    return form.endeZeit >= form.beginnZeit;
+  })();
+
   const isValid =
     !!form &&
     form.name.trim().length >= 2 &&
@@ -173,7 +196,12 @@ export function useVeranstaltungForm(initial: VeranstaltungFormModel | null) {
     !!form.beginnDatum &&
     !!form.endeDatum &&
     !!form.verein &&
-    !!form.leiter;
+    !!form.leiter &&
+    isEndTimeValid;
+
+  /* =========================
+     EXPORT
+     ========================= */
 
   return {
     form,
@@ -181,5 +209,6 @@ export function useVeranstaltungForm(initial: VeranstaltungFormModel | null) {
     reset,
     buildSavePayload,
     isValid,
+    isEndTimeValid,
   };
 }

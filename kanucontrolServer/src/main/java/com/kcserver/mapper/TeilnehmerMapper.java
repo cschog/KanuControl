@@ -8,6 +8,7 @@ import com.kcserver.dto.teilnehmer.TeilnehmerRefDTO;
 import com.kcserver.entity.Mitglied;
 import com.kcserver.entity.Person;
 import com.kcserver.entity.Teilnehmer;
+import com.kcserver.service.AltersService;
 import com.kcserver.service.TeilnehmerBeitragService;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -24,6 +25,9 @@ public abstract class TeilnehmerMapper {
 
     @Autowired
     protected TeilnehmerBeitragService teilnehmerBeitragService;
+
+    @Autowired
+    protected AltersService altersService;
 
      /* =========================
        ENTITY → LIST DTO
@@ -43,6 +47,33 @@ public abstract class TeilnehmerMapper {
         )
     """
     )
+    @Mapping(
+            target = "beitragsQuelle",
+            expression = """
+    java(
+        teilnehmer.getIndividuellerBeitrag() != null
+            ? com.kcserver.enumtype.BeitragsQuelle.INDIVIDUELL
+            : (
+                teilnehmer.getVeranstaltung().getBeitragsstruktur() != null
+                    ? com.kcserver.enumtype.BeitragsQuelle.STRUKTUR
+                    : com.kcserver.enumtype.BeitragsQuelle.STANDARD
+            )
+    )
+"""
+    )
+
+    @Mapping(
+            target = "alterBeiBeginn",
+            expression = """
+        java(
+            altersService.berechneAlterBeiBeginn(
+                teilnehmer.getPerson().getGeburtsdatum(),
+                teilnehmer.getVeranstaltung().getBeginnDatum()
+            )
+        )
+    """
+    )
+
     public abstract TeilnehmerListDTO toListDTO(
             Teilnehmer teilnehmer
     );

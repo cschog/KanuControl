@@ -39,6 +39,8 @@ public class TenantSchemaProvisioner {
             "abrechnung",
             "abrechnung_beleg",
             "abrechnung_buchung",
+            "beitragsregel",
+            "beitragsstruktur",
             "erhebungsbogen",
             "finanz_gruppe",
             "foerdersatz",

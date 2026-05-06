@@ -29,6 +29,9 @@ export interface VeranstaltungDetail {
   individuelleGebuehren: boolean;
   standardGebuehr: number;
 
+  beitragsstrukturId?: number;
+  beitragsstrukturName?: string;
+
   geplanteTeilnehmerMaennlich?: number;
   geplanteTeilnehmerWeiblich?: number;
   geplanteTeilnehmerDivers?: number;

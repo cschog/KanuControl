@@ -1,7 +1,9 @@
 package com.kcserver.service;
 
+import com.kcserver.dto.beitrag.BeitragsstrukturDTO;
 import com.kcserver.dto.person.PersonListDTO;
 import com.kcserver.dto.veranstaltung.*;
+import com.kcserver.entity.Veranstaltung;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -76,5 +78,12 @@ public interface VeranstaltungService {
 
     List<VeranstaltungListDTO> searchAll(
             VeranstaltungFilterDTO filter
+    );
+
+    Veranstaltung findEntityById(Long id);
+
+    BeitragsstrukturDTO assignBeitragsstrukturFromTemplate(
+            Long veranstaltungId,
+            Long templateId
     );
 }

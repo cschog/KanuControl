@@ -8,5 +8,5 @@ import java.util.Optional;
 public interface AuditSessionRepository
         extends JpaRepository<AuditSession, Long> {
 
-    Optional<AuditSession> findBySessionId(String sessionId);
+    Optional<AuditSession> findFirstBySessionId(String sessionId);
 }

@@ -44,6 +44,9 @@ public class VeranstaltungCreateDTO {
 
     private Boolean individuelleGebuehren;
     private BigDecimal standardGebuehr;
+
+    private Long beitragsstrukturId;
+
     private VeranstaltungScope scope;
 
     private String artDerUnterkunft;

@@ -1,4 +1,11 @@
 import React, { Component } from "react";
+
+import { Alert, Box, Grid, Paper } from "@mui/material";
+
+import apiClient from "@/api/client/apiClient";
+
+import axios from "axios";
+
 import { MenueHeader } from "@/components/layout/MenueHeader";
 import { renderLoadingOrError } from "@/components/common/loadingOnErrorUtils";
 import { BottomActionBar } from "@/components/common/BottomActionBar";
@@ -6,8 +13,6 @@ import { BottomActionBar } from "@/components/common/BottomActionBar";
 import { VeranstaltungTable } from "./VeranstaltungTable";
 import { VeranstaltungFormView } from "./VeranstaltungFormView";
 import { VeranstaltungCreateDialog } from "./VeranstaltungCreateDialog";
-
-import { Box, Grid, Paper } from "@mui/material";
 
 import {
   getVeranstaltungenPage,
@@ -28,27 +33,40 @@ import { useReloadAppContext } from "@/context/AppContextBridge";
    TYPES
    ========================================================= */
 
+interface BeitragsstrukturDTO {
+  id: number;
+  name: string;
+}
+
 interface Props {
   reloadContext: () => Promise<void>;
 }
 
 interface State {
   data: VeranstaltungList[];
+
   total: number;
 
   page: number;
+
   pageSize: number;
 
   selectedId: number | null;
+
   selectedVeranstaltung: VeranstaltungDetail | null;
 
+  beitragsstrukturen: BeitragsstrukturDTO[];
+
   loading: boolean;
+
   error: string | null;
 
   createOpen: boolean;
 
   editMode: boolean;
+
   btnEditDisabled: boolean;
+
   btnDeleteDisabled: boolean;
 }
 
@@ -59,26 +77,57 @@ interface State {
 class VeranstaltungenScreen extends Component<Props, State> {
   state: State = {
     data: [],
+
     total: 0,
+
     page: 0,
+
     pageSize: 8,
 
     selectedId: null,
+
     selectedVeranstaltung: null,
 
+    beitragsstrukturen: [],
+
     loading: true,
+
     error: null,
 
     createOpen: false,
 
     editMode: false,
+
     btnEditDisabled: true,
+
     btnDeleteDisabled: true,
   };
 
+  /* =========================================================
+     LIFECYCLE
+     ========================================================= */
+
   componentDidMount() {
     this.fetchData();
+
+    this.loadBeitragsstrukturen();
   }
+
+  /* =========================================================
+     LOAD BEITRAGSSTRUKTUREN
+     ========================================================= */
+
+  loadBeitragsstrukturen = async () => {
+    try {
+      const res = await apiClient.get<BeitragsstrukturDTO[]>("/beitragsstrukturen");
+
+      this.setState({
+        beitragsstrukturen: res.data,
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   /* =========================================================
      DATA LOAD
@@ -91,39 +140,64 @@ class VeranstaltungenScreen extends Component<Props, State> {
       const res = await getVeranstaltungenPage(page, pageSize);
 
       this.setState({
-        data: res, // ✅ direkt das Array
-        total: res.length, // ⚠️ nur lokale Länge!
+        data: res,
+
+        total: res.length,
+
         loading: false,
+
         error: null,
       });
     } catch {
       this.setState({
         loading: false,
+
         error: "Fehler beim Laden der Veranstaltungen",
       });
     }
   };
 
+  /* =========================================================
+     PAGING
+     ========================================================= */
+
   handlePageChange = (page: number) => {
-    this.setState({ page, loading: true }, this.fetchData);
+    this.setState(
+      {
+        page,
+        loading: true,
+      },
+      this.fetchData,
+    );
   };
 
   handlePageSizeChange = (pageSize: number) => {
-    this.setState({ pageSize, page: 0, loading: true }, this.fetchData);
+    this.setState(
+      {
+        pageSize,
+        page: 0,
+        loading: true,
+      },
+      this.fetchData,
+    );
   };
 
   /* =========================================================
-     SELECT → DETAIL LOAD
+     SELECT
      ========================================================= */
 
   handleSelect = async (row: VeranstaltungList | null) => {
     if (!row) {
       this.setState({
         selectedId: null,
+
         selectedVeranstaltung: null,
+
         btnEditDisabled: true,
+
         btnDeleteDisabled: true,
       });
+
       return;
     }
 
@@ -131,9 +205,13 @@ class VeranstaltungenScreen extends Component<Props, State> {
 
     this.setState({
       selectedId: row.id,
+
       selectedVeranstaltung: detail,
+
       editMode: false,
+
       btnEditDisabled: false,
+
       btnDeleteDisabled: false,
     });
   };
@@ -145,13 +223,17 @@ class VeranstaltungenScreen extends Component<Props, State> {
   handleEdit = () => {
     this.setState({
       editMode: true,
+
       btnEditDisabled: true,
+
       btnDeleteDisabled: true,
     });
   };
 
   handleCancelEdit = () => {
-    this.setState({ editMode: false });
+    this.setState({
+      editMode: false,
+    });
   };
 
   /* =========================================================
@@ -160,18 +242,52 @@ class VeranstaltungenScreen extends Component<Props, State> {
 
   handleSave = async (payload: VeranstaltungSave) => {
     const { selectedVeranstaltung } = this.state;
-    if (!selectedVeranstaltung?.id) return;
 
-    const saved = await updateVeranstaltung(selectedVeranstaltung.id, payload);
+    if (!selectedVeranstaltung?.id) {
+      return;
+    }
 
-    await this.fetchData();
+    try {
+      /* ========================================
+     FE VALIDIERUNG
+     ======================================== */
 
-    this.setState({
-      selectedVeranstaltung: saved,
-      editMode: false,
-      btnEditDisabled: false,
-      btnDeleteDisabled: false,
-    });
+      if (payload.individuelleGebuehren && !payload.beitragsstrukturId) {
+        this.setState({
+          error: "Bitte zuerst eine Beitragsstruktur auswählen.",
+        });
+
+        return;
+      }
+
+      const saved = await updateVeranstaltung(selectedVeranstaltung.id, payload);
+
+      await this.fetchData();
+
+      this.setState({
+        selectedVeranstaltung: saved,
+
+        editMode: false,
+
+        btnEditDisabled: false,
+
+        btnDeleteDisabled: false,
+
+        error: null,
+      });
+    } catch (err: unknown) {
+      console.error(err);
+
+      if (axios.isAxiosError(err)) {
+        this.setState({
+          error: err.response?.data?.message ?? "Veranstaltung konnte nicht gespeichert werden.",
+        });
+      } else {
+        this.setState({
+          error: "Veranstaltung konnte nicht gespeichert werden.",
+        });
+      }
+    }
   };
 
   /* =========================================================
@@ -180,19 +296,26 @@ class VeranstaltungenScreen extends Component<Props, State> {
 
   handleDelete = async () => {
     const { selectedVeranstaltung } = this.state;
-    if (!selectedVeranstaltung?.id) return;
+
+    if (!selectedVeranstaltung?.id) {
+      return;
+    }
 
     await deleteVeranstaltung(selectedVeranstaltung.id);
 
     this.setState({
       selectedId: null,
+
       selectedVeranstaltung: null,
+
       btnEditDisabled: true,
+
       btnDeleteDisabled: true,
     });
 
     await this.fetchData();
-    await this.props.reloadContext(); // ⭐ Context aktualisieren
+
+    await this.props.reloadContext();
   };
 
   /* =========================================================
@@ -200,32 +323,49 @@ class VeranstaltungenScreen extends Component<Props, State> {
      ========================================================= */
 
   handleActivate = async () => {
-    if (!this.state.selectedId) return;
+    if (!this.state.selectedId) {
+      return;
+    }
 
     await setActiveVeranstaltung(this.state.selectedId);
 
     await this.fetchData();
-    await this.props.reloadContext(); // ⭐ Statusleiste sofort aktualisieren
+
+    await this.props.reloadContext();
   };
 
   /* =========================================================
      CREATE
      ========================================================= */
 
-  openCreate = () => this.setState({ createOpen: true });
-  closeCreate = () => this.setState({ createOpen: false });
+  openCreate = () => {
+    this.setState({
+      createOpen: true,
+    });
+  };
+
+  closeCreate = () => {
+    this.setState({
+      createOpen: false,
+    });
+  };
 
   handleCreate = async (payload: VeranstaltungSave) => {
     const saved = await createVeranstaltung(payload);
 
     await this.fetchData();
-    await this.props.reloadContext(); // ⭐ BONUS: Context neu laden
+
+    await this.props.reloadContext();
 
     this.setState({
       createOpen: false,
+
       selectedVeranstaltung: saved,
+
       selectedId: saved.id,
+
       btnEditDisabled: false,
+
       btnDeleteDisabled: false,
     });
   };
@@ -234,24 +374,47 @@ class VeranstaltungenScreen extends Component<Props, State> {
      NAV
      ========================================================= */
 
-  handleBack = () => window.history.back();
+  handleBack = () => {
+    window.history.back();
+  };
 
   /* =========================================================
      RENDER
      ========================================================= */
 
   render() {
-    const { data, total, loading, error, selectedId, selectedVeranstaltung, createOpen } =
-      this.state;
+    const {
+      data,
+
+      total,
+
+      loading,
+
+      error,
+
+      selectedId,
+
+      selectedVeranstaltung,
+
+      createOpen,
+
+      beitragsstrukturen,
+    } = this.state;
 
     return (
       <Box>
         <MenueHeader headerText={`${total} Veranstaltungen`} />
 
-        {renderLoadingOrError({ loading, error })}
+        {renderLoadingOrError({
+          loading,
+          error,
+        })}
+
+        {error && <Alert severity="error">{error}</Alert>}
 
         <Grid container spacing={2}>
           {/* ================= LEFT ================= */}
+
           <Grid size={{ xs: 12, md: 6 }}>
             <Paper sx={{ p: 2 }}>
               <VeranstaltungTable
@@ -268,10 +431,12 @@ class VeranstaltungenScreen extends Component<Props, State> {
           </Grid>
 
           {/* ================= RIGHT ================= */}
+
           <Grid size={{ xs: 12, md: 6 }}>
             <Paper sx={{ p: 2 }}>
               <VeranstaltungFormView
                 veranstaltung={selectedVeranstaltung}
+                beitragsstrukturen={beitragsstrukturen}
                 editMode={this.state.editMode}
                 onEdit={this.handleEdit}
                 onCancelEdit={this.handleCancelEdit}
@@ -286,20 +451,36 @@ class VeranstaltungenScreen extends Component<Props, State> {
           </Grid>
         </Grid>
 
-        {/* ACTION BAR */}
+        {/* =====================================================
+           ACTION BAR
+           ===================================================== */}
+
         {!selectedVeranstaltung && (
           <BottomActionBar
             left={[
-              { label: "Neue Veranstaltung", variant: "outlined", onClick: this.openCreate },
-              { label: "Zurück", variant: "outlined", onClick: this.handleBack },
+              {
+                label: "Neue Veranstaltung",
+                variant: "outlined",
+                onClick: this.openCreate,
+              },
+              {
+                label: "Zurück",
+                variant: "outlined",
+                onClick: this.handleBack,
+              },
             ]}
           />
         )}
+
+        {/* =====================================================
+           CREATE DIALOG
+           ===================================================== */}
 
         <VeranstaltungCreateDialog
           open={createOpen}
           onClose={this.closeCreate}
           onCreate={this.handleCreate}
+          beitragsstrukturen={beitragsstrukturen}
         />
       </Box>
     );
@@ -307,11 +488,12 @@ class VeranstaltungenScreen extends Component<Props, State> {
 }
 
 /* =========================================================
-   CONTEXT WRAPPER (HOOK → CLASS)
+   CONTEXT WRAPPER
    ========================================================= */
 
 function VeranstaltungenWithContext() {
   const reload = useReloadAppContext();
+
   return <VeranstaltungenScreen reloadContext={reload} />;
 }
 

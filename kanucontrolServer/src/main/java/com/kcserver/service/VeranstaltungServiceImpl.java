@@ -1,14 +1,18 @@
 package com.kcserver.service;
 
+import com.kcserver.dto.beitrag.BeitragsstrukturDTO;
 import com.kcserver.dto.person.PersonListDTO;
 import com.kcserver.dto.veranstaltung.*;
 import com.kcserver.entity.*;
 import com.kcserver.enumtype.TeilnehmerRolle;
+import com.kcserver.mapper.BeitragsstrukturMapper;
 import com.kcserver.repository.VeranstaltungSpecs;
 
 import com.kcserver.mapper.PersonMapper;
 import com.kcserver.mapper.VeranstaltungMapper;
 import com.kcserver.repository.*;
+import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import static com.kcserver.exception.ErrorMessages.*;
@@ -24,6 +28,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Slf4j
+@RequiredArgsConstructor
 @Service
 @Transactional
 public class VeranstaltungServiceImpl implements VeranstaltungService {
@@ -35,24 +40,9 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
     private final PlanungRepository planungRepository;
     private final VeranstaltungMapper veranstaltungMapper;
     private final PersonMapper personMapper;
-
-    public VeranstaltungServiceImpl(
-            VeranstaltungRepository veranstaltungRepository,
-            VereinRepository vereinRepository,
-            PersonRepository personRepository,
-            TeilnehmerRepository teilnehmerRepository,
-            PlanungRepository planungRepository,
-            VeranstaltungMapper veranstaltungMapper,
-            PersonMapper personMapper
-    ) {
-        this.veranstaltungRepository = veranstaltungRepository;
-        this.vereinRepository = vereinRepository;
-        this.personRepository = personRepository;
-        this.teilnehmerRepository = teilnehmerRepository;
-        this.planungRepository = planungRepository;
-        this.veranstaltungMapper = veranstaltungMapper;
-        this.personMapper = personMapper;
-    }
+    private final BeitragsstrukturService beitragsstrukturService;
+    private final BeitragsstrukturMapper beitragsstrukturMapper;
+    private final BeitragsstrukturRepository beitragsstrukturRepository;
 
     /* =========================================================
        CREATE
@@ -246,6 +236,37 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
         veranstaltungRepository.delete(v);
     }
 
+    @Override
+    @Transactional
+    public BeitragsstrukturDTO assignBeitragsstrukturFromTemplate(
+            Long veranstaltungId,
+            Long templateId
+    ) {
+
+        Veranstaltung veranstaltung =
+                veranstaltungRepository.findById(veranstaltungId)
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        if (veranstaltung.getBeitragsstruktur() != null) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Veranstaltung hat bereits eine Beitragsstruktur"
+            );
+        }
+
+        Beitragsstruktur struktur =
+                beitragsstrukturService.copyFromTemplateEntity(
+                        templateId,
+                        "Beitragsstruktur " + veranstaltung.getName()
+                );
+        veranstaltung.setBeitragsstruktur(struktur);
+
+        veranstaltungRepository.save(veranstaltung);
+
+        return beitragsstrukturMapper.toDTO(struktur);
+
+    }
+
 
 
     /* =========================================================
@@ -398,7 +419,47 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
             v.setIndividuelleGebuehren(dto.getIndividuelleGebuehren());
         }
 
-        v.setStandardGebuehr(dto.getStandardGebuehr());
+/* =========================
+   BEITRAGSSTRUKTUR
+   ========================= */
+
+        if (dto.getBeitragsstrukturId() != null) {
+
+            Beitragsstruktur struktur =
+                    beitragsstrukturRepository
+                            .findById(dto.getBeitragsstrukturId())
+                            .orElseThrow(() ->
+                                    new EntityNotFoundException(
+                                            "Beitragsstruktur nicht gefunden"
+                                    )
+                            );
+
+            v.setBeitragsstruktur(struktur);
+        }
+
+/* =========================================
+   VALIDIERUNG INDIVIDUELLE GEBÜHREN
+   ========================================= */
+
+        if (Boolean.TRUE.equals(v.isIndividuelleGebuehren())) {
+
+            // Standardgebühr wird nicht verwendet
+            v.setStandardGebuehr(null);
+
+            // Struktur zwingend erforderlich
+            if (v.getBeitragsstruktur() == null) {
+
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Für individuelle Gebühren muss eine Beitragsstruktur gewählt werden."
+                );
+            }
+
+        } else {
+
+            // Nur bei NICHT individuellen Gebühren setzen
+            v.setStandardGebuehr(dto.getStandardGebuehr());
+        }
 
         if (dto.getScope() != null) {
             v.setScope(dto.getScope());
@@ -417,5 +478,18 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
         v.setGeplanteMitarbeiterDivers(dto.getGeplanteMitarbeiterDivers());
 
         return veranstaltungMapper.toDetailDTO(v);
+    }
+
+    public Veranstaltung findEntityById(
+            Long id
+    ) {
+
+        return veranstaltungRepository
+                .findById(id)
+                .orElseThrow(() ->
+                        new EntityNotFoundException(
+                                "Veranstaltung nicht gefunden"
+                        )
+                );
     }
 }

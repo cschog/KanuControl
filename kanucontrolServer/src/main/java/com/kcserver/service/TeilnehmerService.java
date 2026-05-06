@@ -13,6 +13,7 @@ import com.kcserver.repository.MitgliedRepository;
 import com.kcserver.repository.PersonRepository;
 import com.kcserver.repository.TeilnehmerRepository;
 import com.kcserver.repository.VeranstaltungRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
@@ -26,6 +27,7 @@ import java.util.List;
 import static com.kcserver.exception.EntityFinder.getOr404;
 import static com.kcserver.exception.ErrorMessages.*;
 import org.springframework.data.domain.Pageable;
+import java.math.BigDecimal;
 
 @Service
 @Transactional
@@ -37,6 +39,7 @@ public class TeilnehmerService {
     private final TeilnehmerMapper teilnehmerMapper;
     private final PersonMapper personMapper;
     private final MitgliedRepository mitgliedRepository;
+    private final BeitragsService beitragsService;
 
 
     public TeilnehmerService(
@@ -45,7 +48,8 @@ public class TeilnehmerService {
             PersonRepository personRepository,
             MitgliedRepository mitgliedRepository,
             TeilnehmerMapper teilnehmerMapper,
-            PersonMapper personMapper
+            PersonMapper personMapper,
+            BeitragsService beitragsService
     ) {
         this.teilnehmerRepository = teilnehmerRepository;
         this.veranstaltungRepository = veranstaltungRepository;
@@ -53,6 +57,7 @@ public class TeilnehmerService {
         this.mitgliedRepository = mitgliedRepository;
         this.teilnehmerMapper = teilnehmerMapper;
         this.personMapper = personMapper;
+        this.beitragsService = beitragsService;
     }
 
     /* =========================================================
@@ -282,7 +287,7 @@ public class TeilnehmerService {
     @Transactional(readOnly = true)
     public List<PersonListDTO> findAvailable(Long veranstaltungId, String search) {
 
-        getOr404(
+        Veranstaltung veranstaltung = getOr404(
                 veranstaltungRepository.findById(veranstaltungId),
                 VERANSTALTUNG_NOT_FOUND
         );
@@ -301,7 +306,7 @@ public class TeilnehmerService {
             Pageable pageable
     ) {
 
-        getOr404(
+        Veranstaltung veranstaltung = getOr404(
                 veranstaltungRepository.findById(veranstaltungId),
                 VERANSTALTUNG_NOT_FOUND
         );
@@ -391,6 +396,11 @@ public class TeilnehmerService {
             Long veranstaltungId
     ) {
 
+        Veranstaltung veranstaltung =
+                veranstaltungRepository
+                        .findById(veranstaltungId)
+                        .orElseThrow();
+
         List<Teilnehmer> teilnehmer =
                 teilnehmerRepository
                         .findAllWithPerson(
@@ -398,8 +408,104 @@ public class TeilnehmerService {
                         );
 
         return teilnehmer.stream()
-                .map(teilnehmerMapper::toListDTO)
+                .map(t -> {
+
+                    TeilnehmerListDTO dto =
+                            teilnehmerMapper.toListDTO(t);
+
+                    dto.setEffektiverBeitrag(
+                            beitragsService.berechneBeitrag(
+                                    veranstaltung,
+                                    t
+                            )
+                    );
+
+                    return dto;
+                })
                 .toList();
+    }
+
+    @Transactional
+    public TeilnehmerListDTO updateIndividuellerBeitrag(
+            Long teilnehmerId,
+            BigDecimal beitrag
+    ) {
+
+        Teilnehmer teilnehmer =
+                teilnehmerRepository
+                        .findById(teilnehmerId)
+                        .orElseThrow(() ->
+                                new EntityNotFoundException(
+                                        "Teilnehmer nicht gefunden"
+                                )
+                        );
+
+        Veranstaltung veranstaltung =
+                teilnehmer.getVeranstaltung();
+
+    /* =========================================
+       Fachregel
+       ========================================= */
+
+        if (!veranstaltung.isIndividuelleGebuehren()) {
+
+            throw new IllegalStateException(
+                    "Individuelle Gebühren sind deaktiviert"
+            );
+        }
+
+    /* =========================================
+       Update
+       ========================================= */
+
+        teilnehmer.setIndividuellerBeitrag(
+                beitrag
+        );
+
+        Teilnehmer saved =
+                teilnehmerRepository.save(
+                        teilnehmer
+                );
+
+        return teilnehmerMapper.toListDTO(saved);
+    }
+
+    @Transactional
+    public TeilnehmerListDTO updateBezahlt(
+            Long teilnehmerId,
+            Boolean bezahlt
+    ) {
+
+        Teilnehmer teilnehmer =
+                teilnehmerRepository
+                        .findById(teilnehmerId)
+                        .orElseThrow(() ->
+                                new EntityNotFoundException(
+                                        "Teilnehmer nicht gefunden"
+                                )
+                        );
+
+        teilnehmer.setBezahlt(
+                Boolean.TRUE.equals(bezahlt)
+        );
+
+        if (Boolean.TRUE.equals(bezahlt)) {
+
+            teilnehmer.setBezahltAm(
+                    LocalDate.now()
+            );
+
+        } else {
+
+            teilnehmer.setBezahltAm(null);
+        }
+
+        Teilnehmer saved =
+                teilnehmerRepository.save(
+                        teilnehmer
+                );
+
+        return teilnehmerMapper.toListDTO(saved);
     }
 
     /* =========================================================

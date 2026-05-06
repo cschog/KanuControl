@@ -1,17 +1,27 @@
 package com.kcserver.service;
 
-import com.kcserver.entity.Teilnehmer;
-import com.kcserver.entity.Veranstaltung;
+import com.kcserver.entity.*;
+import com.kcserver.enumtype.TeilnehmerRolle;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class TeilnehmerBeitragServiceTest {
 
-    private final TeilnehmerBeitragService service =
-            new TeilnehmerBeitragService();
+    private TeilnehmerBeitragService service;
+
+    @BeforeEach
+    void setup() {
+        service = new TeilnehmerBeitragService(
+                new BeitragsregelService(),
+                new AltersService()
+        );
+    }
 
     /* =========================================================
        STANDARDGEBÜHR
@@ -213,5 +223,152 @@ class TeilnehmerBeitragServiceTest {
                 BigDecimal.ZERO,
                 result
         );
+    }
+    @Test
+    void shouldUseBeitragsstrukturWhenNoIndividualBeitrag() {
+
+        // =========================
+        // Veranstaltung
+        // =========================
+        Veranstaltung v = new Veranstaltung();
+        v.setIndividuelleGebuehren(true);
+        v.setBeginnDatum(LocalDate.of(2024, 1, 1));
+
+        // =========================
+        // Beitragsstruktur
+        // =========================
+        Beitragsstruktur struktur = new Beitragsstruktur();
+
+        Beitragsregel regel = new Beitragsregel();
+        regel.setAlterVon(6);
+        regel.setAlterBis(12);
+        regel.setBeitrag(BigDecimal.valueOf(100));
+
+        regel.setBeitragsstruktur(struktur);
+        struktur.setRegeln(List.of(regel));
+
+        v.setBeitragsstruktur(struktur);
+
+        // =========================
+        // Teilnehmer (10 Jahre alt)
+        // =========================
+        Person p = new Person();
+        p.setGeburtsdatum(LocalDate.of(2014, 1, 1));
+
+        Teilnehmer t = new Teilnehmer();
+        t.setPerson(p);
+        t.setVeranstaltung(v);
+
+        // =========================
+        // Service (mit AltersService!)
+        // =========================
+
+
+        BigDecimal result =
+                service.getEffektiverBeitrag(v, t);
+
+        assertEquals(BigDecimal.valueOf(100), result);
+    }
+    @Test
+    void shouldMatchRolleSpecificRegel() {
+
+        Veranstaltung v = new Veranstaltung();
+        v.setIndividuelleGebuehren(true);
+        v.setBeginnDatum(LocalDate.of(2024, 1, 1));
+
+        Beitragsstruktur struktur = new Beitragsstruktur();
+
+        Beitragsregel regel = new Beitragsregel();
+        regel.setAlterVon(0);
+        regel.setAlterBis(99);
+        regel.setRolle(TeilnehmerRolle.MITARBEITER);
+        regel.setBeitrag(BigDecimal.valueOf(50));
+
+        regel.setBeitragsstruktur(struktur);
+        struktur.setRegeln(List.of(regel));
+
+        v.setBeitragsstruktur(struktur);
+
+        Person p = new Person();
+        p.setGeburtsdatum(LocalDate.of(2000, 1, 1));
+
+        Teilnehmer t = new Teilnehmer();
+        t.setPerson(p);
+        t.setVeranstaltung(v);
+        t.setRolle(TeilnehmerRolle.MITARBEITER);
+
+
+        BigDecimal result =
+                service.getEffektiverBeitrag(v, t);
+
+        assertEquals(BigDecimal.valueOf(50), result);
+    }
+    @Test
+    void shouldPreferIndividuellerBeitragOverStruktur() {
+
+        Veranstaltung v = new Veranstaltung();
+        v.setIndividuelleGebuehren(true);
+        v.setBeginnDatum(LocalDate.of(2024, 1, 1));
+
+        Beitragsstruktur struktur = new Beitragsstruktur();
+
+        Beitragsregel regel = new Beitragsregel();
+        regel.setAlterVon(0);
+        regel.setAlterBis(99);
+        regel.setBeitrag(BigDecimal.valueOf(100));
+
+        regel.setBeitragsstruktur(struktur);
+        struktur.setRegeln(List.of(regel));
+
+        v.setBeitragsstruktur(struktur);
+
+        Person p = new Person();
+        p.setGeburtsdatum(LocalDate.of(2000, 1, 1));
+
+        Teilnehmer t = new Teilnehmer();
+        t.setPerson(p);
+        t.setVeranstaltung(v);
+
+        // 🔥 Override
+        t.setIndividuellerBeitrag(BigDecimal.valueOf(999));
+
+        BigDecimal result =
+                service.getEffektiverBeitrag(v, t);
+
+        assertEquals(BigDecimal.valueOf(999), result);
+    }
+
+    @Test
+    void shouldReturnZeroWhenNoRegelMatches() {
+
+        Veranstaltung v = new Veranstaltung();
+        v.setIndividuelleGebuehren(true);
+        v.setBeginnDatum(LocalDate.of(2024, 1, 1));
+
+        Beitragsstruktur struktur = new Beitragsstruktur();
+
+        Beitragsregel regel = new Beitragsregel();
+        regel.setAlterVon(0);
+        regel.setAlterBis(5); // passt nicht
+
+        regel.setBeitrag(BigDecimal.valueOf(50));
+
+        regel.setBeitragsstruktur(struktur);
+        struktur.setRegeln(List.of(regel));
+
+        v.setBeitragsstruktur(struktur);
+
+        Person p = new Person();
+        p.setGeburtsdatum(LocalDate.of(2000, 1, 1));
+
+        Teilnehmer t = new Teilnehmer();
+        t.setPerson(p);
+        t.setVeranstaltung(v);
+
+
+        BigDecimal result =
+                service.getEffektiverBeitrag(v, t);
+
+        assertEquals(BigDecimal.ZERO, result);
     }
 }

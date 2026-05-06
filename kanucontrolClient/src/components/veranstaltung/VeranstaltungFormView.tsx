@@ -21,10 +21,18 @@ interface Props {
 
   disableEdit: boolean;
   disableDelete: boolean;
+
+  beitragsstrukturen: BeitragsstrukturDTO[];
+}
+
+interface BeitragsstrukturDTO {
+  id: number;
+  name: string;
 }
 
 export const VeranstaltungFormView: React.FC<Props> = ({
   veranstaltung,
+  beitragsstrukturen,
   editMode,
   onEdit,
   onCancelEdit,
@@ -63,6 +71,7 @@ export const VeranstaltungFormView: React.FC<Props> = ({
           form={form}
           editMode={editMode}
           detailMode={true}
+          beitragsstrukturen={beitragsstrukturen}
           onChange={update}
         />
       </Box>

@@ -5,10 +5,12 @@ interface Props {
   label: string;
   value?: string;
   disabled?: boolean;
-  onChange: (value: string | undefined) => void;
+  error?: boolean;
+  helperText?: string;
+  onChange: (value?: string) => void;
 }
 
-export function FormFeldTimePicker({ label, value, disabled, onChange }: Props) {
+export function FormFeldTimePicker({ label, value, disabled, error, helperText, onChange }: Props) {
   const parsed = value ? dayjs(`2000-01-01T${value}`) : null;
 
   return (
@@ -22,6 +24,8 @@ export function FormFeldTimePicker({ label, value, disabled, onChange }: Props) 
         textField: {
           fullWidth: true,
           size: "small",
+          error: error,
+          helperText: helperText,
         },
       }}
     />

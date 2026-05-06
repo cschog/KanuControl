@@ -1,6 +1,7 @@
 package com.kcserver.dto.teilnehmer;
 
 import com.kcserver.dto.person.PersonRefDTO;
+import com.kcserver.enumtype.BeitragsQuelle;
 import com.kcserver.enumtype.TeilnehmerRolle;
 import lombok.Data;
 import java.math.BigDecimal;
@@ -17,6 +18,8 @@ public class TeilnehmerListDTO {
 
     private TeilnehmerRolle rolle;
 
+    private Integer alterBeiBeginn;
+
     /* =========================
        Beiträge
        ========================= */
@@ -28,4 +31,6 @@ public class TeilnehmerListDTO {
     private LocalDate bezahltAm;
 
     private BigDecimal effektiverBeitrag;
+
+    private BeitragsQuelle beitragsQuelle;
 }

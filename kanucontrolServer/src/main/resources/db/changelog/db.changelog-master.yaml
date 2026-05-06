@@ -57,3 +57,19 @@ databaseChangeLog:
       file: db/changelog/changes/2026-04-27-drop-foerderdeckel.xml
   - include:
       file: db/changelog/changes/2026-05-03-teilnehmer-bezahlt.xml
+  - include:
+      file: db/changelog/changes/2026-05-04-01-create-beitragsstruktur.xml
+  - include:
+      file: db/changelog/changes/2026-05-04-02-create-beitragsregel.xml
+  - include:
+      file: db/changelog/changes/2026-05-04-03-add-beitragsstruktur-to-veranstaltung.xml
+  - include:
+      file: db/changelog/changes/2026-05-04-04-indexes.xml
+  - include:
+      file: db/changelog/changes/2026-05-04-05-add-template-flag.xml
+  - include:
+      file: db/changelog/changes/2026-05-04-06-seed-template.xml
+  - include:
+      file: db/changelog/changes/2026-05-04-07-seed-regeln.xml
+  - include:
+      file: db/changelog/changes/2026-05-04-08-add-audit-columns.xml
