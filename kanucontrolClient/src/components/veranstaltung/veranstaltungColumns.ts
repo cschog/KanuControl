@@ -6,7 +6,7 @@ export const veranstaltungColumns: GridColDef<VeranstaltungList>[] = [
   {
     field: "aktiv",
     headerName: "",
-    width: 60,
+    width: 40,
     align: "center",
     renderCell: (p) => (p.value ? "🟢" : "⚪"),
     sortable: false,
@@ -14,32 +14,33 @@ export const veranstaltungColumns: GridColDef<VeranstaltungList>[] = [
   {
     field: "name",
     headerName: "Veranstaltung",
-    flex: 2,
+    width: 160,
   },
   {
     field: "typ",
     headerName: "Typ",
-    width: 120,
+    flex: 0.3,
+    align: "center",
   },
   {
     field: "beginnDatum",
     headerName: "Beginn",
-    width: 120,
+    flex: 0.6,
   },
   {
     field: "endeDatum",
     headerName: "Ende",
-    width: 120,
+    flex: 0.6,
   },
   {
-    field: "vereinName",
+    field: "vereinAbk",
     headerName: "Verein",
-    flex: 1.5,
+    flex: 0.4,
   },
   {
     field: "leitung",
     headerName: "Leitung",
-    flex: 1,
+    width: 130,
     valueGetter: (_value, row) => {
       if (!row.leiterName) return "";
       if (!row.leiterVorname) return row.leiterName;

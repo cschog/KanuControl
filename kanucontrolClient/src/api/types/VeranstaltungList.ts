@@ -3,12 +3,15 @@ export interface VeranstaltungList {
   id: number;
 
   name: string;
+
   typ: string;
 
   beginnDatum: string;
   endeDatum: string;
 
   vereinName: string;
+  vereinAbk: string;
+  
   leiterName: string;
   leiterVorname: string;
 

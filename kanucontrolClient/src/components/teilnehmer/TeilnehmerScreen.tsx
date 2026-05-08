@@ -3,6 +3,8 @@ import { Box, Button, MenuItem, Typography, Paper, Grid, TextField } from "@mui/
 import { useAppContext } from "@/context/AppContext";
 import { updateTeilnehmerRolle } from "@/api/services/teilnehmerApi";
 import { useDebounce } from "@/components/common/reference/hooks";
+import { BottomActionBar } from "@/components/layout/BottomActionBar";
+import { useNavigate } from "react-router-dom";
 
 import {
   getAvailablePersons,
@@ -17,6 +19,8 @@ import { TeilnehmerList } from "@/api/types/TeilnehmerList";
 
 export default function TeilnehmerScreen() {
   const { active } = useAppContext();
+
+  const navigate = useNavigate();
 
   /* ================= DATA ================= */
 
@@ -40,13 +44,13 @@ export default function TeilnehmerScreen() {
   const debounceVereinL = useDebounce(fVereinL, 300);
   const debounceVereinR = useDebounce(fVereinR, 300);
 
- const availableVereine = Array.from(
-   new Set(available.map((p) => p.hauptvereinAbk).filter((v): v is string => !!v)),
- );
+  const availableVereine = Array.from(
+    new Set(available.map((p) => p.hauptvereinAbk).filter((v): v is string => !!v)),
+  );
 
- const assignedVereine = Array.from(
-   new Set(assigned.map((t) => t.person?.hauptvereinAbk).filter((v): v is string => !!v)),
- );
+  const assignedVereine = Array.from(
+    new Set(assigned.map((t) => t.person?.hauptvereinAbk).filter((v): v is string => !!v)),
+  );
 
   /* ================= PAGING ================= */
 
@@ -70,8 +74,6 @@ export default function TeilnehmerScreen() {
       debounceSearchL || undefined,
       debounceVereinL || undefined,
     );
-
-    
 
     setAvailable(a?.content ?? []);
     setTotalAvailable(a?.totalElements ?? 0);
@@ -393,6 +395,15 @@ export default function TeilnehmerScreen() {
           </Paper>
         </Grid>
       </Grid>
+      <BottomActionBar
+        left={[
+          {
+            label: "Zurück",
+            onClick: () => navigate("/startmenue"),
+            variant: "outlined",
+          },
+        ]}
+      />
     </Box>
   );
 }

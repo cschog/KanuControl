@@ -1,5 +1,5 @@
 import React from "react";
-import { BottomActionBar } from "@/components/common/BottomActionBar";
+import { BottomActionBar } from "@/components/layout/BottomActionBar";
 
 interface PersonActionBarProps {
   editMode: boolean;
