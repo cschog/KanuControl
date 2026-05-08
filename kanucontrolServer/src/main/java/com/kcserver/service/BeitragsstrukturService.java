@@ -17,17 +17,23 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class BeitragsstrukturService {
 
     private final BeitragsstrukturRepository repository;
+    private final BeitragsregelRepository regelRepository;
     private final BeitragsregelValidator validator;
     private final BeitragsstrukturMapper mapper;
-    private final BeitragsregelRepository regelRepository;
+
+    /* =========================================================
+       CREATE TEMPLATE
+       ========================================================= */
 
     @Transactional
     public BeitragsstrukturDTO createTemplate(BeitragsstrukturDTO dto) {
@@ -43,6 +49,10 @@ public class BeitragsstrukturService {
 
         return mapper.toDTO(saved);
     }
+
+    /* =========================================================
+       UPDATE STRUKTUR
+       ========================================================= */
 
     @Transactional
     public BeitragsstrukturDTO update(
@@ -67,6 +77,80 @@ public class BeitragsstrukturService {
         );
     }
 
+    /* =========================================================
+       UPDATE REGELN
+       ========================================================= */
+
+    @Transactional
+    public BeitragsstrukturDTO updateRegeln(
+            Long strukturId,
+            List<BeitragsregelCreateDTO> dto
+    ) {
+
+        Beitragsstruktur struktur =
+                repository.findById(strukturId)
+                        .orElseThrow(() ->
+                                new ResponseStatusException(
+                                        HttpStatus.NOT_FOUND,
+                                        "Beitragsstruktur nicht gefunden"
+                                )
+                        );
+
+        regelRepository.deleteAll(struktur.getRegeln());
+
+        struktur.getRegeln().clear();
+
+        Map<TeilnehmerRolle, List<BeitragsregelCreateDTO>> gruppiert =
+                dto.stream()
+                        .collect(Collectors.groupingBy(
+                                BeitragsregelCreateDTO::getRolle
+                        ));
+
+        List<Beitragsregel> neueRegeln = new ArrayList<>();
+
+        for (List<BeitragsregelCreateDTO> gruppe : gruppiert.values()) {
+
+            gruppe.sort(
+                    Comparator.comparing(r ->
+                            r.getAlterBis() == null
+                                    ? Integer.MAX_VALUE
+                                    : r.getAlterBis()
+                    )
+            );
+
+            int sortierung = 0;
+
+            for (BeitragsregelCreateDTO r : gruppe) {
+
+                Beitragsregel entity = new Beitragsregel();
+
+                entity.setStruktur(struktur);
+
+                entity.setSortierung(sortierung++);
+
+                entity.setRolle(r.getRolle());
+
+                entity.setAlterBis(r.getAlterBis());
+
+                entity.setBeitrag(r.getBeitrag());
+
+                neueRegeln.add(entity);
+            }
+        }
+
+        validator.validate(neueRegeln);
+
+        regelRepository.saveAll(neueRegeln);
+
+        struktur.setRegeln(neueRegeln);
+
+        return mapper.toDTO(struktur);
+    }
+
+    /* =========================================================
+       DELETE STRUKTUR
+       ========================================================= */
+
     @Transactional
     public void delete(Long id) {
 
@@ -81,6 +165,10 @@ public class BeitragsstrukturService {
         repository.delete(struktur);
     }
 
+    /* =========================================================
+       UPDATE REGEL
+       ========================================================= */
+
     @Transactional
     public BeitragsstrukturDTO updateRegel(
             Long regelId,
@@ -91,18 +179,23 @@ public class BeitragsstrukturService {
                 regelRepository.findById(regelId)
                         .orElseThrow();
 
-        regel.setAlterVon(dto.getAlterVon());
         regel.setAlterBis(dto.getAlterBis());
+
         regel.setRolle(dto.getRolle());
+
         regel.setBeitrag(dto.getBeitrag());
 
         Beitragsstruktur struktur =
-                regel.getBeitragsstruktur();
+                regel.getStruktur();
 
         validator.validate(struktur.getRegeln());
 
         return mapper.toDTO(struktur);
     }
+
+    /* =========================================================
+       DELETE REGEL
+       ========================================================= */
 
     @Transactional
     public void deleteRegel(Long regelId) {
@@ -112,7 +205,7 @@ public class BeitragsstrukturService {
                         .orElseThrow();
 
         Beitragsstruktur struktur =
-                regel.getBeitragsstruktur();
+                regel.getStruktur();
 
         struktur.getRegeln().remove(regel);
 
@@ -120,6 +213,10 @@ public class BeitragsstrukturService {
 
         validator.validate(struktur.getRegeln());
     }
+
+    /* =========================================================
+       COPY TEMPLATE ENTITY
+       ========================================================= */
 
     @Transactional
     public Beitragsstruktur copyFromTemplateEntity(
@@ -129,10 +226,16 @@ public class BeitragsstrukturService {
 
         Beitragsstruktur template =
                 repository.findById(templateId)
-                        .orElseThrow(() -> new IllegalArgumentException("Template nicht gefunden"));
+                        .orElseThrow(() ->
+                                new IllegalArgumentException(
+                                        "Template nicht gefunden"
+                                )
+                        );
 
         if (!template.isTemplate()) {
-            throw new IllegalStateException("Keine Template-Struktur");
+            throw new IllegalStateException(
+                    "Keine Template-Struktur"
+            );
         }
 
         Beitragsstruktur copy = new Beitragsstruktur();
@@ -146,12 +249,17 @@ public class BeitragsstrukturService {
                 template.getRegeln()
                         .stream()
                         .map(r -> {
+
                             Beitragsregel nr = new Beitragsregel();
 
-                            nr.setBeitragsstruktur(copy);
-                            nr.setAlterVon(r.getAlterVon());
+                            nr.setStruktur(copy);
+
+                            nr.setSortierung(r.getSortierung());
+
                             nr.setAlterBis(r.getAlterBis());
+
                             nr.setRolle(r.getRolle());
+
                             nr.setBeitrag(r.getBeitrag());
 
                             return nr;
@@ -165,15 +273,27 @@ public class BeitragsstrukturService {
         return repository.save(copy);
     }
 
+    /* =========================================================
+       COPY TEMPLATE
+       ========================================================= */
+
     @Transactional
     public BeitragsstrukturDTO copyFromTemplate(
             Long templateId,
             String neuerName
     ) {
+
         return mapper.toDTO(
-                copyFromTemplateEntity(templateId, neuerName)
+                copyFromTemplateEntity(
+                        templateId,
+                        neuerName
+                )
         );
     }
+
+    /* =========================================================
+       GET ALL
+       ========================================================= */
 
     @Transactional(readOnly = true)
     public List<BeitragsstrukturDTO> getAll() {
@@ -184,6 +304,10 @@ public class BeitragsstrukturService {
                 .toList();
     }
 
+    /* =========================================================
+       GET TEMPLATES
+       ========================================================= */
+
     @Transactional
     public List<BeitragsstrukturDTO> getTemplates() {
 
@@ -191,7 +315,9 @@ public class BeitragsstrukturService {
                 repository.findByTemplateTrue();
 
         if (templates.isEmpty()) {
-            createDefaultTemplates();   // 🔥 HIER
+
+            createDefaultTemplates();
+
             templates = repository.findByTemplateTrue();
         }
 
@@ -200,14 +326,33 @@ public class BeitragsstrukturService {
                 .toList();
     }
 
+    /* =========================================================
+       CREATE FROM TEMPLATE
+       ========================================================= */
+
     @Transactional
     public BeitragsstrukturDTO createFromDefaultTemplate(
             String name
     ) {
 
+        List<Beitragsstruktur> templates =
+                repository.findByTemplateTrue();
+
+        if (templates.isEmpty()) {
+
+            createDefaultTemplates();
+
+            templates = repository.findByTemplateTrue();
+        }
+
         Beitragsstruktur template =
-                repository.findFirstByTemplateTrue()
-                        .orElseThrow();
+                templates.stream()
+                        .findFirst()
+                        .orElseThrow(() ->
+                                new IllegalStateException(
+                                        "Kein Standardtemplate vorhanden"
+                                )
+                        );
 
         Beitragsstruktur copy =
                 copyFromTemplateEntity(
@@ -217,6 +362,10 @@ public class BeitragsstrukturService {
 
         return mapper.toDTO(copy);
     }
+
+    /* =========================================================
+       DEFAULT TEMPLATES
+       ========================================================= */
 
     @Transactional
     protected void createDefaultTemplates() {
@@ -229,53 +378,61 @@ public class BeitragsstrukturService {
         struktur.setSystem(true);
 
         Beitragsregel r0 = new Beitragsregel();
-        r0.setAlterVon(0);
+        r0.setSortierung(0);
         r0.setAlterBis(2);
         r0.setBeitrag(BigDecimal.ZERO);
-        r0.setBeitragsstruktur(struktur);
+        r0.setStruktur(struktur);
 
         Beitragsregel r1 = new Beitragsregel();
-        r1.setAlterVon(3);
+        r1.setSortierung(1);
         r1.setAlterBis(10);
         r1.setBeitrag(BigDecimal.valueOf(100));
-        r1.setBeitragsstruktur(struktur);
+        r1.setStruktur(struktur);
 
         Beitragsregel r2 = new Beitragsregel();
-        r2.setAlterVon(11);
+        r2.setSortierung(2);
         r2.setAlterBis(20);
         r2.setBeitrag(BigDecimal.valueOf(200));
-        r2.setBeitragsstruktur(struktur);
+        r2.setStruktur(struktur);
 
         Beitragsregel r3 = new Beitragsregel();
-        r3.setAlterVon(21);
+        r3.setSortierung(3);
         r3.setAlterBis(26);
         r3.setBeitrag(BigDecimal.valueOf(300));
-        r3.setBeitragsstruktur(struktur);
+        r3.setStruktur(struktur);
 
         Beitragsregel r4 = new Beitragsregel();
-        r4.setAlterVon(27);
-        r4.setAlterBis(99);
+        r4.setSortierung(4);
+        r4.setAlterBis(null);
         r4.setBeitrag(BigDecimal.valueOf(400));
-        r4.setBeitragsstruktur(struktur);
+        r4.setStruktur(struktur);
 
         Beitragsregel m = new Beitragsregel();
-        m.setAlterVon(0);
-        m.setAlterBis(99);
+        m.setSortierung(0);
+        m.setAlterBis(null);
         m.setRolle(TeilnehmerRolle.MITARBEITER);
         m.setBeitrag(BigDecimal.ZERO);
-        m.setBeitragsstruktur(struktur);
+        m.setStruktur(struktur);
 
         Beitragsregel l = new Beitragsregel();
-        l.setAlterVon(0);
-        l.setAlterBis(99);
+        l.setSortierung(0);
+        l.setAlterBis(null);
         l.setRolle(TeilnehmerRolle.LEITER);
         l.setBeitrag(BigDecimal.ZERO);
-        l.setBeitragsstruktur(struktur);
+        l.setStruktur(struktur);
 
-        struktur.setRegeln(List.of(r0, r1, r2, r3, r4, m, l));
+        struktur.setRegeln(
+                List.of(r0, r1, r2, r3, r4, m, l)
+        );
+
+        validator.validate(struktur.getRegeln());
 
         repository.save(struktur);
     }
+
+    /* =========================================================
+       ADD REGEL
+       ========================================================= */
 
     @Transactional
     public BeitragsstrukturDTO addRegel(
@@ -283,20 +440,39 @@ public class BeitragsstrukturService {
             BeitragsregelCreateDTO dto
     ) {
 
-        Beitragsstruktur struktur = repository.findById(strukturId)
-                .orElseThrow(() -> new IllegalArgumentException("Struktur nicht gefunden"));
+        Beitragsstruktur struktur =
+                repository.findById(strukturId)
+                        .orElseThrow(() ->
+                                new IllegalArgumentException(
+                                        "Struktur nicht gefunden"
+                                )
+                        );
+
+        int nextSortierung =
+                struktur.getRegeln()
+                        .stream()
+                        .filter(r ->
+                                (r.getRolle() == null && dto.getRolle() == null)
+                                        || (r.getRolle() == dto.getRolle())
+                        )
+                        .map(Beitragsregel::getSortierung)
+                        .max(Integer::compareTo)
+                        .orElse(-1) + 1;
 
         Beitragsregel regel = new Beitragsregel();
 
-        regel.setBeitragsstruktur(struktur);
-        regel.setAlterVon(dto.getAlterVon());
+        regel.setStruktur(struktur);
+
+        regel.setSortierung(nextSortierung);
+
         regel.setAlterBis(dto.getAlterBis());
+
         regel.setRolle(dto.getRolle());
+
         regel.setBeitrag(dto.getBeitrag());
 
         struktur.getRegeln().add(regel);
 
-        // 🔥 Wichtig: validieren (dein bestehender Validator)
         validator.validate(struktur.getRegeln());
 
         Beitragsstruktur saved = repository.save(struktur);

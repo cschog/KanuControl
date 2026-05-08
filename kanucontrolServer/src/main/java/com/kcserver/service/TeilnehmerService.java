@@ -92,9 +92,6 @@ public class TeilnehmerService {
         boolean hasFunktion = mitgliedRepository
                 .existsByPerson_IdAndFunktionIsNotNull(person.getId());
 
-        System.out.println(">>> HAS FUNKTION: " + hasFunktion);
-        System.out.println(">>> SET ROLE: " + (hasFunktion ? "MITARBEITER" : "null"));
-
         if (hasFunktion) {
             teilnehmer.setRolle(TeilnehmerRolle.MITARBEITER);
         } else {

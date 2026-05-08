@@ -27,7 +27,7 @@ return {
 
   /* ===== Detailfelder ===== */
 
-  laenderCode: undefined,
+  countryCode: undefined,
   plz: "",
   ort: "",
   artDerUnterkunft: "",
@@ -70,7 +70,7 @@ export function useVeranstaltungForm(initial: VeranstaltungFormModel | null) {
 
       /* ===== Null → Default ===== */
 
-      laenderCode: initial.laenderCode ?? undefined,
+      countryCode: initial.countryCode ?? undefined,
 
       plz: initial.plz ?? "",
       ort: initial.ort ?? "",
@@ -96,7 +96,12 @@ export function useVeranstaltungForm(initial: VeranstaltungFormModel | null) {
      CREATE RESET
      ========================= */
 
-  const reset = () => setForm(emptyVeranstaltung());
+  const reset = (data?: Partial<VeranstaltungFormModel>) => {
+    setForm({
+      ...emptyVeranstaltung(),
+      ...data,
+    });
+  };
 
   /* =========================
      FIELD UPDATE
@@ -144,7 +149,7 @@ export function useVeranstaltungForm(initial: VeranstaltungFormModel | null) {
 
       /* ===== Detailfelder ===== */
 
-      laenderCode: form.laenderCode,
+      countryCode: form.countryCode,
       plz: form.plz || undefined,
       ort: form.ort || undefined,
       artDerUnterkunft: form.artDerUnterkunft || undefined,

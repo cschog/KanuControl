@@ -6,6 +6,7 @@ import com.kcserver.enumtype.TeilnehmerRolle;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -21,23 +22,35 @@ public class BeitragsregelService {
             return Optional.empty();
         }
 
-        return struktur.getRegeln().stream()
+        List<Beitragsregel> regeln = struktur.getRegeln()
+                .stream()
+                .sorted(Comparator.comparing(Beitragsregel::getSortierung))
+                .toList();
 
-                // Alter match
-                .filter(r ->
-                        (r.getAlterVon() == null || alter >= r.getAlterVon()) &&
-                                (r.getAlterBis() == null || alter <= r.getAlterBis())
-                )
+        int alterVon = 0;
 
-                // Rolle match
-                .filter(r ->
-                        r.getRolle() == null || r.getRolle() == rolle
-                )
+        for (Beitragsregel regel : regeln) {
 
-                // 🔥 Wichtig: spezifischste Regel gewinnt
-                .min(Comparator.comparingInt(r ->
-                        (r.getRolle() == null ? 1 : 0) +
-                                (r.getAlterVon() == null ? 1 : 0)
-                ));
+            Integer alterBis = regel.getAlterBis();
+
+            boolean alterMatch =
+                    alter >= alterVon &&
+                            (alterBis == null || alter <= alterBis);
+
+            boolean rollenMatch =
+                    regel.getRolle() == null ||
+                            regel.getRolle() == rolle;
+
+            if (alterMatch && rollenMatch) {
+                return Optional.of(regel);
+            }
+
+            // nächste Regel beginnt nach alterBis
+            if (alterBis != null) {
+                alterVon = alterBis + 1;
+            }
+        }
+
+        return Optional.empty();
     }
 }

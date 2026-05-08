@@ -19,11 +19,8 @@ public class Beitragsregel extends Auditable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    private Beitragsstruktur beitragsstruktur;
-
-    @Column(name = "alter_von")
-    private Integer alterVon;
+    @Column(nullable = false)
+    private Integer sortierung;
 
     @Column(name = "alter_bis")
     private Integer alterBis;
@@ -33,4 +30,8 @@ public class Beitragsregel extends Auditable {
     private TeilnehmerRolle rolle;
 
     private BigDecimal beitrag;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "beitragsstruktur_id")
+    private Beitragsstruktur struktur;
 }

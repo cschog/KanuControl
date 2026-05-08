@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 @Data
 public class BeitragsregelCreateDTO {
 
-    private Integer alterVon;
+
     private Integer alterBis;
 
     private TeilnehmerRolle rolle;

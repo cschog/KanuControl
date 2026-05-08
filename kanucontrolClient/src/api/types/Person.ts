@@ -55,12 +55,11 @@ export interface PersonSave {
 
   geburtsdatum?: string;
   email?: string;
-  countryCode?: CountryCode;
 
   strasse?: string;
   plz?: string;
   ort?: string;
-  laenderCode?: CountryCode;
+  countryCode?: CountryCode;
 
   telefon?: string;
   telefonFestnetz?: string;

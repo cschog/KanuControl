@@ -41,6 +41,14 @@ public class BeitragsstrukturController {
         service.deleteRegel(regelId);
     }
 
+    @PutMapping("/{id}/regeln")
+    public BeitragsstrukturDTO updateRegeln(
+            @PathVariable Long id,
+            @RequestBody List<BeitragsregelCreateDTO> dto
+    ) {
+        return service.updateRegeln(id, dto);
+    }
+
     @PutMapping("/{id}")
     public BeitragsstrukturDTO update(
             @PathVariable Long id,

@@ -4,6 +4,7 @@ import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Box } from "
 import { VeranstaltungBaseForm } from "@/components/veranstaltung/form/VeranstaltungBaseForm";
 import { useVeranstaltungForm } from "@/components/veranstaltung/hook/useVeranstaltungForm";
 import { VeranstaltungSave } from "@/api/types/VeranstaltungSave";
+import { VeranstaltungFormModel } from "@/api/types/VeranstaltungFormModel";
 
 interface BeitragsstrukturDTO {
   id: number;
@@ -14,10 +15,10 @@ interface Props {
   open: boolean;
 
   onClose: () => void;
-
   onCreate: (data: VeranstaltungSave) => Promise<void>;
 
   beitragsstrukturen: BeitragsstrukturDTO[];
+  initialData?: Partial<VeranstaltungFormModel>;
 }
 
 export const VeranstaltungCreateDialog: React.FC<Props> = ({
@@ -25,14 +26,18 @@ export const VeranstaltungCreateDialog: React.FC<Props> = ({
   onClose,
   onCreate,
   beitragsstrukturen,
+  initialData,
 }) => {
   const { form, update, reset, buildSavePayload, isValid } = useVeranstaltungForm(null);
 
   // Dialog öffnen → Form reset
-  useEffect(() => {
-    if (open) reset();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+ useEffect(() => {
+   if (open) {
+     reset(initialData);
+   }
+
+   // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, [open]);
 
   if (!form) return null;
 

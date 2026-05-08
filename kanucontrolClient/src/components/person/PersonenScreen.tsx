@@ -4,12 +4,18 @@ import { GenericTable } from "@/components/common/GenericTable";
 import { PersonFormView } from "@/components/person/PersonFormView";
 import { personColumns } from "@/components/person/personColumns";
 import { deleteMitglied, setHauptverein } from "@/api/services/mitgliedApi";
+import { PersonCreateDialog } from "@/components/person/PersonCreateDialog";
+import { useAppContext } from "@/context/AppContext";
+import { addTeilnehmer } from "@/api/services/teilnehmerApi";
+import { useNavigate } from "react-router-dom";
+import { BottomActionBar } from "@/components/common/BottomActionBar";
 
 import {
   getPersonById,
   deletePerson,
   updatePerson,
   getPersonsScroll,
+  createPerson,
 } from "@/api/services/personApi";
 
 import { PersonList, PersonDetail, PersonSave } from "@/api/types/Person";
@@ -26,6 +32,8 @@ type Cursor = {
 export default function PersonenScreen() {
   /* ================= STATE ================= */
 
+  const navigate = useNavigate();
+
   const [rows, setRows] = useState<PersonList[]>([]);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -40,6 +48,12 @@ export default function PersonenScreen() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [selectedPerson, setSelectedPerson] = useState<PersonDetail | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
+
+  const [createOpen, setCreateOpen] = useState(false);
+  const [copyOpen, setCopyOpen] = useState(false);
+  const [copyData, setCopyData] = useState<Partial<PersonSave>>();
+
+   const { active } = useAppContext();
 
   /* ================= FILTER ================= */
 
@@ -160,6 +174,31 @@ export default function PersonenScreen() {
     setEditMode(true);
   };
 
+ const handleCopy = () => {
+   if (!selectedPerson) {
+     return;
+   }
+
+   setCopyData({
+     name: selectedPerson.name,
+
+     strasse: selectedPerson.strasse,
+
+     plz: selectedPerson.plz,
+     ort: selectedPerson.ort,
+
+     mitgliedschaften: selectedPerson.mitgliedschaften.map((m) => ({
+       vereinId: m.verein.id,
+
+       funktion: m.funktion,
+
+       hauptVerein: m.hauptVerein,
+     })),
+   });
+
+   setCopyOpen(true);
+ };
+
   const handleSave = async (data: PersonSave) => {
     if (!selectedId) return;
 
@@ -192,20 +231,21 @@ export default function PersonenScreen() {
     load(); // ⭐ neu laden
   };
 
-const resetFilter = () => {
-  // ⭐ alles sauber zurücksetzen
-  cursorRef.current = null;
-  setRows([]);
-  setHasMore(true);
+  const resetFilter = () => {
+    // ⭐ alles sauber zurücksetzen
+    cursorRef.current = null;
+    setRows([]);
+    setHasMore(true);
 
-  setSearch(""); // UI
+    setSearch(""); // UI
 
-  loadRef.current(); // ⭐ DIREKT laden
-};
+    loadRef.current(); // ⭐ DIREKT laden
+  };
 
-  useEffect(() => {
-    setEditMode(false); 
-  }, [selectedId]);
+ useEffect(() => {
+   setEditMode(false);
+   setEditData(null);
+ }, [selectedId]);
 
   /* ========================================================= */
   /* UI */
@@ -229,6 +269,7 @@ const resetFilter = () => {
                 onChange={(e) => setSearch(e.target.value)}
                 fullWidth
               />
+
               <Button onClick={resetFilter}>Reset</Button>
             </Box>
 
@@ -264,6 +305,7 @@ const resetFilter = () => {
                 personDetail={editMode ? editData : selectedPerson} // ⭐ SWITCH
                 editMode={editMode}
                 onEdit={handleEdit}
+                onCopy={handleCopy}
                 onCancelEdit={() => {
                   setEditMode(false);
                   setEditData(null);
@@ -279,6 +321,13 @@ const resetFilter = () => {
                     setSelectedPerson(fresh);
                     setEditData(fresh);
                   }
+
+                  // 🔄 Tabelle neu laden
+                  cursorRef.current = null;
+                  setRows([]);
+                  setHasMore(true);
+
+                  await loadRef.current();
                 }}
                 onSetHauptverein={async (mitgliedId) => {
                   await setHauptverein(mitgliedId);
@@ -305,6 +354,72 @@ const resetFilter = () => {
           </Paper>
         </Grid>
       </Grid>
+      {!selectedPerson && (
+        <BottomActionBar
+          left={[
+            {
+              label: "Neue Person",
+              variant: "outlined",
+              onClick: () => setCreateOpen(true),
+            },
+            {
+              label: "Zurück",
+              variant: "outlined",
+              onClick: () => navigate("/startmenue"),
+            },
+          ]}
+        />
+      )}
+      <PersonCreateDialog
+        open={copyOpen}
+        onClose={() => setCopyOpen(false)}
+        initialData={copyData}
+        showAddToVeranstaltung={true}
+        onCreate={async (person, addToActiveVeranstaltung) => {
+          const created = await createPerson(person);
+
+          // Direkt Teilnehmer hinzufügen
+          if (addToActiveVeranstaltung && active?.id) {
+            await addTeilnehmer(active.id, created.id);
+          }
+
+          // Tabelle neu laden
+          cursorRef.current = null;
+
+          setRows([]);
+          setHasMore(true);
+
+          await loadRef.current();
+
+          // Neue Person selektieren
+          setSelectedId(created.id);
+
+          setCopyOpen(false);
+        }}
+      />
+     
+      <PersonCreateDialog
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        showAddToVeranstaltung={true}
+        onCreate={async (person, addToActiveVeranstaltung) => {
+          const created = await createPerson(person);
+
+          if (addToActiveVeranstaltung && active?.id) {
+            await addTeilnehmer(active.id, created.id);
+          }
+
+          cursorRef.current = null;
+          setRows([]);
+          setHasMore(true);
+
+          await loadRef.current();
+
+          setSelectedId(created.id);
+
+          setCreateOpen(false);
+        }}
+      />
     </Box>
   );
 }

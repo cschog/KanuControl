@@ -4,13 +4,15 @@ import com.kcserver.entity.Beitragsregel;
 import com.kcserver.entity.Beitragsstruktur;
 import com.kcserver.entity.Teilnehmer;
 import com.kcserver.entity.Veranstaltung;
+import com.kcserver.enumtype.TeilnehmerRolle;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import com.kcserver.enumtype.TeilnehmerRolle;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.Comparator;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -45,15 +47,15 @@ public class BeitragsService {
         Beitragsstruktur struktur =
                 veranstaltung.getBeitragsstruktur();
 
-        if (struktur == null) {
+        if (struktur == null || struktur.getRegeln() == null) {
             return BigDecimal.ZERO;
         }
 
         // =========================================
-        // Alter
+        // Alter berechnen
         // =========================================
 
-        Integer alter = null;
+        int alter = 0;
 
         if (teilnehmer.getPerson().getGeburtsdatum() != null) {
 
@@ -67,37 +69,91 @@ public class BeitragsService {
                 teilnehmer.getRolle();
 
         // =========================================
-        // Regeln prüfen
+        // Regeln sortieren
         // =========================================
 
-        for (Beitragsregel regel : struktur.getRegeln()) {
+        List<Beitragsregel> regeln =
+                struktur.getRegeln()
+                        .stream()
+                        .sorted(Comparator.comparing(Beitragsregel::getSortierung))
+                        .toList();
 
-            // Rolle prüfen
-            if (regel.getRolle() != null &&
-                    regel.getRolle() != rolle) {
+        // =========================================
+        // Rollen-spezifische Regeln zuerst
+        // =========================================
 
-                continue;
-            }
+        BigDecimal rollenTreffer =
+                findePassendenBeitrag(regeln, alter, rolle, false);
 
-            // Alter von
-            if (regel.getAlterVon() != null &&
-                    alter != null &&
-                    alter < regel.getAlterVon()) {
+        if (rollenTreffer != null) {
+            return rollenTreffer;
+        }
 
-                continue;
-            }
+        // =========================================
+        // Fallback Teilnehmer-Regeln
+        // =========================================
 
-            // Alter bis
-            if (regel.getAlterBis() != null &&
-                    alter != null &&
-                    alter > regel.getAlterBis()) {
+        BigDecimal standardTreffer =
+                findePassendenBeitrag(regeln, alter, rolle, true);
 
-                continue;
-            }
-
-            return regel.getBeitrag();
+        if (standardTreffer != null) {
+            return standardTreffer;
         }
 
         return BigDecimal.ZERO;
+    }
+
+    /* =========================================================
+       MATCHING
+       ========================================================= */
+
+    private BigDecimal findePassendenBeitrag(
+            List<Beitragsregel> regeln,
+            int alter,
+            TeilnehmerRolle rolle,
+            boolean nurStandardRegeln
+    ) {
+
+        int alterVon = 0;
+
+        for (Beitragsregel regel : regeln) {
+
+            // =========================================
+            // Rollenfilter
+            // =========================================
+
+            if (nurStandardRegeln) {
+
+                if (regel.getRolle() != null) {
+                    continue;
+                }
+
+            } else {
+
+                if (regel.getRolle() != rolle) {
+                    continue;
+                }
+            }
+
+            Integer alterBis = regel.getAlterBis();
+
+            boolean alterMatch =
+                    alter >= alterVon &&
+                            (alterBis == null || alter <= alterBis);
+
+            if (alterMatch) {
+                return regel.getBeitrag();
+            }
+
+            // =========================================
+            // Nächster Bereich
+            // =========================================
+
+            if (alterBis != null) {
+                alterVon = alterBis + 1;
+            }
+        }
+
+        return null;
     }
 }

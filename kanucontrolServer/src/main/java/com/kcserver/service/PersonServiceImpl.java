@@ -8,12 +8,11 @@ import com.kcserver.entity.Verein;
 import com.kcserver.enumtype.CountryCode;
 import com.kcserver.mapper.PersonMapper;
 import com.kcserver.persistence.specification.PersonSpecification;
+import com.kcserver.repository.MitgliedRepository;
 import com.kcserver.repository.PersonRepository;
+import com.kcserver.repository.TeilnehmerRepository;
 import com.kcserver.repository.VereinRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -29,21 +28,24 @@ import com.kcserver.dto.common.ScrollResponse;
 @Transactional
 public class PersonServiceImpl implements PersonService {
 
-    private static final Logger logger =
-            LoggerFactory.getLogger(PersonServiceImpl.class);
-
     private final PersonRepository personRepository;
     private final PersonMapper personMapper;
     private final VereinRepository vereinRepository;
+    private final MitgliedRepository mitgliedRepository;
+    private final TeilnehmerRepository teilnehmerRepository;
 
     public PersonServiceImpl(
             PersonRepository personRepository,
             PersonMapper personMapper,
-            VereinRepository vereinRepository
+            VereinRepository vereinRepository,
+            MitgliedRepository mitgliedRepository,
+            TeilnehmerRepository teilnehmerRepository
     ) {
         this.personRepository = personRepository;
         this.personMapper = personMapper;
         this.vereinRepository = vereinRepository;
+        this.mitgliedRepository = mitgliedRepository;
+        this.teilnehmerRepository = teilnehmerRepository;
     }
 
     /* =========================================================
@@ -162,7 +164,43 @@ public class PersonServiceImpl implements PersonService {
 
         Person saved = personRepository.save(entity);
 
-        return personMapper.toDetailDTO(saved);
+        // =====================================================
+        // Mitgliedschaften speichern
+        // =====================================================
+
+        if (dto.getMitgliedschaften() != null) {
+
+            for (MitgliedSaveDTO m : dto.getMitgliedschaften()) {
+
+                Verein verein = vereinRepository.findById(m.getVereinId())
+                        .orElseThrow(() -> new ResponseStatusException(
+                                HttpStatus.NOT_FOUND,
+                                "Verein not found: " + m.getVereinId()
+                        ));
+
+                Mitglied mitglied = new Mitglied();
+
+                mitglied.setPerson(saved);
+
+                mitglied.setVerein(verein);
+
+                mitglied.setFunktion(
+                        m.getFunktion()
+                );
+
+                mitglied.setHauptVerein(
+                        Boolean.TRUE.equals(m.getHauptVerein())
+                );
+
+                mitgliedRepository.save(mitglied);
+            }
+        }
+
+        Person reloaded =
+                personRepository.findDetailById(saved.getId())
+                        .orElseThrow();
+
+        return personMapper.toDetailDTO(reloaded);
     }
 
     /* =========================================================
@@ -210,6 +248,7 @@ public class PersonServiceImpl implements PersonService {
                     HttpStatus.NOT_FOUND, "Person not found"
             );
         }
+        teilnehmerRepository.deleteByPersonId(id);
         personRepository.deleteById(id);
     }
 
@@ -292,7 +331,7 @@ public class PersonServiceImpl implements PersonService {
         }
 
         if (hauptvereine.size() == 1) {
-            Mitglied haupt = hauptvereine.get(0);
+            Mitglied haupt = hauptvereine.getFirst();
 
             existing.forEach(m ->
                     m.setHauptVerein(m == haupt)

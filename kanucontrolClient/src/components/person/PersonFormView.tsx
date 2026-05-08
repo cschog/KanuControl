@@ -29,6 +29,8 @@ interface PersonFormViewProps {
   onDeleteMitglied: (mitgliedId: number) => Promise<void>;
   onSetHauptverein: (mitgliedId: number) => Promise<void>;
 
+  onCopy?: () => void;
+
   onBack: () => void;
 
   btnÄndernPerson: boolean;
@@ -51,6 +53,7 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
   onDeleteMitglied,
   onSetHauptverein,
   onBack,
+  onCopy,
   btnÄndernPerson,
   btnLöschenPerson,
   onReloadPerson,
@@ -61,6 +64,7 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
   const { form, update, buildSavePayload } = usePersonForm(personDetail);
 
   const [vereine, setVereine] = useState<VereinRef[]>([]);
+
 
   useEffect(() => {
     apiClient.get<VereinRef[]>("/verein").then((res) => setVereine(res.data));
@@ -74,7 +78,7 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
     );
   }
 
-  const zugeordneteIds = new Set(personDetail.mitgliedschaften.map((m) => m.verein.id));
+ const zugeordneteIds = new Set((personDetail.mitgliedschaften ?? []).map((m) => m.verein.id));
 
   const verfügbareVereine = vereine.filter((v) => !zugeordneteIds.has(v.id));
 
@@ -96,7 +100,7 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
       {/* MEMBERSHIPS */}
       <Box maxWidth="xl" mx="auto" sx={{ mt: 3 }}>
         <PersonMembershipsCard
-          person={personDetail}
+          person={{ ... personDetail, mitgliedschaften: personDetail.mitgliedschaften ?? [] }}
           editMode={editMode}
           onSetHauptverein={onSetHauptverein}
           onDeleteMitglied={onDeleteMitglied}
@@ -117,11 +121,15 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
         onCancelEdit={onCancelEdit}
         onSave={async () => {
           const payload = buildSavePayload();
-          if (payload) await onSpeichern(payload);
+
+          if (payload) {
+            await onSpeichern(payload);
+          }
         }}
         onDelete={() => setConfirmOpen(true)}
         onBack={onBack}
         onAddVerein={() => setAddVereinOpen(true)}
+        onCopy={onCopy}
         disableEdit={btnÄndernPerson}
         disableDelete={btnLöschenPerson}
       />

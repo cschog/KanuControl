@@ -135,26 +135,45 @@ public abstract class TeilnehmerMapper {
        HILFSMAPPING
        ========================= */
 
-     public PersonRefDTO map(Person person) {
-        if (person == null) return null;
+    public PersonRefDTO map(Person person) {
 
-        PersonRefDTO dto = new PersonRefDTO();
-        dto.setId(person.getId());
-        dto.setVorname(person.getVorname());
-        dto.setName(person.getName());
+        try {
 
-        // ⭐ Hauptverein bestimmen
-        if (person.getMitgliedschaften() != null) {
-            person.getMitgliedschaften().stream()
-                    .filter(m -> Boolean.TRUE.equals(m.getHauptVerein()))
-                    .findFirst()
-                    .ifPresent(m -> {
-                        if (m.getVerein() != null) {
-                            dto.setHauptvereinAbk(m.getVerein().getAbk());
-                        }
-                    });
+            if (person == null) {
+                return null;
+            }
+
+            // 🔑 Zugriff erzwingen
+            person.getId();
+
+            PersonRefDTO dto = new PersonRefDTO();
+
+            dto.setId(person.getId());
+            dto.setVorname(person.getVorname());
+            dto.setName(person.getName());
+
+            // ⭐ Hauptverein bestimmen
+            if (person.getMitgliedschaften() != null) {
+
+                person.getMitgliedschaften().stream()
+                        .filter(m -> Boolean.TRUE.equals(m.getHauptVerein()))
+                        .findFirst()
+                        .ifPresent(m -> {
+
+                            if (m.getVerein() != null) {
+                                dto.setHauptvereinAbk(
+                                        m.getVerein().getAbk()
+                                );
+                            }
+                        });
+            }
+
+            return dto;
+
+        } catch (jakarta.persistence.EntityNotFoundException ex) {
+
+            // kaputter Teilnehmer-Datensatz
+            return null;
         }
-
-        return dto;
     }
 }

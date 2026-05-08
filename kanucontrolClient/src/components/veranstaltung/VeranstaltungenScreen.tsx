@@ -5,11 +5,12 @@ import { Alert, Box, Grid, Paper } from "@mui/material";
 import apiClient from "@/api/client/apiClient";
 
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 import { MenueHeader } from "@/components/layout/MenueHeader";
 import { renderLoadingOrError } from "@/components/common/loadingOnErrorUtils";
 import { BottomActionBar } from "@/components/common/BottomActionBar";
-
+import { VeranstaltungFormModel } from "@/api/types/VeranstaltungFormModel";
 import { VeranstaltungTable } from "./VeranstaltungTable";
 import { VeranstaltungFormView } from "./VeranstaltungFormView";
 import { VeranstaltungCreateDialog } from "./VeranstaltungCreateDialog";
@@ -40,33 +41,24 @@ interface BeitragsstrukturDTO {
 
 interface Props {
   reloadContext: () => Promise<void>;
+  navigate: (path: string) => void;
 }
 
 interface State {
   data: VeranstaltungList[];
-
   total: number;
-
   page: number;
-
   pageSize: number;
-
   selectedId: number | null;
-
   selectedVeranstaltung: VeranstaltungDetail | null;
-
   beitragsstrukturen: BeitragsstrukturDTO[];
-
   loading: boolean;
-
   error: string | null;
-
   createOpen: boolean;
-
+  copyOpen: boolean;
+  copyData?: Partial<VeranstaltungFormModel>;
   editMode: boolean;
-
   btnEditDisabled: boolean;
-
   btnDeleteDisabled: boolean;
 }
 
@@ -77,29 +69,19 @@ interface State {
 class VeranstaltungenScreen extends Component<Props, State> {
   state: State = {
     data: [],
-
     total: 0,
-
     page: 0,
-
     pageSize: 8,
-
     selectedId: null,
-
     selectedVeranstaltung: null,
-
     beitragsstrukturen: [],
-
     loading: true,
-
     error: null,
-
     createOpen: false,
-
+    copyOpen: false,
+    copyData: undefined,
     editMode: false,
-
     btnEditDisabled: true,
-
     btnDeleteDisabled: true,
   };
 
@@ -190,11 +172,8 @@ class VeranstaltungenScreen extends Component<Props, State> {
     if (!row) {
       this.setState({
         selectedId: null,
-
         selectedVeranstaltung: null,
-
         btnEditDisabled: true,
-
         btnDeleteDisabled: true,
       });
 
@@ -205,13 +184,9 @@ class VeranstaltungenScreen extends Component<Props, State> {
 
     this.setState({
       selectedId: row.id,
-
       selectedVeranstaltung: detail,
-
       editMode: false,
-
       btnEditDisabled: false,
-
       btnDeleteDisabled: false,
     });
   };
@@ -223,9 +198,7 @@ class VeranstaltungenScreen extends Component<Props, State> {
   handleEdit = () => {
     this.setState({
       editMode: true,
-
       btnEditDisabled: true,
-
       btnDeleteDisabled: true,
     });
   };
@@ -266,13 +239,9 @@ class VeranstaltungenScreen extends Component<Props, State> {
 
       this.setState({
         selectedVeranstaltung: saved,
-
         editMode: false,
-
         btnEditDisabled: false,
-
         btnDeleteDisabled: false,
-
         error: null,
       });
     } catch (err: unknown) {
@@ -305,11 +274,8 @@ class VeranstaltungenScreen extends Component<Props, State> {
 
     this.setState({
       selectedId: null,
-
       selectedVeranstaltung: null,
-
       btnEditDisabled: true,
-
       btnDeleteDisabled: true,
     });
 
@@ -359,14 +325,48 @@ class VeranstaltungenScreen extends Component<Props, State> {
 
     this.setState({
       createOpen: false,
-
       selectedVeranstaltung: saved,
-
       selectedId: saved.id,
-
       btnEditDisabled: false,
-
       btnDeleteDisabled: false,
+    });
+  };
+
+  handleCopy = () => {
+    const { selectedVeranstaltung } = this.state;
+
+    if (!selectedVeranstaltung) {
+      return;
+    }
+
+    this.setState({
+      copyOpen: true,
+
+      copyData: {
+        name: `${selectedVeranstaltung.name} Kopie`,
+        typ: selectedVeranstaltung.typ,
+        scope: selectedVeranstaltung.scope,
+        verein: selectedVeranstaltung.verein,
+        leiter: selectedVeranstaltung.leiter,
+        beginnDatum: selectedVeranstaltung.beginnDatum,
+        endeDatum: selectedVeranstaltung.endeDatum,
+        beginnZeit: selectedVeranstaltung.beginnZeit,
+        endeZeit: selectedVeranstaltung.endeZeit,
+        artDerUnterkunft: selectedVeranstaltung.artDerUnterkunft,
+        artDerVerpflegung: selectedVeranstaltung.artDerVerpflegung,
+        countryCode: selectedVeranstaltung.countryCode,
+        plz: selectedVeranstaltung.plz,
+        ort: selectedVeranstaltung.ort,
+        individuelleGebuehren: selectedVeranstaltung.individuelleGebuehren,
+        standardGebuehr: selectedVeranstaltung.standardGebuehr,
+        beitragsstrukturId: selectedVeranstaltung.beitragsstrukturId,
+        geplanteTeilnehmerMaennlich: selectedVeranstaltung.geplanteTeilnehmerMaennlich,
+        geplanteTeilnehmerWeiblich: selectedVeranstaltung.geplanteTeilnehmerWeiblich,
+        geplanteTeilnehmerDivers: selectedVeranstaltung.geplanteTeilnehmerDivers,
+        geplanteMitarbeiterMaennlich: selectedVeranstaltung.geplanteMitarbeiterMaennlich,
+        geplanteMitarbeiterWeiblich: selectedVeranstaltung.geplanteMitarbeiterWeiblich,
+        geplanteMitarbeiterDivers: selectedVeranstaltung.geplanteMitarbeiterDivers,
+      },
     });
   };
 
@@ -375,7 +375,7 @@ class VeranstaltungenScreen extends Component<Props, State> {
      ========================================================= */
 
   handleBack = () => {
-    window.history.back();
+    this.props.navigate("/startmenue");
   };
 
   /* =========================================================
@@ -385,19 +385,12 @@ class VeranstaltungenScreen extends Component<Props, State> {
   render() {
     const {
       data,
-
       total,
-
       loading,
-
       error,
-
       selectedId,
-
       selectedVeranstaltung,
-
       createOpen,
-
       beitragsstrukturen,
     } = this.state;
 
@@ -439,6 +432,7 @@ class VeranstaltungenScreen extends Component<Props, State> {
                 beitragsstrukturen={beitragsstrukturen}
                 editMode={this.state.editMode}
                 onEdit={this.handleEdit}
+                onCopy={this.handleCopy}
                 onCancelEdit={this.handleCancelEdit}
                 onSave={this.handleSave}
                 onDelete={this.handleDelete}
@@ -482,6 +476,18 @@ class VeranstaltungenScreen extends Component<Props, State> {
           onCreate={this.handleCreate}
           beitragsstrukturen={beitragsstrukturen}
         />
+
+        <VeranstaltungCreateDialog
+          open={this.state.copyOpen}
+          onClose={() =>
+            this.setState({
+              copyOpen: false,
+            })
+          }
+          onCreate={this.handleCreate}
+          beitragsstrukturen={beitragsstrukturen}
+          initialData={this.state.copyData}
+        />
       </Box>
     );
   }
@@ -494,7 +500,9 @@ class VeranstaltungenScreen extends Component<Props, State> {
 function VeranstaltungenWithContext() {
   const reload = useReloadAppContext();
 
-  return <VeranstaltungenScreen reloadContext={reload} />;
+  const navigate = useNavigate();
+
+  return <VeranstaltungenScreen reloadContext={reload} navigate={navigate} />;
 }
 
 export default VeranstaltungenWithContext;
