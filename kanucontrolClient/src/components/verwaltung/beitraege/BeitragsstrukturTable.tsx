@@ -241,6 +241,28 @@ const BeitragsstrukturTable = () => {
     }
   };
 
+  const handleCopy = async (id: number, name: string) => {
+    const neuerName = window.prompt("Name der Kopie:", `${name} Kopie`);
+
+    if (!neuerName?.trim()) {
+      return;
+    }
+
+    try {
+      await apiClient.post(`/beitragsstrukturen/${id}/copy`, null, {
+        params: {
+          name: neuerName,
+        },
+      });
+
+      load();
+    } catch (err) {
+      console.error(err);
+
+      setError("Struktur konnte nicht kopiert werden.");
+    }
+  };
+
   /* =========================================================
      HELPER
      ========================================================= */
@@ -367,6 +389,10 @@ const BeitragsstrukturTable = () => {
                   {s.regeln.length} Regeln
                 </Typography>
 
+                <Button variant="outlined" onClick={() => handleCopy(s.id, s.name)}>
+                  Kopieren
+                </Button>
+
                 <Button variant="outlined" onClick={() => handleRename(s.id)}>
                   Speichern
                 </Button>
@@ -374,6 +400,7 @@ const BeitragsstrukturTable = () => {
                 <Button color="error" variant="outlined" onClick={() => handleDelete(s.id)}>
                   Löschen
                 </Button>
+                
               </Stack>
             </Stack>
           </AccordionSummary>

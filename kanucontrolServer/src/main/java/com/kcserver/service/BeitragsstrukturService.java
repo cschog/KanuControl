@@ -214,6 +214,56 @@ public class BeitragsstrukturService {
         validator.validate(struktur.getRegeln());
     }
 
+    @Transactional
+    public BeitragsstrukturDTO copy(
+            Long strukturId,
+            String neuerName
+    ) {
+
+        Beitragsstruktur original =
+                repository.findById(strukturId)
+                        .orElseThrow(() ->
+                                new ResponseStatusException(
+                                        HttpStatus.NOT_FOUND,
+                                        "Beitragsstruktur nicht gefunden"
+                                )
+                        );
+
+        Beitragsstruktur copy = new Beitragsstruktur();
+
+        copy.setName(neuerName);
+        copy.setTemplate(false);
+        copy.setAktiv(true);
+        copy.setSystem(false);
+
+        List<Beitragsregel> neueRegeln =
+                original.getRegeln()
+                        .stream()
+                        .map(r -> {
+
+                            Beitragsregel nr = new Beitragsregel();
+
+                            nr.setStruktur(copy);
+
+                            nr.setSortierung(r.getSortierung());
+                            nr.setAlterBis(r.getAlterBis());
+                            nr.setRolle(r.getRolle());
+                            nr.setBeitrag(r.getBeitrag());
+
+                            return nr;
+                        })
+                        .toList();
+
+        copy.setRegeln(neueRegeln);
+
+        validator.validate(copy.getRegeln());
+
+        Beitragsstruktur saved =
+                repository.save(copy);
+
+        return mapper.toDTO(saved);
+    }
+
     /* =========================================================
        COPY TEMPLATE ENTITY
        ========================================================= */
