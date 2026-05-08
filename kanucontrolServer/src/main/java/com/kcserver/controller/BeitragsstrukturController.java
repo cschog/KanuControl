@@ -3,7 +3,6 @@ package com.kcserver.controller;
 import com.kcserver.dto.beitrag.BeitragsregelCreateDTO;
 import com.kcserver.dto.beitrag.BeitragsstrukturDTO;
 import com.kcserver.dto.beitrag.BeitragsstrukturUpdateDTO;
-import com.kcserver.entity.Beitragsstruktur;
 import com.kcserver.service.BeitragsstrukturService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -63,6 +62,15 @@ public class BeitragsstrukturController {
             @RequestBody BeitragsregelCreateDTO dto
     ) {
         return service.updateRegel(regelId, dto);
+    }
+
+    @PostMapping("/{id}/copy")
+    public BeitragsstrukturDTO copy(
+            @PathVariable Long id,
+            @RequestParam String name
+    ) {
+
+        return service.copy(id, name);
     }
 
     @PostMapping("/copy/{templateId}")
