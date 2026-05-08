@@ -27,7 +27,7 @@ public class Beitragsstruktur extends Auditable {
     private boolean system;
 
     @OneToMany(
-            mappedBy = "beitragsstruktur",
+            mappedBy = "struktur",
             cascade = CascadeType.ALL,
             orphanRemoval = true
     )

@@ -1,4 +1,4 @@
-import { Box, Tabs, Tab } from "@mui/material";
+import { Box, Tabs, Tab, Alert } from "@mui/material";
 import { useState } from "react";
 import type { SyntheticEvent } from "react";
 import { useParams } from "react-router-dom";
@@ -17,7 +17,11 @@ const Finanzen = () => {
 
   if (!veranstaltungId) return null;
 
-  const id = Number(veranstaltungId);
+ const id = Number(veranstaltungId);
+
+ if (Number.isNaN(id)) {
+   return <Alert severity="error">Ungültige Veranstaltungs-ID</Alert>;
+ }
 
   const handleChange = (_event: SyntheticEvent, value: number) => {
     setTab(value);

@@ -176,6 +176,8 @@ ORDER BY p.name, p.vorname, t.id
     """)
     void deleteByVeranstaltungIdAndPersonIds(Long veranstaltungId, List<Long> personIds);
 
+    void deleteByPersonId(Long personId);
+
     List<Teilnehmer> findByVeranstaltungIdAndFinanzGruppeIsNull(Long veranstaltungId);
 
     /* =========================================================

@@ -20,7 +20,7 @@ export interface VeranstaltungSave {
 
   scope: VeranstaltungScope;
 
-  laenderCode?: CountryCode;
+  countryCode?: CountryCode;
   plz?: string;
   ort?: string;
 

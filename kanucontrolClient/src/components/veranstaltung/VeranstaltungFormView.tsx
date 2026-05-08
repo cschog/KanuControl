@@ -12,6 +12,7 @@ interface Props {
   editMode: boolean;
 
   onEdit: () => void;
+  onCopy: () => void;
   onCancelEdit: () => void;
   onSave: (v: VeranstaltungSave) => Promise<void>;
   onDelete: () => void;
@@ -35,6 +36,7 @@ export const VeranstaltungFormView: React.FC<Props> = ({
   beitragsstrukturen,
   editMode,
   onEdit,
+  onCopy,
   onCancelEdit,
   onSave,
   onDelete,
@@ -81,6 +83,7 @@ export const VeranstaltungFormView: React.FC<Props> = ({
         aktiv={veranstaltung.aktiv}
         editMode={editMode}
         onEdit={onEdit}
+        onCopy={onCopy}
         onCancelEdit={onCancelEdit}
         onSave={async () => {
           const payload = buildSavePayload();

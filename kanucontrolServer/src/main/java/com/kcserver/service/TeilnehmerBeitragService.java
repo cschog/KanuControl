@@ -1,18 +1,13 @@
 package com.kcserver.service;
 
-import com.kcserver.entity.Beitragsregel;
 import com.kcserver.entity.Beitragsstruktur;
 import com.kcserver.entity.Teilnehmer;
 import com.kcserver.entity.Veranstaltung;
-import com.kcserver.enumtype.TeilnehmerRolle;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.Period;
-
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
@@ -30,11 +25,10 @@ public class TeilnehmerBeitragService {
      *
      * 1. Individuelle Gebühren aktiv:
      *    -> individuellerBeitrag verwenden
-     *    -> falls null => 0 €
+     *    -> sonst Beitragsstruktur verwenden
      *
      * 2. Individuelle Gebühren deaktiviert:
      *    -> Standardgebühr der Veranstaltung
-     *    -> falls null => 0 €
      */
     public BigDecimal getEffektiverBeitrag(
             Veranstaltung veranstaltung,
@@ -45,88 +39,31 @@ public class TeilnehmerBeitragService {
             return BigDecimal.ZERO;
         }
 
-    /* =========================================
-       INDIVIDUELLE GEBÜHREN
-       ========================================= */
-
-        if (veranstaltung.isIndividuelleGebuehren()) {
-
-            // 1️⃣ Manuell überschrieben
-            if (teilnehmer.getIndividuellerBeitrag() != null) {
-                return teilnehmer.getIndividuellerBeitrag();
-            }
-
-            // 2️⃣ Struktur
-            Beitragsstruktur struktur = veranstaltung.getBeitragsstruktur();
-
-            if (struktur != null) {
-
-                Integer alter =
-                        altersService.berechneAlterBeiBeginn(
-                                teilnehmer.getPerson().getGeburtsdatum(),
-                                veranstaltung.getBeginnDatum()
-                        );
-
-                if (alter != null) {
-
-                    return beitragsregelService
-                            .findPassendeRegel(
-                                    struktur,
-                                    alter,
-                                    teilnehmer.getRolle()
-                            )
-                            .map(r -> {
-                                log.debug(
-                                        "Teilnehmer {} Alter {} → Regel {}",
-                                        teilnehmer.getId(),
-                                        alter,
-                                        r.getBeitrag()
-                                );
-                                return r.getBeitrag();
-                            })
-                            .orElse(BigDecimal.ZERO);
-                }
-            }
-
-            return BigDecimal.ZERO;
-        }
-
-    /* =========================================
-       STANDARD
-       ========================================= */
-
-        return veranstaltung.getStandardGebuehr() != null
-                ? veranstaltung.getStandardGebuehr()
-                : BigDecimal.ZERO;
-    }
-
-    public BigDecimal berechneBeitrag(
-            Veranstaltung veranstaltung,
-            Teilnehmer teilnehmer
-    ) {
-
-        // =========================================
-        // Individuell überschrieben
-        // =========================================
+        /* =========================================
+           MANUELL ÜBERSCHRIEBEN
+           ========================================= */
 
         if (teilnehmer.getIndividuellerBeitrag() != null) {
+
             return teilnehmer.getIndividuellerBeitrag();
         }
 
-        // =========================================
-        // Normale Standardgebühr
-        // =========================================
+        /* =========================================
+           STANDARDGEBÜHR
+           ========================================= */
 
         if (!Boolean.TRUE.equals(
                 veranstaltung.isIndividuelleGebuehren()
         )) {
 
-            return veranstaltung.getStandardGebuehr();
+            return veranstaltung.getStandardGebuehr() != null
+                    ? veranstaltung.getStandardGebuehr()
+                    : BigDecimal.ZERO;
         }
 
-        // =========================================
-        // Keine Struktur vorhanden
-        // =========================================
+        /* =========================================
+           BEITRAGSSTRUKTUR
+           ========================================= */
 
         Beitragsstruktur struktur =
                 veranstaltung.getBeitragsstruktur();
@@ -135,60 +72,58 @@ public class TeilnehmerBeitragService {
             return BigDecimal.ZERO;
         }
 
-        // =========================================
-        // Alter berechnen
-        // =========================================
+        /* =========================================
+           ALTER
+           ========================================= */
 
-        Integer alter = null;
+        Integer alter =
+                altersService.berechneAlterBeiBeginn(
+                        teilnehmer.getPerson().getGeburtsdatum(),
+                        veranstaltung.getBeginnDatum()
+                );
 
-        if (teilnehmer.getPerson()
-                .getGeburtsdatum() != null) {
-
-            alter = Period.between(
-                    teilnehmer.getPerson().getGeburtsdatum(),
-                    LocalDate.now()
-            ).getYears();
+        if (alter == null) {
+            return BigDecimal.ZERO;
         }
 
-        TeilnehmerRolle rolle = teilnehmer.getRolle();
+        /* =========================================
+           REGEL SUCHEN
+           ========================================= */
 
-        // =========================================
-        // Passende Regel suchen
-        // =========================================
+        return beitragsregelService
+                .findPassendeRegel(
+                        struktur,
+                        alter,
+                        teilnehmer.getRolle()
+                )
+                .map(regel -> {
 
-        for (Beitragsregel regel : struktur.getRegeln()) {
+                    log.debug(
+                            "Teilnehmer {} Alter {} Rolle {} → Beitrag {}",
+                            teilnehmer.getId(),
+                            alter,
+                            teilnehmer.getRolle(),
+                            regel.getBeitrag()
+                    );
 
-            // Rolle prüfen
-            if (regel.getRolle() != null &&
-                    regel.getRolle() != rolle) {
+                    return regel.getBeitrag();
+                })
+                .orElse(BigDecimal.ZERO);
+    }
 
-                continue;
-            }
+    /**
+     * Alias für Alt-Code.
+     * Kann später entfernt werden.
+     */
+    public BigDecimal berechneBeitrag(
+            Veranstaltung veranstaltung,
+            Teilnehmer teilnehmer
+    ) {
 
-            // Alter von
-            if (regel.getAlterVon() != null &&
-                    alter != null &&
-                    alter < regel.getAlterVon()) {
-
-                continue;
-            }
-
-            // Alter bis
-            if (regel.getAlterBis() != null &&
-                    alter != null &&
-                    alter > regel.getAlterBis()) {
-
-                continue;
-            }
-
-            return regel.getBeitrag();
-        }
-
-        // =========================================
-        // Fallback
-        // =========================================
-
-        return BigDecimal.ZERO;
+        return getEffektiverBeitrag(
+                veranstaltung,
+                teilnehmer
+        );
     }
 
     public boolean isBezahlt(Teilnehmer teilnehmer) {
@@ -197,7 +132,9 @@ public class TeilnehmerBeitragService {
             return false;
         }
 
-        return Boolean.TRUE.equals(teilnehmer.getBezahlt());
+        return Boolean.TRUE.equals(
+                teilnehmer.getBezahlt()
+        );
     }
 
     public BigDecimal getOffenerBetrag(

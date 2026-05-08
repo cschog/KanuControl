@@ -115,3 +115,7 @@ export async function removeTeilnehmerFromGruppe(
     `/veranstaltungen/${veranstaltungId}/finanzgruppen/${gruppeId}/teilnehmer/${personId}`,
   );
 }
+
+export async function addTeilnehmer(veranstaltungId: number, personId: number) {
+  return apiClient.post(`/veranstaltungen/${veranstaltungId}/teilnehmer/${personId}`);
+}

@@ -31,6 +31,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useEffect, useState } from "react";
 import apiClient from "@/api/client/apiClient";
 import { TEILNEHMER_ROLLEN, TeilnehmerRolle } from "@/api/enums/TeilnehmerRolle";
+import axios from "axios";
 
 /* =========================================================
    TYPES
@@ -61,7 +62,6 @@ const BeitragsstrukturTable = () => {
   const [error, setError] = useState<string | null>(null);
   const [newName, setNewName] = useState("");
   const [form, setForm] = useState({
-    alterVon: "",
     alterBis: "",
     rolle: "" as TeilnehmerRolle | "",
     beitrag: "",
@@ -154,26 +154,43 @@ const BeitragsstrukturTable = () => {
     }));
   };
 
-  const handleAddRegel = async (strukturId: number) => {
+  const handleAddRegel = async (strukturId: number, regeln: BeitragsregelDTO[]) => {
     try {
+      const letzte = regeln[regeln.length - 1];
+      const alterVon = regeln.length === 0 ? 0 : (letzte.alterBis ?? 0) + 1;
+
       await apiClient.post(`/beitragsstrukturen/${strukturId}/regeln`, {
-        alterVon: form.alterVon ? Number(form.alterVon) : null,
+        alterVon,
+
         alterBis: form.alterBis ? Number(form.alterBis) : null,
+
         rolle: form.rolle || null,
+
         beitrag: Number(form.beitrag),
       });
 
       // Reset
       setForm({
-        alterVon: "",
         alterBis: "",
         rolle: "",
         beitrag: "",
       });
 
       load();
-    } catch (err) {
-      console.error(err);
+    } catch (err: unknown) {
+      
+      if (axios.isAxiosError(err)) {
+        const message =
+          typeof err.response?.data === "object" &&
+          err.response?.data !== null &&
+          "message" in err.response.data
+            ? String(err.response.data.message)
+            : "Regel konnte nicht gespeichert werden.";
+
+        setError(message);
+      } else {
+        setError("Regel konnte nicht gespeichert werden.");
+      }
     }
   };
 
@@ -200,10 +217,10 @@ const BeitragsstrukturTable = () => {
   };
 
   const handleSaveRegel = async () => {
-   if (!editingRegel?.id) {
-     setError("Regel-ID fehlt.");
-     return;
-   }
+    if (!editingRegel?.id) {
+      setError("Regel-ID fehlt.");
+      return;
+    }
 
     try {
       await apiClient.put(`/beitragsstrukturen/regeln/${editingRegel.id}`, editingRegel);
@@ -213,10 +230,14 @@ const BeitragsstrukturTable = () => {
       setEditingRegel(null);
 
       load();
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(err);
 
-      setError("Regel konnte nicht gespeichert werden.");
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.message ?? "Regel konnte nicht gespeichert werden.");
+      } else {
+        setError("Regel konnte nicht gespeichert werden.");
+      }
     }
   };
 
@@ -224,12 +245,17 @@ const BeitragsstrukturTable = () => {
      HELPER
      ========================================================= */
 
-  const formatAlter = (r: BeitragsregelDTO) => {
-    const von = r.alterVon ?? 0;
-    const bis = r.alterBis ?? "∞";
+ const formatAlter = (r: BeitragsregelDTO) => {
+   // Rollenregeln haben kein Alter
+   if (r.rolle === "L" || r.rolle === "M") {
+     return "—";
+   }
 
-    return `${von} - ${bis}`;
-  };
+   const von = r.alterVon ?? 0;
+   const bis = r.alterBis ?? "∞";
+
+   return `${von} - ${bis}`;
+ };
 
   const getRolleLabel = (rolle: TeilnehmerRolle | null) => {
     if (!rolle) return "Teilnehmer";
@@ -241,6 +267,33 @@ const BeitragsstrukturTable = () => {
     if (rolle === "L") return "secondary";
     if (rolle === "M") return "default";
     return "primary";
+  };
+
+  const sortierteRegeln = (regeln: BeitragsregelDTO[]) => {
+    const rollenRank = (rolle: TeilnehmerRolle | null) => {
+      switch (rolle) {
+        case "M":
+          return 1;
+
+        case "L":
+          return 2;
+
+        default:
+          return 0;
+      }
+    };
+
+    return [...regeln].sort((a, b) => {
+      // zuerst Rolle
+      const rolleCompare = rollenRank(a.rolle) - rollenRank(b.rolle);
+
+      if (rolleCompare !== 0) {
+        return rolleCompare;
+      }
+
+      // dann Alter
+      return (a.alterVon ?? 0) - (b.alterVon ?? 0);
+    });
   };
 
   /* =========================================================
@@ -340,7 +393,7 @@ const BeitragsstrukturTable = () => {
                 </TableHead>
 
                 <TableBody>
-                  {s.regeln.map((r) => (
+                  {sortierteRegeln(s.regeln).map((r) => (
                     <TableRow key={r.id}>
                       <TableCell>{formatAlter(r)}</TableCell>
 
@@ -381,10 +434,18 @@ const BeitragsstrukturTable = () => {
                     <TextField
                       label="Alter von"
                       size="small"
-                      type="number"
                       fullWidth
-                      value={form.alterVon}
-                      onChange={(e) => handleChange("alterVon", e.target.value)}
+                      disabled
+                      value={
+                        form.rolle === "L" || form.rolle === "M"
+                          ? "—"
+                          : s.regeln.filter((r) => r.rolle === null).length === 0
+                          ? 0
+                          : (s.regeln
+                              .filter((r) => r.rolle === null)
+                              .sort((a, b) => (a.alterVon ?? 0) - (b.alterVon ?? 0))
+                              .at(-1)?.alterBis ?? 0) + 1
+                      }
                     />
                   </Grid>
 
@@ -432,7 +493,7 @@ const BeitragsstrukturTable = () => {
                   <Grid size={12}>
                     <Button
                       variant="contained"
-                      onClick={() => handleAddRegel(s.id)}
+                      onClick={() => handleAddRegel(s.id, s.regeln)}
                       disabled={!form.beitrag}
                     >
                       Regel hinzufügen
@@ -446,21 +507,7 @@ const BeitragsstrukturTable = () => {
 
                 <DialogContent>
                   <Stack spacing={2} sx={{ mt: 1 }}>
-                    <TextField
-                      label="Alter von"
-                      type="number"
-                      value={editingRegel?.alterVon ?? ""}
-                      onChange={(e) =>
-                        setEditingRegel((prev) =>
-                          prev
-                            ? {
-                                ...prev,
-                                alterVon: Number(e.target.value),
-                              }
-                            : prev,
-                        )
-                      }
-                    />
+                    <TextField label="Alter von" value={editingRegel?.alterVon ?? ""} disabled />
 
                     <TextField
                       label="Alter bis"

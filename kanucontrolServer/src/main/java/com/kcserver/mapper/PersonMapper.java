@@ -25,7 +25,10 @@ public interface PersonMapper {
             target = "alter",
             expression = "java(calculateAlter(person.getGeburtsdatum()))"
     )
-    @Mapping(target = "mitgliedschaftenCount", ignore = true)
+    @Mapping(
+            target = "mitgliedschaftenCount",
+            expression = "java(person.getMitgliedschaften() == null ? 0 : person.getMitgliedschaften().size())"
+    )
     @Mapping(target = "ort", source = "ort")
     @Mapping(
             target = "hauptvereinAbk",

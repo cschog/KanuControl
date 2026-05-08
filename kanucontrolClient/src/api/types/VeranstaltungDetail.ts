@@ -3,6 +3,7 @@ import { VeranstaltungTyp } from "@/api/enums/VeranstaltungTyp";
 import { VeranstaltungScope } from "@/api/enums/VeranstaltungScope";
 import { VereinRef } from "@/api/types/VereinRef";
 import { PersonRef } from "@/api/types/PersonRef";
+import { CountryCode } from "@/api/enums/CountryCode";
 
 export interface VeranstaltungDetail {
   id: number;
@@ -15,6 +16,7 @@ export interface VeranstaltungDetail {
 
   plz?: string;
   ort?: string;
+  countryCode?: CountryCode;
 
   beginnDatum: string;
   beginnZeit: string;

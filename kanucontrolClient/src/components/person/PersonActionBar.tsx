@@ -11,6 +11,8 @@ interface PersonActionBarProps {
   onDelete: () => void;
   onBack: () => void;
 
+  onCopy?: () => void;
+
   onAddVerein: () => void;
 
   disableEdit: boolean;
@@ -24,6 +26,7 @@ export const PersonActionBar: React.FC<PersonActionBarProps> = ({
   onSave,
   onDelete,
   onBack,
+  onCopy,
   onAddVerein,
   disableEdit,
   disableDelete,
@@ -55,7 +58,7 @@ export const PersonActionBar: React.FC<PersonActionBarProps> = ({
     <BottomActionBar
       left={[
         {
-          label: "Bearbeiten",
+          label: "Ändern",
           variant: "outlined",
           disabled: disableEdit,
           onClick: onEdit,
@@ -67,6 +70,17 @@ export const PersonActionBar: React.FC<PersonActionBarProps> = ({
           disabled: disableDelete,
           onClick: onDelete,
         },
+
+        ...(onCopy
+          ? [
+              {
+                label: "Kopieren",
+                variant: "outlined" as const,
+                onClick: onCopy,
+              },
+            ]
+          : []),
+
         {
           label: "Zurück",
           onClick: onBack,

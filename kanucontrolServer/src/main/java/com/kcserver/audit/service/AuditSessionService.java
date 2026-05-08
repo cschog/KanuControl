@@ -27,39 +27,42 @@ public class AuditSessionService {
 
         AuditSession s = repository
                 .findFirstBySessionId(sessionId)
-                .orElseGet(() -> {
+                .orElse(null);
 
-                    AuditSession neu = new AuditSession();
+        if (s == null) {
 
-                    neu.setUsername(username);
-                    neu.setFullName(fullName);
-                    neu.setEmail(email);
-                    neu.setTenant(tenant);
-                    neu.setSessionId(sessionId);
-                    neu.setLoginTime(LocalDateTime.now());
-                    neu.setIpAddress(ip);
-                    neu.setUserAgent(userAgent);
-                    neu.setLoginSuccess(true);
+            AuditSession neu = new AuditSession();
 
-                    return neu;
-                });
+            neu.setUsername(username);
+            neu.setFullName(fullName);
+            neu.setEmail(email);
+            neu.setTenant(tenant);
+            neu.setSessionId(sessionId);
+            neu.setLoginTime(LocalDateTime.now());
+            neu.setIpAddress(ip);
+            neu.setUserAgent(userAgent);
+            neu.setLoginSuccess(true);
+            neu.setLastSeen(LocalDateTime.now());
+
+            try {
+
+                repository.save(neu);
+
+                return;
+
+            } catch (DataIntegrityViolationException ignored) {
+
+                // Parallel angelegt
+            }
+
+            // nochmal laden
+            s = repository
+                    .findFirstBySessionId(sessionId)
+                    .orElseThrow();
+        }
 
         s.setLastSeen(LocalDateTime.now());
 
-        try {
-
-            repository.saveAndFlush(s);
-
-        } catch (DataIntegrityViolationException ex) {
-
-            // Session wurde parallel angelegt
-            AuditSession existing = repository
-                    .findFirstBySessionId(sessionId)
-                    .orElseThrow();
-
-            existing.setLastSeen(LocalDateTime.now());
-
-            repository.save(existing);
-        }
+        repository.save(s);
     }
 }

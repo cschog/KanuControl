@@ -188,12 +188,12 @@ export const VeranstaltungBaseForm: React.FC<Props> = ({
             fullWidth
             size="small"
             label="Land"
-            value={form.laenderCode ?? ""}
+            value={form.countryCode ?? ""}
             disabled={!editMode}
             onChange={(e) => {
-              const value = (e.target.value || undefined) as VeranstaltungFormModel["laenderCode"];
+              const value = (e.target.value || undefined) as VeranstaltungFormModel["countryCode"];
 
-              onChange("laenderCode", value);
+              onChange("countryCode", value);
             }}
           >
             {COUNTRIES.map((c) => (

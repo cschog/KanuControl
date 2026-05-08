@@ -73,3 +73,7 @@ databaseChangeLog:
       file: db/changelog/changes/2026-05-04-07-seed-regeln.xml
   - include:
       file: db/changelog/changes/2026-05-04-08-add-audit-columns.xml
+  - include:
+      file: db/changelog/changes/2026-05-07-drop-alter-von.xml
+  - include:
+      file: db/changelog/changes/2026-05-07-add-sortierung.xml

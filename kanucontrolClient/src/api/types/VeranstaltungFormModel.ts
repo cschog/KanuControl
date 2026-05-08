@@ -24,7 +24,7 @@ export interface VeranstaltungFormModel {
 
   /* ================= Detailfelder ================= */
 
-  laenderCode?: CountryCode;
+  countryCode?: CountryCode;
   plz?: string;
   ort?: string;
 

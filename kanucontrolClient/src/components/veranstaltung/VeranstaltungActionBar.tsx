@@ -6,6 +6,7 @@ interface Props {
   editMode: boolean;
 
   onEdit: () => void;
+  onCopy: () => void;
   onCancelEdit: () => void;
   onSave: () => void;
   onDelete: () => void; // ⭐ FEHLTE
@@ -20,6 +21,7 @@ export const VeranstaltungActionBar: React.FC<Props> = ({
   aktiv,
   editMode,
   onEdit,
+  onCopy,
   onCancelEdit,
   onSave,
   onDelete,
@@ -47,6 +49,11 @@ export const VeranstaltungActionBar: React.FC<Props> = ({
           onClick: onEdit,
           variant: "contained",
           disabled: disableEdit,
+        },
+        {
+          label: "Kopieren",
+          variant: "outlined",
+          onClick: onCopy,
         },
         {
           label: "Löschen",
