@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 
 import { MenueHeader } from "@/components/layout/MenueHeader";
 import { renderLoadingOrError } from "@/components/common/loadingOnErrorUtils";
-import { BottomActionBar } from "@/components/common/BottomActionBar";
+import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { VeranstaltungFormModel } from "@/api/types/VeranstaltungFormModel";
 import { VeranstaltungTable } from "./VeranstaltungTable";
 import { VeranstaltungFormView } from "./VeranstaltungFormView";

@@ -8,7 +8,7 @@ import { PersonCreateDialog } from "@/components/person/PersonCreateDialog";
 import { useAppContext } from "@/context/AppContext";
 import { addTeilnehmer } from "@/api/services/teilnehmerApi";
 import { useNavigate } from "react-router-dom";
-import { BottomActionBar } from "@/components/common/BottomActionBar";
+import { BottomActionBar } from "@/components/layout/BottomActionBar";
 
 import {
   getPersonById,
@@ -53,7 +53,7 @@ export default function PersonenScreen() {
   const [copyOpen, setCopyOpen] = useState(false);
   const [copyData, setCopyData] = useState<Partial<PersonSave>>();
 
-   const { active } = useAppContext();
+  const { active } = useAppContext();
 
   /* ================= FILTER ================= */
 
@@ -174,30 +174,30 @@ export default function PersonenScreen() {
     setEditMode(true);
   };
 
- const handleCopy = () => {
-   if (!selectedPerson) {
-     return;
-   }
+  const handleCopy = () => {
+    if (!selectedPerson) {
+      return;
+    }
 
-   setCopyData({
-     name: selectedPerson.name,
+    setCopyData({
+      name: selectedPerson.name,
 
-     strasse: selectedPerson.strasse,
+      strasse: selectedPerson.strasse,
 
-     plz: selectedPerson.plz,
-     ort: selectedPerson.ort,
+      plz: selectedPerson.plz,
+      ort: selectedPerson.ort,
 
-     mitgliedschaften: selectedPerson.mitgliedschaften.map((m) => ({
-       vereinId: m.verein.id,
+      mitgliedschaften: selectedPerson.mitgliedschaften.map((m) => ({
+        vereinId: m.verein.id,
 
-       funktion: m.funktion,
+        funktion: m.funktion,
 
-       hauptVerein: m.hauptVerein,
-     })),
-   });
+        hauptVerein: m.hauptVerein,
+      })),
+    });
 
-   setCopyOpen(true);
- };
+    setCopyOpen(true);
+  };
 
   const handleSave = async (data: PersonSave) => {
     if (!selectedId) return;
@@ -242,10 +242,10 @@ export default function PersonenScreen() {
     loadRef.current(); // ⭐ DIREKT laden
   };
 
- useEffect(() => {
-   setEditMode(false);
-   setEditData(null);
- }, [selectedId]);
+  useEffect(() => {
+    setEditMode(false);
+    setEditData(null);
+  }, [selectedId]);
 
   /* ========================================================= */
   /* UI */
@@ -397,7 +397,7 @@ export default function PersonenScreen() {
           setCopyOpen(false);
         }}
       />
-     
+
       <PersonCreateDialog
         open={createOpen}
         onClose={() => setCreateOpen(false)}

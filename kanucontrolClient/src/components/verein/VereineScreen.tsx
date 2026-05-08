@@ -6,7 +6,7 @@ import { VereinTable } from "@/components/verein/VereinTable";
 import { VereinFormView } from "@/components/verein/VereinFormView";
 import { VereinCreateDialog } from "@/components/verein/VereinCreateDialog";
 import { VereinCsvImportDialog } from "@/components/verein/import/VereinCsvImportDialog";
-import { BottomActionBar } from "@/components/common/BottomActionBar";
+import { BottomActionBar } from "@/components/layout/BottomActionBar";
 
 import { renderLoadingOrError } from "@/components/common/loadingOnErrorUtils";
 import { navigateToStartMenu } from "@/components/layout/navigateToStartMenue";

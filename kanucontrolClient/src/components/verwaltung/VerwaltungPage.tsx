@@ -1,5 +1,7 @@
 import { Box, Tab, Tabs } from "@mui/material";
 import { useState, Suspense, lazy } from "react";
+import { BottomActionBar } from "@/components/layout/BottomActionBar";
+import { useNavigate } from "react-router-dom";
 
 // ✅ Lazy imports außerhalb der Komponente
 const FoerdersatzTable = lazy(() => import("@/components/verwaltung/foerdersatz/FoerdersatzTable"));
@@ -12,6 +14,8 @@ const BeitragsStrukturen = lazy(
 
 const VerwaltungPage = () => {
   const [tab, setTab] = useState(() => Number(localStorage.getItem("verwaltungTab")) || 0);
+
+  const navigate = useNavigate();
 
 const handleChange = (_event: React.SyntheticEvent, value: number) => {
   setTab(value);
@@ -32,6 +36,15 @@ const handleChange = (_event: React.SyntheticEvent, value: number) => {
         {tab === 1 && <KikZuschlagTable />}
         {tab === 2 && <BeitragsStrukturen />}
       </Suspense>
+      <BottomActionBar
+        left={[
+          {
+            label: "Zurück",
+            onClick: () => navigate("/startmenue"),
+            variant: "outlined",
+          },
+        ]}
+      />
     </Box>
   );
 };

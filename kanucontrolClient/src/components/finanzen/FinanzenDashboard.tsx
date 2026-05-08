@@ -6,7 +6,7 @@ import { useAppContext } from "@/context/AppContext";
 
 import { useFinanzenDashboard } from "@/hooks/finanzen/useFinanzenDashboard";
 
-import { BottomActionBar } from "@/components/common/BottomActionBar";
+import { BottomActionBar } from "@/components/layout/BottomActionBar";
 
 const FinanzenDashboard = () => {
   /* =========================================================
