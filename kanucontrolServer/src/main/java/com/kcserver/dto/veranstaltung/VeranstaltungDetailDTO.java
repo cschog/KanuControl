@@ -28,7 +28,7 @@ public class VeranstaltungDetailDTO {
 
     private String plz;
     private String ort;
-    private CountryCode laenderCode;
+    private CountryCode countryCode;
 
     private LocalDate beginnDatum;
     private LocalTime beginnZeit;

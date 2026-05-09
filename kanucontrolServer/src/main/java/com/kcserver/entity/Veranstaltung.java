@@ -48,7 +48,7 @@ public class Veranstaltung extends Auditable {
     private String ort;
 
     @Column(name = "country_code", length = 2)
-    private CountryCode laenderCode;
+    private CountryCode countryCode;
 
     @Column(name = "beginn_datum", nullable = false)
     private LocalDate beginnDatum;

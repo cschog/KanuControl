@@ -404,7 +404,7 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
    DETAILFELDER
    ========================= */
 
-        v.setLaenderCode(dto.getLaenderCode());
+        v.setCountryCode(dto.getCountryCode());
         v.setPlz(dto.getPlz());
         v.setOrt(dto.getOrt());
 

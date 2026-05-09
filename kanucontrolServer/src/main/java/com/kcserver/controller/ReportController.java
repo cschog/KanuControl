@@ -31,31 +31,79 @@ public class ReportController {
     private final PDFFmJemReportService fmJemReportService;
     private final PDFTeilnehmerlisteService teilnehmerlisteService;
     private final PDFErhebungsbogenService erhebungsbogenService;
+    private final PDFAbrechnungService abrechnungService;
+
     private final VeranstaltungService veranstaltungService;
     private final TeilnehmerService teilnehmerService;
 
-    /* =========================================================
-       FM / JEM Antrag
-       ========================================================= */
+   /* =========================================================
+   FM / JEM Antrag (Vorschau)
+   ========================================================= */
 
-    @GetMapping("/fm-jem-report")
-    public ResponseEntity<byte[]> generateFmJem(
+    @GetMapping("/fm-jem-report/view")
+    public ResponseEntity<byte[]> viewFmJem(
             @PathVariable Long veranstaltungId
     ) {
+
         byte[] pdf = fmJemReportService.generate(veranstaltungId);
 
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "inline; filename=fm-jem-antrag.pdf")
-                .contentType(MediaType.APPLICATION_PDF)
-                .body(pdf);
+        VeranstaltungDetailDTO veranstaltung =
+                veranstaltungService.getById(veranstaltungId);
+
+        String filename = buildFilename("FMJEM", veranstaltung.getName());
+
+        return buildInlineResponse(pdf, filename);
     }
 
-    /* =========================================================
-       Teilnehmerliste PDF (Download)
-       ========================================================= */
+/* =========================================================
+   FM / JEM Antrag (Download)
+   ========================================================= */
 
-    @GetMapping("/teilnehmer/pdf")
+    @GetMapping("/fm-jem-report/download")
+    public ResponseEntity<byte[]> downloadFmJem(
+            @PathVariable Long veranstaltungId
+    ) {
+
+        byte[] pdf = fmJemReportService.generate(veranstaltungId);
+
+        VeranstaltungDetailDTO veranstaltung =
+                veranstaltungService.getById(veranstaltungId);
+
+        String filename = buildFilename("FMJEM", veranstaltung.getName());
+
+        return buildAttachmentResponse(pdf, filename);
+    }
+
+   /* =========================================================
+   Teilnehmerliste PDF (Vorschau)
+   ========================================================= */
+
+    @GetMapping("/teilnehmer/pdf/view")
+    public ResponseEntity<byte[]> viewTeilnehmerPdf(
+            @PathVariable Long veranstaltungId
+    ) throws Exception {
+
+        VeranstaltungDetailDTO veranstaltung =
+                veranstaltungService.getById(veranstaltungId);
+
+        List<TeilnehmerDetailDTO> teilnehmer =
+                teilnehmerService.findAllDetails(veranstaltungId);
+
+        byte[] pdf = teilnehmerlisteService.generate(
+                veranstaltung,
+                teilnehmer
+        );
+
+        String filename = buildFilename("TN", veranstaltung.getName());
+
+        return buildInlineResponse(pdf, filename);
+    }
+
+/* =========================================================
+   Teilnehmerliste PDF (Download)
+   ========================================================= */
+
+    @GetMapping("/teilnehmer/pdf/download")
     public ResponseEntity<byte[]> downloadTeilnehmerPdf(
             @PathVariable Long veranstaltungId
     ) throws Exception {
@@ -73,14 +121,33 @@ public class ReportController {
 
         String filename = buildFilename("TN", veranstaltung.getName());
 
-        return buildDownloadResponse(pdf, filename);
+        return buildAttachmentResponse(pdf, filename);
     }
 
-    /* =========================================================
-       Erhebungsbogen PDF (Download)
-       ========================================================= */
+   /* =========================================================
+   Erhebungsbogen PDF (Vorschau)
+   ========================================================= */
 
-    @GetMapping("/erhebungsbogen/pdf")
+    @GetMapping("/erhebungsbogen/pdf/view")
+    public ResponseEntity<byte[]> viewErhebungsbogen(
+            @PathVariable Long veranstaltungId
+    ) {
+
+        byte[] pdf = erhebungsbogenService.generate(veranstaltungId);
+
+        VeranstaltungDetailDTO veranstaltung =
+                veranstaltungService.getById(veranstaltungId);
+
+        String filename = buildFilename("EB", veranstaltung.getName());
+
+        return buildInlineResponse(pdf, filename);
+    }
+
+/* =========================================================
+   Erhebungsbogen PDF (Download)
+   ========================================================= */
+
+    @GetMapping("/erhebungsbogen/pdf/download")
     public ResponseEntity<byte[]> downloadErhebungsbogen(
             @PathVariable Long veranstaltungId
     ) {
@@ -92,49 +159,33 @@ public class ReportController {
 
         String filename = buildFilename("EB", veranstaltung.getName());
 
-        return buildDownloadResponse(pdf, filename);
+        return buildAttachmentResponse(pdf, filename);
     }
 
     /* =========================================================
-       Helper: Dateiname
+       Abrechnung PDF (Inline anzeigen)
        ========================================================= */
 
-    private String buildFilename(String prefix, String rawName) {
-
-        String date = LocalDate.now().format(DateTimeFormatter.ISO_DATE);
-
-        String safeName = (rawName == null ? "Veranstaltung" : rawName)
-                .replace("ä","ae").replace("ö","oe").replace("ü","ue")
-                .replace("Ä","Ae").replace("Ö","Oe").replace("Ü","Ue")
-                .replace("ß","ss")
-                .replaceAll("[^a-zA-Z0-9]", "");
-
-        return date + "_" + prefix + "_" + safeName + ".pdf";
-    }
-
-    /* =========================================================
-       Helper: Response Builder
-       ========================================================= */
-
-    private ResponseEntity<byte[]> buildDownloadResponse(
-            byte[] pdf,
-            String filename
+    @GetMapping("/abrechnung/pdf/view")
+    public ResponseEntity<byte[]> viewAbrechnung(
+            @PathVariable Long veranstaltungId
     ) {
 
-        String encodedFilename = URLEncoder
-                .encode(filename, StandardCharsets.UTF_8)
-                .replaceAll("\\+", "%20");
+        byte[] pdf = abrechnungService.generate(veranstaltungId);
 
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + filename +
-                                "\"; filename*=UTF-8''" + encodedFilename)
-                .contentType(MediaType.APPLICATION_PDF)
-                .body(pdf);
+        VeranstaltungDetailDTO veranstaltung =
+                veranstaltungService.getById(veranstaltungId);
+
+        String filename = buildFilename("AB", veranstaltung.getName());
+
+        return buildInlineResponse(pdf, filename);
     }
-    private final PDFAbrechnungService abrechnungService;
 
-    @GetMapping("/abrechnung/pdf")
+     /* =========================================================
+       Abrechnung PDF (download)
+       ========================================================= */
+
+    @GetMapping("/abrechnung/pdf/download")
     public ResponseEntity<byte[]> downloadAbrechnung(
             @PathVariable Long veranstaltungId
     ) {
@@ -146,6 +197,74 @@ public class ReportController {
 
         String filename = buildFilename("AB", veranstaltung.getName());
 
-        return buildDownloadResponse(pdf, filename);
+        return buildAttachmentResponse(pdf, filename);
+    }
+
+    /* =========================================================
+       Helper: Dateiname
+       ========================================================= */
+
+    private String buildFilename(String prefix, String rawName) {
+
+        String date = LocalDate.now()
+                .format(DateTimeFormatter.ISO_DATE);
+
+        String safeName = (rawName == null ? "Veranstaltung" : rawName)
+                .replace("ä", "ae")
+                .replace("ö", "oe")
+                .replace("ü", "ue")
+                .replace("Ä", "Ae")
+                .replace("Ö", "Oe")
+                .replace("Ü", "Ue")
+                .replace("ß", "ss")
+                .replaceAll("[^a-zA-Z0-9]+", "_");
+
+        return date + "_" + prefix + "_" + safeName + ".pdf";
+    }
+
+    /* =========================================================
+       Helper: Attachment Download
+       ========================================================= */
+
+    private ResponseEntity<byte[]> buildAttachmentResponse(
+            byte[] pdf,
+            String filename
+    ) {
+
+        String encodedFilename = URLEncoder
+                .encode(filename, StandardCharsets.UTF_8)
+                .replaceAll("\\+", "%20");
+
+        return ResponseEntity.ok()
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" + filename +
+                                "\"; filename*=UTF-8''" + encodedFilename
+                )
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdf);
+    }
+
+    /* =========================================================
+       Helper: Inline PDF Anzeige
+       ========================================================= */
+
+    private ResponseEntity<byte[]> buildInlineResponse(
+            byte[] pdf,
+            String filename
+    ) {
+
+        String encodedFilename = URLEncoder
+                .encode(filename, StandardCharsets.UTF_8)
+                .replaceAll("\\+", "%20");
+
+        return ResponseEntity.ok()
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "inline; filename=\"" + filename +
+                                "\"; filename*=UTF-8''" + encodedFilename
+                )
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdf);
     }
 }

@@ -1,7 +1,7 @@
 import { Button, Box, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
-
-import { getActiveVeranstaltung, downloadAbrechnungPdf } from "@/api/services/veranstaltungApi";
+import apiClient from "@/api/client/apiClient";
+import { getActiveVeranstaltung } from "@/api/services/veranstaltungApi";
 
 const Abrechnung = () => {
   const [veranstaltungId, setVeranstaltungId] = useState<number | null>(null);
@@ -28,14 +28,61 @@ const Abrechnung = () => {
 
   /* ================= PDF öffnen ================= */
 
-  const handleAbrechnung = async () => {
-    if (!veranstaltungId) return;
+const handlePreview = async () => {
+  if (!veranstaltungId) return;
 
-    const blob = await downloadAbrechnungPdf(veranstaltungId);
+  const response = await apiClient.get(`/veranstaltungen/${veranstaltungId}/abrechnung/pdf/view`, {
+    responseType: "blob",
+  });
 
-    const url = window.URL.createObjectURL(blob);
-    window.open(url, "_blank"); // 👉 öffnet PDF im neuen Tab
-  };
+  const url = window.URL.createObjectURL(response.data);
+
+  window.open(url, "_blank");
+};
+
+const handleDownload = async () => {
+  if (!veranstaltungId) return;
+
+  const response = await apiClient.get(
+    `/veranstaltungen/${veranstaltungId}/abrechnung/pdf/download`,
+    {
+      responseType: "blob",
+    },
+  );
+
+  // Dateiname aus Header lesen
+  const disposition = response.headers["content-disposition"];
+
+  let filename = "download.pdf";
+
+  const match = disposition?.match(/filename="(.+)"/);
+
+  if (match?.[1]) {
+    filename = match[1];
+  }
+
+  // Blob erzeugen
+  const blob = new Blob([response.data], {
+    type: "application/pdf",
+  });
+
+  const url = window.URL.createObjectURL(blob);
+
+  // Download-Link erzeugen
+  const a = document.createElement("a");
+
+  a.href = url;
+  a.download = filename;
+
+  document.body.appendChild(a);
+
+  a.click();
+
+  a.remove();
+
+  window.URL.revokeObjectURL(url);
+};
+
 
   /* ================= UI ================= */
 
@@ -51,9 +98,15 @@ const Abrechnung = () => {
         </Typography>
       )}
 
-      <Button variant="contained" onClick={handleAbrechnung} disabled={!veranstaltungId}>
-        Abrechnung (Deckblatt) öffnen
-      </Button>
+      <Box display="flex" flexDirection="column" gap={2}>
+        <Button variant="contained" onClick={handlePreview} disabled={!veranstaltungId}>
+          Abrechnung (Vorschau)
+        </Button>
+
+        <Button variant="contained" onClick={handleDownload} disabled={!veranstaltungId}>
+          Abrechnung (Download)
+        </Button>
+      </Box>
     </Box>
   );
 };

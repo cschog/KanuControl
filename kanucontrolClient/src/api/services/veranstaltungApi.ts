@@ -42,12 +42,18 @@ export async function downloadErhebungsbogenPdf(veranstaltungId: number) {
 
 /* ================= PDF Anmeldung fm-jem ================= */
 
-export async function downloadFmJemReport(id: number): Promise<Blob> {
-  const response = await apiClient.get(`/veranstaltungen/${id}/fm-jem-report`, {
+export async function downloadFmJemReport(id: number) {
+  return apiClient.get(`/veranstaltungen/${id}/fm-jem-report`, {
     responseType: "blob",
   });
+}
 
-  return response.data;
+/* ================= PDF Abrechnung ================= */
+
+export async function downloadAbrechnungPdf(id: number) {
+  return apiClient.get(`/veranstaltungen/${id}/abrechnung/pdf`, {
+    responseType: "blob",
+  });
 }
 
 
@@ -115,9 +121,4 @@ export async function downloadTeilnehmerlistePdf(id: number) {
     responseType: "blob",
   });
 }
-export async function downloadAbrechnungPdf(id: number) {
-  const res = await apiClient.get(`/veranstaltungen/${id}/abrechnung/pdf`, {
-    responseType: "blob",
-  });
-  return res.data;
-}
+
