@@ -26,7 +26,7 @@ public class AuditSessionService {
     ) {
 
         AuditSession s = repository
-                .findFirstBySessionId(sessionId)
+                .findBySessionId(sessionId)
                 .orElse(null);
 
         if (s == null) {
@@ -46,23 +46,32 @@ public class AuditSessionService {
 
             try {
 
-                repository.save(neu);
+                tryInsert(neu);
 
                 return;
 
             } catch (DataIntegrityViolationException ignored) {
 
-                // Parallel angelegt
+                // andere Request war schneller
             }
 
-            // nochmal laden
+            // Session jetzt erneut laden
             s = repository
-                    .findFirstBySessionId(sessionId)
-                    .orElseThrow();
+                    .findBySessionId(sessionId)
+                    .orElse(null);
+
+            if (s == null) {
+                return;
+            }
         }
 
         s.setLastSeen(LocalDateTime.now());
 
         repository.save(s);
+    }
+    @Transactional(noRollbackFor = DataIntegrityViolationException.class)
+    protected void tryInsert(AuditSession session) {
+
+        repository.save(session);
     }
 }

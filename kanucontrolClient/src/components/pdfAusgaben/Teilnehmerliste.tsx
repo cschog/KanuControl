@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Box, Button, Typography, Paper } from "@mui/material";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
-import {
-  getActiveVeranstaltung,
-  downloadTeilnehmerlistePdf,
-} from "@/api/services/veranstaltungApi";
+import { getActiveVeranstaltung } from "@/api/services/veranstaltungApi";
+import apiClient from "@/api/client/apiClient";
 
 import { VeranstaltungDetail } from "@/api/types/VeranstaltungDetail";
 
@@ -25,14 +23,60 @@ const Teilnehmerliste: React.FC = () => {
   }, []);
 
   /* ================= PDF Öffnen ================= */
-  const handleOpen = async () => {
+  const handlePreview = async () => {
     if (!veranstaltung?.id) return;
 
-    const res = await downloadTeilnehmerlistePdf(veranstaltung.id);
+    const res = await apiClient.get(`/veranstaltungen/${veranstaltung.id}/teilnehmer/pdf/view`, {
+      responseType: "blob",
+    });
 
-    const blob = new Blob([res.data], { type: "application/pdf" });
+    const blob = new Blob([res.data], {
+      type: "application/pdf",
+    });
+
     const url = window.URL.createObjectURL(blob);
+
     window.open(url, "_blank");
+  };
+
+  const handleDownload = async () => {
+    if (!veranstaltung?.id) return;
+
+    const res = await apiClient.get(
+      `/veranstaltungen/${veranstaltung.id}/teilnehmer/pdf/download`,
+      {
+        responseType: "blob",
+      },
+    );
+
+    const disposition = res.headers["content-disposition"];
+
+    let filename = "teilnehmerliste.pdf";
+
+    const match = disposition?.match(/filename="?([^";]+)"?/);
+
+    if (match?.[1]) {
+      filename = match[1];
+    }
+
+    const blob = new Blob([res.data], {
+      type: "application/pdf",
+    });
+
+    const url = window.URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = filename;
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    link.remove();
+
+    window.URL.revokeObjectURL(url);
   };
 
   /* ================= UI ================= */
@@ -50,9 +94,15 @@ const Teilnehmerliste: React.FC = () => {
               Veranstaltung: <b>{veranstaltung.name}</b>
             </Typography>
 
-            <Button variant="contained" startIcon={<PictureAsPdfIcon />} onClick={handleOpen}>
-              Teilnehmerliste im neuen Tab öffnen
-            </Button>
+            <Box display="flex" flexDirection="column" gap={2}>
+              <Button variant="contained" startIcon={<PictureAsPdfIcon />} onClick={handlePreview}>
+                Teilnehmerliste Vorschau
+              </Button>
+
+              <Button variant="contained" startIcon={<PictureAsPdfIcon />} onClick={handleDownload}>
+                Teilnehmerliste Download
+              </Button>
+            </Box>
           </>
         ) : (
           <Typography color="text.secondary">Keine aktive Veranstaltung gefunden</Typography>

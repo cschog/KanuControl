@@ -34,7 +34,7 @@ public class VeranstaltungUpdateDTO {
 
     /* ================= Detailfelder ================= */
 
-    private CountryCode laenderCode;
+    private CountryCode countryCode;
     private String plz;
     private String ort;
 

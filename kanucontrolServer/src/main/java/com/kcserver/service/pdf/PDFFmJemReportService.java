@@ -19,6 +19,7 @@ import com.kcserver.enumtype.FinanzKategorie;
 import com.kcserver.repository.PlanungRepository;
 
 import java.math.BigDecimal;
+import com.kcserver.util.CurrencyUtil;
 
 @Service
 @RequiredArgsConstructor
@@ -124,7 +125,7 @@ public class PDFFmJemReportService {
             set(form, "art_der_verpflegung", v.getArtDerVerpflegung());
 
             String ortLand = (v.getOrt() != null ? v.getOrt() : "")
-                    + (v.getLaenderCode() != null ? " (" + v.getLaenderCode().name() + ")" : "");
+                    + (v.getCountryCode() != null ? " (" + v.getCountryCode().name() + ")" : "");
 
             set(form, "ort_und_land_der_veranstaltung", ortLand);
 
@@ -217,26 +218,26 @@ public class PDFFmJemReportService {
                 /* ================= PDF FELDER ================= */
 
                 set(form, "unterkunft_und_verpflegung",
-                        unterkunftVerpflegung);
+                        CurrencyUtil.decimal(unterkunftVerpflegung));
 
-                set(form, "honorare", honorare);
+                set(form, "honorare", CurrencyUtil.decimal(honorare));
 
-                set(form, "fahrtkosten", fahrtkosten);
+                set(form, "fahrtkosten", CurrencyUtil.decimal(fahrtkosten));
 
                 set(form, "verbrauchsmaterial",
-                        verbrauchsmaterial);
+                        CurrencyUtil.decimal(verbrauchsmaterial));
 
-                set(form, "mietkosten", mietkosten);
+                set(form, "mietkosten", CurrencyUtil.decimal(mietkosten));
 
                 set(form, "sonstige_kosten",
-                        sonstigeKosten);
+                        CurrencyUtil.decimal(sonstigeKosten));
 
-                set(form, "tn_beitrag", tnBeitrag);
+                set(form, "tn_beitrag", CurrencyUtil.decimal(tnBeitrag));
 
                 set(form, "sonstige_einnahmen",
-                        sonstigeEinnahmen);
+                        CurrencyUtil.decimal(sonstigeEinnahmen));
 
-                set(form, "kjfp_zuschuss", kjfp);
+                set(form, "kjfp_zuschuss", CurrencyUtil.decimal(kjfp));
 
                 /* Teilnehmerbeiträge Gesamt */
 
@@ -260,7 +261,7 @@ public class PDFFmJemReportService {
                 set(form, "anz_tn", tn);
 
                 set(form, "summe_TN_beitraege",
-                        summeTn);
+                        CurrencyUtil.decimal(summeTn));
 
                 /* Summen */
 
@@ -278,10 +279,10 @@ public class PDFFmJemReportService {
                                 .add(kjfp);
 
                 set(form, "summe_ausgaben",
-                        summeAusgaben);
+                        CurrencyUtil.decimal(summeAusgaben));
 
                 set(form, "summe_einnahmen",
-                        summeEinnahmen);
+                        CurrencyUtil.decimal(summeEinnahmen));
             }
 
             /* ❗ NICHT flatten → Formular bleibt editierbar */

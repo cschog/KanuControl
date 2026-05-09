@@ -37,7 +37,7 @@ public class VeranstaltungCreateDTO {
     @NotNull
     private LocalTime endeZeit;
 
-    private CountryCode laenderCode;
+    private CountryCode countryCode;
 
     private String plz;
     private String ort;

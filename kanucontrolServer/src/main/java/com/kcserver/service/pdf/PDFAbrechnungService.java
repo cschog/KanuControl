@@ -22,6 +22,7 @@ import static com.kcserver.util.StringUtils.join;
 import com.kcserver.enumtype.FinanzKategorie;
 
 import java.math.BigDecimal;
+import com.kcserver.util.CurrencyUtil;
 
 @Service
 @RequiredArgsConstructor
@@ -178,8 +179,8 @@ public class PDFAbrechnungService {
         /* ================= Ort + Land ================= */
 
         String ort = v.getOrt();
-        String land = v.getLaenderCode() != null
-                ? v.getLaenderCode().getCode()   // 2-Zeichen-Code!
+        String land = v.getCountryCode() != null
+                ? v.getCountryCode().getCode()   // 2-Zeichen-Code!
                 : null;
 
         set(form, "veranstaltung_ort_land",
@@ -238,10 +239,10 @@ public class PDFAbrechnungService {
                 tage);
 
         set(form, "foerdersatz",
-                foerdersatz);
+                CurrencyUtil.decimal(foerdersatz));
 
         set(form, "berechnete_beihilfe",
-                beihilfe);
+                CurrencyUtil.decimal(beihilfe));
     }
 
     private void fillFinanzen(
@@ -292,7 +293,8 @@ public class PDFAbrechnungService {
         BigDecimal sonstigeEinnahmen =
                 sum(
                         buchungen,
-                        FinanzKategorie.SONSTIGE_EINNAHMEN
+                        FinanzKategorie.SONSTIGE_EINNAHMEN,
+                        FinanzKategorie.PFAND
                 );
 
         BigDecimal kjfp =
@@ -332,47 +334,47 @@ public class PDFAbrechnungService {
 
         set(form,
                 "kosten_unterkunft_verpflegung",
-                unterkunftVerpflegung);
+                CurrencyUtil.decimal(unterkunftVerpflegung));
 
         set(form,
                 "kosten_leitung_verguetung",
-                honorare);
+                CurrencyUtil.decimal(honorare));
 
         set(form,
                 "kosten_fahrkosten",
-                fahrtkosten);
+                CurrencyUtil.decimal(fahrtkosten));
 
         set(form,
                 "kosten_material",
-                material);
+                CurrencyUtil.decimal(material));
 
         set(form,
                 "kosten_miete",
-                mieteSonstige);
+                CurrencyUtil.decimal(mieteSonstige));
 
         set(form,
                 "kosten_gesamt",
-                gesamtKosten);
+                CurrencyUtil.decimal(gesamtKosten));
 
         set(form,
                 "einnahmen_eigenleistung_veranstalter",
-                eigenleistung);
+                CurrencyUtil.decimal(eigenleistung));
 
         set(form,
                 "einnahmen_teilnehmer_beitraege",
-                tnGesamt);
+                CurrencyUtil.decimal(tnGesamt));
 
         set(form,
                 "einnahmen_sonstige",
-                sonstigeEinnahmen);
+                CurrencyUtil.decimal(sonstigeEinnahmen));
 
         set(form,
                 "einnahmen_kjfp_zuschuss",
-                kjfp);
+                CurrencyUtil.decimal(kjfp));
 
         set(form,
                 "einnahmen_gesamt",
-                gesamtEinnahmen);
+                CurrencyUtil.decimal(gesamtEinnahmen));
     }
 
     /* ========================================================= */

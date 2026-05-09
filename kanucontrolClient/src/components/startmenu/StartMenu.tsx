@@ -32,10 +32,8 @@ const StartMenue = () => {
        ]
      : []),
 
-   { key: "anmeldung", label: "Anmeldung", path: "/anmeldung" },
-   { key: "abrechnung", label: "Abrechnung", path: "/abrechnung" },
-   { key: "teilnehmerliste", label: "Teilnehmerliste", path: "/teilnehmerliste" },
-   { key: "erhebungsbogen", label: "Erhebungsbogen", path: "/erhebungsbogen" },
+   { key: "dokumente", label: "Dokumente", path: "/dokumente" },
+
    { key: "verwaltung", label: "Verwaltung", path: "/verwaltung" },
  ] as const;
 

@@ -164,9 +164,9 @@ public class PDFErhebungsbogenService {
 
         /* ================= Land / Typ ================= */
 
-        if (v.getLaenderCode() != null) {
-            set(form, "land", v.getLaenderCode().name());
-            set(form, "veranstaltung_land", v.getLaenderCode().getLabel());
+        if (v.getCountryCode() != null) {
+            set(form, "land", v.getCountryCode().name());
+            set(form, "veranstaltung_land", v.getCountryCode().getLabel());
         }
 
         if (v.getTyp() != null)
@@ -188,10 +188,10 @@ public class PDFErhebungsbogenService {
 
         /* ================= Durchführungsort ================= */
 
-        if (v.getLaenderCode() != null) {
+        if (v.getCountryCode() != null) {
 
             boolean deutschland =
-                    "DE".equalsIgnoreCase(v.getLaenderCode().getCode());
+                    "DE".equalsIgnoreCase(v.getCountryCode().getCode());
 
             // PLZ Durchführungsort
             if (deutschland && v.getPlz() != null && !v.getPlz().isBlank()) {
@@ -203,10 +203,10 @@ public class PDFErhebungsbogenService {
             // Radiobutton
             PDField field = form.getField("Durchfuehrungsort");
 
-            if (field != null && v.getLaenderCode() != null) {
+            if (field != null && v.getCountryCode() != null) {
 
                 deutschland =
-                        "DE".equalsIgnoreCase(v.getLaenderCode().getCode());
+                        "DE".equalsIgnoreCase(v.getCountryCode().getCode());
 
                 String value = deutschland ? "EinOrt" : "ausland";
 

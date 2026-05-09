@@ -6,13 +6,10 @@ import Vereine from "./components/verein/VereineScreen";
 import Personen from "./components/person/PersonenScreen";
 import Veranstaltungen from "@/components/veranstaltung/VeranstaltungenScreen";
 import TeilnehmerScreen from "@/components/teilnehmer/TeilnehmerScreen";
-import Finanzen from "./pages/Finanzen";
+import Finanzen from "./components/finanzen/FinanzenScreen";
 import Reisekosten from "./Platzhalter/Reisekosten";
-import Teilnehmerliste from "./components/pdfAusgaben/Teilnehmerliste";
-import Erhebungsbogen from "./components/pdfAusgaben/Erhebungsbogen";
+import DokumenteScreen from "@/components/dokumente/DokumenteScreen";
 import VerwaltungPage from "@/components/verwaltung/VerwaltungPage";
-import Anmeldung from "./components/pdfAusgaben/Anmeldung";
-import Abrechnung from "./components/pdfAusgaben/Abrechnung";
 import AusgabeReisekosten from "./components/pdfAusgaben/AusgabeReisekosten";
 import AppLayout from "@/components/layout/AppLayout";
 
@@ -29,11 +26,8 @@ const App: React.FC = () => {
           <Route path="/teilnehmer" element={<TeilnehmerScreen />} />
           <Route path="/veranstaltungen/:veranstaltungId/finanzen" element={<Finanzen />} />
           <Route path="/reisekosten" element={<Reisekosten />} />
-          <Route path="/teilnehmerliste" element={<Teilnehmerliste />} />
-          <Route path="/erhebungsbogen" element={<Erhebungsbogen />} />
           <Route path="/verwaltung" element={<VerwaltungPage />} />
-          <Route path="/anmeldung" element={<Anmeldung />} />
-          <Route path="/abrechnung" element={<Abrechnung />} />
+          <Route path="/dokumente" element={<DokumenteScreen />} />
           <Route path="/ausgabeReisekosten" element={<AusgabeReisekosten />} />
         </Route>
         <Route path="*" element={<p>Path not resolved</p>} />

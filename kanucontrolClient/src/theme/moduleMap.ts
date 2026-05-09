@@ -14,11 +14,7 @@ export const moduleTypeMap: Record<string, ModuleType> = {
   reisekosten: "addon",
 
   // Reports
-  anmeldung: "report",
-  abrechnung: "report",
-  teilnehmerliste: "report",
-  erhebungsbogen: "report",
-  reisekostenausgabe: "report",
+  dokumente: "report",
 
   verwaltung: "admin",
 };
