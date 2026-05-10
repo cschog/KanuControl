@@ -45,14 +45,13 @@ public class VeranstaltungSearchSortTest
                         mockMvc,
                         objectMapper
                 );
+        vereinId = vereinFactory.create("TV", "Test Verein");
 
         leiterId = personFactory.createWithVerein(vereinId, b ->
                 b.withVorname("leiter")
                         .withName("Test")
                         .withGeburtsdatum(java.time.LocalDate.of(2000, 1, 1))
         );
-
-        vereinId = vereinFactory.create("TV", "Test Verein");
     }
 
     @Test

@@ -15,6 +15,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.time.LocalDate;
+
 import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -42,22 +44,33 @@ class MitgliedSearchTest extends AbstractTenantIntegrationTest {
     void setup() throws Exception {
 
         personFactory = new PersonTestFactory(mockMvc, objectMapper);
-        vereinFactory = new VereinTestFactory(mockMvc, objectMapper);
 
         VereinTestFactory vereine =
                 new VereinTestFactory(mockMvc, objectMapper);
 
-        verein1Id = vereine.createIfNotExists("EKC_M", "Eschweiler Kanu Club");
-        verein2Id = vereine.createIfNotExists("BKV_M", "Bonner Kanu Verein");
+        verein1Id =
+                vereine.createIfNotExists("EKC_M", "Eschweiler Kanu Club");
 
-        personId = personFactory.createWithVerein(vereinId, b ->
+        verein2Id =
+                vereine.createIfNotExists("BKV_M", "Bonner Kanu Verein");
+
+        personId = personFactory.create(b ->
                 b.withVorname("Anna")
                         .withName("Müller")
-                        .withGeburtsdatum(java.time.LocalDate.of(1995, 1, 1))
+                        .withGeburtsdatum(LocalDate.of(1995, 1, 1))
         );
 
-        createMitglied(personId, verein1Id,  MitgliedFunktion.BOOTSHAUSWART);
-        createMitglied(personId, verein2Id,  MitgliedFunktion.JUGENDWART);
+        createMitglied(
+                personId,
+                verein1Id,
+                MitgliedFunktion.BOOTSHAUSWART
+        );
+
+        createMitglied(
+                personId,
+                verein2Id,
+                MitgliedFunktion.JUGENDWART
+        );
     }
 
     /* =========================================================

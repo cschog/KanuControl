@@ -64,25 +64,13 @@ class MitgliedDeleteTest extends AbstractTenantIntegrationTest {
                         .withGeburtsdatum(java.time.LocalDate.of(2000, 1, 1))
         );
 
-        // Mitglied anlegen (Setup)
-        MitgliedDTO dto = new MitgliedDTO();
-        dto.setPersonId(personId);
-        dto.setVereinId(vereinId);
-        dto.setHauptVerein(true);
+        List<MitgliedDTO> mitglieder = getMitgliedByPerson(personId);
 
-        String response =
-                mockMvc.perform(
-                                post("/api/mitglied")
-                                        .contentType(MediaType.APPLICATION_JSON)
-                                        .content(objectMapper.writeValueAsString(dto)
-                        ))
-                        .andExpect(status().isCreated())
-                        .andReturn()
-                        .getResponse()
-                        .getContentAsString();
-
-        mitgliedId =
-                objectMapper.readTree(response).get("id").asLong();
+        mitgliedId = mitglieder.stream()
+                .filter(m -> m.getVereinId().equals(vereinId))
+                .findFirst()
+                .orElseThrow()
+                .getId();
 
         // Mitglied A = Hauptverein
         mitgliedAId = createMitglied(personId, vereinAId);

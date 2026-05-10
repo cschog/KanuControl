@@ -16,6 +16,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 
 
+import java.time.LocalDate;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -49,11 +51,10 @@ class MitgliedSearchSortTest extends AbstractTenantIntegrationTest {
         Long verein2 = vereine.createIfNotExists("OKC_SORT", "Oberhausener KC");
         Long verein3 = vereine.createIfNotExists("BKC_SORT", "Bonner KC");
 
-
-        personId = personFactory.createWithVerein(vereinId, b ->
+        personId = personFactory.create(b ->
                 b.withVorname("Anna")
                         .withName("Müller")
-                        .withGeburtsdatum(java.time.LocalDate.of(1995, 1, 1))
+                        .withGeburtsdatum(LocalDate.of(1995, 1, 1))
         );
 
         createMitglied(personId, verein1, MitgliedFunktion.BOOTSHAUSWART);
