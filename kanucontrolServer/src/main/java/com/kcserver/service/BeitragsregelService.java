@@ -24,7 +24,20 @@ public class BeitragsregelService {
 
         List<Beitragsregel> regeln = struktur.getRegeln()
                 .stream()
-                .sorted(Comparator.comparing(Beitragsregel::getSortierung))
+                .sorted(
+                        Comparator
+                                .comparing(
+                                        Beitragsregel::getSortierung,
+                                        Comparator.nullsLast(Integer::compareTo)
+                                )
+                                .thenComparing(
+                                        regel -> regel.getRolle() == null ? 1 : 0
+                                )
+                                .thenComparing(
+                                        Beitragsregel::getAlterBis,
+                                        Comparator.nullsLast(Integer::compareTo)
+                                )
+                )
                 .toList();
 
         int alterVon = 0;
