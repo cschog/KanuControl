@@ -1,5 +1,6 @@
 import apiClient from "@/api/client/apiClient";
 import { AbrechnungDetail, Buchung, BelegCreate, BuchungCreate } from "@/api/types/abrechnung";
+import { ValidationResult } from "@/api/types/ValidationResult";
 
 export const getAbrechnung = async (veranstaltungId: number) => {
   const { data } = await apiClient.get<AbrechnungDetail>(
@@ -73,3 +74,11 @@ export async function addBeleg(veranstaltungId: number, payload: BelegCreate): P
 export const deleteBeleg = async (veranstaltungId: number, belegId: number) => {
   await apiClient.delete(`/veranstaltungen/${veranstaltungId}/abrechnung/belege/${belegId}`);
 };
+
+export async function validateAbrechnung(veranstaltungId: number): Promise<ValidationResult> {
+  const res = await apiClient.get<ValidationResult>(
+    `/veranstaltungen/${veranstaltungId}/abrechnung/validierung`,
+  );
+
+  return res.data;
+}

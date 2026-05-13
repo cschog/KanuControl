@@ -392,7 +392,7 @@ export default function PersonenScreen() {
           await loadRef.current();
 
           // Neue Person selektieren
-          setSelectedId(created.id);
+          // setSelectedId(created.id);
 
           setCopyOpen(false);
         }}
@@ -415,7 +415,7 @@ export default function PersonenScreen() {
 
           await loadRef.current();
 
-          setSelectedId(created.id);
+          // setSelectedId(created.id);
 
           setCreateOpen(false);
         }}

@@ -2,7 +2,7 @@
   "name": "kanucontrol-client",
   "private": true,
   "type": "module",
-  "version": "0.0.0",
+  "version": "0.6.3.2",
   "scripts": {
     "dev": "vite --config vite.config.mts",
     "build": "tsc -b && vite build",
@@ -13,6 +13,7 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
+    "@fontsource/roboto": "^5.2.10",
     "@mui/icons-material": "^7.3.7",
     "@mui/material": "^7.3.7",
     "@mui/system": "^7.3.7",

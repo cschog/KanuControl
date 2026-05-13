@@ -60,6 +60,7 @@ const BeitragsstrukturTable = () => {
   const [data, setData] = useState<BeitragsstrukturDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
   const [newName, setNewName] = useState("");
   const [form, setForm] = useState({
     alterBis: "",
@@ -357,7 +358,11 @@ const BeitragsstrukturTable = () => {
 
       {/* LISTE */}
       {data.map((s) => (
-        <Accordion key={s.id} defaultExpanded={false}>
+        <Accordion
+          key={s.id}
+          expanded={expandedId === s.id}
+          onChange={() => setExpandedId(expandedId === s.id ? null : s.id)}
+        >
           {/* HEADER */}
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Stack
@@ -400,7 +405,6 @@ const BeitragsstrukturTable = () => {
                 <Button color="error" variant="outlined" onClick={() => handleDelete(s.id)}>
                   Löschen
                 </Button>
-                
               </Stack>
             </Stack>
           </AccordionSummary>

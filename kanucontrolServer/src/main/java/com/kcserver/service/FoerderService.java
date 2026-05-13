@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.Period;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
@@ -18,6 +17,7 @@ public class FoerderService {
 
     private final FoerdersatzService foerdersatzService;
     private final KikZuschlagService kikZuschlagService;
+    private final AltersService altersService;
 
     public boolean istFoerderfaehig(
 
@@ -27,9 +27,13 @@ public class FoerderService {
 
     ) {
 
+        if (veranstaltung == null || teilnehmer == null) {
+            return false;
+        }
+
         VeranstaltungTyp typ = veranstaltung.getTyp();
 
-        if (!typ.isFoerderfaehig()) {
+        if (typ == null || !typ.isFoerderfaehig()) {
 
             return false;
 
@@ -44,20 +48,21 @@ public class FoerderService {
         }
 
         LocalDate geburt =
+                teilnehmer.getPerson() != null
+                        ? teilnehmer.getPerson().getGeburtsdatum()
+                        : null;
 
-                teilnehmer.getPerson().getGeburtsdatum();
+        Integer alter =
+                altersService.berechneAlterBeiBeginn(
+                        geburt,
+                        veranstaltung.getBeginnDatum()
+                );
 
-        if (geburt == null) {
+        if (alter == null) {
 
             return false;
 
         }
-
-        int alter =
-                Period.between(
-                        geburt,
-                        veranstaltung.getBeginnDatum()
-                ).getYears();
 
         return alter >= typ.getMindestalter()
                 && alter <= typ.getHoechstalter();
@@ -83,6 +88,14 @@ public class FoerderService {
             Veranstaltung veranstaltung
     ) {
 
+        if (
+                veranstaltung == null
+                        || veranstaltung.getBeginnDatum() == null
+                        || veranstaltung.getEndeDatum() == null
+        ) {
+            return 0;
+        }
+
         return (int)
                 ChronoUnit.DAYS.between(
                         veranstaltung.getBeginnDatum(),
@@ -99,7 +112,15 @@ public class FoerderService {
             Teilnehmer teilnehmer
     ) {
 
+        if (veranstaltung == null) {
+            return BigDecimal.ZERO;
+        }
+
         LocalDate datum = veranstaltung.getBeginnDatum();
+
+        if (datum == null) {
+            return BigDecimal.ZERO;
+        }
 
         if (!istFoerderfaehig(veranstaltung, teilnehmer)) {
             return BigDecimal.ZERO;
@@ -111,18 +132,25 @@ public class FoerderService {
                         datum
                 );
 
+        if (fs == null || fs.getFoerdersatz() == null) {
+            return BigDecimal.ZERO;
+        }
+
         BigDecimal grund = fs.getFoerdersatz();
         BigDecimal deckel = FoerderConfig.FOERDERDECKEL;
 
         BigDecimal zuschlag = BigDecimal.ZERO;
 
-        if (veranstaltung.getVerein()
-                .isKikZertifiziertAm(datum)) {
+        if (
+                veranstaltung.getVerein() != null
+                        && veranstaltung.getVerein()
+                        .isKikZertifiziertAm(datum)
+        ) {
 
             KikZuschlag kik =
                     kikZuschlagService.findOptionalGueltigAm(datum);
 
-            if (kik != null) {
+            if (kik != null && kik.getKikZuschlag() != null) {
                 zuschlag = kik.getKikZuschlag();
             }
         }
@@ -139,6 +167,10 @@ public class FoerderService {
 
     private boolean istFmOderJem(Veranstaltung veranstaltung) {
 
+        if (veranstaltung == null) {
+            return false;
+        }
+
         VeranstaltungTyp typ = veranstaltung.getTyp();
 
         return typ == VeranstaltungTyp.FM
@@ -150,6 +182,11 @@ public class FoerderService {
             Veranstaltung veranstaltung,
             List<Teilnehmer> teilnehmer
     ) {
+
+        if (veranstaltung == null || teilnehmer == null) {
+            return BigDecimal.ZERO;
+        }
+
         int tage =
                 berechneFoerdertage(veranstaltung);
 
@@ -172,12 +209,21 @@ public class FoerderService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .multiply(BigDecimal.valueOf(tage));
     }
+
     public BigDecimal berechneAngewandtenFoerdersatz(
             Veranstaltung veranstaltung
     ) {
 
+        if (veranstaltung == null) {
+            return BigDecimal.ZERO;
+        }
+
         LocalDate datum =
                 veranstaltung.getBeginnDatum();
+
+        if (datum == null) {
+            return BigDecimal.ZERO;
+        }
 
         Foerdersatz fs =
                 foerdersatzService.findEntityGueltigFuerTypAm(
@@ -185,19 +231,26 @@ public class FoerderService {
                         datum
                 );
 
+        if (fs == null || fs.getFoerdersatz() == null) {
+            return BigDecimal.ZERO;
+        }
+
         BigDecimal grund =
                 fs.getFoerdersatz();
 
         BigDecimal zuschlag =
                 BigDecimal.ZERO;
 
-        if (veranstaltung.getVerein()
-                .isKikZertifiziertAm(datum)) {
+        if (
+                veranstaltung.getVerein() != null
+                        && veranstaltung.getVerein()
+                        .isKikZertifiziertAm(datum)
+        ) {
 
             KikZuschlag kik =
                     kikZuschlagService.findOptionalGueltigAm(datum);
 
-            if (kik != null) {
+            if (kik != null && kik.getKikZuschlag() != null) {
                 zuschlag = kik.getKikZuschlag();
             }
         }

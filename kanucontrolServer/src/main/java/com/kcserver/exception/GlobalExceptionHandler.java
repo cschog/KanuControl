@@ -12,6 +12,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 
 @Slf4j
 @RestControllerAdvice
@@ -82,6 +83,34 @@ public class GlobalExceptionHandler {
                         HttpStatus.BAD_REQUEST.value(),
                         "BAD_REQUEST",
                         ex.getMessage()
+                )
+        );
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiError> handleInvalidJson(
+            HttpMessageNotReadableException ex
+    ) {
+
+        String message = "Ungültige Anfrage";
+
+        Throwable cause = ex.getCause();
+
+        if (cause instanceof com.fasterxml.jackson.databind.exc.InvalidFormatException ife) {
+
+            String field = ife.getPath().stream()
+                    .map(ref -> ref.getFieldName())
+                    .reduce((a, b) -> b)
+                    .orElse("unknown");
+
+            message = "Ungültiges Format '" + ife.getValue() + "' für Feld '" + field + "'";
+        }
+
+        return ResponseEntity.badRequest().body(
+                ApiError.simple(
+                        HttpStatus.BAD_REQUEST.value(),
+                        "INVALID_REQUEST",
+                        message
                 )
         );
     }

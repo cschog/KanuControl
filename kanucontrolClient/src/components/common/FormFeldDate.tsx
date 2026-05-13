@@ -12,6 +12,8 @@ interface FormFeldDateProps {
 export function FormFeldDate({ label, value, onChange, disabled = false }: FormFeldDateProps) {
   const safeValue = value ?? "";
 
+  const invalid = safeValue.trim() !== "" && normalizeGermanDate(safeValue) === null;
+
   const handleBlur = () => {
     if (disabled) return;
 
@@ -31,6 +33,8 @@ export function FormFeldDate({ label, value, onChange, disabled = false }: FormF
       onChange={(e) => onChange(e.target.value)}
       onBlur={handleBlur}
       placeholder="TT.MM.JJJJ"
+      error={invalid}
+      helperText={invalid ? "Ungültiges Datum" : ""}
     />
   );
 }

@@ -55,11 +55,11 @@ export default function TeilnehmerScreen() {
   /* ================= PAGING ================= */
 
   const [pageL, setPageL] = useState(0);
-  const [sizeL, setSizeL] = useState(50);
+  const [sizeL, setSizeL] = useState(1000);
   const [totalAvailable, setTotalAvailable] = useState(0);
 
   const [pageR, setPageR] = useState(0);
-  const [sizeR, setSizeR] = useState(50);
+  const [sizeR, setSizeR] = useState(1000);
   const [totalAssigned, setTotalAssigned] = useState(0);
 
   /* ================= LOAD ================= */
@@ -347,19 +347,19 @@ export default function TeilnehmerScreen() {
                   field: "name",
                   headerName: "Name",
                   flex: 1,
-                  valueGetter: (_v, row) => row.person.name,
+                  valueGetter: (_v, row) => row.person?.name ?? "",
                 },
                 {
                   field: "vorname",
                   headerName: "Vorname",
                   flex: 1,
-                  valueGetter: (_v, row) => row.person.vorname,
+                  valueGetter: (_v, row) => row.person?.vorname ?? "",
                 },
                 {
                   field: "verein",
                   headerName: "Verein",
                   flex: 1,
-                  valueGetter: (_v, row) => row.person.hauptvereinAbk,
+                  valueGetter: (_v, row) => row.person?.hauptvereinAbk ?? "",
                 },
                 {
                   field: "rolle",
