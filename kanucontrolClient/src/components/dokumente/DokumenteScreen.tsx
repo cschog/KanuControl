@@ -6,6 +6,10 @@ import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import DownloadIcon from "@mui/icons-material/Download";
 
+import { validateAbrechnung } from "@/api/services/abrechnungApi";
+
+import { ValidationResult } from "@/api/types/ValidationResult";
+
 import apiClient from "@/api/client/apiClient";
 
 import { getActiveVeranstaltung } from "@/api/services/veranstaltungApi";
@@ -14,6 +18,8 @@ import { VeranstaltungDetail } from "@/api/types/VeranstaltungDetail";
 
 const DokumenteScreen: React.FC = () => {
   const [veranstaltung, setVeranstaltung] = useState<VeranstaltungDetail | null>(null);
+
+  const [abrechnungValidation, setAbrechnungValidation] = useState<ValidationResult | null>(null);
 
   /* =========================================================
      Aktive Veranstaltung laden
@@ -25,6 +31,12 @@ const DokumenteScreen: React.FC = () => {
         const v = await getActiveVeranstaltung();
 
         setVeranstaltung(v);
+
+        if (v?.id) {
+          const validation = await validateAbrechnung(v.id);
+
+          setAbrechnungValidation(validation);
+        }
       } catch (err) {
         console.error("Keine aktive Veranstaltung gefunden", err);
       }
@@ -96,7 +108,12 @@ const DokumenteScreen: React.FC = () => {
      Reusable Report Section
      ========================================================= */
 
-  const renderSection = (title: string, endpoint: string, fallbackFilename: string) => (
+  const renderSection = (
+    title: string,
+    endpoint: string,
+    fallbackFilename: string,
+    disabled: boolean = false,
+  ) => (
     <Paper
       elevation={3}
       sx={{
@@ -121,6 +138,7 @@ const DokumenteScreen: React.FC = () => {
           variant="contained"
           startIcon={<VisibilityIcon />}
           onClick={() => handlePreview(endpoint)}
+          disabled={disabled}
         >
           Vorschau
         </Button>
@@ -129,6 +147,7 @@ const DokumenteScreen: React.FC = () => {
           variant="outlined"
           startIcon={<DownloadIcon />}
           onClick={() => handleDownload(endpoint, fallbackFilename)}
+          disabled={disabled}
         >
           Download
         </Button>
@@ -162,8 +181,30 @@ const DokumenteScreen: React.FC = () => {
             {renderSection("Teilnehmerliste", "teilnehmer/pdf", "teilnehmerliste.pdf")}
 
             {/* Abrechnung */}
+            {abrechnungValidation && !abrechnungValidation.valid && (
+              <Paper
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  bgcolor: "#fff3cd",
+                  border: "1px solid #ffe69c",
+                }}
+              >
+                <Typography fontWeight={700}>⚠️ Abrechnung derzeit nicht möglich</Typography>
 
-            {renderSection("Abrechnung", "abrechnung/pdf", "abrechnung.pdf")}
+                <Box component="ul" sx={{ mb: 0 }}>
+                  {abrechnungValidation.messages.map((m: string, i: number) => (
+                    <li key={i}>{m}</li>
+                  ))}
+                </Box>
+              </Paper>
+            )}
+            {renderSection(
+              "Abrechnung",
+              "abrechnung/pdf",
+              "abrechnung.pdf",
+              !abrechnungValidation?.valid,
+            )}
 
             {/* Erhebungsbogen */}
 

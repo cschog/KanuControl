@@ -4,6 +4,7 @@ import com.kcserver.entity.*;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.repository.*;
 import com.kcserver.service.FoerderService;
+import com.kcserver.service.VeranstaltungValidator;
 import lombok.RequiredArgsConstructor;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -34,6 +35,8 @@ public class PDFAbrechnungService {
     private final AbrechnungBuchungRepository abrechnungBuchungRepository;
     private final FoerderService foerderService;
 
+    private final VeranstaltungValidator validator;
+
     public byte[] generate(Long veranstaltungId) {
 
         Veranstaltung v = veranstaltungRepository
@@ -42,6 +45,11 @@ public class PDFAbrechnungService {
 
         List<Teilnehmer> teilnehmer =
                 teilnehmerRepository.findAllWithPerson(veranstaltungId);
+
+        validator.validateAbrechnungFaehigOrThrow(
+                v,
+                teilnehmer
+        );
 
         var abrechnung =
                 abrechnungRepository

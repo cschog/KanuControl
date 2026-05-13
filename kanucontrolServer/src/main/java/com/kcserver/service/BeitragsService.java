@@ -10,13 +10,14 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.Period;
 import java.util.Comparator;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class BeitragsService {
+
+    private final AltersService altersService;
 
     public BigDecimal berechneBeitrag(
             Veranstaltung veranstaltung,
@@ -55,14 +56,15 @@ public class BeitragsService {
         // Alter berechnen
         // =========================================
 
-        int alter = 0;
+        Integer alter = altersService.berechneAlterBeiBeginn(
+                teilnehmer.getPerson() != null
+                        ? teilnehmer.getPerson().getGeburtsdatum()
+                        : null,
+                LocalDate.now()
+        );
 
-        if (teilnehmer.getPerson().getGeburtsdatum() != null) {
-
-            alter = Period.between(
-                    teilnehmer.getPerson().getGeburtsdatum(),
-                    LocalDate.now()
-            ).getYears();
+        if (alter == null) {
+            alter = 0;
         }
 
         TeilnehmerRolle rolle =

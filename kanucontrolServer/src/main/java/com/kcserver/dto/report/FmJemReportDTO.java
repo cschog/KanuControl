@@ -1,4 +1,4 @@
-package com.kcserver.dto;
+package com.kcserver.dto.report;
 
 import java.time.LocalDate;
 

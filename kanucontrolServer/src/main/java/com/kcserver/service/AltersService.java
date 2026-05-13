@@ -13,12 +13,12 @@ public class AltersService {
             LocalDate veranstaltungsbeginn
     ) {
 
-        if (veranstaltungsbeginn.isBefore(geburtsdatum)) {
-            return 0; // oder Exception
-        }
-
         if (geburtsdatum == null || veranstaltungsbeginn == null) {
             return null;
+        }
+
+        if (veranstaltungsbeginn.isBefore(geburtsdatum)) {
+            return 0;
         }
 
         return Period.between(

@@ -65,13 +65,15 @@ public abstract class TeilnehmerMapper {
     @Mapping(
             target = "alterBeiBeginn",
             expression = """
-        java(
-            altersService.berechneAlterBeiBeginn(
+    java(
+        teilnehmer.getPerson().getGeburtsdatum() != null
+            ? altersService.berechneAlterBeiBeginn(
                 teilnehmer.getPerson().getGeburtsdatum(),
                 teilnehmer.getVeranstaltung().getBeginnDatum()
             )
-        )
-    """
+            : null
+    )
+"""
     )
 
     public abstract TeilnehmerListDTO toListDTO(

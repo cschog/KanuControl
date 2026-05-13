@@ -1,9 +1,14 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import packageJson from "./package.json";
 import { VitePWA } from "vite-plugin-pwa";
 import path from "path";
 
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(packageJson.version),
+  },
+
   plugins: [
     react(),
 
@@ -11,7 +16,7 @@ export default defineConfig({
       registerType: "autoUpdate",
 
       devOptions: {
-        enabled: false, // ⭐ PWA auch im dev aktiv
+        enabled: false,
       },
 
       manifest: {
@@ -55,6 +60,7 @@ export default defineConfig({
   server: {
     host: true,
     port: 5173,
+
     proxy: {
       "/api": {
         target: "http://localhost:8090",

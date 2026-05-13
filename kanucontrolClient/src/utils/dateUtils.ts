@@ -33,6 +33,9 @@ function buildIsoDate(d: string, m: string, y: string): string | null {
 
   const date = new Date(year, month - 1, day);
 
+  if (month < 1 || month > 12) return null;
+  if (day < 1 || day > 31) return null;
+
   // echte Validierung (kein 31.02.)
   if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
     return null;

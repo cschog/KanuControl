@@ -1,4 +1,5 @@
 import * as React from "react";
+import { deDE } from "@mui/x-data-grid/locales";
 import {
   DataGrid,
   GridColDef,
@@ -158,6 +159,7 @@ export function GenericTable<T extends WithId>({
         getRowId={(row) => row.id}
         rowBufferPx={1000}
         density="compact"
+        localeText={deDE.components.MuiDataGrid.defaultProps.localeText}
         checkboxSelection={checkboxSelection}
         disableMultipleRowSelection={!checkboxSelection}
         onRowSelectionModelChange={handleSelectionChange}
