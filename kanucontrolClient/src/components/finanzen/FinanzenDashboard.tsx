@@ -46,13 +46,13 @@ const FinanzenDashboard = () => {
 
   const istEinnahmenNachKategorie = data?.istEinnahmenNachKategorie ?? [];
 
-  const handleExport = () => {
-    console.log("export");
-  };
+  // const handleExport = () => {
+  //   console.log("export");
+  // };
 
-  const handleAbrechnung = () => {
-    console.log("abrechnung");
-  };
+  // const handleAbrechnung = () => {
+  //   console.log("abrechnung");
+  // };
 
   if (isLoading) {
     return <div>Lade Dashboard...</div>;
@@ -422,17 +422,17 @@ const FinanzenDashboard = () => {
             variant: "outlined",
           },
         ]}
-        right={[
-          {
-            label: "Export",
-            onClick: handleExport,
-            variant: "outlined",
-          },
-          {
-            label: "Abrechnung",
-            onClick: handleAbrechnung,
-          },
-        ]}
+        // right={[
+        //   {
+        //     label: "Export",
+        //     onClick: handleExport,
+        //     variant: "outlined",
+        //   },
+        //   {
+        //     label: "Abrechnung",
+        //     onClick: handleAbrechnung,
+        //   },
+        // ]}
       />
     </Box>
   );

@@ -20,6 +20,8 @@ import com.kcserver.repository.PlanungRepository;
 
 import java.math.BigDecimal;
 import com.kcserver.util.CurrencyUtil;
+import com.kcserver.enumtype.PdfDokumentTyp;
+import com.kcserver.util.PdfFilenameUtil;
 
 @Service
 @RequiredArgsConstructor
@@ -286,6 +288,16 @@ public class PDFFmJemReportService {
             }
 
             /* ❗ NICHT flatten → Formular bleibt editierbar */
+
+            String filename = PdfFilenameUtil.build(
+                    java.time.LocalDate.now(),
+                    PdfDokumentTyp.ANMELDUNG,
+                    v
+            );
+
+            doc.getDocumentInformation().setTitle(filename);
+            doc.getDocumentInformation().setAuthor("KanuControl");
+            doc.getDocumentInformation().setCreator("KanuControl");
 
             doc.save(out);
             return out.toByteArray();

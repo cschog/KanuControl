@@ -41,7 +41,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         </LocalizationProvider>
       </BrowserRouter>
 
-      <ReactQueryDevtools initialIsOpen={false} />
+      {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
     </QueryClientProvider>
   </React.StrictMode>,
 );

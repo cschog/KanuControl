@@ -5,11 +5,12 @@ import { Box, Typography, Paper, Button, Stack } from "@mui/material";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import DownloadIcon from "@mui/icons-material/Download";
+import { Accordion, AccordionSummary, AccordionDetails } from "@mui/material";
+
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 import { validateAbrechnung } from "@/api/services/abrechnungApi";
-
 import { ValidationResult } from "@/api/types/ValidationResult";
-
 import apiClient from "@/api/client/apiClient";
 
 import { getActiveVeranstaltung } from "@/api/services/veranstaltungApi";
@@ -19,7 +20,8 @@ import { VeranstaltungDetail } from "@/api/types/VeranstaltungDetail";
 const DokumenteScreen: React.FC = () => {
   const [veranstaltung, setVeranstaltung] = useState<VeranstaltungDetail | null>(null);
 
-  const [abrechnungValidation, setAbrechnungValidation] = useState<ValidationResult | null>(null);
+  const [alterValidation, setAlterValidation] = useState<ValidationResult | null>(null);
+
 
   /* =========================================================
      Aktive Veranstaltung laden
@@ -32,11 +34,10 @@ const DokumenteScreen: React.FC = () => {
 
         setVeranstaltung(v);
 
-        if (v?.id) {
-          const validation = await validateAbrechnung(v.id);
-
-          setAbrechnungValidation(validation);
-        }
+       if (v?.id) {
+         const abrechnung = await validateAbrechnung(v.id);
+         setAlterValidation(abrechnung);
+       }
       } catch (err) {
         console.error("Keine aktive Veranstaltung gefunden", err);
       }
@@ -107,6 +108,34 @@ const DokumenteScreen: React.FC = () => {
   /* =========================================================
      Reusable Report Section
      ========================================================= */
+const renderValidationWarning = (title: string, validation: ValidationResult | null) => {
+  if (!validation || validation.valid) {
+    return null;
+  }
+
+  return (
+    <Accordion
+      sx={{
+        bgcolor: "#fff3cd",
+        border: "1px solid #ffe69c",
+        borderRadius: 2,
+        boxShadow: "none",
+      }}
+    >
+      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+        <Typography fontWeight={700}>⚠️ {title}</Typography>
+      </AccordionSummary>
+
+      <AccordionDetails>
+        <Box component="ul" sx={{ mb: 0 }}>
+          {validation.messages.map((m: string, i: number) => (
+            <li key={i}>{m}</li>
+          ))}
+        </Box>
+      </AccordionDetails>
+    </Accordion>
+  );
+};
 
   const renderSection = (
     title: string,
@@ -181,34 +210,24 @@ const DokumenteScreen: React.FC = () => {
             {renderSection("Teilnehmerliste", "teilnehmer/pdf", "teilnehmerliste.pdf")}
 
             {/* Abrechnung */}
-            {abrechnungValidation && !abrechnungValidation.valid && (
-              <Paper
-                sx={{
-                  p: 2,
-                  borderRadius: 2,
-                  bgcolor: "#fff3cd",
-                  border: "1px solid #ffe69c",
-                }}
-              >
-                <Typography fontWeight={700}>⚠️ Abrechnung derzeit nicht möglich</Typography>
-
-                <Box component="ul" sx={{ mb: 0 }}>
-                  {abrechnungValidation.messages.map((m: string, i: number) => (
-                    <li key={i}>{m}</li>
-                  ))}
-                </Box>
-              </Paper>
-            )}
+            {renderValidationWarning("Abrechnung derzeit nicht möglich", alterValidation)}
             {renderSection(
               "Abrechnung",
               "abrechnung/pdf",
               "abrechnung.pdf",
-              !abrechnungValidation?.valid,
+              !alterValidation?.valid,
             )}
 
             {/* Erhebungsbogen */}
 
-            {renderSection("Erhebungsbogen", "erhebungsbogen/pdf", "erhebungsbogen.pdf")}
+            {renderValidationWarning("Erhebungsbogen derzeit nicht möglich", alterValidation)}
+
+            {renderSection(
+              "Erhebungsbogen",
+              "erhebungsbogen/pdf",
+              "erhebungsbogen.pdf",
+              !alterValidation?.valid,
+            )}
           </Stack>
         </>
       ) : (

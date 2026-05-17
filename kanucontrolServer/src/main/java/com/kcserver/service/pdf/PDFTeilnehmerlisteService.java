@@ -3,6 +3,8 @@ package com.kcserver.service.pdf;
 import com.kcserver.dto.person.PersonRefDTO;
 import com.kcserver.dto.teilnehmer.TeilnehmerDetailDTO;
 import com.kcserver.dto.veranstaltung.VeranstaltungDetailDTO;
+import com.kcserver.enumtype.PdfDokumentTyp;
+import com.kcserver.util.PdfFilenameUtil;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -72,9 +74,11 @@ public class PDFTeilnehmerlisteService {
                     }
                 }
 
-                String filename =
-                        LocalDate.now() + "_TN_" +
-                                sanitizeFilename(v.getName()) + ".pdf";
+                String filename = PdfFilenameUtil.build(
+                        LocalDate.now(),
+                        PdfDokumentTyp.TEILNEHMERLISTE,
+                        v
+                );
 
                 PDDocumentInformation info = masterDoc.getDocumentInformation();
                 info.setTitle(filename);
@@ -253,13 +257,5 @@ public class PDFTeilnehmerlisteService {
                             .compareToIgnoreCase(b.getPerson().getVorname());
                 })
                 .toList();
-    }
-
-    private String sanitizeFilename(String name) {
-        if (name == null) return "Veranstaltung";
-        return name
-                .replaceAll("[\\\\/:*?\"<>|]", "")
-                .replaceAll("\\s+", "_")
-                .trim();
     }
 }

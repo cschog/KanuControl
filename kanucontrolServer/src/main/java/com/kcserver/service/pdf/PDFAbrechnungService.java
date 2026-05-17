@@ -1,10 +1,12 @@
 package com.kcserver.service.pdf;
 
 import com.kcserver.entity.*;
+import com.kcserver.enumtype.PdfDokumentTyp;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.repository.*;
 import com.kcserver.service.FoerderService;
 import com.kcserver.service.VeranstaltungValidator;
+import com.kcserver.util.PdfFilenameUtil;
 import lombok.RequiredArgsConstructor;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -101,6 +103,16 @@ public class PDFAbrechnungService {
                     buchungen,
                     teilnehmer
             );
+
+            String filename = PdfFilenameUtil.build(
+                    java.time.LocalDate.now(),
+                    PdfDokumentTyp.ABRECHNUNG,
+                    v
+            );
+
+            doc.getDocumentInformation().setTitle(filename);
+            doc.getDocumentInformation().setAuthor("KanuControl");
+            doc.getDocumentInformation().setCreator("KanuControl");
 
             doc.save(out);
             return out.toByteArray();
