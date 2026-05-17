@@ -9,6 +9,7 @@ import { useAppContext } from "@/context/AppContext";
 import { addTeilnehmer } from "@/api/services/teilnehmerApi";
 import { useNavigate } from "react-router-dom";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
+import { GridFilterModel } from "@mui/x-data-grid";
 
 import {
   getPersonById,
@@ -62,6 +63,12 @@ export default function PersonenScreen() {
 
   const size = 25;
 
+  const [filterModel, setFilterModel] = useState<GridFilterModel>({
+    items: [],
+  });
+
+  const ortFilter = filterModel.items.find((i) => i.field === "ort")?.value;
+
   /* ========================================================= */
   /* 🔄 LOAD (Cursor-based) */
   /* ========================================================= */
@@ -72,6 +79,9 @@ export default function PersonenScreen() {
     loadingRef.current = true;
     setLoading(true);
 
+    console.log("filterModel", filterModel);
+    console.log("ortFilter", ortFilter);
+
     try {
       const res = await getPersonsScroll(
         cursorRef.current?.name,
@@ -80,6 +90,7 @@ export default function PersonenScreen() {
         size,
         {
           search: debounceSearch || undefined,
+          ort: ortFilter || undefined,
         },
       );
 
@@ -90,13 +101,18 @@ export default function PersonenScreen() {
         return;
       }
 
-      setRows((prev) => {
-        const existing = new Set(prev.map((r) => r.id));
-        const filtered = newRows.filter((r) => !existing.has(r.id));
-        return [...prev, ...filtered];
-      });
+    const isFirstPage = cursorRef.current === null;
 
-      const isFirstPage = cursorRef.current === null;
+    setRows((prev) => {
+      if (isFirstPage) {
+        return newRows;
+      }
+
+      const existing = new Set(prev.map((r) => r.id));
+      const filtered = newRows.filter((r) => !existing.has(r.id));
+
+      return [...prev, ...filtered];
+    });
 
       if (isFirstPage) {
         setTotal(res.total);
@@ -138,7 +154,7 @@ export default function PersonenScreen() {
     setHasMore(true);
 
     loadRef.current(); // ⭐ initial load
-  }, [debounceSearch]);
+  }, [debounceSearch, filterModel]);
 
   /* ========================================================= */
   /* 🔄 DETAIL */
@@ -232,14 +248,16 @@ export default function PersonenScreen() {
   };
 
   const resetFilter = () => {
-    // ⭐ alles sauber zurücksetzen
     cursorRef.current = null;
+
     setRows([]);
     setHasMore(true);
 
-    setSearch(""); // UI
+    setSearch("");
 
-    loadRef.current(); // ⭐ DIREKT laden
+    setFilterModel({
+      items: [],
+    });
   };
 
   useEffect(() => {
@@ -279,8 +297,16 @@ export default function PersonenScreen() {
               loading={loading}
               onLoadMore={() => loadRef.current()}
               selectedRowId={selectedId}
+              filterModel={filterModel}
+              onFilterChange={(model) => {
+                setFilterModel(model);
+
+                cursorRef.current = null;
+                setRows([]);
+                setHasMore(true);
+              }}
+              rowCount={total}
               onSelectRow={(row) => {
-                // console.log("selected:", row); // ⭐ DEBUG
                 setSelectedId(row?.id ?? null);
               }}
             />

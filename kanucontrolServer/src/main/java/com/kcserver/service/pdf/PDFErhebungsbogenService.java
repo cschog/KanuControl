@@ -3,9 +3,11 @@ package com.kcserver.service.pdf;
 import com.kcserver.entity.Person;
 import com.kcserver.entity.Teilnehmer;
 import com.kcserver.entity.Veranstaltung;
+import com.kcserver.enumtype.PdfDokumentTyp;
 import com.kcserver.enumtype.Sex;
 import com.kcserver.repository.TeilnehmerRepository;
 import com.kcserver.repository.VeranstaltungRepository;
+import com.kcserver.util.PdfFilenameUtil;
 import lombok.RequiredArgsConstructor;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -112,7 +114,19 @@ public class PDFErhebungsbogenService {
             fillStatistik(form, v, teilnehmer);
 
             ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+            String filename = PdfFilenameUtil.build(
+                    java.time.LocalDate.now(),
+                    PdfDokumentTyp.ERHEBUNGSBOGEN,
+                    v
+            );
+
+            doc.getDocumentInformation().setTitle(filename);
+            doc.getDocumentInformation().setAuthor("KanuControl");
+            doc.getDocumentInformation().setCreator("KanuControl");
+
             doc.save(out);
+
             return out.toByteArray();
         }
     }

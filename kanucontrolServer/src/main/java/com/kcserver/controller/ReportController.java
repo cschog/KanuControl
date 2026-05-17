@@ -20,8 +20,10 @@ import org.springframework.web.bind.annotation.RestController;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
+import com.kcserver.enumtype.PdfDokumentTyp;
+import com.kcserver.util.PdfFilenameUtil;
+
 
 @RestController
 @RequestMapping("/api/veranstaltungen/{veranstaltungId}")
@@ -50,7 +52,11 @@ public class ReportController {
         VeranstaltungDetailDTO veranstaltung =
                 veranstaltungService.getById(veranstaltungId);
 
-        String filename = buildFilename("FMJEM", veranstaltung.getName());
+        String filename = PdfFilenameUtil.build(
+                LocalDate.now(),
+                PdfDokumentTyp.ANMELDUNG,
+                veranstaltung
+        );
 
         return buildInlineResponse(pdf, filename);
     }
@@ -69,7 +75,11 @@ public class ReportController {
         VeranstaltungDetailDTO veranstaltung =
                 veranstaltungService.getById(veranstaltungId);
 
-        String filename = buildFilename("FMJEM", veranstaltung.getName());
+        String filename = PdfFilenameUtil.build(
+                LocalDate.now(),
+                PdfDokumentTyp.ANMELDUNG,
+                veranstaltung
+        );
 
         return buildAttachmentResponse(pdf, filename);
     }
@@ -81,7 +91,7 @@ public class ReportController {
     @GetMapping("/teilnehmer/pdf/view")
     public ResponseEntity<byte[]> viewTeilnehmerPdf(
             @PathVariable Long veranstaltungId
-    ) throws Exception {
+    )  {
 
         VeranstaltungDetailDTO veranstaltung =
                 veranstaltungService.getById(veranstaltungId);
@@ -94,7 +104,11 @@ public class ReportController {
                 teilnehmer
         );
 
-        String filename = buildFilename("TN", veranstaltung.getName());
+        String filename = PdfFilenameUtil.build(
+                LocalDate.now(),
+                PdfDokumentTyp.TEILNEHMERLISTE,
+                veranstaltung
+        );
 
         return buildInlineResponse(pdf, filename);
     }
@@ -106,7 +120,7 @@ public class ReportController {
     @GetMapping("/teilnehmer/pdf/download")
     public ResponseEntity<byte[]> downloadTeilnehmerPdf(
             @PathVariable Long veranstaltungId
-    ) throws Exception {
+    )  {
 
         VeranstaltungDetailDTO veranstaltung =
                 veranstaltungService.getById(veranstaltungId);
@@ -119,7 +133,11 @@ public class ReportController {
                 teilnehmer
         );
 
-        String filename = buildFilename("TN", veranstaltung.getName());
+        String filename = PdfFilenameUtil.build(
+                LocalDate.now(),
+                PdfDokumentTyp.TEILNEHMERLISTE,
+                veranstaltung
+        );
 
         return buildAttachmentResponse(pdf, filename);
     }
@@ -138,7 +156,11 @@ public class ReportController {
         VeranstaltungDetailDTO veranstaltung =
                 veranstaltungService.getById(veranstaltungId);
 
-        String filename = buildFilename("EB", veranstaltung.getName());
+        String filename = PdfFilenameUtil.build(
+                LocalDate.now(),
+                PdfDokumentTyp.ERHEBUNGSBOGEN,
+                veranstaltung
+        );
 
         return buildInlineResponse(pdf, filename);
     }
@@ -157,7 +179,11 @@ public class ReportController {
         VeranstaltungDetailDTO veranstaltung =
                 veranstaltungService.getById(veranstaltungId);
 
-        String filename = buildFilename("EB", veranstaltung.getName());
+        String filename = PdfFilenameUtil.build(
+                LocalDate.now(),
+                PdfDokumentTyp.ERHEBUNGSBOGEN,
+                veranstaltung
+        );
 
         return buildAttachmentResponse(pdf, filename);
     }
@@ -176,7 +202,11 @@ public class ReportController {
         VeranstaltungDetailDTO veranstaltung =
                 veranstaltungService.getById(veranstaltungId);
 
-        String filename = buildFilename("AB", veranstaltung.getName());
+        String filename = PdfFilenameUtil.build(
+                LocalDate.now(),
+                PdfDokumentTyp.ABRECHNUNG,
+                veranstaltung
+        );
 
         return buildInlineResponse(pdf, filename);
     }
@@ -195,31 +225,13 @@ public class ReportController {
         VeranstaltungDetailDTO veranstaltung =
                 veranstaltungService.getById(veranstaltungId);
 
-        String filename = buildFilename("AB", veranstaltung.getName());
+        String filename = PdfFilenameUtil.build(
+                LocalDate.now(),
+                PdfDokumentTyp.ABRECHNUNG,
+                veranstaltung
+        );
 
         return buildAttachmentResponse(pdf, filename);
-    }
-
-    /* =========================================================
-       Helper: Dateiname
-       ========================================================= */
-
-    private String buildFilename(String prefix, String rawName) {
-
-        String date = LocalDate.now()
-                .format(DateTimeFormatter.ISO_DATE);
-
-        String safeName = (rawName == null ? "Veranstaltung" : rawName)
-                .replace("ä", "ae")
-                .replace("ö", "oe")
-                .replace("ü", "ue")
-                .replace("Ä", "Ae")
-                .replace("Ö", "Oe")
-                .replace("Ü", "Ue")
-                .replace("ß", "ss")
-                .replaceAll("[^a-zA-Z0-9]+", "_");
-
-        return date + "_" + prefix + "_" + safeName + ".pdf";
     }
 
     /* =========================================================

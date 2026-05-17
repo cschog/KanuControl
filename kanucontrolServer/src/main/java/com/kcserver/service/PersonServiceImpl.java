@@ -65,7 +65,8 @@ public class PersonServiceImpl implements PersonService {
                 cursorName,
                 cursorVorname,
                 cursorId,
-                criteria.getSearch()
+                criteria.getSearch(),
+                criteria.getOrt()
         );
 
         long total = personRepository.count(

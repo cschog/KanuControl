@@ -2,7 +2,7 @@
   "name": "kanucontrol-client",
   "private": true,
   "type": "module",
-  "version": "0.6.3.2",
+  "version": "0.6.6",
   "scripts": {
     "dev": "vite --config vite.config.mts",
     "build": "tsc -b && vite build",

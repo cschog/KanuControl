@@ -46,13 +46,18 @@ AND (
     LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR
     LOWER(p.vorname) LIKE LOWER(CONCAT('%', :search, '%'))
 )
+AND (
+    :ort IS NULL OR :ort = '' OR
+    LOWER(p.ort) LIKE LOWER(CONCAT('%', :ort, '%'))
+)
 ORDER BY p.name ASC, p.vorname ASC, p.id ASC
 """)
     List<Person> scroll(
-            String cursorName,
-            String cursorVorname,
-            Long cursorId,
-            String search
+            @Param("cursorName") String cursorName,
+            @Param("cursorVorname") String cursorVorname,
+            @Param("cursorId") Long cursorId,
+            @Param("search") String search,
+            @Param("ort") String ort
     );
 
     @EntityGraph(attributePaths = {

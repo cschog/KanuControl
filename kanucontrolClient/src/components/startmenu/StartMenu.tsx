@@ -5,6 +5,7 @@ import { MenueHeader } from "@/components/layout/MenueHeader";
 import { useAppContext } from "@/context/AppContext";
 import { ModuleButton } from "@/components/common/ModuleButton";
 import { moduleTypeMap } from "@/theme/moduleMap";
+import { FeedbackFab } from "@/components/userFeedBack/featureBase/FeedbackFab";
 
 const StartMenue = () => {
   const { schema, active, loading } = useAppContext();
@@ -54,6 +55,7 @@ const StartMenue = () => {
           </Grid>
         ))}
       </Grid>
+      <FeedbackFab />
     </Box>
   );
 };
