@@ -185,8 +185,6 @@ public class TeilnehmerService {
                         HttpStatus.NOT_FOUND, TEILNEHMER_NOT_FOUND
                 ));
 
-        System.out.println(">>> REQUEST ROLLE: " + rolle);
-
         // ❗ Leiter darf NICHT überschrieben werden
         if (t.getRolle() == TeilnehmerRolle.LEITER) {
             return;

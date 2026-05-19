@@ -23,6 +23,8 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDate;
 import java.util.List;
 import com.kcserver.dto.common.ScrollResponse;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
 
 @Service
 @Transactional
@@ -61,24 +63,47 @@ public class PersonServiceImpl implements PersonService {
             PersonSearchCriteria criteria
     ) {
 
-        List<Person> result = personRepository.scroll(
-                cursorName,
-                cursorVorname,
-                cursorId,
-                criteria.getSearch(),
-                criteria.getOrt()
-        );
+        boolean desc =
+                "desc".equalsIgnoreCase(
+                        criteria.getSortDirection()
+                );
+
+        Slice<Person> slice;
+
+        if (desc) {
+
+            slice = personRepository.scrollDesc(
+                    cursorName,
+                    cursorVorname,
+                    cursorId,
+                    criteria.getSearch(),
+                    criteria.getOrt(),
+                    PageRequest.of(0, size)
+            );
+
+        } else {
+
+            slice = personRepository.scroll(
+                    cursorName,
+                    cursorVorname,
+                    cursorId,
+                    criteria.getSearch(),
+                    criteria.getOrt(),
+                    PageRequest.of(0, size)
+            );
+        }
 
         long total = personRepository.count(
                 PersonSpecification.byCriteria(criteria)
         );
 
         return new ScrollResponse<>(
-                result.stream()
-                        .limit(size)
+                slice.getContent()
+                        .stream()
                         .map(personMapper::toListDTO)
                         .toList(),
-                total
+                total,
+                slice.hasNext()
         );
     }
 

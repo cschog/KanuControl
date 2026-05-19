@@ -3,15 +3,16 @@ package com.kcserver.repository;
 import com.kcserver.entity.Person;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import org.springframework.data.jpa.repository.Query;
 
 public interface PersonRepository
         extends JpaRepository<Person, Long>,
@@ -30,7 +31,7 @@ public interface PersonRepository
     );
 
     /* =========================
-       LIST
+       LIST / SCROLL
        ========================= */
 
     @Query("""
@@ -52,12 +53,41 @@ AND (
 )
 ORDER BY p.name ASC, p.vorname ASC, p.id ASC
 """)
-    List<Person> scroll(
+    Slice<Person> scroll(
             @Param("cursorName") String cursorName,
             @Param("cursorVorname") String cursorVorname,
             @Param("cursorId") Long cursorId,
             @Param("search") String search,
-            @Param("ort") String ort
+            @Param("ort") String ort,
+            Pageable pageable
+    );
+
+    @Query("""
+SELECT p FROM Person p
+WHERE (
+    :cursorName IS NULL OR
+    (p.name < :cursorName) OR
+    (p.name = :cursorName AND p.vorname < :cursorVorname) OR
+    (p.name = :cursorName AND p.vorname = :cursorVorname AND p.id < :cursorId)
+)
+AND (
+    :search IS NULL OR :search = '' OR
+    LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR
+    LOWER(p.vorname) LIKE LOWER(CONCAT('%', :search, '%'))
+)
+AND (
+    :ort IS NULL OR :ort = '' OR
+    LOWER(p.ort) LIKE LOWER(CONCAT('%', :ort, '%'))
+)
+ORDER BY p.name DESC, p.vorname DESC, p.id DESC
+""")
+    Slice<Person> scrollDesc(
+            @Param("cursorName") String cursorName,
+            @Param("cursorVorname") String cursorVorname,
+            @Param("cursorId") Long cursorId,
+            @Param("search") String search,
+            @Param("ort") String ort,
+            Pageable pageable
     );
 
     @EntityGraph(attributePaths = {
@@ -84,6 +114,10 @@ ORDER BY p.name ASC, p.vorname ASC, p.id ASC
             "mitgliedschaften.verein"
     })
     Optional<Person> findDetailById(Long id);
+
+    /* =========================
+       SEARCH REF
+       ========================= */
 
     @Query("""
 SELECT DISTINCT p

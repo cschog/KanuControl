@@ -12,6 +12,8 @@ export async function getAvailablePersons(
   size: number,
   search?: string,
   verein?: string,
+  sortField?: string,
+  sortDirection?: "asc" | "desc",
 ) {
   const res = await apiClient.get(
     `/veranstaltungen/${veranstaltungId}/teilnehmer/available/paged`,
@@ -21,6 +23,8 @@ export async function getAvailablePersons(
         size,
         search,
         verein,
+        sortField,
+        sortDirection,
       },
     },
   );
@@ -40,6 +44,8 @@ export async function getTeilnehmer(
   size: number,
   search?: string,
   verein?: string,
+  sortField?: string,
+  sortDirection?: "asc" | "desc",
 ) {
   const res = await apiClient.get<{
     content: TeilnehmerBackend[];
@@ -50,14 +56,15 @@ export async function getTeilnehmer(
       size,
       search: search || undefined,
       verein: verein || undefined,
+      sortField,
+      sortDirection,
     },
   });
 
-  // ✅ Mapping hier!
-const content: TeilnehmerList[] = res.data.content.map((t) => ({
-  ...t,
-  rolle: mapRoleFromBackend(t.rolle),
-}));
+  const content: TeilnehmerList[] = res.data.content.map((t) => ({
+    ...t,
+    rolle: mapRoleFromBackend(t.rolle),
+  }));
 
   return {
     ...res.data,

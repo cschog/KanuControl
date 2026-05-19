@@ -9,7 +9,7 @@ import {
   useGridApiRef,
   GridFilterModel,
 } from "@mui/x-data-grid";
-import { Box, useMediaQuery } from "@mui/material";
+import { Box, Button, useMediaQuery } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import type { Theme } from "@mui/material/styles";
 
@@ -38,6 +38,7 @@ interface GenericTableProps<T extends WithId> {
   loading?: boolean;
   onLoadMore?: () => void;
 
+  enableCheckboxSelection?: boolean;
   checkboxSelection?: boolean;
   onSelectionChange?: (rows: T[]) => void;
 
@@ -69,20 +70,21 @@ export function GenericTable<T extends WithId>({
   onLoadMore,
   filterModel,
   onFilterChange,
-  //rowCount,
-}: GenericTableProps<T>) {
+  loading,
+}: //rowCount,
+GenericTableProps<T>) {
   const theme: Theme = useTheme();
+
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
 
   const containerRef = React.useRef<HTMLDivElement | null>(null);
+
   const apiRef = useGridApiRef();
 
-  const rowHeight = 42;
-  const headerHeight = 56;
+  const rowHeight = 40;
+  const headerHeight = 50;
 
-  const visibleRows = isMobile ? 4 : isTablet ? 6 : 8;
-  const tableHeight = height ?? headerHeight + visibleRows * rowHeight;
+  const tableHeight = height ?? (isMobile ? window.innerHeight - 380 : 650);
 
   /* ================= Selection ================= */
 
@@ -124,77 +126,68 @@ export function GenericTable<T extends WithId>({
     [onSortChange],
   );
 
-  /* ================= Scroll Handling ================= */
-
-  React.useEffect(() => {
-    const el = containerRef.current?.querySelector(
-      ".MuiDataGrid-virtualScroller",
-    ) as HTMLElement | null;
-
-    if (!el || !onLoadMore) return;
-
-    let lastTrigger = 0;
-
-    const handleScroll = () => {
-      const { scrollTop, scrollHeight, clientHeight } = el;
-
-      const isNearBottom = scrollTop + clientHeight >= scrollHeight - 100;
-
-      const now = Date.now();
-
-      if (isNearBottom && now - lastTrigger > 300) {
-        lastTrigger = now;
-        onLoadMore();
-      }
-    };
-
-    el.addEventListener("scroll", handleScroll);
-
-    return () => {
-      el.removeEventListener("scroll", handleScroll);
-    };
-  }, [onLoadMore]);
-
   /* ================= Render ================= */
 
-  return (
-    <Box ref={containerRef} sx={{ width: "100%", height: tableHeight, overflow: "hidden" }}>
-      <DataGrid
-        apiRef={apiRef}
-        rows={rows}
-        columns={columns}
-        getRowId={(row) => row.id}
-        rowBufferPx={1000}
-        density="compact"
-        localeText={deDE.components.MuiDataGrid.defaultProps.localeText}
-        checkboxSelection={checkboxSelection}
-        disableMultipleRowSelection={!checkboxSelection}
-        onRowSelectionModelChange={handleSelectionChange}
-        disableRowSelectionOnClick={checkboxSelection}
-        // sortingMode={onSortChange ? "server" : "client"}
-        filterMode="server"
-        sortingMode="server"
-        disableColumnFilter={false}
-        filterModel={filterModel}
-        onFilterModelChange={onFilterChange}
-        sortModel={sortField ? [{ field: sortField, sort: sortDirection ?? "asc" }] : undefined}
-        onSortModelChange={handleSortChange}
-        onCellClick={onCellClick}
-        // rowCount={rowCount ?? rows.length} // ⭐ KEY FIX
-        // paginationMode="server" // ⭐ wichtig!
-        // hideFooter
-        rowHeight={rowHeight}
-        columnHeaderHeight={headerHeight}
-        initialState={
-          initialSortField
-            ? {
-                sorting: {
-                  sortModel: [{ field: initialSortField as string, sort: "asc" }],
-                },
-              }
-            : undefined
-        }
-      />
-    </Box>
-  );
+ return (
+   <Box
+     ref={containerRef}
+     sx={{
+       width: "100%",
+     }}
+   >
+     <Box
+       sx={{
+         height: tableHeight,
+       }}
+     >
+       <DataGrid
+         apiRef={apiRef}
+         rows={rows}
+         disableVirtualization
+         columns={columns}
+         getRowId={(row) => row.id}
+         //rowBufferPx={200}
+         density="compact"
+         localeText={deDE.components.MuiDataGrid.defaultProps.localeText}
+         checkboxSelection={checkboxSelection}
+         disableMultipleRowSelection={!checkboxSelection}
+         onRowSelectionModelChange={handleSelectionChange}
+         disableRowSelectionOnClick={checkboxSelection}
+         sortingMode={onSortChange ? "server" : "client"}
+         filterMode="server"
+         disableColumnFilter={false}
+         filterModel={filterModel}
+         onFilterModelChange={onFilterChange}
+         sortModel={sortField ? [{ field: sortField, sort: sortDirection ?? "asc" }] : undefined}
+         onSortModelChange={handleSortChange}
+         onCellClick={onCellClick}
+         hideFooter
+         rowHeight={rowHeight}
+         columnHeaderHeight={headerHeight}
+         initialState={
+           initialSortField
+             ? {
+                 sorting: {
+                   sortModel: [
+                     {
+                       field: initialSortField as string,
+                       sort: "asc",
+                     },
+                   ],
+                 },
+               }
+             : undefined
+         }
+       />
+     </Box>
+
+     {onLoadMore && (
+       <Box display="flex" justifyContent="center" mt={2}>
+         <Button variant="outlined" onClick={() => onLoadMore()} disabled={loading}>
+           {loading ? "Lade..." : "Weitere Personen laden"}
+         </Button>
+       </Box>
+     )}
+   </Box>
+ );
 }

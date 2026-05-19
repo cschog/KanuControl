@@ -19,6 +19,7 @@ export interface PageResponse<T> {
 export interface ScrollResponse<T> {
   content: T[];
   total: number;
+  hasMore: boolean;
 }
 
 export async function getPersonsScroll(
