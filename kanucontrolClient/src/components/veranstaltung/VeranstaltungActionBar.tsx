@@ -9,7 +9,7 @@ interface Props {
   onCopy: () => void;
   onCancelEdit: () => void;
   onSave: () => void;
-  onDelete: () => void; // ⭐ FEHLTE
+  onDelete: () => void;
   onBack: () => void;
   onActivate: () => void;
 
@@ -34,8 +34,27 @@ export const VeranstaltungActionBar: React.FC<Props> = ({
     return (
       <BottomActionBar
         left={[
-          { label: "Speichern", onClick: onSave, variant: "contained" },
-          { label: "Abbrechen", onClick: onCancelEdit, variant: "outlined" },
+          {
+            label: "Abbrechen",
+            variant: "outlined",
+            onClick: onCancelEdit,
+          },
+
+          ...(onCopy
+            ? [
+                {
+                  label: "Kopieren",
+                  variant: "outlined" as const,
+                  onClick: onCopy,
+                },
+              ]
+            : []),
+        ]}
+        right={[
+          {
+            label: "Speichern",
+            onClick: onSave,
+          },
         ]}
       />
     );
@@ -45,31 +64,37 @@ export const VeranstaltungActionBar: React.FC<Props> = ({
     <BottomActionBar
       left={[
         {
-          label: "Ändern",
-          onClick: onEdit,
-          variant: "contained",
-          disabled: disableEdit,
+          label: "Zurück",
+          variant: "outlined",
+          onClick: onBack,
         },
+
         {
           label: "Kopieren",
           variant: "outlined",
           onClick: onCopy,
         },
+
         {
           label: "Löschen",
-          onClick: onDelete,
           variant: "outlined",
+          color: "error",
           disabled: disableDelete,
+          onClick: onDelete,
         },
+      ]}
+      right={[
+        {
+          label: "Ändern",
+          variant: "outlined",
+          disabled: disableEdit,
+          onClick: onEdit,
+        },
+
         {
           label: aktiv ? "Aktiv" : "Aktiv setzen",
           onClick: onActivate,
           variant: aktiv ? "contained" : "outlined",
-        },
-        {
-          label: "Zurück",
-          onClick: onBack,
-          variant: "outlined",
         },
       ]}
     />

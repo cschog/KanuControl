@@ -1,48 +1,85 @@
-// src/components/veranstaltung/VeranstaltungTable.tsx
-import * as React from "react";
-import { GenericTable } from "@/components/common/GenericTable";
+import { Box, Typography } from "@mui/material";
+
+import { GenericTableTanstack } from "@/components/common/GenericTableTanstack";
+
 import { VeranstaltungList } from "@/api/types/VeranstaltungList";
-import { veranstaltungColumns } from "./veranstaltungColumns";
+
+import { veranstaltungColumnsTanstack } from "./veranstaltungColumnsTanstack";
 
 interface Props {
   data: VeranstaltungList[];
-  total: number;
-
-  page: number;
-  pageSize: number;
 
   selectedId: number | null;
 
   onSelect: (row: VeranstaltungList | null) => void;
 
-  onPageChange: (page: number) => void;
-  onPageSizeChange: (size: number) => void;
+  sorting: {
+    id: string;
+    desc: boolean;
+  }[];
+
+  onSortingChange: (
+    sorting: {
+      id: string;
+      desc: boolean;
+    }[],
+  ) => void;
 }
 
 export function VeranstaltungTable({
   data,
-  total,
-  page,
-  pageSize,
+  selectedId,
   onSelect,
-  onPageChange,
-  onPageSizeChange,
+  sorting,
+  onSortingChange,
 }: Props) {
   return (
-    <GenericTable<VeranstaltungList>
-      rows={data}
-      columns={veranstaltungColumns}
-      /* ===== Single Select ===== */
+    <GenericTableTanstack
+      data={data}
+      columns={veranstaltungColumnsTanstack}
+      selectedRowId={selectedId}
       onSelectRow={(row) => onSelect(row ?? null)}
-      /* ===== Server Paging ===== */
-      paginationMode="server"
-      rowCount={total}
-      page={page}
-      pageSize={pageSize}
-      onPageChange={onPageChange}
-      onPageSizeChange={onPageSizeChange}
-      /* ===== Sorting ===== */
-      initialSortField="beginnDatum"
+      sorting={sorting}
+      onSortingChange={onSortingChange}
+      mobileRenderRow={(row) => (
+        <Box>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+            }}
+          >
+            <Typography fontWeight={600}>{row.name}</Typography>
+
+            {row.aktiv && (
+              <Box
+                sx={{
+                  px: 1,
+                  py: 0.2,
+                  borderRadius: 1,
+                  bgcolor: "success.main",
+                  color: "white",
+                  fontSize: "0.7rem",
+                  fontWeight: 600,
+                }}
+              >
+                AKTIV
+              </Box>
+            )}
+          </Box>
+
+          <Typography variant="body2" color="text.secondary">
+            {row.typ}
+            {" • "}
+            {row.beginnDatum}
+          </Typography>
+
+          <Typography variant="body2" color="text.secondary">
+            {row.vereinAbk ?? "-"}
+          </Typography>
+        </Box>
+      )}
     />
   );
 }

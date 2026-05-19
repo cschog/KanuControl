@@ -1,19 +1,27 @@
 import { useEffect, useState, useCallback } from "react";
-import { Box, Grid, Paper } from "@mui/material";
+
+import { Box, Paper } from "@mui/material";
 
 import { MenueHeader } from "@/components/layout/MenueHeader";
+
 import { VereinTable } from "@/components/verein/VereinTable";
+
 import { VereinFormView } from "@/components/verein/VereinFormView";
+
 import { VereinCreateDialog } from "@/components/verein/VereinCreateDialog";
+
 import { VereinCsvImportDialog } from "@/components/verein/import/VereinCsvImportDialog";
+
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 
 import { renderLoadingOrError } from "@/components/common/loadingOnErrorUtils";
+
 import { navigateToStartMenu } from "@/components/layout/navigateToStartMenue";
 
 import { getAllVereine, deleteVerein, createVerein, updateVerein } from "@/api/services/vereinApi";
 
 import type Verein from "@/api/types/VereinFormModel";
+
 import type { VereinSave } from "@/api/types/VereinSave";
 
 /* ========================================================= */
@@ -22,15 +30,19 @@ export default function VereinScreen() {
   /* ================= STATE ================= */
 
   const [data, setData] = useState<Verein[]>([]);
+
   const [loading, setLoading] = useState(true);
+
   const [error, setError] = useState<string | null>(null);
 
   const [selected, setSelected] = useState<Verein | null>(null);
 
   const [editMode, setEditMode] = useState(false);
+
   const [editData, setEditData] = useState<Verein | null>(null);
 
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+
   const [csvImportOpen, setCsvImportOpen] = useState(false);
 
   /* ========================================================= */
@@ -40,8 +52,11 @@ export default function VereinScreen() {
   const load = useCallback(async () => {
     try {
       setLoading(true);
+
       const res = await getAllVereine();
+
       setData(res);
+
       setError(null);
     } catch {
       setError("Fehler beim Laden der Vereine");
@@ -52,7 +67,7 @@ export default function VereinScreen() {
 
   useEffect(() => {
     load();
-  }, [load]); // ✅
+  }, [load]);
 
   /* ========================================================= */
   /* SELECT */
@@ -60,7 +75,9 @@ export default function VereinScreen() {
 
   const handleSelect = (verein: Verein | null) => {
     setSelected(verein);
+
     setEditMode(false);
+
     setEditData(null);
   };
 
@@ -70,12 +87,15 @@ export default function VereinScreen() {
 
   const handleEdit = () => {
     if (!selected) return;
+
     setEditData({ ...selected });
+
     setEditMode(true);
   };
 
   const handleCancel = () => {
     setEditMode(false);
+
     setEditData(null);
   };
 
@@ -87,7 +107,9 @@ export default function VereinScreen() {
     await load();
 
     setSelected(updated);
+
     setEditMode(false);
+
     setEditData(null);
   };
 
@@ -101,6 +123,7 @@ export default function VereinScreen() {
     await deleteVerein(selected.id);
 
     setSelected(null);
+
     await load();
   };
 
@@ -111,10 +134,12 @@ export default function VereinScreen() {
   const handleCreate = async (payload: VereinSave) => {
     const saved = await createVerein(payload);
 
-    setData((prev) => [...prev, saved]); // ⭐ kein reload nötig
+    setData((prev) => [...prev, saved]);
 
     setSelected(saved);
+
     setEditMode(false);
+
     setEditData(null);
 
     setCreateDialogOpen(false);
@@ -125,6 +150,7 @@ export default function VereinScreen() {
   /* ========================================================= */
 
   const disableEdit = !selected || editMode;
+
   const disableDelete = !selected || editMode;
 
   /* ========================================================= */
@@ -135,55 +161,75 @@ export default function VereinScreen() {
     <Box>
       <MenueHeader headerText={`${data.length} Vereine`} />
 
-      {renderLoadingOrError({ loading, error })}
+      {renderLoadingOrError({
+        loading,
+        error,
+      })}
 
-      <Grid container spacing={2}>
-        {/* LEFT */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Paper sx={{ p: 2 }}>
-            <VereinTable data={data} selectedVerein={selected} onSelectVerein={handleSelect} />
-          </Paper>
-        </Grid>
+      {/* ===================================================== */}
+      {/* LIST VIEW */}
+      {/* ===================================================== */}
 
-        {/* RIGHT */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Paper sx={{ p: 2 }}>
-            <VereinFormView
-              verein={editMode ? editData : selected}
-              editMode={editMode}
-              onEdit={handleEdit}
-              onCancelEdit={handleCancel}
-              onSave={handleSave}
-              onDelete={handleDelete}
-              onBack={navigateToStartMenu}
-              onCsvImport={() => setCsvImportOpen(true)}
-              disableEdit={disableEdit}
-              disableDelete={disableDelete}
-            />
-          </Paper>
-        </Grid>
-      </Grid>
+      {!selected ? (
+        <Paper sx={{ p: 2 }}>
+          <VereinTable data={data} selectedVerein={selected} onSelectVerein={handleSelect} />
+        </Paper>
+      ) : (
+        /* =================================================== */
+        /* DETAIL VIEW */
+        /* =================================================== */
 
-      {/* ================= ACTION BAR ================= */}
+        <Paper sx={{ p: 2 }}>
+          <VereinFormView
+            verein={editMode ? editData : selected}
+            editMode={editMode}
+            onEdit={handleEdit}
+            onCancelEdit={handleCancel}
+            onSave={handleSave}
+            onDelete={handleDelete}
+            onBack={() => {
+              setSelected(null);
+
+              setEditMode(false);
+
+              setEditData(null);
+            }}
+            onCsvImport={() => setCsvImportOpen(true)}
+            disableEdit={disableEdit}
+            disableDelete={disableDelete}
+          />
+        </Paper>
+      )}
+
+      {/* ===================================================== */}
+      {/* ACTION BAR */}
+      {/* ===================================================== */}
 
       {!selected && !editMode && (
         <BottomActionBar
           left={[
             {
               label: "Neuer Verein",
+
               variant: "outlined",
+
               onClick: () => setCreateDialogOpen(true),
             },
+
             {
               label: "Zurück",
+
               variant: "outlined",
+
               onClick: navigateToStartMenu,
             },
           ]}
         />
       )}
 
-      {/* ================= DIALOGS ================= */}
+      {/* ===================================================== */}
+      {/* DIALOGS */}
+      {/* ===================================================== */}
 
       {selected?.id && (
         <VereinCsvImportDialog

@@ -4,4 +4,7 @@ export interface PersonFilterState {
   vereinId?: number;
   aktiv?: boolean;
   ort?: string;
+
+  sortField?: string;
+  sortDirection?: "asc" | "desc";
 }

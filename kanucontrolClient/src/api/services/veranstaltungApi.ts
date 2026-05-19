@@ -5,18 +5,25 @@ import { VeranstaltungSave } from "@/api/types/VeranstaltungSave";
 import { Page } from "@/api/types/Page";
 
 /* =========================================================
-   LIST (PAGED)
+   LIST
    ========================================================= */
 
-export function getVeranstaltungenPage(page: number, size: number) {
+export function getVeranstaltungenPage(
+  sortField = "beginnDatum",
+  sortDirection: "asc" | "desc" = "desc",
+) {
   return apiClient
-    .get<Page<VeranstaltungList>>("/veranstaltungen", {
-      params: {
-        page,
-        size,
-        sort: "beginnDatum,desc",
+    .get<Page<VeranstaltungList>>(
+      "/veranstaltungen",
+      {
+        params: {
+          page: 0,
+          size: 1000,
+
+          sort: `${sortField},${sortDirection}`,
+        },
       },
-    })
+    )
     .then((r) => r.data.content);
 }
 

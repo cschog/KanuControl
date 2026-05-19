@@ -24,8 +24,8 @@ public class PersonSpecification {
             Predicate predicate = cb.conjunction();
 
             // =========================
-// Name / Vorname (Kombifeld)
-// =========================
+            // Name / Vorname (Kombifeld)
+            // =========================
             if (hasText(c.getSearch())) {
 
                 String search = c.getSearch().toLowerCase().trim();

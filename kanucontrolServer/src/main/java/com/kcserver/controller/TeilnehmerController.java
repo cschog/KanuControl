@@ -2,15 +2,17 @@ package com.kcserver.controller;
 
 import com.kcserver.dto.person.PersonListDTO;
 import com.kcserver.dto.teilnehmer.*;
-import com.kcserver.enumtype.TeilnehmerRolle;
 import com.kcserver.service.TeilnehmerService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/veranstaltungen/{veranstaltungId}/teilnehmer")
@@ -45,10 +47,58 @@ public class TeilnehmerController {
     @GetMapping("/available/paged")
     public Page<PersonListDTO> findAvailablePaged(
             @PathVariable Long veranstaltungId,
+
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String verein,
-            Pageable pageable
+
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1000") int size,
+
+            @RequestParam(defaultValue = "name") String sortField,
+            @RequestParam(defaultValue = "asc") String sortDirection
     ) {
+
+        // =========================
+        // SORT FIELD SECURITY
+        // =========================
+
+        Set<String> allowedSortFields = Set.of(
+                "name",
+                "vorname",
+                "hauptvereinAbk"
+        );
+
+        if ("fullname".equals(sortField)) {
+            sortField = "name";
+        }
+
+        if (!allowedSortFields.contains(sortField)) {
+            sortField = "name";
+        }
+
+        // =========================
+        // SORT
+        // =========================
+
+        Sort.Direction direction =
+                sortDirection.equalsIgnoreCase("desc")
+                        ? Sort.Direction.DESC
+                        : Sort.Direction.ASC;
+
+        Sort sort;
+
+        if ("name".equals(sortField)) {
+
+            sort = Sort.by(direction, "name")
+                    .and(Sort.by(direction, "vorname"));
+
+        } else {
+
+            sort = Sort.by(direction, sortField);
+        }
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
         return teilnehmerService.findAvailable(
                 veranstaltungId,
                 search,
@@ -72,10 +122,54 @@ public class TeilnehmerController {
     @GetMapping("/paged")
     public Page<TeilnehmerListDTO> getTeilnehmerPaged(
             @PathVariable Long veranstaltungId,
+
             TeilnehmerSearchCriteria criteria,
-            Pageable pageable
+
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1000") int size,
+
+            @RequestParam(defaultValue = "name") String sortField,
+            @RequestParam(defaultValue = "asc") String sortDirection
     ) {
-        return teilnehmerService.getAssigned(veranstaltungId, criteria, pageable);
+
+        if ("fullname".equals(sortField)) {
+            sortField = "person.name";
+        }
+
+        Set<String> allowedSortFields = Set.of(
+                "person.name",
+                "person.vorname",
+                "rolle"
+        );
+
+        if (!allowedSortFields.contains(sortField)) {
+            sortField = "person.name";
+        }
+
+        Sort.Direction direction =
+                sortDirection.equalsIgnoreCase("desc")
+                        ? Sort.Direction.DESC
+                        : Sort.Direction.ASC;
+
+        Sort sort;
+
+        if ("person.name".equals(sortField)) {
+
+            sort = Sort.by(direction, "person.name")
+                    .and(Sort.by(direction, "person.vorname"));
+
+        } else {
+
+            sort = Sort.by(direction, sortField);
+        }
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        return teilnehmerService.getAssigned(
+                veranstaltungId,
+                criteria,
+                pageable
+        );
     }
 
     @GetMapping

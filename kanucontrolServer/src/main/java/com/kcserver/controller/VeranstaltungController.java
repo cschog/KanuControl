@@ -20,6 +20,10 @@ import org.springframework.web.bind.annotation.*;
 import com.kcserver.finanz.FinanzGruppeService;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+
+import java.util.Set;
 
 @RequiredArgsConstructor
 @RestController
@@ -58,7 +62,11 @@ public class VeranstaltungController {
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
             LocalDate endeDatum,
             @RequestParam(required = false) VeranstaltungTyp typ,
-            @PageableDefault(size = 1000) Pageable pageable
+            @PageableDefault(
+                    size = 1000,
+                    sort = "beginnDatum",
+                    direction = Sort.Direction.DESC
+            )Pageable pageable
     ) {
 
         VeranstaltungFilterDTO filter = new VeranstaltungFilterDTO();
@@ -69,7 +77,21 @@ public class VeranstaltungController {
         filter.setEndeDatum(endeDatum);
         filter.setTyp(typ);
 
-        return veranstaltungService.search(filter, pageable);
+        Pageable safePageable = sanitizePageable(
+                pageable,
+                Set.of(
+                        "beginnDatum",
+                        "endeDatum",
+                        "name",
+                        "typ",
+                        "aktiv"
+                )
+        );
+
+        return veranstaltungService.search(
+                filter,
+                safePageable
+        );
     }
 
     // ohne paging
@@ -176,4 +198,37 @@ public class VeranstaltungController {
         return teilnehmerService.findOhneKuerzel(veranstaltungId);
     }
 
+    private Pageable sanitizePageable(
+            Pageable pageable,
+            Set<String> allowedFields
+    ) {
+
+        Sort safeSort = Sort.unsorted();
+
+        for (Sort.Order order : pageable.getSort()) {
+
+            if (allowedFields.contains(order.getProperty())) {
+
+                safeSort = safeSort.and(
+                        Sort.by(order)
+                );
+            }
+        }
+
+        // Fallback Default Sort
+
+        if (safeSort.isUnsorted()) {
+
+            safeSort = Sort.by(
+                    Sort.Direction.DESC,
+                    "beginnDatum"
+            );
+        }
+
+        return PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                safeSort
+        );
+    }
 }

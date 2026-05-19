@@ -17,9 +17,9 @@ public class TeilnehmerSpecification {
     public static Specification<Teilnehmer> byCriteria(TeilnehmerSearchCriteria c) {
         return (root, query, cb) -> {
 
-            if (query != null && !Long.class.equals(query.getResultType())) {
-                query.distinct(true);
-            }
+//            if (query != null && !Long.class.equals(query.getResultType())) {
+//                query.distinct(true);
+//            }
 
             Predicate predicate = cb.conjunction();
 

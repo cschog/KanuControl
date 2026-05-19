@@ -23,4 +23,7 @@ public class PersonSearchCriteria {
     private String ort;
 
     private Boolean unvollstaendig;
+
+    private String sortField;
+    private String sortDirection;
 }

@@ -3,6 +3,25 @@ import { PersonList } from "@/api/types/Person";
 
 export type PersonWithId = PersonList & { id: number };
 
+export const personColumnsMobile: GridColDef<PersonWithId>[] = [
+  {
+    field: "name",
+    headerName: "Name",
+    flex: 1,
+
+    valueGetter: (_, row) => `${row.name ?? ""}, ${row.vorname ?? ""}`,
+  },
+  {
+    field: "alter",
+    headerName: "Alter",
+    width: 70,
+    align: "center",
+    headerAlign: "center",
+
+    valueFormatter: (value: number | null) => value ?? "-",
+  },
+];
+
 export const personColumns: GridColDef<PersonWithId>[] = [
   {
     field: "fullName",

@@ -1,16 +1,16 @@
-import React, { Component } from "react";
+import { useEffect, useState, useCallback } from "react";
 
-import { Alert, Box, Grid, Paper } from "@mui/material";
-
-import apiClient from "@/api/client/apiClient";
+import { Alert, Box, Paper } from "@mui/material";
 
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
+import apiClient from "@/api/client/apiClient";
+
 import { MenueHeader } from "@/components/layout/MenueHeader";
 import { renderLoadingOrError } from "@/components/common/loadingOnErrorUtils";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
-import { VeranstaltungFormModel } from "@/api/types/VeranstaltungFormModel";
+
 import { VeranstaltungTable } from "./VeranstaltungTable";
 import { VeranstaltungFormView } from "./VeranstaltungFormView";
 import { VeranstaltungCreateDialog } from "./VeranstaltungCreateDialog";
@@ -27,6 +27,7 @@ import {
 import { VeranstaltungList } from "@/api/types/VeranstaltungList";
 import { VeranstaltungDetail } from "@/api/types/VeranstaltungDetail";
 import { VeranstaltungSave } from "@/api/types/VeranstaltungSave";
+import { VeranstaltungFormModel } from "@/api/types/VeranstaltungFormModel";
 
 import { useReloadAppContext } from "@/context/AppContextBridge";
 
@@ -39,222 +40,184 @@ interface BeitragsstrukturDTO {
   name: string;
 }
 
-interface Props {
-  reloadContext: () => Promise<void>;
-  navigate: (path: string) => void;
-}
-
-interface State {
-  data: VeranstaltungList[];
-  total: number;
-  page: number;
-  pageSize: number;
-  selectedId: number | null;
-  selectedVeranstaltung: VeranstaltungDetail | null;
-  beitragsstrukturen: BeitragsstrukturDTO[];
-  loading: boolean;
-  error: string | null;
-  createOpen: boolean;
-  copyOpen: boolean;
-  copyData?: Partial<VeranstaltungFormModel>;
-  editMode: boolean;
-  btnEditDisabled: boolean;
-  btnDeleteDisabled: boolean;
-}
-
 /* =========================================================
-   CLASS COMPONENT
+   COMPONENT
    ========================================================= */
 
-class VeranstaltungenScreen extends Component<Props, State> {
-  state: State = {
-    data: [],
-    total: 0,
-    page: 0,
-    pageSize: 8,
-    selectedId: null,
-    selectedVeranstaltung: null,
-    beitragsstrukturen: [],
-    loading: true,
-    error: null,
-    createOpen: false,
-    copyOpen: false,
-    copyData: undefined,
-    editMode: false,
-    btnEditDisabled: true,
-    btnDeleteDisabled: true,
-  };
+export default function VeranstaltungenScreen() {
+  const navigate = useNavigate();
+
+  const reloadContext = useReloadAppContext();
 
   /* =========================================================
-     LIFECYCLE
+     STATE
      ========================================================= */
 
-  componentDidMount() {
-    this.fetchData();
+  const [data, setData] = useState<VeranstaltungList[]>([]);
 
-    this.loadBeitragsstrukturen();
-  }
+  const [total, setTotal] = useState(0);
+
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+
+  const [selectedVeranstaltung, setSelectedVeranstaltung] = useState<VeranstaltungDetail | null>(
+    null,
+  );
+
+  const [beitragsstrukturen, setBeitragsstrukturen] = useState<BeitragsstrukturDTO[]>([]);
+
+  const [loading, setLoading] = useState(true);
+
+  const [error, setError] = useState<string | null>(null);
+
+  const [createOpen, setCreateOpen] = useState(false);
+
+  const [copyOpen, setCopyOpen] = useState(false);
+
+  const [copyData, setCopyData] = useState<Partial<VeranstaltungFormModel>>();
+
+  const [editMode, setEditMode] = useState(false);
+
+  const [btnEditDisabled, setBtnEditDisabled] = useState(true);
+
+  const [btnDeleteDisabled, setBtnDeleteDisabled] = useState(true);
+
+  const [sorting, setSorting] = useState<{ id: string; desc: boolean }[]>([
+    {
+      id: "beginnDatum",
+      desc: true,
+    },
+  ]);
+
+  /* =========================================================
+     LOAD DATA
+     ========================================================= */
+
+ const fetchData = useCallback(async () => {
+   try {
+     setLoading(true);
+
+     const res = await getVeranstaltungenPage(sorting[0]?.id, sorting[0]?.desc ? "desc" : "asc");
+
+     setData(res);
+
+     setTotal(res.length);
+
+     setError(null);
+   } catch {
+     setError("Fehler beim Laden der Veranstaltungen");
+   } finally {
+     setLoading(false);
+   }
+ }, [sorting]);
 
   /* =========================================================
      LOAD BEITRAGSSTRUKTUREN
      ========================================================= */
 
-  loadBeitragsstrukturen = async () => {
+  const loadBeitragsstrukturen = async () => {
     try {
       const res = await apiClient.get<BeitragsstrukturDTO[]>("/beitragsstrukturen");
 
-      this.setState({
-        beitragsstrukturen: res.data,
-      });
+      setBeitragsstrukturen(res.data);
     } catch (err) {
       console.error(err);
     }
   };
 
   /* =========================================================
-     DATA LOAD
+     INITIAL LOAD
      ========================================================= */
 
-  fetchData = async () => {
-    const { page, pageSize } = this.state;
+ useEffect(() => {
+   fetchData();
+ }, [fetchData]);
 
-    try {
-      const res = await getVeranstaltungenPage(page, pageSize);
-
-      this.setState({
-        data: res,
-
-        total: res.length,
-
-        loading: false,
-
-        error: null,
-      });
-    } catch {
-      this.setState({
-        loading: false,
-
-        error: "Fehler beim Laden der Veranstaltungen",
-      });
-    }
-  };
-
-  /* =========================================================
-     PAGING
-     ========================================================= */
-
-  handlePageChange = (page: number) => {
-    this.setState(
-      {
-        page,
-        loading: true,
-      },
-      this.fetchData,
-    );
-  };
-
-  handlePageSizeChange = (pageSize: number) => {
-    this.setState(
-      {
-        pageSize,
-        page: 0,
-        loading: true,
-      },
-      this.fetchData,
-    );
-  };
+  useEffect(() => {
+    loadBeitragsstrukturen();
+  }, []);
 
   /* =========================================================
      SELECT
      ========================================================= */
 
-  handleSelect = async (row: VeranstaltungList | null) => {
+  const handleSelect = async (row: VeranstaltungList | null) => {
     if (!row) {
-      this.setState({
-        selectedId: null,
-        selectedVeranstaltung: null,
-        btnEditDisabled: true,
-        btnDeleteDisabled: true,
-      });
+      setSelectedId(null);
+
+      setSelectedVeranstaltung(null);
+
+      setBtnEditDisabled(true);
+
+      setBtnDeleteDisabled(true);
 
       return;
     }
 
     const detail = await getVeranstaltung(row.id);
 
-    this.setState({
-      selectedId: row.id,
-      selectedVeranstaltung: detail,
-      editMode: false,
-      btnEditDisabled: false,
-      btnDeleteDisabled: false,
-    });
+    setSelectedId(row.id);
+
+    setSelectedVeranstaltung(detail);
+
+    setEditMode(false);
+
+    setBtnEditDisabled(false);
+
+    setBtnDeleteDisabled(false);
   };
 
   /* =========================================================
      EDIT
      ========================================================= */
 
-  handleEdit = () => {
-    this.setState({
-      editMode: true,
-      btnEditDisabled: true,
-      btnDeleteDisabled: true,
-    });
+  const handleEdit = () => {
+    setEditMode(true);
+
+    setBtnEditDisabled(true);
+
+    setBtnDeleteDisabled(true);
   };
 
-  handleCancelEdit = () => {
-    this.setState({
-      editMode: false,
-    });
+  const handleCancelEdit = () => {
+    setEditMode(false);
   };
 
   /* =========================================================
      SAVE
      ========================================================= */
 
-  handleSave = async (payload: VeranstaltungSave) => {
-    const { selectedVeranstaltung } = this.state;
-
+  const handleSave = async (payload: VeranstaltungSave) => {
     if (!selectedVeranstaltung?.id) {
       return;
     }
 
     try {
-      /* ========================================
-     FE VALIDIERUNG
-     ======================================== */
-
       if (payload.individuelleGebuehren && !payload.beitragsstrukturId) {
-        this.setState({
-          error: "Bitte zuerst eine Beitragsstruktur auswählen.",
-        });
+        setError("Bitte zuerst eine Beitragsstruktur auswählen.");
 
         return;
       }
 
       const saved = await updateVeranstaltung(selectedVeranstaltung.id, payload);
 
-      await this.fetchData();
+      await fetchData();
 
-      this.setState({
-        selectedVeranstaltung: saved,
-        editMode: false,
-        btnEditDisabled: false,
-        btnDeleteDisabled: false,
-        error: null,
-      });
+      setSelectedVeranstaltung(saved);
+
+      setEditMode(false);
+
+      setBtnEditDisabled(false);
+
+      setBtnDeleteDisabled(false);
+
+      setError(null);
     } catch (err: unknown) {
       console.error(err);
 
       if (axios.isAxiosError(err)) {
-        this.setState({
-          error: err.response?.data?.message ?? "Veranstaltung konnte nicht gespeichert werden.",
-        });
+        setError(err.response?.data?.message ?? "Veranstaltung konnte nicht gespeichert werden.");
       } else {
-        this.setState({
-          error: "Veranstaltung konnte nicht gespeichert werden.",
-        });
+        setError("Veranstaltung konnte nicht gespeichert werden.");
       }
     }
   };
@@ -263,246 +226,198 @@ class VeranstaltungenScreen extends Component<Props, State> {
      DELETE
      ========================================================= */
 
-  handleDelete = async () => {
-    const { selectedVeranstaltung } = this.state;
-
+  const handleDelete = async () => {
     if (!selectedVeranstaltung?.id) {
       return;
     }
 
     await deleteVeranstaltung(selectedVeranstaltung.id);
 
-    this.setState({
-      selectedId: null,
-      selectedVeranstaltung: null,
-      btnEditDisabled: true,
-      btnDeleteDisabled: true,
-    });
+    setSelectedId(null);
 
-    await this.fetchData();
+    setSelectedVeranstaltung(null);
 
-    await this.props.reloadContext();
+    setBtnEditDisabled(true);
+
+    setBtnDeleteDisabled(true);
+
+    await fetchData();
+
+    await reloadContext();
   };
 
   /* =========================================================
      ACTIVATE
      ========================================================= */
 
-  handleActivate = async () => {
-    if (!this.state.selectedId) {
+  const handleActivate = async () => {
+    if (!selectedId) {
       return;
     }
 
-    await setActiveVeranstaltung(this.state.selectedId);
+    await setActiveVeranstaltung(selectedId);
 
-    await this.fetchData();
+    await fetchData();
 
-    await this.props.reloadContext();
+    await reloadContext();
   };
 
   /* =========================================================
      CREATE
      ========================================================= */
 
-  openCreate = () => {
-    this.setState({
-      createOpen: true,
-    });
-  };
-
-  closeCreate = () => {
-    this.setState({
-      createOpen: false,
-    });
-  };
-
-  handleCreate = async (payload: VeranstaltungSave) => {
+  const handleCreate = async (payload: VeranstaltungSave) => {
     const saved = await createVeranstaltung(payload);
 
-    await this.fetchData();
+    await fetchData();
 
-    await this.props.reloadContext();
+    await reloadContext();
 
-    this.setState({
-      createOpen: false,
-      selectedVeranstaltung: saved,
-      selectedId: saved.id,
-      btnEditDisabled: false,
-      btnDeleteDisabled: false,
-    });
+    setCreateOpen(false);
+
+    setSelectedVeranstaltung(saved);
+
+    setSelectedId(saved.id);
+
+    setBtnEditDisabled(false);
+
+    setBtnDeleteDisabled(false);
   };
 
-  handleCopy = () => {
-    const { selectedVeranstaltung } = this.state;
+  /* =========================================================
+     COPY
+     ========================================================= */
 
+  const handleCopy = () => {
     if (!selectedVeranstaltung) {
       return;
     }
 
-    this.setState({
-      copyOpen: true,
-
-      copyData: {
-        name: `${selectedVeranstaltung.name} Kopie`,
-        typ: selectedVeranstaltung.typ,
-        scope: selectedVeranstaltung.scope,
-        verein: selectedVeranstaltung.verein,
-        leiter: selectedVeranstaltung.leiter,
-        beginnDatum: selectedVeranstaltung.beginnDatum,
-        endeDatum: selectedVeranstaltung.endeDatum,
-        beginnZeit: selectedVeranstaltung.beginnZeit,
-        endeZeit: selectedVeranstaltung.endeZeit,
-        artDerUnterkunft: selectedVeranstaltung.artDerUnterkunft,
-        artDerVerpflegung: selectedVeranstaltung.artDerVerpflegung,
-        countryCode: selectedVeranstaltung.countryCode,
-        plz: selectedVeranstaltung.plz,
-        ort: selectedVeranstaltung.ort,
-        individuelleGebuehren: selectedVeranstaltung.individuelleGebuehren,
-        standardGebuehr: selectedVeranstaltung.standardGebuehr,
-        beitragsstrukturId: selectedVeranstaltung.beitragsstrukturId,
-        geplanteTeilnehmerMaennlich: selectedVeranstaltung.geplanteTeilnehmerMaennlich,
-        geplanteTeilnehmerWeiblich: selectedVeranstaltung.geplanteTeilnehmerWeiblich,
-        geplanteTeilnehmerDivers: selectedVeranstaltung.geplanteTeilnehmerDivers,
-        geplanteMitarbeiterMaennlich: selectedVeranstaltung.geplanteMitarbeiterMaennlich,
-        geplanteMitarbeiterWeiblich: selectedVeranstaltung.geplanteMitarbeiterWeiblich,
-        geplanteMitarbeiterDivers: selectedVeranstaltung.geplanteMitarbeiterDivers,
-      },
+    setCopyData({
+      name: `${selectedVeranstaltung.name} Kopie`,
+      typ: selectedVeranstaltung.typ,
+      scope: selectedVeranstaltung.scope,
+      verein: selectedVeranstaltung.verein,
+      leiter: selectedVeranstaltung.leiter,
+      beginnDatum: selectedVeranstaltung.beginnDatum,
+      endeDatum: selectedVeranstaltung.endeDatum,
+      beginnZeit: selectedVeranstaltung.beginnZeit,
+      endeZeit: selectedVeranstaltung.endeZeit,
+      artDerUnterkunft: selectedVeranstaltung.artDerUnterkunft,
+      artDerVerpflegung: selectedVeranstaltung.artDerVerpflegung,
+      countryCode: selectedVeranstaltung.countryCode,
+      plz: selectedVeranstaltung.plz,
+      ort: selectedVeranstaltung.ort,
+      individuelleGebuehren: selectedVeranstaltung.individuelleGebuehren,
+      standardGebuehr: selectedVeranstaltung.standardGebuehr,
+      beitragsstrukturId: selectedVeranstaltung.beitragsstrukturId,
     });
-  };
 
-  /* =========================================================
-     NAV
-     ========================================================= */
-
-  handleBack = () => {
-    this.props.navigate("/startmenue");
+    setCopyOpen(true);
   };
 
   /* =========================================================
      RENDER
      ========================================================= */
 
-  render() {
-    const {
-      data,
-      total,
-      loading,
-      error,
-      selectedId,
-      selectedVeranstaltung,
-      createOpen,
-      beitragsstrukturen,
-    } = this.state;
+  return (
+    <Box>
+      <MenueHeader headerText={`${total} Veranstaltungen`} />
 
-    return (
-      <Box>
-        <MenueHeader headerText={`${total} Veranstaltungen`} />
+      {renderLoadingOrError({
+        loading,
+        error,
+      })}
 
-        {renderLoadingOrError({
-          loading,
-          error,
-        })}
+      {error && <Alert severity="error">{error}</Alert>}
 
-        {error && <Alert severity="error">{error}</Alert>}
+      {/* ===================================================== */}
+      {/* LIST VIEW */}
+      {/* ===================================================== */}
 
-        <Grid container spacing={2}>
-          {/* ================= LEFT ================= */}
-
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Paper sx={{ p: 2 }}>
-              <VeranstaltungTable
-                data={data}
-                total={total}
-                page={this.state.page}
-                pageSize={this.state.pageSize}
-                selectedId={selectedId}
-                onSelect={this.handleSelect}
-                onPageChange={this.handlePageChange}
-                onPageSizeChange={this.handlePageSizeChange}
-              />
-            </Paper>
-          </Grid>
-
-          {/* ================= RIGHT ================= */}
-
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Paper sx={{ p: 2 }}>
-              <VeranstaltungFormView
-                veranstaltung={selectedVeranstaltung}
-                beitragsstrukturen={beitragsstrukturen}
-                editMode={this.state.editMode}
-                onEdit={this.handleEdit}
-                onCopy={this.handleCopy}
-                onCancelEdit={this.handleCancelEdit}
-                onSave={this.handleSave}
-                onDelete={this.handleDelete}
-                onBack={this.handleBack}
-                onActivate={this.handleActivate}
-                disableEdit={this.state.btnEditDisabled}
-                disableDelete={this.state.btnDeleteDisabled}
-              />
-            </Paper>
-          </Grid>
-        </Grid>
-
-        {/* =====================================================
-           ACTION BAR
-           ===================================================== */}
-
-        {!selectedVeranstaltung && (
-          <BottomActionBar
-            left={[
-              {
-                label: "Neue Veranstaltung",
-                variant: "outlined",
-                onClick: this.openCreate,
-              },
-              {
-                label: "Zurück",
-                variant: "outlined",
-                onClick: this.handleBack,
-              },
-            ]}
+      {!selectedVeranstaltung ? (
+        <Paper sx={{ p: 2 }}>
+          <VeranstaltungTable
+            data={data}
+            selectedId={selectedId}
+            onSelect={handleSelect}
+            sorting={sorting}
+            onSortingChange={setSorting}
           />
-        )}
+        </Paper>
+      ) : (
+        /* =================================================== */
+        /* DETAIL VIEW */
+        /* =================================================== */
 
-        {/* =====================================================
-           CREATE DIALOG
-           ===================================================== */}
+        <Paper sx={{ p: 2 }}>
+          <VeranstaltungFormView
+            veranstaltung={selectedVeranstaltung}
+            beitragsstrukturen={beitragsstrukturen}
+            editMode={editMode}
+            onEdit={handleEdit}
+            onCopy={handleCopy}
+            onCancelEdit={handleCancelEdit}
+            onSave={handleSave}
+            onDelete={handleDelete}
+            onBack={() => {
+              setSelectedId(null);
 
-        <VeranstaltungCreateDialog
-          open={createOpen}
-          onClose={this.closeCreate}
-          onCreate={this.handleCreate}
-          beitragsstrukturen={beitragsstrukturen}
+              setSelectedVeranstaltung(null);
+
+              setEditMode(false);
+            }}
+            onActivate={handleActivate}
+            disableEdit={btnEditDisabled}
+            disableDelete={btnDeleteDisabled}
+          />
+        </Paper>
+      )}
+
+      {/* ===================================================== */}
+      {/* ACTION BAR */}
+      {/* ===================================================== */}
+
+      {!selectedVeranstaltung && (
+        <BottomActionBar
+          left={[
+            {
+              label: "Zurück",
+              variant: "outlined",
+              onClick: () => navigate("/startmenue"),
+            },
+          ]}
+          right={[
+            {
+              label: "Neue Veranstaltung",
+              onClick: () => setCreateOpen(true),
+            },
+          ]}
         />
+      )}
 
-        <VeranstaltungCreateDialog
-          open={this.state.copyOpen}
-          onClose={() =>
-            this.setState({
-              copyOpen: false,
-            })
-          }
-          onCreate={this.handleCreate}
-          beitragsstrukturen={beitragsstrukturen}
-          initialData={this.state.copyData}
-        />
-      </Box>
-    );
-  }
+      {/* ===================================================== */}
+      {/* CREATE */}
+      {/* ===================================================== */}
+
+      <VeranstaltungCreateDialog
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onCreate={handleCreate}
+        beitragsstrukturen={beitragsstrukturen}
+      />
+
+      {/* ===================================================== */}
+      {/* COPY */}
+      {/* ===================================================== */}
+
+      <VeranstaltungCreateDialog
+        open={copyOpen}
+        onClose={() => setCopyOpen(false)}
+        onCreate={handleCreate}
+        beitragsstrukturen={beitragsstrukturen}
+        initialData={copyData}
+      />
+    </Box>
+  );
 }
-
-/* =========================================================
-   CONTEXT WRAPPER
-   ========================================================= */
-
-function VeranstaltungenWithContext() {
-  const reload = useReloadAppContext();
-
-  const navigate = useNavigate();
-
-  return <VeranstaltungenScreen reloadContext={reload} navigate={navigate} />;
-}
-
-export default VeranstaltungenWithContext;

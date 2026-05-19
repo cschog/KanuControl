@@ -1,8 +1,9 @@
 import { useEffect, useState, useRef } from "react";
-import { Box, Grid, Paper, Typography, TextField, Button } from "@mui/material";
-import { GenericTable } from "@/components/common/GenericTable";
+import { Box, Paper, Typography, TextField, Button } from "@mui/material";
+import { GenericTableTanstack } from "@/components/common/GenericTableTanstack";
 import { PersonFormView } from "@/components/person/PersonFormView";
-import { personColumns } from "@/components/person/personColumns";
+//import { personColumns, personColumnsMobile } from "@/components/person/personColumns";
+import { personColumnsTanstack } from "@/components/person/personColumnsTanstack";
 import { deleteMitglied, setHauptverein } from "@/api/services/mitgliedApi";
 import { PersonCreateDialog } from "@/components/person/PersonCreateDialog";
 import { useAppContext } from "@/context/AppContext";
@@ -36,11 +37,11 @@ export default function PersonenScreen() {
   const navigate = useNavigate();
 
   const [rows, setRows] = useState<PersonList[]>([]);
-  const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
 
   const cursorRef = useRef<Cursor>(null);
   const loadingRef = useRef(false);
+  const hasMoreRef = useRef(true);
   const [total, setTotal] = useState(0);
 
   const [editMode, setEditMode] = useState(false);
@@ -67,6 +68,13 @@ export default function PersonenScreen() {
     items: [],
   });
 
+  const [sorting, setSorting] = useState<{ id: string; desc: boolean }[]>([
+    {
+      id: "fullName",
+      desc: false,
+    },
+  ]);
+
   const ortFilter = filterModel.items.find((i) => i.field === "ort")?.value;
 
   /* ========================================================= */
@@ -74,7 +82,7 @@ export default function PersonenScreen() {
   /* ========================================================= */
 
   const load = async () => {
-    if (loadingRef.current || !hasMore) return;
+    if (loadingRef.current || !hasMoreRef.current) return;
 
     loadingRef.current = true;
     setLoading(true);
@@ -91,28 +99,46 @@ export default function PersonenScreen() {
         {
           search: debounceSearch || undefined,
           ort: ortFilter || undefined,
+
+          sortField: sorting[0]?.id,
+          sortDirection: sorting[0]?.desc ? "desc" : "asc",
         },
       );
 
-      const newRows = res.content; // ⭐ WICHTIG
+      const newRows = res.content;
+
+      hasMoreRef.current = res.hasMore;
 
       if (!newRows.length) {
-        setHasMore(false);
         return;
       }
 
-    const isFirstPage = cursorRef.current === null;
+      const isFirstPage = cursorRef.current === null;
 
-    setRows((prev) => {
-      if (isFirstPage) {
-        return newRows;
-      }
+      setRows((prev) => {
+        if (isFirstPage) {
+          return newRows;
+        }
 
-      const existing = new Set(prev.map((r) => r.id));
-      const filtered = newRows.filter((r) => !existing.has(r.id));
+        const existing = new Set(prev.map((r) => r.id));
 
-      return [...prev, ...filtered];
-    });
+        const filtered = newRows.filter((r) => !existing.has(r.id));
+
+        console.log(
+          "PREV",
+          prev.length,
+          "NEW",
+          newRows.length,
+          "FILTERED",
+          filtered.length,
+          "LAST ID",
+          newRows[newRows.length - 1]?.id,
+        );
+
+        console.log("RESULT LENGTH", prev.length + filtered.length);
+
+        return [...prev, ...filtered];
+      });
 
       if (isFirstPage) {
         setTotal(res.total);
@@ -151,10 +177,10 @@ export default function PersonenScreen() {
   useEffect(() => {
     cursorRef.current = null;
     setRows([]);
-    setHasMore(true);
+    hasMoreRef.current = true;
 
     loadRef.current(); // ⭐ initial load
-  }, [debounceSearch, filterModel]);
+  }, [debounceSearch, filterModel, sorting]);
 
   /* ========================================================= */
   /* 🔄 DETAIL */
@@ -225,33 +251,35 @@ export default function PersonenScreen() {
 
     cursorRef.current = null;
     setRows([]);
-    setHasMore(true);
+    hasMoreRef.current = true;
     loadRef.current();
   };
 
   const handleDelete = async () => {
     if (!selectedId) return;
 
-    await deletePerson(selectedId);
+    const deletedId = selectedId;
 
+    // ⭐ DB DELETE
+    await deletePerson(deletedId);
+
+    // ⭐ lokal aus Tabelle entfernen
+    setRows((prev) => prev.filter((p) => p.id !== deletedId));
+
+    // ⭐ Counter aktualisieren
+    setTotal((prev) => Math.max(0, prev - 1));
+
+    // ⭐ Detail schließen
     setSelectedId(null);
+
     setSelectedPerson(null);
 
-    // ⭐ ALLES resetten
-    cursorRef.current = null;
-    setRows([]);
-    setHasMore(true);
     setEditMode(false);
-    setEditData(null);
 
-    load(); // ⭐ neu laden
+    setEditData(null);
   };
 
   const resetFilter = () => {
-    cursorRef.current = null;
-
-    setRows([]);
-    setHasMore(true);
 
     setSearch("");
 
@@ -271,13 +299,31 @@ export default function PersonenScreen() {
 
   return (
     <Box>
-      <Typography variant="h5" sx={{ mb: 2, fontWeight: 600 }}>
+      <Typography
+        sx={{
+          mb: 2,
+
+          fontWeight: 600,
+
+          fontSize: {
+            xs: "1.5rem",
+            md: "2rem",
+          },
+        }}
+      >
         {total} Personen
       </Typography>
 
-      <Grid container spacing={2}>
-        {/* LEFT */}
-        <Grid size={{ xs: 12, md: 6 }}>
+      <>
+        {/* ===================================================== */}
+        {/* LIST VIEW */}
+        {/* ===================================================== */}
+
+        <Box
+          sx={{
+            display: selectedPerson ? "none" : "block",
+          }}
+        >
           <Paper sx={{ p: 2 }}>
             <Box display="flex" gap={1} mb={2}>
               <TextField
@@ -291,23 +337,38 @@ export default function PersonenScreen() {
               <Button onClick={resetFilter}>Reset</Button>
             </Box>
 
-            <GenericTable<PersonList>
-              rows={rows}
-              columns={personColumns}
-              loading={loading}
-              onLoadMore={() => loadRef.current()}
-              selectedRowId={selectedId}
-              filterModel={filterModel}
-              onFilterChange={(model) => {
-                setFilterModel(model);
+            <GenericTableTanstack
+              mobileRenderRow={(row) => (
+                <Box>
+                  <Typography fontWeight={600}>
+                    {row.name}, {row.vorname}
+                  </Typography>
 
-                cursorRef.current = null;
-                setRows([]);
-                setHasMore(true);
-              }}
-              rowCount={total}
+                  <Typography variant="body2" color="text.secondary">
+                    {row.alter ?? "-"} Jahre
+                    {" • "}
+                    {row.hauptvereinAbk ?? "-"}
+                  </Typography>
+                </Box>
+              )}
+              data={rows}
+              columns={personColumnsTanstack}
+              loading={loading}
+              selectedRowId={selectedId}
               onSelectRow={(row) => {
-                setSelectedId(row?.id ?? null);
+                setSelectedId(row.id);
+              }}
+              hasMore={hasMoreRef.current}
+              onLoadMore={() => loadRef.current()}
+              sorting={sorting}
+              onSortingChange={(s) => {
+                cursorRef.current = null;
+
+                setRows([]);
+
+                hasMoreRef.current = true;
+
+                setSorting(s);
               }}
             />
 
@@ -317,23 +378,29 @@ export default function PersonenScreen() {
               </Box>
             )}
           </Paper>
-        </Grid>
+        </Box>
 
-        {/* RIGHT */}
-        <Grid size={{ xs: 12, md: 6 }}>
+        {/* ===================================================== */}
+        {/* DETAIL VIEW */}
+        {/* ===================================================== */}
+
+        <Box
+          sx={{
+            display: selectedPerson ? "block" : "none",
+          }}
+        >
           <Paper sx={{ p: 2 }}>
             {loadingDetail ? (
               <Typography>Lade Details...</Typography>
-            ) : !selectedPerson ? (
-              <Typography color="text.secondary">Bitte Person auswählen</Typography>
             ) : (
               <PersonFormView
-                personDetail={editMode ? editData : selectedPerson} // ⭐ SWITCH
+                personDetail={editMode ? editData : selectedPerson}
                 editMode={editMode}
                 onEdit={handleEdit}
                 onCopy={handleCopy}
                 onCancelEdit={() => {
                   setEditMode(false);
+
                   setEditData(null);
                 }}
                 onSpeichern={handleSave}
@@ -345,13 +412,15 @@ export default function PersonenScreen() {
                     const fresh = await getPersonById(selectedId);
 
                     setSelectedPerson(fresh);
+
                     setEditData(fresh);
                   }
 
-                  // 🔄 Tabelle neu laden
                   cursorRef.current = null;
+
                   setRows([]);
-                  setHasMore(true);
+
+                  hasMoreRef.current = true;
 
                   await loadRef.current();
                 }}
@@ -362,14 +431,25 @@ export default function PersonenScreen() {
                     const fresh = await getPersonById(selectedId);
 
                     setSelectedPerson(fresh);
+
                     setEditData(fresh);
                   }
                 }}
-                onBack={() => setSelectedId(null)}
+                onBack={() => {
+                  setSelectedId(null);
+
+                  setSelectedPerson(null);
+
+                  setEditMode(false);
+
+                  setEditData(null);
+                }}
                 onReloadPerson={async () => {
                   if (selectedId) {
                     const fresh = await getPersonById(selectedId);
+
                     setSelectedPerson(fresh);
+
                     setEditData(fresh);
                   }
                 }}
@@ -378,8 +458,9 @@ export default function PersonenScreen() {
               />
             )}
           </Paper>
-        </Grid>
-      </Grid>
+        </Box>
+      </>
+
       {!selectedPerson && (
         <BottomActionBar
           left={[
@@ -413,7 +494,8 @@ export default function PersonenScreen() {
           cursorRef.current = null;
 
           setRows([]);
-          setHasMore(true);
+
+          hasMoreRef.current = true;
 
           await loadRef.current();
 
@@ -437,7 +519,8 @@ export default function PersonenScreen() {
 
           cursorRef.current = null;
           setRows([]);
-          setHasMore(true);
+
+          hasMoreRef.current = true;
 
           await loadRef.current();
 
