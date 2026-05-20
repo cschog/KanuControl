@@ -34,9 +34,6 @@ public class AbrechnungBuchung implements FinanzPosition {
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal betrag;
 
-    @Column(nullable = false)
-    private LocalDate datum;
-
     @Column(length = 500)
     private String beschreibung;
 

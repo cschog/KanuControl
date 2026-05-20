@@ -3,15 +3,15 @@
 export type ModuleType = "core" | "addon" | "report" | "admin";
 
 export const moduleColors: Record<ModuleType, string> = {
-  core: "#2F6FA3", // Kernmodule
-  addon: "#2F8F8B", // Zusatzfunktionen
-  report: "#6B7280", // Dokumente / Reports
-  admin: "#7B3F61", // System / Verwaltung
+  core: "#1E5AA8", // KC Blau (Control)
+  addon: "#D62839", // KC Rot (Kanu)
+  report: "#8C8C8C", // neutrales Grau
+  admin: "#3A3A3A", // dunkles Anthrazit
 };
 
 export const moduleHover: Record<ModuleType, string> = {
-  core: "#3E82BC",
-  addon: "#3FA6A1",
-  report: "#4B5563",
-  admin: "#91506F",
+  core: "#2B6FC7",
+  addon: "#E03E4E",
+  report: "#A3A3A3",
+  admin: "#505050",
 };

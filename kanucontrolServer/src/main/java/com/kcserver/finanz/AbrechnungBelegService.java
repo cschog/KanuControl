@@ -24,7 +24,6 @@ public class AbrechnungBelegService {
     private final AbrechnungRepository abrechnungRepository;
     private final AbrechnungBelegRepository belegRepository;
     private final AbrechnungBuchungRepository buchungRepository;
-    private final TeilnehmerRepository teilnehmerRepository;
     private final FinanzGruppeRepository finanzGruppeRepository;
     private final AbrechnungMapper mapper;
 
@@ -95,6 +94,44 @@ public class AbrechnungBelegService {
         return mapper.toDTO(beleg);
     }
 
+    @Transactional
+    public AbrechnungBelegDTO updateBeleg(
+            Long veranstaltungId,
+            Long belegId,
+            AbrechnungBelegCreateDTO dto
+    ) {
+        AbrechnungBeleg beleg = belegRepository
+                .findById(belegId)
+                .orElseThrow(() ->
+                        new ResponseStatusException(
+                                HttpStatus.NOT_FOUND,
+                                "Beleg nicht gefunden"
+                        )
+                );
+
+        FinanzGruppe gruppe = finanzGruppeRepository
+                .findByVeranstaltungIdAndKuerzel(
+                        veranstaltungId,
+                        dto.getKuerzel()
+                )
+                .orElseThrow(() ->
+                        new ResponseStatusException(
+                                HttpStatus.NOT_FOUND,
+                                "Finanzgruppe nicht gefunden"
+                        )
+                );
+
+        beleg.setDatum(dto.getDatum());
+
+        beleg.setBeschreibung(
+                dto.getBeschreibung()
+        );
+
+        beleg.setFinanzGruppe(gruppe);
+
+        return mapper.toDTO(beleg);
+    }
+
     /* =========================================================
        POSITION HINZUFÜGEN
        ========================================================= */
@@ -112,7 +149,6 @@ public class AbrechnungBelegService {
         position.setBeleg(beleg);
         position.setKategorie(dto.getKategorie());
         position.setBetrag(dto.getBetrag());
-        position.setDatum(dto.getDatum());
         position.setBeschreibung(dto.getBeschreibung());
 
         beleg.addPosition(position);
@@ -140,7 +176,6 @@ public class AbrechnungBelegService {
 
         pos.setKategorie(dto.getKategorie());
         pos.setBetrag(dto.getBetrag());
-        pos.setDatum(dto.getDatum());
         pos.setBeschreibung(dto.getBeschreibung());
 
         return mapper.toDTO(pos);

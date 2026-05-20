@@ -99,31 +99,23 @@ export function VereinActionBar(props: Props) {
       left={[
         {
           label: "Bearbeiten",
-
           variant: "outlined",
-
           onClick: onEdit,
-
           disabled: disableEdit,
         },
 
         {
           label: "Zurück",
-
           onClick: onBack,
         },
-
-        // ⭐ destructive action last
+      ]}
+      right={[
         {
           label: "Löschen",
-
           variant: "outlined",
-
           color: "error",
-
-          onClick: onDelete,
-
           disabled: disableDelete,
+          onClick: onDelete,
         },
       ]}
     />

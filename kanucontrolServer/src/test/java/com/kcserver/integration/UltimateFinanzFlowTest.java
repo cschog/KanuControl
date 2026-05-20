@@ -126,7 +126,6 @@ class UltimateFinanzFlowTest extends AbstractFinanzIntegrationTest {
 
         dto.setKategorie(kat);
         dto.setBetrag(new BigDecimal(betrag));
-        dto.setDatum(LocalDate.now());
 
         return dto;
     }

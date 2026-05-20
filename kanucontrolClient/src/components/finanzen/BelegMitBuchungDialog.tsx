@@ -58,7 +58,6 @@ export default function BelegMitBuchungDialog({ open, kuerzelListe, onClose, onS
       buchung: {
         kategorie,
         betrag: Number(betrag),
-        datum,
         beschreibung: buchungText,
       },
     });

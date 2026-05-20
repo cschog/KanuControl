@@ -1,29 +1,23 @@
-import {
-  Box,
-  Button,
-  Typography,
-  Stack,
-  Divider,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
-  Paper,
-} from "@mui/material";
+import { Box, Button, Typography, Stack, Divider } from "@mui/material";
 
 import { useEffect, useState, useCallback } from "react";
+
+import BelegCard from "@/components/finanzen/BelegCard";
+import BuchungDialog from "@/components/finanzen/BuchungDialog";
+import BelegDialog from "@/components/finanzen/BelegDialog";
+import BelegMitBuchungDialog from "@/components/finanzen/BelegMitBuchungDialog";
+
 import {
   getAbrechnung,
   addBuchung,
   updateBuchung,
   deleteBuchung,
   deleteBeleg,
+  updateBeleg,
+  createBelegWithBuchung,
 } from "@/api/services/abrechnungApi";
+
 import { getFinanzgruppen, FinanzGruppe } from "@/api/services/finanzgruppenApi";
-import BuchungDialog from "@/components/finanzen/BuchungDialog";
-import { createBelegWithBuchung } from "@/api/services/abrechnungApi";
-import BelegMitBuchungDialog from "@/components/finanzen/BelegMitBuchungDialog";
 
 import {
   AbrechnungDetail,
@@ -44,21 +38,39 @@ export default function BuchungenPage({ veranstaltungId }: Props) {
 
   const [finanzgruppen, setFinanzgruppen] = useState<FinanzGruppe[]>([]);
 
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editing, setEditing] = useState<Buchung | undefined>();
-  const [selectedBeleg, setSelectedBeleg] = useState<AbrechnungBeleg | null>(null);
+  /* =========================================================
+     BUCHUNG DIALOG
+     ========================================================= */
 
-  const [belegDialogOpen, setBelegDialogOpen] = useState(false);
+  const [buchungDialogOpen, setBuchungDialogOpen] = useState(false);
+
+  const [editingBuchung, setEditingBuchung] = useState<Buchung | undefined>();
+
+  const [selectedBeleg, setSelectedBeleg] = useState<AbrechnungBeleg | null>(null);
 
   const [dialogTyp, setDialogTyp] = useState<"KOSTEN" | "EINNAHME">("KOSTEN");
 
-  /* ================= LOAD ================= */
+  /* =========================================================
+     BELEG DIALOGE
+     ========================================================= */
+
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+
+  const [editingBeleg, setEditingBeleg] = useState<AbrechnungBeleg | null>(null);
+
+  /* =========================================================
+     LOAD
+     ========================================================= */
 
   const load = useCallback(async () => {
     const abrechnungData = await getAbrechnung(veranstaltungId);
+
     setAbrechnung(abrechnungData);
 
     const gruppenData = await getFinanzgruppen(veranstaltungId);
+
     setFinanzgruppen(gruppenData);
   }, [veranstaltungId]);
 
@@ -70,131 +82,59 @@ export default function BuchungenPage({ veranstaltungId }: Props) {
 
   const { kosten, einnahmen, saldo } = abrechnung.finanz;
 
-  /* ================= CRUD ================= */
+  /* =========================================================
+     BUCHUNG CRUD
+     ========================================================= */
 
-  const handleSave = async (data: BuchungCreate) => {
+  const handleSaveBuchung = async (data: BuchungCreate) => {
     if (!selectedBeleg) return;
 
-    if (editing) {
-      await updateBuchung(veranstaltungId, selectedBeleg.id, editing.id, data);
+    if (editingBuchung) {
+      await updateBuchung(veranstaltungId, selectedBeleg.id, editingBuchung.id, data);
     } else {
       await addBuchung(veranstaltungId, selectedBeleg.id, data);
     }
 
-    setDialogOpen(false);
-    setEditing(undefined);
+    setBuchungDialogOpen(false);
+
+    setEditingBuchung(undefined);
+
     setSelectedBeleg(null);
+
     await load();
   };
 
-  const handleCreate = async (data: { beleg: BelegCreate; buchung: BuchungCreate }) => {
+  /* =========================================================
+     CREATE BELEG
+     ========================================================= */
+
+  const handleCreateBeleg = async (data: { beleg: BelegCreate; buchung: BuchungCreate }) => {
     await createBelegWithBuchung(veranstaltungId, data);
-    setBelegDialogOpen(false);
+
+    setCreateDialogOpen(false);
+
     await load();
   };
 
-  /* ================= RENDER ================= */
+  /* =========================================================
+     UPDATE BELEG
+     ========================================================= */
 
-  const renderBeleg = (beleg: AbrechnungBeleg) => (
-    <Box key={beleg.id} mb={4}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
-        <Box>
-          <Typography variant="h6">
-            {beleg.belegnummer} ({beleg.kuerzel})
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {beleg.datum} – {beleg.beschreibung}
-          </Typography>
-        </Box>
+  const handleUpdateBeleg = async (data: BelegCreate) => {
+    if (!editingBeleg) return;
 
-        {abrechnung.status !== "ABGESCHLOSSEN" && (
-          <Stack direction="row" spacing={1}>
-            <Button
-              size="small"
-              variant="contained"
-              onClick={() => {
-                setSelectedBeleg(beleg);
-                setEditing(undefined);
-                setDialogTyp("KOSTEN");
-                setDialogOpen(true);
-              }}
-            >
-              + Position
-            </Button>
+    await updateBeleg(veranstaltungId, editingBeleg.id, data);
 
-            <Button
-              size="small"
-              color="error"
-              onClick={async () => {
-                if (!confirm("Beleg komplett löschen?")) return;
+    setEditDialogOpen(false);
 
-                await deleteBeleg(veranstaltungId, beleg.id);
-                await load();
-              }}
-            >
-              Löschen
-            </Button>
-          </Stack>
-        )}
-      </Stack>
+    setEditingBeleg(null);
 
-      <Paper variant="outlined">
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Datum</TableCell>
-              <TableCell>Kategorie</TableCell>
-              <TableCell>Beschreibung</TableCell>
-              <TableCell align="right">Betrag (€)</TableCell>
-              {abrechnung.status !== "ABGESCHLOSSEN" && <TableCell />}
-            </TableRow>
-          </TableHead>
+    await load();
+  };
 
-          <TableBody>
-            {beleg.positionen.map((p) => (
-              <TableRow key={p.id}>
-                <TableCell>{p.datum}</TableCell>
-                <TableCell>{p.kategorie.replaceAll("_", " ")}</TableCell>
-
-                <TableCell>{p.beschreibung}</TableCell>
-                <TableCell align="right">{p.betrag.toFixed(2)}</TableCell>
-
-                {abrechnung.status !== "ABGESCHLOSSEN" && (
-                  <TableCell>
-                    <Button
-                      size="small"
-                      onClick={() => {
-                        setSelectedBeleg(beleg);
-                        setEditing(p);
-                        setDialogTyp(kategorieZuTyp[p.kategorie]);
-                        setDialogOpen(true);
-                      }}
-                    >
-                      Bearbeiten
-                    </Button>
-                    <Button
-                      size="small"
-                      color="error"
-                      onClick={async () => {
-                        if (!confirm("Position wirklich löschen?")) return;
-
-                        await deleteBuchung(veranstaltungId, beleg.id, p.id);
-                        await load();
-                      }}
-                    >
-                      Löschen
-                    </Button>
-                  </TableCell>
-                )}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Paper>
-    </Box>
-  );
-
-  /* ================= UI ================= */
+  /* =========================================================
+     UI
+     ========================================================= */
 
   return (
     <Box p={3}>
@@ -203,38 +143,109 @@ export default function BuchungenPage({ veranstaltungId }: Props) {
       </Typography>
 
       {abrechnung.status !== "ABGESCHLOSSEN" && (
-        <Button variant="contained" sx={{ mb: 2 }} onClick={() => setBelegDialogOpen(true)}>
+        <Button variant="contained" sx={{ mb: 2 }} onClick={() => setCreateDialogOpen(true)}>
           + Beleg anlegen
         </Button>
       )}
 
       <Stack direction="row" spacing={4} mb={3}>
         <Typography>💸 Kosten: {kosten.toFixed(2)} €</Typography>
+
         <Typography>💰 Einnahmen: {einnahmen.toFixed(2)} €</Typography>
+
         <Typography>📊 Saldo: {saldo.toFixed(2)} €</Typography>
       </Stack>
 
       <Divider sx={{ mb: 3 }} />
 
-      {abrechnung.belege.map(renderBeleg)}
+      {abrechnung.belege.map((beleg) => (
+        <BelegCard
+          key={beleg.id}
+          beleg={beleg}
+          readOnly={abrechnung.status === "ABGESCHLOSSEN"}
+          onEditBeleg={(beleg) => {
+            setEditingBeleg(beleg);
+
+            setEditDialogOpen(true);
+          }}
+          onAddPosition={(beleg) => {
+            setSelectedBeleg(beleg);
+
+            setEditingBuchung(undefined);
+
+            setDialogTyp("KOSTEN");
+
+            setBuchungDialogOpen(true);
+          }}
+          onEditPosition={(beleg, buchung) => {
+            setSelectedBeleg(beleg);
+
+            setEditingBuchung(buchung);
+
+            setDialogTyp(kategorieZuTyp[buchung.kategorie]);
+
+            setBuchungDialogOpen(true);
+          }}
+          onDeletePosition={async (belegId, buchungId) => {
+            if (!confirm("Position wirklich löschen?")) return;
+
+            await deleteBuchung(veranstaltungId, belegId, buchungId);
+
+            await load();
+          }}
+          onDeleteBeleg={async (belegId) => {
+            if (!confirm("Beleg komplett löschen?")) return;
+
+            await deleteBeleg(veranstaltungId, belegId);
+
+            await load();
+          }}
+        />
+      ))}
+
+      {/* =====================================================
+          BUCHUNG DIALOG
+         ===================================================== */}
 
       <BuchungDialog
-        open={dialogOpen}
+        open={buchungDialogOpen}
         typ={dialogTyp}
-        initialData={editing}
+        initialData={editingBuchung}
         onClose={() => {
-          setDialogOpen(false);
-          setEditing(undefined);
+          setBuchungDialogOpen(false);
+
+          setEditingBuchung(undefined);
+
           setSelectedBeleg(null);
         }}
-        onSave={handleSave}
+        onSave={handleSaveBuchung}
       />
 
+      {/* =====================================================
+          CREATE BELEG
+         ===================================================== */}
+
       <BelegMitBuchungDialog
-        open={belegDialogOpen}
+        open={createDialogOpen}
         kuerzelListe={finanzgruppen.map((g) => g.kuerzel)}
-        onClose={() => setBelegDialogOpen(false)}
-        onSave={handleCreate}
+        onClose={() => setCreateDialogOpen(false)}
+        onSave={handleCreateBeleg}
+      />
+
+      {/* =====================================================
+          EDIT BELEG
+         ===================================================== */}
+
+      <BelegDialog
+        open={editDialogOpen}
+        kuerzelListe={finanzgruppen.map((g) => g.kuerzel)}
+        initialData={editingBeleg ?? undefined}
+        onClose={() => {
+          setEditDialogOpen(false);
+
+          setEditingBeleg(null);
+        }}
+        onSave={handleUpdateBeleg}
       />
     </Box>
   );

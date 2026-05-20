@@ -33,6 +33,23 @@ public class AbrechnungBelegController {
     }
 
     /* =========================================================
+   BELEG UPDATE
+   ========================================================= */
+
+    @PutMapping("/{belegId}")
+    public AbrechnungBelegDTO updateBeleg(
+            @PathVariable Long veranstaltungId,
+            @PathVariable Long belegId,
+            @RequestBody @Valid AbrechnungBelegCreateDTO dto
+    ) {
+        return service.updateBeleg(
+                veranstaltungId,
+                belegId,
+                dto
+        );
+    }
+
+    /* =========================================================
        POSITION HINZUFÜGEN (Splitbuchung)
        ========================================================= */
 

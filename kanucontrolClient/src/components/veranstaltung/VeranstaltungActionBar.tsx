@@ -64,37 +64,33 @@ export const VeranstaltungActionBar: React.FC<Props> = ({
     <BottomActionBar
       left={[
         {
-          label: "Zurück",
+          label: "Ändern",
           variant: "outlined",
-          onClick: onBack,
+          disabled: disableEdit,
+          onClick: onEdit,
         },
-
         {
           label: "Kopieren",
           variant: "outlined",
           onClick: onCopy,
         },
-
+        {
+          label: aktiv ? "Aktiv" : "Aktiv setzen",
+          onClick: onActivate,
+          variant: aktiv ? "contained" : "outlined",
+        },
+        {
+          label: "Zurück",
+          onClick: onBack,
+        },
+      ]}
+      right={[
         {
           label: "Löschen",
           variant: "outlined",
           color: "error",
           disabled: disableDelete,
           onClick: onDelete,
-        },
-      ]}
-      right={[
-        {
-          label: "Ändern",
-          variant: "outlined",
-          disabled: disableEdit,
-          onClick: onEdit,
-        },
-
-        {
-          label: aktiv ? "Aktiv" : "Aktiv setzen",
-          onClick: onActivate,
-          variant: aktiv ? "contained" : "outlined",
         },
       ]}
     />

@@ -280,8 +280,6 @@ class AbrechnungServiceTest
                 new BigDecimal(betrag)
         );
 
-        posDTO.setDatum(LocalDate.now());
-
         belegService.addPosition(
                 veranstaltungId,
                 beleg.getId(),

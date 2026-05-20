@@ -56,23 +56,18 @@ export const PersonActionBar: React.FC<PersonActionBarProps> = ({
           // ⭐ PRIMARY ACTION FIRST
           {
             label: "Speichern",
-
             onClick: onSave,
           },
 
           {
             label: "Abbrechen",
-
             variant: "outlined",
-
             onClick: onCancelEdit,
           },
 
           {
             label: "Verein zuordnen",
-
             variant: "outlined",
-
             onClick: onAddVerein,
           },
         ]}
@@ -89,42 +84,32 @@ export const PersonActionBar: React.FC<PersonActionBarProps> = ({
       left={[
         {
           label: "Ändern",
-
           variant: "outlined",
-
           disabled: disableEdit,
-
           onClick: onEdit,
-        },
-
-        {
-          label: "Zurück",
-
-          onClick: onBack,
         },
 
         ...(onCopy
           ? [
               {
                 label: "Kopieren",
-
                 variant: "outlined" as const,
-
                 onClick: onCopy,
               },
             ]
           : []),
 
-        // ⭐ destructive action last
+        {
+          label: "Zurück",
+          onClick: onBack,
+        },
+      ]}
+      right={[
         {
           label: "Löschen",
-
           variant: "outlined",
-
           color: "error",
-
           disabled: disableDelete,
-
           onClick: onDelete,
         },
       ]}
