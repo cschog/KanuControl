@@ -22,10 +22,9 @@ interface Props {
   onSave: (data: BuchungCreate) => void | Promise<void>;
 }
 
-export default function BuchungDialog({ open, typ, initialData, onClose, onSave }: Props) {
+export default function BuchungDialog({ open, initialData, onClose, onSave }: Props) {
   const [kategorie, setKategorie] = useState<FinanzKategorie | "">("");
   const [betrag, setBetrag] = useState("");
-  const [datum, setDatum] = useState("");
   const [beschreibung, setBeschreibung] = useState("");
 
 
@@ -37,13 +36,11 @@ export default function BuchungDialog({ open, typ, initialData, onClose, onSave 
     if (initialData) {
       setKategorie(initialData.kategorie);
       setBetrag(initialData.betrag.toString());
-      setDatum(initialData.datum);
       setBeschreibung(initialData.beschreibung ?? "");
 
     } else {
       setKategorie("");
       setBetrag("");
-      setDatum("");
       setBeschreibung("");
 
     }
@@ -53,21 +50,18 @@ export default function BuchungDialog({ open, typ, initialData, onClose, onSave 
      Kategorien filtern (typesafe)
   ========================================================= */
 
-  const gefilterteKategorien = (Object.keys(kategorieZuTyp) as FinanzKategorie[]).filter(
-    (k) => kategorieZuTyp[k] === typ,
-  );
+  const gefilterteKategorien = Object.keys(kategorieZuTyp) as FinanzKategorie[];
 
   /* =========================================================
      SAVE
   ========================================================= */
 
   const handleSave = async () => {
-    if (!kategorie || !betrag || !datum ) return;
+    if (!kategorie || !betrag) return;
 
     const payload: BuchungCreate = {
       kategorie,
       betrag: parseFloat(betrag),
-      datum,
       beschreibung,
     };
 
@@ -103,17 +97,6 @@ export default function BuchungDialog({ open, typ, initialData, onClose, onSave 
             type="number"
             value={betrag}
             onChange={(e) => setBetrag(e.target.value)}
-            fullWidth
-          />
-
-          <TextField
-            label="Datum"
-            type="date"
-            value={datum}
-            onChange={(e) => setDatum(e.target.value)}
-            InputLabelProps={{
-              shrink: true,
-            }}
             fullWidth
           />
 

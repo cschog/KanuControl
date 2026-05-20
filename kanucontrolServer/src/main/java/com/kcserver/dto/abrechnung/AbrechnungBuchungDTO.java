@@ -13,6 +13,6 @@ public class AbrechnungBuchungDTO {
 
     private FinanzKategorie kategorie;
     private BigDecimal betrag;
-    private LocalDate datum;
+
     private String beschreibung;
 }

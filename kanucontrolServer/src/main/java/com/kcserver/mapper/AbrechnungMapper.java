@@ -84,7 +84,6 @@ public class AbrechnungMapper {
         dto.setId(pos.getId());
         dto.setKategorie(pos.getKategorie());
         dto.setBetrag(pos.getBetrag());
-        dto.setDatum(pos.getDatum());
         dto.setBeschreibung(pos.getBeschreibung());
 
         return dto;

@@ -166,7 +166,6 @@ class FinanzGruppeIntegrationTest extends AbstractFinanzIntegrationTest {
         AbrechnungBuchung buchung = new AbrechnungBuchung();
         buchung.setKategorie(FinanzKategorie.TEILNEHMERBEITRAG);
         buchung.setBetrag(BigDecimal.TEN);
-        buchung.setDatum(LocalDate.now());
         buchung.setBeschreibung("Testbuchung");
 
         beleg.addPosition(buchung);

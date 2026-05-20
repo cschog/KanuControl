@@ -1,30 +1,41 @@
-import { Table, TableHead, TableRow, TableCell, TableBody, IconButton } from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import TableContainer from "@mui/material/TableContainer";
+import { Box, Typography } from "@mui/material";
+
+import { GenericTableTanstack } from "@/components/common/GenericTableTanstack";
+
+import { kostenColumns } from "@/components/finanzen/kostenColumns";
+
+import { KostenRow } from "@/api/types/KostenRow";
 
 interface Props {
   onDelete: (id: number) => void;
 }
 
-const rows = [
+const rows: KostenRow[] = [
   {
     id: 1,
     datum: "01.05.2025",
     person: "MS",
     kategorie: "Unterkunft",
     kommentar: "Jugendherberge",
-    einnahme: "",
-    ausgabe: "800 €",
+    ausgabe: 800,
   },
+
   {
     id: 2,
     datum: "02.05.2025",
     person: "AB",
     kategorie: "Verpflegung",
     kommentar: "Essen",
-    einnahme: "",
-    ausgabe: "600 €",
+    ausgabe: 600,
+  },
+
+  {
+    id: 3,
+    datum: "03.05.2025",
+    person: "CK",
+    kategorie: "Teilnehmerbeitrag",
+    kommentar: "Überweisung",
+    einnahme: 250,
   },
 ];
 
@@ -33,49 +44,47 @@ const KostenTable = ({ onDelete }: Props) => {
     console.log("Edit Buchung", id);
   };
 
+  const columns = kostenColumns(handleEdit, onDelete);
+
   return (
-    <TableContainer
-      sx={{
-        maxHeight: 400,
-      }}
-    >
-      <Table size="small" stickyHeader>
-        <TableHead>
-          <TableRow>
-            <TableCell>Datum</TableCell>
-            <TableCell>Person</TableCell>
-            <TableCell>Kategorie</TableCell>
-            <TableCell>Kommentar</TableCell>
-            <TableCell align="right">Einnahme</TableCell>
-            <TableCell align="right">Ausgabe</TableCell>
-            <TableCell align="center">Aktionen</TableCell>
-          </TableRow>
-        </TableHead>
+    <GenericTableTanstack<KostenRow>
+      data={rows}
+      columns={columns}
+      loading={false}
+      sorting={[
+        {
+          id: "datum",
+          desc: true,
+        },
+      ]}
+      mobileRenderRow={(row) => (
+        <Box>
+          <Typography fontWeight={600}>{row.kategorie}</Typography>
 
-        <TableBody>
-          {rows.map((r) => (
-            <TableRow key={r.id}>
-              <TableCell>{r.datum}</TableCell>
-              <TableCell>{r.person}</TableCell>
-              <TableCell>{r.kategorie}</TableCell>
-              <TableCell>{r.kommentar}</TableCell>
-              <TableCell align="right">{r.einnahme}</TableCell>
-              <TableCell align="right">{r.ausgabe}</TableCell>
+          <Typography variant="body2" color="text.secondary">
+            {row.datum}
+            {" • "}
+            {row.person}
+          </Typography>
 
-              <TableCell align="center">
-                <IconButton size="small" onClick={() => handleEdit(r.id)}>
-                  <EditIcon fontSize="small" />
-                </IconButton>
+          <Typography variant="body2" sx={{ mt: 0.5 }}>
+            {row.kommentar}
+          </Typography>
 
-                <IconButton size="small" onClick={() => onDelete(r.id)}>
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+          <Box sx={{ mt: 1 }}>
+            {row.einnahme ? (
+              <Typography color="success.main" fontWeight={600}>
+                + {row.einnahme.toFixed(2)} €
+              </Typography>
+            ) : (
+              <Typography color="error.main" fontWeight={600}>
+                - {row.ausgabe?.toFixed(2)} €
+              </Typography>
+            )}
+          </Box>
+        </Box>
+      )}
+    />
   );
 };
 

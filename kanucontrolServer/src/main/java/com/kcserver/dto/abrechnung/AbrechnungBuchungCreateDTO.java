@@ -17,8 +17,5 @@ public class AbrechnungBuchungCreateDTO {
     @NotNull
     private BigDecimal betrag;
 
-    @NotNull
-    private LocalDate datum;
-
     private String beschreibung;
 }

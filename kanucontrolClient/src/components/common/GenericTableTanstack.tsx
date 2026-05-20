@@ -109,6 +109,7 @@ export function GenericTableTanstack<T extends WithId>({
         checked={table.getIsAllRowsSelected()}
         indeterminate={table.getIsSomeRowsSelected()}
         onChange={table.getToggleAllRowsSelectedHandler()}
+    
       />
     ),
 
@@ -223,6 +224,7 @@ export function GenericTableTanstack<T extends WithId>({
       <TableContainer
         sx={{
           maxHeight: tableHeight,
+          overflowX: "auto",
         }}
       >
         {/* =====================================================
@@ -284,8 +286,15 @@ export function GenericTableTanstack<T extends WithId>({
           /* ===================================================
              DESKTOP
              =================================================== */
+          <Table
+            stickyHeader
+            size="small"
+            sx={{
+              tableLayout: "fixed",
 
-          <Table stickyHeader size="small">
+              minWidth: table.getTotalSize(),
+            }}
+          >
             <TableHead>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
@@ -295,13 +304,29 @@ export function GenericTableTanstack<T extends WithId>({
                     return (
                       <TableCell
                         key={header.id}
-                        align={header.id === "select" ? "center" : "left"}
+                        align={
+                          (header.column.columnDef.meta as { align?: string })?.align === "right"
+                            ? "right"
+                            : header.id === "select"
+                            ? "center"
+                            : "left"
+                        }
                         onClick={header.column.getToggleSortingHandler()}
                         padding="normal"
                         sx={{
+                          width: header.getSize(),
+                          whiteSpace: "nowrap",
+                          minWidth: header.getSize(),
+                          maxWidth: header.getSize(),
+
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+
                           cursor: header.column.getCanSort() ? "pointer" : "default",
+
                           py: 0.5,
                           px: 1,
+
                           fontWeight: 700,
 
                           fontSize: {
@@ -310,11 +335,22 @@ export function GenericTableTanstack<T extends WithId>({
                           },
 
                           userSelect: "none",
-
-                          whiteSpace: "nowrap",
                         }}
                       >
-                        <Box display="flex" alignItems="center" gap={1}>
+                        <Box
+                          display="flex"
+                          alignItems="center"
+                          justifyContent={
+                            (
+                              header.column.columnDef.meta as {
+                                align?: string;
+                              }
+                            )?.align === "right"
+                              ? "flex-end"
+                              : "flex-start"
+                          }
+                          gap={1}
+                        >
                           {flexRender(header.column.columnDef.header, header.getContext())}
 
                           {sorted === "asc" ? "▲" : sorted === "desc" ? "▼" : ""}
@@ -347,10 +383,17 @@ export function GenericTableTanstack<T extends WithId>({
                     {row.getVisibleCells().map((cell) => (
                       <TableCell
                         key={cell.id}
-                        align={cell.column.id === "select" ? "center" : "left"}
+                        align={
+                          (cell.column.columnDef.meta as { align?: string })?.align === "right"
+                            ? "right"
+                            : cell.column.id === "select"
+                            ? "center"
+                            : "left"
+                        }
                         size="small"
                         padding="normal"
                         sx={{
+                          width: cell.column.getSize(),
                           py: 0.5,
                           px: 1,
 
@@ -359,6 +402,13 @@ export function GenericTableTanstack<T extends WithId>({
                             md: "1.2rem",
                           },
 
+                          minWidth: cell.column.getSize(),
+                          maxWidth: cell.column.getSize(),
+                          overflow: "hidden",
+
+                          textOverflow: "ellipsis",
+
+                          whiteSpace: "nowrap",
                           lineHeight: 1.2,
                         }}
                       >

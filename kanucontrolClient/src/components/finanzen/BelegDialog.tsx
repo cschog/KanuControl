@@ -9,39 +9,56 @@ import {
   Stack,
 } from "@mui/material";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-import { BelegCreate } from "@/api/types/abrechnung";
+import { BelegCreate, AbrechnungBeleg } from "@/api/types/abrechnung";
 
 interface Props {
   open: boolean;
   kuerzelListe: string[];
   onClose: () => void;
   onSave: (data: BelegCreate) => void | Promise<void>;
+  initialData?: AbrechnungBeleg;
 }
 
-export default function BelegDialog({ open, kuerzelListe, onClose, onSave }: Props) {
+export default function BelegDialog({ open, kuerzelListe, onClose, onSave, initialData }: Props) {
   const [datum, setDatum] = useState("");
   const [beschreibung, setBeschreibung] = useState("");
   const [kuerzel, setKuerzel] = useState("");
 
-  const handleSave = async () => {
-    if (!datum || !kuerzel) return;
+  useEffect(() => {
+    if (initialData) {
+      setKuerzel(initialData.kuerzel);
+      setDatum(initialData.datum);
+      setBeschreibung(initialData.beschreibung ?? "");
+    } else {
+      setKuerzel("");
+      setDatum("");
+      setBeschreibung("");
+    }
+  }, [initialData, open]);
 
-    await onSave({
-      kuerzel,
-      datum,
-      beschreibung,
-    });
+ const resetForm = () => {
+   setDatum("");
+   setBeschreibung("");
+   setKuerzel("");
+ };
 
-    setDatum("");
-    setBeschreibung("");
-    setKuerzel("");
-  };
+ const handleSave = async () => {
+   if (!datum || !kuerzel) return;
+
+   await onSave({
+     kuerzel,
+     datum,
+     beschreibung,
+   });
+
+   resetForm();
+ };
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Neuer Beleg</DialogTitle>
+      <DialogTitle>{initialData ? "Beleg bearbeiten" : "Neuer Beleg"}</DialogTitle>
 
       <DialogContent>
         <Stack spacing={2} mt={1}>

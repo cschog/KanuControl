@@ -226,7 +226,6 @@ class FinanzGruppeServiceTest extends AbstractFinanzIntegrationTest {
 
         posDTO.setKategorie(FinanzKategorie.UNTERKUNFT);
         posDTO.setBetrag(new BigDecimal("100"));
-        posDTO.setDatum(LocalDate.now());
 
         belegService.addPosition(
                 veranstaltungId,

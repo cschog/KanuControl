@@ -382,17 +382,17 @@ export default function VeranstaltungenScreen() {
         <BottomActionBar
           left={[
             {
+              label: "Neue Veranstaltung",
+              variant: "outlined",
+              onClick: () => setCreateOpen(true),
+            },
+            {
               label: "Zurück",
               variant: "outlined",
               onClick: () => navigate("/startmenue"),
             },
           ]}
-          right={[
-            {
-              label: "Neue Veranstaltung",
-              onClick: () => setCreateOpen(true),
-            },
-          ]}
+          
         />
       )}
 

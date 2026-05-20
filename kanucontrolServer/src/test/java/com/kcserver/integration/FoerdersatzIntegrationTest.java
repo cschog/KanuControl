@@ -216,7 +216,6 @@ class FoerdersatzIntegrationTest extends AbstractFinanzIntegrationTest {
 
         posDTO.setKategorie(kat);
         posDTO.setBetrag(new BigDecimal(betrag));
-        posDTO.setDatum(TEST_DATE);
 
         belegService.addPosition(
                 veranstaltungId,

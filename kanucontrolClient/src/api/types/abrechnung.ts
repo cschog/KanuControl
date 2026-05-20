@@ -1,17 +1,15 @@
 import { FinanzKategorie } from "@/api/types/finanz";
+import { WithId } from "@/components/common/GenericTableTanstack";
 
-export interface Buchung {
-  id: number;
+export interface Buchung extends WithId {
   kategorie: FinanzKategorie;
   betrag: number;
-  datum: string;
   beschreibung?: string;
 }
 
 export interface BuchungCreate {
   kategorie: FinanzKategorie;
   betrag: number;
-  datum: string;
   beschreibung?: string;
 }
 
@@ -42,6 +40,12 @@ export interface FinanzSummary {
 }
 
 export interface BelegCreate {
+  kuerzel: string;
+  datum: string;
+  beschreibung?: string;
+}
+
+export interface BelegUpdate {
   kuerzel: string;
   datum: string;
   beschreibung?: string;
