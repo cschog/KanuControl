@@ -172,7 +172,7 @@ Das schützt bereits gegen:
 
 Aber:
 
-Der MiniMac steht vermutlich im selben Gebäude.
+Der MiniMac steht im selben Gebäude.
 
 Deshalb später zusätzlich sinnvoll:
 
