@@ -1,4 +1,4 @@
-AVV typischerweise regelt
+AVV regelt
 
 * welche Daten verarbeitet werden
 * zu welchem Zweck
