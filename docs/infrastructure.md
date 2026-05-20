@@ -71,7 +71,7 @@ kcserver-prod                           keycloak-prod
 
 ```text
 /var/www/kc_client/dist
-
+```
 
 ## kcserver-prod
 
