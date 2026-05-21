@@ -28,7 +28,13 @@ export const VereinTable: React.FC<VereinTableProps> = ({
       mobileRenderRow={(row) => (
         <>
           <Box>
-            <Typography fontWeight={600}>{row.abk}</Typography>
+            <Typography fontWeight={600}>
+              {row.abk}
+
+              <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 0.5 }}>
+                ({row.mitgliederCount})
+              </Typography>
+            </Typography>
 
             <Typography variant="body2">{row.name}</Typography>
 

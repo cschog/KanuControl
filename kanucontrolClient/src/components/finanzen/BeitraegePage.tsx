@@ -7,44 +7,17 @@ import {
   Chip,
   CircularProgress,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
+
   TextField,
   Typography,
 } from "@mui/material";
 
+import { GenericTableTanstack } from "@/components/common/GenericTableTanstack";
+import { beitraegeColumns } from "@/components/finanzen/beitraegeColumns";
+import { TeilnehmerBeitraegeResponseDTO, TeilnehmerListDTO } from "@/api/types/beitraege";
+
 import { useEffect, useState } from "react";
 import apiClient from "@/api/client/apiClient";
-
-type TeilnehmerRolle = "L" | "M" | null;
-
-interface PersonRefDTO {
-  id: number;
-  vorname: string;
-  name: string;
-  hauptvereinAbk?: string;
-}
-
-interface TeilnehmerListDTO {
-  id: number;
-  personId: number;
-  person: PersonRefDTO;
-  rolle: TeilnehmerRolle;
-  individuellerBeitrag?: number;
-  bezahlt: boolean;
-  bezahltAm?: string;
-  alterBeiBeginn?: number;
-  effektiverBeitrag: number;
-}
-
-interface TeilnehmerBeitraegeResponseDTO {
-  individuelleGebuehren: boolean;
-
-  teilnehmer: TeilnehmerListDTO[];
-}
 
 interface Props {
   veranstaltungId: number;
@@ -100,13 +73,28 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
   const offenSumme = summe - bezahltSumme;
 
   const chipStyle = {
-    fontSize: "1.1rem",
+    fontSize: {
+      xs: "0.9rem",
+      md: "1.3rem",
+    },
+
     fontWeight: "bold",
-    height: 52,
-    borderRadius: 3,
+
+    height: {
+      xs: 42,
+      md: 52,
+    },
+
+    borderRadius: {
+      xs: 2,
+      md: 3,
+    },
 
     "& .MuiChip-label": {
-      px: 2,
+      px: {
+        xs: 1.5,
+        md: 2,
+      },
     },
   };
 
@@ -158,20 +146,36 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
     }
   };
 
+  const columns = beitraegeColumns({
+    individuelleGebuehren,
+    onBezahltChange: handleBezahltChange,
+    onBeitragChange: handleBeitragSave,
+    setData,
+  });
+
+
   return (
     <Stack spacing={2}>
       {/* =====================================================
           HEADER
           ===================================================== */}
-      <Stack direction="row" spacing={2} flexWrap="wrap">
+      <Box
+        sx={{
+          display: "grid",
+
+          gridTemplateColumns: {
+            xs: "1fr 1fr",
+            md: "repeat(4, 1fr)",
+          },
+
+          gap: 1.5,
+        }}
+      >
         <Chip label={`Teilnehmer: ${data.length}`} color="primary" sx={chipStyle} />
-
         <Chip label={`Soll: ${summe.toFixed(2)} €`} color="info" sx={chipStyle} />
-
         <Chip label={`Bezahlt: ${bezahltSumme.toFixed(2)} €`} color="success" sx={chipStyle} />
-
         <Chip label={`Offen: ${offenSumme.toFixed(2)} €`} color="warning" sx={chipStyle} />
-      </Stack>
+      </Box>
 
       {/* =====================================================
           TABELLE
@@ -183,90 +187,111 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
             Teilnehmerbeiträge
           </Typography>
 
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ fontWeight: "bold" }}>Teilnehmer</TableCell>
+          <GenericTableTanstack<TeilnehmerListDTO>
+            data={data}
+            columns={columns}
+            loading={loading}
+            height={600}
+            mobileRenderRow={(row) => (
+              <Box>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: 1,
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: "1rem",
 
-                <TableCell align="center" sx={{ fontWeight: "bold" }}>
-                  Alter
-                </TableCell>
+                      flex: 1,
+                      minWidth: 0,
+                    }}
+                  >
+                    {row.person.name}, {row.person.vorname}
+                  </Typography>
 
-                <TableCell sx={{ fontWeight: "bold" }}>Verein</TableCell>
+                  {individuelleGebuehren ? (
+                    <TextField
+                      type="number"
+                      size="small"
+                      value={row.individuellerBeitrag ?? row.effektiverBeitrag}
+                      onChange={(e) => {
+                        const value = e.target.value;
 
-                <TableCell sx={{ fontWeight: "bold" }}>Rolle</TableCell>
+                        setData((prev) =>
+                          prev.map((x) =>
+                            x.id === row.id
+                              ? {
+                                  ...x,
+                                  individuellerBeitrag: value === "" ? undefined : Number(value),
+                                }
+                              : x,
+                          ),
+                        );
+                      }}
+                      onBlur={() => handleBeitragSave(row.id, row.individuellerBeitrag)}
+                      sx={{
+                        width: 72,
 
-                <TableCell align="right" sx={{ fontWeight: "bold" }}>
-                  Beitrag
-                </TableCell>
-
-                <TableCell align="center" sx={{ fontWeight: "bold" }}>
-                  bezahlt
-                </TableCell>
-
-                <TableCell sx={{ fontWeight: "bold" }}>bezahlt am</TableCell>
-              </TableRow>
-            </TableHead>
-
-            <TableBody>
-              {data.map((t) => (
-                <TableRow key={t.id} hover>
-                  <TableCell>
-                    {t.person.name}, {t.person.vorname}
-                  </TableCell>
-
-                  <TableCell align="center">{t.alterBeiBeginn ?? "-"}</TableCell>
-
-                  <TableCell>{t.person.hauptvereinAbk ?? "-"}</TableCell>
-
-                  <TableCell>
-                    {t.rolle === "L" && <Chip size="small" label="Leiter" color="secondary" />}
-
-                    {t.rolle === "M" && <Chip size="small" label="Mitarbeiter" color="default" />}
-                  </TableCell>
-
-                  <TableCell align="right">
-                    {individuelleGebuehren ? (
-                      <TextField
-                        type="number"
-                        size="small"
-                        value={t.individuellerBeitrag ?? t.effektiverBeitrag ?? ""}
-                        onChange={(e) => {
-                          const value = e.target.value;
-
-                          setData((prev) =>
-                            prev.map((x) =>
-                              x.id === t.id
-                                ? {
-                                    ...x,
-                                    individuellerBeitrag: value === "" ? undefined : Number(value),
-                                  }
-                                : x,
-                            ),
-                          );
-                        }}
-                        onBlur={() => handleBeitragSave(t.id, t.individuellerBeitrag)}
-                        sx={{
-                          width: 90,
-                        }}
-                      />
-                    ) : (
-                      <>{t.effektiverBeitrag.toFixed(2)} €</>
-                    )}
-                  </TableCell>
-
-                  <TableCell align="center">
-                    <Checkbox
-                      checked={t.bezahlt}
-                      onChange={(e) => handleBezahltChange(t.id, e.target.checked)}
+                        "& input": {
+                          textAlign: "right",
+                          fontWeight: 700,
+                          fontSize: "1rem",
+                          paddingRight: "6px",
+                        },
+                      }}
                     />
-                  </TableCell>
+                  ) : (
+                    <Typography
+                      sx={{
+                        fontWeight: 700,
+                        color: "primary.main",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {row.effektiverBeitrag.toFixed(2)} €
+                    </Typography>
+                  )}
+                </Box>
 
-                  <TableCell>{t.bezahltAm ?? "-"}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                <Stack
+                  direction="row"
+                  alignItems="center"
+                  justifyContent="space-between"
+                  spacing={1}
+                  sx={{ mt: 0.3 }}
+                >
+                  <Typography variant="body2" color="text.secondary">
+                    {row.person.hauptvereinAbk ?? "-"}
+                    {" • Alter: "}
+                    {row.alterBeiBeginn ?? "-"}
+                  </Typography>
+
+                  <Stack direction="row" alignItems="center" spacing={0.3}>
+                    <Checkbox
+                      size="small"
+                      checked={row.bezahlt}
+                      onChange={(e) => handleBezahltChange(row.id, e.target.checked)}
+                    />
+
+                    <Typography variant="caption" color="text.secondary">
+                      bezahlt
+                    </Typography>
+                  </Stack>
+                </Stack>
+
+                {row.rolle && (
+                  <Box sx={{ mt: 0.5 }}>
+                    <Chip size="small" label={row.rolle === "L" ? "Leiter" : "Mitarbeiter"} />
+                  </Box>
+                )}
+              </Box>
+            )}
+          />
         </CardContent>
       </Card>
     </Stack>

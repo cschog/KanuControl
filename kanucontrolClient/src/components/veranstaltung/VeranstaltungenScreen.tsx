@@ -256,9 +256,9 @@ export default function VeranstaltungenScreen() {
     }
 
     await setActiveVeranstaltung(selectedId);
-
     await fetchData();
-
+    const updated = await getVeranstaltung(selectedId);
+    setSelectedVeranstaltung(updated);
     await reloadContext();
   };
 

@@ -112,14 +112,36 @@ export default function BelegCard({
         height={350}
         mobileRenderRow={(row) => (
           <Box>
-            <Typography
+            <Box
               sx={{
-                fontSize: "0.7rem",
-                fontWeight: 600,
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: 2,
               }}
             >
-              {row.kategorie.replaceAll("_", " ")}
-            </Typography>
+              <Typography
+                sx={{
+                  fontSize: "0.7rem",
+                  fontWeight: 600,
+                }}
+              >
+                {row.kategorie.replaceAll("_", " ")}
+              </Typography>
+
+              <Typography
+                sx={{
+                  fontSize: "0.9rem",
+                  fontWeight: 700,
+                  whiteSpace: "nowrap",
+
+                  color: kategorieZuTyp[row.kategorie] === "KOSTEN" ? "error.main" : "success.main",
+                }}
+              >
+                {kategorieZuTyp[row.kategorie] === "KOSTEN" ? "-" : "+"}
+                {row.betrag.toFixed(2)} €
+              </Typography>
+            </Box>
 
             <Typography
               variant="body2"
@@ -129,18 +151,6 @@ export default function BelegCard({
               }}
             >
               {row.beschreibung}
-            </Typography>
-
-            <Typography
-              sx={{
-                mt: 0.5,
-                fontSize: "0.9rem",
-                fontWeight: 700,
-                color: kategorieZuTyp[row.kategorie] === "KOSTEN" ? "error.main" : "success.main",
-              }}
-            >
-              {kategorieZuTyp[row.kategorie] === "KOSTEN" ? "-" : "+"}
-              {row.betrag.toFixed(2)} €
             </Typography>
 
             {!readOnly && (

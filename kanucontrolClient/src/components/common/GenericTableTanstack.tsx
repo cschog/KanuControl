@@ -175,7 +175,7 @@ export function GenericTableTanstack<T extends WithId>({
      HEIGHT
      ========================================================= */
 
-  const tableHeight = height ?? (isMobile ? window.innerHeight - 320 : 650);
+  const tableHeight = height ?? (isMobile ? undefined : 650);
 
   /* =========================================================
      INFINITE SCROLL
@@ -224,6 +224,7 @@ export function GenericTableTanstack<T extends WithId>({
       <TableContainer
         sx={{
           maxHeight: tableHeight,
+          height: "auto",
           overflowX: "auto",
         }}
       >

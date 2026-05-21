@@ -8,7 +8,6 @@ import PlanungPage from "@/components/finanzen/PlanungPage";
 import BuchungenPage from "@/components/finanzen/BuchungenPage";
 import BeitraegePage from "@/components/finanzen/BeitraegePage";
 import AbrechnungPage from "@/components/finanzen/AbrechnungPage";
-import VergleichPage from "@/components/finanzen/VergleichPage";
 import KuerzelPage from "@/components/finanzen/KuerzelPage";
 
 const Finanzen = () => {
@@ -32,16 +31,31 @@ const Finanzen = () => {
       <Tabs
         value={tab}
         onChange={handleChange}
-        sx={{ mb: 2 }}
         variant="scrollable"
         scrollButtons="auto"
+        allowScrollButtonsMobile
+        sx={{
+          mb: 2,
+          minHeight: 42,
+
+          "& .MuiTab-root": {
+            minHeight: 42,
+            px: 1.2,
+
+            fontSize: {
+              xs: "0.72rem",
+              sm: "1.2rem",
+            },
+
+            minWidth: "auto",
+          },
+        }}
       >
         <Tab label="Dashboard" />
         <Tab label="Planung" />
         <Tab label="Buchungen" />
         <Tab label="Beiträge" />
         <Tab label="Abrechnung" />
-        <Tab label="Vergleich" />
         <Tab label="Kürzel" />
       </Tabs>
 
@@ -50,8 +64,7 @@ const Finanzen = () => {
       {tab === 2 && <BuchungenPage veranstaltungId={id} />}
       {tab === 3 && <BeitraegePage veranstaltungId={id} />}
       {tab === 4 && <AbrechnungPage veranstaltungId={id} />}
-      {tab === 5 && <VergleichPage veranstaltungId={id} />}
-      {tab === 6 && <KuerzelPage veranstaltungId={id} />}
+      {tab === 5 && <KuerzelPage veranstaltungId={id} />}
     </Box>
   );
 };

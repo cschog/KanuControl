@@ -1,22 +1,36 @@
 import { useEffect, useState, useCallback } from "react";
-import { Box, Button, MenuItem, Typography, Paper, Grid, TextField } from "@mui/material";
-import { useAppContext } from "@/context/AppContext";
-import { updateTeilnehmerRolle } from "@/api/services/teilnehmerApi";
-import { useDebounce } from "@/components/common/reference/hooks";
-import { BottomActionBar } from "@/components/layout/BottomActionBar";
+
+import { Box, Button, Chip, MenuItem, Typography, Paper, Grid, TextField } from "@mui/material";
+
+import { useTheme } from "@mui/material/styles";
+import { useMediaQuery } from "@mui/material";
+
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+
 import { useNavigate } from "react-router-dom";
+
 import { SortingState } from "@tanstack/react-table";
+
+import { useAppContext } from "@/context/AppContext";
+
+import { useDebounce } from "@/components/common/reference/hooks";
+
+import { BottomActionBar } from "@/components/layout/BottomActionBar";
+
+import { GenericTableTanstack } from "@/components/common/GenericTableTanstack";
+
+import { teilnehmerAvailableColumns } from "@/components/teilnehmer/teilnehmerAvailableColumns";
+import { teilnehmerAssignedColumns } from "@/components/teilnehmer/teilnehmerAssignedColumns";
 
 import {
   getAvailablePersons,
   getTeilnehmer,
   addTeilnehmerBulk,
   removeTeilnehmerBulk,
+  updateTeilnehmerRolle,
 } from "@/api/services/teilnehmerApi";
 
-import { GenericTableTanstack } from "@/components/common/GenericTableTanstack";
-import { teilnehmerAvailableColumns } from "@/components/teilnehmer/teilnehmerAvailableColumns";
-import { teilnehmerAssignedColumns } from "@/components/teilnehmer/teilnehmerAssignedColumns";
 import { PersonList } from "@/api/types/PersonList";
 import { TeilnehmerList } from "@/api/types/TeilnehmerList";
 
@@ -25,13 +39,27 @@ export default function TeilnehmerScreen() {
 
   const navigate = useNavigate();
 
-  /* ================= DATA ================= */
+  const theme = useTheme();
+
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
+  /* =========================================================
+     DATA
+     ========================================================= */
 
   const [available, setAvailable] = useState<PersonList[]>([]);
+
   const [assigned, setAssigned] = useState<TeilnehmerList[]>([]);
 
   const [selAvailable, setSelAvailable] = useState<PersonList[]>([]);
+
   const [selAssigned, setSelAssigned] = useState<TeilnehmerList[]>([]);
+
+  const [mobileMode, setMobileMode] = useState<"available" | "assigned">("available");
+
+  /* =========================================================
+     SORTING
+     ========================================================= */
 
   const [sortingL, setSortingL] = useState<SortingState>([
     {
@@ -47,19 +75,45 @@ export default function TeilnehmerScreen() {
     },
   ]);
 
-  /* ================= FILTER ================= */
+  /* =========================================================
+     FILTER
+     ========================================================= */
 
   const [searchL, setSearchL] = useState("");
-  const [fVereinL, setFVereinL] = useState("");
 
   const [searchR, setSearchR] = useState("");
+
+  const [fVereinL, setFVereinL] = useState("");
+
   const [fVereinR, setFVereinR] = useState("");
 
   const debounceSearchL = useDebounce(searchL, 300);
+
   const debounceSearchR = useDebounce(searchR, 300);
 
   const debounceVereinL = useDebounce(fVereinL, 300);
+
   const debounceVereinR = useDebounce(fVereinR, 300);
+
+  /* =========================================================
+     COUNTS
+     ========================================================= */
+
+  const [totalAvailable, setTotalAvailable] = useState(0);
+
+  const [totalAssigned, setTotalAssigned] = useState(0);
+
+  /* =========================================================
+     RESET
+     ========================================================= */
+
+  const [resetLeftSelection, setResetLeftSelection] = useState(0);
+
+  const [resetRightSelection, setResetRightSelection] = useState(0);
+
+  /* =========================================================
+     VEREINE
+     ========================================================= */
 
   const availableVereine = Array.from(
     new Set(available.map((p) => p.hauptvereinAbk).filter((v): v is string => !!v)),
@@ -69,17 +123,9 @@ export default function TeilnehmerScreen() {
     new Set(assigned.map((t) => t.person?.hauptvereinAbk).filter((v): v is string => !!v)),
   );
 
-  /* ================= PAGING ================= */
-
-  const [totalAvailable, setTotalAvailable] = useState(0);
-  const [totalAssigned, setTotalAssigned] = useState(0);
-
-  /* ========= Reset ========= */
-
-  const [resetLeftSelection, setResetLeftSelection] = useState(0);
-  const [resetRightSelection, setResetRightSelection] = useState(0);
-
-  /* ================= LOAD ================= */
+  /* =========================================================
+     LOAD
+     ========================================================= */
 
   const mapSortField = (field: string) => {
     switch (field) {
@@ -94,30 +140,32 @@ export default function TeilnehmerScreen() {
   const load = useCallback(async () => {
     if (!active?.id) return;
 
-   const a = await getAvailablePersons(
-     active.id,
-     0,
-     1000,
-     debounceSearchL || undefined,
-     debounceVereinL || undefined,
-     mapSortField(sortingL[0]?.id ?? "fullname"),
-     sortingL[0]?.desc ? "desc" : "asc",
-   );
+    const a = await getAvailablePersons(
+      active.id,
+      0,
+      1000,
+      debounceSearchL || undefined,
+      debounceVereinL || undefined,
+      mapSortField(sortingL[0]?.id ?? "fullname"),
+      sortingL[0]?.desc ? "desc" : "asc",
+    );
 
     setAvailable(a?.content ?? []);
+
     setTotalAvailable(a?.totalElements ?? 0);
 
-   const b = await getTeilnehmer(
-     active.id,
-     0,
-     1000,
-     debounceSearchR || undefined,
-     debounceVereinR || undefined,
-     mapSortField(sortingR[0]?.id ?? "fullname"),
-     sortingR[0]?.desc ? "desc" : "asc",
-   );
+    const b = await getTeilnehmer(
+      active.id,
+      0,
+      1000,
+      debounceSearchR || undefined,
+      debounceVereinR || undefined,
+      mapSortField(sortingR[0]?.id ?? "fullname"),
+      sortingR[0]?.desc ? "desc" : "asc",
+    );
 
     setAssigned(b?.content ?? []);
+
     setTotalAssigned(b?.totalElements ?? 0);
   }, [
     active?.id,
@@ -133,26 +181,35 @@ export default function TeilnehmerScreen() {
     load();
   }, [load]);
 
-  /* ================= COUNTS ================= */
+  /* =========================================================
+     DISTINCT COUNTS
+     ========================================================= */
 
   function countDistinct<T>(arr: T[] | undefined, getKey: (x: T) => string | null | undefined) {
     if (!arr) return 0;
 
     const set = new Set<string>();
+
     arr.forEach((x) => {
       const k = getKey(x);
+
       if (k) set.add(k);
     });
+
     return set.size;
   }
 
   const availablePersonCount = totalAvailable;
-  const availableVereinCount = countDistinct(available, (p) => p.hauptvereinAbk);
 
   const assignedPersonCount = totalAssigned;
+
+  const availableVereinCount = countDistinct(available, (p) => p.hauptvereinAbk);
+
   const assignedVereinCount = countDistinct(assigned, (t) => t.person?.hauptvereinAbk);
 
-  /* ================= ACTIONS ================= */
+  /* =========================================================
+     ACTIONS
+     ========================================================= */
 
   const handleAdd = async () => {
     if (!active?.id || selAvailable.length === 0) return;
@@ -163,42 +220,68 @@ export default function TeilnehmerScreen() {
     );
 
     setSelAvailable([]);
+    setResetLeftSelection((v) => v + 1);
+
     await load();
   };
 
-  const handleRemove = async () => {
-    if (!active?.id || selAssigned.length === 0) return;
+ const handleRemove = async () => {
+   if (!active?.id || selAssigned.length === 0) return;
 
-    await removeTeilnehmerBulk(
-      active.id,
-      selAssigned.map((p) => p.personId),
-    );
+   await removeTeilnehmerBulk(
+     active.id,
+     selAssigned.map((p) => p.personId),
+   );
 
-    setSelAssigned([]);
-    await load();
+   setSelAssigned([]);
+
+   setResetRightSelection((v) => v + 1);
+
+   await load();
+ };
+
+  const handleMobileAction = async () => {
+    if (mobileMode === "available") {
+      await handleAdd();
+    } else {
+      await handleRemove();
+    }
   };
 
-  /* ================= ROLE CHANGE (🔥 OPTIMISTIC) ================= */
+  /* =========================================================
+     ROLE CHANGE
+     ========================================================= */
 
   const handleRoleChange = async (current: "L" | "M" | null, personId: number) => {
     if (!active?.id) return;
+
     if (current === "L") return;
 
     const newRole = current === "M" ? null : "M";
 
-    // console.log("CLICK ROLE CHANGE", current, "->", newRole);
-
-    // optimistic UI
     setAssigned((prev) =>
-      prev.map((t) => (t.personId === personId ? { ...t, rolle: newRole } : t)),
+      prev.map((t) =>
+        t.personId === personId
+          ? {
+              ...t,
+              rolle: newRole,
+            }
+          : t,
+      ),
     );
 
     try {
       await updateTeilnehmerRolle(active.id, personId, newRole);
     } catch {
-      // rollback
       setAssigned((prev) =>
-        prev.map((t) => (t.personId === personId ? { ...t, rolle: current } : t)),
+        prev.map((t) =>
+          t.personId === personId
+            ? {
+                ...t,
+                rolle: current,
+              }
+            : t,
+        ),
       );
     }
   };
@@ -207,10 +290,13 @@ export default function TeilnehmerScreen() {
     onRoleClick: handleRoleChange,
   });
 
-  /* ================= RESET ================= */
+  /* =========================================================
+     RESET
+     ========================================================= */
 
   const resetLeftFilter = () => {
     setSearchL("");
+
     setFVereinL("");
 
     setSelAvailable([]);
@@ -220,27 +306,307 @@ export default function TeilnehmerScreen() {
 
   const resetRightFilter = () => {
     setSearchR("");
+
     setFVereinR("");
 
     setSelAssigned([]);
 
     setResetRightSelection((v) => v + 1);
   };
-  
-  /* ================= UI ================= */
+
+  /* =========================================================
+     NO ACTIVE
+     ========================================================= */
 
   if (!active) {
     return <Typography align="center">Keine aktive Veranstaltung</Typography>;
   }
 
+  /* =========================================================
+     MOBILE
+     ========================================================= */
+
+  if (isMobile) {
+    return (
+      <Box>
+        <Typography
+          variant="h5"
+          sx={{
+            mb: 2,
+            fontWeight: 600,
+          }}
+        >
+          Teilnehmer — {active.name}
+        </Typography>
+
+        <Box
+          sx={{
+            display: "flex",
+            gap: 1,
+            alignItems: "stretch",
+          }}
+        >
+          {/* LISTE */}
+
+          <Box
+            sx={{
+              flex: 1,
+              minWidth: 0,
+            }}
+          >
+            <Paper sx={{ p: 1 }}>
+              <Typography
+                sx={{
+                  mb: 1,
+                  fontWeight: 600,
+                }}
+              >
+                {mobileMode === "available"
+                  ? `${availablePersonCount} Personen`
+                  : `${assignedPersonCount} Teilnehmer`}
+              </Typography>
+
+              {/* FILTER */}
+
+              <Box sx={{ mb: 1 }}>
+                <TextField
+                  size="small"
+                  fullWidth
+                  label="Suche"
+                  value={mobileMode === "available" ? searchL : searchR}
+                  onChange={(e) => {
+                    if (mobileMode === "available") {
+                      setSearchL(e.target.value);
+                    } else {
+                      setSearchR(e.target.value);
+                    }
+                  }}
+                />
+              </Box>
+
+              <Box sx={{ mb: 1 }}>
+                <TextField
+                  select
+                  size="small"
+                  fullWidth
+                  label="Verein"
+                  value={mobileMode === "available" ? fVereinL : fVereinR}
+                  onChange={(e) => {
+                    if (mobileMode === "available") {
+                      setFVereinL(e.target.value);
+                    } else {
+                      setFVereinR(e.target.value);
+                    }
+                  }}
+                >
+                  <MenuItem value="">Alle</MenuItem>
+
+                  {(mobileMode === "available" ? availableVereine : assignedVereine).map((v) => (
+                    <MenuItem key={v} value={v}>
+                      {v}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Box>
+
+              <Box display="flex" justifyContent="flex-end" mb={1}>
+                <Button
+                  size="small"
+                  onClick={mobileMode === "available" ? resetLeftFilter : resetRightFilter}
+                >
+                  Reset
+                </Button>
+              </Box>
+
+              {/* AVAILABLE */}
+
+              {mobileMode === "available" ? (
+                <GenericTableTanstack<PersonList>
+                  enableCheckboxSelection
+                  data={available}
+                  columns={teilnehmerAvailableColumns}
+                  resetSelectionTrigger={resetLeftSelection}
+                  loading={false}
+                  height={window.innerHeight - 390}
+                  mobileRenderRow={(row) => (
+                    <Box>
+                      <Typography fontWeight={600}>
+                        {row.name}, {row.vorname}
+                      </Typography>
+
+                      <Typography variant="body2" color="text.secondary">
+                        {row.hauptvereinAbk ?? "-"}
+                        {" • "}
+                        {row.alter ?? "-"} Jahre
+                      </Typography>
+                    </Box>
+                  )}
+                  onRowSelectionChange={setSelAvailable}
+                />
+              ) : (
+                /* ASSIGNED */
+                <GenericTableTanstack<TeilnehmerList>
+                  enableCheckboxSelection
+                  data={assigned}
+                  columns={assignedColumns}
+                  resetSelectionTrigger={resetRightSelection}
+                  loading={false}
+                  height={window.innerHeight - 390}
+                  mobileRenderRow={(row) => (
+                    <Box>
+                      <Typography fontWeight={600}>
+                        {row.person?.name}, {row.person?.vorname}
+                      </Typography>
+
+                      <Box
+                        sx={{
+                          mt: 0.3,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <Typography variant="body2" color="text.secondary">
+                          {row.person?.hauptvereinAbk ?? "-"}
+                        </Typography>
+
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {row.alterBeiBeginn ?? "-"} J.
+                        </Typography>
+
+                        <Chip
+                          size="small"
+                          label={row.rolle === "L" ? "L" : row.rolle === "M" ? "M" : "+"}
+                          color={row.rolle === "L" ? "secondary" : "default"}
+                          variant={row.rolle === "L" ? "filled" : "outlined"}
+                          onClick={() => handleRoleChange(row.rolle ?? null, row.personId)}
+                          sx={{
+                            fontWeight: 700,
+
+                            minWidth: 34,
+                            height: 24,
+                            cursor: row.rolle === "L" ? "default" : "pointer",
+
+                            opacity: row.rolle === "L" ? 0.9 : 1,
+                          }}
+                        />
+                      </Box>
+                    </Box>
+                  )}
+                  onRowSelectionChange={setSelAssigned}
+                />
+              )}
+            </Paper>
+          </Box>
+
+          {/* ACTION RAIL */}
+
+          <Box
+            sx={{
+              width: 72,
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+            }}
+          >
+            <Button
+              variant="contained"
+              color={mobileMode === "available" ? "primary" : "error"}
+              onClick={handleMobileAction}
+              disabled={mobileMode === "available" ? !selAvailable.length : !selAssigned.length}
+              sx={{
+                minWidth: 0,
+
+                width: 72,
+                height: 88,
+
+                borderRadius: 3,
+
+                boxShadow: 3,
+
+                opacity:
+                  mobileMode === "available"
+                    ? selAvailable.length
+                      ? 1
+                      : 0.5
+                    : selAssigned.length
+                    ? 1
+                    : 0.5,
+              }}
+            >
+              {mobileMode === "available" ? (
+                <ArrowForwardIcon
+                  sx={{
+                    fontSize: 42,
+                  }}
+                />
+              ) : (
+                <ArrowBackIcon
+                  sx={{
+                    fontSize: 42,
+                  }}
+                />
+              )}
+            </Button>
+
+            <Button
+              variant="outlined"
+              onClick={() => setMobileMode((m) => (m === "available" ? "assigned" : "available"))}
+              sx={{
+                writingMode: "vertical-rl",
+                textOrientation: "mixed",
+
+                minWidth: 0,
+
+                py: 2,
+
+                fontWeight: 700,
+              }}
+            >
+              SWITCH
+            </Button>
+          </Box>
+        </Box>
+
+        <BottomActionBar
+          left={[
+            {
+              label: "Zurück",
+              onClick: () => navigate("/startmenue"),
+              variant: "outlined",
+            },
+          ]}
+        />
+      </Box>
+    );
+  }
+
+  /* =========================================================
+     DESKTOP
+     ========================================================= */
+
   return (
     <Box>
-      <Typography variant="h5" sx={{ mb: 2, fontWeight: 600 }}>
+      <Typography
+        variant="h5"
+        sx={{
+          mb: 2,
+          fontWeight: 600,
+        }}
+      >
         Teilnehmer — {active.name}
       </Typography>
 
       <Grid container spacing={2}>
         {/* LEFT */}
+
         <Grid size={{ xs: 12, md: 5 }}>
           <Paper sx={{ p: 1 }}>
             <Box display="flex" justifyContent="space-between" mb={1}>
@@ -248,6 +614,7 @@ export default function TeilnehmerScreen() {
                 variant="subtitle2"
                 sx={{
                   fontWeight: 600,
+
                   fontSize: {
                     xs: "0.95rem",
                     md: "1.2rem",
@@ -256,6 +623,7 @@ export default function TeilnehmerScreen() {
               >
                 {availablePersonCount} Personen • {availableVereinCount} Verein(e)
               </Typography>
+
               <Button size="small" onClick={resetLeftFilter}>
                 Reset
               </Button>
@@ -267,21 +635,18 @@ export default function TeilnehmerScreen() {
                   size="small"
                   label="Suche (Name / Vorname)"
                   value={searchL}
-                  onChange={(e) => {
-                    setSearchL(e.target.value);
-                  }}
+                  onChange={(e) => setSearchL(e.target.value)}
                   fullWidth
                 />
               </Grid>
+
               <Grid size={4}>
                 <TextField
                   select
                   size="small"
                   label="Verein"
                   value={fVereinL}
-                  onChange={(e) => {
-                    setFVereinL(e.target.value);
-                  }}
+                  onChange={(e) => setFVereinL(e.target.value)}
                   fullWidth
                 >
                   <MenuItem value="">Alle</MenuItem>
@@ -300,21 +665,7 @@ export default function TeilnehmerScreen() {
               data={available}
               columns={teilnehmerAvailableColumns}
               resetSelectionTrigger={resetLeftSelection}
-              selectedRowId={undefined}
               loading={false}
-              mobileRenderRow={(row) => (
-                <Box>
-                  <Typography fontWeight={600}>
-                    {row.name}, {row.vorname}
-                  </Typography>
-
-                  <Typography variant="body2" color="text.secondary">
-                    {row.hauptvereinAbk ?? "-"}
-                    {" • "}
-                    {row.alter ?? "-"} Jahre
-                  </Typography>
-                </Box>
-              )}
               onRowSelectionChange={setSelAvailable}
               sorting={sortingL}
               onSortingChange={setSortingL}
@@ -323,6 +674,7 @@ export default function TeilnehmerScreen() {
         </Grid>
 
         {/* ACTIONS */}
+
         <Grid
           size={{ xs: 12, md: 2 }}
           display="flex"
@@ -330,20 +682,63 @@ export default function TeilnehmerScreen() {
           gap={2}
           justifyContent="center"
         >
-          <Button variant="contained" disabled={!selAvailable.length} onClick={handleAdd}>
-            →
+          <Button
+            variant="contained"
+            color="primary"
+            disabled={!selAvailable.length}
+            onClick={handleAdd}
+            sx={{
+              minWidth: 0,
+
+              width: 56,
+              height: 72,
+
+              alignSelf: "center",
+
+              borderRadius: 3,
+
+              boxShadow: 2,
+
+              opacity: selAvailable.length ? 1 : 0.45,
+            }}
+          >
+            <ArrowForwardIcon
+              sx={{
+                fontSize: 42,
+              }}
+            />
           </Button>
+
           <Button
             variant="contained"
             color="error"
             disabled={!selAssigned.length}
             onClick={handleRemove}
+            sx={{
+              minWidth: 0,
+
+              width: 56,
+              height: 72,
+
+              alignSelf: "center",
+
+              borderRadius: 3,
+
+              boxShadow: 2,
+
+              opacity: selAssigned.length ? 1 : 0.45,
+            }}
           >
-            ←
+            <ArrowBackIcon
+              sx={{
+                fontSize: 42,
+              }}
+            />
           </Button>
         </Grid>
 
         {/* RIGHT */}
+
         <Grid size={{ xs: 12, md: 5 }}>
           <Paper sx={{ p: 1 }}>
             <Box display="flex" justifyContent="space-between" mb={1}>
@@ -351,6 +746,7 @@ export default function TeilnehmerScreen() {
                 variant="subtitle2"
                 sx={{
                   fontWeight: 600,
+
                   fontSize: {
                     xs: "0.95rem",
                     md: "1.2rem",
@@ -359,6 +755,7 @@ export default function TeilnehmerScreen() {
               >
                 {assignedPersonCount} Teilnehmer • {assignedVereinCount} Verein(e)
               </Typography>
+
               <Button size="small" onClick={resetRightFilter}>
                 Reset
               </Button>
@@ -370,21 +767,18 @@ export default function TeilnehmerScreen() {
                   size="small"
                   label="Suche (Name / Vorname)"
                   value={searchR}
-                  onChange={(e) => {
-                    setSearchR(e.target.value);
-                  }}
+                  onChange={(e) => setSearchR(e.target.value)}
                   fullWidth
                 />
               </Grid>
+
               <Grid size={4}>
                 <TextField
                   select
                   size="small"
                   label="Verein"
                   value={fVereinR}
-                  onChange={(e) => {
-                    setFVereinR(e.target.value);
-                  }}
+                  onChange={(e) => setFVereinR(e.target.value)}
                   fullWidth
                 >
                   <MenuItem value="">Alle</MenuItem>
@@ -401,27 +795,9 @@ export default function TeilnehmerScreen() {
             <GenericTableTanstack<TeilnehmerList>
               enableCheckboxSelection
               data={assigned}
-              resetSelectionTrigger={resetRightSelection}
               columns={assignedColumns}
-              selectedRowId={undefined}
+              resetSelectionTrigger={resetRightSelection}
               loading={false}
-              mobileRenderRow={(row) => (
-                <Box>
-                  <Typography fontWeight={600}>
-                    {row.person?.name}, {row.person?.vorname}
-                  </Typography>
-
-                  <Typography variant="body2" color="text.secondary">
-                    {row.person?.hauptvereinAbk ?? "-"}
-                    {" • "}
-                    {row.rolle === "L"
-                      ? "Leitung"
-                      : row.rolle === "M"
-                      ? "Mitarbeiter"
-                      : "Teilnehmer"}
-                  </Typography>
-                </Box>
-              )}
               onRowSelectionChange={setSelAssigned}
               sorting={sortingR}
               onSortingChange={setSortingR}
@@ -429,6 +805,7 @@ export default function TeilnehmerScreen() {
           </Paper>
         </Grid>
       </Grid>
+
       <BottomActionBar
         left={[
           {

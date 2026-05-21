@@ -1,4 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
+import { GenericTableTanstack } from "@/components/common/GenericTableTanstack";
+import { BottomActionBar } from "@/components/layout/BottomActionBar";
+import { kuerzelColumns } from "@/components/finanzen/kuerzelColumns";
 import {
   Alert,
   Box,
@@ -10,11 +13,6 @@ import {
   DialogTitle,
   Paper,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
   TextField,
   Typography,
 } from "@mui/material";
@@ -192,6 +190,14 @@ export default function KuerzelPage({ veranstaltungId }: Props) {
     loadGroups();
   }
 
+const columns = kuerzelColumns({
+  onAddTeilnehmer: openDialog,
+
+  onDelete: openDeleteDialog,
+
+  onRemoveTeilnehmer: openConfirm,
+});
+
   /* ================= UI ================= */
 
   return (
@@ -214,52 +220,62 @@ export default function KuerzelPage({ veranstaltungId }: Props) {
         </Stack>
       </Paper>
 
-      <Paper sx={{ p: 2 }}>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Kürzel</TableCell>
-              <TableCell>Teilnehmer</TableCell>
-              <TableCell>Belege</TableCell>
-              <TableCell />
-            </TableRow>
-          </TableHead>
+      <GenericTableTanstack<FinanzGruppe>
+        data={groups}
+        columns={columns}
+        loading={false}
+        height={500}
+        mobileRenderRow={(row) => (
+          <Box>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "baseline",
+                mb: 1,
+              }}
+            >
+              <Typography fontWeight={700}>{row.kuerzel}</Typography>
 
-          <TableBody>
-            {groups.map((g) => (
-              <TableRow key={g.id}>
-                <TableCell>{g.kuerzel}</TableCell>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {row.belegCount} Belege
+              </Typography>
+            </Box>
 
-                <TableCell>
-                  {g.teilnehmer.map((t) => (
-                    <Chip
-                      key={t.id}
-                      size="small"
-                      label={`${t.vorname} ${t.nachname}`}
-                      onDelete={() => openConfirm(g.id, t.personId, `${t.vorname} ${t.nachname}`)}
-                      sx={{ mr: 1, mb: 1 }}
-                    />
-                  ))}
-                </TableCell>
+            <Stack direction="row" spacing={0.5} useFlexGap flexWrap="wrap">
+              {row.teilnehmer.map((t) => (
+                <Chip
+                  key={t.id}
+                  size="small"
+                  label={`${t.vorname} ${t.nachname}`}
+                  onDelete={() => openConfirm(row.id, t.personId, `${t.vorname} ${t.nachname}`)}
+                />
+              ))}
+            </Stack>
 
-                <TableCell>{g.belegCount}</TableCell>
+            <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+              <Button size="small" variant="outlined" onClick={() => openDialog(row.id)}>
+                + Teilnehmer
+              </Button>
 
-                <TableCell>
-                  <Stack direction="row" spacing={1}>
-                    <Button size="small" onClick={() => openDialog(g.id)}>
-                      + Teilnehmer
-                    </Button>
-
-                    <Button size="small" color="error" onClick={() => openDeleteDialog(g)}>
-                      Löschen
-                    </Button>
-                  </Stack>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Paper>
+              <Button
+                size="small"
+                color="error"
+                variant="outlined"
+                onClick={() => openDeleteDialog(row)}
+              >
+                Löschen
+              </Button>
+            </Stack>
+          </Box>
+        )}
+      />
 
       {/* ADD DIALOG */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth>
@@ -340,6 +356,15 @@ export default function KuerzelPage({ veranstaltungId }: Props) {
           )}
         </DialogActions>
       </Dialog>
+      <BottomActionBar
+        left={[
+          {
+            label: "Zurück",
+            variant: "outlined",
+            onClick: () => window.history.back(),
+          },
+        ]}
+      />
     </Box>
   );
 }

@@ -17,14 +17,13 @@ import {
   Typography,
   TextField,
   Chip,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
   MenuItem,
   Grid,
 } from "@mui/material";
+import { ColumnDef } from "@tanstack/react-table";
+import { GenericTableTanstack } from "@/components/common/GenericTableTanstack";
+
+import Money from "@/components/common/Money";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -319,6 +318,76 @@ const BeitragsstrukturTable = () => {
     });
   };
 
+  const regelColumns: ColumnDef<BeitragsregelDTO>[] = [
+    {
+      id: "alter",
+
+      header: "Alter",
+
+      cell: ({ row }) => formatAlter(row.original),
+    },
+
+    {
+      accessorKey: "rolle",
+
+      header: "Rolle",
+
+      cell: ({ row }) => (
+        <Chip
+          size="small"
+          label={getRolleLabel(row.original.rolle)}
+          color={getRolleColor(row.original.rolle)}
+        />
+      ),
+    },
+
+    {
+      accessorKey: "beitrag",
+
+      header: "Beitrag",
+
+      meta: {
+        align: "right",
+      },
+
+      cell: ({ row }) => (
+        <Box
+          sx={{
+            display: "flex",
+
+            justifyContent: "flex-end",
+
+            width: "100%",
+          }}
+        >
+          <Money value={row.original.beitrag} />
+        </Box>
+      ),
+    },
+
+    {
+      id: "actions",
+
+      header: "",
+
+      size: 120,
+
+      enableSorting: false,
+
+      cell: ({ row }) => (
+        <Stack direction="row" spacing={0.5} justifyContent="flex-end">
+          <IconButton size="small" onClick={() => openEditDialog(row.original)}>
+            <EditIcon fontSize="small" />
+          </IconButton>
+
+          <IconButton size="small" color="error" onClick={() => handleDeleteRegel(row.original.id)}>
+            <DeleteIcon fontSize="small" />
+          </IconButton>
+        </Stack>
+      ),
+    },
+  ];
+
   /* =========================================================
      RENDER
      ========================================================= */
@@ -367,10 +436,12 @@ const BeitragsstrukturTable = () => {
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Stack
               direction="row"
-              spacing={1}
-              alignItems="center"
+              alignItems="flex-start"
               justifyContent="space-between"
-              sx={{ width: "100%" }}
+              spacing={2}
+              sx={{
+                width: "100%",
+              }}
             >
               <TextField
                 size="small"
@@ -378,7 +449,10 @@ const BeitragsstrukturTable = () => {
                 sx={{
                   "& input": {
                     fontWeight: "bold",
-                    fontSize: "1rem",
+                    fontSize: {
+                      xs: "1.rem",
+                      md: "1.2rem",
+                    },
                   },
                 }}
                 onChange={(e) =>
@@ -389,20 +463,64 @@ const BeitragsstrukturTable = () => {
                 }
               />
 
-              <Stack direction="row" spacing={1}>
-                <Typography variant="body2" color="text.secondary">
+              <Stack
+                direction={{
+                  xs: "column",
+                  sm: "row",
+                }}
+                spacing={1}
+                alignItems="stretch"
+                sx={{
+                  minWidth: {
+                    xs: 110,
+                    sm: "auto",
+                  },
+                }}
+              >
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+
+                    fontSize: {
+                      xs: "0.95rem",
+                      md: "1rem",
+                    },
+                  }}
+                >
                   {s.regeln.length} Regeln
                 </Typography>
 
-                <Button variant="outlined" onClick={() => handleCopy(s.id, s.name)}>
+                <Button
+                  variant="outlined"
+                  onClick={() => handleCopy(s.id, s.name)}
+                  sx={{
+                    whiteSpace: "nowrap",
+                  }}
+                >
                   Kopieren
                 </Button>
 
-                <Button variant="outlined" onClick={() => handleRename(s.id)}>
+                <Button
+                  variant="outlined"
+                  onClick={() => handleRename(s.id)}
+                  sx={{
+                    whiteSpace: "nowrap",
+                  }}
+                >
                   Speichern
                 </Button>
 
-                <Button color="error" variant="outlined" onClick={() => handleDelete(s.id)}>
+                <Button
+                  color="error"
+                  variant="outlined"
+                  onClick={() => handleDelete(s.id)}
+                  sx={{
+                    whiteSpace: "nowrap",
+                  }}
+                >
                   Löschen
                 </Button>
               </Stack>
@@ -413,50 +531,72 @@ const BeitragsstrukturTable = () => {
           <AccordionDetails>
             <Stack spacing={2}>
               {/* REGELN */}
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Alter</TableCell>
-                    <TableCell>Rolle</TableCell>
-                    <TableCell align="right">Beitrag</TableCell>
-                    <TableCell align="right">Aktionen</TableCell>
-                  </TableRow>
-                </TableHead>
+              <GenericTableTanstack<BeitragsregelDTO>
+                data={sortierteRegeln(s.regeln)}
+                columns={regelColumns}
+                loading={false}
+                height={340}
+                mobileRenderRow={(row) => (
+                  <Box>
+                    <Box
+                      sx={{
+                        display: "flex",
 
-                <TableBody>
-                  {sortierteRegeln(s.regeln).map((r) => (
-                    <TableRow key={r.id}>
-                      <TableCell>{formatAlter(r)}</TableCell>
+                        justifyContent: "space-between",
 
-                      <TableCell>
-                        <Chip
-                          size="small"
-                          label={getRolleLabel(r.rolle)}
-                          color={getRolleColor(r.rolle)}
-                        />
-                      </TableCell>
+                        alignItems: "center",
 
-                      <TableCell align="right">{r.beitrag.toFixed(2)} €</TableCell>
+                        gap: 1,
+                      }}
+                    >
+                      <Chip
+                        size="small"
+                        label={getRolleLabel(row.rolle)}
+                        color={getRolleColor(row.rolle)}
+                      />
 
-                      <TableCell align="right">
-                        <Stack direction="row" spacing={1} justifyContent="flex-end">
-                          <IconButton size="small" onClick={() => openEditDialog(r)}>
-                            <EditIcon fontSize="small" />
-                          </IconButton>
+                      <Typography
+                        sx={{
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        <Money value={row.beitrag} />
+                      </Typography>
+                    </Box>
 
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => handleDeleteRegel(r.id)}
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </Stack>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{
+                        mt: 0.5,
+                      }}
+                    >
+                      Alter: {formatAlter(row)}
+                    </Typography>
+
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      sx={{
+                        mt: 1,
+                      }}
+                    >
+                      <Button size="small" variant="outlined" onClick={() => openEditDialog(row)}>
+                        Bearbeiten
+                      </Button>
+
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        color="error"
+                        onClick={() => handleDeleteRegel(row.id)}
+                      >
+                        Löschen
+                      </Button>
+                    </Stack>
+                  </Box>
+                )}
+              />
 
               {/* NEUE REGEL */}
               <Card variant="outlined" sx={{ p: 2 }}>
