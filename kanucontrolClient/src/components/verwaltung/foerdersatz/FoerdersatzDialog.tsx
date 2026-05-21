@@ -125,10 +125,42 @@ const FoerdersatzDialog = ({ open, initialData, onClose, onSave, loading = false
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>{initialData ? "Fördersatz bearbeiten" : "Neuer Fördersatz"}</DialogTitle>
+      <DialogTitle
+        sx={{
+          fontSize: {
+            xs: "1.2rem",
+            md: "1.4rem",
+          },
+          fontWeight: 700,
+          pb: 1,
+        }}
+      >
+        {initialData ? "Fördersatz bearbeiten" : "Neuer Fördersatz"}
+      </DialogTitle>
 
       <DialogContent>
-        <Stack spacing={2} sx={{ mt: 1 }}>
+        <Stack
+          spacing={2}
+          sx={{
+            mt: 1,
+
+            "& .MuiTextField-root": {
+              "& .MuiInputBase-input": {
+                fontSize: {
+                  xs: "1rem",
+                  md: "1rem",
+                },
+              },
+
+              "& .MuiInputLabel-root": {
+                fontSize: {
+                  xs: "1rem",
+                  md: "1rem",
+                },
+              },
+            },
+          }}
+        >
           <TextField
             select
             label="Typ"
@@ -149,6 +181,11 @@ const FoerdersatzDialog = ({ open, initialData, onClose, onSave, loading = false
           <TextField
             label="Fördersatz"
             type="number"
+            slotProps={{
+              input: {
+                endAdornment: <InputAdornment position="end">€</InputAdornment>,
+              },
+            }}
             value={foerdersatz}
             onChange={(e) => setFoerdersatz(e.target.value)}
           />
@@ -172,7 +209,18 @@ const FoerdersatzDialog = ({ open, initialData, onClose, onSave, loading = false
         </Stack>
       </DialogContent>
 
-      <DialogActions>
+      <DialogActions
+        sx={{
+          px: 3,
+          pb: 2,
+
+          "& .MuiButton-root": {
+            minWidth: 120,
+            fontSize: "0.95rem",
+            fontWeight: 600,
+          },
+        }}
+      >
         <Button onClick={onClose} disabled={loading}>
           Abbrechen
         </Button>

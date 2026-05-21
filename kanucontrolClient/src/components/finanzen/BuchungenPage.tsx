@@ -148,60 +148,105 @@ export default function BuchungenPage({ veranstaltungId }: Props) {
         </Button>
       )}
 
-      <Stack direction="row" spacing={4} mb={3}>
-        <Typography>💸 Kosten: {kosten.toFixed(2)} €</Typography>
+      <Stack
+        direction={{
+          xs: "column",
+          sm: "row",
+        }}
+        spacing={{
+          xs: 1,
+          sm: 4,
+        }}
+        mb={3}
+      >
+        <Typography
+          sx={{
+            whiteSpace: "nowrap",
+            fontSize: {
+              xs: "0.95rem",
+              md: "1.5rem",
+            },
+            fontWeight: 500,
+          }}
+        >
+          💸 Kosten: {kosten.toFixed(2)} €
+        </Typography>
 
-        <Typography>💰 Einnahmen: {einnahmen.toFixed(2)} €</Typography>
+        <Typography
+          sx={{
+            whiteSpace: "nowrap",
+            fontSize: {
+              xs: "0.95rem",
+              md: "1.5rem",
+            },
+            fontWeight: 500,
+          }}
+        >
+          💰 Einnahmen: {einnahmen.toFixed(2)} €
+        </Typography>
 
-        <Typography>📊 Saldo: {saldo.toFixed(2)} €</Typography>
+        <Typography
+          sx={{
+            whiteSpace: "nowrap",
+            fontSize: {
+              xs: "0.95rem",
+              md: "1.5rem",
+            },
+            fontWeight: 500,
+          }}
+        >
+          📊 Saldo: {saldo.toFixed(2)} €
+        </Typography>
       </Stack>
 
       <Divider sx={{ mb: 3 }} />
 
-      {abrechnung.belege.map((beleg) => (
-        <BelegCard
-          key={beleg.id}
-          beleg={beleg}
-          readOnly={abrechnung.status === "ABGESCHLOSSEN"}
-          onEditBeleg={(beleg) => {
-            setEditingBeleg(beleg);
+      {[...abrechnung.belege]
+        .sort((a, b) => new Date(b.datum).getTime() - new Date(a.datum).getTime())
+        .map((beleg) => (
+          <BelegCard
+            key={beleg.id}
+            beleg={beleg}
+            readOnly={abrechnung.status === "ABGESCHLOSSEN"}
+            onEditBeleg={(beleg) => {
+              setEditingBeleg(beleg);
 
-            setEditDialogOpen(true);
-          }}
-          onAddPosition={(beleg) => {
-            setSelectedBeleg(beleg);
+              setEditDialogOpen(true);
+            }}
+            onAddPosition={(beleg) => {
+              setSelectedBeleg(beleg);
 
-            setEditingBuchung(undefined);
+              setEditingBuchung(undefined);
 
-            setDialogTyp("KOSTEN");
+              setDialogTyp("KOSTEN");
 
-            setBuchungDialogOpen(true);
-          }}
-          onEditPosition={(beleg, buchung) => {
-            setSelectedBeleg(beleg);
+              setBuchungDialogOpen(true);
+            }}
+            onEditPosition={(beleg, buchung) => {
+              setSelectedBeleg(beleg);
 
-            setEditingBuchung(buchung);
+              setEditingBuchung(buchung);
 
-            setDialogTyp(kategorieZuTyp[buchung.kategorie]);
+              setDialogTyp(kategorieZuTyp[buchung.kategorie]);
 
-            setBuchungDialogOpen(true);
-          }}
-          onDeletePosition={async (belegId, buchungId) => {
-            if (!confirm("Position wirklich löschen?")) return;
+              setBuchungDialogOpen(true);
+            }}
+            onDeletePosition={async (belegId, buchungId) => {
+              if (!confirm("Position wirklich löschen?")) return;
 
-            await deleteBuchung(veranstaltungId, belegId, buchungId);
+              await deleteBuchung(veranstaltungId, belegId, buchungId);
 
-            await load();
-          }}
-          onDeleteBeleg={async (belegId) => {
-            if (!confirm("Beleg komplett löschen?")) return;
+              await load();
+            }}
+            onDeleteBeleg={async (belegId) => {
+              if (!confirm("Beleg komplett löschen?")) return;
 
-            await deleteBeleg(veranstaltungId, belegId);
+              await deleteBeleg(veranstaltungId, belegId);
 
-            await load();
-          }}
-        />
-      ))}
+              await load();
+            }}
+          />
+        ))}
 
       {/* =====================================================
           BUCHUNG DIALOG

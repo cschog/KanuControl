@@ -75,8 +75,16 @@ export function VeranstaltungTable({
             {row.beginnDatum}
           </Typography>
 
-          <Typography variant="body2" color="text.secondary">
-            {row.vereinAbk ?? "-"}
+          <Typography variant="body2">
+            {row.vereinAbk}
+
+            {(row.leiterName || row.leiterVorname) && (
+              <Typography component="span" variant="body2" color="text.secondary">
+                {" • Leitung: "}
+                {row.leiterName}
+                {row.leiterVorname ? `, ${row.leiterVorname}` : ""}
+              </Typography>
+            )}
           </Typography>
         </Box>
       )}

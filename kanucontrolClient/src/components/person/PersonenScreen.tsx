@@ -347,7 +347,9 @@ export default function PersonenScreen() {
                   <Typography variant="body2" color="text.secondary">
                     {row.alter ?? "-"} Jahre
                     {" • "}
-                    {row.hauptvereinAbk ?? "-"}
+                    {row.hauptvereinAbk ?? ""}
+                    {" • "}
+                    {row.ort ?? ""}
                   </Typography>
                 </Box>
               )}

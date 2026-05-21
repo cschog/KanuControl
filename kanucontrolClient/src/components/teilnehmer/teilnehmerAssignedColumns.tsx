@@ -11,9 +11,7 @@ export function teilnehmerAssignedColumns({ onRoleClick }: Props): ColumnDef<Tei
   return [
     {
       id: "fullname",
-
       header: "Name",
-
       accessorFn: (row) => `${row.person?.name ?? ""}, ${row.person?.vorname ?? ""}`,
 
       sortingFn: "text",
@@ -42,7 +40,7 @@ export function teilnehmerAssignedColumns({ onRoleClick }: Props): ColumnDef<Tei
             clickable={rolle !== "L"}
             size="small"
             variant={rolle ? "filled" : "outlined"}
-            label={rolle === "L" ? "Leitung" : rolle === "M" ? "Mitarbeiter" : "+"}
+            label={rolle === "L" ? "L" : rolle === "M" ? "M" : "+"}
             onClick={() => {
               if (rolle !== "L") {
                 onRoleClick(rolle ?? null, row.original.personId);
