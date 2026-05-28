@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="20260528-01-person-countrycode-not-null" author="chatgpt">
+
+        <!-- Fehlende Werte auf DE setzen -->
+        <update tableName="person">
+            <column name="country_code" value="DE"/>
+            <where>country_code IS NULL</where>
+        </update>
+
+        <!-- NOT NULL setzen -->
+        <addNotNullConstraint
+                tableName="person"
+                columnName="country_code"
+                columnDataType="char(2)"/>
+
+    </changeSet>
+
+</databaseChangeLog>

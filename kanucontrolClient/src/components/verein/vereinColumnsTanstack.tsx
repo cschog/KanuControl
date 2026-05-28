@@ -1,4 +1,5 @@
 import { ColumnDef } from "@tanstack/react-table";
+import { COUNTRIES } from "@/api/enums/CountryCode";
 
 import Verein from "@/api/types/VereinFormModel";
 
@@ -50,5 +51,15 @@ export const vereinColumnsTanstack: ColumnDef<VereinWithId>[] = [
     accessorKey: "ort",
     header: "Ort",
     enableSorting: true,
+  },
+  {
+    accessorKey: "countryCode",
+    header: "Land",
+
+    cell: ({ getValue }) => {
+      const code = getValue<string>();
+
+      return COUNTRIES.find((c) => c.code === code)?.label ?? code;
+    },
   },
 ];

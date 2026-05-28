@@ -50,6 +50,7 @@ class VereinUpdateTest extends AbstractTenantIntegrationTest {
         VereinDTO update = new VereinDTO();
         update.setName("Eschweiler KC");
         update.setAbk("EKC");
+        update.setCountryCode("DE");
 
         mockMvc.perform(
 
@@ -70,6 +71,7 @@ class VereinUpdateTest extends AbstractTenantIntegrationTest {
         VereinDTO update = new VereinDTO();
         update.setName("Ghost Club");
         update.setAbk("GC");
+        update.setCountryCode("DE");
 
         mockMvc.perform(
 

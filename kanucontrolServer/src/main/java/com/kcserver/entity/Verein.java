@@ -1,6 +1,8 @@
 package com.kcserver.entity;
 
 import com.kcserver.audit.Auditable;
+import com.kcserver.enumtype.CountryCode;
+import com.kcserver.persistence.converter.CountryCodeConverter;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -37,6 +39,11 @@ public class Verein extends Auditable {
     private String strasse;
     private String plz;
     private String ort;
+    @NotNull
+    @Convert(converter = CountryCodeConverter.class)
+    @Column(name = "country_code", nullable = false, length = 2)
+    private CountryCode countryCode = CountryCode.DE;
+
     private String telefon;
 
     @Column(name = "bank_name")

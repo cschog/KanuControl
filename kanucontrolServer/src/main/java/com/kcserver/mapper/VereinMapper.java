@@ -15,6 +15,7 @@ public interface VereinMapper {
 
     @Mapping(source = "kontoinhaber.id", target = "kontoinhaberId")
     @Mapping(source = "kontoinhaber", target = "kontoinhaber")
+    @Mapping(source = "countryCode", target = "countryCode")
     @Mapping(expression = "java(verein.getMitglieder() != null ? verein.getMitglieder().size() : 0)", target = "mitgliederCount")
     VereinDTO toDTO(Verein verein);
 
@@ -22,6 +23,7 @@ public interface VereinMapper {
     @Mapping(target = "kontoinhaber", ignore = true)
     @Mapping(target = "bic", source = "bic")
     @Mapping(target = "schutzkonzept", source = "schutzkonzept")
+    @Mapping(target = "countryCode", source = "countryCode")
     @Mapping(target = "mitglieder", ignore = true)
     Verein toEntity(VereinDTO dto);
 
@@ -35,6 +37,7 @@ public interface VereinMapper {
     @Mapping(target = "kontoinhaber", ignore = true)
     @Mapping(target = "bic", source = "bic")
     @Mapping(target = "schutzkonzept", source = "schutzkonzept")
+    @Mapping(target = "countryCode", source = "countryCode")
     @Mapping(target = "mitglieder", ignore = true)
     void updateFromDTO(VereinDTO dto, @MappingTarget Verein verein);
 

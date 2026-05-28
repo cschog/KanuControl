@@ -29,6 +29,7 @@ class VereinCreateTest extends AbstractTenantIntegrationTest {
         VereinDTO dto = new VereinDTO();
         dto.setAbk("EKC");
         dto.setName("Eschweiler Kanu Club");
+        dto.setCountryCode("DE");
 
         mockMvc.perform(
 
@@ -49,6 +50,7 @@ class VereinCreateTest extends AbstractTenantIntegrationTest {
         VereinDTO dto = new VereinDTO();
         dto.setAbk("EKC");
         dto.setName("Eschweiler Kanu Club");
+        dto.setCountryCode("DE");
 
         // 1️⃣ erster Create → OK
         mockMvc.perform(

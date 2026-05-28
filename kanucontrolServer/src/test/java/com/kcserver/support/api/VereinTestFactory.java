@@ -29,6 +29,7 @@ public class VereinTestFactory extends AbstractApiTestFactory {
         VereinDTO dto = new VereinDTO();
         dto.setAbk(abk);
         dto.setName(name);
+        dto.setCountryCode("DE");
 
         var result =
                 mockMvc.perform(

@@ -32,6 +32,8 @@ public class VereinDTO {
     private String strasse;
     private String plz;
     private String ort;
+    @NotBlank
+    private String countryCode;
     private String telefon;
 
     private String bankName;

@@ -63,9 +63,10 @@ public class Person extends Auditable {
     private String plz;
     private String ort;
 
+    @NotNull
     @Convert(converter = CountryCodeConverter.class)
-    @Column(name = "country_code", length = 2)
-    private CountryCode countryCode;
+    @Column(name = "country_code", nullable = false, length = 2)
+    private CountryCode countryCode = CountryCode.DE;
 
     @Column(name = "telefon_festnetz")
     private String telefonFestnetz;

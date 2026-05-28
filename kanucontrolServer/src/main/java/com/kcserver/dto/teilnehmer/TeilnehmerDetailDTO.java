@@ -29,5 +29,6 @@ public class TeilnehmerDetailDTO {
 
     private LocalDate geburtsdatum;
     private String plz;
+    private String countryCode;
     private Sex sex;
 }

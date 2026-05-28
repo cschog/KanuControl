@@ -1,8 +1,9 @@
 import React from "react";
 import { FormFeld } from "@/components/common/FormFeld";
 import { FormFeldDate } from "@/components/common/FormFeldDate";
-
+import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 import Verein from "@/api/types/VereinFormModel";
+import { COUNTRIES, CountryCode } from "@/api/enums/CountryCode";
 
 interface Props {
   form: Verein;
@@ -54,6 +55,24 @@ export const VereinBaseForm: React.FC<Props> = ({ form, editMode, mode, onChange
             onChange={(v) => onChange("strasse", v)}
             disabled={!editMode}
           />
+
+          <FormControl fullWidth size="small">
+            <InputLabel>Land</InputLabel>
+
+            <Select
+              value={form.countryCode ?? "DE"}
+              label="Land"
+              size="small"
+              disabled={!editMode}
+              onChange={(e) => onChange("countryCode", e.target.value as CountryCode)}
+            >
+              {COUNTRIES.map((c) => (
+                <MenuItem key={c.code} value={c.code}>
+                  {c.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
 
           <FormFeld
             label="Telefon"

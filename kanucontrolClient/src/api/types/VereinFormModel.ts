@@ -1,6 +1,7 @@
 // src/api/types/VereinFormModel.ts
 
 import { PersonRef } from "@/api/types/PersonRef";
+import { CountryCode } from "@/api/enums/CountryCode";
 
 export default interface VereinFormModel {
   /** ID – nur bei READ / EDIT */
@@ -14,6 +15,7 @@ export default interface VereinFormModel {
   strasse?: string;
   plz?: string;
   ort?: string;
+  countryCode: CountryCode;
 
   /** Kontakt */
   telefon?: string;
