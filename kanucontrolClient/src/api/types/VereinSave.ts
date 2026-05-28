@@ -1,4 +1,6 @@
 // VereinSave.ts
+import { CountryCode } from "@/api/enums/CountryCode";
+
 export interface VereinSave {
   id?: number;
   name: string;
@@ -6,6 +8,7 @@ export interface VereinSave {
   strasse?: string;
   plz?: string;
   ort?: string;
+  countryCode: CountryCode;
   telefon?: string;
   bankName?: string;
   iban?: string;

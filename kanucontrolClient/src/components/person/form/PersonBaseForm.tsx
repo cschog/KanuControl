@@ -5,6 +5,7 @@ import { FormFeldDate } from "@/components/common/FormFeldDate";
 import { PersonSave } from "@/api/types/Person";
 import { Sex } from "@/api/enums/Sex";
 import { COUNTRIES } from "@/api/enums/CountryCode";
+import PostalCodeAutocomplete from "@/components/common/PostalCodeAutocomplete";
 
 interface Props {
   form: PersonSave;
@@ -62,11 +63,14 @@ export const PersonBaseForm: React.FC<Props> = ({ form, editMode, mode, onChange
         disabled={!editMode}
       />
 
-      <FormFeld
-        label="PLZ"
-        value={form.plz}
-        onChange={(v) => onChange("plz", v || undefined)}
+      <PostalCodeAutocomplete
+        countryCode={form.countryCode ?? "DE"}
+        postalCode={form.plz}
         disabled={!editMode}
+        onSelect={(item) => {
+          onChange("plz", item.postalCode);
+          onChange("ort", item.city);
+        }}
       />
 
       <FormFeld

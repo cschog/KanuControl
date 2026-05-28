@@ -180,8 +180,7 @@ public class PDFTeilnehmerlisteService {
         set(form, "alter_" + row,
                 calcAgeAtDate(tn.getGeburtsdatum(), v.getBeginnDatum()));
 
-        set(form, "plz_" + row,
-                tn.getPlz() != null ? tn.getPlz() : "");
+        set(form, "plz_" + row, formatPlz(tn));
 
         if (tn.getSex() != null)
             set(form, "geschlecht_" + row,
@@ -240,22 +239,29 @@ public class PDFTeilnehmerlisteService {
                     if (a.getPersonId().equals(leiterId)) return -1;
                     if (b.getPersonId().equals(leiterId)) return 1;
 
-                    String vereinA = a.getPerson().getHauptvereinAbk() == null
-                            ? "" : a.getPerson().getHauptvereinAbk();
-
-                    String vereinB = b.getPerson().getHauptvereinAbk() == null
-                            ? "" : b.getPerson().getHauptvereinAbk();
-
-                    int v = vereinA.compareToIgnoreCase(vereinB);
-                    if (v != 0) return v;
-
                     int n = a.getPerson().getName()
                             .compareToIgnoreCase(b.getPerson().getName());
+
                     if (n != 0) return n;
 
                     return a.getPerson().getVorname()
                             .compareToIgnoreCase(b.getPerson().getVorname());
                 })
                 .toList();
+    }
+    private String formatPlz(TeilnehmerDetailDTO tn) {
+
+        if (tn.getPlz() == null || tn.getPlz().isBlank()) {
+            return "";
+        }
+
+        if (tn.getCountryCode() == null ||
+                tn.getCountryCode().isBlank() ||
+                tn.getCountryCode().equalsIgnoreCase("DE")) {
+
+            return tn.getPlz();
+        }
+
+        return tn.getCountryCode().toUpperCase() + "-" + tn.getPlz();
     }
 }

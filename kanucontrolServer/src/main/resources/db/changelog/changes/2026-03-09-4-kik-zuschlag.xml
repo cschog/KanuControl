@@ -26,18 +26,19 @@
             <column name="beschluss" type="varchar(255)"/>
         </createTable>
 
-        <!-- Optional: Überlappung verhindern -->
-        <sql>
+        <!-- Nur PostgreSQL -->
+        <sql dbms="postgresql">
             CREATE EXTENSION IF NOT EXISTS btree_gist;
         </sql>
 
-        <sql><![CDATA[
-    ALTER TABLE kik_zuschlag
-    ADD CONSTRAINT kik_zuschlag_no_overlap
-    EXCLUDE USING gist (
-        daterange(gueltig_von, gueltig_bis, '[]') WITH &&
-    );
-]]></sql>
+        <!-- Nur PostgreSQL -->
+        <sql dbms="postgresql"><![CDATA[
+            ALTER TABLE kik_zuschlag
+            ADD CONSTRAINT kik_zuschlag_no_overlap
+            EXCLUDE USING gist (
+                daterange(gueltig_von, gueltig_bis, '[]') WITH &&
+            );
+        ]]></sql>
 
     </changeSet>
 

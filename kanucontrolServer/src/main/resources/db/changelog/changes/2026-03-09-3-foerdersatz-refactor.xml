@@ -44,25 +44,24 @@
                 columnDataType="numeric(10,2)"/>
 
         <!-- 6️⃣ Alten EXCLUDE-Constraint sicher entfernen -->
-        <!-- 6️⃣ Alten EXCLUDE-Constraint sicher entfernen -->
         <sql>
             ALTER TABLE foerdersatz
             DROP CONSTRAINT IF EXISTS foerdersatz_no_overlap;
         </sql>
 
         <!-- 7️⃣ Extension sicherstellen -->
-        <sql><![CDATA[
+        <sql dbms="postgresql"><![CDATA[
             CREATE EXTENSION IF NOT EXISTS btree_gist;
         ]]></sql>
 
         <!-- 8️⃣ Typabhängigen EXCLUDE-Constraint anlegen -->
-        <sql><![CDATA[
+        <sql dbms="postgresql"><![CDATA[
             ALTER TABLE foerdersatz
             ADD CONSTRAINT foerdersatz_typ_no_overlap
             EXCLUDE USING gist (
                 typ WITH =,
                 daterange(gueltig_von, gueltig_bis, '[]') WITH &&
-            );
+             );
         ]]></sql>
 
         <!-- 9️⃣ Unique Constraint -->

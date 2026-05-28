@@ -67,7 +67,7 @@
         </createIndex>
 
         <!-- Case-insensitive identity -->
-        <sql>
+        <sql dbms="postgresql">
             CREATE UNIQUE INDEX ux_person_identity
             ON person (lower(name), lower(vorname), geburtsdatum)
             WHERE geburtsdatum IS NOT NULL;
@@ -121,7 +121,7 @@
             <column name="kontoinhaber_id"/>
         </createIndex>
 
-        <sql>
+        <sql dbms="postgresql">
             CREATE UNIQUE INDEX ux_verein_identity
             ON verein (lower(abk), lower(name));
         </sql>
@@ -264,7 +264,7 @@
         </createIndex>
 
         <!-- 🔐 GENAU EIN LEITER PRO VERANSTALTUNG -->
-        <sql>
+        <sql dbms="postgresql">
             CREATE UNIQUE INDEX ux_teilnehmer_single_leiter
             ON teilnehmer (veranstaltung_id)
             WHERE rolle = 'L';

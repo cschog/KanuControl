@@ -56,7 +56,7 @@ Empfehlung:
 * Format:
 
 ```bash
-pg_dump -Fc kcdb > kcdb_YYYYMMDD.dump
+pg_dump -Fc kanucontrol > kanucontrol_YYYYMMDD.dump
 ```
 
 Vorteile:
@@ -172,7 +172,7 @@ Das schützt bereits gegen:
 
 Aber:
 
-Der MiniMac steht im selben Gebäude.
+Der MiniMac steht vermutlich im selben Gebäude.
 
 Deshalb später zusätzlich sinnvoll:
 

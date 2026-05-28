@@ -92,6 +92,7 @@ public abstract class TeilnehmerMapper {
 
     @Mapping(source = "person.geburtsdatum", target = "geburtsdatum")
     @Mapping(source = "person.plz", target = "plz")
+    @Mapping(source = "person.countryCode", target = "countryCode")
     @Mapping(source = "person.sex", target = "sex")
     public abstract TeilnehmerDetailDTO toDetailDTO(
             Teilnehmer teilnehmer

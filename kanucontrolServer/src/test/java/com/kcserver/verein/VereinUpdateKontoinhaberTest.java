@@ -63,6 +63,7 @@ class VereinUpdateKontoinhaberTest extends AbstractTenantIntegrationTest {
         VereinDTO update = new VereinDTO();
         update.setName("Eschweiler Kanu Club");
         update.setAbk("EKC");
+        update.setCountryCode("DE");
         update.setKontoinhaberId(personId);
 
         mockMvc.perform(
