@@ -66,6 +66,7 @@ export const PersonBaseForm: React.FC<Props> = ({ form, editMode, mode, onChange
       <PostalCodeAutocomplete
         countryCode={form.countryCode ?? "DE"}
         postalCode={form.plz}
+        city={form.ort}
         disabled={!editMode}
         onSelect={(item) => {
           onChange("plz", item.postalCode);

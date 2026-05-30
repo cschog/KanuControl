@@ -1,8 +1,6 @@
 package com.kcserver.tenancy;
 
 import jakarta.annotation.PostConstruct;
-import liquibase.Contexts;
-import liquibase.LabelExpression;
 import liquibase.Liquibase;
 import liquibase.database.Database;
 import liquibase.database.DatabaseFactory;
@@ -13,11 +11,22 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
+import liquibase.Contexts;
+import liquibase.LabelExpression;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.util.List;
 
+/**
+ * Migriert alle Tenant-Schemas.
+ * Läuft für:
+ * - kanu
+ * - ekc_*
+ * - okc_*
+ * - svbt_*
+ * - wkc_*
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -76,7 +85,7 @@ public class TenantLiquibaseMigrator {
 
             Liquibase liquibase =
                     new Liquibase(
-                            "db/changelog/db.changelog-master.yaml",
+                            "db/changelog/db.changelog-tenant.yaml",
                             new ClassLoaderResourceAccessor(),
                             database
                     );
@@ -96,29 +105,19 @@ public class TenantLiquibaseMigrator {
              */
             if (hasPersonTable && !hasLiquibaseEntries) {
 
-                log.warn("""
-                        
-                        Existing schema detected without DATABASECHANGELOG.
-                        Bootstrapping Liquibase history for schema '{}'
-                        
-                        """, schema);
-
                 liquibase.changeLogSync(
                         new Contexts(),
                         new LabelExpression()
                 );
             }
-
             /*
              * =====================================================
              * NORMALE MIGRATION
              * =====================================================
              */
-            liquibase.update(
-                    new Contexts(),
-                    new LabelExpression()
-            );
-            System.out.println("Liquibase migration finished for schema: " + schema);
+            liquibase.update();
+
+            log.info("Liquibase migration finished for schema '{}'", schema);
 
         } catch (Exception e) {
 
@@ -167,14 +166,9 @@ public class TenantLiquibaseMigrator {
     }
     private boolean isManagedSchema(String schema) {
 
-        if (SYSTEM_SCHEMAS.contains(schema)) {
-            return false;
-        }
-
         return schema.equals("kanu")
-                || schema.startsWith("ekc_")
-                || schema.startsWith("okc_")
-                || schema.startsWith("svbt_")
-                || schema.startsWith("wkc_");
+
+                || schema.matches("[a-z]{3,5}_.*");
+
     }
 }

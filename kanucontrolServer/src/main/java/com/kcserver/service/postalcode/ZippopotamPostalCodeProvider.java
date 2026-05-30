@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@Primary
 @RequiredArgsConstructor
 public class ZippopotamPostalCodeProvider
         implements PostalCodeProvider {

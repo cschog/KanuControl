@@ -6,6 +6,8 @@ import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import DownloadIcon from "@mui/icons-material/Download";
 import { Accordion, AccordionSummary, AccordionDetails } from "@mui/material";
+import { BottomActionBar } from "@/components/layout/BottomActionBar";
+import { useNavigate } from "react-router-dom";
 
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
@@ -18,11 +20,13 @@ import { getActiveVeranstaltung } from "@/api/services/veranstaltungApi";
 import { VeranstaltungDetail } from "@/api/types/VeranstaltungDetail";
 
 const DokumenteScreen: React.FC = () => {
+  const navigate = useNavigate();
   const [veranstaltung, setVeranstaltung] = useState<VeranstaltungDetail | null>(null);
 
   const [alterValidation, setAlterValidation] = useState<ValidationResult | null>(null);
 
 
+  
   /* =========================================================
      Aktive Veranstaltung laden
      ========================================================= */
@@ -240,6 +244,15 @@ const renderValidationWarning = (title: string, validation: ValidationResult | n
           <Typography color="text.secondary">Keine aktive Veranstaltung gefunden</Typography>
         </Paper>
       )}
+      <BottomActionBar
+        left={[
+          {
+            label: "Zurück",
+            onClick: () => navigate("/startmenue"),
+            variant: "outlined",
+          },
+        ]}
+      />
     </Box>
   );
 };

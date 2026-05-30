@@ -92,23 +92,23 @@ export default function VeranstaltungenScreen() {
      LOAD DATA
      ========================================================= */
 
- const fetchData = useCallback(async () => {
-   try {
-     setLoading(true);
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
 
-     const res = await getVeranstaltungenPage(sorting[0]?.id, sorting[0]?.desc ? "desc" : "asc");
+      const res = await getVeranstaltungenPage(sorting[0]?.id, sorting[0]?.desc ? "desc" : "asc");
 
-     setData(res);
+      setData(res);
 
-     setTotal(res.length);
+      setTotal(res.length);
 
-     setError(null);
-   } catch {
-     setError("Fehler beim Laden der Veranstaltungen");
-   } finally {
-     setLoading(false);
-   }
- }, [sorting]);
+      setError(null);
+    } catch {
+      setError("Fehler beim Laden der Veranstaltungen");
+    } finally {
+      setLoading(false);
+    }
+  }, [sorting]);
 
   /* =========================================================
      LOAD BEITRAGSSTRUKTUREN
@@ -128,9 +128,9 @@ export default function VeranstaltungenScreen() {
      INITIAL LOAD
      ========================================================= */
 
- useEffect(() => {
-   fetchData();
- }, [fetchData]);
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   useEffect(() => {
     loadBeitragsstrukturen();
@@ -178,8 +178,19 @@ export default function VeranstaltungenScreen() {
     setBtnDeleteDisabled(true);
   };
 
-  const handleCancelEdit = () => {
+  const handleCancelEdit = async () => {
+    if (!selectedId) {
+      return;
+    }
+
+    const detail = await getVeranstaltung(selectedId);
+
+    setSelectedVeranstaltung(detail);
+
     setEditMode(false);
+
+    setBtnEditDisabled(false);
+    setBtnDeleteDisabled(false);
   };
 
   /* =========================================================
@@ -392,7 +403,6 @@ export default function VeranstaltungenScreen() {
               onClick: () => navigate("/startmenue"),
             },
           ]}
-          
         />
       )}
 

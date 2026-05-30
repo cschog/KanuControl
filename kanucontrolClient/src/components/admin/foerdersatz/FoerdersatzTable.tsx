@@ -8,7 +8,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 
 import { GenericTableTanstack } from "@/components/common/GenericTableTanstack";
 
-import FoerdersatzDialog from "@/components/verwaltung/foerdersatz/FoerdersatzDialog";
+import FoerdersatzDialog from "@/components/admin/foerdersatz/FoerdersatzDialog";
 
 import {
   createFoerdersatz,
@@ -204,33 +204,12 @@ const FoerdersatzTable = () => {
           ===================================================== */}
 
       <Stack
-        direction={{
-          xs: "column",
-          sm: "row",
-        }}
-        justifyContent="space-between"
-        alignItems={{
-          xs: "stretch",
-          sm: "center",
-        }}
-        spacing={1.5}
+        direction="row"
+        justifyContent="flex-end"
         sx={{
           mb: 2,
         }}
       >
-        <Typography
-          variant="h5"
-          sx={{
-            fontSize: {
-              xs: "1.2rem",
-              md: "1.5rem",
-            },
-            fontWeight: 600,
-          }}
-        >
-          Fördersätze
-        </Typography>
-
         <Button variant="contained" startIcon={<AddIcon />} onClick={handleCreate}>
           Neuer Fördersatz
         </Button>

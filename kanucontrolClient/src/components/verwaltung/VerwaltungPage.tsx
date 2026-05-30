@@ -7,10 +7,6 @@ import { useNavigate } from "react-router-dom";
    LAZY IMPORTS
    ========================================================= */
 
-const FoerdersatzTable = lazy(() => import("@/components/verwaltung/foerdersatz/FoerdersatzTable"));
-
-const KikZuschlagTable = lazy(() => import("@/components/verwaltung/kik/KikZuschlagTable"));
-
 const BeitragsStrukturen = lazy(
   () => import("@/components/verwaltung/beitraege/BeitragsstrukturTable"),
 );
@@ -80,10 +76,6 @@ const VerwaltungPage = () => {
           },
         }}
       >
-        <Tab label="Fördersätze" />
-
-        <Tab label="KiK-Zuschläge" />
-
         <Tab label="Beitragsstrukturen" />
       </Tabs>
 
@@ -97,11 +89,7 @@ const VerwaltungPage = () => {
             overflowX: "hidden",
           }}
         >
-          {tab === 0 && <FoerdersatzTable />}
-
-          {tab === 1 && <KikZuschlagTable />}
-
-          {tab === 2 && <BeitragsStrukturen />}
+          {tab === 0 && <BeitragsStrukturen />}
         </Box>
       </Suspense>
 

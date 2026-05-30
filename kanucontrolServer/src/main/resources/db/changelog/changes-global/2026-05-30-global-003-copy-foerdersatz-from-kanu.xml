@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="global-003-copy-foerdersatz-from-kanu" author="chris">
+
+        <sql>
+
+            INSERT INTO public.foerdersatz (
+            id,
+            gueltig_von,
+            gueltig_bis,
+            foerdersatz,
+            beschluss,
+            typ
+            )
+            SELECT
+            id,
+            gueltig_von,
+            gueltig_bis,
+            foerdersatz,
+            beschluss,
+            typ
+            FROM ekc_eschweilerkanuclub.foerdersatz;
+
+        </sql>
+
+    </changeSet>
+
+</databaseChangeLog>

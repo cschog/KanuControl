@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="global-006-copy-kik-zuschlag-from-ekc" author="chris">
+        <sql>
+
+            INSERT INTO public.kik_zuschlag (
+            id,
+            gueltig_von,
+            gueltig_bis,
+            kik_zuschlag,
+            beschluss
+            )
+            SELECT
+            id,
+            gueltig_von,
+            gueltig_bis,
+            kik_zuschlag,
+            beschluss
+            FROM ekc_eschweilerkanuclub.kik_zuschlag;
+
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

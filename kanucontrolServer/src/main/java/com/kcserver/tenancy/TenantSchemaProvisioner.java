@@ -43,8 +43,6 @@ public class TenantSchemaProvisioner {
             "beitragsstruktur",
             "erhebungsbogen",
             "finanz_gruppe",
-            "foerdersatz",
-            "kik_zuschlag",
             "mitglied",
             "person",
             "planung",

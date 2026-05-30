@@ -14,37 +14,31 @@ export const veranstaltungColumnsTanstack: ColumnDef<VeranstaltungList>[] = [
 
   {
     accessorKey: "name",
-
     header: "Veranstaltung",
   },
 
   {
     accessorKey: "typ",
-
     header: "Typ",
   },
 
   {
     accessorKey: "beginnDatum",
-
     header: "Beginn",
   },
 
   {
     accessorKey: "endeDatum",
-
     header: "Ende",
   },
 
   {
     accessorKey: "vereinAbk",
-
     header: "Verein",
   },
 
   {
     id: "leitung",
-
     header: "Leitung",
 
     cell: ({ row }) => {

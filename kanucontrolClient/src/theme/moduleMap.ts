@@ -17,4 +17,7 @@ export const moduleTypeMap: Record<string, ModuleType> = {
   dokumente: "report",
 
   verwaltung: "admin",
+
+  admin: "system",
+  administration: "system",
 };

@@ -78,10 +78,8 @@ const KikDialog = ({ open, initialData, onClose, onSave, loading = false }: Prop
      ========================================================= */
 
   const handleSave = () => {
-    console.log("SAVE CLICK");
 
       if (!gueltigVon) {
-        console.log("NO DATE");
 
         return;
       }
@@ -97,7 +95,6 @@ const KikDialog = ({ open, initialData, onClose, onSave, loading = false }: Prop
       beschluss: beschluss || null,
     };
 
-    console.log(dto);
     onSave(dto);
   };
 

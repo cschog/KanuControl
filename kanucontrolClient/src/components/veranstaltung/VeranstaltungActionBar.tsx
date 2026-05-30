@@ -35,6 +35,11 @@ export const VeranstaltungActionBar: React.FC<Props> = ({
       <BottomActionBar
         left={[
           {
+            label: "Speichern",
+            variant: "contained",
+            onClick: onSave,
+          },
+          {
             label: "Abbrechen",
             variant: "outlined",
             onClick: onCancelEdit,
@@ -49,12 +54,6 @@ export const VeranstaltungActionBar: React.FC<Props> = ({
                 },
               ]
             : []),
-        ]}
-        right={[
-          {
-            label: "Speichern",
-            onClick: onSave,
-          },
         ]}
       />
     );

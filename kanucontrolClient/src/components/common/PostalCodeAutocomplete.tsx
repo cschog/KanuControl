@@ -19,7 +19,6 @@ type Props = {
 export default function PostalCodeAutocomplete({
   countryCode,
   postalCode,
-  city,
   onSelect,
   disabled,
 }: Props) {
@@ -27,22 +26,21 @@ export default function PostalCodeAutocomplete({
   const [options, setOptions] = useState<PostalCodeLookupResponse[]>([]);
   const [loading, setLoading] = useState(false);
 
+
   /* =========================================================
      EXTERNEN STATE SYNCHRONISIEREN
      ========================================================= */
 
-  useEffect(() => {
-    const value = postalCode || city ? `${postalCode ?? ""} ${city ?? ""}`.trim() : "";
-
-    setInputValue(value);
-  }, [postalCode, city]);
+useEffect(() => {
+  setInputValue(postalCode ?? "");
+}, [postalCode]);
 
   /* =========================================================
      SEARCH
      ========================================================= */
 
   useEffect(() => {
-    if (inputValue.trim().length < 5) {
+    if (inputValue.trim().length < 2) {
       setOptions([]);
       return;
     }
@@ -64,6 +62,9 @@ export default function PostalCodeAutocomplete({
     return () => clearTimeout(timeout);
   }, [countryCode, inputValue]);
 
+
+  
+
   /* =========================================================
      RENDER
      ========================================================= */
@@ -75,7 +76,9 @@ export default function PostalCodeAutocomplete({
       options={options}
       loading={loading}
       noOptionsText={
-        inputValue.length >= 5 ? "Keine Treffer gefunden" : "Mindestens 5 Zeichen eingeben"
+        inputValue.length >= 2
+          ? "Keine Treffer gefunden"
+          : "Mindestens 2 Zeichen einer PLZ oder eines Orts eingeben"
       }
       getOptionLabel={(option) => `${option.postalCode} ${option.city}`}
       isOptionEqualToValue={(a, b) => a.postalCode === b.postalCode && a.city === b.city}
@@ -87,13 +90,15 @@ export default function PostalCodeAutocomplete({
         onSelect(value);
       }}
       inputValue={inputValue}
-      onInputChange={(_, value) => {
-        setInputValue(value);
+      onInputChange={(_, value, reason) => {
+        if (reason === "input") {
+          setInputValue(value);
+        }
       }}
       renderInput={(params) => (
         <TextField
           {...params}
-          label="PLZ"
+          label="PLZ oder Ort"
           size="small"
           InputProps={{
             ...params.InputProps,
