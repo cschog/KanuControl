@@ -6,6 +6,7 @@ import { useAppContext } from "@/context/AppContext";
 import { ModuleButton } from "@/components/common/ModuleButton";
 import { moduleTypeMap } from "@/theme/moduleMap";
 import { FeedbackFab } from "@/components/userFeedBack/featureBase/FeedbackFab";
+import { isAdmin } from "@/auth/useTenant";
 
 const StartMenue = () => {
   const { schema, active, loading } = useAppContext();
@@ -17,26 +18,37 @@ const StartMenue = () => {
       }`
     : `Mandant: ${schema}`;
 
- const buttons = [
-   { key: "vereine", label: "Vereine", path: "/vereine" },
-   { key: "mitglieder", label: "Mitglieder", path: "/personen" },
-   { key: "veranstaltungen", label: "Veranstaltungen", path: "/veranstaltungen" },
-   { key: "teilnehmer", label: "Teilnehmer", path: "/teilnehmer" },
+  const admin = isAdmin();
 
-   ...(active?.id
-     ? [
-         {
-           key: "finanzen",
-           label: "Finanzen",
-           path: `/veranstaltungen/${active.id}/finanzen`,
-         },
-       ]
-     : []),
+  const buttons = [
+    { key: "vereine", label: "Vereine", path: "/vereine" },
+    { key: "mitglieder", label: "Mitglieder", path: "/personen" },
+    { key: "veranstaltungen", label: "Veranstaltungen", path: "/veranstaltungen" },
+    { key: "teilnehmer", label: "Teilnehmer", path: "/teilnehmer" },
 
-   { key: "dokumente", label: "Dokumente", path: "/dokumente" },
+    ...(active?.id
+      ? [
+          {
+            key: "finanzen",
+            label: "Finanzen",
+            path: `/veranstaltungen/${active.id}/finanzen`,
+          },
+        ]
+      : []),
 
-   { key: "verwaltung", label: "Verwaltung", path: "/verwaltung" },
- ] as const;
+    { key: "dokumente", label: "Dokumente", path: "/dokumente" },
+
+    { key: "verwaltung", label: "Verwaltung", path: "/verwaltung" },
+    ...(admin
+      ? [
+          {
+            key: "admin",
+            label: "Administration",
+            path: "/admin",
+          },
+        ]
+      : []),
+  ] as const;
 
   return (
     <Box>

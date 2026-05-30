@@ -12,6 +12,10 @@ import DokumenteScreen from "@/components/dokumente/DokumenteScreen";
 import VerwaltungPage from "@/components/verwaltung/VerwaltungPage";
 import AusgabeReisekosten from "./components/pdfAusgaben/AusgabeReisekosten";
 import AppLayout from "@/components/layout/AppLayout";
+import PostalCodeAdminPage from "@/components/admin/PostalCodeAdminPage";
+import AdminPage from "@/components/admin/AdminPage";
+import FoerdersatzAdminPage from "@/components/admin/foerdersatz/FoerdersatzAdminPage";
+import KikZuschlagAdminPage from "@/components/admin/kik/KikZuschlagAdminPage";
 
 const App: React.FC = () => {
   return (
@@ -29,8 +33,11 @@ const App: React.FC = () => {
           <Route path="/verwaltung" element={<VerwaltungPage />} />
           <Route path="/dokumente" element={<DokumenteScreen />} />
           <Route path="/ausgabeReisekosten" element={<AusgabeReisekosten />} />
+          <Route path="/admin" element={<AdminPage />} />
+          <Route path="/admin/postal-codes" element={<PostalCodeAdminPage />} />
+          <Route path="/admin/foerdersaetze" element={<FoerdersatzAdminPage />} />
+          <Route path="/admin/kik-zuschlaege" element={<KikZuschlagAdminPage />} />
         </Route>
-        <Route path="*" element={<p>Path not resolved</p>} />
       </Routes>
     </div>
   );

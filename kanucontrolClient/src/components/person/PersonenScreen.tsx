@@ -2,7 +2,6 @@ import { useEffect, useState, useRef } from "react";
 import { Box, Paper, Typography, TextField, Button } from "@mui/material";
 import { GenericTableTanstack } from "@/components/common/GenericTableTanstack";
 import { PersonFormView } from "@/components/person/PersonFormView";
-//import { personColumns, personColumnsMobile } from "@/components/person/personColumns";
 import { personColumnsTanstack } from "@/components/person/personColumnsTanstack";
 import { deleteMitglied, setHauptverein } from "@/api/services/mitgliedApi";
 import { PersonCreateDialog } from "@/components/person/PersonCreateDialog";
@@ -87,9 +86,6 @@ export default function PersonenScreen() {
     loadingRef.current = true;
     setLoading(true);
 
-    console.log("filterModel", filterModel);
-    console.log("ortFilter", ortFilter);
-
     try {
       const res = await getPersonsScroll(
         cursorRef.current?.name,
@@ -123,19 +119,6 @@ export default function PersonenScreen() {
         const existing = new Set(prev.map((r) => r.id));
 
         const filtered = newRows.filter((r) => !existing.has(r.id));
-
-        console.log(
-          "PREV",
-          prev.length,
-          "NEW",
-          newRows.length,
-          "FILTERED",
-          filtered.length,
-          "LAST ID",
-          newRows[newRows.length - 1]?.id,
-        );
-
-        console.log("RESULT LENGTH", prev.length + filtered.length);
 
         return [...prev, ...filtered];
       });

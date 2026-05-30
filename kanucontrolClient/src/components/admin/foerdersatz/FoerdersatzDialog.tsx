@@ -97,10 +97,8 @@ const FoerdersatzDialog = ({ open, initialData, onClose, onSave, loading = false
      ========================================================= */
 
   const handleSave = () => {
-    console.log("SAVE CLICK");
 
-      if (!gueltigVon) {
-        console.log("NO DATE");
+      if (!gueltigVon) { 
 
         return;
       }
@@ -117,7 +115,6 @@ const FoerdersatzDialog = ({ open, initialData, onClose, onSave, loading = false
       beschluss: beschluss || null,
     };
 
-    console.log(dto);
     onSave(dto);
   };
 

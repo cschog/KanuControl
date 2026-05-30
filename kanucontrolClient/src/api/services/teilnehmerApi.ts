@@ -96,7 +96,6 @@ export async function updateTeilnehmerRolle(
   rolle: "L" | "M" | null,
 ) {
 
-  console.log("API CALL", veranstaltungId, personId, rolle);
   return apiClient.put(`/veranstaltungen/${veranstaltungId}/teilnehmer/${personId}/rolle`, {
     rolle: mapRoleToBackend(rolle),
   });

@@ -46,14 +46,6 @@ const FinanzenDashboard = () => {
 
   const istEinnahmenNachKategorie = data?.istEinnahmenNachKategorie ?? [];
 
-  // const handleExport = () => {
-  //   console.log("export");
-  // };
-
-  // const handleAbrechnung = () => {
-  //   console.log("abrechnung");
-  // };
-
   if (isLoading) {
     return <div>Lade Dashboard...</div>;
   }

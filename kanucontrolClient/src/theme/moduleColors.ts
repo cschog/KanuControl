@@ -1,12 +1,13 @@
 // src/theme/moduleColors.ts
 
-export type ModuleType = "core" | "addon" | "report" | "admin";
+export type ModuleType = "core" | "addon" | "report" | "admin" | "system";
 
 export const moduleColors: Record<ModuleType, string> = {
   core: "#1E5AA8", // KC Blau (Control)
   addon: "#D62839", // KC Rot (Kanu)
   report: "#8C8C8C", // neutrales Grau
   admin: "#3A3A3A", // dunkles Anthrazit
+  system: "#2E7D32",
 };
 
 export const moduleHover: Record<ModuleType, string> = {
@@ -14,4 +15,5 @@ export const moduleHover: Record<ModuleType, string> = {
   addon: "#E03E4E",
   report: "#A3A3A3",
   admin: "#505050",
+  system: "#388E3C",
 };

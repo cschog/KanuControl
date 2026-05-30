@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="global-007-fix-kik-zuschlag-sequence" author="chris">
+        <sql dbms="postgresql">
+
+            SELECT setval(
+            pg_get_serial_sequence(
+            'public.kik_zuschlag',
+            'id'
+            ),
+            COALESCE(
+            (SELECT MAX(id)
+            FROM public.kik_zuschlag),
+            1
+            ),
+            true
+            );
+
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

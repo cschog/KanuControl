@@ -10,7 +10,10 @@ import java.time.LocalDate;
 @Entity
 @Getter
 @Setter
-@Table(name = "kik_zuschlag")
+@Table(
+        schema = "public",
+        name = "kik_zuschlag"
+)
 public class KikZuschlag {
 
     @Id

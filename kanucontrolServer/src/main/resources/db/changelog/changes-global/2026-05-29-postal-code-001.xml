@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="postal-code-001" author="chris">
+
+        <createTable
+                tableName="postal_code"
+                schemaName="public">
+
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true"/>
+            </column>
+
+            <column name="country_code" type="VARCHAR(2)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="postal_code" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="city" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="state" type="VARCHAR(255)"/>
+
+            <column name="district" type="VARCHAR(255)"/>
+
+            <column name="latitude" type="DOUBLE PRECISION"/>
+
+            <column name="longitude" type="DOUBLE PRECISION"/>
+
+            <column name="source" type="VARCHAR(50)"/>
+
+            <column name="imported_at" type="TIMESTAMP"/>
+        </createTable>
+
+        <addUniqueConstraint
+                schemaName="public"
+                tableName="postal_code"
+                columnNames="country_code,postal_code,city"
+                constraintName="uk_postal_country_plz_city"/>
+
+    </changeSet>
+
+</databaseChangeLog>

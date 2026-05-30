@@ -13,6 +13,7 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @Table(
+        schema = "public",
         name = "foerdersatz",
         uniqueConstraints = {
                 @UniqueConstraint(

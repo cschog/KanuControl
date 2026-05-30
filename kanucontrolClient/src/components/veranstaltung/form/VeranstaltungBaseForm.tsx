@@ -13,6 +13,7 @@ import { FormFeldDatePicker } from "@/components/common/FormFeldDatePicker";
 import { FormFeldTimePicker } from "@/components/common/FormFeldTimePicker";
 
 import { COUNTRIES } from "@/api/enums/CountryCode";
+import PostalCodeAutocomplete from "@/components/common/PostalCodeAutocomplete";
 
 /* =========================================================
    TYPES
@@ -205,20 +206,23 @@ export const VeranstaltungBaseForm: React.FC<Props> = ({
 
           {/* ================= PLZ ================= */}
 
-          <FormFeld
-            label="PLZ"
-            value={form.plz ?? ""}
+          <PostalCodeAutocomplete
+            countryCode={form.countryCode ?? "DE"}
+            postalCode={form.plz}
+            city={form.ort}
             disabled={!editMode}
-            onChange={(v) => onChange("plz", v || undefined)}
+            onSelect={(item) => {
+              onChange("plz", item.postalCode);
+              onChange("ort", item.city);
+            }}
           />
-
-          {/* ================= ORT ================= */}
+          {/* ================= Ort ================= */}
 
           <FormFeld
             label="Ort"
             value={form.ort ?? ""}
+            onChange={(v) => onChange("ort", v)}
             disabled={!editMode}
-            onChange={(v) => onChange("ort", v || undefined)}
           />
 
           {/* ================= INDIVIDUELLE GEBÜHREN ================= */}

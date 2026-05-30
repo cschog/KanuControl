@@ -41,3 +41,16 @@ export function useTenant(): TenantInfo | null {
 
   return null;
 }
+export function getUsername(): string | undefined {
+  if (!keycloak.authenticated || !keycloak.tokenParsed) {
+    return undefined;
+  }
+
+  const token = keycloak.tokenParsed as BaseToken;
+
+  return token.preferred_username;
+}
+
+export function isAdmin(): boolean {
+  return getUsername() === "cschog";
+}

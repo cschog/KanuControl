@@ -132,7 +132,7 @@ export const PersonCreateDialog: React.FC<PersonCreateDialogProps> = ({
             if (!payload) {
               return;
             }
-            console.log("PAYLOAD", payload);
+        
             await onCreate(payload, addToActiveVeranstaltung);
 
             onClose();

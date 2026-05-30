@@ -8,7 +8,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 
 import Money from "@/components/common/Money";
 
-import KikZuschlagDialog from "@/components/verwaltung/kik/KikDialog";
+import KikZuschlagDialog from "@/components/admin/kik/KikDialog";
 
 import {
   createKikZuschlag,
@@ -156,34 +156,12 @@ const KikZuschlagTable = () => {
           ===================================================== */}
 
       <Stack
-        direction={{
-          xs: "column",
-          sm: "row",
-        }}
-        justifyContent="space-between"
-        alignItems={{
-          xs: "stretch",
-          sm: "center",
-        }}
-        spacing={1.5}
+        direction="row"
+        justifyContent="flex-end"
         sx={{
           mb: 2,
         }}
       >
-        <Typography
-          variant="h5"
-          sx={{
-            fontSize: {
-              xs: "1.2rem",
-              md: "1.5rem",
-            },
-
-            fontWeight: 600,
-          }}
-        >
-          KiK-Zuschläge
-        </Typography>
-
         <Button variant="contained" startIcon={<AddIcon />} onClick={handleCreate}>
           Neuer KiK-Zuschlag
         </Button>
