@@ -1,8 +1,10 @@
 package com.kcserver.service.postalcode;
 
 import com.kcserver.entity.PostalCode;
+import com.kcserver.entity.PostalCodeCountry;
 import com.kcserver.enumtype.CountryCode;
 import com.kcserver.enumtype.PostalCodeImportStatus;
+import com.kcserver.repository.PostalCodeCountryRepository;
 import com.kcserver.repository.PostalCodeRepository;
 import com.kcserver.dto.postalcode.PostalCodeStatusResponse;
 import java.util.Map;
@@ -33,9 +35,8 @@ public class PostalCodeImportService {
             "https://download.geonames.org/export/zip/";
 
     private final PostalCodeRepository repository;
-
+    private final PostalCodeCountryRepository countryRepository;
     private final RestClient restClient;
-
     private final Map<CountryCode, PostalCodeImportStatus> importStatuses =
             new ConcurrentHashMap<>();
 
@@ -44,6 +45,12 @@ public class PostalCodeImportService {
             CountryCode countryCode
     ) {
 
+        if (PostalCodeImportStatus.RUNNING.equals(
+                importStatuses.get(countryCode))) {
+
+            return;
+        }
+
         importStatuses.put(
                 countryCode,
                 PostalCodeImportStatus.RUNNING
@@ -51,8 +58,6 @@ public class PostalCodeImportService {
 
         repository.deleteByCountryCode(countryCode);
         repository.flush();
-
-
 
         List<PostalCode> batch = new ArrayList<>();
 
@@ -68,7 +73,6 @@ public class PostalCodeImportService {
                             .retrieve()
                             .body(byte[].class);
 
-
             if (zipBytes == null) {
                 throw new IllegalStateException("GeoNames download failed");
             }
@@ -83,33 +87,53 @@ public class PostalCodeImportService {
                 ZipEntry entry;
 
                 while ((entry = zis.getNextEntry()) != null) {
-
                     String expectedFile =
                             countryCode.name() + ".txt";
-
 
                     if (!entry.getName().equalsIgnoreCase(expectedFile)) {
                         continue;
                     }
-
 
                     importFile(
                             countryCode,
                             zis,
                             batch
                     );
-
                     break;
                 }
             }
 
             if (!batch.isEmpty()) {
+
                 repository.saveAll(batch);
+
             }
+
             importStatuses.put(
+
                     countryCode,
+
                     PostalCodeImportStatus.SUCCESS
+
             );
+
+            log.info(
+
+                    "Postal code import finished. Imported {} rows for {}",
+
+                    repository.countByCountryCode(countryCode),
+
+                    countryCode
+
+            );
+            PostalCodeCountry country =
+                    countryRepository.findById(countryCode)
+                            .orElseThrow();
+
+            LocalDateTime now = LocalDateTime.now();
+            country.setLastImport(now);
+            country.setNextImport(now.plusMonths(1));
+
 
         } catch (Exception ex) {
 
@@ -210,10 +234,9 @@ public class PostalCodeImportService {
                 }
             }
             log.info(
-                    "Postal code import finished. Imported {} rows for {} ({} duplicates skipped)",
-                    repository.countByCountryCode(countryCode),
-                    countryCode,
-                    duplicateCount
+                    "{} duplicates skipped for {}",
+                    duplicateCount,
+                    countryCode
             );
         }
     }

@@ -3,7 +3,6 @@ package com.kcserver.service.postalcode;
 import com.kcserver.dto.postalcode.PostalCodeLookupResponse;
 import com.kcserver.enumtype.CountryCode;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
