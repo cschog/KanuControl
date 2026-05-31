@@ -1,7 +1,17 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { Box, Button, Card, CardContent, CircularProgress, Grid, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  CircularProgress,
+  Grid,
+  Typography,
+  Switch,
+  FormControlLabel,
+} from "@mui/material";
 
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 
@@ -9,7 +19,9 @@ import {
   getPostalCodeStatus,
   getPostalCodeCountries,
   importPostalCodes,
+  updatePostalCodeCountry,
   type PostalCodeStatus,
+  type PostalCodeCountry,
 } from "@/api/services/postalCodeAdminApi";
 
 const COUNTRY_LABELS: Record<string, string> = {
@@ -19,6 +31,17 @@ const COUNTRY_LABELS: Record<string, string> = {
   AT: "Österreich",
   CH: "Schweiz",
   LU: "Luxemburg",
+  DK: "Dänemark",
+  SI: "Slowenien",
+  SE: "Schweden",
+  FR: "Frankreich",
+  GB: "Großbritannien",
+  PL: "Polen",
+  CZ: "Tschechien",
+  IT: "Italien",
+  NO: "Norwegen",
+  LI: "Lichtenstein",
+  ES: "Spanien",
 };
 
 export default function PostalCodeAdminPage() {
@@ -28,9 +51,7 @@ export default function PostalCodeAdminPage() {
 
   const [loading, setLoading] = useState(true);
 
-  const [importingCountry, setImportingCountry] = useState<string | null>(null);
-
-  const [countries, setCountries] = useState<string[]>([]);
+ const [countries, setCountries] = useState<PostalCodeCountry[]>([]);
 
   const statusLabels = {
     IDLE: "⚪ Bereit",
@@ -39,37 +60,55 @@ export default function PostalCodeAdminPage() {
     FAILED: "🔴 Fehler",
   };
 
-async function loadStatus() {
+async function loadStatus(showSpinner = false) {
   try {
-    setLoading(true);
+    if (showSpinner) {
+      setLoading(true);
+    }
 
-    const countryCodes = await getPostalCodeCountries();
+    const countries = await getPostalCodeCountries();
 
-    setCountries(countryCodes);
+    setCountries(countries);
 
-    const results = await Promise.all(countryCodes.map((c) => getPostalCodeStatus(c)));
+    const results = await Promise.all(countries.map((c) => getPostalCodeStatus(c.countryCode)));
 
     setStatuses(Object.fromEntries(results.map((r) => [r.countryCode, r])));
   } finally {
-    setLoading(false);
+    if (showSpinner) {
+      setLoading(false);
+    }
   }
 }
 
+useEffect(() => {
+  loadStatus(true);
+}, []);
+
   useEffect(() => {
-    loadStatus();
-  }, []);
+    const hasRunningImport = Object.values(statuses).some((s) => s.importStatus === "RUNNING");
 
-  async function handleImport(countryCode: string) {
-    try {
-      setImportingCountry(countryCode);
-
-      await importPostalCodes(countryCode);
-
-      await loadStatus();
-    } finally {
-      setImportingCountry(null);
+    if (!hasRunningImport) {
+      return;
     }
+
+    const timer = setInterval(() => {
+      loadStatus();
+    }, 5000);
+
+    return () => clearInterval(timer);
+  }, [statuses]);
+
+  function formatDate(value?: string | null) {
+    if (!value) return "-";
+
+    return new Date(value).toLocaleDateString("de-DE");
   }
+
+async function handleImport(countryCode: string) {
+  await importPostalCodes(countryCode);
+
+  await loadStatus();
+}
 
   if (loading) {
     return <CircularProgress />;
@@ -82,22 +121,58 @@ async function loadStatus() {
       </Typography>
 
       <Grid container spacing={2}>
-        {countries.map((countryCode) => {
-          const status = statuses[countryCode];
+        {countries.map((country) => {
+          const status = statuses[country.countryCode];
 
           return (
-            <Grid size={{ xs: 12, md: 4 }} key={countryCode}>
+            <Grid size={{ xs: 12, md: 4 }} key={country.countryCode}>
               <Card>
                 <CardContent>
                   <Typography variant="h6" gutterBottom>
-                    {COUNTRY_LABELS[countryCode] ?? countryCode}
+                    {COUNTRY_LABELS[country.countryCode] ?? country.countryCode}
                   </Typography>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={country.enabled}
+                        onChange={async (_, checked) => {
+                          await updatePostalCodeCountry(
+                            country.countryCode,
+                            checked,
+                            country.autoImport,
+                          );
 
+                          await loadStatus();
+                        }}
+                      />
+                    }
+                    label="Aktiviert"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={country.autoImport}
+                        disabled={!country.enabled}
+                        onChange={async (_, checked) => {
+                          await updatePostalCodeCountry(
+                            country.countryCode,
+                            country.enabled,
+                            checked,
+                          );
+
+                          await loadStatus();
+                        }}
+                      />
+                    }
+                    label="Automatischer Import"
+                  />
                   <Typography>Datensätze: {status?.count?.toLocaleString("de-DE") ?? 0}</Typography>
 
                   <Typography>Quelle: {status?.source ?? "-"}</Typography>
 
-                  <Typography>Letzter Import: {status?.lastImport ?? "-"}</Typography>
+                  <Typography>Letzter Import: {formatDate(country.lastImport)}</Typography>
+
+                  <Typography>Nächster Import: {formatDate(country.nextImport)}</Typography>
 
                   <Typography sx={{ mt: 1 }}>
                     {status ? statusLabels[status.importStatus] : "⚪ Keine Daten"}
@@ -106,12 +181,12 @@ async function loadStatus() {
                   <Box sx={{ mt: 2 }}>
                     <Button
                       variant="contained"
-                      disabled={importingCountry === countryCode}
-                      onClick={() => handleImport(countryCode)}
+                      disabled={status?.importStatus === "RUNNING"}
+                      onClick={() => handleImport(country.countryCode)}
                     >
-                      {importingCountry === countryCode
+                      {status?.importStatus === "RUNNING"
                         ? "Import läuft..."
-                        : `${countryCode} importieren`}
+                        : `${country.countryCode} importieren`}
                     </Button>
                   </Box>
                 </CardContent>

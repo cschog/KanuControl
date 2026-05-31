@@ -14,3 +14,7 @@ databaseChangeLog:
        file: db/changelog/changes-global/2026-05-30-global-006-copy-kik-zuschlag-from-ekc.xml
    - include:
        file: db/changelog/changes-global/2026-05-30-global-007-fix-kik-zuschlag-sequence.xml
+   - include:
+       file: db/changelog/changes-global/2026-06-01-postal-code-country-001.xml
+   - include:
+       file: db/changelog/changes-global/2026-06-01-postal-code-country-002.xml
