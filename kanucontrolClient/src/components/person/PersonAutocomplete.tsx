@@ -5,18 +5,18 @@ import { searchPersons } from "@/api/services/personApi";
 interface Props {
   value?: PersonRef;
   disabled?: boolean;
-  label?: string; // ⭐ HINZUFÜGEN
+  label?: string;
   onChange: (value?: PersonRef) => void;
 }
 
-export function PersonAutocomplete({ value, disabled, onChange }: Props) {
+export function PersonAutocomplete({ value, disabled, label = "Person", onChange }: Props) {
   return (
     <EntityAutocomplete<PersonRef>
-      label="Leitung"
+      label={label}
       value={value}
       disabled={disabled}
       fetch={searchPersons}
-      getLabel={(p) => `${p.name}, ${p.vorname}`}
+      getLabel={(p) => `${p.name}, ${p.vorname}${p.hauptvereinAbk ? ` (${p.hauptvereinAbk})` : ""}`}
       onChange={onChange}
     />
   );

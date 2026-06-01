@@ -83,3 +83,13 @@ databaseChangeLog:
       file: db/changelog/changes/20260528-01-person-countrycode-not-null.xml
   - include:
       file: db/changelog/changes/20260528-02-verein-countrycode.xml
+  - include:
+      file: db/changelog/changes/2026-05-31-reisekostenabrechnung-001.xml
+  - include:
+      file: db/changelog/changes/2026-05-31-fahrtabschnitt-001.xml
+  - include:
+      file: db/changelog/changes/2026-05-31-fahrtabschnitt-mitfahrer-001.xml
+  - include:
+      file: db/changelog/changes/2026-05-31-fahrtabschnitt-002.xml
+  - include:
+      file: db/changelog/changes/2026-06-01-reisekostenabrechnung-audit-001.xml

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="reisekosten-konfiguration-002" author="chris">
+
+        <insert
+                schemaName="public"
+                tableName="reisekosten_konfiguration">
+
+            <column name="pkw_satz" valueNumeric="0.35"/>
+            <column name="mitfahrer_satz" valueNumeric="0.05"/>
+            <column name="anhaenger_satz" valueNumeric="0.10"/>
+
+            <column name="gueltig_von" valueDate="2026-01-01"/>
+
+        </insert>
+
+    </changeSet>
+
+</databaseChangeLog>

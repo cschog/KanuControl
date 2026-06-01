@@ -19,7 +19,7 @@ interface Props {
   onSelect: (person: PersonRef | undefined) => void;
 }
 
-export const KontoinhaberSelectDialog: React.FC<Props> = ({ open, onClose, onSelect }) => {
+export const PersonSelectDialog: React.FC<Props> = ({ open, onClose, onSelect }) => {
   const [options, setOptions] = useState<PersonRef[]>([]);
   const [value, setValue] = useState<PersonRef | null>(null);
   const [inputValue, setInputValue] = useState("");

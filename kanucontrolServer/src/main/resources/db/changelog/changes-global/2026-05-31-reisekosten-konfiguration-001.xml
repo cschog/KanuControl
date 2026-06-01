@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="reisekosten-konfiguration-001" author="chris">
+
+        <createTable
+                schemaName="public"
+                tableName="reisekosten_konfiguration">
+
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true"/>
+            </column>
+
+            <column name="pkw_satz" type="numeric(10,2)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="mitfahrer_satz" type="numeric(10,2)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="anhaenger_satz" type="numeric(10,2)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="gueltig_von" type="date">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="gueltig_bis" type="date"/>
+
+        </createTable>
+
+    </changeSet>
+
+</databaseChangeLog>

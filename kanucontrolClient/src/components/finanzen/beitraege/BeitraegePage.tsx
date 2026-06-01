@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 
 import { GenericTableTanstack } from "@/components/common/GenericTableTanstack";
-import { beitraegeColumns } from "@/components/finanzen/beitraegeColumns";
+import { beitraegeColumns } from "@/components/finanzen/beitraege/beitraegeColumns";
 import { TeilnehmerBeitraegeResponseDTO, TeilnehmerListDTO } from "@/api/types/beitraege";
 
 import { useEffect, useState } from "react";

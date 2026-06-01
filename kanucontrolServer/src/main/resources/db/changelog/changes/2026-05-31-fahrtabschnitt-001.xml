@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="fahrtabschnitt-001" author="chris">
+
+        <createTable tableName="fahrtabschnitt">
+
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true"/>
+            </column>
+
+            <column name="abrechnung_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="reihenfolge" type="integer"/>
+
+            <column name="von_plz" type="varchar(20)"/>
+            <column name="von_ort" type="varchar(200)"/>
+            <column name="von_country_code" type="varchar(2)"/>
+
+            <column name="nach_plz" type="varchar(20)"/>
+            <column name="nach_ort" type="varchar(200)"/>
+            <column name="nach_country_code" type="varchar(2)"/>
+
+            <column name="kilometer" type="integer">
+                <constraints nullable="false"/>
+            </column>
+
+            <column
+                    name="anhaenger"
+                    type="boolean"
+                    defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="fahrtabschnitt"
+                baseColumnNames="abrechnung_id"
+                referencedTableName="reisekostenabrechnung"
+                referencedColumnNames="id"
+                constraintName="fk_fahrtabschnitt_abrechnung"/>
+
+    </changeSet>
+
+</databaseChangeLog>

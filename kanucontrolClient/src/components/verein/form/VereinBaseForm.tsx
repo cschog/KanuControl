@@ -4,6 +4,7 @@ import { FormFeldDate } from "@/components/common/FormFeldDate";
 import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 import Verein from "@/api/types/VereinFormModel";
 import { COUNTRIES, CountryCode } from "@/api/enums/CountryCode";
+import { PersonAutocomplete } from "@/components/person/PersonAutocomplete";
 import PostalCodeAutocomplete from "@/components/common/PostalCodeAutocomplete";
 
 interface Props {
@@ -107,12 +108,11 @@ export const VereinBaseForm: React.FC<Props> = ({ form, editMode, mode, onChange
             disabled={!editMode}
           />
 
-          <FormFeld
+          <PersonAutocomplete
             label="Kontoinhaber"
-            value={
-              form.kontoinhaber ? `${form.kontoinhaber.name}, ${form.kontoinhaber.vorname}` : ""
-            }
-            disabled
+            value={form.kontoinhaber}
+            disabled={!editMode}
+            onChange={(person) => onChange("kontoinhaber", person)}
           />
 
           <FormFeldDate

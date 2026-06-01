@@ -7,7 +7,6 @@ import Personen from "./components/person/PersonenScreen";
 import Veranstaltungen from "@/components/veranstaltung/VeranstaltungenScreen";
 import TeilnehmerScreen from "@/components/teilnehmer/TeilnehmerScreen";
 import Finanzen from "./components/finanzen/FinanzenScreen";
-import Reisekosten from "./Platzhalter/Reisekosten";
 import DokumenteScreen from "@/components/dokumente/DokumenteScreen";
 import VerwaltungPage from "@/components/verwaltung/VerwaltungPage";
 import AusgabeReisekosten from "./components/pdfAusgaben/AusgabeReisekosten";
@@ -16,6 +15,8 @@ import PostalCodeAdminPage from "@/components/admin/PostalCodeAdminPage";
 import AdminPage from "@/components/admin/AdminPage";
 import FoerdersatzAdminPage from "@/components/admin/foerdersatz/FoerdersatzAdminPage";
 import KikZuschlagAdminPage from "@/components/admin/kik/KikZuschlagAdminPage";
+import ReisekostenKonfigurationPage from "@/components/admin/reisekosten/ReisekostenKonfigurationPage";
+import ReisekostenDetailPage from "@/components/finanzen/reisekosten/ReisekostenDetailPage";
 
 const App: React.FC = () => {
   return (
@@ -29,7 +30,10 @@ const App: React.FC = () => {
           <Route path="/veranstaltungen" element={<Veranstaltungen />} />
           <Route path="/teilnehmer" element={<TeilnehmerScreen />} />
           <Route path="/veranstaltungen/:veranstaltungId/finanzen" element={<Finanzen />} />
-          <Route path="/reisekosten" element={<Reisekosten />} />
+          <Route
+            path="/veranstaltungen/:veranstaltungId/reisekosten/:id"
+            element={<ReisekostenDetailPage />}
+          />
           <Route path="/verwaltung" element={<VerwaltungPage />} />
           <Route path="/dokumente" element={<DokumenteScreen />} />
           <Route path="/ausgabeReisekosten" element={<AusgabeReisekosten />} />
@@ -37,6 +41,7 @@ const App: React.FC = () => {
           <Route path="/admin/postal-codes" element={<PostalCodeAdminPage />} />
           <Route path="/admin/foerdersaetze" element={<FoerdersatzAdminPage />} />
           <Route path="/admin/kik-zuschlaege" element={<KikZuschlagAdminPage />} />
+          <Route path="/admin/reisekosten" element={<ReisekostenKonfigurationPage />} />
         </Route>
       </Routes>
     </div>
