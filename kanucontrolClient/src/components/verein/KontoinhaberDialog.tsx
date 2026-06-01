@@ -1,31 +1,45 @@
+import { useState } from "react";
+
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material";
+
 import { PersonRef } from "@/api/types/PersonRef";
-import { Dialog, DialogTitle, DialogContent, Button } from "@mui/material";
+import { PersonAutocomplete } from "@/components/person/PersonAutocomplete";
 
 interface Props {
   open: boolean;
-  persons: PersonRef[];
   onSelect: (p: PersonRef) => void;
   onClose: () => void;
 }
 
-export function KontoinhaberDialog({ open, persons, onSelect, onClose }: Props) {
+export function KontoinhaberDialog({ open, onSelect, onClose }: Props) {
+  const [person, setPerson] = useState<PersonRef>();
+
   return (
-    <Dialog open={open} onClose={onClose}>
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>Kontoinhaber auswählen</DialogTitle>
+
       <DialogContent>
-        {persons.map((p) => (
-          <Button
-            key={p.id}
-            fullWidth
-            onClick={() => {
-              onSelect(p);
-              onClose();
-            }}
-          >
-            {p.name}, {p.vorname}
-          </Button>
-        ))}
+        <PersonAutocomplete label="Kontoinhaber" value={person} onChange={setPerson} />
       </DialogContent>
+
+      <DialogActions>
+        <Button onClick={onClose}>Abbrechen</Button>
+
+        <Button
+          variant="contained"
+          disabled={!person}
+          onClick={() => {
+            if (!person) {
+              return;
+            }
+
+            onSelect(person);
+            onClose();
+          }}
+        >
+          Übernehmen
+        </Button>
+      </DialogActions>
     </Dialog>
   );
 }

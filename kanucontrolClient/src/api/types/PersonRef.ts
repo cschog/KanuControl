@@ -2,5 +2,6 @@
 export interface PersonRef {
   id: number;
   name: string;
-  vorname: string; 
+  vorname: string;
+  hauptvereinAbk?: string;
 }

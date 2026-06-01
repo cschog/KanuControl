@@ -1,7 +1,6 @@
 package com.kcserver.entity;
 
 import com.kcserver.enumtype.VeranstaltungTyp;
-import com.kcserver.enumtype.VeranstaltungTyp;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

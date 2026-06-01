@@ -5,7 +5,7 @@ import { VereinBaseForm } from "./form/VereinBaseForm";
 import { VereinActionBar } from "./VereinActionBar";
 import { useVereinForm } from "./hooks/useVereinForm";
 import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
-import { KontoinhaberSelectDialog } from "@/components/verein/kontoinhaber/KontoinhaberSelectDialog";
+import { PersonAutocomplete } from "@/components/person/PersonAutocomplete";
 import { VereinSave } from "@/api/types/VereinSave";
 
 
@@ -39,7 +39,7 @@ export const VereinFormView: React.FC<VereinFormViewProps> = ({
 }) => {
   const { form, update, buildSavePayload } = useVereinForm(verein);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [kontoinhaberDialogOpen, setKontoinhaberDialogOpen] = useState(false);
+
 
   if (!verein || !form) {
     return (
@@ -67,10 +67,11 @@ export const VereinFormView: React.FC<VereinFormViewProps> = ({
       </Box>
 
       {/* ================= KONTOINHABER ================= */}
-      <KontoinhaberSelectDialog
-        open={kontoinhaberDialogOpen}
-        onClose={() => setKontoinhaberDialogOpen(false)}
-        onSelect={(person) => update("kontoinhaber", person)}
+      <PersonAutocomplete
+        label="Kontoinhaber"
+        value={form.kontoinhaber}
+        disabled={!editMode}
+        onChange={(person) => update("kontoinhaber", person)}
       />
 
       {/* ================= ACTION BAR ================= */}
@@ -85,7 +86,7 @@ export const VereinFormView: React.FC<VereinFormViewProps> = ({
         onDelete={() => setConfirmOpen(true)}
         onBack={onBack}
         onCsvImport={onCsvImport}
-        onChangeKontoinhaber={() => setKontoinhaberDialogOpen(true)}
+      
         disableEdit={disableEdit}
         disableDelete={disableDelete}
       />

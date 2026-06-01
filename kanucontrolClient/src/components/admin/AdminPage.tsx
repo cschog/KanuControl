@@ -42,6 +42,17 @@ export default function AdminPage() {
             KiK-Zuschläge
           </Button>
         </Grid>
+
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Button
+            fullWidth
+            variant="outlined"
+            sx={{ height: 80 }}
+            onClick={() => navigate("/admin/reisekosten")}
+          >
+            Reisekosten
+          </Button>
+        </Grid>
       </Grid>
       <BottomActionBar
         left={[

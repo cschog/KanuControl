@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="reisekostenabrechnung-audit-001" author="chris">
+
+        <addColumn tableName="reisekostenabrechnung">
+
+            <column name="created_at" type="timestamp"/>
+
+            <column name="created_by" type="varchar(255)"/>
+
+            <column name="last_modified_at" type="timestamp"/>
+
+            <column name="last_modified_by" type="varchar(255)"/>
+
+        </addColumn>
+
+    </changeSet>
+
+</databaseChangeLog>

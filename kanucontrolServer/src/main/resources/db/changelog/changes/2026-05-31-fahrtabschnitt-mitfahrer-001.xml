@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="fahrtabschnitt-mitfahrer-001" author="chris">
+
+        <createTable tableName="fahrtabschnitt_mitfahrer">
+
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true"/>
+            </column>
+
+            <column name="fahrtabschnitt_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="person_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="fahrtabschnitt_mitfahrer"
+                baseColumnNames="fahrtabschnitt_id"
+                referencedTableName="fahrtabschnitt"
+                referencedColumnNames="id"
+                constraintName="fk_fahrtabschnitt_mitfahrer_abschnitt"/>
+
+        <addForeignKeyConstraint
+                baseTableName="fahrtabschnitt_mitfahrer"
+                baseColumnNames="person_id"
+                referencedTableName="person"
+                referencedColumnNames="id"
+                constraintName="fk_fahrtabschnitt_mitfahrer_person"/>
+
+    </changeSet>
+
+</databaseChangeLog>
