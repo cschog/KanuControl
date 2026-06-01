@@ -1,7 +1,7 @@
 // src/components/finanzen/reisekosten/ReisekostenCreateDialog.tsx
 
 import { useState } from "react";
-import { PersonAutocomplete } from "@/components/person/PersonAutocomplete";
+import { ReisekostenPersonAutocomplete } from "@/components/finanzen/reisekosten/ReisekostenPersonAutocomplete";
 import { PersonRef } from "@/api/types/PersonRef";
 
 import {
@@ -21,12 +21,14 @@ import dayjs, { Dayjs } from "dayjs";
 interface Props {
   open: boolean;
 
+  veranstaltungId: number;
+
   onClose: () => void;
 
   onSave: (fahrerId: number, abrechnungsdatum: string, bemerkung: string) => void;
 }
 
-export default function ReisekostenCreateDialog({ open, onClose, onSave }: Props) {
+export default function ReisekostenCreateDialog({ open, veranstaltungId, onClose, onSave }: Props) {
   const [fahrer, setFahrer] = useState<PersonRef | undefined>();
 
   const [abrechnungsdatum, setAbrechnungsdatum] = useState<Dayjs | null>(dayjs());
@@ -47,8 +49,12 @@ export default function ReisekostenCreateDialog({ open, onClose, onSave }: Props
 
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
-       
-          <PersonAutocomplete label="Fahrer" value={fahrer} onChange={setFahrer} />
+          <ReisekostenPersonAutocomplete
+            veranstaltungId={veranstaltungId}
+            label="Fahrer"
+            value={fahrer}
+            onChange={setFahrer}
+          />
 
           <DatePicker
             label="Abrechnungsdatum"

@@ -1,5 +1,6 @@
 package com.kcserver.service.reisekosten;
 
+import com.kcserver.dto.person.PersonRefDTO;
 import com.kcserver.dto.reisekosten.ReisekostenabrechnungCreateRequest;
 import com.kcserver.dto.reisekosten.ReisekostenabrechnungDetailResponse;
 import com.kcserver.dto.reisekosten.ReisekostenabrechnungListResponse;
@@ -15,6 +16,15 @@ public interface ReisekostenabrechnungService {
 
     ReisekostenabrechnungDetailResponse get(
             Long id
+    );
+
+    List<PersonRefDTO> getVerfuegbareReisekostenPersonen(
+            Long veranstaltungId,
+            String search
+    );
+
+    List<PersonRefDTO> getVerfuegbareMitfahrer(
+            Long veranstaltungId
     );
 
     List<ReisekostenabrechnungListResponse> listByVeranstaltung(

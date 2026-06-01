@@ -1,5 +1,6 @@
 package com.kcserver.controller;
 
+import com.kcserver.dto.person.PersonRefDTO;
 import com.kcserver.dto.reisekosten.ReisekostenabrechnungCreateRequest;
 import com.kcserver.dto.reisekosten.ReisekostenabrechnungDetailResponse;
 import com.kcserver.dto.reisekosten.ReisekostenabrechnungListResponse;
@@ -41,6 +42,31 @@ public class ReisekostenabrechnungController {
 
         return service.listByVeranstaltung(veranstaltungId);
 
+    }
+
+    @GetMapping(
+            "/veranstaltung/{veranstaltungId}/personen"
+    )
+    public List<PersonRefDTO> getVerfuegbareReisekostenPersonen(
+            @PathVariable Long veranstaltungId,
+            @RequestParam(required = false) String search
+    ) {
+        return service.getVerfuegbareReisekostenPersonen(
+                veranstaltungId,
+                search
+        );
+    }
+
+    @GetMapping(
+            "/veranstaltung/{veranstaltungId}/mitfahrer"
+    )
+    public List<PersonRefDTO> getVerfuegbareMitfahrer(
+            @PathVariable Long veranstaltungId
+    ) {
+
+        return service.getVerfuegbareMitfahrer(
+                veranstaltungId
+        );
     }
 
     @PutMapping("/{id}")

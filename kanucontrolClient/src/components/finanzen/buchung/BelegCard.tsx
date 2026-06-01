@@ -2,7 +2,7 @@ import { Box, Button, Paper, Stack, Typography } from "@mui/material";
 
 import { GenericTableTanstack } from "@/components/common/GenericTableTanstack";
 
-import { buchungColumns } from "@/components/finanzen/buchungColumns";
+import { buchungColumns } from "@/components/finanzen/buchung/buchungColumns";
 
 import { AbrechnungBeleg, Buchung } from "@/api/types/abrechnung";
 

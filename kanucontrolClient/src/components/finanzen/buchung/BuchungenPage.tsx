@@ -2,10 +2,10 @@ import { Box, Button, Typography, Stack, Divider } from "@mui/material";
 
 import { useEffect, useState, useCallback } from "react";
 
-import BelegCard from "@/components/finanzen/BelegCard";
-import BuchungDialog from "@/components/finanzen/BuchungDialog";
-import BelegDialog from "@/components/finanzen/BelegDialog";
-import BelegMitBuchungDialog from "@/components/finanzen/BelegMitBuchungDialog";
+import BelegCard from "@/components/finanzen/buchung/BelegCard";
+import BuchungDialog from "@/components/finanzen/buchung/BuchungDialog";
+import BelegDialog from "@/components/finanzen/buchung/BelegDialog";
+import BelegMitBuchungDialog from "@/components/finanzen/buchung/BelegMitBuchungDialog";
 
 import {
   getAbrechnung,

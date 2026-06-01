@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { Box, Button, IconButton, Stack } from "@mui/material";
+import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import { ColumnDef } from "@tanstack/react-table";
@@ -10,6 +11,10 @@ import Money from "@/components/common/Money";
 import { useNavigate } from "react-router-dom";
 import { useReisekostenabrechnungen } from "@/hooks/reisekosten/useReisekostenabrechnungen";
 import { ReisekostenabrechnungListResponse } from "@/api/types/Reisekostenabrechnung";
+import DeleteIcon from "@mui/icons-material/Delete";
+import { deleteReisekostenabrechnung } from "@/api/services/reisekostenApi";
+import { useQueryClient } from "@tanstack/react-query";
+
 
 import { useState } from "react";
 
@@ -27,6 +32,9 @@ const ReisekostenTable = ({ veranstaltungId }: Props) => {
   const { data = [], isLoading } = useReisekostenabrechnungen(veranstaltungId);
 
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const queryClient = useQueryClient();
 
   const columns = useMemo<ColumnDef<ReisekostenabrechnungListResponse>[]>(
     () => [
@@ -59,18 +67,24 @@ const ReisekostenTable = ({ veranstaltungId }: Props) => {
       {
         id: "actions",
         header: "",
-        size: 80,
+        size: 120,
         enableSorting: false,
 
         cell: ({ row }) => (
-          <IconButton
-            size="small"
-            onClick={() =>
-              navigate(`/veranstaltungen/${veranstaltungId}/reisekosten/${row.original.id}`)
-            }
-          >
-            <EditIcon fontSize="small" />
-          </IconButton>
+          <Stack direction="row" spacing={1}>
+            <IconButton
+              size="small"
+              onClick={() =>
+                navigate(`/veranstaltungen/${veranstaltungId}/reisekosten/${row.original.id}`)
+              }
+            >
+              <EditIcon fontSize="small" />
+            </IconButton>
+
+            <IconButton size="small" color="error" onClick={() => setDeleteId(row.original.id)}>
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </Stack>
         ),
       },
     ],
@@ -81,6 +95,7 @@ const ReisekostenTable = ({ veranstaltungId }: Props) => {
     <Box>
       <ReisekostenCreateDialog
         open={dialogOpen}
+        veranstaltungId={veranstaltungId}
         onClose={() => setDialogOpen(false)}
         onSave={async (fahrerId, abrechnungsdatum, bemerkung) => {
           const id = await createReisekostenabrechnung({
@@ -144,6 +159,24 @@ const ReisekostenTable = ({ veranstaltungId }: Props) => {
             </Button>
           </Box>
         )}
+      />
+      <ConfirmDeleteDialog
+        open={deleteId !== null}
+        onClose={() => setDeleteId(null)}
+        onConfirm={async () => {
+          if (deleteId == null) {
+            return;
+          }
+
+          await deleteReisekostenabrechnung(deleteId);
+
+          await queryClient.invalidateQueries({
+            queryKey: ["reisekosten", veranstaltungId],
+          });
+
+          setDeleteId(null);
+        }}
+        description="Soll die Reisekostenabrechnung wirklich gelöscht werden?"
       />
     </Box>
   );
