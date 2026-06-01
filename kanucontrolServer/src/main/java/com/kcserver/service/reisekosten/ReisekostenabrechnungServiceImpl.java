@@ -1,20 +1,20 @@
 package com.kcserver.service.reisekosten;
 
+import com.kcserver.dto.person.PersonRefDTO;
 import com.kcserver.dto.reisekosten.*;
 import com.kcserver.entity.*;
 import com.kcserver.mapper.PersonMapper;
-import com.kcserver.repository.ReisekostenabrechnungRepository;
+import com.kcserver.repository.*;
+import com.kcserver.service.AltersService;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.kcserver.repository.PersonRepository;
-import com.kcserver.repository.VeranstaltungRepository;
-import com.kcserver.repository.ReisekostenKonfigurationRepository;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+
 import java.util.List;
 
 
@@ -30,6 +30,8 @@ public class ReisekostenabrechnungServiceImpl
     private final PersonMapper personMapper;
     private final ReisekostenKonfigurationRepository
             konfigurationRepository;
+    private final AltersService altersService;
+    private final TeilnehmerRepository teilnehmerRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -50,7 +52,74 @@ public class ReisekostenabrechnungServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<PersonRefDTO> getVerfuegbareReisekostenPersonen(
+            Long veranstaltungId,
+            String search
+    ) {
 
+        Veranstaltung veranstaltung =
+                veranstaltungRepository.findById(
+                        veranstaltungId
+                ).orElseThrow();
+
+        return teilnehmerRepository
+                .searchRef(
+                        veranstaltungId,
+                        search
+                )
+                .stream()
+                .map(Teilnehmer::getPerson)
+
+                .filter(person -> {
+
+                    Integer alter =
+                            altersService.berechneAlterBeiBeginn(
+                                    person.getGeburtsdatum(),
+                                    veranstaltung.getBeginnDatum()
+                            );
+
+                    return alter != null
+                            && alter >= 18;
+                })
+
+                .filter(person ->
+                        !repository.isPersonBereitsFahrzeugZugeordnet(
+                                veranstaltungId,
+                                person.getId(),
+                                null
+                        )
+                )
+
+                .map(personMapper::toPersonRefDTO)
+
+                .toList();
+    }
+    @Override
+    @Transactional(readOnly = true)
+    public List<PersonRefDTO> getVerfuegbareMitfahrer(
+            Long veranstaltungId
+    ) {
+
+        return teilnehmerRepository
+                .findAllWithPerson(veranstaltungId)
+                .stream()
+                .map(Teilnehmer::getPerson)
+
+                .filter(person ->
+                        !repository.isPersonBereitsFahrzeugZugeordnet(
+                                veranstaltungId,
+                                person.getId(),
+                                null
+                        )
+                )
+
+                .map(personMapper::toPersonRefDTO)
+
+                .toList();
+    }
+
+    @Override
     public Long create(
             ReisekostenabrechnungCreateRequest request
     ) {
@@ -70,6 +139,20 @@ public class ReisekostenabrechnungServiceImpl
 
         abrechnung.setVeranstaltung(veranstaltung);
         abrechnung.setFahrer(fahrer);
+
+        validateFahrer(
+                veranstaltung,
+                fahrer
+        );
+
+        validatePersonNichtBereitsZugeordnet(
+                veranstaltung.getId(),
+                fahrer.getId(),
+                -1L,
+                fahrer.getVorname() + " " + fahrer.getName()
+        );
+
+
         abrechnung.setAbrechnungsdatum(
                 request.abrechnungsdatum()
         );
@@ -156,6 +239,19 @@ public class ReisekostenabrechnungServiceImpl
                         Person person =
                                 personRepository.findById(personId)
                                         .orElseThrow();
+
+                        validateMitfahrer(
+                                abrechnung.getVeranstaltung(),
+                                abrechnung.getFahrer(),
+                                person);
+
+                        validatePersonNichtBereitsZugeordnet(
+                                abrechnung.getVeranstaltung().getId(),
+                                person.getId(),
+                                abrechnung.getId(),
+                                person.getVorname() + " " + person.getName()
+                        );
+
                         FahrtabschnittMitfahrer mitfahrer =
                                 new FahrtabschnittMitfahrer();
 
@@ -325,6 +421,93 @@ public class ReisekostenabrechnungServiceImpl
                 2,
                 RoundingMode.HALF_UP
         );
+    }
+
+    private void validateFahrer(
+            Veranstaltung veranstaltung,
+            Person fahrer
+    ) {
+
+        boolean istTeilnehmer =
+                teilnehmerRepository
+                        .existsByVeranstaltungAndPerson(
+                                veranstaltung,
+                                fahrer
+                        );
+
+        if (!istTeilnehmer) {
+            throw new IllegalArgumentException(
+                    "Der Fahrer muss Teilnehmer der Veranstaltung sein."
+            );
+        }
+
+        Integer alter =
+                altersService.berechneAlterBeiBeginn(
+                        fahrer.getGeburtsdatum(),
+                        veranstaltung.getBeginnDatum()
+                );
+
+        if (alter == null) {
+            throw new IllegalArgumentException(
+                    "Beim Fahrer ist kein Geburtsdatum hinterlegt."
+            );
+        }
+
+        if (alter < 18) {
+            throw new IllegalArgumentException(
+                    "Der Fahrer muss mindestens 18 Jahre alt sein."
+            );
+        }
+    }
+
+
+    private void validateMitfahrer(
+            Veranstaltung veranstaltung,
+            Person fahrer,
+            Person mitfahrer
+    ) {
+
+        if (fahrer.getId().equals(
+                mitfahrer.getId()
+        )) {
+
+            throw new IllegalArgumentException(
+                    "Der Fahrer kann nicht gleichzeitig Mitfahrer sein."
+            );
+        }
+
+        boolean istTeilnehmer =
+                teilnehmerRepository
+                        .existsByVeranstaltungAndPerson(
+                                veranstaltung,
+                                mitfahrer
+                        );
+
+        if (!istTeilnehmer) {
+            throw new IllegalArgumentException(
+                    "Mitfahrer muss Teilnehmer der Veranstaltung sein."
+            );
+        }
+    }
+    private void validatePersonNichtBereitsZugeordnet(
+            Long veranstaltungId,
+            Long personId,
+            Long abrechnungId,
+            String name
+    ) {
+
+        boolean bereitsZugeordnet =
+                repository.isPersonBereitsFahrzeugZugeordnet(
+                        veranstaltungId,
+                        personId,
+                        abrechnungId
+                );
+
+        if (bereitsZugeordnet) {
+            throw new IllegalArgumentException(
+                    name + " ist bereits einem Fahrzeug zugeordnet."
+            );
+        }
     }
 }
 

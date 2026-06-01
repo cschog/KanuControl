@@ -228,4 +228,39 @@ and p.geburtsdatum between :maxGeburtsdatum and :minGeburtsdatum
             @Param("minGeburtsdatum") LocalDate minGeburtsdatum,
             @Param("maxGeburtsdatum") LocalDate maxGeburtsdatum
     );
+
+    @Query("""
+select t
+from Teilnehmer t
+join fetch t.person p
+where t.veranstaltung.id = :veranstaltungId
+order by p.name, p.vorname
+""")
+    List<Teilnehmer> findAllReisekostenKandidaten(
+            Long veranstaltungId
+    );
+
+    @Query("""
+select count(r) > 0
+from Reisekostenabrechnung r
+where r.veranstaltung.id = :veranstaltungId
+and (
+    r.fahrer.id = :personId
+    or exists (
+        select 1
+        from FahrtabschnittMitfahrer m
+        where m.fahrtabschnitt.abrechnung = r
+        and m.person.id = :personId
+    )
+)
+and (
+    :abrechnungId is null
+    or r.id <> :abrechnungId
+)
+""")
+    boolean isPersonBereitsFahrzeugZugeordnet(
+            Long veranstaltungId,
+            Long personId,
+            Long abrechnungId
+    );
 }

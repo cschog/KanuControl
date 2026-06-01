@@ -2,8 +2,13 @@
 
 import apiClient from "@/api/client/apiClient";
 
-import { ReisekostenabrechnungListResponse } from "@/api/types/Reisekostenabrechnung";
-import { ReisekostenabrechnungDetailResponse } from "@/api/types/Reisekostenabrechnung";
+import { PersonRef } from "@/api/types/PersonRef";
+import {
+  ReisekostenabrechnungListResponse,
+  ReisekostenabrechnungDetailResponse,
+  ReisekostenabrechnungUpdateRequest,
+} from "@/api/types/Reisekostenabrechnung";
+
 
 export interface ReisekostenabrechnungCreateRequest {
   veranstaltungId: number;
@@ -39,4 +44,57 @@ export async function getReisekostenabrechnung(
   const response = await apiClient.get<ReisekostenabrechnungDetailResponse>(`/reisekosten/${id}`);
 
   return response.data;
+}
+
+// reisekostenApi.ts
+
+export async function getVerfuegbareReisekostenPersonen(
+  veranstaltungId: number,
+): Promise<PersonRef[]> {
+
+  const response = await apiClient.get<PersonRef[]>(
+    `/reisekosten/veranstaltung/${veranstaltungId}/personen`,
+  );
+
+  return response.data;
+}
+
+export async function searchVerfuegbareReisekostenPersonen(
+  veranstaltungId: number,
+  params: { search?: string },
+): Promise<PersonRef[]> {
+  const response = await apiClient.get<PersonRef[]>(
+    `/reisekosten/veranstaltung/${veranstaltungId}/personen`,
+    {
+      params: {
+        search: params.search,
+      },
+    },
+  );
+
+  return response.data;
+}
+
+export async function searchVerfuegbareMitfahrer(
+  veranstaltungId: number,
+  params: { search?: string },
+): Promise<PersonRef[]> {
+  const response = await apiClient.get<PersonRef[]>(
+    `/reisekosten/veranstaltung/${veranstaltungId}/mitfahrer`,
+    {
+      params,
+    },
+  );
+
+  return response.data;
+}
+export async function updateReisekostenabrechnung(
+  id: number,
+  request: ReisekostenabrechnungUpdateRequest,
+): Promise<void> {
+  await apiClient.put(`/reisekosten/${id}`, request);
+}
+
+export async function deleteReisekostenabrechnung(id: number): Promise<void> {
+  await apiClient.delete(`/reisekosten/${id}`);
 }

@@ -1,11 +1,11 @@
 import { Box, Tabs, Tab, Alert } from "@mui/material";
 import { useState } from "react";
 import type { SyntheticEvent } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 
 import FinanzenDashboard from "@/components/finanzen/FinanzenDashboard";
-import PlanungPage from "@/components/finanzen/PlanungPage";
-import BuchungenPage from "@/components/finanzen/BuchungenPage";
+import PlanungPage from "@/components/finanzen/planung/PlanungPage";
+import BuchungenPage from "@/components/finanzen/buchung/BuchungenPage";
 import BeitraegePage from "@/components/finanzen/beitraege/BeitraegePage";
 import ReisekostenPage from "@/components/finanzen/reisekosten/ReisekostenPage";
 import AbrechnungPage from "@/components/finanzen/AbrechnungPage";
@@ -13,7 +13,8 @@ import KuerzelPage from "@/components/finanzen/KuerzelPage";
 
 const Finanzen = () => {
   const { veranstaltungId } = useParams<{ veranstaltungId: string }>();
-  const [tab, setTab] = useState(0);
+  const location = useLocation();
+  const [tab, setTab] = useState(location.state?.tab ?? 0);
 
   if (!veranstaltungId) return null;
 

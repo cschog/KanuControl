@@ -1,7 +1,7 @@
 import { Box, Typography, Grid, Card, CardContent, Button } from "@mui/material";
-import KostenSummary from "@/components/finanzen/KostenSummary";
-import KostenTable from "@/components/finanzen/KostenTable";
-import KostenDialog from "@/components/finanzen/KostenDialog";
+import KostenSummary from "@/components/finanzen/kosten/KostenSummary";
+import KostenTable from "@/components/finanzen/kosten/KostenTable";
+import KostenDialog from "@/components/finanzen/kosten/KostenDialog";
 import { useState } from "react";
 import DeleteConfirmDialog from "@/components/dialogs/DeleteConfirmDialog";
 

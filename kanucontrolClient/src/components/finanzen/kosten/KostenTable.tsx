@@ -2,7 +2,7 @@ import { Box, Typography } from "@mui/material";
 
 import { GenericTableTanstack } from "@/components/common/GenericTableTanstack";
 
-import { kostenColumns } from "@/components/finanzen/kostenColumns";
+import { kostenColumns } from "@/components/finanzen/kosten/kostenColumns";
 
 import { KostenRow } from "@/api/types/KostenRow";
 
