@@ -1,5 +1,6 @@
 package com.kcserver.audit.service;
 
+import com.kcserver.audit.enumtype.SessionEndReason;
 import com.kcserver.audit.repository.AuditSessionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -36,4 +37,13 @@ public class AuditSessionService {
                 userAgent
         );
     }
+    @Transactional
+    public void registerLogout(String sessionId) {
+        repository.updateLogoutTime(
+                sessionId,
+                LocalDateTime.now(),
+                SessionEndReason.LOGOUT
+        );
+    }
+
 }

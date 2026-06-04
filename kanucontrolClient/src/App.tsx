@@ -17,6 +17,10 @@ import FoerdersatzAdminPage from "@/components/admin/foerdersatz/FoerdersatzAdmi
 import KikZuschlagAdminPage from "@/components/admin/kik/KikZuschlagAdminPage";
 import ReisekostenKonfigurationPage from "@/components/admin/reisekosten/ReisekostenKonfigurationPage";
 import ReisekostenDetailPage from "@/components/finanzen/reisekosten/ReisekostenDetailPage";
+import ActiveSessionsPage from "@/components/admin/audit/ActiveSessionsPage";
+import AuditHistoryPage from "@/components/admin/audit/AuditHistoryPage";
+import AuditPage from "@/components/admin/audit/AuditPage";
+
 
 const App: React.FC = () => {
   return (
@@ -42,6 +46,9 @@ const App: React.FC = () => {
           <Route path="/admin/foerdersaetze" element={<FoerdersatzAdminPage />} />
           <Route path="/admin/kik-zuschlaege" element={<KikZuschlagAdminPage />} />
           <Route path="/admin/reisekosten" element={<ReisekostenKonfigurationPage />} />
+          <Route path="/admin/audit/active-sessions" element={<ActiveSessionsPage />} />
+          <Route path="/admin/audit/history" element={<AuditHistoryPage />} />
+          <Route path="/admin/audit" element={<AuditPage />} />
         </Route>
       </Routes>
     </div>

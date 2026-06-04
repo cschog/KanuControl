@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import com.kcserver.audit.enumtype.SessionEndReason;
 
 @Entity
 @Table(
@@ -40,6 +41,10 @@ public class AuditSession {
 
     @Column(name = "logout_time")
     private LocalDateTime logoutTime;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "end_reason")
+    private SessionEndReason endReason;
 
     @Column(name = "last_seen")
     private LocalDateTime lastSeen;

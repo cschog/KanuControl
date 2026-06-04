@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="audit-session-end-reason-001" author="cschog">
+        <addColumn schemaName="audit" tableName="audit_session">
+            <column name="end_reason" type="varchar(20)" defaultValue="ACTIVE"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

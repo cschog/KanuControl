@@ -22,3 +22,5 @@ databaseChangeLog:
        file: db/changelog/changes-global/2026-05-31-reisekosten-konfiguration-001.xml
    - include:
        file: db/changelog/changes-global/2026-05-31-reisekosten-konfiguration-002.xml
+   - include:
+       file: db/changelog/changes-global/2026-06-04-audit-session-end-reason-001.xml
