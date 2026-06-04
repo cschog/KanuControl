@@ -1,4 +1,4 @@
-import { Typography, TypographyProps } from "@mui/material";
+import { Typography, TypographyProps, SxProps, Theme } from "@mui/material";
 
 type MoneyProps = {
   value: number;
@@ -6,6 +6,8 @@ type MoneyProps = {
   align?: "left" | "right" | "center";
 
   colorize?: boolean;
+
+  sx?: SxProps<Theme>;
 } & Pick<TypographyProps, "variant">;
 
 const formatter = new Intl.NumberFormat("de-DE", {
@@ -26,6 +28,8 @@ const Money = ({
   colorize = false,
 
   variant,
+
+  sx,
 }: MoneyProps) => {
   const color = colorize && value !== 0 ? (value > 0 ? "success.main" : "error.main") : "inherit";
 
@@ -40,11 +44,7 @@ const Money = ({
 
         fontVariantNumeric: "tabular-nums",
 
-        fontSize: "inherit",
-
-        fontWeight: "inherit",
-
-        lineHeight: "inherit",
+        ...sx,
       }}
     >
       {formatter.format(value)}

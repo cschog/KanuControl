@@ -3,6 +3,7 @@ package com.kcserver.mapper;
 import com.kcserver.dto.mitglied.MitgliedDetailDTO;
 import com.kcserver.dto.person.PersonDetailDTO;
 import com.kcserver.dto.person.PersonListDTO;
+import com.kcserver.dto.person.PersonRefDTO;
 import com.kcserver.dto.person.PersonSaveDTO;
 import com.kcserver.dto.verein.VereinRefDTO;
 import com.kcserver.entity.Mitglied;
@@ -44,7 +45,6 @@ public interface PersonMapper {
     MitgliedDetailDTO toMitgliedDetailDTO(Mitglied mitglied);
     VereinRefDTO toVereinRefDTO(Verein verein);
 
-    /* WRITE */
     /* WRITE */
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "mitgliedschaften", ignore = true)
@@ -93,5 +93,9 @@ public interface PersonMapper {
             target = "hauptvereinAbk",
             expression = "java(resolveHauptvereinAbk(person))"
     )
-    com.kcserver.dto.person.PersonRefDTO toPersonRefDTO(Person person);
+    @Mapping(
+            target = "verwendetInFahrtabschnitten",
+            ignore = true
+    )
+    PersonRefDTO toPersonRefDTO(Person person);
 }

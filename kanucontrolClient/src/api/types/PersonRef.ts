@@ -4,4 +4,5 @@ export interface PersonRef {
   name: string;
   vorname: string;
   hauptvereinAbk?: string;
+  verwendetInFahrtabschnitten?: boolean;
 }

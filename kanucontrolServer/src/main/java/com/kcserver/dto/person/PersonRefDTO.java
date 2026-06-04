@@ -9,7 +9,7 @@ public class PersonRefDTO {
     private String vorname;
     private String name;
 
-    private String hauptvereinAbk;   // ⭐ NEU
+    private String hauptvereinAbk;
 
-    // getter/setter
+    private boolean verwendetInFahrtabschnitten;
 }

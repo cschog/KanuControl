@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 
-import { Box, IconButton, Stack, Tooltip } from "@mui/material";
+import { Box, IconButton, Stack, Tooltip, Typography } from "@mui/material";
 
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -27,33 +27,28 @@ export default function ReisekostenFahrtabschnittTable({ data, onEdit, onDelete 
       {
         accessorKey: "reihenfolge",
         header: "#",
-        size: 60,
+        size: 50,
       },
 
       {
         accessorKey: "vonOrt",
         header: "Von",
-        size: 180,
       },
 
       {
         accessorKey: "nachOrt",
         header: "Nach",
-        size: 180,
       },
 
       {
         accessorKey: "beschreibung",
-
         header: "Bemerkung",
-
-        size: 250,
       },
 
       {
         accessorKey: "kilometer",
         header: "km",
-        size: 100,
+        size: 80,
         meta: {
           align: "right",
         },
@@ -62,29 +57,26 @@ export default function ReisekostenFahrtabschnittTable({ data, onEdit, onDelete 
       {
         id: "mitfahrer",
         header: "Mitfahrer",
-        size: 120,
-
+        size: 90,
         meta: {
           align: "center",
         },
-
         cell: ({ row }) => <Box textAlign="center">{row.original.mitfahrerIds?.length ?? 0}</Box>,
       },
 
       {
         accessorKey: "anhaenger",
-        header: "Anhänger",
-
+        header: "Hänger",
         cell: ({ row }) => (row.original.anhaenger ? "Ja" : "Nein"),
       },
 
       {
         id: "actions",
         header: "",
-        size: 100,
+        size: 70,
 
         cell: ({ row }) => (
-          <Stack direction="row" spacing={1}>
+          <Stack direction="row" spacing={0}>
             <Tooltip title="Bearbeiten">
               <IconButton size="small" onClick={() => onEdit(row.original)}>
                 <EditIcon fontSize="small" />
@@ -109,23 +101,30 @@ export default function ReisekostenFahrtabschnittTable({ data, onEdit, onDelete 
       columns={columns}
       loading={false}
       height={450}
+      fixedColumnWidths={false}
       mobileRenderRow={(row) => (
-        <Box>
-          <Box
-            sx={{
-              fontWeight: 600,
-            }}
-          >
-            {row.vonOrt}
-            {" → "}
-            {row.nachOrt}
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Box>
+            <Typography fontWeight={600}>
+              {row.vonOrt} → {row.nachOrt}
+            </Typography>
+
+            <Typography variant="body2">
+              {row.kilometer} km · {row.mitfahrerIds?.length ?? 0} Mitfahrer
+            </Typography>
+
+            <Typography variant="body2">Anhänger: {row.anhaenger ? "Ja" : "Nein"}</Typography>
           </Box>
 
-          <Box>{row.kilometer} km</Box>
+          <Stack direction="row" spacing={0.5}>
+            <IconButton size="small" onClick={() => onEdit(row)}>
+              <EditIcon fontSize="small" />
+            </IconButton>
 
-          <Box>Mitfahrer: {row.mitfahrerIds?.length ?? 0}</Box>
-
-          <Box>Anhänger: {row.anhaenger ? "Ja" : "Nein"}</Box>
+            <IconButton size="small" color="error" onClick={() => onDelete(row)}>
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </Stack>
         </Box>
       )}
     />

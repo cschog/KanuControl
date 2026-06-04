@@ -8,7 +8,7 @@ public record ReisekostenabrechnungUpdateRequest(
         LocalDate abrechnungsdatum,
 
         String bemerkung,
-
+        List<Long> mitfahrerIds,
         List<FahrtabschnittRequest> fahrtabschnitte
 
 ) {}

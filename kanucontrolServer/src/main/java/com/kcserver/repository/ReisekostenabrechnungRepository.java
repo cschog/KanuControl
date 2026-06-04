@@ -33,5 +33,5 @@ and (:abrechnungId is null or r.id <> :abrechnungId)
             Long personId,
             Long abrechnungId
     );
-
+    boolean existsByFahrerId(Long personId);
 }

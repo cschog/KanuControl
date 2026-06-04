@@ -25,11 +25,8 @@ interface Abschnitt {
 
 interface Props {
   open: boolean;
-
   veranstaltungId: number;
-
   abschnitte: Abschnitt[];
-
   onClose: () => void;
 
   onSave: (person: PersonRef, startReihenfolge: number, endReihenfolge: number) => void;
