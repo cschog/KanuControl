@@ -84,7 +84,7 @@ public class FinanzenDashboardService {
         dto.setPlanEinnahmen(planEinnahmen);
 
         /* =====================================================
-           IST (vorerst leer)
+           IST
            ===================================================== */
 
         Abrechnung abrechnung =
@@ -187,13 +187,26 @@ public class FinanzenDashboardService {
 
         dto.setKostenNachKategorie(
                 positionen.stream()
-                        .filter(p ->
-                                p.getKategorie().isKosten()
+                        .filter(p -> p.getKategorie().isKosten())
+                        .collect(
+                                Collectors.groupingBy(
+                                        PlanungPosition::getKategorie,
+                                        Collectors.reducing(
+                                                BigDecimal.ZERO,
+                                                PlanungPosition::getBetrag,
+                                                BigDecimal::add
+                                        )
+                                )
                         )
-                        .map(p ->
+                        .entrySet()
+                        .stream()
+                        .sorted(
+                                java.util.Map.Entry.comparingByKey()
+                        )
+                        .map(e ->
                                 new BetragPositionDTO(
-                                        p.getKategorie().name(),
-                                        p.getBetrag()
+                                        e.getKey().name(),
+                                        e.getValue()
                                 )
                         )
                         .toList()
@@ -201,26 +214,36 @@ public class FinanzenDashboardService {
 
         dto.setEinnahmenNachKategorie(
                 positionen.stream()
-                        .filter(p ->
-                                p.getKategorie().isEinnahme()
+                        .filter(p -> p.getKategorie().isEinnahme())
+                        .collect(
+                                Collectors.groupingBy(
+                                        PlanungPosition::getKategorie,
+                                        Collectors.reducing(
+                                                BigDecimal.ZERO,
+                                                PlanungPosition::getBetrag,
+                                                BigDecimal::add
+                                        )
+                                )
                         )
-                        .map(p ->
+                        .entrySet()
+                        .stream()
+                        .sorted(
+                                java.util.Map.Entry.comparingByKey()
+                        )
+                        .map(e ->
                                 new BetragPositionDTO(
-                                        p.getKategorie().name(),
-                                        p.getBetrag()
+                                        e.getKey().name(),
+                                        e.getValue()
                                 )
                         )
                         .toList()
         );
 
         dto.setIstKostenNachKategorie(
-
                 buchungen.stream()
-
                         .filter(b ->
                                 b.getKategorie().isKosten()
                         )
-
                         .collect(
                                 Collectors.groupingBy(
                                         AbrechnungBuchung::getKategorie,
@@ -233,8 +256,10 @@ public class FinanzenDashboardService {
                         )
 
                         .entrySet()
-
                         .stream()
+                        .sorted(
+                                java.util.Map.Entry.comparingByKey()
+                        )
 
                         .map(e ->
                                 new BetragPositionDTO(
@@ -249,11 +274,9 @@ public class FinanzenDashboardService {
         dto.setIstEinnahmenNachKategorie(
 
                 buchungen.stream()
-
                         .filter(b ->
                                 b.getKategorie().isEinnahme()
                         )
-
                         .collect(
                                 Collectors.groupingBy(
                                         AbrechnungBuchung::getKategorie,
@@ -264,21 +287,19 @@ public class FinanzenDashboardService {
                                         )
                                 )
                         )
-
                         .entrySet()
-
                         .stream()
-
+                        .sorted(
+                                java.util.Map.Entry.comparingByKey()
+                        )
                         .map(e ->
                                 new BetragPositionDTO(
                                         e.getKey().name(),
                                         e.getValue()
                                 )
                         )
-
                         .toList()
         );
-
         return dto;
     }
 }

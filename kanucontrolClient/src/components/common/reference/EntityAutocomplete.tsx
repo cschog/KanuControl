@@ -69,33 +69,46 @@ export function EntityAutocomplete<T extends RefBase>({
     };
   }, [debounce, fetch]);
 
+  useEffect(() => {
+    if (!value) {
+      setInput("");
+    }
+  }, [value]);
+
   /* ================= RENDER ================= */
 
-  return (
-    <Autocomplete
-      options={options}
-      value={value ?? null}
-      disabled={disabled}
-      loading={loading}
-      isOptionEqualToValue={(a, b) => a.id === b.id}
-      getOptionLabel={(o) => getLabel(o)}
-      onInputChange={(_, v) => setInput(v)}
-      onChange={(_, v) => onChange(v ?? undefined)}
-      renderInput={(params) => (
-        <TextField
-          {...params}
-          label={label}
-          InputProps={{
-            ...params.InputProps,
-            endAdornment: (
-              <>
-                {loading && <CircularProgress size={18} />}
-                {params.InputProps.endAdornment}
-              </>
-            ),
-          }}
-        />
-      )}
-    />
-  );
+ return (
+   <Autocomplete
+     options={options}
+     value={value ?? null}
+     inputValue={input}
+     disabled={disabled}
+     loading={loading}
+     isOptionEqualToValue={(a, b) => a.id === b.id}
+     getOptionLabel={(o) => getLabel(o)}
+     onInputChange={(_, v) => setInput(v)}
+     onChange={(_, v) => {
+       onChange(v ?? undefined);
+
+       if (v) {
+         setInput("");
+       }
+     }}
+     renderInput={(params) => (
+       <TextField
+         {...params}
+         label={label}
+         InputProps={{
+           ...params.InputProps,
+           endAdornment: (
+             <>
+               {loading && <CircularProgress size={18} />}
+               {params.InputProps.endAdornment}
+             </>
+           ),
+         }}
+       />
+     )}
+   />
+ );
 }

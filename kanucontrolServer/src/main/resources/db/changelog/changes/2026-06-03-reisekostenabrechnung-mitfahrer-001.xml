@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="reisekostenabrechnung-mitfahrer-001" author="chris">
+
+        <createTable tableName="reisekostenabrechnung_mitfahrer">
+
+            <column name="abrechnung_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="person_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+        </createTable>
+
+        <addPrimaryKey
+                tableName="reisekostenabrechnung_mitfahrer"
+                columnNames="abrechnung_id,person_id"
+                constraintName="pk_rk_mitfahrer"/>
+
+        <addForeignKeyConstraint
+                constraintName="fk_rk_mitfahrer_abrechnung"
+                baseTableName="reisekostenabrechnung_mitfahrer"
+                baseColumnNames="abrechnung_id"
+                referencedTableName="reisekostenabrechnung"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint
+                constraintName="fk_rk_mitfahrer_person"
+                baseTableName="reisekostenabrechnung_mitfahrer"
+                baseColumnNames="person_id"
+                referencedTableName="person"
+                referencedColumnNames="id"/>
+
+    </changeSet>
+
+</databaseChangeLog>

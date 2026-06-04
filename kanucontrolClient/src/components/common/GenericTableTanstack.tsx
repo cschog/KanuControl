@@ -49,6 +49,8 @@ interface GenericTableTanstackProps<T extends WithId> {
 
   resetSelectionTrigger?: number;
 
+  fixedColumnWidths?: boolean;
+
   // ⭐ SERVER SORTING
 
   sorting?: SortingState;
@@ -76,6 +78,7 @@ export function GenericTableTanstack<T extends WithId>({
   hasMore = false,
   mobileRenderRow,
   resetSelectionTrigger,
+  fixedColumnWidths = true,
   enableCheckboxSelection = false,
 }: GenericTableTanstackProps<T>) {
   const theme = useTheme();
@@ -109,7 +112,6 @@ export function GenericTableTanstack<T extends WithId>({
         checked={table.getIsAllRowsSelected()}
         indeterminate={table.getIsSomeRowsSelected()}
         onChange={table.getToggleAllRowsSelectedHandler()}
-    
       />
     ),
 
@@ -291,9 +293,8 @@ export function GenericTableTanstack<T extends WithId>({
             stickyHeader
             size="small"
             sx={{
-              tableLayout: "fixed",
-
-              minWidth: table.getTotalSize(),
+              tableLayout: fixedColumnWidths ? "fixed" : "auto",
+              ...(fixedColumnWidths ? { minWidth: table.getTotalSize() } : { width: "100%" }),
             }}
           >
             <TableHead>
@@ -315,10 +316,13 @@ export function GenericTableTanstack<T extends WithId>({
                         onClick={header.column.getToggleSortingHandler()}
                         padding="normal"
                         sx={{
-                          width: header.getSize(),
+                          ...(fixedColumnWidths && {
+                            width: header.getSize(),
+                            minWidth: header.getSize(),
+                            maxWidth: header.getSize(),
+                          }),
+
                           whiteSpace: "nowrap",
-                          minWidth: header.getSize(),
-                          maxWidth: header.getSize(),
 
                           overflow: "hidden",
                           textOverflow: "ellipsis",
@@ -394,7 +398,12 @@ export function GenericTableTanstack<T extends WithId>({
                         size="small"
                         padding="normal"
                         sx={{
-                          width: cell.column.getSize(),
+                          ...(fixedColumnWidths && {
+                            width: cell.column.getSize(),
+                            minWidth: cell.column.getSize(),
+                            maxWidth: cell.column.getSize(),
+                          }),
+
                           py: 0.5,
                           px: 1,
 
@@ -403,10 +412,7 @@ export function GenericTableTanstack<T extends WithId>({
                             md: "1.2rem",
                           },
 
-                          minWidth: cell.column.getSize(),
-                          maxWidth: cell.column.getSize(),
                           overflow: "hidden",
-
                           textOverflow: "ellipsis",
 
                           whiteSpace: "nowrap",

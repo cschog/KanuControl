@@ -93,3 +93,5 @@ databaseChangeLog:
       file: db/changelog/changes/2026-05-31-fahrtabschnitt-002.xml
   - include:
       file: db/changelog/changes/2026-06-01-reisekostenabrechnung-audit-001.xml
+  - include:
+      file: db/changelog/changes/2026-06-03-reisekostenabrechnung-mitfahrer-001.xml

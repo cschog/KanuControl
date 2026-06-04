@@ -49,11 +49,13 @@ export interface ReisekostenabrechnungDetailResponse {
   gesamtKilometer: number;
   gesamtBetrag: number;
   bemerkung: string | null;
+  mitfahrer: PersonRef[];
   fahrtabschnitte: FahrtabschnittResponse[];
 }
 
 export interface ReisekostenabrechnungUpdateRequest {
   abrechnungsdatum: string;
   bemerkung: string;
+  mitfahrerIds: number[];
   fahrtabschnitte: FahrtabschnittRequest[];
 }

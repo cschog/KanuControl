@@ -1,5 +1,7 @@
 #!/bin/bash
 
+ssh-add --apple-load-keychain >/dev/null 2>&1
+
 echo "🛠️ Backend wird gebaut..."
 ./mvnw clean package -DskipTests
 

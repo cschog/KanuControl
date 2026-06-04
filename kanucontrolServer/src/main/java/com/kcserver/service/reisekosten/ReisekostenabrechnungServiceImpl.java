@@ -32,6 +32,7 @@ public class ReisekostenabrechnungServiceImpl
             konfigurationRepository;
     private final AltersService altersService;
     private final TeilnehmerRepository teilnehmerRepository;
+    private final FahrtabschnittMitfahrerRepository fahrtabschnittMitfahrerRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -159,6 +160,9 @@ public class ReisekostenabrechnungServiceImpl
         abrechnung.setBemerkung(
                 request.bemerkung()
         );
+
+
+
         abrechnung.setGesamtKilometer(0);
         abrechnung.setGesamtBetrag(BigDecimal.ZERO);
 
@@ -189,6 +193,27 @@ public class ReisekostenabrechnungServiceImpl
                 abrechnung.getGesamtKilometer(),
                 abrechnung.getGesamtBetrag(),
                 abrechnung.getBemerkung(),
+
+                abrechnung.getMitfahrer()
+                        .stream()
+                        .map(person -> {
+                            PersonRefDTO dto =
+                                    personMapper.toPersonRefDTO(person);
+
+                            dto.setVerwendetInFahrtabschnitten(
+                                    fahrtabschnittMitfahrerRepository
+                                            .existsByFahrtabschnittAbrechnungIdAndPersonId(
+                                                    abrechnung.getId(),
+                                                    person.getId()
+                                            )
+                            );
+
+                            return dto;
+                        })
+                        .toList(),
+
+
+
                 abrechnung.getFahrtabschnitte()
                         .stream()
                         .map(abschnitt ->
@@ -209,6 +234,8 @@ public class ReisekostenabrechnungServiceImpl
                         )
                         .toList()
         );
+
+
     }
 
     @Override
@@ -226,6 +253,30 @@ public class ReisekostenabrechnungServiceImpl
         abrechnung.setBemerkung(
                 request.bemerkung()
         );
+
+        abrechnung.getMitfahrer().clear();
+
+        if (request.mitfahrerIds() != null) {
+
+            for (Long personId : request.mitfahrerIds()) {
+
+                Person person = personRepository.findById(personId)
+                        .orElseThrow();
+
+                validateMitfahrer(
+                        abrechnung.getVeranstaltung(),
+                        abrechnung.getFahrer(),
+                        person);
+
+                validatePersonNichtBereitsZugeordnet(
+                        abrechnung.getVeranstaltung().getId(),
+                        person.getId(),
+                        abrechnung.getId(),
+                        person.getVorname() + " " + person.getName()
+                );
+                abrechnung.getMitfahrer().add(person);
+            }
+        }
 
         abrechnung.getFahrtabschnitte().clear();
         int gesamtKilometer = 0;
@@ -325,9 +376,8 @@ public class ReisekostenabrechnungServiceImpl
     }
 
     @Override
-    public void delete(
-            Long id
-    ) {
+    public void delete(Long id) {
+
         repository.deleteById(id);
     }
 

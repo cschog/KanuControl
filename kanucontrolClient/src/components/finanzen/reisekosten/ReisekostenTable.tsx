@@ -1,7 +1,7 @@
 // src/components/finanzen/reisekosten/ReisekostenTable.tsx
 
 import { useMemo } from "react";
-import { Box, Button, IconButton, Stack } from "@mui/material";
+import { Box, Button, IconButton, Stack, Typography } from "@mui/material";
 import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
@@ -122,41 +122,38 @@ const ReisekostenTable = ({ veranstaltungId }: Props) => {
         loading={isLoading}
         height={600}
         mobileRenderRow={(row) => (
-          <Box>
-            <Box
-              sx={{
-                fontWeight: 600,
-              }}
-            >
-              {row.fahrerName}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              width: "100%",
+            }}
+          >
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="body2" fontWeight={600} noWrap>
+                {row.fahrerName}
+              </Typography>
+
+              <Typography variant="body2" color="text.secondary">
+                {row.gesamtKilometer} km · <Money value={row.gesamtBetrag} />
+              </Typography>
             </Box>
 
-            <Box
-              sx={{
-                mt: 0.5,
-              }}
-            >
-              {row.gesamtKilometer} km
-            </Box>
+            <Stack direction="row" spacing={0.5}>
+              <IconButton
+                size="small"
+                onClick={() =>
+                  navigate(`/veranstaltungen/${veranstaltungId}/reisekosten/${row.id}`)
+                }
+              >
+                <EditIcon fontSize="small" />
+              </IconButton>
 
-            <Box
-              sx={{
-                mt: 0.5,
-                color: "primary.main",
-                fontWeight: 700,
-              }}
-            >
-              <Money value={row.gesamtBetrag} />
-            </Box>
-
-            <Button
-              size="small"
-              variant="outlined"
-              sx={{ mt: 1 }}
-              onClick={() => navigate(`/veranstaltungen/${veranstaltungId}/reisekosten/${row.id}`)}
-            >
-              Bearbeiten
-            </Button>
+              <IconButton size="small" color="error" onClick={() => setDeleteId(row.id)}>
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </Stack>
           </Box>
         )}
       />

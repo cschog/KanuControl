@@ -12,7 +12,9 @@ import java.math.BigDecimal;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -39,6 +41,15 @@ public class Reisekostenabrechnung extends Auditable {
             nullable = false
     )
     private Person fahrer;
+
+    @ManyToMany
+    @JoinTable(
+            name = "reisekostenabrechnung_mitfahrer",
+            joinColumns = @JoinColumn(name = "abrechnung_id"),
+            inverseJoinColumns = @JoinColumn(name = "person_id")
+    )
+    private Set<Person> mitfahrer = new HashSet<>();
+
 
     @Column(name = "abrechnungsdatum")
     private LocalDate abrechnungsdatum;
