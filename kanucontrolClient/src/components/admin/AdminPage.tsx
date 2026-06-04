@@ -53,7 +53,18 @@ export default function AdminPage() {
             Reisekosten
           </Button>
         </Grid>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Button
+            fullWidth
+            variant="outlined"
+            sx={{ height: 80 }}
+            onClick={() => navigate("/admin/audit")}
+          >
+            Audit
+          </Button>
+        </Grid>
       </Grid>
+
       <BottomActionBar
         left={[
           {

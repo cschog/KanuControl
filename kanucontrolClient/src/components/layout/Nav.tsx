@@ -19,6 +19,7 @@ import { useNavigate } from "react-router-dom";
 import { useAppContext } from "@/context/AppContext";
 
 import { getBackendVersion } from "@/api/services/systemApi";
+import apiClient from "@/api/client/apiClient";
 
 const Navigation = () => {
   const navigate = useNavigate();
@@ -39,10 +40,17 @@ const Navigation = () => {
 
   const handleHome = () => navigate("/startmenue");
 
-  const handleLogout = () =>
-    keycloak.logout({
+  const handleLogout = async () => {
+    try {
+      await apiClient.post("/admin/audit/logout");
+    } catch (error) {
+      console.error("Audit-Logout konnte nicht gespeichert werden", error);
+    }
+
+    await keycloak.logout({
       redirectUri: window.location.origin,
     });
+  };
 
   // const contextText = active
   //   ? `${schema} · ${active.name} · ${
