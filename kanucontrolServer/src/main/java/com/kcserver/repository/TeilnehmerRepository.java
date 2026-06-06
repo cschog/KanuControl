@@ -263,4 +263,22 @@ and (
             Long personId,
             Long abrechnungId
     );
+
+    @Query("""
+select t
+from Teilnehmer t
+join fetch t.veranstaltung v
+where t.person.id = :personId
+order by v.beginnDatum, v.name
+""")
+    List<Teilnehmer> findByPersonIdWithVeranstaltung(Long personId);
+
+    List<Teilnehmer> findByPersonId(Long personId);
+
+    @Modifying
+    @Query("""
+delete from Teilnehmer t
+where t.veranstaltung.id = :veranstaltungId
+""")
+    void deleteByVeranstaltungId(Long veranstaltungId);
 }

@@ -161,7 +161,7 @@ export default function ReisekostenDetailPage() {
       </Paper>
       {!isMobile && (
         <Typography variant="h5" gutterBottom>
-          Reisekostenabrechnung
+          Fahrkostenabrechnung
         </Typography>
       )}
       <Paper sx={{ p: 2, mb: 3 }}>

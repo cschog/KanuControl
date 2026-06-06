@@ -5,7 +5,9 @@ import com.kcserver.dto.verein.VereinRefDTO;
 import com.kcserver.entity.Person;
 import com.kcserver.entity.Verein;
 import com.kcserver.mapper.VereinMapper;
+import com.kcserver.repository.MitgliedRepository;
 import com.kcserver.repository.PersonRepository;
+import com.kcserver.repository.VeranstaltungRepository;
 import com.kcserver.repository.VereinRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,15 +26,21 @@ public class VereinService {
     private final VereinRepository vereinRepository;
     private final PersonRepository personRepository;
     private final VereinMapper vereinMapper;
+    private final MitgliedRepository mitgliedRepository;
+    private final VeranstaltungRepository veranstaltungRepository;
 
     public VereinService(
             VereinRepository vereinRepository,
             PersonRepository personRepository,
-            VereinMapper vereinMapper
+            VereinMapper vereinMapper,
+            MitgliedRepository mitgliedRepository,
+            VeranstaltungRepository veranstaltungRepository
     ) {
         this.vereinRepository = vereinRepository;
         this.personRepository = personRepository;
         this.vereinMapper = vereinMapper;
+        this.veranstaltungRepository = veranstaltungRepository;
+        this.mitgliedRepository = mitgliedRepository;
     }
 
     /* =========================================================
@@ -180,13 +188,46 @@ public class VereinService {
        DELETE
        ========================================================= */
 
+    @Transactional
+
     public void delete(Long id) {
-        if (!vereinRepository.existsById(id)) {
+
+        Verein verein = getVereinOrThrow(id);
+
+        if (mitgliedRepository.existsByVereinId(id)) {
+
             throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND, "Verein not found"
+
+                    HttpStatus.CONFLICT,
+
+                    "Der Verein kann nicht gelöscht werden, da noch Mitglieder zugeordnet sind."
+
             );
+
         }
-        vereinRepository.deleteById(id);
+
+        if (veranstaltungRepository.existsByVereinId(id)) {
+
+            throw new ResponseStatusException(
+
+                    HttpStatus.CONFLICT,
+
+                    "Der Verein kann nicht gelöscht werden, da er noch als Veranstalter verwendet wird."
+
+            );
+
+        }
+
+        vereinRepository.delete(verein);
+
+    }
+
+    private Verein getVereinOrThrow(Long id) {
+        return vereinRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Verein nicht gefunden"
+                ));
     }
 
     private void normalize(VereinDTO dto) {

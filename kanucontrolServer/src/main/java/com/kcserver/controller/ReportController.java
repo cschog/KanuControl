@@ -1,13 +1,12 @@
 package com.kcserver.controller;
 
+import com.kcserver.dto.reisekosten.ReisekostenabrechnungListResponse;
 import com.kcserver.dto.teilnehmer.TeilnehmerDetailDTO;
 import com.kcserver.dto.veranstaltung.VeranstaltungDetailDTO;
 import com.kcserver.service.TeilnehmerService;
 import com.kcserver.service.VeranstaltungService;
-import com.kcserver.service.pdf.PDFAbrechnungService;
-import com.kcserver.service.pdf.PDFErhebungsbogenService;
-import com.kcserver.service.pdf.PDFFmJemReportService;
-import com.kcserver.service.pdf.PDFTeilnehmerlisteService;
+import com.kcserver.service.pdf.*;
+import com.kcserver.service.reisekosten.ReisekostenabrechnungService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -37,6 +36,8 @@ public class ReportController {
 
     private final VeranstaltungService veranstaltungService;
     private final TeilnehmerService teilnehmerService;
+    private final PDFReisekostenabrechnungService reisekostenPdfService;
+    private final ReisekostenabrechnungService reisekostenabrechnungService;
 
    /* =========================================================
    FM / JEM Antrag (Vorschau)
@@ -265,11 +266,9 @@ public class ReportController {
             byte[] pdf,
             String filename
     ) {
-
         String encodedFilename = URLEncoder
                 .encode(filename, StandardCharsets.UTF_8)
                 .replaceAll("\\+", "%20");
-
         return ResponseEntity.ok()
                 .header(
                         HttpHeaders.CONTENT_DISPOSITION,
@@ -278,5 +277,52 @@ public class ReportController {
                 )
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(pdf);
+    }
+
+    @GetMapping("/reisekosten/{abrechnungId}/pdf/view")
+    public ResponseEntity<byte[]> viewReisekosten(
+            @PathVariable Long veranstaltungId,
+            @PathVariable Long abrechnungId
+    ) {
+
+        byte[] pdf = reisekostenPdfService.generate(abrechnungId);
+
+        VeranstaltungDetailDTO veranstaltung =
+                veranstaltungService.getById(veranstaltungId);
+
+        String filename = PdfFilenameUtil.build(
+                LocalDate.now(),
+                PdfDokumentTyp.REISEKOSTENABRECHNUNG,
+                veranstaltung
+        );
+
+        return buildInlineResponse(pdf, filename);
+    }
+
+    @GetMapping("/reisekosten/{abrechnungId}/pdf/download")
+    public ResponseEntity<byte[]> downloadReisekosten(
+            @PathVariable Long veranstaltungId,
+            @PathVariable Long abrechnungId
+    ) {
+
+        byte[] pdf = reisekostenPdfService.generate(abrechnungId);
+
+        VeranstaltungDetailDTO veranstaltung =
+                veranstaltungService.getById(veranstaltungId);
+
+        String filename = PdfFilenameUtil.build(
+                LocalDate.now(),
+                PdfDokumentTyp.REISEKOSTENABRECHNUNG,
+                veranstaltung
+        );
+
+        return buildAttachmentResponse(pdf, filename);
+    }
+    @GetMapping("/reisekosten")
+    public List<ReisekostenabrechnungListResponse> listReisekosten(
+            @PathVariable Long veranstaltungId
+    ) {
+        return reisekostenabrechnungService
+                .listByVeranstaltung(veranstaltungId);
     }
 }

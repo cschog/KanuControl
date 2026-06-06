@@ -1,6 +1,17 @@
 import { useEffect, useState, useCallback } from "react";
 
-import { Box, Paper } from "@mui/material";
+import {
+  Box,
+  Paper,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+} from "@mui/material";
+
+import axios from "axios";
 
 import { MenueHeader } from "@/components/layout/MenueHeader";
 
@@ -30,20 +41,15 @@ export default function VereinScreen() {
   /* ================= STATE ================= */
 
   const [data, setData] = useState<Verein[]>([]);
-
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState<string | null>(null);
-
   const [selected, setSelected] = useState<Verein | null>(null);
-
   const [editMode, setEditMode] = useState(false);
-
   const [editData, setEditData] = useState<Verein | null>(null);
-
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-
   const [csvImportOpen, setCsvImportOpen] = useState(false);
+  const [errorOpen, setErrorOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   /* ========================================================= */
   /* LOAD */
@@ -120,11 +126,23 @@ export default function VereinScreen() {
   const handleDelete = async () => {
     if (!selected?.id) return;
 
-    await deleteVerein(selected.id);
+    try {
+      await deleteVerein(selected.id);
 
-    setSelected(null);
+      await load();
 
-    await load();
+      setSelected(null);
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        setErrorMessage(
+          error.response?.data?.message ?? "Der Verein konnte nicht gelöscht werden.",
+        );
+      } else {
+        setErrorMessage("Unerwarteter Fehler.");
+      }
+
+      setErrorOpen(true);
+    }
   };
 
   /* ========================================================= */
@@ -244,6 +262,17 @@ export default function VereinScreen() {
         onClose={() => setCreateDialogOpen(false)}
         onCreate={handleCreate}
       />
+      <Dialog open={errorOpen} onClose={() => setErrorOpen(false)}>
+        <DialogTitle>Löschen nicht möglich</DialogTitle>
+
+        <DialogContent>
+          <DialogContentText sx={{ whiteSpace: "pre-line" }}>{errorMessage}</DialogContentText>
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={() => setErrorOpen(false)}>OK</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

@@ -17,7 +17,9 @@ import apiClient from "@/api/client/apiClient";
 
 import { getActiveVeranstaltung } from "@/api/services/veranstaltungApi";
 
+
 import { VeranstaltungDetail } from "@/api/types/VeranstaltungDetail";
+import { ReisekostenPdfDialog } from "@/components/finanzen/reisekosten/ReisekostenPdfDialog";
 
 const DokumenteScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -25,8 +27,9 @@ const DokumenteScreen: React.FC = () => {
 
   const [alterValidation, setAlterValidation] = useState<ValidationResult | null>(null);
 
+  const [reisekostenOpen, setReisekostenOpen] = useState(false);
+ 
 
-  
   /* =========================================================
      Aktive Veranstaltung laden
      ========================================================= */
@@ -38,10 +41,10 @@ const DokumenteScreen: React.FC = () => {
 
         setVeranstaltung(v);
 
-       if (v?.id) {
-         const abrechnung = await validateAbrechnung(v.id);
-         setAlterValidation(abrechnung);
-       }
+        if (v?.id) {
+          const abrechnung = await validateAbrechnung(v.id);
+          setAlterValidation(abrechnung);
+        }
       } catch (err) {
         console.error("Keine aktive Veranstaltung gefunden", err);
       }
@@ -112,34 +115,34 @@ const DokumenteScreen: React.FC = () => {
   /* =========================================================
      Reusable Report Section
      ========================================================= */
-const renderValidationWarning = (title: string, validation: ValidationResult | null) => {
-  if (!validation || validation.valid) {
-    return null;
-  }
+  const renderValidationWarning = (title: string, validation: ValidationResult | null) => {
+    if (!validation || validation.valid) {
+      return null;
+    }
 
-  return (
-    <Accordion
-      sx={{
-        bgcolor: "#fff3cd",
-        border: "1px solid #ffe69c",
-        borderRadius: 2,
-        boxShadow: "none",
-      }}
-    >
-      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-        <Typography fontWeight={700}>⚠️ {title}</Typography>
-      </AccordionSummary>
+    return (
+      <Accordion
+        sx={{
+          bgcolor: "#fff3cd",
+          border: "1px solid #ffe69c",
+          borderRadius: 2,
+          boxShadow: "none",
+        }}
+      >
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Typography fontWeight={700}>⚠️ {title}</Typography>
+        </AccordionSummary>
 
-      <AccordionDetails>
-        <Box component="ul" sx={{ mb: 0 }}>
-          {validation.messages.map((m: string, i: number) => (
-            <li key={i}>{m}</li>
-          ))}
-        </Box>
-      </AccordionDetails>
-    </Accordion>
-  );
-};
+        <AccordionDetails>
+          <Box component="ul" sx={{ mb: 0 }}>
+            {validation.messages.map((m: string, i: number) => (
+              <li key={i}>{m}</li>
+            ))}
+          </Box>
+        </AccordionDetails>
+      </Accordion>
+    );
+  };
 
   const renderSection = (
     title: string,
@@ -206,11 +209,9 @@ const renderValidationWarning = (title: string, validation: ValidationResult | n
 
           <Stack spacing={3}>
             {/* FM / JEM */}
-
             {renderSection("FM / JEM Antrag", "fm-jem-report", "fm-jem.pdf")}
 
             {/* Teilnehmerliste */}
-
             {renderSection("Teilnehmerliste", "teilnehmer/pdf", "teilnehmerliste.pdf")}
 
             {/* Abrechnung */}
@@ -223,7 +224,6 @@ const renderValidationWarning = (title: string, validation: ValidationResult | n
             )}
 
             {/* Erhebungsbogen */}
-
             {renderValidationWarning("Erhebungsbogen derzeit nicht möglich", alterValidation)}
 
             {renderSection(
@@ -232,7 +232,30 @@ const renderValidationWarning = (title: string, validation: ValidationResult | n
               "erhebungsbogen.pdf",
               !alterValidation?.valid,
             )}
+
+            {/* Reisekosten */}
+            <Paper
+              elevation={3}
+              sx={{
+                p: 3,
+                borderRadius: 3,
+              }}
+            >
+              <Stack direction="row" alignItems="center" spacing={1} mb={2}>
+                <PictureAsPdfIcon />
+                <Typography variant="h6">Fahrkosten</Typography>
+              </Stack>
+
+              <Button variant="contained" onClick={() => setReisekostenOpen(true)}>
+                Fahrkosten auswählen
+              </Button>
+            </Paper>
           </Stack>
+          <ReisekostenPdfDialog
+            open={reisekostenOpen}
+            veranstaltungId={veranstaltung.id}
+            onClose={() => setReisekostenOpen(false)}
+          />
         </>
       ) : (
         <Paper

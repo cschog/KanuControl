@@ -1,5 +1,16 @@
 import { useEffect, useState, useRef } from "react";
-import { Box, Paper, Typography, TextField, Button } from "@mui/material";
+import {
+  Box,
+  Paper,
+  Typography,
+  TextField,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+} from "@mui/material";
 import { GenericTableTanstack } from "@/components/common/GenericTableTanstack";
 import { PersonFormView } from "@/components/person/PersonFormView";
 import { personColumnsTanstack } from "@/components/person/personColumnsTanstack";
@@ -10,6 +21,8 @@ import { addTeilnehmer } from "@/api/services/teilnehmerApi";
 import { useNavigate } from "react-router-dom";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { GridFilterModel } from "@mui/x-data-grid";
+import axios from "axios";
+import type { ApiError } from "@/api/types/ApiError";
 
 import {
   getPersonById,
@@ -55,13 +68,15 @@ export default function PersonenScreen() {
   const [copyData, setCopyData] = useState<Partial<PersonSave>>();
 
   const { active } = useAppContext();
+  const [errorMessage, setErrorMessage] = useState("");
+  const [errorOpen, setErrorOpen] = useState(false);
 
   /* ================= FILTER ================= */
 
   const [search, setSearch] = useState("");
   const debounceSearch = useDebounce(search, 300);
 
-  const size = 25;
+  const size = 500;
 
   const [filterModel, setFilterModel] = useState<GridFilterModel>({
     items: [],
@@ -241,29 +256,30 @@ export default function PersonenScreen() {
   const handleDelete = async () => {
     if (!selectedId) return;
 
-    const deletedId = selectedId;
+    try {
+      const deletedId = selectedId;
 
-    // ⭐ DB DELETE
-    await deletePerson(deletedId);
+      await deletePerson(deletedId);
 
-    // ⭐ lokal aus Tabelle entfernen
-    setRows((prev) => prev.filter((p) => p.id !== deletedId));
+      setRows((prev) => prev.filter((p) => p.id !== deletedId));
+      setTotal((prev) => Math.max(0, prev - 1));
 
-    // ⭐ Counter aktualisieren
-    setTotal((prev) => Math.max(0, prev - 1));
+      setSelectedId(null);
+      setSelectedPerson(null);
+      setEditMode(false);
+      setEditData(null);
+    } catch (error: unknown) {
+      if (axios.isAxiosError<ApiError>(error)) {
+        setErrorMessage(error.response?.data.message ?? "Person konnte nicht gelöscht werden.");
+      } else {
+        setErrorMessage("Person konnte nicht gelöscht werden.");
+      }
 
-    // ⭐ Detail schließen
-    setSelectedId(null);
-
-    setSelectedPerson(null);
-
-    setEditMode(false);
-
-    setEditData(null);
+      setErrorOpen(true);
+    }
   };
 
   const resetFilter = () => {
-
     setSearch("");
 
     setFilterModel({
@@ -514,6 +530,18 @@ export default function PersonenScreen() {
           setCreateOpen(false);
         }}
       />
+
+      <Dialog open={errorOpen} onClose={() => setErrorOpen(false)}>
+        <DialogTitle>Löschen nicht möglich</DialogTitle>
+
+        <DialogContent>
+          <DialogContentText sx={{ whiteSpace: "pre-line" }}>{errorMessage}</DialogContentText>
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={() => setErrorOpen(false)}>OK</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

@@ -4,14 +4,12 @@ import com.kcserver.dto.mitglied.MitgliedSaveDTO;
 import com.kcserver.dto.person.*;
 import com.kcserver.entity.Mitglied;
 import com.kcserver.entity.Person;
+import com.kcserver.entity.Teilnehmer;
 import com.kcserver.entity.Verein;
 import com.kcserver.enumtype.CountryCode;
 import com.kcserver.mapper.PersonMapper;
 import com.kcserver.persistence.specification.PersonSpecification;
-import com.kcserver.repository.MitgliedRepository;
-import com.kcserver.repository.PersonRepository;
-import com.kcserver.repository.TeilnehmerRepository;
-import com.kcserver.repository.VereinRepository;
+import com.kcserver.repository.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -22,6 +20,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
+
 import com.kcserver.dto.common.ScrollResponse;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
@@ -35,19 +35,25 @@ public class PersonServiceImpl implements PersonService {
     private final VereinRepository vereinRepository;
     private final MitgliedRepository mitgliedRepository;
     private final TeilnehmerRepository teilnehmerRepository;
+    private final ReisekostenabrechnungRepository reisekostenabrechnungRepository;
+    private final FahrtabschnittMitfahrerRepository fahrtabschnittMitfahrerRepository;
 
     public PersonServiceImpl(
             PersonRepository personRepository,
             PersonMapper personMapper,
             VereinRepository vereinRepository,
             MitgliedRepository mitgliedRepository,
-            TeilnehmerRepository teilnehmerRepository
+            TeilnehmerRepository teilnehmerRepository,
+            ReisekostenabrechnungRepository reisekostenabrechnungRepository,
+            FahrtabschnittMitfahrerRepository fahrtabschnittMitfahrerRepository
     ) {
         this.personRepository = personRepository;
         this.personMapper = personMapper;
         this.vereinRepository = vereinRepository;
         this.mitgliedRepository = mitgliedRepository;
         this.teilnehmerRepository = teilnehmerRepository;
+        this.reisekostenabrechnungRepository = reisekostenabrechnungRepository;
+        this.fahrtabschnittMitfahrerRepository = fahrtabschnittMitfahrerRepository;
     }
 
     /* =========================================================
@@ -271,10 +277,43 @@ public class PersonServiceImpl implements PersonService {
     public void deletePerson(long id) {
         if (!personRepository.existsById(id)) {
             throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND, "Person not found"
+                    HttpStatus.NOT_FOUND,
+                    "Person not found"
             );
         }
-        teilnehmerRepository.deleteByPersonId(id);
+
+        List<Teilnehmer> teilnahmen =
+                teilnehmerRepository.findByPersonId(id);
+
+        if (!teilnahmen.isEmpty()) {
+
+            String veranstaltungen = teilnahmen.stream()
+                    .map(t -> "• " + t.getVeranstaltung().getName())
+                    .distinct()
+                    .sorted()
+                    .collect(Collectors.joining("\n"));
+
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Person kann nicht gelöscht werden.\n\nVerwendet in:\n"
+                            + veranstaltungen
+            );
+        }
+
+        if (reisekostenabrechnungRepository.existsByFahrerId(id)) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Person kann nicht gelöscht werden. Sie wird als Fahrer in einer Reisekostenabrechnung verwendet."
+            );
+        }
+
+        if (fahrtabschnittMitfahrerRepository.existsByPersonId(id)) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Person kann nicht gelöscht werden. Sie wird als Mitfahrer in einer Reisekostenabrechnung verwendet."
+            );
+        }
+
         personRepository.deleteById(id);
     }
 

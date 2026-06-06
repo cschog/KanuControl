@@ -1,9 +1,11 @@
 package com.kcserver.service;
 
 import com.kcserver.config.FoerderConfig;
+import com.kcserver.dto.foerder.FoerdersatzLookupResult;
 import com.kcserver.entity.*;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -12,6 +14,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class FoerderService {
 
@@ -126,13 +129,15 @@ public class FoerderService {
             return BigDecimal.ZERO;
         }
 
-        Foerdersatz fs =
-                foerdersatzService.findEntityGueltigFuerTypAm(
+        FoerdersatzLookupResult result =
+                foerdersatzService.getGueltigOderLetztenMitInfo(
                         veranstaltung.getTyp(),
                         datum
                 );
 
-        if (fs == null || fs.getFoerdersatz() == null) {
+        Foerdersatz fs = result.foerdersatz();
+
+        if (fs.getFoerdersatz() == null) {
             return BigDecimal.ZERO;
         }
 
@@ -225,13 +230,15 @@ public class FoerderService {
             return BigDecimal.ZERO;
         }
 
-        Foerdersatz fs =
-                foerdersatzService.findEntityGueltigFuerTypAm(
+        FoerdersatzLookupResult result =
+                foerdersatzService.getGueltigOderLetztenMitInfo(
                         veranstaltung.getTyp(),
                         datum
                 );
 
-        if (fs == null || fs.getFoerdersatz() == null) {
+        Foerdersatz fs = result.foerdersatz();
+
+        if (fs.getFoerdersatz() == null) {
             return BigDecimal.ZERO;
         }
 

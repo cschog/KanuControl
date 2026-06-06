@@ -41,4 +41,12 @@ join fetch v.verein
 where v.id = :id
 """)
     Optional<Veranstaltung> findByIdWithVerein(Long id);
+
+    Optional<Veranstaltung>
+    findTopByOrderByBeginnDatumDescBeginnZeitDesc();
+
+    Optional<Veranstaltung>
+    findTopByIdNotOrderByBeginnDatumDescBeginnZeitDesc(Long id);
+
+    boolean existsByVereinId(Long vereinId);
 }

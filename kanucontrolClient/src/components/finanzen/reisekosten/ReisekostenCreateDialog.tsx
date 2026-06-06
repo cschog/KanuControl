@@ -45,7 +45,7 @@ export default function ReisekostenCreateDialog({ open, veranstaltungId, onClose
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Neue Reisekostenabrechnung</DialogTitle>
+      <DialogTitle>Neue Fahrkostenabrechnung</DialogTitle>
 
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>

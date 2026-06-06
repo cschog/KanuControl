@@ -57,4 +57,6 @@ public interface MitgliedRepository extends JpaRepository<Mitglied, Long> {
            and m.hauptVerein = true
     """)
     void unsetHauptvereinByPerson(@Param("personId") Long personId);
+
+    boolean existsByVereinId(Long vereinId);
 }

@@ -66,8 +66,7 @@ public class AuditFilter extends OncePerRequestFilter {
             String sessionId =
                     jwt.getClaimAsString("sid");
 
-            String ip =
-                    request.getRemoteAddr();
+            String ip = getClientIp(request);
 
             String userAgent =
                     request.getHeader("User-Agent");
@@ -84,5 +83,23 @@ public class AuditFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+    private String getClientIp(HttpServletRequest request) {
+
+        String xForwardedFor =
+                request.getHeader("X-Forwarded-For");
+
+        if (xForwardedFor != null && !xForwardedFor.isBlank()) {
+            return xForwardedFor.split(",")[0].trim();
+        }
+
+        String xRealIp =
+                request.getHeader("X-Real-IP");
+
+        if (xRealIp != null && !xRealIp.isBlank()) {
+            return xRealIp;
+        }
+
+        return request.getRemoteAddr();
     }
 }
