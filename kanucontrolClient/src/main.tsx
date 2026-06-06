@@ -8,6 +8,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 import Root from "@/Root";
 
+
 import { AppProvider } from "@/context/AppProvider";
 
 import { LocalizationProvider } from "@mui/x-date-pickers";
@@ -32,16 +33,18 @@ const queryClient = new QueryClient();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <AppProvider>
-            <Root />
-          </AppProvider>
-        </LocalizationProvider>
-      </BrowserRouter>
+   
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <AppProvider>
+              <Root />
+            </AppProvider>
+          </LocalizationProvider>
+        </BrowserRouter>
 
-      {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
-    </QueryClientProvider>
+        {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
+      </QueryClientProvider>
+
   </React.StrictMode>,
 );

@@ -75,4 +75,9 @@ public interface FoerdersatzRepository
             @Param("typ") VeranstaltungTyp typ,
             @Param("ignoreId") Long ignoreId
     );
+
+    Optional<Foerdersatz>
+    findFirstByTypOrderByGueltigVonDesc(
+            VeranstaltungTyp typ
+    );
 }

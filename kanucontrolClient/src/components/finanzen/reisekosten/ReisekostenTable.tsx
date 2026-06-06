@@ -112,7 +112,7 @@ const ReisekostenTable = ({ veranstaltungId }: Props) => {
       />
       <Stack direction="row" justifyContent="flex-end" sx={{ mb: 2 }}>
         <Button variant="contained" startIcon={<AddIcon />} onClick={() => setDialogOpen(true)}>
-          Neue Reisekostenabrechnung
+          Neue Fahrkostenabrechnung
         </Button>
       </Stack>
 
@@ -173,7 +173,7 @@ const ReisekostenTable = ({ veranstaltungId }: Props) => {
 
           setDeleteId(null);
         }}
-        description="Soll die Reisekostenabrechnung wirklich gelöscht werden?"
+        description="Soll die Fahrkostenabrechnung wirklich gelöscht werden?"
       />
     </Box>
   );

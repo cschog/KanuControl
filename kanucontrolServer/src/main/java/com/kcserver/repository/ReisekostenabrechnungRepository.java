@@ -2,9 +2,9 @@ package com.kcserver.repository;
 
 import com.kcserver.entity.Reisekostenabrechnung;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
-import org.springframework.data.jpa.repository.Query;
 
 public interface ReisekostenabrechnungRepository
         extends JpaRepository<Reisekostenabrechnung, Long> {
@@ -34,4 +34,5 @@ and (:abrechnungId is null or r.id <> :abrechnungId)
             Long abrechnungId
     );
     boolean existsByFahrerId(Long personId);
+
 }

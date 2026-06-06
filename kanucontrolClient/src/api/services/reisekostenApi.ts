@@ -98,3 +98,9 @@ export async function updateReisekostenabrechnung(
 export async function deleteReisekostenabrechnung(id: number): Promise<void> {
   await apiClient.delete(`/reisekosten/${id}`);
 }
+
+export async function getReisekostenByVeranstaltung(veranstaltungId: number) {
+  const res = await apiClient.get(`/veranstaltungen/${veranstaltungId}/reisekosten`);
+
+  return res.data;
+}

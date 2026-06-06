@@ -44,6 +44,7 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
     private final BeitragsstrukturMapper beitragsstrukturMapper;
     private final BeitragsstrukturRepository beitragsstrukturRepository;
 
+
     /* =========================================================
        CREATE
        ========================================================= */
@@ -222,6 +223,7 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
     public void delete(Long id) {
 
         Veranstaltung v = getVeranstaltungOrThrow(id);
+        boolean warAktiv = v.isAktiv();
 
         boolean hasTeilnehmer =
                 teilnehmerRepository.existsNonLeiter(id, TeilnehmerRolle.LEITER);
@@ -233,7 +235,21 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
         planungRepository.findByVeranstaltungId(id)
                 .ifPresent(planungRepository::delete);
 
+        teilnehmerRepository.deleteByVeranstaltungId(id);
+
         veranstaltungRepository.delete(v);
+        veranstaltungRepository.flush();
+
+        if (warAktiv) {
+            Optional<Veranstaltung> neuAktiv =
+                    veranstaltungRepository
+                            .findTopByIdNotOrderByBeginnDatumDescBeginnZeitDesc(id);
+
+            neuAktiv.ifPresent(veranstaltung -> {
+                veranstaltung.setAktiv(true);
+                veranstaltungRepository.save(veranstaltung);
+            });
+        }
     }
 
     @Override
