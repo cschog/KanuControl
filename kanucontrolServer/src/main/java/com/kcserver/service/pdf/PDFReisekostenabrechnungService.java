@@ -1,12 +1,10 @@
 package com.kcserver.service.pdf;
 
 import com.kcserver.dto.reisekosten.KostenZeile;
-import com.kcserver.entity.Fahrtabschnitt;
-import com.kcserver.entity.Person;
-import com.kcserver.entity.ReisekostenKonfiguration;
-import com.kcserver.entity.Reisekostenabrechnung;
+import com.kcserver.entity.*;
 import com.kcserver.repository.ReisekostenKonfigurationRepository;
 import com.kcserver.repository.ReisekostenabrechnungRepository;
+import com.kcserver.util.PdfFilenameUtil;
 import lombok.RequiredArgsConstructor;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -21,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.RoundingMode;
 import java.text.NumberFormat;
 import java.util.*;
-import com.kcserver.entity.FahrtabschnittMitfahrer;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -68,7 +65,7 @@ public class PDFReisekostenabrechnungService {
             try (PDDocument document = Loader.loadPDF(
                     StreamUtils.copyToByteArray(
                             new ClassPathResource(
-                                    "pdf/fahrkostenformular.pdf")
+                                    "pdf/fahrkostenformular_template.pdf")
                                     .getInputStream()
                     ))) {
 
@@ -117,6 +114,22 @@ public class PDFReisekostenabrechnungService {
             );
         }
     }
+
+    @Transactional(readOnly = true)
+    public String buildFilename(Long abrechnungId) {
+
+        Reisekostenabrechnung rk =
+                repository.findById(abrechnungId)
+                        .orElseThrow();
+
+        return PdfFilenameUtil.buildReisekosten(
+                LocalDate.now(),
+                rk.getVeranstaltung(),
+                rk.getFahrer().getName(),
+                rk.getFahrer().getVorname()
+        );
+    }
+
 
     private void fillHeader(
             PDAcroForm form,
@@ -228,7 +241,7 @@ public class PDFReisekostenabrechnungService {
 
             set(
                     form,
-                    "HängerRow" + row,
+                    "HaengerRow" + row,
                     abschnitt.isAnhaenger()
                             ? "x"
                             : ""
@@ -237,6 +250,7 @@ public class PDFReisekostenabrechnungService {
             row++;
         }
     }
+
 
     private void fillFooter(
             PDAcroForm form,
@@ -565,18 +579,14 @@ public class PDFReisekostenabrechnungService {
 
             set(
                     form,
-                    "€kmRow" + row,
-                    z.getSatz()
-                            .setScale(2)
-                            .toPlainString()
+                    "EurkmRow" + row,
+                    formatBetrag(z.getSatz())
             );
 
             set(
                     form,
-                    "Summe€Row" + row,
-                    z.getBetrag()
-                            .setScale(2)
-                            .toPlainString()
+                    "SummeEurRow" + row,
+                    formatBetrag(z.getBetrag())
             );
 
             gesamt = gesamt.add(
@@ -588,7 +598,7 @@ public class PDFReisekostenabrechnungService {
 
         set(
                 form,
-                "Summe€Gesamt",
+                "SummeEurGesamt",
                 formatEuro(gesamt)
         );
     }
@@ -599,5 +609,16 @@ public class PDFReisekostenabrechnungService {
         return BigDecimal.valueOf(kilometer)
                 .multiply(satz)
                 .setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private String formatBetrag(BigDecimal wert) {
+
+        if (wert == null) {
+            return "";
+        }
+
+        return wert.setScale(2, RoundingMode.HALF_UP)
+                .toPlainString()
+                .replace('.', ',');
     }
 }

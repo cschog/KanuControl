@@ -11,18 +11,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.web.bind.annotation.*;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
 import com.kcserver.enumtype.PdfDokumentTyp;
 import com.kcserver.util.PdfFilenameUtil;
-
 
 @RestController
 @RequestMapping("/api/veranstaltungen/{veranstaltungId}")
@@ -307,16 +302,13 @@ public class ReportController {
 
         byte[] pdf = reisekostenPdfService.generate(abrechnungId);
 
-        VeranstaltungDetailDTO veranstaltung =
-                veranstaltungService.getById(veranstaltungId);
-
-        String filename = PdfFilenameUtil.build(
-                LocalDate.now(),
-                PdfDokumentTyp.REISEKOSTENABRECHNUNG,
-                veranstaltung
-        );
+        String filename =
+                reisekostenPdfService.buildFilename(
+                        abrechnungId
+                );
 
         return buildAttachmentResponse(pdf, filename);
+
     }
     @GetMapping("/reisekosten")
     public List<ReisekostenabrechnungListResponse> listReisekosten(

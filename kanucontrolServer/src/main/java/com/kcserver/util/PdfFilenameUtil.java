@@ -98,4 +98,21 @@ public class PdfFilenameUtil {
                 .replaceAll("[\\\\/:*?\"<>|]", "")
                 .trim();
     }
+    public static String buildReisekosten(
+            LocalDate datum,
+            Veranstaltung veranstaltung,
+            String nachname,
+            String vorname
+    ) {
+
+        return sanitize(
+                datum +
+                        " Fahrkostenabrechnung " +
+                        veranstaltung.getName() +
+                        " " +
+                        nachname +
+                        "_" +
+                        vorname
+        ) + ".pdf";
+    }
 }

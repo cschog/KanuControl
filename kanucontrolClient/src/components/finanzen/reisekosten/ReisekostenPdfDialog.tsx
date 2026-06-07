@@ -6,14 +6,13 @@ import {
   DialogContent,
   DialogActions,
   Button,
-  RadioGroup,
   FormControlLabel,
-  Radio,
   Typography,
   Stack,
   CircularProgress,
 } from "@mui/material";
 
+import Checkbox from "@mui/material/Checkbox";
 import apiClient from "@/api/client/apiClient";
 import { ReisekostenabrechnungListResponse } from "@/api/types/Reisekostenabrechnung";
 
@@ -32,7 +31,11 @@ export const ReisekostenPdfDialog: React.FC<ReisekostenPdfDialogProps> = ({
 
   const [abrechnungen, setAbrechnungen] = useState<ReisekostenabrechnungListResponse[]>([]);
 
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+
+  const toggleSelection = (id: number) => {
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  };
 
   /* =========================================================
      Laden
@@ -53,9 +56,7 @@ export const ReisekostenPdfDialog: React.FC<ReisekostenPdfDialogProps> = ({
 
         setAbrechnungen(data);
 
-        if (data.length > 0) {
-          setSelectedId(data[0].id);
-        }
+        setSelectedIds(data.filter((rk) => rk.druckbar).map((rk) => rk.id));
       } catch (err) {
         console.error("Fehler beim Laden der Reisekosten", err);
       } finally {
@@ -66,43 +67,29 @@ export const ReisekostenPdfDialog: React.FC<ReisekostenPdfDialogProps> = ({
     loadData();
   }, [open, veranstaltungId]);
 
-
-  /* =========================================================
-     Vorschau
-     ========================================================= */
-
-  const handlePreview = async () => {
-    if (!selectedId) {
-      return;
-    }
-
-    const res = await apiClient.get(
-      `/veranstaltungen/${veranstaltungId}/reisekosten/${selectedId}/pdf/view`,
-      {
-        responseType: "blob",
-      },
-    );
-
-    const blob = new Blob([res.data], {
-      type: "application/pdf",
-    });
-
-    const url = URL.createObjectURL(blob);
-
-    window.open(url, "_blank");
-  };
-
   /* =========================================================
      Download
      ========================================================= */
 
-  const handleDownload = async () => {
-    if (!selectedId) {
-      return;
-    }
+  const handleDownloadAll = async () => {
+    for (const rk of abrechnungen) {
+      if (!rk.druckbar) {
+        continue;
+      }
 
+      if (!selectedIds.includes(rk.id)) {
+        continue;
+      }
+
+      await downloadPdf(rk.id);
+
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    }
+  };
+
+  const downloadPdf = async (id: number) => {
     const res = await apiClient.get(
-      `/veranstaltungen/${veranstaltungId}/reisekosten/${selectedId}/pdf/download`,
+      `/veranstaltungen/${veranstaltungId}/reisekosten/${id}/pdf/download`,
       {
         responseType: "blob",
       },
@@ -156,30 +143,49 @@ export const ReisekostenPdfDialog: React.FC<ReisekostenPdfDialogProps> = ({
             Für diese Veranstaltung wurden noch keine Reisekostenabrechnungen erfasst.
           </Typography>
         ) : (
-          <RadioGroup value={selectedId} onChange={(e) => setSelectedId(Number(e.target.value))}>
+          <Stack spacing={1}>
             {abrechnungen.map((rk) => (
               <FormControlLabel
                 key={rk.id}
-                value={rk.id}
-                control={<Radio />}
+                control={
+                  <Checkbox
+                    checked={selectedIds.includes(rk.id)}
+                    onChange={() => toggleSelection(rk.id)}
+                    disabled={!rk.druckbar}
+                  />
+                }
                 label={
-                  `${rk.fahrerName} • ` + `${rk.gesamtKilometer} km • ` + `${rk.gesamtBetrag} €`
+                  <Stack spacing={0.5}>
+                    <Typography>
+                      {rk.fahrerName} • {rk.gesamtKilometer} km • {rk.gesamtBetrag} €
+                    </Typography>
+
+                    {!rk.druckbar && (
+                      <Typography variant="caption" color="error">
+                        {rk.fehler.join(", ")}
+                      </Typography>
+                    )}
+                  </Stack>
                 }
               />
             ))}
-          </RadioGroup>
+          </Stack>
         )}
       </DialogContent>
 
       <DialogActions>
         <Button onClick={onClose}>Schließen</Button>
 
-        <Button variant="outlined" disabled={!selectedId} onClick={handlePreview}>
-          Vorschau
+        <Button
+          onClick={() =>
+            setSelectedIds(abrechnungen.filter((rk) => rk.druckbar).map((rk) => rk.id))
+          }
+        >
+          Alle auswählen
         </Button>
-
-        <Button variant="contained" disabled={!selectedId} onClick={handleDownload}>
-          Download
+        <Button onClick={() => setSelectedIds([])}>Auswahl löschen</Button>
+        <Button variant="contained" disabled={selectedIds.length === 0} onClick={handleDownloadAll}>
+          Alle ausgeben
         </Button>
       </DialogActions>
     </Dialog>
