@@ -10,7 +10,7 @@ export default function ReisekostenKonfigurationAdminPage() {
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h5" gutterBottom>
-        Reisekosten-Konfiguration
+        Fahrkosten-Konfiguration
       </Typography>
 
       <ReisekostenKonfigurationTable />

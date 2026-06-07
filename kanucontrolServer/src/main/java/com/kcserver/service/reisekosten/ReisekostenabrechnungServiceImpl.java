@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -42,13 +43,22 @@ public class ReisekostenabrechnungServiceImpl
 
         return repository.findByVeranstaltungId(veranstaltungId)
                 .stream()
-                .map(r -> new ReisekostenabrechnungListResponse(
-                        r.getId(),
-                        r.getFahrer().getId(),
-                        r.getFahrer().getVorname() + " " + r.getFahrer().getName(),
-                        r.getGesamtKilometer(),
-                        r.getGesamtBetrag()
-                ))
+                .map(r -> {
+
+                    List<String> fehler = validatePdfData(r);
+
+                    return new ReisekostenabrechnungListResponse(
+                            r.getId(),
+                            r.getFahrer().getId(),
+                            r.getFahrer().getVorname()
+                                    + " "
+                                    + r.getFahrer().getName(),
+                            r.getGesamtKilometer(),
+                            r.getGesamtBetrag(),
+                            fehler.isEmpty(),
+                            fehler
+                    );
+                })
                 .toList();
     }
 
@@ -96,6 +106,38 @@ public class ReisekostenabrechnungServiceImpl
 
                 .toList();
     }
+
+    private List<String> validatePdfData(
+            Reisekostenabrechnung rk
+    ) {
+
+        List<String> fehler = new ArrayList<>();
+
+        Person fahrer = rk.getFahrer();
+
+        if (fahrer.getStrasse() == null ||
+                fahrer.getStrasse().isBlank()) {
+            fehler.add("Anschrift fehlt");
+        }
+
+        if (fahrer.getIban() == null ||
+                fahrer.getIban().isBlank()) {
+            fehler.add("IBAN fehlt");
+        }
+
+        if (fahrer.getBic() == null ||
+                fahrer.getBic().isBlank()) {
+            fehler.add("BIC fehlt");
+        }
+
+        if (fahrer.getBankName() == null ||
+                fahrer.getBankName().isBlank()) {
+            fehler.add("Bank fehlt");
+        }
+
+        return fehler;
+    }
+
     @Override
     @Transactional(readOnly = true)
     public List<PersonRefDTO> getVerfuegbareMitfahrer(

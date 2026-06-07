@@ -50,7 +50,7 @@ export default function AdminPage() {
             sx={{ height: 80 }}
             onClick={() => navigate("/admin/reisekosten")}
           >
-            Reisekosten
+            Fahrkosten
           </Button>
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>

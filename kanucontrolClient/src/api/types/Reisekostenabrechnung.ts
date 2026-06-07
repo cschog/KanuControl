@@ -7,6 +7,9 @@ export interface ReisekostenabrechnungListResponse {
   fahrerName: string;
   gesamtKilometer: number;
   gesamtBetrag: number;
+
+  druckbar: boolean;
+  fehler: string[];
 }
 
 export interface FahrtabschnittResponse {
