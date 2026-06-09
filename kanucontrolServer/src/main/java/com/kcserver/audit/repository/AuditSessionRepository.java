@@ -40,7 +40,7 @@ public interface AuditSessionRepository
             :now,
             :ip,
             :userAgent,
-            true,     
+            true,
             'ACTIVE'
         )
         ON CONFLICT (session_id)
@@ -114,4 +114,19 @@ public interface AuditSessionRepository
     where a.logoutTime is null
 """)
     long countActiveTenants();
+
+    @Query("""
+select distinct a.username
+from AuditSession a
+where a.tenant = :tenant
+  and a.logoutTime is null
+  and a.lastSeen >= :since
+  and a.username <> :currentUsername
+order by a.username
+""")
+    List<String> findOtherOnlineUsers(
+            @Param("tenant") String tenant,
+            @Param("currentUsername") String currentUsername,
+            @Param("since") LocalDateTime since
+    );
 }

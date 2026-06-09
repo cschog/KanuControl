@@ -11,8 +11,10 @@ import lombok.RequiredArgsConstructor;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StreamUtils;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.ByteArrayOutputStream;
@@ -40,6 +42,7 @@ public class PDFAbrechnungService {
     private final VeranstaltungValidator validator;
 
     public byte[] generate(Long veranstaltungId) {
+
 
         Veranstaltung v = veranstaltungRepository
                 .findByIdWithRelations(veranstaltungId)
@@ -76,14 +79,16 @@ public class PDFAbrechnungService {
                     "Nur FM oder JEM erlaubt"
             );
         }
-
         try (
                 PDDocument doc = Loader.loadPDF(
-                        getClass().getClassLoader()
-                                .getResourceAsStream("pdf/abrechnung-JEM-FM_template.pdf")
-                                .readAllBytes()
+                        StreamUtils.copyToByteArray(
+                                new ClassPathResource(
+                                        "pdf/abrechnung-JEM-FM_template.pdf"
+                                ).getInputStream()
+                        )
                 );
-                ByteArrayOutputStream out = new ByteArrayOutputStream()
+                ByteArrayOutputStream out =
+                        new ByteArrayOutputStream()
         ) {
 
             PDAcroForm form = doc.getDocumentCatalog().getAcroForm();

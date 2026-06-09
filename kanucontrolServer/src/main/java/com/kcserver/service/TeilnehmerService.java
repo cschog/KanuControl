@@ -9,10 +9,7 @@ import com.kcserver.enumtype.TeilnehmerRolle;
 import com.kcserver.mapper.PersonMapper;
 import com.kcserver.mapper.TeilnehmerMapper;
 import com.kcserver.persistence.specification.TeilnehmerSpecification;
-import com.kcserver.repository.MitgliedRepository;
-import com.kcserver.repository.PersonRepository;
-import com.kcserver.repository.TeilnehmerRepository;
-import com.kcserver.repository.VeranstaltungRepository;
+import com.kcserver.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
@@ -27,7 +24,7 @@ import java.util.List;
 import static com.kcserver.exception.EntityFinder.getOr404;
 import static com.kcserver.exception.ErrorMessages.*;
 import org.springframework.data.domain.Pageable;
-import java.math.BigDecimal;
+//import java.math.BigDecimal;
 
 @Service
 @Transactional
@@ -40,6 +37,7 @@ public class TeilnehmerService {
     private final PersonMapper personMapper;
     private final MitgliedRepository mitgliedRepository;
     private final BeitragsService beitragsService;
+    private final ReisekostenabrechnungRepository reisekostenabrechnungRepository;
 
 
     public TeilnehmerService(
@@ -49,7 +47,8 @@ public class TeilnehmerService {
             MitgliedRepository mitgliedRepository,
             TeilnehmerMapper teilnehmerMapper,
             PersonMapper personMapper,
-            BeitragsService beitragsService
+            BeitragsService beitragsService,
+            ReisekostenabrechnungRepository reisekostenabrechnungRepository
     ) {
         this.teilnehmerRepository = teilnehmerRepository;
         this.veranstaltungRepository = veranstaltungRepository;
@@ -58,6 +57,7 @@ public class TeilnehmerService {
         this.teilnehmerMapper = teilnehmerMapper;
         this.personMapper = personMapper;
         this.beitragsService = beitragsService;
+        this.reisekostenabrechnungRepository = reisekostenabrechnungRepository;
     }
 
     /* =========================================================
@@ -225,6 +225,11 @@ public class TeilnehmerService {
             );
         }
 
+        validateTeilnehmerKannEntferntWerden(
+                veranstaltungId,
+                teilnehmer.getPerson().getId()
+        );
+
         teilnehmerRepository.delete(teilnehmer);
     }
 
@@ -247,6 +252,11 @@ public class TeilnehmerService {
                 .toList();
 
         if (filteredIds.isEmpty()) return;
+
+        validateTeilnehmerKoennenEntferntWerden(
+                veranstaltungId,
+                filteredIds
+        );
 
         teilnehmerRepository.deleteByVeranstaltungIdAndPersonIds(
                 veranstaltungId,
@@ -282,10 +292,10 @@ public class TeilnehmerService {
     @Transactional(readOnly = true)
     public List<PersonListDTO> findAvailable(Long veranstaltungId, String search) {
 
-        Veranstaltung veranstaltung = getOr404(
-                veranstaltungRepository.findById(veranstaltungId),
-                VERANSTALTUNG_NOT_FOUND
-        );
+//        Veranstaltung veranstaltung = getOr404(
+//                veranstaltungRepository.findById(veranstaltungId),
+//                VERANSTALTUNG_NOT_FOUND
+//        );
 
         return teilnehmerRepository.findAvailable(veranstaltungId, search)
                 .stream()
@@ -301,10 +311,10 @@ public class TeilnehmerService {
             Pageable pageable
     ) {
 
-        Veranstaltung veranstaltung = getOr404(
-                veranstaltungRepository.findById(veranstaltungId),
-                VERANSTALTUNG_NOT_FOUND
-        );
+//        Veranstaltung veranstaltung = getOr404(
+//                veranstaltungRepository.findById(veranstaltungId),
+//                VERANSTALTUNG_NOT_FOUND
+//        );
 
         return teilnehmerRepository
                 .findAvailable(veranstaltungId, search, verein, pageable)
@@ -379,11 +389,11 @@ public class TeilnehmerService {
         );
     }
 
-    public Page<TeilnehmerKurzDTO> getTeilnehmerPaged(Long veranstaltungId, Pageable pageable) {
-        return teilnehmerRepository
-                .findByVeranstaltungId(veranstaltungId, pageable)
-                .map(teilnehmerMapper::toKurzDTO);
-    }
+//    public Page<TeilnehmerKurzDTO> getTeilnehmerPaged(Long veranstaltungId, Pageable pageable) {
+//        return teilnehmerRepository
+//                .findByVeranstaltungId(veranstaltungId, pageable)
+//                .map(teilnehmerMapper::toKurzDTO);
+//    }
 
 
     public List<TeilnehmerListDTO>
@@ -420,50 +430,50 @@ public class TeilnehmerService {
                 .toList();
     }
 
-    @Transactional
-    public TeilnehmerListDTO updateIndividuellerBeitrag(
-            Long teilnehmerId,
-            BigDecimal beitrag
-    ) {
-
-        Teilnehmer teilnehmer =
-                teilnehmerRepository
-                        .findById(teilnehmerId)
-                        .orElseThrow(() ->
-                                new EntityNotFoundException(
-                                        "Teilnehmer nicht gefunden"
-                                )
-                        );
-
-        Veranstaltung veranstaltung =
-                teilnehmer.getVeranstaltung();
-
-    /* =========================================
-       Fachregel
-       ========================================= */
-
-        if (!veranstaltung.isIndividuelleGebuehren()) {
-
-            throw new IllegalStateException(
-                    "Individuelle Gebühren sind deaktiviert"
-            );
-        }
-
-    /* =========================================
-       Update
-       ========================================= */
-
-        teilnehmer.setIndividuellerBeitrag(
-                beitrag
-        );
-
-        Teilnehmer saved =
-                teilnehmerRepository.save(
-                        teilnehmer
-                );
-
-        return teilnehmerMapper.toListDTO(saved);
-    }
+//    @Transactional
+//    public TeilnehmerListDTO updateIndividuellerBeitrag(
+//            Long teilnehmerId,
+//            BigDecimal beitrag
+//    ) {
+//
+//        Teilnehmer teilnehmer =
+//                teilnehmerRepository
+//                        .findById(teilnehmerId)
+//                        .orElseThrow(() ->
+//                                new EntityNotFoundException(
+//                                        "Teilnehmer nicht gefunden"
+//                                )
+//                        );
+//
+//        Veranstaltung veranstaltung =
+//                teilnehmer.getVeranstaltung();
+//
+//    /* =========================================
+//       Fachregel
+//       ========================================= */
+//
+//        if (!veranstaltung.isIndividuelleGebuehren()) {
+//
+//            throw new IllegalStateException(
+//                    "Individuelle Gebühren sind deaktiviert"
+//            );
+//        }
+//
+//    /* =========================================
+//       Update
+//       ========================================= */
+//
+//        teilnehmer.setIndividuellerBeitrag(
+//                beitrag
+//        );
+//
+//        Teilnehmer saved =
+//                teilnehmerRepository.save(
+//                        teilnehmer
+//                );
+//
+//        return teilnehmerMapper.toListDTO(saved);
+//    }
 
     @Transactional
     public TeilnehmerListDTO updateBezahlt(
@@ -552,5 +562,31 @@ public class TeilnehmerService {
                 .stream()
                 .map(teilnehmerMapper::toDetailDTO)
                 .toList();
+    }
+    private void validateTeilnehmerKannEntferntWerden(
+            Long veranstaltungId,
+            Long personId
+    ) {
+        if (reisekostenabrechnungRepository
+                .existsByVeranstaltungAndPersonVerwendet(
+                        veranstaltungId,
+                        personId)) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Der Teilnehmer wird in einer Reisekostenabrechnung als Fahrer oder Mitfahrer verwendet."
+            );
+        }
+    }
+    private void validateTeilnehmerKoennenEntferntWerden(
+            Long veranstaltungId,
+            List<Long> personIds
+    ) {
+        for (Long personId : personIds) {
+            validateTeilnehmerKannEntferntWerden(
+                    veranstaltungId,
+                    personId
+            );
+        }
     }
 }

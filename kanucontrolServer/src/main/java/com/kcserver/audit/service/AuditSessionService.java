@@ -2,10 +2,15 @@ package com.kcserver.audit.service;
 
 import com.kcserver.audit.enumtype.SessionEndReason;
 import com.kcserver.audit.repository.AuditSessionRepository;
+import com.kcserver.tenancy.TenantContext;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -43,6 +48,23 @@ public class AuditSessionService {
                 sessionId,
                 LocalDateTime.now(),
                 SessionEndReason.LOGOUT
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public List<String> getOnlineUsers() {
+
+        String tenant = TenantContext.getCurrentTenant();
+
+        String currentUsername =
+                SecurityContextHolder.getContext()
+                        .getAuthentication()
+                        .getName();
+
+        return repository.findOtherOnlineUsers(
+                tenant,
+                currentUsername,
+                LocalDateTime.now().minusMinutes(5)
         );
     }
 

@@ -1,9 +1,21 @@
 import { useEffect, useState, useCallback } from "react";
+import keycloak from "@/auth/keycloak";
 
-import { Alert, Box, Paper } from "@mui/material";
+import {
+  Alert,
+  Box,
+  Paper,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button,
+} from "@mui/material";
 
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { getOnlineUsers } from "@/api/services/sessionApi";
 
 import apiClient from "@/api/client/apiClient";
 
@@ -54,39 +66,30 @@ export default function VeranstaltungenScreen() {
      ========================================================= */
 
   const [data, setData] = useState<VeranstaltungList[]>([]);
-
   const [total, setTotal] = useState(0);
-
   const [selectedId, setSelectedId] = useState<number | null>(null);
-
   const [selectedVeranstaltung, setSelectedVeranstaltung] = useState<VeranstaltungDetail | null>(
     null,
   );
-
   const [beitragsstrukturen, setBeitragsstrukturen] = useState<BeitragsstrukturDTO[]>([]);
-
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState<string | null>(null);
-
   const [createOpen, setCreateOpen] = useState(false);
-
   const [copyOpen, setCopyOpen] = useState(false);
-
   const [copyData, setCopyData] = useState<Partial<VeranstaltungFormModel>>();
-
   const [editMode, setEditMode] = useState(false);
-
   const [btnEditDisabled, setBtnEditDisabled] = useState(true);
-
   const [btnDeleteDisabled, setBtnDeleteDisabled] = useState(true);
-
   const [sorting, setSorting] = useState<{ id: string; desc: boolean }[]>([
     {
       id: "beginnDatum",
       desc: true,
     },
   ]);
+
+  const [confirmActivateOpen, setConfirmActivateOpen] = useState(false);
+  const [otherOnlineUsers, setOtherOnlineUsers] = useState<string[]>([]);
+  const [activating, setActivating] = useState(false);
 
   /* =========================================================
      LOAD DATA
@@ -99,7 +102,6 @@ export default function VeranstaltungenScreen() {
       const res = await getVeranstaltungenPage(sorting[0]?.id, sorting[0]?.desc ? "desc" : "asc");
 
       setData(res);
-
       setTotal(res.length);
 
       setError(null);
@@ -143,26 +145,18 @@ export default function VeranstaltungenScreen() {
   const handleSelect = async (row: VeranstaltungList | null) => {
     if (!row) {
       setSelectedId(null);
-
       setSelectedVeranstaltung(null);
-
       setBtnEditDisabled(true);
-
       setBtnDeleteDisabled(true);
-
       return;
     }
 
     const detail = await getVeranstaltung(row.id);
 
     setSelectedId(row.id);
-
     setSelectedVeranstaltung(detail);
-
     setEditMode(false);
-
     setBtnEditDisabled(false);
-
     setBtnDeleteDisabled(false);
   };
 
@@ -212,13 +206,9 @@ export default function VeranstaltungenScreen() {
       const saved = await updateVeranstaltung(selectedVeranstaltung.id, payload);
 
       await fetchData();
-
       setSelectedVeranstaltung(saved);
-
       setEditMode(false);
-
       setBtnEditDisabled(false);
-
       setBtnDeleteDisabled(false);
 
       setError(null);
@@ -245,15 +235,11 @@ export default function VeranstaltungenScreen() {
     await deleteVeranstaltung(selectedVeranstaltung.id);
 
     setSelectedId(null);
-
     setSelectedVeranstaltung(null);
-
     setBtnEditDisabled(true);
-
     setBtnDeleteDisabled(true);
 
     await fetchData();
-
     await reloadContext();
   };
 
@@ -266,11 +252,44 @@ export default function VeranstaltungenScreen() {
       return;
     }
 
-    await setActiveVeranstaltung(selectedId);
-    await fetchData();
-    const updated = await getVeranstaltung(selectedId);
-    setSelectedVeranstaltung(updated);
-    await reloadContext();
+    try {
+      const users = await getOnlineUsers();
+
+      const otherUsers = users.filter((user) => user !== keycloak.tokenParsed?.preferred_username);
+
+      if (otherUsers.length > 0) {
+        setOtherOnlineUsers(otherUsers);
+        setConfirmActivateOpen(true);
+        return;
+      }
+
+      await doActivate();
+    } catch (err) {
+      console.error(err);
+      setError("Die Online-Benutzer konnten nicht ermittelt werden.");
+    }
+  };
+
+  const doActivate = async () => {
+    if (!selectedId) {
+      return;
+    }
+
+    setActivating(true);
+
+    try {
+      await setActiveVeranstaltung(selectedId);
+
+      await fetchData();
+
+      const updated = await getVeranstaltung(selectedId);
+
+      setSelectedVeranstaltung(updated);
+
+      await reloadContext();
+    } finally {
+      setActivating(false);
+    }
   };
 
   /* =========================================================
@@ -428,6 +447,42 @@ export default function VeranstaltungenScreen() {
         beitragsstrukturen={beitragsstrukturen}
         initialData={copyData}
       />
+
+      <Dialog open={confirmActivateOpen} onClose={() => setConfirmActivateOpen(false)}>
+        <DialogTitle>Achtung</DialogTitle>
+
+        <DialogContent>
+          <DialogContentText>
+            Der Wechsel der aktiven Veranstaltung betrifft alle aktuell angemeldeten Benutzer dieses
+            Vereins.
+          </DialogContentText>
+
+          <DialogContentText sx={{ mt: 2 }}>
+            Folgende weitere Benutzer sind derzeit angemeldet:
+          </DialogContentText>
+
+          <Box sx={{ mt: 1 }}>
+            {otherOnlineUsers.map((user) => (
+              <div key={user}>• {user}</div>
+            ))}
+          </Box>
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={() => setConfirmActivateOpen(false)}>Abbrechen</Button>
+
+          <Button
+            variant="contained"
+            disabled={activating}
+            onClick={async () => {
+              setConfirmActivateOpen(false);
+              await doActivate();
+            }}
+          >
+            Wechseln
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

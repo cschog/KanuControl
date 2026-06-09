@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 import { Box, Typography, Paper, Button, Stack } from "@mui/material";
+import axios from "axios";
 
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -11,7 +12,8 @@ import { useNavigate } from "react-router-dom";
 
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
-import { validateAbrechnung } from "@/api/services/abrechnungApi";
+import { validateDokument } from "@/api/services/dokumentValidationApi";
+import { PdfDokumentTyp } from "@/api/enums/PdfDokumentTyp";
 import { ValidationResult } from "@/api/types/ValidationResult";
 import apiClient from "@/api/client/apiClient";
 
@@ -25,7 +27,15 @@ const DokumenteScreen: React.FC = () => {
   const navigate = useNavigate();
   const [veranstaltung, setVeranstaltung] = useState<VeranstaltungDetail | null>(null);
 
-  const [alterValidation, setAlterValidation] = useState<ValidationResult | null>(null);
+ const [anmeldungValidation, setAnmeldungValidation] = useState<ValidationResult | null>(null);
+
+ const [teilnehmerValidation, setTeilnehmerValidation] = useState<ValidationResult | null>(null);
+
+ const [erhebungsbogenValidation, setErhebungsbogenValidation] = useState<ValidationResult | null>(
+   null,
+ );
+
+ const [abrechnungValidation, setAbrechnungValidation] = useState<ValidationResult | null>(null);
 
   const [reisekostenOpen, setReisekostenOpen] = useState(false);
  
@@ -34,22 +44,36 @@ const DokumenteScreen: React.FC = () => {
      Aktive Veranstaltung laden
      ========================================================= */
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const v = await getActiveVeranstaltung();
+useEffect(() => {
+  (async () => {
+    try {
+      const v = await getActiveVeranstaltung();
 
-        setVeranstaltung(v);
+      setVeranstaltung(v);
 
-        if (v?.id) {
-          const abrechnung = await validateAbrechnung(v.id);
-          setAlterValidation(abrechnung);
-        }
-      } catch (err) {
-        console.error("Keine aktive Veranstaltung gefunden", err);
+      if (v?.id) {
+        const [anmeldung, teilnehmerliste, erhebungsbogen, abrechnung] = await Promise.all([
+          validateDokument(v.id, PdfDokumentTyp.ANMELDUNG),
+          validateDokument(v.id, PdfDokumentTyp.TEILNEHMERLISTE),
+          validateDokument(v.id, PdfDokumentTyp.ERHEBUNGSBOGEN),
+          validateDokument(v.id, PdfDokumentTyp.ABRECHNUNG),
+        ]);
+
+        setAnmeldungValidation(anmeldung);
+        setTeilnehmerValidation(teilnehmerliste);
+        setErhebungsbogenValidation(erhebungsbogen);
+        setAbrechnungValidation(abrechnung);
       }
-    })();
-  }, []);
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        console.error("Status:", err.response?.status);
+        console.error("Data:", err.response?.data);
+      } else {
+        console.error(err);
+      }
+    }
+  })();
+}, []);
 
   /* =========================================================
      Generic PDF Preview
@@ -209,28 +233,46 @@ const DokumenteScreen: React.FC = () => {
 
           <Stack spacing={3}>
             {/* FM / JEM */}
-            {renderSection("FM / JEM Antrag", "fm-jem-report", "fm-jem.pdf")}
+            {renderValidationWarning("FM / JEM Antrag derzeit nicht möglich", anmeldungValidation)}
+
+            {renderSection(
+              "FM / JEM Antrag",
+              "fm-jem-report",
+              "fm-jem.pdf",
+              !anmeldungValidation?.valid,
+            )}
 
             {/* Teilnehmerliste */}
-            {renderSection("Teilnehmerliste", "teilnehmer/pdf", "teilnehmerliste.pdf")}
+            {renderValidationWarning("Teilnehmerliste derzeit nicht möglich", teilnehmerValidation)}
+
+            {renderSection(
+              "Teilnehmerliste",
+              "teilnehmer/pdf",
+              "teilnehmerliste.pdf",
+              !teilnehmerValidation?.valid,
+            )}
 
             {/* Abrechnung */}
-            {renderValidationWarning("Abrechnung derzeit nicht möglich", alterValidation)}
+            {renderValidationWarning("Abrechnung derzeit nicht möglich", abrechnungValidation)}
+
             {renderSection(
               "Abrechnung",
               "abrechnung/pdf",
               "abrechnung.pdf",
-              !alterValidation?.valid,
+              !abrechnungValidation?.valid,
             )}
 
             {/* Erhebungsbogen */}
-            {renderValidationWarning("Erhebungsbogen derzeit nicht möglich", alterValidation)}
+            {renderValidationWarning(
+              "Erhebungsbogen derzeit nicht möglich",
+              erhebungsbogenValidation,
+            )}
 
             {renderSection(
               "Erhebungsbogen",
               "erhebungsbogen/pdf",
               "erhebungsbogen.pdf",
-              !alterValidation?.valid,
+              !erhebungsbogenValidation?.valid,
             )}
 
             {/* Reisekosten */}
