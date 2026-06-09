@@ -1,28 +1,19 @@
 import { useEffect, useState, useCallback } from "react";
-
+import { getApiErrorMessage } from "@/api/utils/apiError";
+import { ErrorDialog } from "@/components/common/ErrorDialog";
 import { Box, Button, Chip, MenuItem, Typography, Paper, Grid, TextField } from "@mui/material";
-
 import { useTheme } from "@mui/material/styles";
 import { useMediaQuery } from "@mui/material";
-
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-
 import { useNavigate } from "react-router-dom";
-
 import { SortingState } from "@tanstack/react-table";
-
 import { useAppContext } from "@/context/AppContext";
-
 import { useDebounce } from "@/components/common/reference/hooks";
-
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
-
 import { GenericTableTanstack } from "@/components/common/GenericTableTanstack";
-
 import { teilnehmerAvailableColumns } from "@/components/teilnehmer/teilnehmerAvailableColumns";
 import { teilnehmerAssignedColumns } from "@/components/teilnehmer/teilnehmerAssignedColumns";
-
 import {
   getAvailablePersons,
   getTeilnehmer,
@@ -30,17 +21,13 @@ import {
   removeTeilnehmerBulk,
   updateTeilnehmerRolle,
 } from "@/api/services/teilnehmerApi";
-
 import { PersonList } from "@/api/types/PersonList";
 import { TeilnehmerList } from "@/api/types/TeilnehmerList";
 
 export default function TeilnehmerScreen() {
   const { active } = useAppContext();
-
   const navigate = useNavigate();
-
   const theme = useTheme();
-
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   /* =========================================================
@@ -48,14 +35,12 @@ export default function TeilnehmerScreen() {
      ========================================================= */
 
   const [available, setAvailable] = useState<PersonList[]>([]);
-
   const [assigned, setAssigned] = useState<TeilnehmerList[]>([]);
-
   const [selAvailable, setSelAvailable] = useState<PersonList[]>([]);
-
   const [selAssigned, setSelAssigned] = useState<TeilnehmerList[]>([]);
-
   const [mobileMode, setMobileMode] = useState<"available" | "assigned">("available");
+  const [errorOpen, setErrorOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   /* =========================================================
      SORTING
@@ -80,19 +65,12 @@ export default function TeilnehmerScreen() {
      ========================================================= */
 
   const [searchL, setSearchL] = useState("");
-
   const [searchR, setSearchR] = useState("");
-
   const [fVereinL, setFVereinL] = useState("");
-
   const [fVereinR, setFVereinR] = useState("");
-
   const debounceSearchL = useDebounce(searchL, 300);
-
   const debounceSearchR = useDebounce(searchR, 300);
-
   const debounceVereinL = useDebounce(fVereinL, 300);
-
   const debounceVereinR = useDebounce(fVereinR, 300);
 
   /* =========================================================
@@ -100,7 +78,6 @@ export default function TeilnehmerScreen() {
      ========================================================= */
 
   const [totalAvailable, setTotalAvailable] = useState(0);
-
   const [totalAssigned, setTotalAssigned] = useState(0);
 
   /* =========================================================
@@ -108,7 +85,6 @@ export default function TeilnehmerScreen() {
      ========================================================= */
 
   const [resetLeftSelection, setResetLeftSelection] = useState(0);
-
   const [resetRightSelection, setResetRightSelection] = useState(0);
 
   /* =========================================================
@@ -200,11 +176,8 @@ export default function TeilnehmerScreen() {
   }
 
   const availablePersonCount = totalAvailable;
-
   const assignedPersonCount = totalAssigned;
-
   const availableVereinCount = countDistinct(available, (p) => p.hauptvereinAbk);
-
   const assignedVereinCount = countDistinct(assigned, (t) => t.person?.hauptvereinAbk);
 
   /* =========================================================
@@ -228,16 +201,20 @@ export default function TeilnehmerScreen() {
  const handleRemove = async () => {
    if (!active?.id || selAssigned.length === 0) return;
 
-   await removeTeilnehmerBulk(
-     active.id,
-     selAssigned.map((p) => p.personId),
-   );
+   try {
+     await removeTeilnehmerBulk(
+       active.id,
+       selAssigned.map((p) => p.personId),
+     );
 
-   setSelAssigned([]);
+     setSelAssigned([]);
+     setResetRightSelection((v) => v + 1);
 
-   setResetRightSelection((v) => v + 1);
-
-   await load();
+     await load();
+   } catch (error) {
+     setErrorMessage(getApiErrorMessage(error));
+     setErrorOpen(true);
+   }
  };
 
   const handleMobileAction = async () => {
@@ -584,6 +561,13 @@ export default function TeilnehmerScreen() {
             },
           ]}
         />
+
+        <ErrorDialog
+          open={errorOpen}
+          title="Teilnehmer kann nicht entfernt werden"
+          message={errorMessage}
+          onClose={() => setErrorOpen(false)}
+        />
       </Box>
     );
   }
@@ -814,6 +798,12 @@ export default function TeilnehmerScreen() {
             variant: "outlined",
           },
         ]}
+      />
+      <ErrorDialog
+        open={errorOpen}
+        title="Teilnehmer kann nicht entfernt werden"
+        message={errorMessage}
+        onClose={() => setErrorOpen(false)}
       />
     </Box>
   );

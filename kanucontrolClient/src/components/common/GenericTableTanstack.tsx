@@ -1,4 +1,5 @@
 import React from "react";
+import { Row } from "@tanstack/react-table";
 
 import {
   ColumnDef,
@@ -33,34 +34,23 @@ export interface WithId {
 interface GenericTableTanstackProps<T extends WithId> {
   data: T[];
   columns: ColumnDef<T>[];
-
   loading?: boolean;
-
   mobileRenderRow?: (row: T) => React.ReactNode;
-
   selectedRowId?: number | null;
-
   onSelectRow?: (row: T) => void;
   onRowSelectionChange?: (rows: T[]) => void;
-
   height?: number;
-
   enableCheckboxSelection?: boolean;
-
   resetSelectionTrigger?: number;
-
   fixedColumnWidths?: boolean;
 
   // ⭐ SERVER SORTING
-
   sorting?: SortingState;
 
   onSortingChange?: (sorting: SortingState) => void;
 
   // ⭐ INFINITE SCROLL
-
   onLoadMore?: () => void;
-
   hasMore?: boolean;
 }
 
@@ -82,10 +72,16 @@ export function GenericTableTanstack<T extends WithId>({
   enableCheckboxSelection = false,
 }: GenericTableTanstackProps<T>) {
   const theme = useTheme();
-
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
   const loadMoreRef = React.useRef<HTMLDivElement | null>(null);
+
+  const handleRowClick = (row: Row<T>) => {
+    onSelectRow?.(row.original);
+
+    if (enableCheckboxSelection) {
+      row.toggleSelected();
+    }
+  };
 
   /* =========================================================
      ROW SELECTION
@@ -243,7 +239,7 @@ export function GenericTableTanstack<T extends WithId>({
                 <Paper
                   key={row.id}
                   variant="outlined"
-                  onClick={() => onSelectRow?.(row.original)}
+                  onClick={() => handleRowClick(row)}
                   sx={{
                     p: 1.2,
                     mb: 1,
@@ -376,10 +372,9 @@ export function GenericTableTanstack<T extends WithId>({
                     key={row.id}
                     hover
                     selected={selected}
-                    onClick={() => onSelectRow?.(row.original)}
+                    onClick={() => handleRowClick(row)}
                     sx={{
                       cursor: "pointer",
-
                       "& td": {
                         py: 0.6,
                       },

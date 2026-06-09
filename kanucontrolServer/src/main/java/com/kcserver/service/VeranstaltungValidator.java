@@ -14,7 +14,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class VeranstaltungValidator {
 
-    private final FoerderService foerderService;
 
     /* =========================================================
        ABRECHNUNG

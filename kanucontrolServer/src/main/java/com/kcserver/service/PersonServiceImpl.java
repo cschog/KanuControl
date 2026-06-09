@@ -37,6 +37,7 @@ public class PersonServiceImpl implements PersonService {
     private final TeilnehmerRepository teilnehmerRepository;
     private final ReisekostenabrechnungRepository reisekostenabrechnungRepository;
     private final FahrtabschnittMitfahrerRepository fahrtabschnittMitfahrerRepository;
+    private final BankLookupService bankLookupService;
 
     public PersonServiceImpl(
             PersonRepository personRepository,
@@ -45,7 +46,9 @@ public class PersonServiceImpl implements PersonService {
             MitgliedRepository mitgliedRepository,
             TeilnehmerRepository teilnehmerRepository,
             ReisekostenabrechnungRepository reisekostenabrechnungRepository,
-            FahrtabschnittMitfahrerRepository fahrtabschnittMitfahrerRepository
+            FahrtabschnittMitfahrerRepository fahrtabschnittMitfahrerRepository,
+            BankLookupService bankLookupService
+
     ) {
         this.personRepository = personRepository;
         this.personMapper = personMapper;
@@ -54,6 +57,7 @@ public class PersonServiceImpl implements PersonService {
         this.teilnehmerRepository = teilnehmerRepository;
         this.reisekostenabrechnungRepository = reisekostenabrechnungRepository;
         this.fahrtabschnittMitfahrerRepository = fahrtabschnittMitfahrerRepository;
+        this.bankLookupService = bankLookupService;
     }
 
     /* =========================================================
@@ -193,6 +197,7 @@ public class PersonServiceImpl implements PersonService {
         if (entity.getCountryCode() == null) {
             entity.setCountryCode(CountryCode.DE);
         }
+        fillBankIfMissing(entity);
 
         Person saved = personRepository.save(entity);
 
@@ -258,6 +263,8 @@ public class PersonServiceImpl implements PersonService {
 
         // 4. APPLY
         personMapper.updateFromDTO(dto, existing);
+
+        fillBankIfMissing(existing);
 
         // 5. EXTRA LOGIK
         syncMitgliedschaften(existing, dto.getMitgliedschaften());
@@ -422,5 +429,26 @@ public class PersonServiceImpl implements PersonService {
                             "Eine andere Person mit gleichem Namen und Geburtsdatum existiert bereits"
                     );
                 });
+    }
+    private void fillBankIfMissing(Person person) {
+
+        if (person.getBankName() != null
+                && !person.getBankName().isBlank()) {
+            return;
+        }
+
+        if (person.getBic() == null
+                || person.getBic().isBlank()) {
+            return;
+        }
+
+        String bank =
+                bankLookupService.findBankName(
+                        person.getBic()
+                );
+
+        if (bank != null) {
+            person.setBankName(bank);
+        }
     }
 }

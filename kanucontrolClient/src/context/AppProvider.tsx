@@ -40,6 +40,14 @@ useEffect(() => {
   waitForAuth();
 }, []);
 
+useEffect(() => {
+  const interval = setInterval(() => {
+    loadContext();
+  }, 60000);
+
+  return () => clearInterval(interval);
+}, []);
+
   return (
     <AppContext.Provider
       value={{

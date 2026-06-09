@@ -1,6 +1,7 @@
 // api/services/teilnehmerApi.ts
 
 import apiClient from "@/api/client/apiClient";
+import axios from "axios";
 import { TeilnehmerList } from "@/api/types/TeilnehmerList";
 import { mapRoleFromBackend, mapRoleToBackend } from "../mappers/teilnehmerMapper";
 
@@ -83,10 +84,26 @@ export function addTeilnehmerBulk(veranstaltungId: number, personIds: number[]) 
 
 /* ================= REMOVE BULK ================= */
 
-export function removeTeilnehmerBulk(veranstaltungId: number, personIds: number[]) {
-  return apiClient.delete(`/veranstaltungen/${veranstaltungId}/teilnehmer/bulk`, {
-    data: { personIds },
-  });
+export async function removeTeilnehmerBulk(
+  veranstaltungId: number,
+
+  personIds: number[],
+) {
+  try {
+    await apiClient.delete(
+      `/veranstaltungen/${veranstaltungId}/teilnehmer/bulk`,
+
+      {
+        data: { personIds },
+      },
+    );
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(error.response?.data?.message ?? "Teilnehmer konnten nicht entfernt werden.");
+    }
+
+    throw error;
+  }
 }
 
 // teilnehmerApi.ts

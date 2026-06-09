@@ -1,9 +1,7 @@
 package com.kcserver.controller;
 
 import com.kcserver.dto.reisekosten.ReisekostenabrechnungListResponse;
-import com.kcserver.dto.teilnehmer.TeilnehmerDetailDTO;
 import com.kcserver.dto.veranstaltung.VeranstaltungDetailDTO;
-import com.kcserver.service.TeilnehmerService;
 import com.kcserver.service.VeranstaltungService;
 import com.kcserver.service.pdf.*;
 import com.kcserver.service.reisekosten.ReisekostenabrechnungService;
@@ -24,13 +22,9 @@ import com.kcserver.util.PdfFilenameUtil;
 @RequiredArgsConstructor
 public class ReportController {
 
-    private final PDFFmJemReportService fmJemReportService;
-    private final PDFTeilnehmerlisteService teilnehmerlisteService;
-    private final PDFErhebungsbogenService erhebungsbogenService;
-    private final PDFAbrechnungService abrechnungService;
-
+    private final DokumentService dokumentService;
+    private final DokumentValidationService dokumentValidationService;
     private final VeranstaltungService veranstaltungService;
-    private final TeilnehmerService teilnehmerService;
     private final PDFReisekostenabrechnungService reisekostenPdfService;
     private final ReisekostenabrechnungService reisekostenabrechnungService;
 
@@ -42,8 +36,10 @@ public class ReportController {
     public ResponseEntity<byte[]> viewFmJem(
             @PathVariable Long veranstaltungId
     ) {
-
-        byte[] pdf = fmJemReportService.generate(veranstaltungId);
+        byte[] pdf =
+                dokumentService.generateAnmeldung(
+                        veranstaltungId
+                );
 
         VeranstaltungDetailDTO veranstaltung =
                 veranstaltungService.getById(veranstaltungId);
@@ -66,7 +62,10 @@ public class ReportController {
             @PathVariable Long veranstaltungId
     ) {
 
-        byte[] pdf = fmJemReportService.generate(veranstaltungId);
+        byte[] pdf =
+                dokumentService.generateAnmeldung(
+                        veranstaltungId
+                );
 
         VeranstaltungDetailDTO veranstaltung =
                 veranstaltungService.getById(veranstaltungId);
@@ -87,18 +86,17 @@ public class ReportController {
     @GetMapping("/teilnehmer/pdf/view")
     public ResponseEntity<byte[]> viewTeilnehmerPdf(
             @PathVariable Long veranstaltungId
-    )  {
+    ) {
+
+        byte[] pdf =
+                dokumentService.generateTeilnehmerliste(
+                        veranstaltungId
+                );
 
         VeranstaltungDetailDTO veranstaltung =
-                veranstaltungService.getById(veranstaltungId);
-
-        List<TeilnehmerDetailDTO> teilnehmer =
-                teilnehmerService.findAllDetails(veranstaltungId);
-
-        byte[] pdf = teilnehmerlisteService.generate(
-                veranstaltung,
-                teilnehmer
-        );
+                veranstaltungService.getById(
+                        veranstaltungId
+                );
 
         String filename = PdfFilenameUtil.build(
                 LocalDate.now(),
@@ -116,18 +114,17 @@ public class ReportController {
     @GetMapping("/teilnehmer/pdf/download")
     public ResponseEntity<byte[]> downloadTeilnehmerPdf(
             @PathVariable Long veranstaltungId
-    )  {
+    ) {
+
+        byte[] pdf =
+                dokumentService.generateTeilnehmerliste(
+                        veranstaltungId
+                );
 
         VeranstaltungDetailDTO veranstaltung =
-                veranstaltungService.getById(veranstaltungId);
-
-        List<TeilnehmerDetailDTO> teilnehmer =
-                teilnehmerService.findAllDetails(veranstaltungId);
-
-        byte[] pdf = teilnehmerlisteService.generate(
-                veranstaltung,
-                teilnehmer
-        );
+                veranstaltungService.getById(
+                        veranstaltungId
+                );
 
         String filename = PdfFilenameUtil.build(
                 LocalDate.now(),
@@ -147,7 +144,10 @@ public class ReportController {
             @PathVariable Long veranstaltungId
     ) {
 
-        byte[] pdf = erhebungsbogenService.generate(veranstaltungId);
+        byte[] pdf =
+                dokumentService.generateErhebungsbogen(
+                        veranstaltungId
+                );
 
         VeranstaltungDetailDTO veranstaltung =
                 veranstaltungService.getById(veranstaltungId);
@@ -170,7 +170,10 @@ public class ReportController {
             @PathVariable Long veranstaltungId
     ) {
 
-        byte[] pdf = erhebungsbogenService.generate(veranstaltungId);
+        byte[] pdf =
+                dokumentService.generateErhebungsbogen(
+                        veranstaltungId
+                );
 
         VeranstaltungDetailDTO veranstaltung =
                 veranstaltungService.getById(veranstaltungId);
@@ -192,8 +195,10 @@ public class ReportController {
     public ResponseEntity<byte[]> viewAbrechnung(
             @PathVariable Long veranstaltungId
     ) {
-
-        byte[] pdf = abrechnungService.generate(veranstaltungId);
+        byte[] pdf =
+                dokumentService.generateAbrechnung(
+                        veranstaltungId
+                );
 
         VeranstaltungDetailDTO veranstaltung =
                 veranstaltungService.getById(veranstaltungId);
@@ -216,7 +221,10 @@ public class ReportController {
             @PathVariable Long veranstaltungId
     ) {
 
-        byte[] pdf = abrechnungService.generate(veranstaltungId);
+        byte[] pdf =
+                dokumentService.generateAbrechnung(
+                        veranstaltungId
+                );
 
         VeranstaltungDetailDTO veranstaltung =
                 veranstaltungService.getById(veranstaltungId);
@@ -316,5 +324,16 @@ public class ReportController {
     ) {
         return reisekostenabrechnungService
                 .listByVeranstaltung(veranstaltungId);
+    }
+
+    @GetMapping("/dokumente/{typ}/validation")
+    public ValidationResult validateDokument(
+            @PathVariable Long veranstaltungId,
+            @PathVariable PdfDokumentTyp typ
+    ) {
+        return dokumentValidationService.validate(
+                veranstaltungId,
+                typ
+        );
     }
 }

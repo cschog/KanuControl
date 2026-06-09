@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
@@ -22,6 +23,7 @@ import java.math.BigDecimal;
 import com.kcserver.util.CurrencyUtil;
 import com.kcserver.enumtype.PdfDokumentTyp;
 import com.kcserver.util.PdfFilenameUtil;
+import org.springframework.util.StreamUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -38,40 +40,28 @@ public class PDFFmJemReportService {
 
         try (
                 PDDocument doc = Loader.loadPDF(
-                        getClass().getClassLoader()
-                                .getResourceAsStream("pdf/antrag_FM-JEM_template.pdf")
-                                .readAllBytes()
+                        StreamUtils.copyToByteArray(
+                                new ClassPathResource(
+                                        "pdf/antrag_FM-JEM_template.pdf"
+                                ).getInputStream()
+                        )
                 );
-                ByteArrayOutputStream out = new ByteArrayOutputStream()
+                ByteArrayOutputStream out =
+                        new ByteArrayOutputStream()
         ) {
 
             PDAcroForm form = doc.getDocumentCatalog().getAcroForm();
 
-            /* =========================================================
-               DEBUG – Feldnamen auslesen
-               ========================================================= */
-
-        /*    System.out.println("====== PDF FELDER ======");
-
-            if (form != null) {
-                form.getFieldTree().forEach(f ->
-                        System.out.println(f.getFullyQualifiedName())
-                );
-            } else {
-                System.out.println("KEIN FORMULAR GEFUNDEN");
-            }
-
-            System.out.println("========================");*/
 
             /* ================= Verein ================= */
 
-            set(form, "ausrichter", v.getVerein().getName());
-            if (v.getVerein() != null) {
-                set(form, "ausrichter_telefon", v.getVerein().getTelefon());
-            }
-            set(form, "ausrichter_bank_name", v.getVerein().getBankName());
-            set(form, "ausrichter_iban", v.getVerein().getIban());
-            set(form, "ausrichter_bic", v.getVerein().getBic());
+            var verein = v.getVerein();
+
+            set(form, "ausrichter", verein.getName());
+            set(form, "ausrichter_telefon", verein.getTelefon());
+            set(form, "ausrichter_bank_name", verein.getBankName());
+            set(form, "ausrichter_iban", verein.getIban());
+            set(form, "ausrichter_bic", verein.getBic());
 
             String plzOrt = (v.getVerein().getPlz() != null ? v.getVerein().getPlz() : "")
                     + " "
