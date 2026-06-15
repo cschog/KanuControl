@@ -1,5 +1,7 @@
 package com.kcserver.finanz;
 
+import com.kcserver.dto.abrechnung.AbrechnungBelegDTO;
+import com.kcserver.dto.abrechnung.AbrechnungBuchungDTO;
 import com.kcserver.dto.abrechnung.AbrechnungDetailDTO;
 import com.kcserver.dto.finanzen.FinanzSummaryDTO;
 import com.kcserver.entity.*;
@@ -9,6 +11,8 @@ import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.mapper.AbrechnungMapper;
 import com.kcserver.repository.*;
 import com.kcserver.service.FoerdersatzService;
+import com.kcserver.service.TeilnehmerBeitragService;
+import com.kcserver.service.reisekosten.ReisekostenabrechnungService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -34,7 +38,10 @@ public class AbrechnungService {
     private final FinanzGruppeRepository finanzGruppeRepository;
     private final AbrechnungMapper mapper;
     private final FinanzService finanzService;
-    private final FoerdersatzService foerdersatzService;   // ✅ neu
+    private final FoerdersatzService foerdersatzService;
+    private final ReisekostenabrechnungService reisekostenabrechnungService;
+    private final TeilnehmerBeitragService teilnehmerBeitragService;
+
 
     /* =========================================================
        GET OR CREATE
@@ -48,11 +55,111 @@ public class AbrechnungService {
 
         AbrechnungDetailDTO dto = mapper.toDTO(a);
 
+        BigDecimal reisekosten =
+                reisekostenabrechnungService.getReisekostenSumme(
+                        veranstaltungId
+                );
+
+        if (reisekosten.compareTo(BigDecimal.ZERO) > 0) {
+
+            AbrechnungBuchungDTO position =
+                    new AbrechnungBuchungDTO();
+
+            position.setId(-1L);
+            position.setKategorie(FinanzKategorie.FAHRTKOSTEN);
+            position.setBeschreibung(
+                    "Reisekostenabrechnungen"
+            );
+            position.setBetrag(reisekosten);
+            position.setSystemGenerated(true);
+
+            AbrechnungBelegDTO beleg =
+                    new AbrechnungBelegDTO();
+
+            beleg.setId(-1L);
+            beleg.setKuerzel("_SYSTEM_");
+            beleg.setBeschreibung(
+                    "Summe Fahrkosten"
+            );
+
+            beleg.setPositionen(
+                    List.of(position)
+            );
+
+            dto.getBelege().add(beleg);
+        }
+
+        Veranstaltung veranstaltung =
+                a.getVeranstaltung();
+
+        List<Teilnehmer> teilnehmer =
+                teilnehmerRepository.findAllWithPerson(
+                        veranstaltungId
+                );
+
+        BigDecimal teilnehmerbeitraege =
+                teilnehmerBeitragService
+                        .getBezahlteSumme(
+                                veranstaltung,
+                                teilnehmer
+                        );
+
+        if (teilnehmerbeitraege.compareTo(BigDecimal.ZERO) > 0) {
+
+            AbrechnungBuchungDTO position =
+                    new AbrechnungBuchungDTO();
+
+            position.setId(-2L);
+            position.setKategorie(
+                    FinanzKategorie.TEILNEHMERBEITRAG
+            );
+            position.setBeschreibung(
+                    "Bezahlte Teilnehmerbeiträge"
+            );
+            position.setBetrag(teilnehmerbeitraege);
+            position.setSystemGenerated(true);
+
+            AbrechnungBelegDTO beleg =
+                    new AbrechnungBelegDTO();
+
+            beleg.setId(-2L);
+            beleg.setKuerzel("_SYSTEM_");
+            beleg.setBeschreibung(
+                    "Teilnehmerbeiträge"
+            );
+
+            beleg.setPositionen(List.of(position));
+
+            dto.getBelege().add(beleg);
+        }
+
         FinanzSummaryDTO summary =
                 finanzService.buildSummary(
                         getAllPositionen(a),
-                        teilnehmerRepository.countByVeranstaltungId(veranstaltungId)
+                        teilnehmerRepository.countByVeranstaltungId(
+                                veranstaltungId
+                        )
                 );
+
+        reisekosten =
+                reisekostenabrechnungService
+                        .getReisekostenSumme(
+                                veranstaltungId
+                        );
+
+        summary.setKosten(
+                summary.getKosten().add(reisekosten)
+        );
+
+        summary.setEinnahmen(
+                summary.getEinnahmen()
+                        .add(teilnehmerbeitraege)
+        );
+
+        summary.setSaldo(
+                summary.getEinnahmen()
+                        .subtract(summary.getKosten())
+        );
 
         dto.setFinanz(summary);
 

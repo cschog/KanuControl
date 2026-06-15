@@ -3,7 +3,7 @@ import { MenuItem, TextField, FormControlLabel, Switch } from "@mui/material";
 
 import { VeranstaltungFormModel } from "@/api/types/VeranstaltungFormModel";
 import { VeranstaltungTyp } from "@/api/enums/VeranstaltungTyp";
-import { VeranstaltungScope } from "@/api/enums/VeranstaltungScope";
+// import { VeranstaltungScope } from "@/api/enums/VeranstaltungScope";
 
 import { VereinAutocomplete } from "@/components/verein/VereinAutocomplete";
 import { PersonAutocomplete } from "@/components/person/PersonAutocomplete";
@@ -97,7 +97,7 @@ export const VeranstaltungBaseForm: React.FC<Props> = ({
 
       {/* ================= SCOPE ================= */}
 
-      <TextField
+      {/* <TextField
         select
         fullWidth
         size="small"
@@ -109,7 +109,7 @@ export const VeranstaltungBaseForm: React.FC<Props> = ({
         <MenuItem value={VeranstaltungScope.VERBAND}>Verband</MenuItem>
 
         <MenuItem value={VeranstaltungScope.VEREIN}>Verein</MenuItem>
-      </TextField>
+      </TextField> */}
 
       {/* ================= BEGINN ================= */}
 
@@ -272,7 +272,7 @@ export const VeranstaltungBaseForm: React.FC<Props> = ({
           {/* ================= STANDARDGEBÜHR ================= */}
 
           <FormFeld
-            label="Teilnehmergebühr"
+            label="Teilnehmergebühr (Euro)"
             value={form.standardGebuehr ?? ""}
             disabled={!editMode || form.individuelleGebuehren}
             onChange={(v) => onChange("standardGebuehr", v ? Number(v) : undefined)}

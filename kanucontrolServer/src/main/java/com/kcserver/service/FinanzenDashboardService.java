@@ -4,13 +4,17 @@ import com.kcserver.dto.finanzen.BetragPositionDTO;
 import com.kcserver.dto.finanzen.FinanzenDashboardDTO;
 import com.kcserver.dto.finanzen.FoerderungDashboardDTO;
 import com.kcserver.entity.*;
+import com.kcserver.enumtype.FinanzKategorie;
 import com.kcserver.repository.*;
+import com.kcserver.service.reisekosten.ReisekostenabrechnungService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -19,16 +23,13 @@ import java.util.stream.Collectors;
 public class FinanzenDashboardService {
 
     private final VeranstaltungRepository veranstaltungRepository;
-
     private final TeilnehmerRepository teilnehmerRepository;
-
     private final PlanungPositionRepository planungPositionRepository;
-
     private final FoerderService foerderService;
-
     private final AbrechnungRepository abrechnungRepository;
-
     private final AbrechnungBuchungRepository abrechnungBuchungRepository;
+    private final ReisekostenabrechnungService reisekostenabrechnungService;
+    private final TeilnehmerBeitragService teilnehmerBeitragService;
 
     public FinanzenDashboardDTO getDashboard(
             Long veranstaltungId
@@ -49,6 +50,11 @@ public class FinanzenDashboardService {
                         .findByPlanung_Veranstaltung_Id(
                                 veranstaltungId
                         );
+
+        BigDecimal reisekosten =
+                reisekostenabrechnungService.getReisekostenSumme(
+                        veranstaltungId
+                );
 
         FinanzenDashboardDTO dto =
                 new FinanzenDashboardDTO();
@@ -113,6 +119,13 @@ public class FinanzenDashboardService {
                                 BigDecimal::add
                         );
 
+        BigDecimal teilnehmerbeitraege =
+                teilnehmerBeitragService
+                        .getBezahlteSumme(
+                                veranstaltung,
+                                teilnehmer
+                        );
+
         BigDecimal istEinnahmen =
                 buchungen.stream()
                         .filter(b ->
@@ -124,8 +137,12 @@ public class FinanzenDashboardService {
                                 BigDecimal::add
                         );
 
-        dto.setIstKosten(istKosten);
-        dto.setIstEinnahmen(istEinnahmen);
+        dto.setIstKosten(
+                istKosten.add(reisekosten)
+        );
+        dto.setIstEinnahmen(
+                istEinnahmen.add(teilnehmerbeitraege)
+        );
 
         /* =====================================================
            SALDEN
@@ -239,11 +256,9 @@ public class FinanzenDashboardService {
                         .toList()
         );
 
-        dto.setIstKostenNachKategorie(
+        Map<FinanzKategorie, BigDecimal> kostenNachKategorie =
                 buchungen.stream()
-                        .filter(b ->
-                                b.getKategorie().isKosten()
-                        )
+                        .filter(b -> b.getKategorie().isKosten())
                         .collect(
                                 Collectors.groupingBy(
                                         AbrechnungBuchung::getKategorie,
@@ -253,8 +268,16 @@ public class FinanzenDashboardService {
                                                 BigDecimal::add
                                         )
                                 )
-                        )
+                        );
 
+        kostenNachKategorie.merge(
+                FinanzKategorie.FAHRTKOSTEN,
+                reisekosten,
+                BigDecimal::add
+        );
+
+        dto.setIstKostenNachKategorie(
+                kostenNachKategorie
                         .entrySet()
                         .stream()
                         .sorted(
@@ -269,28 +292,34 @@ public class FinanzenDashboardService {
                         )
 
                         .toList()
+        );
+
+        Map<FinanzKategorie, BigDecimal> einnahmenNachKategorie =
+                buchungen.stream()
+                        .filter(b -> b.getKategorie().isEinnahme())
+                        .collect(
+                                Collectors.groupingBy(
+                                        AbrechnungBuchung::getKategorie,
+                                        Collectors.reducing(
+                                                BigDecimal.ZERO,
+                                                AbrechnungBuchung::getBetrag,
+                                                BigDecimal::add
+                                        )
+                                )
+                        );
+
+        einnahmenNachKategorie.merge(
+                FinanzKategorie.TEILNEHMERBEITRAG,
+                teilnehmerbeitraege,
+                BigDecimal::add
         );
 
         dto.setIstEinnahmenNachKategorie(
-
-                buchungen.stream()
-                        .filter(b ->
-                                b.getKategorie().isEinnahme()
-                        )
-                        .collect(
-                                Collectors.groupingBy(
-                                        AbrechnungBuchung::getKategorie,
-                                        Collectors.reducing(
-                                                BigDecimal.ZERO,
-                                                AbrechnungBuchung::getBetrag,
-                                                BigDecimal::add
-                                        )
-                                )
-                        )
+                einnahmenNachKategorie
                         .entrySet()
                         .stream()
                         .sorted(
-                                java.util.Map.Entry.comparingByKey()
+                                Map.Entry.comparingByKey()
                         )
                         .map(e ->
                                 new BetragPositionDTO(
@@ -300,6 +329,10 @@ public class FinanzenDashboardService {
                         )
                         .toList()
         );
+
+
+
+
         return dto;
     }
 }

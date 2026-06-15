@@ -15,4 +15,6 @@ public class AbrechnungBuchungDTO {
     private BigDecimal betrag;
 
     private String beschreibung;
+
+    private boolean systemGenerated;
 }

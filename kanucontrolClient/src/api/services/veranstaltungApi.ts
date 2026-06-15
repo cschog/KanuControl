@@ -3,6 +3,7 @@ import { VeranstaltungList } from "@/api/types/VeranstaltungList";
 import { VeranstaltungDetail } from "@/api/types/VeranstaltungDetail";
 import { VeranstaltungSave } from "@/api/types/VeranstaltungSave";
 import { Page } from "@/api/types/Page";
+import { SaveResponse } from "@/api/types/SaveResponse";
 
 /* =========================================================
    LIST
@@ -104,7 +105,9 @@ export function setActiveVeranstaltung(id: number) {
    ========================================================= */
 
 export function createVeranstaltung(payload: VeranstaltungSave) {
-  return apiClient.post<VeranstaltungDetail>("/veranstaltungen", payload).then((r) => r.data);
+  return apiClient
+    .post<SaveResponse<VeranstaltungDetail>>("/veranstaltungen", payload)
+    .then((r) => r.data);
 }
 
 /* =========================================================
@@ -112,9 +115,10 @@ export function createVeranstaltung(payload: VeranstaltungSave) {
    ========================================================= */
 
 export function updateVeranstaltung(id: number, payload: VeranstaltungSave) {
-  return apiClient.put<VeranstaltungDetail>(`/veranstaltungen/${id}`, payload).then((r) => r.data);
+  return apiClient
+    .put<SaveResponse<VeranstaltungDetail>>(`/veranstaltungen/${id}`, payload)
+    .then((r) => r.data);
 }
-
 /* =========================================================
    DELETE
    ========================================================= */

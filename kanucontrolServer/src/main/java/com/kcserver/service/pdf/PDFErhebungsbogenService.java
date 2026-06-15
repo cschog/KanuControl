@@ -209,8 +209,12 @@ public class PDFErhebungsbogenService {
                     "DE".equalsIgnoreCase(v.getCountryCode().getCode());
 
             // PLZ Durchführungsort
-            if (deutschland && v.getPlz() != null && !v.getPlz().isBlank()) {
-                set(form, "plzDurchfuehrungsort", v.getPlz());
+            // PLZ Durchführungsort
+            if (deutschland) {
+                set(form, "plzDurchfuehrungsort",
+                        v.getPlz() != null && !v.getPlz().isBlank()
+                                ? v.getPlz()
+                                : "");
             } else {
                 set(form, "plzDurchfuehrungsort", "11111");
             }

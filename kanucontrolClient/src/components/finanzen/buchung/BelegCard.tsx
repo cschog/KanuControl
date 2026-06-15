@@ -1,11 +1,7 @@
 import { Box, Button, Paper, Stack, Typography } from "@mui/material";
-
 import { GenericTableTanstack } from "@/components/common/GenericTableTanstack";
-
 import { buchungColumns } from "@/components/finanzen/buchung/buchungColumns";
-
 import { AbrechnungBeleg, Buchung } from "@/api/types/abrechnung";
-
 import { kategorieZuTyp } from "@/api/types/finanz";
 
 interface Props {
@@ -14,13 +10,9 @@ interface Props {
   readOnly?: boolean;
 
   onEditBeleg: (beleg: AbrechnungBeleg) => void;
-
   onAddPosition: (beleg: AbrechnungBeleg) => void;
-
   onEditPosition: (beleg: AbrechnungBeleg, buchung: Buchung) => void;
-
   onDeletePosition: (belegId: number, buchungId: number) => void;
-
   onDeleteBeleg: (belegId: number) => void;
 }
 
@@ -38,6 +30,8 @@ export default function BelegCard({
 
     onDelete: (buchungId) => onDeletePosition(beleg.id, buchungId),
   });
+
+  const isSystemBeleg = beleg.kuerzel === "__SYSTEM__";
 
   return (
     <Paper
@@ -81,14 +75,21 @@ export default function BelegCard({
             {beleg.datum}
             {" • "}
             {beleg.beschreibung}
+            {isSystemBeleg && (
+              <Typography component="span" color="text.secondary" sx={{ ml: 1 }}>
+                (automatisch)
+              </Typography>
+            )}
           </Typography>
 
-          <Button size="small" onClick={() => onEditBeleg(beleg)}>
-            Bearbeiten
-          </Button>
+          {!isSystemBeleg && (
+            <Button size="small" onClick={() => onEditBeleg(beleg)}>
+              Bearbeiten
+            </Button>
+          )}
         </Box>
 
-        {!readOnly && (
+        {!readOnly && !isSystemBeleg && (
           <Stack direction="row" spacing={1}>
             <Button size="small" variant="contained" onClick={() => onAddPosition(beleg)}>
               + Position
@@ -153,7 +154,7 @@ export default function BelegCard({
               {row.beschreibung}
             </Typography>
 
-            {!readOnly && (
+            {!readOnly && !row.systemGenerated && (
               <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
                 <Button
                   size="small"

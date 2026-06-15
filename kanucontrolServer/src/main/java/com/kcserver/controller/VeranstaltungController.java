@@ -1,7 +1,7 @@
 package com.kcserver.controller;
 
+import com.kcserver.api.response.SaveResponse;
 import com.kcserver.dto.teilnehmer.TeilnehmerBulkDeleteDTO;
-import com.kcserver.dto.teilnehmer.TeilnehmerUpdateDTO;
 import com.kcserver.dto.veranstaltung.*;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.service.TeilnehmerService;
@@ -40,10 +40,10 @@ public class VeranstaltungController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public VeranstaltungDetailDTO create(
-            @Valid @RequestBody VeranstaltungCreateDTO dto
-    ) {
+    public SaveResponse<VeranstaltungDetailDTO> create(
+            @RequestBody VeranstaltungCreateDTO dto) {
         return veranstaltungService.create(dto);
+
     }
 
     /* =========================================================
@@ -142,10 +142,9 @@ public class VeranstaltungController {
        ========================================================= */
 
     @PutMapping("/{id}")
-    public VeranstaltungDetailDTO update(
+    public SaveResponse<VeranstaltungDetailDTO> update(
             @PathVariable Long id,
-            @Valid @RequestBody VeranstaltungUpdateDTO dto
-    ) {
+            @Valid @RequestBody VeranstaltungUpdateDTO dto) {
         return veranstaltungService.update(id, dto);
     }
 

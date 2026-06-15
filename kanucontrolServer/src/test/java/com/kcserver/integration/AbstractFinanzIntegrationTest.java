@@ -98,7 +98,7 @@ public abstract class AbstractFinanzIntegrationTest
         dto.setVereinId(verein.getId());
         dto.setLeiterId(leiter.getId());
 
-        return veranstaltungService.create(dto).getId();
+        return veranstaltungService.create(dto).data().getId();
     }
 
     protected Long createTestVeranstaltung(
