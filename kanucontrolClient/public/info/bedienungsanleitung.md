@@ -37,7 +37,7 @@ Menü:
 
 **Vereine → Verein bearbeiten → CSV-Import**
 
-Über den CSV-Import können größere Mitgliederbestände schnell übernommen werden.
+Über den CSV-Import können größere Mitgliederbestände schnell übernommen werden. Dazu kann eine Beispiel CSV -Mapping Datei heruntergeladen werden, die auch angepasst werden kann.
 
 Nach dem Import stehen die Personen sofort für Veranstaltungen zur Verfügung.
 
@@ -112,33 +112,21 @@ Jedem Kürzel können eine oder mehrere Personen zugeordnet werden.
 
 ---
 
-## 7. Abrechnung erfassen
+## 7. Abrechnung
 
 Menü:
 **Finanzen → Abrechnung**
 
-Nach Durchführung der Veranstaltung werden die tatsächlichen Kosten und Einnahmen erfasst.
-
-Erfasst werden beispielsweise:
-
-- Unterkunftskosten
-- Verpflegungskosten
-- Fahrtkosten
-- Honorare
-- Materialkosten
-- Teilnehmerbeiträge
-- Sonstige Einnahmen
-
-Die Abrechnung bildet die Grundlage für den Verwendungsnachweis.
+Der Menuepunkt ist noch in Vorbereitung
 
 ---
 
-## 8. Reisekosten erfassen
+## 8. Fahrkosten erfassen
 
 Menü:
-**Finanzen → Reisekosten**
+**Finanzen → Fahrkosten**
 
-Fahrt- und Reisekosten können separat erfasst werden.
+Fahrtkosten können separat erfasst werden.
 
 Hierzu werden unter anderem gespeichert:
 
@@ -148,25 +136,57 @@ Hierzu werden unter anderem gespeichert:
 - Kilometer
 - Erstattungsbetrag
 
-Für jede Reisekostenabrechnung kann später ein PDF erzeugt werden.
+Die berechneten Fahrkosten werden summiert im Finanz-Dashboard und bei den Buchungen berücksichtigt.
+
+Für jede Fahrkostenabrechnung kann später ein PDF erzeugt werden.
 
 ---
 
 ## 9. Beitragsstrukturen verwalten
 
-Menü:
+Menü:  
 **Verwaltung → Beitragsstrukturen**
 
-Über Beitragsstrukturen können Teilnahmegebühren verwaltet werden.
+Mit Beitragsstrukturen können individuelle Teilnehmerbeiträge für Veranstaltungen erstellt werden.
 
-Dabei können sowohl:
+Eine Beitragsstruktur besteht aus einer oder mehreren Regeln. Jede Regel definiert einen Beitrag für eine bestimmte Altersgruppe und optional für eine bestimmte Rolle (z. B. Teilnehmer oder Mitarbeiter).
 
-- Standardbeiträge
-- individuelle Teilnahmebeiträge
+Für jede Regel werden folgende Angaben festgelegt:
 
-definiert werden.
+- Alter von
+- Alter bis
+- Rolle
+- Beitrag
 
-Die Beitragsstruktur kann anschließend einer Veranstaltung zugeordnet werden.
+Die Regeln werden bei der Berechnung der Teilnehmerbeiträge automatisch ausgewertet. KanuControl ordnet jedem Teilnehmer anhand seines Alters und seiner Rolle den passenden Beitrag zu.
+
+Eine Beitragsstruktur kann beliebig viele Regeln enthalten und für mehrere Veranstaltungen verwendet werden.
+
+### Beitragsstruktur einer Veranstaltung zuordnen
+
+Menü:  
+**Veranstaltungen → Veranstaltung bearbeiten**
+
+Im Feld **Beitragsstruktur** kann eine zuvor angelegte Struktur ausgewählt werden, wenn die Option **Individuelle Gebühren** aktiviert worden ist.
+
+Nach der Zuordnung berechnet KanuControl die Teilnehmerbeiträge automatisch für alle der Veranstaltung zugeordneten Personen.
+
+### Teilnehmerbeiträge verwalten
+
+Menü:  
+**Finanzen → Beiträge**
+
+Im Bereich **Beiträge** werden alle Teilnehmer mit ihrem festgelegten Beitrag angezeigt. Das sind entweder ein Beitrag, der für jeden Teilnehmer gilt oder die zugeordnete Beitragsstruktur.
+
+Zusätzlich können hier:
+
+- Zahlungseingänge erfasst
+- offene Beträge überwacht
+- Gesamtsummen kontrolliert
+
+werden.
+
+KanuControl berechnet automatisch die Summe der Teilnehmerbeiträge sowie die offenen und bereits bezahlten Beträge der Veranstaltung.
 
 ---
 
@@ -175,19 +195,19 @@ Die Beitragsstruktur kann anschließend einer Veranstaltung zugeordnet werden.
 Menü:
 **Dokumente**
 
-KanuControl erstellt automatisch verschiedene PDF-Dokumente.
+KanuControl kann verschiedene PDF-Dokumente erzeugen.
 
 Verfügbare Dokumente:
 
 - Anmeldung (FM/JEM)
-- Abrechnung
+- Abrechnung (FM/JEM)
 - Teilnehmerliste
 - Erhebungsbogen
-- Reisekostenabrechnung
+- Reisekostenabrechnung(en)
 
-Vor der Erstellung prüft KanuControl automatisch, ob alle erforderlichen Daten vorhanden sind.
+Vor der Erstellung prüft KanuControl, ob alle erforderlichen Daten vorhanden sind.
 
-Fehlende Angaben werden angezeigt und müssen zunächst ergänzt werden.
+Fehlende Angaben werden angezeigt und müssen zunächst ergänzt werden bevor das entsprechende PDF erzeugt werden kann.
 
 ---
 

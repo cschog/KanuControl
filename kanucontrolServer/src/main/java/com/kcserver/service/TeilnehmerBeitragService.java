@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -16,6 +17,7 @@ public class TeilnehmerBeitragService {
 
     private final BeitragsregelService beitragsregelService;
     private final AltersService altersService;
+
 
     /**
      * Liefert den fachlich gültigen Beitrag
@@ -150,5 +152,25 @@ public class TeilnehmerBeitragService {
                 veranstaltung,
                 teilnehmer
         );
+    }
+
+    public BigDecimal getBezahlteSumme(
+            Veranstaltung veranstaltung,
+            List<Teilnehmer> teilnehmer
+    ) {
+
+        return teilnehmer.stream()
+
+                .filter(this::isBezahlt)
+
+                .map(t -> getEffektiverBeitrag(
+                        veranstaltung,
+                        t
+                ))
+
+                .reduce(
+                        BigDecimal.ZERO,
+                        BigDecimal::add
+                );
     }
 }

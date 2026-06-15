@@ -1,5 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import keycloak from "@/auth/keycloak";
+import { WarningDialog } from "@/components/common/WarningDialog";
+import axios from "axios";
 
 import {
   Alert,
@@ -13,7 +15,6 @@ import {
   Button,
 } from "@mui/material";
 
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { getOnlineUsers } from "@/api/services/sessionApi";
 
@@ -73,7 +74,6 @@ export default function VeranstaltungenScreen() {
   );
   const [beitragsstrukturen, setBeitragsstrukturen] = useState<BeitragsstrukturDTO[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [copyOpen, setCopyOpen] = useState(false);
   const [copyData, setCopyData] = useState<Partial<VeranstaltungFormModel>>();
@@ -90,6 +90,10 @@ export default function VeranstaltungenScreen() {
   const [confirmActivateOpen, setConfirmActivateOpen] = useState(false);
   const [otherOnlineUsers, setOtherOnlineUsers] = useState<string[]>([]);
   const [activating, setActivating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [warnings, setWarnings] = useState<string[]>([]);
+  const [warningDialogOpen, setWarningDialogOpen] = useState(false);
+  const [dialogTitle, setDialogTitle] = useState("");
 
   /* =========================================================
      LOAD DATA
@@ -203,10 +207,23 @@ export default function VeranstaltungenScreen() {
         return;
       }
 
-      const saved = await updateVeranstaltung(selectedVeranstaltung.id, payload);
+      const response = await updateVeranstaltung(selectedVeranstaltung.id, payload);
 
       await fetchData();
-      setSelectedVeranstaltung(saved);
+
+      setSelectedVeranstaltung(response.data);
+
+     if (response.warnings.length > 0) {
+       setDialogTitle("Hinweise");
+       setWarnings(response.warnings);
+       setWarningDialogOpen(true);
+     }
+
+      setEditMode(false);
+      setBtnEditDisabled(false);
+      setBtnDeleteDisabled(false);
+
+      setError(null);
       setEditMode(false);
       setBtnEditDisabled(false);
       setBtnDeleteDisabled(false);
@@ -215,11 +232,17 @@ export default function VeranstaltungenScreen() {
     } catch (err: unknown) {
       console.error(err);
 
+      setDialogTitle("Speichern nicht möglich");
+
       if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.message ?? "Veranstaltung konnte nicht gespeichert werden.");
+        setWarnings([
+          err.response?.data?.message ?? "Veranstaltung konnte nicht gespeichert werden.",
+        ]);
       } else {
-        setError("Veranstaltung konnte nicht gespeichert werden.");
+        setWarnings(["Veranstaltung konnte nicht gespeichert werden."]);
       }
+
+      setWarningDialogOpen(true);
     }
   };
 
@@ -232,15 +255,32 @@ export default function VeranstaltungenScreen() {
       return;
     }
 
-    await deleteVeranstaltung(selectedVeranstaltung.id);
+    try {
+      await deleteVeranstaltung(selectedVeranstaltung.id);
 
-    setSelectedId(null);
-    setSelectedVeranstaltung(null);
-    setBtnEditDisabled(true);
-    setBtnDeleteDisabled(true);
+      setSelectedId(null);
+      setSelectedVeranstaltung(null);
+      setBtnEditDisabled(true);
+      setBtnDeleteDisabled(true);
 
-    await fetchData();
-    await reloadContext();
+      await fetchData();
+      await reloadContext();
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response?.status === 409) {
+        setDialogTitle("Veranstaltung kann nicht gelöscht werden");
+        setWarnings([
+          error.response.data?.message ??
+            "Die Veranstaltung kann nicht gelöscht werden, solange Teilnehmer eingetragen sind. Ausnahme: Es ist nur noch der Leiter vorhanden.",
+        ]);
+        setWarningDialogOpen(true);
+      } else {
+        setDialogTitle("Fehler beim Löschen");
+
+        setWarnings(["Beim Löschen der Veranstaltung ist ein Fehler aufgetreten."]);
+
+        setWarningDialogOpen(true);
+      }
+    }
   };
 
   /* =========================================================
@@ -297,20 +337,22 @@ export default function VeranstaltungenScreen() {
      ========================================================= */
 
   const handleCreate = async (payload: VeranstaltungSave) => {
-    const saved = await createVeranstaltung(payload);
+    const response = await createVeranstaltung(payload);
 
     await fetchData();
-
     await reloadContext();
 
     setCreateOpen(false);
 
-    setSelectedVeranstaltung(saved);
+    setSelectedVeranstaltung(response.data);
+    setSelectedId(response.data.id);
 
-    setSelectedId(saved.id);
+    if (response.warnings?.length > 0) {
+      // TODO: Dialog/Snackbar
+      alert(response.warnings.join("\n"));
+    }
 
     setBtnEditDisabled(false);
-
     setBtnDeleteDisabled(false);
   };
 
@@ -483,6 +525,12 @@ export default function VeranstaltungenScreen() {
           </Button>
         </DialogActions>
       </Dialog>
+      <WarningDialog
+        open={warningDialogOpen}
+        title={dialogTitle}
+        warnings={warnings}
+        onClose={() => setWarningDialogOpen(false)}
+      />
     </Box>
   );
 }

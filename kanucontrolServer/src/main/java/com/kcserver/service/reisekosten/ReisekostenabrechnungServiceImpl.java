@@ -601,6 +601,16 @@ public class ReisekostenabrechnungServiceImpl
             );
         }
     }
+
+    @Override
+    public BigDecimal getReisekostenSumme(
+            Long veranstaltungId
+    ) {
+        return repository
+                .sumGesamtBetragByVeranstaltung(
+                        veranstaltungId
+                );
+    }
 }
 
 

@@ -5,6 +5,7 @@ export interface Buchung extends WithId {
   kategorie: FinanzKategorie;
   betrag: number;
   beschreibung?: string;
+  systemGenerated?: boolean;
 }
 
 export interface BuchungCreate {

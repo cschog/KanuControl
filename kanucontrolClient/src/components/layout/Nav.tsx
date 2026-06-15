@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import packageJson from "../../../package.json";
-import { HelpDialog } from "@/components/help/HelpDialog";
 import Popover from "@mui/material/Popover";
 import { getOnlineUsers } from "@/api/services/sessionApi";
+import { InfoDialog } from "@/components/info/InfoDialog";
+import { InfoMenuDialog } from "@/components/info/InfoMenuDialog";
 
 import {
   AppBar,
@@ -25,20 +26,18 @@ import { useAppContext } from "@/context/AppContext";
 
 import { getBackendVersion } from "@/api/services/systemApi";
 import apiClient from "@/api/client/apiClient";
+import { InfoPage } from "@/api/enums/InfoPage";
 
 const Navigation = () => {
   const navigate = useNavigate();
-
   const theme = useTheme();
-  const [helpOpen, setHelpOpen] = useState(false);
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
   const { schema, active, loading } = useAppContext();
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
-
   const [onlineAnchor, setOnlineAnchor] = useState<HTMLElement | null>(null);
-
   const [backendVersion, setBackendVersion] = useState("...");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [infoPage, setInfoPage] = useState<InfoPage | null>(null);
 
   useEffect(() => {
     getBackendVersion()
@@ -275,7 +274,7 @@ const loadOnlineUsers = async () => {
         >
           {/* Zeile 1 */}
           <Box>
-            <IconButton color="inherit" onClick={() => setHelpOpen(true)}>
+            <IconButton color="inherit" onClick={() => setMenuOpen(true)}>
               <HelpOutlineIcon />
             </IconButton>
 
@@ -297,7 +296,13 @@ const loadOnlineUsers = async () => {
         </Box>
       </Toolbar>
 
-      <HelpDialog open={helpOpen} onClose={() => setHelpOpen(false)} />
+      <InfoMenuDialog
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        onSelect={(page) => setInfoPage(page)}
+      />
+
+      {infoPage && <InfoDialog open page={infoPage} onClose={() => setInfoPage(null)} />}
     </AppBar>
   );
 };

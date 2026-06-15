@@ -4,6 +4,7 @@ import com.kcserver.entity.Reisekostenabrechnung;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import java.math.BigDecimal;
 
 import java.util.List;
 
@@ -55,4 +56,12 @@ and (
             @Param("personId") Long personId
     );
 
+    @Query("""
+    select coalesce(sum(r.gesamtBetrag), 0)
+    from Reisekostenabrechnung r
+    where r.veranstaltung.id = :veranstaltungId
+""")
+    BigDecimal sumGesamtBetragByVeranstaltung(
+            @Param("veranstaltungId") Long veranstaltungId
+    );
 }

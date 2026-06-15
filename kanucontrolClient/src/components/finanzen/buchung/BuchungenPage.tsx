@@ -43,11 +43,8 @@ export default function BuchungenPage({ veranstaltungId }: Props) {
      ========================================================= */
 
   const [buchungDialogOpen, setBuchungDialogOpen] = useState(false);
-
   const [editingBuchung, setEditingBuchung] = useState<Buchung | undefined>();
-
   const [selectedBeleg, setSelectedBeleg] = useState<AbrechnungBeleg | null>(null);
-
   const [dialogTyp, setDialogTyp] = useState<"KOSTEN" | "EINNAHME">("KOSTEN");
 
   /* =========================================================

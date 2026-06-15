@@ -1,14 +1,9 @@
 import { ColumnDef } from "@tanstack/react-table";
-
 import { Box, IconButton, Stack, Typography } from "@mui/material";
-
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-
 import Money from "@/components/common/Money";
-
 import { Buchung } from "@/api/types/abrechnung";
-
 import { kategorieZuTyp } from "@/api/types/finanz";
 
 interface Props {
@@ -19,11 +14,8 @@ interface Props {
 export const buchungColumns = ({ onEdit, onDelete }: Props): ColumnDef<Buchung>[] => [
   {
     accessorKey: "kategorie",
-
     header: "Kategorie",
-
     size: 200,
-
     cell: ({ row }) => (
       <Typography
         sx={{
@@ -38,11 +30,8 @@ export const buchungColumns = ({ onEdit, onDelete }: Props): ColumnDef<Buchung>[
   },
   {
     accessorKey: "beschreibung",
-
     header: "Beschreibung",
-
     size: 200,
-
     cell: ({ row }) => (
       <Typography
         sx={{
@@ -55,11 +44,8 @@ export const buchungColumns = ({ onEdit, onDelete }: Props): ColumnDef<Buchung>[
   },
   {
     accessorKey: "betrag",
-
     header: "Betrag",
-
     size: 100,
-
     meta: {
       align: "right",
     },
@@ -99,23 +85,29 @@ export const buchungColumns = ({ onEdit, onDelete }: Props): ColumnDef<Buchung>[
       align: "right",
     },
 
-    cell: ({ row }) => (
-      <Stack
-        direction="row"
-        spacing={0.5}
-        justifyContent="flex-end"
-        sx={{
-          width: "100%",
-        }}
-      >
-        <IconButton size="small" onClick={() => onEdit(row.original)}>
-          <EditIcon fontSize="small" />
-        </IconButton>
+    cell: ({ row }) => {
+      if (row.original.systemGenerated) {
+        return null;
+      }
 
-        <IconButton size="small" color="error" onClick={() => onDelete(row.original.id)}>
-          <DeleteIcon fontSize="small" />
-        </IconButton>
-      </Stack>
-    ),
+      return (
+        <Stack
+          direction="row"
+          spacing={0.5}
+          justifyContent="flex-end"
+          sx={{
+            width: "100%",
+          }}
+        >
+          <IconButton size="small" onClick={() => onEdit(row.original)}>
+            <EditIcon fontSize="small" />
+          </IconButton>
+
+          <IconButton size="small" color="error" onClick={() => onDelete(row.original.id)}>
+            <DeleteIcon fontSize="small" />
+          </IconButton>
+        </Stack>
+      );
+    },
   },
 ];

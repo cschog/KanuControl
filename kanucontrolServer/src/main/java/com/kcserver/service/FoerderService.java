@@ -22,6 +22,12 @@ public class FoerderService {
     private final KikZuschlagService kikZuschlagService;
     private final AltersService altersService;
 
+    private static final int MAX_FOERDERTAGE_FM_JEM = 21;
+    private boolean isFmJem(Veranstaltung veranstaltung) {
+        return veranstaltung.getTyp() == VeranstaltungTyp.FM
+                || veranstaltung.getTyp() == VeranstaltungTyp.JEM;
+    }
+
     public boolean istFoerderfaehig(
 
             Veranstaltung veranstaltung,
@@ -89,21 +95,23 @@ public class FoerderService {
 
     public int berechneFoerdertage(
             Veranstaltung veranstaltung
-    ) {
 
-        if (
-                veranstaltung == null
-                        || veranstaltung.getBeginnDatum() == null
-                        || veranstaltung.getEndeDatum() == null
-        ) {
+    ) {
+        if (veranstaltung == null
+                || veranstaltung.getBeginnDatum() == null
+                || veranstaltung.getEndeDatum() == null) {
             return 0;
         }
+        int tage = (int) ChronoUnit.DAYS.between(
+                veranstaltung.getBeginnDatum(),
+                veranstaltung.getEndeDatum()
+        ) + 1;
 
-        return (int)
-                ChronoUnit.DAYS.between(
-                        veranstaltung.getBeginnDatum(),
-                        veranstaltung.getEndeDatum()
-                ) + 1;
+        if (isFmJem(veranstaltung)) {
+            return Math.min(tage, MAX_FOERDERTAGE_FM_JEM);
+        }
+
+        return tage;
 
     }
 

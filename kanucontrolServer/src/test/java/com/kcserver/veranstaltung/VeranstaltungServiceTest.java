@@ -171,7 +171,7 @@ class VeranstaltungServiceTest extends AbstractTenantIntegrationTest {
                         .withVerein(verein.getId())
                         .withLeiter(leiter.getId())
                         .build()
-        );
+        ).data();
     }
 
     @Test
@@ -233,6 +233,6 @@ class VeranstaltungServiceTest extends AbstractTenantIntegrationTest {
                         .withVerein(v.getId())
                         .withLeiter(p.getId())
                         .build()
-        );
+        ).data();
     }
 }

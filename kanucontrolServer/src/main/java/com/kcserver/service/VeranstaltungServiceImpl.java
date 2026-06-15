@@ -1,10 +1,12 @@
 package com.kcserver.service;
 
+import com.kcserver.api.response.SaveResponse;
 import com.kcserver.dto.beitrag.BeitragsstrukturDTO;
 import com.kcserver.dto.person.PersonListDTO;
 import com.kcserver.dto.veranstaltung.*;
 import com.kcserver.entity.*;
 import com.kcserver.enumtype.TeilnehmerRolle;
+import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.mapper.BeitragsstrukturMapper;
 import com.kcserver.repository.VeranstaltungSpecs;
 
@@ -24,6 +26,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,6 +47,7 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
     private final BeitragsstrukturService beitragsstrukturService;
     private final BeitragsstrukturMapper beitragsstrukturMapper;
     private final BeitragsstrukturRepository beitragsstrukturRepository;
+    private final TeilnehmerService teilnehmerService;
 
 
     /* =========================================================
@@ -50,7 +55,8 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
        ========================================================= */
 
     @Override
-    public VeranstaltungDetailDTO create(VeranstaltungCreateDTO dto) {
+    public SaveResponse<VeranstaltungDetailDTO> create(
+            VeranstaltungCreateDTO dto) {
 
         veranstaltungRepository.unsetAktiveVeranstaltung();
         veranstaltungRepository.flush();
@@ -75,16 +81,20 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
         v.setLeiter(leiter);
         v.setAktiv(true);
 
+        List<String> warnings = adjustFmJemType(v);
+
         Veranstaltung saved = veranstaltungRepository.save(v);
 
-        // Leiter als Teilnehmer sicherstellen
         Teilnehmer t = new Teilnehmer();
         t.setVeranstaltung(saved);
         t.setPerson(leiter);
         t.setRolle(TeilnehmerRolle.LEITER);
         teilnehmerRepository.save(t);
 
-        return veranstaltungMapper.toDetailDTO(saved);
+        VeranstaltungDetailDTO dtoResult =
+                veranstaltungMapper.toDetailDTO(saved);
+
+        return new SaveResponse<>(dtoResult, warnings);
     }
 
     /* =========================================================
@@ -305,9 +315,18 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
     }
 
     private void validateLeiterAge(Person person) {
-        if (person.getGeburtsdatum() == null ||
-                person.getGeburtsdatum().plusYears(18).isAfter(LocalDate.now())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        if (person.getGeburtsdatum() == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Für den Veranstaltungsleiter muss ein Geburtsdatum hinterlegt sein."
+            );
+        }
+
+        if (person.getGeburtsdatum().plusYears(18).isAfter(LocalDate.now())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Der Veranstaltungsleiter muss mindestens 18 Jahre alt sein."
+            );
         }
     }
     @Override
@@ -349,9 +368,12 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
         return veranstaltungMapper.toDetailDTO(loaded);
     }
 
-    @Override
+
     @Transactional
-    public VeranstaltungDetailDTO update(Long id, VeranstaltungUpdateDTO dto) {
+    @Override
+    public SaveResponse<VeranstaltungDetailDTO> update(
+            Long id,
+            VeranstaltungUpdateDTO dto) {
 
         Veranstaltung v = veranstaltungRepository.findByIdWithRelations(id)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -411,7 +433,7 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
                             HttpStatus.NOT_FOUND, PERSON_NOT_FOUND
                     ));
 
-            validateLeiterAge(leiter);   // ⭐ DAS HAT GEFEHLT
+            validateLeiterAge(leiter);
 
             v.setLeiter(leiter);
         }
@@ -457,7 +479,7 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
    VALIDIERUNG INDIVIDUELLE GEBÜHREN
    ========================================= */
 
-        if (Boolean.TRUE.equals(v.isIndividuelleGebuehren())) {
+        if (v.isIndividuelleGebuehren()) {
 
             // Standardgebühr wird nicht verwendet
             v.setStandardGebuehr(null);
@@ -493,7 +515,14 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
         v.setGeplanteMitarbeiterWeiblich(dto.getGeplanteMitarbeiterWeiblich());
         v.setGeplanteMitarbeiterDivers(dto.getGeplanteMitarbeiterDivers());
 
-        return veranstaltungMapper.toDetailDTO(v);
+        List<String> warnings = adjustFmJemType(v);
+        Veranstaltung saved = veranstaltungRepository.save(v);
+
+        VeranstaltungDetailDTO dtoResult =
+
+                veranstaltungMapper.toDetailDTO(saved);
+
+        return new SaveResponse<>(dtoResult, warnings);
     }
 
     public Veranstaltung findEntityById(
@@ -507,5 +536,48 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
                                 "Veranstaltung nicht gefunden"
                         )
                 );
+    }
+
+    private List<String> adjustFmJemType(Veranstaltung veranstaltung) {
+        List<String> warnings = new ArrayList<>();
+
+        if (veranstaltung.getTyp() != VeranstaltungTyp.FM
+                && veranstaltung.getTyp() != VeranstaltungTyp.JEM) {
+            return warnings;
+        }
+
+        if (veranstaltung.getBeginnDatum() == null || veranstaltung.getEndeDatum() == null) {
+            return warnings;
+        }
+
+        long dauerInTagen = ChronoUnit.DAYS.between(
+                veranstaltung.getBeginnDatum(),
+                veranstaltung.getEndeDatum()
+        ) + 1;
+
+        if (dauerInTagen <= 0) {
+            warnings.add(
+                    "Das Enddatum liegt vor dem Beginndatum."
+            );
+            return warnings;
+        }
+
+        if (dauerInTagen <= 4) {
+            veranstaltung.setTyp(VeranstaltungTyp.FM);
+        } else {
+            veranstaltung.setTyp(VeranstaltungTyp.JEM);
+
+            if (dauerInTagen > 21) {
+                warnings.add(
+                        "Die Veranstaltung dauert " + dauerInTagen
+                                + " Tage. FM/JEM-Veranstaltungen dürfen maximal 21 Tage dauern." +
+                                "Für die Förderung werden 21 Tage berücksichtigt."
+                );
+            }
+        }
+
+
+
+        return warnings;
     }
 }
