@@ -218,7 +218,7 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
                     <TextField
                       type="number"
                       size="small"
-                      value={row.individuellerBeitrag ?? row.effektiverBeitrag}
+                      value={row.individuellerBeitrag ?? row.effektiverBeitrag ?? ""}
                       onChange={(e) => {
                         const value = e.target.value;
 
@@ -253,7 +253,7 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
                         whiteSpace: "nowrap",
                       }}
                     >
-                      {row.effektiverBeitrag.toFixed(2)} €
+                      {getBeitrag(row).toFixed(2)} €
                     </Typography>
                   )}
                 </Box>

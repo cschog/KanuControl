@@ -7,6 +7,7 @@ import com.kcserver.entity.Person;
 import com.kcserver.entity.Teilnehmer;
 import com.kcserver.entity.Verein;
 import com.kcserver.enumtype.CountryCode;
+import com.kcserver.exception.ErrorMessages;
 import com.kcserver.mapper.PersonMapper;
 import com.kcserver.persistence.specification.PersonSpecification;
 import com.kcserver.repository.*;
@@ -123,7 +124,7 @@ public class PersonServiceImpl implements PersonService {
 
         Person person = personRepository.findDetailById(id)
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Person not found"
+                        HttpStatus.NOT_FOUND, ErrorMessages.PERSON_NOT_FOUND
                 ));
 
         return personMapper.toDetailDTO(person);
@@ -212,7 +213,7 @@ public class PersonServiceImpl implements PersonService {
                 Verein verein = vereinRepository.findById(m.getVereinId())
                         .orElseThrow(() -> new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
-                                "Verein not found: " + m.getVereinId()
+                                "Verein nicht gefunden: " + m.getVereinId()
                         ));
 
                 Mitglied mitglied = new Mitglied();
@@ -250,7 +251,7 @@ public class PersonServiceImpl implements PersonService {
         // 1. LOAD
         Person existing = personRepository.findDetailById(id)
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Person not found"
+                        HttpStatus.NOT_FOUND, ErrorMessages.PERSON_NOT_FOUND
                 ));
 
         // 2. MERGE (finale Werte!)
@@ -285,7 +286,7 @@ public class PersonServiceImpl implements PersonService {
         if (!personRepository.existsById(id)) {
             throw new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
-                    "Person not found"
+                    ErrorMessages.PERSON_NOT_FOUND
             );
         }
 
@@ -376,7 +377,7 @@ public class PersonServiceImpl implements PersonService {
                         Verein verein = vereinRepository.findById(dto.getVereinId())
                                 .orElseThrow(() -> new ResponseStatusException(
                                         HttpStatus.NOT_FOUND,
-                                        "Verein not found: " + dto.getVereinId()
+                                        "Verein nicht gefunden: " + dto.getVereinId()
                                 ));
 
                         Mitglied m = new Mitglied();

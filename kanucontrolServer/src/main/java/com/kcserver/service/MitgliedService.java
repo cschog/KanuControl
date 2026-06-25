@@ -5,6 +5,7 @@ import com.kcserver.entity.Mitglied;
 import com.kcserver.entity.Person;
 import com.kcserver.entity.Verein;
 import com.kcserver.exception.BusinessRuleViolationException;
+import com.kcserver.exception.ErrorMessages;
 import com.kcserver.mapper.MitgliedMapper;
 import com.kcserver.repository.MitgliedRepository;
 import com.kcserver.repository.PersonRepository;
@@ -58,18 +59,18 @@ public class MitgliedService {
 
         Person person = personRepository.findById(dto.getPersonId())
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Person not found"
+                        HttpStatus.NOT_FOUND, ErrorMessages.PERSON_NOT_FOUND
                 ));
 
         Verein verein = vereinRepository.findById(dto.getVereinId())
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Verein not found"
+                        HttpStatus.NOT_FOUND, ErrorMessages.VEREIN_NOT_FOUND
                 ));
 
         if (mitgliedRepository.existsByPerson_IdAndVerein_Id(
                 dto.getPersonId(), dto.getVereinId())) {
             throw new BusinessRuleViolationException(
-                    "Person is already Mitglied in this Verein"
+                    "Person ist schon Mitglied in diesem Verein"
             );
         }
 

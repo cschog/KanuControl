@@ -4,6 +4,7 @@ import com.kcserver.dto.validation.ValidationResultDTO;
 import com.kcserver.entity.Teilnehmer;
 import com.kcserver.entity.Veranstaltung;
 import com.kcserver.exception.BusinessRuleViolationException;
+import com.kcserver.exception.ErrorMessages;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -130,11 +131,9 @@ public class VeranstaltungValidator {
             }
 
             if (t.getPerson() == null) {
-
                 fehler.add(
-                        "Teilnehmer ohne Person gefunden."
+                        ErrorMessages.TEILNEHMER_OHNE_PERSON
                 );
-
                 return;
             }
 

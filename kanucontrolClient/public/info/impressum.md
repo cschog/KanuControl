@@ -5,8 +5,9 @@
 ### Betreiber der KanuControl-Installation
 
 Chris Schog
-
-Aachen, Deutschland
+Ardennenstr. 82
+52076 Aachen
+Deutschland
 
 E-Mail: c.schog@icloud.com
 

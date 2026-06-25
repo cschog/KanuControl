@@ -8,6 +8,7 @@ import com.kcserver.entity.*;
 import com.kcserver.enumtype.AbrechnungsStatus;
 import com.kcserver.enumtype.FinanzKategorie;
 import com.kcserver.enumtype.VeranstaltungTyp;
+import com.kcserver.exception.ErrorMessages;
 import com.kcserver.mapper.AbrechnungMapper;
 import com.kcserver.repository.*;
 import com.kcserver.service.FoerdersatzService;
@@ -312,7 +313,7 @@ public class AbrechnungService {
                 .findById(veranstaltungId)
                 .orElseThrow(() -> new ResponseStatusException(
                         NOT_FOUND,
-                        "Veranstaltung nicht gefunden"
+                        ErrorMessages.VERANSTALTUNG_NOT_FOUND
                 ));
 
         Abrechnung abrechnung = new Abrechnung();
