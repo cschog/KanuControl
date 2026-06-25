@@ -70,14 +70,15 @@ class FinanzGruppeControllerTest extends AbstractFinanzIntegrationTest {
                                 .content(objectMapper.writeValueAsString(dto))
                 )
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.kuerzel").value("MS"));
+                .andExpect(jsonPath("$.data.kuerzel").value("MS"));
 
         mockMvc.perform(
                         get("/api/veranstaltungen/{vid}/finanzgruppen", veranstaltungId)
                                 .with(testUser())
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].kuerzel").value("MS"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[0].kuerzel").value("MS"));
     }
 
     /* =========================================================
@@ -102,7 +103,7 @@ class FinanzGruppeControllerTest extends AbstractFinanzIntegrationTest {
                         .getContentAsString();
 
         JsonNode node = objectMapper.readTree(response);
-        Long id = node.get("id").asLong();
+        Long id = node.path("data").path("id").asLong();
 
         var update = new FinanzGruppeCreateDTO("CS");
 
@@ -114,7 +115,7 @@ class FinanzGruppeControllerTest extends AbstractFinanzIntegrationTest {
                                 .content(objectMapper.writeValueAsString(update))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.kuerzel").value("CS"));
+                .andExpect(jsonPath("$.data.kuerzel").value("CS"));
     }
 
     /* =========================================================
@@ -139,7 +140,7 @@ class FinanzGruppeControllerTest extends AbstractFinanzIntegrationTest {
                         .getContentAsString();
 
         JsonNode node = objectMapper.readTree(response);
-        Long id = node.get("id").asLong();
+        Long id = node.path("data").path("id").asLong();
 
         mockMvc.perform(
                         delete("/api/veranstaltungen/{vid}/finanzgruppen/{gid}",

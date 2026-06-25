@@ -75,7 +75,10 @@ class VeranstaltungActiveTest extends AbstractTenantIntegrationTest {
                 .getResponse()
                 .getContentAsString();
 
-        boolean aktiv = objectMapper.readTree(json).get("aktiv").asBoolean();
+        boolean aktiv = objectMapper.readTree(json)
+                .path("data")
+                .path("aktiv")
+                .asBoolean();
 
         assertThat(aktiv).isTrue();
     }
@@ -147,6 +150,6 @@ class VeranstaltungActiveTest extends AbstractTenantIntegrationTest {
                 .getResponse()
                 .getContentAsString();
 
-        return objectMapper.readTree(json).get("id").asLong();
+        return objectMapper.readTree(json).path("data").path("id").asLong();
     }
 }

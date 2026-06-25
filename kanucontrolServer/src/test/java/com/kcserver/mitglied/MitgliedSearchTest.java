@@ -86,7 +86,7 @@ class MitgliedSearchTest extends AbstractTenantIntegrationTest {
 
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$.data.length()").value(2))
                 .andExpect(jsonPath("$[*].personId")
                         .value(everyItem(is(personId.intValue()))));
     }
@@ -104,8 +104,8 @@ class MitgliedSearchTest extends AbstractTenantIntegrationTest {
 
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].vereinId").value(verein1Id));
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].vereinId").value(verein1Id));
 
     }
 
@@ -122,7 +122,7 @@ class MitgliedSearchTest extends AbstractTenantIntegrationTest {
 
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.vereinId").value(verein2Id));
+                .andExpect(jsonPath("$.data.vereinId").value(verein2Id));
     }
 
     /* =========================================================

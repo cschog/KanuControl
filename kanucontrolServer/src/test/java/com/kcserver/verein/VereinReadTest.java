@@ -65,9 +65,9 @@ class VereinReadTest extends AbstractTenantIntegrationTest {
                         get("/api/verein/{id}", vereinId))
 
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(vereinId))
-                .andExpect(jsonPath("$.name").value("Eschweiler Kanu Club"))
-                .andExpect(jsonPath("$.abk").value("EKC"));
+                .andExpect(jsonPath("$.data.id").value(vereinId))
+                .andExpect(jsonPath("$.data.name").value("Eschweiler Kanu Club"))
+                .andExpect(jsonPath("$.data.abk").value("EKC"));
     }
 
     @Test

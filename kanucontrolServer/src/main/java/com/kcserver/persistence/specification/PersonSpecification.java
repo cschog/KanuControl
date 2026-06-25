@@ -76,7 +76,7 @@ public class PersonSpecification {
             }
 
             // Aktiv (Default: true)
-            Boolean aktiv = c.getAktiv();
+            //Boolean aktiv = c.getAktiv();
             // Aktiv (nur filtern wenn gesetzt)
             if (c.getAktiv() != null) {
                 predicate = cb.and(
@@ -109,7 +109,10 @@ public class PersonSpecification {
                 Join<Person, Mitglied> join =
                         root.join("mitgliedschaften", JoinType.INNER);
                 predicate = cb.and(predicate,
-                        cb.equal(join.get("verein").get("id"), c.getVereinId()));
+                        cb.equal(
+                                join.get("verein").get("id"),
+                                c.getVereinId()
+                        ));
             }
 
             // Alter

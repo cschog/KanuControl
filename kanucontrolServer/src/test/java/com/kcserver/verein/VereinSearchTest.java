@@ -46,7 +46,7 @@ class VereinSearchTest extends AbstractTenantIntegrationTest {
                                 .param("name", "Kanu")
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(3));
+                .andExpect(jsonPath("$.data.length()").value(3));
     }
 
     @Test
@@ -57,8 +57,8 @@ class VereinSearchTest extends AbstractTenantIntegrationTest {
                                 .param("abk", "EKC")
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content.length()").value(1))
-                .andExpect(jsonPath("$.content[0].name").value("Eschweiler Kanu Club"));
+                .andExpect(jsonPath("$.data.content.length()").value(1))
+                .andExpect(jsonPath("$.data.content[0].name").value("Eschweiler Kanu Club"));
     }
 
     @Test
@@ -70,8 +70,8 @@ class VereinSearchTest extends AbstractTenantIntegrationTest {
                                 .param("abk", "DKV")
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content.length()").value(1))
-                .andExpect(jsonPath("$.content[0].name").value("Dürener Kanu Verein"));
+                .andExpect(jsonPath("$.data.content.length()").value(1))
+                .andExpect(jsonPath("$.data.content[0].name").value("Dürener Kanu Verein"));
     }
 
     @Test
@@ -83,6 +83,6 @@ class VereinSearchTest extends AbstractTenantIntegrationTest {
                                 .param("size", "2")
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content.length()").value(2));
+                .andExpect(jsonPath("$.data.content.length()").value(2));
     }
 }

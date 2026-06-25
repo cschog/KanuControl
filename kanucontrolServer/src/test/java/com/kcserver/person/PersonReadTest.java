@@ -50,8 +50,8 @@ class PersonReadTest extends AbstractTenantIntegrationTest {
                         get("/api/person")
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[*].vorname").value(hasItem("Max")))
-                .andExpect(jsonPath("$.content[*].name").value(hasItem("Mustermann")));
+                .andExpect(jsonPath("$.data.content[*].vorname").value(hasItem("Max")))
+                .andExpect(jsonPath("$.data.content[*].name").value(hasItem("Mustermann")));
     }
 
     @Test
@@ -71,9 +71,9 @@ class PersonReadTest extends AbstractTenantIntegrationTest {
                         get("/api/person/{id}", personId)
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(personId))
-                .andExpect(jsonPath("$.vorname").value("Erika"))
-                .andExpect(jsonPath("$.name").value("Mustermann"));
+                .andExpect(jsonPath("$.data.id").value(personId))
+                .andExpect(jsonPath("$.data.vorname").value("Erika"))
+                .andExpect(jsonPath("$.data.name").value("Mustermann"));
     }
 
     @Test
@@ -134,7 +134,7 @@ class PersonReadTest extends AbstractTenantIntegrationTest {
                         get("/api/person/{id}", personId))
 
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(personId))
+                .andExpect(jsonPath("$.data.id").value(personId))
                 .andExpect(jsonPath("$.mitgliedschaften").isArray())
                 .andExpect(jsonPath("$.mitgliedschaften[0].verein.id").value(vereinId))
                 .andExpect(jsonPath("$.mitgliedschaften[0].verein.name")

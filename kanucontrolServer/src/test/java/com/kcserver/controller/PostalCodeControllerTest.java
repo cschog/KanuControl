@@ -50,8 +50,8 @@ class PostalCodeControllerTest extends AbstractTenantIntegrationTest {
                                 .param("postalCode", "50226"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.postalCode").value("50226"))
-                .andExpect(jsonPath("$.city").value("Frechen"))
-                .andExpect(jsonPath("$.countryCode").value("DE"));
+                .andExpect(jsonPath("$.data.postalCode").value("50226"))
+                .andExpect(jsonPath("$.data.city").value("Frechen"))
+                .andExpect(jsonPath("$.data.countryCode").value("DE"));
     }
 }

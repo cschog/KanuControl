@@ -36,7 +36,10 @@ public final class VeranstaltungSpecs {
     public static Specification<Veranstaltung> vereinEquals(Long vereinId) {
         return (root, query, cb) -> {
             if (vereinId == null) return null;
-            return cb.equal(root.get("verein").get("id"), vereinId);
+            return cb.equal(
+                    root.get("verein").get("id"),
+                    vereinId
+            );
         };
     }
 

@@ -69,7 +69,7 @@ class MitgliedReadTest extends AbstractTenantIntegrationTest {
                         .getContentAsString();
 
         mitgliedId =
-                objectMapper.readTree(response).get("id").asLong();
+                objectMapper.readTree(response).path("data").path("id").asLong();
     }
 
     /* =========================================================
@@ -83,9 +83,9 @@ class MitgliedReadTest extends AbstractTenantIntegrationTest {
                        get("/api/mitglied/{id}", mitgliedId)
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(mitgliedId))
-                .andExpect(jsonPath("$.personId").value(personId))
-                .andExpect(jsonPath("$.verein.id").value(vereinId));
+                .andExpect(jsonPath("$.data.id").value(mitgliedId))
+                .andExpect(jsonPath("$.data.personId").value(personId))
+                .andExpect(jsonPath("$.data.verein.id").value(vereinId));
     }
 
     @Test

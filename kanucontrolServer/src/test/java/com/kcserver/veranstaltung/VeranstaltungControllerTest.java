@@ -111,7 +111,8 @@ class VeranstaltungControllerTest extends AbstractTenantIntegrationTest {
         JsonNode root = objectMapper.readTree(json);
 
         // 🔹 wichtig: Page → content
-        JsonNode content = root.get("content");
+        JsonNode content = root.path("data")
+                .path("content");
 
         assertThat(content).isNotNull();
         assertThat(content.isArray()).isTrue();
@@ -119,7 +120,7 @@ class VeranstaltungControllerTest extends AbstractTenantIntegrationTest {
 
         JsonNode first = content.get(0);
 
-        assertThat(first.get("name").asText()).isEqualTo("Sommerlager 2026");
-        assertThat(first.get("id")).isNotNull();
+        assertThat(first.path("data").path("namee").asText()).isEqualTo("Sommerlager 2026");
+        assertThat(first.path("data").path("id")).isNotNull();
     }
 }

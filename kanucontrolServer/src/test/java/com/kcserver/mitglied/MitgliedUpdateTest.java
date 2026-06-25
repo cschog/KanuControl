@@ -75,7 +75,7 @@ class MitgliedUpdateTest extends AbstractTenantIntegrationTest {
 
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.funktion").value("BOOTSHAUSWART"));
+                .andExpect(jsonPath("$.data.funktion").value("BOOTSHAUSWART"));
     }
 
     /* =========================================================
@@ -97,7 +97,7 @@ class MitgliedUpdateTest extends AbstractTenantIntegrationTest {
 
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.hauptVerein").value(true));
+                .andExpect(jsonPath("$.data.hauptVerein").value(true));
 
         // erster ist jetzt kein Hauptverein mehr
         mockMvc.perform(
@@ -108,7 +108,7 @@ class MitgliedUpdateTest extends AbstractTenantIntegrationTest {
 
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.hauptVerein").value(false));
+                .andExpect(jsonPath("$.data.hauptVerein").value(false));
     }
 
     /* =========================================================

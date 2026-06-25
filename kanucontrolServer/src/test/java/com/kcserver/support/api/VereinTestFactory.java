@@ -1,5 +1,6 @@
 package com.kcserver.support.api;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.MediaType;
 import com.kcserver.dto.verein.VereinDTO;
@@ -9,6 +10,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import java.util.Optional;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 /**
  * Tenant-agnostische Test-Factory für Vereine.
@@ -37,12 +39,13 @@ public class VereinTestFactory extends AbstractApiTestFactory {
                                         .contentType(MediaType.APPLICATION_JSON) // 🔥 DAS FEHLT
                                         .content(objectMapper.writeValueAsString(dto))
                         )
+                        .andDo(print())
                         .andExpect(status().isCreated())
                         .andReturn();
 
         return objectMapper
                 .readTree(result.getResponse().getContentAsString())
-                .get("id")
+                .path("data").path("id")
                 .asLong();
     }
     public Long createIfNotExists(String abk, String name) throws Exception {
@@ -70,8 +73,10 @@ public class VereinTestFactory extends AbstractApiTestFactory {
 
         var tree = objectMapper.readTree(result.getResponse().getContentAsString());
 
-        if (tree.isArray() && !tree.isEmpty()) {
-            return Optional.of(tree.get(0).get("id").asLong());
+        JsonNode content = tree.path("data").path("content");
+
+        if (content.isArray() && !content.isEmpty()) {
+            return Optional.of(content.get(0).path("id").asLong());
         }
 
         return Optional.empty();

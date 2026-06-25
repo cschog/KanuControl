@@ -39,9 +39,9 @@ class VereinCreateTest extends AbstractTenantIntegrationTest {
 
                 )
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").isNumber())
-                .andExpect(jsonPath("$.abk").value("EKC"))
-                .andExpect(jsonPath("$.name").value("Eschweiler Kanu Club"));
+                .andExpect(jsonPath("$.data.id").isNumber())
+                .andExpect(jsonPath("$.data.abk").value("EKC"))
+                .andExpect(jsonPath("$.data.name").value("Eschweiler Kanu Club"));
     }
 
     @Test

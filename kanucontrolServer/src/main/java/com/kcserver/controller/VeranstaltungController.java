@@ -1,6 +1,6 @@
 package com.kcserver.controller;
 
-import com.kcserver.api.response.SaveResponse;
+import com.kcserver.api.response.ApiResponse;
 import com.kcserver.dto.teilnehmer.TeilnehmerBulkDeleteDTO;
 import com.kcserver.dto.veranstaltung.*;
 import com.kcserver.enumtype.VeranstaltungTyp;
@@ -16,6 +16,7 @@ import com.kcserver.dto.teilnehmer.TeilnehmerKurzDTO;
 
 import java.time.LocalDate;
 import java.util.List;
+
 import org.springframework.web.bind.annotation.*;
 import com.kcserver.finanz.FinanzGruppeService;
 import org.springframework.web.server.ResponseStatusException;
@@ -40,10 +41,10 @@ public class VeranstaltungController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public SaveResponse<VeranstaltungDetailDTO> create(
-            @RequestBody VeranstaltungCreateDTO dto) {
-        return veranstaltungService.create(dto);
+    public ApiResponse<VeranstaltungDetailDTO> create(
+            @Valid @RequestBody VeranstaltungCreateDTO dto) {
 
+        return veranstaltungService.create(dto);
     }
 
     /* =========================================================
@@ -51,7 +52,7 @@ public class VeranstaltungController {
        ========================================================= */
 
     @GetMapping
-    public Page<VeranstaltungListDTO> search(
+    public ApiResponse<Page<VeranstaltungListDTO>> search(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) Boolean aktiv,
             @RequestParam(required = false) Long vereinId,
@@ -88,16 +89,16 @@ public class VeranstaltungController {
                 )
         );
 
-        return veranstaltungService.search(
-                filter,
-                safePageable
+        return new ApiResponse<>(
+                veranstaltungService.search(filter, safePageable),
+                List.of()
         );
     }
 
     // ohne paging
 
     @GetMapping("/all")
-    public List<VeranstaltungListDTO> searchAll(
+    public ApiResponse<List<VeranstaltungListDTO>> searchAll(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) Boolean aktiv,
             @RequestParam(required = false) Long vereinId,
@@ -118,7 +119,7 @@ public class VeranstaltungController {
         filter.setEndeDatum(endeDatum);
         filter.setTyp(typ);
 
-        return veranstaltungService.searchAll(filter);
+        return ApiResponse.of(veranstaltungService.searchAll(filter));
     }
 
     /* =========================================================
@@ -126,15 +127,21 @@ public class VeranstaltungController {
        ========================================================= */
 
     @GetMapping("/aktiv")
-    public VeranstaltungDetailDTO getActive() {
-        return veranstaltungService.getActiveOptional()
-                .orElseThrow(() ->
-                        new ResponseStatusException(HttpStatus.NOT_FOUND));
+    public ApiResponse<VeranstaltungDetailDTO> getActive() {
+
+        VeranstaltungDetailDTO dto =
+                veranstaltungService.getActiveOptional()
+                        .orElseThrow(() ->
+                                new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        return new ApiResponse<>(dto, List.of());
     }
 
     @GetMapping("/{id:\\d+}")
-    public VeranstaltungDetailDTO getById(@PathVariable Long id) {
-        return veranstaltungService.getById(id);
+    public ApiResponse<VeranstaltungDetailDTO> getById(
+            @PathVariable Long id) {
+
+        return ApiResponse.of(veranstaltungService.getById(id));
     }
 
     /* =========================================================
@@ -142,7 +149,7 @@ public class VeranstaltungController {
        ========================================================= */
 
     @PutMapping("/{id}")
-    public SaveResponse<VeranstaltungDetailDTO> update(
+    public ApiResponse<VeranstaltungDetailDTO> update(
             @PathVariable Long id,
             @Valid @RequestBody VeranstaltungUpdateDTO dto) {
         return veranstaltungService.update(id, dto);
