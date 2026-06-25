@@ -33,9 +33,13 @@ Hierzu gehören insbesondere:
 
 ## Hosting und Datensicherheit
 
-Die Daten werden auf Systemen gespeichert und verarbeitet, die vom Betreiber der KanuControl-Installation bereitgestellt werden.
+KanuControl wird auf einer privaten Linux-Serverinfrastruktur betrieben.
 
-Zum Schutz vor Datenverlust werden regelmäßig Datensicherungen (Backups) erstellt. Der Zugriff auf die gespeicherten Daten ist auf berechtigte Personen beschränkt.
+Die Anwendung wird auf mehreren voneinander getrennten virtuellen Systemen (VMs) ausgeführt. Zur Sicherstellung der Verfügbarkeit werden tägliche Datensicherungen auf einem separaten System erstellt.
+
+Jeder Verein wird in einem eigenen Datenbankschema geführt, wodurch eine logische Trennung der Vereinsdaten gewährleistet ist.
+
+Der Zugriff auf personenbezogene Daten ist auf berechtigte Personen beschränkt.
 
 Der Betreiber trifft angemessene technische und organisatorische Maßnahmen, um die Vertraulichkeit, Integrität und Verfügbarkeit der gespeicherten Daten sicherzustellen.
 
@@ -60,7 +64,8 @@ Ansprechpartner hierfür ist der jeweilige Verein bzw. Betreiber der Installatio
 
 KanuControl unterstützt den Schutz personenbezogener Daten durch:
 
-- Benutzeranmeldung mit OTP (One-Time-Password)
+- Zentrale Authentifizierung über Keycloak
+- Unterstützung von OTP (One-Time Password)
 - Protokollierung sicherheitsrelevanter Vorgänge
 - Mandantenfähige Datenhaltung
 - Verschlüsselte Kommunikation über HTTPS

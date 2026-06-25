@@ -4,6 +4,7 @@ import com.kcserver.dto.verein.VereinDTO;
 import com.kcserver.dto.verein.VereinRefDTO;
 import com.kcserver.entity.Person;
 import com.kcserver.entity.Verein;
+import com.kcserver.exception.ErrorMessages;
 import com.kcserver.mapper.VereinMapper;
 import com.kcserver.repository.MitgliedRepository;
 import com.kcserver.repository.PersonRepository;
@@ -59,7 +60,7 @@ public class VereinService {
     public VereinDTO getById(Long id) {
         Verein verein = vereinRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Verein not found"
+                        HttpStatus.NOT_FOUND, ErrorMessages.VEREIN_NOT_FOUND
                 ));
         return vereinMapper.toDTO(verein);
     }
@@ -157,7 +158,7 @@ public class VereinService {
 
         Verein verein = vereinRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Verein not found"
+                        HttpStatus.NOT_FOUND, ErrorMessages.VEREIN_NOT_FOUND
                 ));
 
         // 🔒 Fachliche Duplikatsprüfung (UPDATE!)
@@ -226,7 +227,7 @@ public class VereinService {
         return vereinRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
-                        "Verein nicht gefunden"
+                        ErrorMessages.VEREIN_NOT_FOUND
                 ));
     }
 

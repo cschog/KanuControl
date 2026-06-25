@@ -5,6 +5,7 @@ import com.kcserver.dto.planung.PlanungPositionDTO;
 import com.kcserver.entity.Planung;
 import com.kcserver.entity.PlanungPosition;
 import com.kcserver.entity.Veranstaltung;
+import com.kcserver.exception.ErrorMessages;
 import com.kcserver.mapper.PlanungMapper;
 import com.kcserver.repository.PlanungPositionRepository;
 import com.kcserver.repository.PlanungRepository;
@@ -110,7 +111,7 @@ public class PlanungPositionService {
                             .findById(veranstaltungId)
                             .orElseThrow(() -> new ResponseStatusException(
                                     HttpStatus.NOT_FOUND,
-                                    "Veranstaltung nicht gefunden"
+                                    ErrorMessages.VERANSTALTUNG_NOT_FOUND
                             ));
 
                     Planung p = new Planung();

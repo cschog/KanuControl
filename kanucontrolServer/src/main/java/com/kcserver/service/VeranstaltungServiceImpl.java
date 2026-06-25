@@ -533,7 +533,7 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
                 .findById(id)
                 .orElseThrow(() ->
                         new EntityNotFoundException(
-                                "Veranstaltung nicht gefunden"
+                                VERANSTALTUNG_NOT_FOUND
                         )
                 );
     }

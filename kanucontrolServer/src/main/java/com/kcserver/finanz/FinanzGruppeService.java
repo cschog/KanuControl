@@ -3,6 +3,8 @@ package com.kcserver.finanz;
 import com.kcserver.entity.FinanzGruppe;
 import com.kcserver.entity.Teilnehmer;
 import com.kcserver.entity.Veranstaltung;
+import com.kcserver.exception.BusinessRuleViolationException;
+import com.kcserver.exception.ErrorMessages;
 import com.kcserver.repository.AbrechnungBelegRepository;
 import com.kcserver.repository.FinanzGruppeRepository;
 import com.kcserver.repository.TeilnehmerRepository;
@@ -12,6 +14,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+
+import static com.kcserver.exception.BusinessRuleViolationException.TEILNEHMER_NOT_IN_VERANSTALTUNG;
+import static com.kcserver.exception.ErrorMessages.*;
+
 
 import java.util.List;
 
@@ -156,12 +162,13 @@ public class FinanzGruppeService {
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
-                                "Teilnehmer nicht gefunden"));
+                                TEILNEHMER_NOT_FOUND
+                        ));
 
         if (!teilnehmer.getVeranstaltung().getId().equals(veranstaltungId)) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "Teilnehmer gehört nicht zur Veranstaltung");
+            throw new BusinessRuleViolationException(
+                    TEILNEHMER_NOT_IN_VERANSTALTUNG
+            );
         }
 
         FinanzGruppe gruppe = repository
@@ -213,9 +220,8 @@ public class FinanzGruppeService {
         for (Teilnehmer t : neueTeilnehmer) {
 
             if (!t.getVeranstaltung().getId().equals(veranstaltungId)) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        "Teilnehmer gehört nicht zur Veranstaltung"
+                throw new BusinessRuleViolationException(
+                        BusinessRuleViolationException.TEILNEHMER_NOT_IN_VERANSTALTUNG
                 );
             }
 
@@ -253,7 +259,7 @@ public class FinanzGruppeService {
                     .orElseThrow(() ->
                             new ResponseStatusException(
                                     HttpStatus.NOT_FOUND,
-                                    "Teilnehmer nicht gefunden"
+                                    ErrorMessages.TEILNEHMER_IN_VERANSTALTUNG_NOT_FOUND
                             )
                     );
 
@@ -275,7 +281,7 @@ public class FinanzGruppeService {
                                 .orElseThrow(() ->
                                         new ResponseStatusException(
                                                 HttpStatus.NOT_FOUND,
-                                                "Teilnehmer nicht gefunden"
+                                                TEILNEHMER_NOT_FOUND
                                         )
                                 )
                                 .getId()
@@ -291,7 +297,7 @@ public class FinanzGruppeService {
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
-                                "Veranstaltung nicht gefunden"));
+                                VERANSTALTUNG_NOT_FOUND));
     }
 
     private FinanzGruppe getGruppe(Long id) {
@@ -326,7 +332,7 @@ public class FinanzGruppeService {
             if (!t.getVeranstaltung().getId().equals(veranstaltungId)) {
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST,
-                        "Teilnehmer gehört nicht zur Veranstaltung"
+                        TEILNEHMER_IN_VERANSTALTUNG_NOT_FOUND
                 );
             }
 
@@ -383,7 +389,7 @@ public class FinanzGruppeService {
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
-                                "Teilnehmer nicht gefunden"
+                                TEILNEHMER_NOT_FOUND
                         )
                 );
 

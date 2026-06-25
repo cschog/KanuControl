@@ -149,7 +149,7 @@ public class TeilnehmerService {
         if (!t.getVeranstaltung().getId().equals(veranstaltungId)) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "Teilnehmer does not belong to Veranstaltung"
+                   TEILNEHMER_IN_VERANSTALTUNG_NOT_FOUND
             );
         }
 
@@ -486,7 +486,7 @@ public class TeilnehmerService {
                         .findById(teilnehmerId)
                         .orElseThrow(() ->
                                 new EntityNotFoundException(
-                                        "Teilnehmer nicht gefunden"
+                                       TEILNEHMER_NOT_FOUND
                                 )
                         );
 

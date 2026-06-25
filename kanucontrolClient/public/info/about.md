@@ -39,6 +39,14 @@ KanuControl basiert auf modernen Open-Source-Technologien:
 - Keycloak
 - Liquibase
 
+## Datenschutz und Sicherheit
+
+KanuControl ist mandantenfähig aufgebaut.
+
+Jeder Verein wird in einem eigenen Datenbankschema verwaltet. Die Benutzeranmeldung erfolgt über einen zentralen Authentifizierungsdienst. Die Kommunikation erfolgt verschlüsselt über HTTPS.
+
+Zur Sicherstellung der Verfügbarkeit werden tägliche Datensicherungen erstellt.
+
 ## Entwicklung
 
 KanuControl wird kontinuierlich weiterentwickelt.

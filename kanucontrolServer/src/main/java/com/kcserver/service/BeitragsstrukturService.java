@@ -21,6 +21,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import static com.kcserver.exception.ErrorMessages.BEITRAGSSTRUKTUR_NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor
@@ -60,11 +61,14 @@ public class BeitragsstrukturService {
             BeitragsstrukturUpdateDTO dto
     ) {
 
+
+
         Beitragsstruktur struktur =
                 repository.findById(id)
                         .orElseThrow(() ->
                                 new ResponseStatusException(
-                                        HttpStatus.NOT_FOUND
+                                        HttpStatus.NOT_FOUND,
+                                        BEITRAGSSTRUKTUR_NOT_FOUND
                                 )
                         );
 
