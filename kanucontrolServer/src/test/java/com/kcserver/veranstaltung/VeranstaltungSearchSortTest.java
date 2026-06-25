@@ -46,6 +46,7 @@ public class VeranstaltungSearchSortTest
                         objectMapper
                 );
         vereinId = vereinFactory.create("TV", "Test Verein");
+        System.out.println("vereinId = " + vereinId);
 
         leiterId = personFactory.createWithVerein(vereinId, b ->
                 b.withVorname("leiter")
@@ -93,14 +94,15 @@ public class VeranstaltungSearchSortTest
                 .getContentAsString();
 
         JsonNode json = objectMapper.readTree(response);
-        JsonNode content = json.get("content");
+        JsonNode content = json.path("data")
+                .path("content");
 
         // THEN
         assertThat(content).hasSize(3);
 
-        Long firstId  = content.get(0).get("id").asLong();
-        Long secondId = content.get(1).get("id").asLong();
-        Long thirdId  = content.get(2).get("id").asLong();
+        Long firstId = content.get(0).path("id").asLong();
+        Long secondId = content.get(1).path("id").asLong();
+        Long thirdId  = content.get(2).path("id").asLong();
 
         assertThat(firstId).isEqualTo(v1);
         assertThat(secondId).isEqualTo(v2);
@@ -127,11 +129,12 @@ public class VeranstaltungSearchSortTest
                 ).andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        JsonNode content = objectMapper.readTree(response).get("content");
+        JsonNode content = objectMapper.readTree(response).path("data")
+                .path("content");
 
-        assertThat(content.get(0).get("id").asLong()).isEqualTo(v3);
-        assertThat(content.get(1).get("id").asLong()).isEqualTo(v2);
-        assertThat(content.get(2).get("id").asLong()).isEqualTo(v1);
+        assertThat(content.get(0).path("id").asLong()).isEqualTo(v3);
+        assertThat(content.get(1).path("id").asLong()).isEqualTo(v2);
+        assertThat(content.get(2).path("id").asLong()).isEqualTo(v1);
     }
 
     @Test
@@ -155,7 +158,8 @@ public class VeranstaltungSearchSortTest
                 ).andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        JsonNode content = objectMapper.readTree(response).get("content");
+        JsonNode content = objectMapper.readTree(response).path("data")
+                .path("content");
 
         assertThat(content).hasSize(2);
     }
@@ -179,7 +183,8 @@ public class VeranstaltungSearchSortTest
                 ).andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        JsonNode content = objectMapper.readTree(response).get("content");
+        JsonNode content = objectMapper.readTree(response).path("data")
+                .path("content");
 
         assertThat(content.get(0).get("name").asText()).isEqualTo("A");
         assertThat(content.get(1).get("name").asText()).isEqualTo("B");
@@ -200,7 +205,8 @@ public class VeranstaltungSearchSortTest
                 ).andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        JsonNode content = objectMapper.readTree(response).get("content");
+        JsonNode content = objectMapper.readTree(response).path("data")
+                .path("content");
 
         assertThat(content).hasSize(1);
         assertThat(content.get(0).get("name").asText()).contains("Sommer");
@@ -210,8 +216,8 @@ public class VeranstaltungSearchSortTest
     void filterByAktiv_returnsOnlyActive() throws Exception {
 
         Long active = veranstaltungFactory.create(vereinId, leiterId, "Aktiv");
-        Long inactive = veranstaltungFactory.createInactive(
-                vereinId, leiterId, "Inaktiv", active);
+        // Long inactive = veranstaltungFactory.createInactive(
+        //        vereinId, leiterId, "Inaktiv", active);
 
         String response = mockMvc.perform(
 
@@ -222,10 +228,13 @@ public class VeranstaltungSearchSortTest
                 ).andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        JsonNode content = objectMapper.readTree(response).get("content");
+        JsonNode content =
+                objectMapper.readTree(response)
+                        .path("data")
+                        .path("content");
 
         assertThat(content).hasSize(1);
-        assertThat(content.get(0).get("id").asLong()).isEqualTo(active);
+        assertThat(content.get(0).path("id").asLong()).isEqualTo(active);
     }
 
     @Test
@@ -242,7 +251,8 @@ public class VeranstaltungSearchSortTest
                 ).andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        JsonNode content = objectMapper.readTree(response).get("content");
+        JsonNode content = objectMapper.readTree(response).path("data")
+                .path("content");
 
         assertThat(content).isEmpty();
     }
@@ -265,10 +275,11 @@ public class VeranstaltungSearchSortTest
                 ).andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        JsonNode content = objectMapper.readTree(response).get("content");
+        JsonNode content = objectMapper.readTree(response).path("data")
+                .path("content");
 
-        assertThat(content.get(0).get("id").asLong()).isEqualTo(v1);
-        assertThat(content.get(1).get("id").asLong()).isEqualTo(v2);
+        assertThat(content.get(0).path("id").asLong()).isEqualTo(v1);
+        assertThat(content.get(1).path("id").asLong()).isEqualTo(v2);
     }
 }
 

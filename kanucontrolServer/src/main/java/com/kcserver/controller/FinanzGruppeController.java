@@ -1,5 +1,6 @@
 package com.kcserver.controller;
 
+import com.kcserver.api.response.ApiResponse;
 import com.kcserver.dto.finanzen.FinanzGruppeCreateDTO;
 import com.kcserver.dto.finanzen.FinanzGruppeDetailDTO;
 import com.kcserver.dto.finanzen.FinanzGruppeOverviewDTO;
@@ -26,10 +27,14 @@ public class FinanzGruppeController {
        ========================= */
 
     @GetMapping
-    public List<FinanzGruppeOverviewDTO> findAll(
+
+    public ApiResponse<List<FinanzGruppeOverviewDTO>> findAll(
             @PathVariable Long veranstaltungId) {
 
-        return queryService.getOverview(veranstaltungId);
+        return ApiResponse.of(
+                queryService.getOverview(veranstaltungId)
+
+        );
     }
 
     /* =========================
@@ -37,10 +42,12 @@ public class FinanzGruppeController {
        ========================= */
 
     @GetMapping("/{gruppeId}")
-    public FinanzGruppeDetailDTO findOne(
+    public ApiResponse<FinanzGruppeDetailDTO> findOne(
             @PathVariable Long gruppeId) {
 
-        return queryService.getDetail(gruppeId);
+        return ApiResponse.of(
+                queryService.getDetail(gruppeId)
+        );
     }
 
     /* =========================
@@ -49,14 +56,13 @@ public class FinanzGruppeController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public FinanzGruppeDetailDTO create(
+    public ApiResponse<FinanzGruppeDetailDTO> create(
             @PathVariable Long veranstaltungId,
             @Valid @RequestBody FinanzGruppeCreateDTO dto) {
 
-        FinanzGruppe g =
-                commandService.create(veranstaltungId, dto.kuerzel());
+        FinanzGruppe g = commandService.create(veranstaltungId, dto.kuerzel());
 
-        return queryService.getDetail(g.getId());
+        return ApiResponse.of(queryService.getDetail(g.getId()));
     }
 
     /* =========================
@@ -64,14 +70,20 @@ public class FinanzGruppeController {
        ========================= */
 
     @PutMapping("/{gruppeId}")
-    public FinanzGruppeDetailDTO update(
+    public ApiResponse<FinanzGruppeDetailDTO> update(
             @PathVariable Long veranstaltungId,
             @PathVariable Long gruppeId,
             @Valid @RequestBody FinanzGruppeCreateDTO dto) {
 
-        commandService.update(veranstaltungId, gruppeId, dto.kuerzel());
+        commandService.update(
+                veranstaltungId,
+                gruppeId,
+                dto.kuerzel()
+        );
 
-        return queryService.getDetail(gruppeId);
+        return ApiResponse.of(
+                queryService.getDetail(gruppeId)
+        );
     }
 
     /* =========================

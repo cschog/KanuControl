@@ -1,5 +1,6 @@
 package com.kcserver.support.api;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.dto.veranstaltung.VeranstaltungCreateDTO;
 import com.kcserver.enumtype.VeranstaltungTyp;
@@ -53,7 +54,11 @@ public class VeranstaltungTestFactory extends AbstractApiTestFactory {
                 .getResponse()
                 .getContentAsString();
 
-        return objectMapper.readTree(json).get("id").asLong();
+        JsonNode root = objectMapper.readTree(json);
+
+        return root.path("data")
+                .path("id")
+                .asLong();
     }
 
     /* =========================================================
@@ -100,7 +105,12 @@ public class VeranstaltungTestFactory extends AbstractApiTestFactory {
                 .getResponse()
                 .getContentAsString();
 
-        return objectMapper.readTree(json).get("id").asLong();
+        JsonNode root = objectMapper.readTree(json);
+
+        return root
+                .path("data")
+                .path("id")
+                .asLong();
     }
 
     /* =========================================================

@@ -1,6 +1,6 @@
 package com.kcserver.service;
 
-import com.kcserver.api.response.SaveResponse;
+import com.kcserver.api.response.ApiResponse;
 import com.kcserver.dto.beitrag.BeitragsstrukturDTO;
 import com.kcserver.dto.person.PersonListDTO;
 import com.kcserver.dto.veranstaltung.*;
@@ -25,7 +25,7 @@ public interface VeranstaltungService {
      * - Veranstaltung wird automatisch aktiv
      * - Leiter wird automatisch als Teilnehmer (LEITER) angelegt
      */
-    SaveResponse<VeranstaltungDetailDTO> create(
+    ApiResponse<VeranstaltungDetailDTO> create(
 
             VeranstaltungCreateDTO dto);
 
@@ -60,7 +60,7 @@ public interface VeranstaltungService {
      /* =========================================================
        UPDATE
        ========================================================= */
-     SaveResponse<VeranstaltungDetailDTO> update(
+     ApiResponse<VeranstaltungDetailDTO> update(
              Long id,
              VeranstaltungUpdateDTO dto);
 

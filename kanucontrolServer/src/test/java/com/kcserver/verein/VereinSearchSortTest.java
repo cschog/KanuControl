@@ -50,8 +50,8 @@ class VereinSearchSortTest extends AbstractTenantIntegrationTest {
 
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].name").value("Aachener Kanu Verein"))
-                .andExpect(jsonPath("$.content[3].name").value("Oberhausener Kanu Club"));
+                .andExpect(jsonPath("$.data.content[0].name").value("Aachener Kanu Verein"))
+                .andExpect(jsonPath("$.data.content[3].name").value("Oberhausener Kanu Club"));
     }
 
     @Test
@@ -64,8 +64,8 @@ class VereinSearchSortTest extends AbstractTenantIntegrationTest {
 
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].name").value("Oberhausener Kanu Club"))
-                .andExpect(jsonPath("$.content[3].name").value("Aachener Kanu Verein"));
+                .andExpect(jsonPath("$.data.content[0].name").value("Oberhausener Kanu Club"))
+                .andExpect(jsonPath("$.data.content[3].name").value("Aachener Kanu Verein"));
     }
 
     @Test
@@ -78,8 +78,8 @@ class VereinSearchSortTest extends AbstractTenantIntegrationTest {
 
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].abk").value("AKV"))
-                .andExpect(jsonPath("$.content[3].abk").value("OKC"));
+                .andExpect(jsonPath("$.data.content[0].abk").value("AKV"))
+                .andExpect(jsonPath("$.data.content[3].abk").value("OKC"));
     }
 
     /* =========================================================
@@ -98,8 +98,8 @@ class VereinSearchSortTest extends AbstractTenantIntegrationTest {
 
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content.length()").value(2))
-                .andExpect(jsonPath("$.content[0].name").value("Eschweiler Kanu Club"))
-                .andExpect(jsonPath("$.content[1].name").value("Oberhausener Kanu Club"));
+                .andExpect(jsonPath("$.data.content.length()").value(2))
+                .andExpect(jsonPath("$.data.content[0].name").value("Eschweiler Kanu Club"))
+                .andExpect(jsonPath("$.data.content[1].name").value("Oberhausener Kanu Club"));
     }
 }

@@ -37,8 +37,8 @@ class PersonCreateTest extends AbstractTenantIntegrationTest {
 
                 )
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").isNumber())
-                .andExpect(jsonPath("$.vorname").value("Max"));
+                .andExpect(jsonPath("$.data.id").isNumber())
+                .andExpect(jsonPath("$.data.vorname").value("Max"));
     }
 
     /* =========================================================
@@ -99,7 +99,7 @@ class PersonCreateTest extends AbstractTenantIntegrationTest {
                                 .content(objectMapper.writeValueAsString(dto))
                 )
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.data.id").exists())
                 .andExpect(jsonPath("$.mitgliedschaften").isArray());
     }
 

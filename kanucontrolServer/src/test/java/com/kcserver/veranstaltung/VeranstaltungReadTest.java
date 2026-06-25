@@ -71,7 +71,7 @@ class VeranstaltungReadTest extends AbstractTenantIntegrationTest {
                 .getContentAsString();
 
         veranstaltungId =
-                objectMapper.readTree(json).get("id").asLong();
+                objectMapper.readTree(json).path("data").path("id").asLong();
     }
 
     /* =========================================================
@@ -87,14 +87,14 @@ class VeranstaltungReadTest extends AbstractTenantIntegrationTest {
 
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(veranstaltungId))
-                .andExpect(jsonPath("$.name").value("Sommerfreizeit 2026"))
-                .andExpect(jsonPath("$.typ").value("JEM"))
-                .andExpect(jsonPath("$.aktiv").value(true))
+                .andExpect(jsonPath("$.data.id").value(veranstaltungId))
+                .andExpect(jsonPath("$.data.name").value("Sommerfreizeit 2026"))
+                .andExpect(jsonPath("$.data.typ").value("JEM"))
+                .andExpect(jsonPath("$.data.ktiv").value(true))
 
                 // Beziehungen (IDs)
-                .andExpect(jsonPath("$.vereinId").value(vereinId))
-                .andExpect(jsonPath("$.leiterId").value(leiterId))
+                .andExpect(jsonPath("$.data.vereinId").value(vereinId))
+                .andExpect(jsonPath("$.data.leiterId").value(leiterId))
 
                 // Anzeigeobjekte
                 .andExpect(jsonPath("$.verein.name").value("Eschweiler Kanu Club"))

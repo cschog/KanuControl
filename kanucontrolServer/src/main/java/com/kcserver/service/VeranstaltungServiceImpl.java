@@ -1,6 +1,6 @@
 package com.kcserver.service;
 
-import com.kcserver.api.response.SaveResponse;
+import com.kcserver.api.response.ApiResponse;
 import com.kcserver.dto.beitrag.BeitragsstrukturDTO;
 import com.kcserver.dto.person.PersonListDTO;
 import com.kcserver.dto.veranstaltung.*;
@@ -55,7 +55,7 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
        ========================================================= */
 
     @Override
-    public SaveResponse<VeranstaltungDetailDTO> create(
+    public ApiResponse<VeranstaltungDetailDTO> create(
             VeranstaltungCreateDTO dto) {
 
         veranstaltungRepository.unsetAktiveVeranstaltung();
@@ -94,7 +94,7 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
         VeranstaltungDetailDTO dtoResult =
                 veranstaltungMapper.toDetailDTO(saved);
 
-        return new SaveResponse<>(dtoResult, warnings);
+        return new ApiResponse<>(dtoResult, warnings);
     }
 
     /* =========================================================
@@ -371,7 +371,7 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
 
     @Transactional
     @Override
-    public SaveResponse<VeranstaltungDetailDTO> update(
+    public ApiResponse<VeranstaltungDetailDTO> update(
             Long id,
             VeranstaltungUpdateDTO dto) {
 
@@ -522,7 +522,7 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
 
                 veranstaltungMapper.toDetailDTO(saved);
 
-        return new SaveResponse<>(dtoResult, warnings);
+        return new ApiResponse<>(dtoResult, warnings);
     }
 
     public Veranstaltung findEntityById(

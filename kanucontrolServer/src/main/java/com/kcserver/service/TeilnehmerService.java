@@ -341,7 +341,10 @@ public class TeilnehmerService {
         Specification<Teilnehmer> spec =
                 TeilnehmerSpecification.byCriteria(criteria)
                         .and((root, query, cb) ->
-                                cb.equal(root.get("veranstaltung").get("id"), veranstaltungId)
+                                cb.equal(
+                                        root.get("veranstaltung").get("id"),
+                                        veranstaltungId
+                                )
                         );
 
         return teilnehmerRepository

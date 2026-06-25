@@ -104,7 +104,7 @@ class MitgliedHauptvereinTest extends AbstractTenantIntegrationTest {
                         .getResponse()
                         .getContentAsString();
 
-        return objectMapper.readTree(response).get("id").asLong();
+        return objectMapper.readTree(response).path("data").path("id").asLong();
     }
 
     private MitgliedDTO getMitglied(Long mitgliedId) throws Exception {

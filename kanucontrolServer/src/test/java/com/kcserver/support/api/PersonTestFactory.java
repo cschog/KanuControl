@@ -75,7 +75,7 @@ public class PersonTestFactory extends AbstractApiTestFactory {
 
         return objectMapper
                 .readTree(result.getResponse().getContentAsString())
-                .get("id")
+                .path("data").path("id")
                 .asLong();
     }
 }

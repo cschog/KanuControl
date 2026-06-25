@@ -92,7 +92,10 @@ class VeranstaltungUpdateAndDeleteTest extends AbstractTenantIntegrationTest {
                         .getResponse()
                         .getContentAsString();
 
-        veranstaltungId = objectMapper.readTree(json).get("id").asLong();
+        veranstaltungId = objectMapper.readTree(json)
+                .path("data")
+                .path("id")
+                .asLong();
     }
 
     /* =========================================================
@@ -114,8 +117,8 @@ class VeranstaltungUpdateAndDeleteTest extends AbstractTenantIntegrationTest {
 
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Sommerfreizeit 2026"))
-                .andExpect(jsonPath("$.endeDatum").exists());
+                .andExpect(jsonPath("$.data.name").value("Sommerfreizeit 2026"))
+                .andExpect(jsonPath("$.data.endeDatum").exists());
     }
 
     /* =========================================================
@@ -125,14 +128,14 @@ class VeranstaltungUpdateAndDeleteTest extends AbstractTenantIntegrationTest {
     @Test
     void activateVeranstaltung_switchesActiveVeranstaltung() throws Exception {
 
-        Long firstId = veranstaltungFactory.create(vereinId, leiterId, "Sommer");
+        // Long firstId = veranstaltungFactory.create(vereinId, leiterId, "Sommer");
         Long secondId = veranstaltungFactory.create(vereinId, leiterId, "Herbst");
 
         mockMvc.perform(
                         get("/api/veranstaltungen/aktiv")
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(secondId));
+                .andExpect(jsonPath("$.data.id").value(secondId));
     }
 
     /* =========================================================

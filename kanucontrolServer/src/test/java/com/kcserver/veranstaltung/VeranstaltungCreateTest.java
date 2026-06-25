@@ -74,7 +74,7 @@ class VeranstaltungCreateTest extends AbstractTenantIntegrationTest {
         String json = createValidVeranstaltung("Sommerfreizeit 2026");
 
         Long veranstaltungId =
-                objectMapper.readTree(json).get("id").asLong();
+                objectMapper.readTree(json).path("data").path("id").asLong();
 
         assertThat(veranstaltungRepository.findById(veranstaltungId)).isPresent();
     }
@@ -107,7 +107,10 @@ class VeranstaltungCreateTest extends AbstractTenantIntegrationTest {
         String json = createValidVeranstaltung("Auto Active Test");
 
         boolean aktiv =
-                objectMapper.readTree(json).get("aktiv").asBoolean();
+                objectMapper.readTree(json)
+                        .path("data")
+                        .path("aktiv")
+                        .asBoolean();
 
         assertThat(aktiv).isTrue();
     }
@@ -141,7 +144,7 @@ class VeranstaltungCreateTest extends AbstractTenantIntegrationTest {
         String json = createValidVeranstaltung("Leiter Auto Teilnehmer");
 
         Long veranstaltungId =
-                objectMapper.readTree(json).get("id").asLong();
+                objectMapper.readTree(json).path("data").path("id").asLong();
 
         var teilnehmer = teilnehmerRepository
                 .findByVeranstaltungIdAndPersonId(veranstaltungId, leiterId)

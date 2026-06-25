@@ -9,7 +9,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import com.kcserver.api.response.ApiResponse;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,26 +33,33 @@ public class PersonController {
        ========================= */
 
     @GetMapping("/scroll")
-    public ScrollResponse<PersonListDTO> scroll(
+    public ApiResponse<ScrollResponse<PersonListDTO>> scroll(
             @RequestParam(required = false) String cursorName,
             @RequestParam(required = false) String cursorVorname,
             @RequestParam(required = false) Long cursorId,
             @RequestParam(defaultValue = "25") int size,
             @ModelAttribute PersonSearchCriteria criteria
     ) {
-        return personService.scroll(
-                cursorName,
-                cursorVorname,
-                cursorId,
-                size,
-                criteria
+        return new ApiResponse<>(
+                personService.scroll(
+                        cursorName,
+                        cursorVorname,
+                        cursorId,
+                        size,
+                        criteria
+                ),
+                List.of()
         );
     }
 
 
     @GetMapping
-    public Page<PersonListDTO> getAll(Pageable pageable) {
-        return personService.getAll(pageable);
+    public ApiResponse<Page<PersonListDTO>> getAll(Pageable pageable) {
+
+        return ApiResponse.of(
+                personService.getAll(pageable)
+
+        );
     }
 
     /* =========================
@@ -60,12 +67,16 @@ public class PersonController {
    ========================= */
 
     @GetMapping("/all")
-    public List<PersonListDTO> getAll(
+    public ApiResponse<List<PersonListDTO>> getAll(
             @ModelAttribute PersonSearchCriteria criteria,
             Pageable pageable
     ) {
+
         Pageable mapped = mapSort(pageable);
-        return personService.getAll(mapped.getSort(), criteria);
+
+        return ApiResponse.of(
+                personService.getAll(mapped.getSort(), criteria)
+        );
     }
 
 
@@ -74,12 +85,16 @@ public class PersonController {
        ========================= */
 
     @GetMapping("/search")
-    public Page<PersonListDTO> search(
+    public ApiResponse<Page<PersonListDTO>> search(
             PersonSearchCriteria criteria,
             Pageable pageable
     ) {
+
         Pageable mapped = mapSort(pageable);
-        return personService.searchList(criteria, mapped);
+
+        return ApiResponse.of(
+                personService.searchList(criteria, mapped)
+        );
     }
 
     private Pageable mapSort(Pageable pageable) {
@@ -150,21 +165,29 @@ public class PersonController {
        ========================= */
 
     @GetMapping("/{id}")
-    public PersonDetailDTO getPerson(@PathVariable long id) {
-        return personService.getPersonDetail(id);
-    }
+    public ApiResponse<PersonDetailDTO> getPerson(
+            @PathVariable long id
+    ) {
 
+        return ApiResponse.of(
+                personService.getPersonDetail(id)
+
+        );
+    }
     /* =========================
        CREATE
        ========================= */
 
     @PostMapping
-    public ResponseEntity<PersonDetailDTO> createPerson(
-            @Validated(OnCreate.class) @RequestBody PersonSaveDTO dto
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApiResponse<PersonDetailDTO> createPerson(
+            @Validated(OnCreate.class)
+            @RequestBody PersonSaveDTO dto
     ) {
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(personService.createPerson(dto));
+
+        return  ApiResponse.of(
+                personService.createPerson(dto)
+        );
     }
 
     /* =========================
@@ -172,11 +195,15 @@ public class PersonController {
        ========================= */
 
     @PutMapping("/{id}")
-    public PersonDetailDTO updatePerson(
+    public ApiResponse<PersonDetailDTO> updatePerson(
             @PathVariable long id,
-            @Validated(OnUpdate.class) @RequestBody PersonSaveDTO dto
+            @Validated(OnUpdate.class)
+            @RequestBody PersonSaveDTO dto
     ) {
-        return personService.updatePerson(id, dto);
+
+        return ApiResponse.of(
+                personService.updatePerson(id, dto)
+        );
     }
 
     /* =========================
@@ -190,9 +217,12 @@ public class PersonController {
     }
 
     @GetMapping("/search/ref")
-    public List<PersonRefDTO> searchRef(
+    public ApiResponse<List<PersonRefDTO>> searchRef(
             @RequestParam(required = false) String search
     ) {
-        return personService.searchRefList(search);
+
+        return ApiResponse.of(
+                personService.searchRefList(search)
+        );
     }
 }

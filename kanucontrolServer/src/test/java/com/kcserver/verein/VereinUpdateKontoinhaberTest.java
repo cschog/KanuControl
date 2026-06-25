@@ -74,9 +74,9 @@ class VereinUpdateKontoinhaberTest extends AbstractTenantIntegrationTest {
 
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(vereinId))
-                .andExpect(jsonPath("$.kontoinhaber").exists())
-                .andExpect(jsonPath("$.kontoinhaber.id").value(personId))
-                .andExpect(jsonPath("$.kontoinhaber.name").value("Schog"));
+                .andExpect(jsonPath("$.data.id").value(vereinId))
+                .andExpect(jsonPath("$.data.kontoinhaber").exists())
+                .andExpect(jsonPath("$.data.kontoinhaber.id").value(personId))
+                .andExpect(jsonPath("$.data.kontoinhaber.name").value("Schog"));
     }
 }

@@ -60,9 +60,9 @@ class VereinUpdateTest extends AbstractTenantIntegrationTest {
 
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(vereinId))
-                .andExpect(jsonPath("$.name").value("Eschweiler KC"))
-                .andExpect(jsonPath("$.abk").value("EKC"));
+                .andExpect(jsonPath("$.data.id").value(vereinId))
+                .andExpect(jsonPath("$.data.name").value("Eschweiler KC"))
+                .andExpect(jsonPath("$.data.abk").value("EKC"));
     }
 
     @Test

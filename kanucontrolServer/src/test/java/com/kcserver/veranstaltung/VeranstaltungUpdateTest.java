@@ -1,5 +1,6 @@
 package com.kcserver.veranstaltung;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.dto.veranstaltung.VeranstaltungCreateDTO;
 import com.kcserver.dto.veranstaltung.VeranstaltungUpdateDTO;
@@ -80,8 +81,13 @@ class VeranstaltungUpdateTest extends AbstractTenantIntegrationTest {
                 .getResponse()
                 .getContentAsString();
 
+
+        JsonNode root = objectMapper.readTree(json);
+
         veranstaltungId =
-                objectMapper.readTree(json).get("id").asLong();
+                root.path("data")
+                        .path("id")
+                        .asLong();
     }
 
     /* =========================================================
@@ -103,8 +109,8 @@ class VeranstaltungUpdateTest extends AbstractTenantIntegrationTest {
 
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Sommerfreizeit 2026"))
-                .andExpect(jsonPath("$.endeDatum").exists());
+                .andExpect(jsonPath("$.data.name").value("Sommerfreizeit 2026"))
+                .andExpect(jsonPath("$.data.endeDatum").exists());
     }
 
     /* =========================================================
@@ -121,7 +127,7 @@ class VeranstaltungUpdateTest extends AbstractTenantIntegrationTest {
                         get("/api/veranstaltungen/aktiv"))
 
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(secondId));
+                .andExpect(jsonPath("$.data.id").value(secondId));
     }
     @Test
     void shouldUpdateName() throws Exception {
@@ -137,7 +143,7 @@ class VeranstaltungUpdateTest extends AbstractTenantIntegrationTest {
 
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Neue Sommerfreizeit"));
+                .andExpect(jsonPath("$.data.name").value("Neue Sommerfreizeit"));
     }
 
     @Test
@@ -163,7 +169,7 @@ class VeranstaltungUpdateTest extends AbstractTenantIntegrationTest {
 
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.leiterId").value(newLeiterId));
+                .andExpect(jsonPath("$.data.leiterId").value(newLeiterId));;
     }
     @Test
     void shouldChangeVerein() throws Exception {
@@ -187,7 +193,7 @@ class VeranstaltungUpdateTest extends AbstractTenantIntegrationTest {
 
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.vereinId").value(newVereinId));
+                .andExpect(jsonPath("$.data.vereinId").value(newVereinId));
     }
     @Test
     void shouldFailInvalidLeiterAge() throws Exception {

@@ -41,7 +41,7 @@ public class TeilnehmerTestFactory extends AbstractApiTestFactory {
                 .andReturn();
 
         JsonNode json = objectMapper.readTree(result.getResponse().getContentAsString());
-        return json.get("id").asLong();
+        return json.path("data").path("id").asLong();
     }
 
     public Long addTeilnehmer(Long veranstaltungId, Long personId) throws Exception {
@@ -53,7 +53,7 @@ public class TeilnehmerTestFactory extends AbstractApiTestFactory {
                 .andReturn();
 
         JsonNode json = objectMapper.readTree(result.getResponse().getContentAsString());
-        return json.get("id").asLong();
+        return json.path("data").path("id").asLong();
     }
 
     public void removeTeilnehmer(Long veranstaltungId, Long teilnehmerId) throws Exception {

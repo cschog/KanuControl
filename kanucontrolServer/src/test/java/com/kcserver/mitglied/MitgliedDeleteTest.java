@@ -172,7 +172,7 @@ class MitgliedDeleteTest extends AbstractTenantIntegrationTest {
                         .getResponse()
                         .getContentAsString();
 
-        return objectMapper.readTree(response).get("id").asLong();
+        return objectMapper.readTree(response).path("data").path("id").asLong();
     }
 
     private MitgliedDTO findHauptverein(List<MitgliedDTO> list) {

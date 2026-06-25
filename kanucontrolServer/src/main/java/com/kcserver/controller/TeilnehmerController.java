@@ -6,6 +6,7 @@ import com.kcserver.service.TeilnehmerService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import com.kcserver.api.response.ApiResponse;
 
 import java.util.List;
 import org.springframework.data.domain.Pageable;
@@ -29,23 +30,31 @@ public class TeilnehmerController {
        ========================= */
 
     @GetMapping("/search")
-    public List<TeilnehmerListDTO> search(
+
+    public ApiResponse<List<TeilnehmerListDTO>> search(
             @PathVariable Long veranstaltungId,
             @RequestParam(required = false) String search
     ) {
-        return teilnehmerService.search(veranstaltungId, search);
+        return ApiResponse.of(
+                teilnehmerService.search(veranstaltungId, search)
+        );
     }
 
     @GetMapping("/search/ref")
-    public List<TeilnehmerRefDTO> searchRef(
+
+    public ApiResponse<List<TeilnehmerRefDTO>> searchRef(
             @PathVariable Long veranstaltungId,
             @RequestParam(required = false) String search
     ) {
-        return teilnehmerService.searchRef(veranstaltungId, search);
+        return ApiResponse.of(
+                teilnehmerService.searchRef(veranstaltungId, search)
+
+        );
     }
 
     @GetMapping("/available/paged")
-    public Page<PersonListDTO> findAvailablePaged(
+
+    public ApiResponse<Page<PersonListDTO>> findAvailablePaged(
             @PathVariable Long veranstaltungId,
 
             @RequestParam(required = false) String search,
@@ -99,20 +108,24 @@ public class TeilnehmerController {
 
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        return teilnehmerService.findAvailable(
-                veranstaltungId,
-                search,
-                verein,
-                pageable
+        return ApiResponse.of(
+                teilnehmerService.findAvailable(
+                        veranstaltungId,
+                        search,
+                        verein,
+                        pageable
+                )
         );
     }
 
     @GetMapping("/available")
-    public List<PersonListDTO> findAvailable(
+    public ApiResponse<List<PersonListDTO>> findAvailable(
             @PathVariable Long veranstaltungId,
             @RequestParam(required = false) String search
     ) {
-        return teilnehmerService.findAvailable(veranstaltungId, search);
+        return ApiResponse.of(
+                teilnehmerService.findAvailable(veranstaltungId, search)
+        );
     }
 
     /* =========================
@@ -120,7 +133,7 @@ public class TeilnehmerController {
        ========================= */
 
     @GetMapping("/paged")
-    public Page<TeilnehmerListDTO> getTeilnehmerPaged(
+    public ApiResponse<Page<TeilnehmerListDTO>> getTeilnehmerPaged(
             @PathVariable Long veranstaltungId,
 
             TeilnehmerSearchCriteria criteria,
@@ -165,18 +178,22 @@ public class TeilnehmerController {
 
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        return teilnehmerService.getAssigned(
-                veranstaltungId,
-                criteria,
-                pageable
+        return ApiResponse.of(
+                teilnehmerService.getAssigned(
+                        veranstaltungId,
+                        criteria,
+                        pageable
+                )
         );
     }
 
     @GetMapping
-    public List<PersonListDTO> getAssigned(
+    public ApiResponse<List<PersonListDTO>> getAssigned(
             @PathVariable Long veranstaltungId
     ) {
-        return teilnehmerService.getAssigned(veranstaltungId);
+        return ApiResponse.of(
+                teilnehmerService.getAssigned(veranstaltungId)
+        );
     }
 
     /* =========================
@@ -198,11 +215,16 @@ public class TeilnehmerController {
 
     @PostMapping("/{personId}")
     @ResponseStatus(HttpStatus.CREATED)
-    public TeilnehmerDetailDTO addTeilnehmer(
+    public ApiResponse<TeilnehmerDetailDTO> addTeilnehmer(
             @PathVariable Long veranstaltungId,
             @PathVariable Long personId
     ) {
-        return teilnehmerService.addTeilnehmer(veranstaltungId, personId);
+        return ApiResponse.of(
+                teilnehmerService.addTeilnehmer(
+                        veranstaltungId,
+                        personId
+                )
+        );
     }
 
     /* =========================
@@ -223,20 +245,31 @@ public class TeilnehmerController {
     }
 
     @PutMapping("/{personId}/leiter")
-    public TeilnehmerDetailDTO setLeiter(
+    public ApiResponse<TeilnehmerDetailDTO> setLeiter(
             @PathVariable Long veranstaltungId,
             @PathVariable Long personId
     ) {
-        return teilnehmerService.setLeiter(veranstaltungId, personId);
+        return ApiResponse.of(
+                teilnehmerService.setLeiter(
+                        veranstaltungId,
+                        personId
+                )
+        );
     }
 
     @PutMapping("/{teilnehmerId}")
-    public void updateTeilnehmer(
+    public ApiResponse<TeilnehmerDetailDTO> updateTeilnehmer(
             @PathVariable Long veranstaltungId,
             @PathVariable Long teilnehmerId,
             @RequestBody TeilnehmerUpdateDTO dto
     ) {
-        teilnehmerService.update(veranstaltungId, teilnehmerId, dto);
+        return ApiResponse.of(
+                teilnehmerService.update(
+                        veranstaltungId,
+                        teilnehmerId,
+                        dto
+                )
+        );
     }
 
     /* =========================
