@@ -40,7 +40,20 @@ apiClient.interceptors.request.use(
 
 
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const body = response.data;
+
+    if (
+      body &&
+      typeof body === "object" &&
+      "data" in body &&
+      "warnings" in body
+    ) {
+      response.headers["x-api-warnings"] = JSON.stringify(body.warnings);
+      response.data = body.data;
+    }
+    return response;
+  },
   async (error) => {
     if (error.response?.status === 401) {
       try {
