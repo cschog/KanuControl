@@ -100,7 +100,7 @@ class PersonCreateTest extends AbstractTenantIntegrationTest {
                 )
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.data.id").exists())
-                .andExpect(jsonPath("$.mitgliedschaften").isArray());
+                .andExpect(jsonPath("$.data.mitgliedschaften").isArray());
     }
 
     /* =========================================================

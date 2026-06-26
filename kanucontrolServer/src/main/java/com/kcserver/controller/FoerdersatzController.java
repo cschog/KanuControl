@@ -1,14 +1,15 @@
 package com.kcserver.controller;
 
+import com.kcserver.api.response.ApiResponse;
 import com.kcserver.dto.foerder.FoerdersatzCreateUpdateDTO;
 import com.kcserver.dto.foerder.FoerdersatzDTO;
 import com.kcserver.entity.Foerdersatz;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.mapper.FoerdersatzMapper;
 import com.kcserver.service.FoerdersatzService;
-
 import jakarta.validation.Valid;
-
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -16,30 +17,24 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/foerdersaetze")
+@RequiredArgsConstructor
 public class FoerdersatzController {
 
     private final FoerdersatzService service;
     private final FoerdersatzMapper mapper;
-
-    public FoerdersatzController(
-            FoerdersatzService service,
-            FoerdersatzMapper mapper
-    ) {
-        this.service = service;
-        this.mapper = mapper;
-    }
 
     /* =========================================================
        CREATE
        ========================================================= */
 
     @PostMapping
-    public FoerdersatzDTO create(
-            @Valid
-            @RequestBody
-            FoerdersatzCreateUpdateDTO dto
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApiResponse<FoerdersatzDTO> create(
+            @Valid @RequestBody FoerdersatzCreateUpdateDTO dto
     ) {
-        return service.create(dto);
+        return ApiResponse.of(
+                service.create(dto)
+        );
     }
 
     /* =========================================================
@@ -47,14 +42,13 @@ public class FoerdersatzController {
        ========================================================= */
 
     @PutMapping("/{id}")
-    public FoerdersatzDTO update(
+    public ApiResponse<FoerdersatzDTO> update(
             @PathVariable Long id,
-
-            @Valid
-            @RequestBody
-            FoerdersatzCreateUpdateDTO dto
+            @Valid @RequestBody FoerdersatzCreateUpdateDTO dto
     ) {
-        return service.update(id, dto);
+        return ApiResponse.of(
+                service.update(id, dto)
+        );
     }
 
     /* =========================================================
@@ -62,10 +56,12 @@ public class FoerdersatzController {
        ========================================================= */
 
     @GetMapping("/{id}")
-    public FoerdersatzDTO get(
+    public ApiResponse<FoerdersatzDTO> get(
             @PathVariable Long id
     ) {
-        return service.getById(id);
+        return ApiResponse.of(
+                service.getById(id)
+        );
     }
 
     /* =========================================================
@@ -73,8 +69,10 @@ public class FoerdersatzController {
        ========================================================= */
 
     @GetMapping
-    public List<FoerdersatzDTO> list() {
-        return service.getAll();
+    public ApiResponse<List<FoerdersatzDTO>> list() {
+        return ApiResponse.of(
+                service.getAll()
+        );
     }
 
     /* =========================================================
@@ -82,6 +80,7 @@ public class FoerdersatzController {
        ========================================================= */
 
     @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(
             @PathVariable Long id
     ) {
@@ -93,7 +92,7 @@ public class FoerdersatzController {
        ========================================================= */
 
     @GetMapping("/gueltig")
-    public FoerdersatzDTO gueltigAm(
+    public ApiResponse<FoerdersatzDTO> gueltigAm(
             @RequestParam VeranstaltungTyp typ,
             @RequestParam LocalDate datum
     ) {
@@ -104,6 +103,8 @@ public class FoerdersatzController {
                         datum
                 );
 
-        return mapper.toDTO(entity);
+        return ApiResponse.of(
+                mapper.toDTO(entity)
+        );
     }
 }

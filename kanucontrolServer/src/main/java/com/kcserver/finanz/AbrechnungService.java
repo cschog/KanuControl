@@ -4,6 +4,7 @@ import com.kcserver.dto.abrechnung.AbrechnungBelegDTO;
 import com.kcserver.dto.abrechnung.AbrechnungBuchungDTO;
 import com.kcserver.dto.abrechnung.AbrechnungDetailDTO;
 import com.kcserver.dto.finanzen.FinanzSummaryDTO;
+import com.kcserver.dto.validation.ValidationResultDTO;
 import com.kcserver.entity.*;
 import com.kcserver.enumtype.AbrechnungsStatus;
 import com.kcserver.enumtype.FinanzKategorie;
@@ -13,6 +14,7 @@ import com.kcserver.mapper.AbrechnungMapper;
 import com.kcserver.repository.*;
 import com.kcserver.service.FoerdersatzService;
 import com.kcserver.service.TeilnehmerBeitragService;
+import com.kcserver.service.VeranstaltungValidator;
 import com.kcserver.service.reisekosten.ReisekostenabrechnungService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -42,6 +44,7 @@ public class AbrechnungService {
     private final FoerdersatzService foerdersatzService;
     private final ReisekostenabrechnungService reisekostenabrechnungService;
     private final TeilnehmerBeitragService teilnehmerBeitragService;
+    private final VeranstaltungValidator validator;
 
 
     /* =========================================================
@@ -167,6 +170,24 @@ public class AbrechnungService {
         return dto;
     }
 
+    @Transactional(readOnly = true)
+    public ValidationResultDTO validate(Long veranstaltungId) {
+
+        Veranstaltung veranstaltung =
+                veranstaltungRepository
+                        .findByIdWithRelations(veranstaltungId)
+                        .orElseThrow();
+
+        List<Teilnehmer> teilnehmer =
+                teilnehmerRepository
+                        .findAllWithPerson(veranstaltungId);
+
+        return validator.getAbrechnungValidation(
+                veranstaltung,
+                teilnehmer
+        );
+    }
+
     /* =========================================================
        AUTOMATISCHE BERECHNUNG TEILNEHMERBEITRÄGE
        ========================================================= */
@@ -262,7 +283,7 @@ public class AbrechnungService {
        FÖRDERSATZ SNAPSHOT
        ================================ */
 
-        Veranstaltung veranstaltung = abrechnung.getVeranstaltung();
+       // Veranstaltung veranstaltung = abrechnung.getVeranstaltung();
         LocalDate veranstaltungsDatum =
                 abrechnung.getVeranstaltung().getBeginnDatum();
 

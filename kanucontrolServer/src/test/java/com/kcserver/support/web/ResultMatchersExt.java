@@ -16,19 +16,23 @@ public final class ResultMatchersExt {
     }
 
     public static ResultMatcher hasExactlyOneHauptverein() {
-        return (MvcResult result) -> {
+
+        return result -> {
+
             String json = result.getResponse().getContentAsString();
+
             JsonNode root = objectMapper.readTree(json);
 
-            JsonNode mitgliedschaften = root.get("mitgliedschaften");
+            JsonNode mitgliedschaften =
+                    root.path("data")
+                            .path("mitgliedschaften");
 
-            if (mitgliedschaften == null || !mitgliedschaften.isArray()) {
-                fail("Expected 'mitgliedschaften' to be an array");
+            if (!mitgliedschaften.isArray()) {
+                fail("Expected 'data.mitgliedschaften' to be an array");
             }
 
             long count =
-                    mitgliedschaften
-                            .findValues("hauptVerein")
+                    mitgliedschaften.findValues("hauptVerein")
                             .stream()
                             .filter(JsonNode::asBoolean)
                             .count();

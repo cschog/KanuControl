@@ -1,12 +1,12 @@
 package com.kcserver.controller;
 
+import com.kcserver.api.response.ApiResponse;
 import com.kcserver.dto.abrechnung.*;
 import com.kcserver.finanz.AbrechnungBelegService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/veranstaltungen/{veranstaltungId}/abrechnung/belege")
@@ -21,31 +21,35 @@ public class AbrechnungBelegController {
 
     @PostMapping("/mit-buchung")
     @ResponseStatus(HttpStatus.CREATED)
-    public AbrechnungBelegDTO createBelegMitBuchung(
+    public ApiResponse<AbrechnungBelegDTO> createBelegMitBuchung(
             @PathVariable Long veranstaltungId,
             @RequestBody @Valid AbrechnungBelegMitBuchungCreateDTO dto
     ) {
-        return service.createBelegMitBuchung(
-                veranstaltungId,
-                dto.getBeleg(),
-                dto.getBuchung()
+        return ApiResponse.of(
+                service.createBelegMitBuchung(
+                        veranstaltungId,
+                        dto.getBeleg(),
+                        dto.getBuchung()
+                )
         );
     }
 
     /* =========================================================
-   BELEG UPDATE
-   ========================================================= */
+       BELEG UPDATE
+       ========================================================= */
 
     @PutMapping("/{belegId}")
-    public AbrechnungBelegDTO updateBeleg(
+    public ApiResponse<AbrechnungBelegDTO> updateBeleg(
             @PathVariable Long veranstaltungId,
             @PathVariable Long belegId,
             @RequestBody @Valid AbrechnungBelegCreateDTO dto
     ) {
-        return service.updateBeleg(
-                veranstaltungId,
-                belegId,
-                dto
+        return ApiResponse.of(
+                service.updateBeleg(
+                        veranstaltungId,
+                        belegId,
+                        dto
+                )
         );
     }
 
@@ -55,12 +59,18 @@ public class AbrechnungBelegController {
 
     @PostMapping("/{belegId}/positionen")
     @ResponseStatus(HttpStatus.CREATED)
-    public AbrechnungBuchungDTO addPosition(
+    public ApiResponse<AbrechnungBuchungDTO> addPosition(
             @PathVariable Long veranstaltungId,
             @PathVariable Long belegId,
-            @RequestBody AbrechnungBuchungCreateDTO dto
+            @RequestBody @Valid AbrechnungBuchungCreateDTO dto
     ) {
-        return service.addPosition(veranstaltungId, belegId, dto);
+        return ApiResponse.of(
+                service.addPosition(
+                        veranstaltungId,
+                        belegId,
+                        dto
+                )
+        );
     }
 
     /* =========================================================
@@ -68,12 +78,18 @@ public class AbrechnungBelegController {
        ========================================================= */
 
     @PutMapping("/positionen/{positionId}")
-    public AbrechnungBuchungDTO updatePosition(
+    public ApiResponse<AbrechnungBuchungDTO> updatePosition(
             @PathVariable Long veranstaltungId,
             @PathVariable Long positionId,
-            @RequestBody AbrechnungBuchungCreateDTO dto
+            @RequestBody @Valid AbrechnungBuchungCreateDTO dto
     ) {
-        return service.updatePosition(veranstaltungId, positionId, dto);
+        return ApiResponse.of(
+                service.updatePosition(
+                        veranstaltungId,
+                        positionId,
+                        dto
+                )
+        );
     }
 
     /* =========================================================
@@ -102,6 +118,10 @@ public class AbrechnungBelegController {
         service.deleteBeleg(veranstaltungId, belegId);
     }
 
+    /* =========================================================
+       KÜRZEL ÄNDERN
+       ========================================================= */
+
     @PutMapping("/{belegId}/kuerzel")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void changeKuerzel(
@@ -109,6 +129,10 @@ public class AbrechnungBelegController {
             @PathVariable Long belegId,
             @RequestParam String kuerzel
     ) {
-        service.changeKuerzel(veranstaltungId, belegId, kuerzel);
+        service.changeKuerzel(
+                veranstaltungId,
+                belegId,
+                kuerzel
+        );
     }
 }

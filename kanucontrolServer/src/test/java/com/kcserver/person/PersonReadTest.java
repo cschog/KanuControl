@@ -92,11 +92,11 @@ class PersonReadTest extends AbstractTenantIntegrationTest {
                         get("/api/person")
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].id").exists())
-                .andExpect(jsonPath("$.content[0].vorname").exists())
-                .andExpect(jsonPath("$.content[0].name").exists())
-                .andExpect(jsonPath("$.content[0].mitgliedschaften").doesNotExist())
-                .andExpect(jsonPath("$.content[0].mitgliedschaftenCount").exists());
+                .andExpect(jsonPath("$.data.content[0].id").exists())
+                .andExpect(jsonPath("$.data.content[0].vorname").exists())
+                .andExpect(jsonPath("$.data.content[0].name").exists())
+                .andExpect(jsonPath("$.data.content[0].mitgliedschaften").doesNotExist())
+                .andExpect(jsonPath("$.data.content[0].mitgliedschaftenCount").exists());
     }
 
     @Test
@@ -135,9 +135,9 @@ class PersonReadTest extends AbstractTenantIntegrationTest {
 
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.id").value(personId))
-                .andExpect(jsonPath("$.mitgliedschaften").isArray())
-                .andExpect(jsonPath("$.mitgliedschaften[0].verein.id").value(vereinId))
-                .andExpect(jsonPath("$.mitgliedschaften[0].verein.name")
+                .andExpect(jsonPath("$.data.mitgliedschaften").isArray())
+                .andExpect(jsonPath("$.data.mitgliedschaften[0].verein.id").value(vereinId))
+                .andExpect(jsonPath("$.data.mitgliedschaften[0].verein.name")
                         .value("Eschweiler Kanu Club"));
     }
 
@@ -148,6 +148,6 @@ class PersonReadTest extends AbstractTenantIntegrationTest {
                         get("/api/person"))
 
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[*].vereinId").doesNotExist());
+                .andExpect(jsonPath("$.data.content[*].vereinId").doesNotExist());
     }
 }

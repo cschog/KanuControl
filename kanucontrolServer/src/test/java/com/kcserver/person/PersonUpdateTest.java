@@ -87,7 +87,7 @@ class PersonUpdateTest extends AbstractTenantIntegrationTest {
                                 .content(objectMapper.writeValueAsString(update))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.vorname").value("Maximilian"));
+                .andExpect(jsonPath("$.data.vorname").value("Maximilian"));
     }
 
     @Test

@@ -1,14 +1,14 @@
 package com.kcserver.controller;
 
+import com.kcserver.api.response.ApiResponse;
 import com.kcserver.dto.reisekosten.ReisekostenKonfigurationResponse;
 import com.kcserver.dto.reisekosten.ReisekostenKonfigurationSaveRequest;
 import com.kcserver.service.reisekosten.ReisekostenKonfigurationService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
@@ -19,19 +19,26 @@ public class ReisekostenKonfigurationController {
     private final ReisekostenKonfigurationService service;
 
     @GetMapping
-    public List<ReisekostenKonfigurationResponse> list() {
-        return service.list();
+    public ApiResponse<List<ReisekostenKonfigurationResponse>> list() {
+        return ApiResponse.of(
+                service.list()
+        );
     }
 
     @GetMapping("/aktuell")
-    public ReisekostenKonfigurationResponse aktuell() {
-        return service.getAktuell();
+    public ApiResponse<ReisekostenKonfigurationResponse> aktuell() {
+        return ApiResponse.of(
+                service.getAktuell()
+        );
     }
 
     @PostMapping
-    public Long create(
-            @RequestBody ReisekostenKonfigurationSaveRequest request
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApiResponse<Long> create(
+            @RequestBody @Valid ReisekostenKonfigurationSaveRequest request
     ) {
-        return service.create(request);
+        return ApiResponse.of(
+                service.create(request)
+        );
     }
 }

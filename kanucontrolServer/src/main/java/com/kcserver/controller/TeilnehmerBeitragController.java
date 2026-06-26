@@ -1,5 +1,6 @@
 package com.kcserver.controller;
 
+import com.kcserver.api.response.ApiResponse;
 import com.kcserver.dto.teilnehmer.TeilnehmerBeitraegeResponseDTO;
 import com.kcserver.dto.teilnehmer.TeilnehmerBezahltDTO;
 import com.kcserver.dto.teilnehmer.TeilnehmerListDTO;
@@ -9,41 +10,36 @@ import com.kcserver.service.VeranstaltungService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/veranstaltungen/{veranstaltungId}/beitraege")
 public class TeilnehmerBeitragController {
 
     private final TeilnehmerService teilnehmerService;
-
     private final VeranstaltungService veranstaltungService;
 
-
     @PatchMapping("/{teilnehmerId}")
-    public TeilnehmerListDTO updateBezahlt(
+    public ApiResponse<TeilnehmerListDTO> updateBezahlt(
             @PathVariable Long veranstaltungId,
             @PathVariable Long teilnehmerId,
             @RequestBody TeilnehmerBezahltDTO dto
     ) {
 
-        return teilnehmerService.updateBezahlt(
-                teilnehmerId,
-                dto.getBezahlt()
+        return ApiResponse.of(
+                teilnehmerService.updateBezahlt(
+                        teilnehmerId,
+                        dto.getBezahlt()
+                )
         );
     }
 
     @GetMapping
-    public TeilnehmerBeitraegeResponseDTO getBeitraege(
+    public ApiResponse<TeilnehmerBeitraegeResponseDTO> getBeitraege(
             @PathVariable Long veranstaltungId
     ) {
 
         Veranstaltung veranstaltung =
-                veranstaltungService
-                        .findEntityById(
-                                veranstaltungId
-                        );
+                veranstaltungService.findEntityById(veranstaltungId);
 
         TeilnehmerBeitraegeResponseDTO dto =
                 new TeilnehmerBeitraegeResponseDTO();
@@ -53,13 +49,11 @@ public class TeilnehmerBeitragController {
         );
 
         dto.setTeilnehmer(
-                teilnehmerService
-                        .findAllByVeranstaltungForBeitraege(
-                                veranstaltungId
-                        )
+                teilnehmerService.findAllByVeranstaltungForBeitraege(
+                        veranstaltungId
+                )
         );
 
-        return dto;
+        return ApiResponse.of(dto);
     }
-
 }

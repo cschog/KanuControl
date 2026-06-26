@@ -1,10 +1,10 @@
 package com.kcserver.controller;
 
+import com.kcserver.api.response.ApiResponse;
 import com.kcserver.dto.postalcode.PostalCodeCountryResponse;
 import com.kcserver.dto.postalcode.PostalCodeCountryUpdateRequest;
 import com.kcserver.dto.postalcode.PostalCodeStatusResponse;
 import com.kcserver.enumtype.CountryCode;
-import com.kcserver.repository.PostalCodeCountryRepository;
 import com.kcserver.service.postalcode.PostalCodeCountryService;
 import com.kcserver.service.postalcode.PostalCodeImportAsyncService;
 import com.kcserver.service.postalcode.PostalCodeImportService;
@@ -20,7 +20,6 @@ import java.util.List;
 public class PostalCodeAdminController {
 
     private final PostalCodeImportService importService;
-    private final PostalCodeCountryRepository countryRepository;
     private final PostalCodeCountryService countryService;
     private final PostalCodeImportAsyncService asyncService;
 
@@ -43,18 +42,10 @@ public class PostalCodeAdminController {
     }
 
     @GetMapping("/countries")
-    public List<PostalCodeCountryResponse> countries() {
-
-        return countryRepository.findAll()
-                .stream()
-                .map(c -> new PostalCodeCountryResponse(
-                        c.getCountryCode(),
-                        c.isEnabled(),
-                        c.isAutoImport(),
-                        c.getLastImport(),
-                        c.getNextImport()
-                ))
-                .toList();
+    public ApiResponse<List<PostalCodeCountryResponse>> countries() {
+        return ApiResponse.of(
+                countryService.getCountries()
+        );
     }
     @PutMapping("/countries/{countryCode}")
     public void updateCountry(

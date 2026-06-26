@@ -90,16 +90,16 @@ class VeranstaltungReadTest extends AbstractTenantIntegrationTest {
                 .andExpect(jsonPath("$.data.id").value(veranstaltungId))
                 .andExpect(jsonPath("$.data.name").value("Sommerfreizeit 2026"))
                 .andExpect(jsonPath("$.data.typ").value("JEM"))
-                .andExpect(jsonPath("$.data.ktiv").value(true))
+                .andExpect(jsonPath("$.data.aktiv").value(true))
 
                 // Beziehungen (IDs)
                 .andExpect(jsonPath("$.data.vereinId").value(vereinId))
                 .andExpect(jsonPath("$.data.leiterId").value(leiterId))
 
                 // Anzeigeobjekte
-                .andExpect(jsonPath("$.verein.name").value("Eschweiler Kanu Club"))
-                .andExpect(jsonPath("$.leiter.vorname").value("Max"))
-                .andExpect(jsonPath("$.leiter.name").value("Mustermann"));
+                .andExpect(jsonPath("$.data.verein.name").value("Eschweiler Kanu Club"))
+                .andExpect(jsonPath("$.data.leiter.vorname").value("Max"))
+                .andExpect(jsonPath("$.data.leiter.name").value("Mustermann"));
     }
 
     /* =========================================================

@@ -95,7 +95,7 @@ class MitgliedReadTest extends AbstractTenantIntegrationTest {
                         get("/api/mitglied/person/{id}", personId)
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1));
+                .andExpect(jsonPath("$.data.length()").value(1));
     }
 
     @Test
@@ -105,6 +105,6 @@ class MitgliedReadTest extends AbstractTenantIntegrationTest {
                         get("/api/mitglied/verein/{id}", vereinId)
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1));
+                .andExpect(jsonPath("$.data.length()").value(1));
     }
 }

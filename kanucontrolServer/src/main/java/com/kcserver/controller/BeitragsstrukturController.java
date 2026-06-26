@@ -1,10 +1,13 @@
 package com.kcserver.controller;
 
+import com.kcserver.api.response.ApiResponse;
 import com.kcserver.dto.beitrag.BeitragsregelCreateDTO;
 import com.kcserver.dto.beitrag.BeitragsstrukturDTO;
 import com.kcserver.dto.beitrag.BeitragsstrukturUpdateDTO;
 import com.kcserver.service.BeitragsstrukturService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,16 +20,17 @@ public class BeitragsstrukturController {
     private final BeitragsstrukturService service;
 
     @GetMapping("/templates")
-    public List<BeitragsstrukturDTO> getTemplates() {
-        return service.getTemplates();
+    public ApiResponse<List<BeitragsstrukturDTO>> getTemplates() {
+        return ApiResponse.of(service.getTemplates());
     }
 
     @GetMapping
-    public List<BeitragsstrukturDTO> getAll() {
-        return service.getAll();
+    public ApiResponse<List<BeitragsstrukturDTO>> getAll() {
+        return ApiResponse.of(service.getAll());
     }
 
     @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(
             @PathVariable Long id
     ) {
@@ -34,6 +38,7 @@ public class BeitragsstrukturController {
     }
 
     @DeleteMapping("/regeln/{regelId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteRegel(
             @PathVariable Long regelId
     ) {
@@ -41,62 +46,80 @@ public class BeitragsstrukturController {
     }
 
     @PutMapping("/{id}/regeln")
-    public BeitragsstrukturDTO updateRegeln(
+    public ApiResponse<BeitragsstrukturDTO> updateRegeln(
             @PathVariable Long id,
-            @RequestBody List<BeitragsregelCreateDTO> dto
+            @RequestBody @Valid List<BeitragsregelCreateDTO> dto
     ) {
-        return service.updateRegeln(id, dto);
+        return ApiResponse.of(
+                service.updateRegeln(id, dto)
+        );
     }
 
     @PutMapping("/{id}")
-    public BeitragsstrukturDTO update(
+    public ApiResponse<BeitragsstrukturDTO> update(
             @PathVariable Long id,
-            @RequestBody BeitragsstrukturUpdateDTO dto
+            @RequestBody @Valid BeitragsstrukturUpdateDTO dto
     ) {
-        return service.update(id, dto);
+        return ApiResponse.of(
+                service.update(id, dto)
+        );
     }
 
     @PutMapping("/regeln/{regelId}")
-    public BeitragsstrukturDTO updateRegel(
+    public ApiResponse<BeitragsstrukturDTO> updateRegel(
             @PathVariable Long regelId,
-            @RequestBody BeitragsregelCreateDTO dto
+            @RequestBody @Valid BeitragsregelCreateDTO dto
     ) {
-        return service.updateRegel(regelId, dto);
+        return ApiResponse.of(
+                service.updateRegel(regelId, dto)
+        );
     }
 
     @PostMapping("/{id}/copy")
-    public BeitragsstrukturDTO copy(
+    public ApiResponse<BeitragsstrukturDTO> copy(
             @PathVariable Long id,
             @RequestParam String name
     ) {
-
-        return service.copy(id, name);
+        return ApiResponse.of(
+                service.copy(id, name)
+        );
     }
 
     @PostMapping("/copy/{templateId}")
-    public BeitragsstrukturDTO copyFromTemplate(
+    public ApiResponse<BeitragsstrukturDTO> copyFromTemplate(
             @PathVariable Long templateId,
             @RequestParam String name
     ) {
-        return service.copyFromTemplate(templateId, name);
+        return ApiResponse.of(
+                service.copyFromTemplate(templateId, name)
+        );
     }
+
     @PostMapping("/{id}/regeln")
-    public BeitragsstrukturDTO addRegel(
+    public ApiResponse<BeitragsstrukturDTO> addRegel(
             @PathVariable Long id,
-            @RequestBody BeitragsregelCreateDTO dto
+            @RequestBody @Valid BeitragsregelCreateDTO dto
     ) {
-        return service.addRegel(id, dto);
+        return ApiResponse.of(
+                service.addRegel(id, dto)
+        );
     }
+
     @PostMapping("/create")
-    public BeitragsstrukturDTO create(
+    public ApiResponse<BeitragsstrukturDTO> create(
             @RequestParam String name
     ) {
-        return service.createFromDefaultTemplate(name);
+        return ApiResponse.of(
+                service.createFromDefaultTemplate(name)
+        );
     }
+
     @PostMapping
-    public BeitragsstrukturDTO createTemplate(
-            @RequestBody BeitragsstrukturDTO dto
+    public ApiResponse<BeitragsstrukturDTO> createTemplate(
+            @RequestBody @Valid BeitragsstrukturDTO dto
     ) {
-        return service.createTemplate(dto);
+        return ApiResponse.of(
+                service.createTemplate(dto)
+        );
     }
 }
