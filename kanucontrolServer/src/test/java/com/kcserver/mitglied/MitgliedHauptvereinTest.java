@@ -1,6 +1,6 @@
 package com.kcserver.mitglied;
 
-import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.dto.mitglied.MitgliedDTO;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
@@ -108,6 +108,7 @@ class MitgliedHauptvereinTest extends AbstractTenantIntegrationTest {
     }
 
     private MitgliedDTO getMitglied(Long mitgliedId) throws Exception {
+
         String json =
                 mockMvc.perform(
                                 get("/api/mitglied/{id}", mitgliedId)
@@ -117,6 +118,7 @@ class MitgliedHauptvereinTest extends AbstractTenantIntegrationTest {
                         .getResponse()
                         .getContentAsString();
 
-        return objectMapper.readValue(json, new TypeReference<>() {});
+        JsonNode data = objectMapper.readTree(json).path("data");
+        return objectMapper.treeToValue(data, MitgliedDTO.class);
     }
 }

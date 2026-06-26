@@ -1,17 +1,13 @@
 package com.kcserver.controller;
 
+import com.kcserver.api.response.ApiResponse;
 import com.kcserver.dto.abrechnung.AbrechnungDetailDTO;
 import com.kcserver.dto.validation.ValidationResultDTO;
-import com.kcserver.entity.Teilnehmer;
-import com.kcserver.entity.Veranstaltung;
 import com.kcserver.finanz.AbrechnungService;
-import com.kcserver.repository.TeilnehmerRepository;
-import com.kcserver.repository.VeranstaltungRepository;
-import com.kcserver.service.VeranstaltungValidator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/veranstaltungen/{veranstaltungId}/abrechnung")
@@ -20,18 +16,17 @@ public class AbrechnungController {
 
     private final AbrechnungService service;
 
-    private final VeranstaltungRepository veranstaltungRepository;
-    private final TeilnehmerRepository teilnehmerRepository;
-    private final VeranstaltungValidator validator;
-
     @GetMapping
-    public AbrechnungDetailDTO get(
+    public ApiResponse<AbrechnungDetailDTO> get(
             @PathVariable Long veranstaltungId
     ) {
-        return service.getOrCreate(veranstaltungId);
+        return ApiResponse.of(
+                service.getOrCreate(veranstaltungId)
+        );
     }
 
     @PostMapping("/abschliessen")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void abschliessen(
             @PathVariable Long veranstaltungId
     ) {
@@ -39,6 +34,7 @@ public class AbrechnungController {
     }
 
     @PostMapping("/teilnehmer-berechnen")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void berechneTeilnehmer(
             @PathVariable Long veranstaltungId
     ) {
@@ -46,22 +42,11 @@ public class AbrechnungController {
     }
 
     @GetMapping("/validierung")
-    public ValidationResultDTO validateAbrechnung(
+    public ApiResponse<ValidationResultDTO> validateAbrechnung(
             @PathVariable Long veranstaltungId
     ) {
-
-        Veranstaltung veranstaltung =
-                veranstaltungRepository
-                        .findByIdWithRelations(veranstaltungId)
-                        .orElseThrow();
-
-        List<Teilnehmer> teilnehmer =
-                teilnehmerRepository
-                        .findAllWithPerson(veranstaltungId);
-
-        return validator.getAbrechnungValidation(
-                veranstaltung,
-                teilnehmer
+        return ApiResponse.of(
+                service.validate(veranstaltungId)
         );
     }
 }

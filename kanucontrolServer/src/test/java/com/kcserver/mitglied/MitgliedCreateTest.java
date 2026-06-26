@@ -69,6 +69,7 @@ class MitgliedCreateTest extends AbstractTenantIntegrationTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(dto))
                 )
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.data.id").exists())
                 .andExpect(jsonPath("$.data.hauptVerein").value(true))
                 .andExpect(jsonPath("$.data.funktion").value("JUGENDWART"))
@@ -170,7 +171,7 @@ class MitgliedCreateTest extends AbstractTenantIntegrationTest {
                         get("/api/mitglied/person/{personId}", personId)
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[?(@.vereinId==" + verein1Id + ")].hauptVerein").value(false))
-                .andExpect(jsonPath("$[?(@.vereinId==" + verein2Id + ")].hauptVerein").value(true));
+                .andExpect(jsonPath("$.data[?(@.vereinId==" + verein1Id + ")].hauptVerein").value(false))
+                .andExpect(jsonPath("$.data[?(@.vereinId==" + verein2Id + ")].hauptVerein").value(true));
     }
 }

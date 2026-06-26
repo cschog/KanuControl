@@ -53,9 +53,9 @@ class VereinReadTest extends AbstractTenantIntegrationTest {
                         get("/api/verein")
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].name").exists())
-                .andExpect(jsonPath("$[0].abk").exists());
+                .andExpect(jsonPath("$.data.length()").value(2))
+                .andExpect(jsonPath("$.data[0].name").exists())
+                .andExpect(jsonPath("$.data[0].abk").exists());
     }
 
     @Test

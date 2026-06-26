@@ -1,5 +1,6 @@
 package com.kcserver.mitglied;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.dto.mitglied.MitgliedDTO;
 import com.kcserver.enumtype.MitgliedFunktion;
@@ -170,7 +171,8 @@ class MitgliedUpdateTest extends AbstractTenantIntegrationTest {
                         .getResponse()
                         .getContentAsString();
 
-        return objectMapper.readValue(response, MitgliedDTO.class).getId();
+        JsonNode node = objectMapper.readTree(response);
+        return node.path("data").path("id").asLong();
     }
 
     @Test

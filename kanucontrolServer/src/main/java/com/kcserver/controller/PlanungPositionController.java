@@ -1,5 +1,6 @@
 package com.kcserver.controller;
 
+import com.kcserver.api.response.ApiResponse;
 import com.kcserver.dto.planung.PlanungPositionCreateDTO;
 import com.kcserver.dto.planung.PlanungPositionDTO;
 import com.kcserver.finanz.PlanungPositionService;
@@ -20,11 +21,13 @@ public class PlanungPositionController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public PlanungPositionDTO add(
+    public ApiResponse<PlanungPositionDTO> add(
             @PathVariable Long veranstaltungId,
             @RequestBody PlanungPositionCreateDTO dto
     ) {
-        return service.addPosition(veranstaltungId, dto);
+        return ApiResponse.of(
+                service.addPosition(veranstaltungId, dto)
+        );
     }
 
     /* =========================================================
@@ -32,12 +35,18 @@ public class PlanungPositionController {
        ========================================================= */
 
     @PutMapping("/{positionId}")
-    public PlanungPositionDTO update(
+    public ApiResponse<PlanungPositionDTO> update(
             @PathVariable Long veranstaltungId,
             @PathVariable Long positionId,
             @RequestBody PlanungPositionCreateDTO dto
     ) {
-        return service.updatePosition(veranstaltungId, positionId, dto);
+        return ApiResponse.of(
+                service.updatePosition(
+                        veranstaltungId,
+                        positionId,
+                        dto
+                )
+        );
     }
 
     /* =========================================================
@@ -50,6 +59,9 @@ public class PlanungPositionController {
             @PathVariable Long veranstaltungId,
             @PathVariable Long positionId
     ) {
-        service.deletePosition(veranstaltungId, positionId);
+        service.deletePosition(
+                veranstaltungId,
+                positionId
+        );
     }
 }

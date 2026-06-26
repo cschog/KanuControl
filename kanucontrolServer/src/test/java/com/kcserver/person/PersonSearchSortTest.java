@@ -82,10 +82,10 @@ class PersonSearchSortTest extends AbstractTenantIntegrationTest {
                                 .param("sort", "name,asc")
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].name").value("Becker"))
-                .andExpect(jsonPath("$.content[1].name").value("Meier"))
-                .andExpect(jsonPath("$.content[2].name").value("Mustermann"))
-                .andExpect(jsonPath("$.content[3].name").value("Mustermann"));
+                .andExpect(jsonPath("$.data.content[0].name").value("Becker"))
+                .andExpect(jsonPath("$.data.content[1].name").value("Meier"))
+                .andExpect(jsonPath("$.data.content[2].name").value("Mustermann"))
+                .andExpect(jsonPath("$.data.content[3].name").value("Mustermann"));
     }
 
     @Test
@@ -97,8 +97,8 @@ class PersonSearchSortTest extends AbstractTenantIntegrationTest {
                                 .param("sort", "name,desc")
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].name").value("Mustermann"))
-                .andExpect(jsonPath("$.content[3].name").value("Becker"));
+                .andExpect(jsonPath("$.data.content[0].name").value("Mustermann"))
+                .andExpect(jsonPath("$.data.content[3].name").value("Becker"));
     }
 
     @Test
@@ -110,8 +110,8 @@ class PersonSearchSortTest extends AbstractTenantIntegrationTest {
                                 .param("sort", "vorname,asc")
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].vorname").value("Erika"))
-                .andExpect(jsonPath("$.content[3].vorname").value("Theo"));
+                .andExpect(jsonPath("$.data.content[0].vorname").value("Erika"))
+                .andExpect(jsonPath("$.data.content[3].vorname").value("Theo"));
     }
 
     @Test
@@ -125,8 +125,8 @@ class PersonSearchSortTest extends AbstractTenantIntegrationTest {
                                 .param("size", "2")
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content.length()").value(2))
-                .andExpect(jsonPath("$.content[0].name").value("Mustermann"))
-                .andExpect(jsonPath("$.totalElements").value(4));
+                .andExpect(jsonPath("$.data.content.length()").value(2))
+                .andExpect(jsonPath("$.data.content[0].name").value("Mustermann"))
+                .andExpect(jsonPath("$.data.totalElements").value(4));
     }
 }

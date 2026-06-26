@@ -12,7 +12,6 @@ import org.springframework.security.oauth2.server.resource.web.authentication.Be
 import org.springframework.security.web.SecurityFilterChain;
 
 @TestConfiguration
-@Disabled("Security wird später getestet")
 @Profile("test")
 public class TestSecurityConfig {
 

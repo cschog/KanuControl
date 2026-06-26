@@ -91,7 +91,7 @@ class PersonSearchTest extends AbstractTenantIntegrationTest {
                                 .param("name", "Muster")
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content.length()").value(2));
+                .andExpect(jsonPath("$.data.content.length()").value(2));
     }
 
     @Test
@@ -102,8 +102,8 @@ class PersonSearchTest extends AbstractTenantIntegrationTest {
                                 .param("sex", "WEIBLICH")
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content.length()").value(1))
-                .andExpect(jsonPath("$.content[0].vorname").value("Erika"));
+                .andExpect(jsonPath("$.data.content.length()").value(1))
+                .andExpect(jsonPath("$.data.content[0].vorname").value("Erika"));
     }
 
     @Test
@@ -114,8 +114,8 @@ class PersonSearchTest extends AbstractTenantIntegrationTest {
                                 .param("aktiv", "false")
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content.length()").value(1))
-                .andExpect(jsonPath("$.content[0].name").value("Meier"));
+                .andExpect(jsonPath("$.data.content.length()").value(1))
+                .andExpect(jsonPath("$.data.content[0].name").value("Meier"));
     }
 
     @Test
@@ -127,9 +127,9 @@ class PersonSearchTest extends AbstractTenantIntegrationTest {
                                 .param("size", "2")
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.data.content.length()").value(2))
                 // 🔑 totalElements MUSS mindestens so groß sein
-                .andExpect(jsonPath("$.totalElements").value(
+                .andExpect(jsonPath("$.data.totalElements").value(
                         org.hamcrest.Matchers.greaterThanOrEqualTo(2)
                 ));
     }
@@ -143,8 +143,8 @@ class PersonSearchTest extends AbstractTenantIntegrationTest {
                                 .param("sex", "MAENNLICH")
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content.length()").value(1))
-                .andExpect(jsonPath("$.content[0].vorname").value("Max"));
+                .andExpect(jsonPath("$.data.content.length()").value(1))
+                .andExpect(jsonPath("$.data.content[0].vorname").value("Max"));
     }
 
     @Test
@@ -157,8 +157,8 @@ class PersonSearchTest extends AbstractTenantIntegrationTest {
                                 .param("sort", "name,asc")
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").isArray())
-                .andExpect(jsonPath("$.content[0].id").exists())
-                .andExpect(jsonPath("$.content[0].mitgliedschaften").doesNotExist());
+                .andExpect(jsonPath("$.data.content").isArray())
+                .andExpect(jsonPath("$.data.content[0].id").exists())
+                .andExpect(jsonPath("$.data.content[0].mitgliedschaften").doesNotExist());
     }
 }

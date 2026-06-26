@@ -1,6 +1,7 @@
 package com.kcserver.mitglied;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kcserver.dto.mitglied.MitgliedDTO;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
@@ -40,12 +41,10 @@ class MitgliedDeleteTest extends AbstractTenantIntegrationTest {
     Long mitgliedAId;
     Long mitgliedBId;
 
-    private PersonTestFactory personFactory;
-
     @BeforeEach
     void setup() throws Exception {
 
-        personFactory = new PersonTestFactory(mockMvc, objectMapper);
+        PersonTestFactory personFactory = new PersonTestFactory(mockMvc, objectMapper);
 
         VereinTestFactory vereine =
                 new VereinTestFactory(mockMvc, objectMapper);
@@ -139,19 +138,21 @@ class MitgliedDeleteTest extends AbstractTenantIntegrationTest {
     }
 
     private List<MitgliedDTO> getMitgliedByPerson(Long personId) throws Exception {
+
         String json = mockMvc.perform(
-                (get("/api/mitglied/person/{id}", personId))
-
-
+                        get("/api/mitglied/person/{personId}", personId)
                 )
                 .andExpect(status().isOk())
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
 
-        return objectMapper.readValue(
-                json,
-                new TypeReference<List<MitgliedDTO>>() {}
+        JsonNode data = objectMapper.readTree(json).path("data");
+
+        return objectMapper.convertValue(
+                data,
+                new TypeReference<>() {
+                }
         );
     }
 

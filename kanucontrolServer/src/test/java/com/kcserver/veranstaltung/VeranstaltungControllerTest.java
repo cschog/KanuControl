@@ -17,7 +17,6 @@ import org.springframework.test.annotation.DirtiesContext;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -78,8 +77,8 @@ class VeranstaltungControllerTest extends AbstractTenantIntegrationTest {
 
         mockMvc.perform(get("/api/veranstaltungen"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").isArray())
-                .andExpect(jsonPath("$.content[0].name").value("Sommerlager 2026"));
+                .andExpect(jsonPath("$.data.content").isArray())
+                .andExpect(jsonPath("$.data.content[0].name").value("Sommerlager 2026"));
     }
 
     /* =========================================================
@@ -92,7 +91,7 @@ class VeranstaltungControllerTest extends AbstractTenantIntegrationTest {
         mockMvc.perform(get("/api/veranstaltungen")
                         .param("name", "Sommerlager"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].name").value("Sommerlager 2026"));
+                .andExpect(jsonPath("$.data.content[0].name").value("Sommerlager 2026"));
     }
 
     /* =========================================================
@@ -120,7 +119,10 @@ class VeranstaltungControllerTest extends AbstractTenantIntegrationTest {
 
         JsonNode first = content.get(0);
 
-        assertThat(first.path("data").path("namee").asText()).isEqualTo("Sommerlager 2026");
-        assertThat(first.path("data").path("id")).isNotNull();
+        assertThat(first.path("name").asText())
+                .isEqualTo("Sommerlager 2026");
+
+        assertThat(first.path("id").asLong())
+                .isGreaterThan(0);
     }
 }

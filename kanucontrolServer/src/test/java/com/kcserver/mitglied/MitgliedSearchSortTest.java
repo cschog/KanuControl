@@ -77,9 +77,9 @@ class MitgliedSearchSortTest extends AbstractTenantIntegrationTest {
 
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].funktion").value("BOOTSHAUSWART"))
-                .andExpect(jsonPath("$[1].funktion").value("JUGENDWART"))
-                .andExpect(jsonPath("$[2].funktion").value("KASSENWART"));
+                .andExpect(jsonPath("$.data[0].funktion").value("BOOTSHAUSWART"))
+                .andExpect(jsonPath("$.data[1].funktion").value("JUGENDWART"))
+                .andExpect(jsonPath("$.data[2].funktion").value("KASSENWART"));
     }
 
     /* =========================================================
@@ -97,9 +97,9 @@ class MitgliedSearchSortTest extends AbstractTenantIntegrationTest {
 
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].hauptVerein").value(true))
-                .andExpect(jsonPath("$[1].hauptVerein").value(false))
-                .andExpect(jsonPath("$[2].hauptVerein").value(false));
+                .andExpect(jsonPath("$.data[0].hauptVerein").value(true))
+                .andExpect(jsonPath("$.data[1].hauptVerein").value(false))
+                .andExpect(jsonPath("$.data[2].hauptVerein").value(false));
 
     }
 

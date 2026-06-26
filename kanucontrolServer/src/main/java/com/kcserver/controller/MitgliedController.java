@@ -1,14 +1,15 @@
 package com.kcserver.controller;
 
+import com.kcserver.api.response.ApiResponse;
 import com.kcserver.dto.mitglied.MitgliedDTO;
 import com.kcserver.dto.mitglied.MitgliedDetailDTO;
 import com.kcserver.entity.Mitglied;
+import org.springframework.data.domain.Pageable;
 import com.kcserver.mapper.MitgliedMapper;
 import com.kcserver.service.MitgliedService;
 import com.kcserver.validation.OnCreate;
 import com.kcserver.validation.OnUpdate;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,13 +36,15 @@ public class MitgliedController {
        ========================================================= */
 
     @PostMapping
-    public ResponseEntity<MitgliedDetailDTO> create(
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApiResponse<MitgliedDetailDTO> create(
             @RequestBody @Validated(OnCreate.class) MitgliedDTO dto
     ) {
         Mitglied mitglied = mitgliedService.createMitgliedEntity(dto);
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(mitgliedMapper.toDetailDTO(mitglied));
+
+        return ApiResponse.of(
+                mitgliedMapper.toDetailDTO(mitglied)
+        );
     }
 
     /* =========================================================
@@ -49,29 +52,40 @@ public class MitgliedController {
        ========================================================= */
 
     @GetMapping("/{id}")
-    public MitgliedDetailDTO getById(@PathVariable Long id) {
+    public ApiResponse<MitgliedDetailDTO> getById(
+            @PathVariable Long id
+    ) {
         Mitglied mitglied = mitgliedService.getEntityByIdWithVerein(id);
-        return mitgliedMapper.toDetailDTO(mitglied);
+
+        return ApiResponse.of(
+                mitgliedMapper.toDetailDTO(mitglied)
+        );
     }
 
     @GetMapping("/person/{personId}")
-    public List<MitgliedDTO> getByPerson(
+    public ApiResponse<List<MitgliedDTO>> getByPerson(
             @PathVariable Long personId,
-            org.springframework.data.domain.Pageable pageable
+            Pageable pageable
     ) {
-        return mitgliedService.getByPerson(personId, pageable);
+        return ApiResponse.of(
+                mitgliedService.getByPerson(personId, pageable)
+        );
     }
 
     @GetMapping("/verein/{vereinId}")
-    public List<MitgliedDTO> getByVerein(@PathVariable Long vereinId) {
-        return mitgliedService.getByVerein(vereinId);
+    public ApiResponse<List<MitgliedDTO>> getByVerein(
+            @PathVariable Long vereinId
+    ) {
+        return ApiResponse.of(
+                mitgliedService.getByVerein(vereinId)
+        );
     }
 
     @GetMapping("/person/{personId}/hauptverein")
-    public ResponseEntity<MitgliedDTO> getHauptvereinByPerson(
+    public ApiResponse<MitgliedDTO> getHauptvereinByPerson(
             @PathVariable Long personId
     ) {
-        return ResponseEntity.ok(
+        return ApiResponse.of(
                 mitgliedService.getHauptvereinByPerson(personId)
         );
     }
@@ -91,12 +105,16 @@ public class MitgliedController {
        ========================= */
 
     @PutMapping("/{id}")
-    public MitgliedDetailDTO update(
+    public ApiResponse<MitgliedDetailDTO> update(
             @PathVariable Long id,
             @RequestBody @Validated(OnUpdate.class) MitgliedDTO dto
     ) {
-        Mitglied mitglied = mitgliedService.updateMitgliedEntity(id, dto);
-        return mitgliedMapper.toDetailDTO(mitglied);
+        Mitglied mitglied =
+                mitgliedService.updateMitgliedEntity(id, dto);
+
+        return ApiResponse.of(
+                mitgliedMapper.toDetailDTO(mitglied)
+        );
     }
 
     @PutMapping("/{id}/hauptverein")

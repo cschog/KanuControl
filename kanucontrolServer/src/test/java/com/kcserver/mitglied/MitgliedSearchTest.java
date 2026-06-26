@@ -87,7 +87,7 @@ class MitgliedSearchTest extends AbstractTenantIntegrationTest {
                 )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.length()").value(2))
-                .andExpect(jsonPath("$[*].personId")
+                .andExpect(jsonPath("$.data[*].personId")
                         .value(everyItem(is(personId.intValue()))));
     }
 

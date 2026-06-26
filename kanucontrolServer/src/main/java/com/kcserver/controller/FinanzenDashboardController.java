@@ -1,7 +1,6 @@
-// controller/FinanzenDashboardController.java
-
 package com.kcserver.controller;
 
+import com.kcserver.api.response.ApiResponse;
 import com.kcserver.dto.finanzen.FinanzenDashboardDTO;
 import com.kcserver.service.FinanzenDashboardService;
 import lombok.RequiredArgsConstructor;
@@ -15,9 +14,11 @@ public class FinanzenDashboardController {
     private final FinanzenDashboardService service;
 
     @GetMapping("/dashboard")
-    public FinanzenDashboardDTO getDashboard(
+    public ApiResponse<FinanzenDashboardDTO> getDashboard(
             @PathVariable Long veranstaltungId
     ) {
-        return service.getDashboard(veranstaltungId);
+        return ApiResponse.of(
+                service.getDashboard(veranstaltungId)
+        );
     }
 }

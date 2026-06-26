@@ -1,5 +1,6 @@
 package com.kcserver.controller;
 
+import com.kcserver.api.response.ApiResponse;
 import com.kcserver.dto.planung.PlanungDetailDTO;
 import com.kcserver.finanz.PlanungService;
 import lombok.RequiredArgsConstructor;
@@ -18,8 +19,12 @@ public class PlanungController {
        ========================================================= */
 
     @GetMapping
-    public PlanungDetailDTO get(@PathVariable Long veranstaltungId) {
-        return planungService.getOrCreate(veranstaltungId);
+    public ApiResponse<PlanungDetailDTO> get(
+            @PathVariable Long veranstaltungId
+    ) {
+        return ApiResponse.of(
+                planungService.getOrCreate(veranstaltungId)
+        );
     }
 
     /* =========================================================
@@ -28,13 +33,21 @@ public class PlanungController {
 
     @PostMapping("/einreichen")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void einreichen(@PathVariable Long veranstaltungId) {
+    public void einreichen(
+            @PathVariable Long veranstaltungId
+    ) {
         planungService.einreichen(veranstaltungId);
     }
 
+    /* =========================================================
+       WIEDER ÖFFNEN
+       ========================================================= */
+
     @PostMapping("/wieder-oeffnen")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void wiederOeffnen(@PathVariable Long veranstaltungId) {
+    public void wiederOeffnen(
+            @PathVariable Long veranstaltungId
+    ) {
         planungService.wiederOeffnen(veranstaltungId);
     }
 }
