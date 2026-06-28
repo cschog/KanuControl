@@ -1,6 +1,6 @@
 import { ColumnDef } from "@tanstack/react-table";
 
-import { PersonList } from "@/api/types/Person";
+import { PersonList } from "@/api/types/person/Person";
 
 export const personColumnsTanstack: ColumnDef<PersonList>[] = [
   {

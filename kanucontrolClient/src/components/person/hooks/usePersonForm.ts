@@ -1,4 +1,4 @@
-import { PersonDetail, PersonSave } from "@/api/types/Person";
+import { PersonDetail, PersonSave } from "@/api/types/person/Person";
 import { normalizeGermanDate } from "@/utils/dateUtils";
 import { useEntityForm } from "@/components/common/hooks/useEntityForm";
 
@@ -21,7 +21,7 @@ function mapDetailToSave(detail: PersonDetail): PersonSave {
     bic: detail.bic, // ⭐ FEHLTE → jetzt im Payload
 
     efz: detail.efz, // (falls du nutzt)
-   
+
 
     aktiv: detail.aktiv,
 

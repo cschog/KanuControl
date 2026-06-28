@@ -1,5 +1,6 @@
 import React from "react";
 import { Row } from "@tanstack/react-table";
+import EmptyState from "@/components/common/EmptyState";
 
 import {
   ColumnDef,
@@ -43,6 +44,7 @@ interface GenericTableTanstackProps<T extends WithId> {
   enableCheckboxSelection?: boolean;
   resetSelectionTrigger?: number;
   fixedColumnWidths?: boolean;
+  emptyState?: React.ReactNode;
 
   // ⭐ SERVER SORTING
   sorting?: SortingState;
@@ -70,6 +72,7 @@ export function GenericTableTanstack<T extends WithId>({
   resetSelectionTrigger,
   fixedColumnWidths = true,
   enableCheckboxSelection = false,
+  emptyState,
 }: GenericTableTanstackProps<T>) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -306,8 +309,8 @@ export function GenericTableTanstack<T extends WithId>({
                           (header.column.columnDef.meta as { align?: string })?.align === "right"
                             ? "right"
                             : header.id === "select"
-                            ? "center"
-                            : "left"
+                              ? "center"
+                              : "left"
                         }
                         onClick={header.column.getToggleSortingHandler()}
                         padding="normal"
@@ -387,8 +390,8 @@ export function GenericTableTanstack<T extends WithId>({
                           (cell.column.columnDef.meta as { align?: string })?.align === "right"
                             ? "right"
                             : cell.column.id === "select"
-                            ? "center"
-                            : "left"
+                              ? "center"
+                              : "left"
                         }
                         size="small"
                         padding="normal"
@@ -436,16 +439,12 @@ export function GenericTableTanstack<T extends WithId>({
       )}
 
       {/* =====================================================
-         EMPTY
-         ===================================================== */}
+          EMPTY
+        ===================================================== */}
 
-      {!loading && data.length === 0 && (
-        <Box p={3}>
-          <Typography align="center" color="text.secondary">
-            Keine Daten vorhanden
-          </Typography>
-        </Box>
-      )}
+      {!loading &&
+        data.length === 0 &&
+        (emptyState ?? <EmptyState />)}
 
       {/* =====================================================
          INFINITE SCROLL

@@ -1,19 +1,19 @@
 import React from "react";
 import { MenuItem, TextField, FormControlLabel, Switch } from "@mui/material";
 
-import { VeranstaltungFormModel } from "@/api/types/VeranstaltungFormModel";
+import { VeranstaltungFormModel } from "@/api/types/veranstaltung/VeranstaltungFormModel";
 import { VeranstaltungTyp } from "@/api/enums/VeranstaltungTyp";
-// import { VeranstaltungScope } from "@/api/enums/VeranstaltungScope";
 
 import { VereinAutocomplete } from "@/components/verein/VereinAutocomplete";
 import { PersonAutocomplete } from "@/components/person/PersonAutocomplete";
 
-import { FormFeld } from "@/components/common/FormFeld";
+import FormFeld from "@/components/common/FormFeld";
 import { FormFeldDatePicker } from "@/components/common/FormFeldDatePicker";
 import { FormFeldTimePicker } from "@/components/common/FormFeldTimePicker";
 
 import { COUNTRIES } from "@/api/enums/CountryCode";
 import PostalCodeAutocomplete from "@/components/common/PostalCodeAutocomplete";
+import PriceField from "@/components/common/MoneyField";
 
 /* =========================================================
    TYPES
@@ -271,12 +271,11 @@ export const VeranstaltungBaseForm: React.FC<Props> = ({
 
           {/* ================= STANDARDGEBÜHR ================= */}
 
-          <FormFeld
-            label="Teilnehmergebühr (Euro)"
+          <PriceField
+            label="Teilnehmergebühr"
             value={form.standardGebuehr ?? ""}
             disabled={!editMode || form.individuelleGebuehren}
             onChange={(v) => onChange("standardGebuehr", v ? Number(v) : undefined)}
-            type="number"
             helperText={
               form.individuelleGebuehren
                 ? "Gebühr wird individuell pro Teilnehmer berechnet"

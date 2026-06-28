@@ -1,7 +1,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { COUNTRIES } from "@/api/enums/CountryCode";
 
-import Verein from "@/api/types/VereinFormModel";
+import Verein from "@/api/types/verein/VereinFormModel";
 
 export interface VereinWithId extends Verein {
   id: number;

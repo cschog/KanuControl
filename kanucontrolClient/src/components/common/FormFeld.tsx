@@ -1,43 +1,54 @@
 // components/common/FormFeld.tsx
+
 import React from "react";
-import { TextField } from "@mui/material";
+import { TextField, TextFieldProps } from "@mui/material";
 
 type FormValue = string | number | boolean | null | undefined;
 
-interface FormFeldProps {
-  label: string;
+interface FormFeldProps
+  extends Omit<
+    TextFieldProps,
+    "value" | "onChange"
+  > {
   value: FormValue;
-  disabled?: boolean;
-  maxLength?: number;
+
   onChange?: (value: string) => void;
-  type?: React.InputHTMLAttributes<HTMLInputElement>["type"];
-  helperText?: string;
+
+  maxLength?: number;
 }
 
-export const FormFeld: React.FC<FormFeldProps> = ({
-  label,
+const FormFeld: React.FC<FormFeldProps> = ({
   value,
-  disabled = false,
-  maxLength,
   onChange,
-  type = "text",
-  helperText,
+  maxLength,
+  ...props
 }) => {
-  const displayValue = typeof value === "boolean" ? (value ? "Ja" : "Nein") : value ?? "";
+  const displayValue =
+    typeof value === "boolean"
+      ? value
+        ? "Ja"
+        : "Nein"
+      : value ?? "";
 
   return (
     <TextField
-      fullWidth
-      size="small"
-      label={label}
+      {...props}
+      fullWidth={props.fullWidth ?? true}
+      size={props.size ?? "small"}
       value={displayValue}
-      disabled={disabled}
-      type={type}
       inputProps={{
         maxLength,
+        ...props.inputProps,
       }}
-      helperText={helperText}
-      onChange={onChange ? (e) => onChange(e.target.value) : undefined}
+      onChange={
+        onChange
+          ? (e) => onChange(e.target.value)
+          : undefined
+      }
     />
   );
 };
+
+export default FormFeld;
+
+export type { FormFeldProps };

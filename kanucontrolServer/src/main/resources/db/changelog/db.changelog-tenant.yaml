@@ -95,3 +95,11 @@ databaseChangeLog:
       file: db/changelog/changes/2026-06-01-reisekostenabrechnung-audit-001.xml
   - include:
       file: db/changelog/changes/2026-06-03-reisekostenabrechnung-mitfahrer-001.xml
+  - include:
+      file: db/changelog/changes/20260626-01-unterkunft-verpflegung.xml
+  - include:
+      file: db/changelog/changes/20260626-02-default-daten.xml
+  - include:
+      file: db/changelog/changes/20260626-03-veranstaltung-fk.xml
+  - include:
+      file: db/changelog/changes/20260627-001-planung-position-erweitern.xml

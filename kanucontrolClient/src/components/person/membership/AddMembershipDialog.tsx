@@ -15,7 +15,7 @@ import axios from "axios";
 
 import apiClient from "@/api/client/apiClient";
 
-import { VereinRef } from "@/api/types/VereinRef";
+import { VereinRef } from "@/api/types/verein/VereinRef";
 
 interface AddMembershipDialogProps {
   open: boolean;

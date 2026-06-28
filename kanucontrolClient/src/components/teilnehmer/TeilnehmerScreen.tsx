@@ -21,7 +21,7 @@ import {
   removeTeilnehmerBulk,
   updateTeilnehmerRolle,
 } from "@/api/services/teilnehmerApi";
-import { PersonList } from "@/api/types/PersonList";
+import { PersonList } from "@/api/types/person/PersonList";
 import { TeilnehmerList } from "@/api/types/TeilnehmerList";
 
 export default function TeilnehmerScreen() {
@@ -198,24 +198,24 @@ export default function TeilnehmerScreen() {
     await load();
   };
 
- const handleRemove = async () => {
-   if (!active?.id || selAssigned.length === 0) return;
+  const handleRemove = async () => {
+    if (!active?.id || selAssigned.length === 0) return;
 
-   try {
-     await removeTeilnehmerBulk(
-       active.id,
-       selAssigned.map((p) => p.personId),
-     );
+    try {
+      await removeTeilnehmerBulk(
+        active.id,
+        selAssigned.map((p) => p.personId),
+      );
 
-     setSelAssigned([]);
-     setResetRightSelection((v) => v + 1);
+      setSelAssigned([]);
+      setResetRightSelection((v) => v + 1);
 
-     await load();
-   } catch (error) {
-     setErrorMessage(getApiErrorMessage(error));
-     setErrorOpen(true);
-   }
- };
+      await load();
+    } catch (error) {
+      setErrorMessage(getApiErrorMessage(error));
+      setErrorOpen(true);
+    }
+  };
 
   const handleMobileAction = async () => {
     if (mobileMode === "available") {
@@ -240,9 +240,9 @@ export default function TeilnehmerScreen() {
       prev.map((t) =>
         t.personId === personId
           ? {
-              ...t,
-              rolle: newRole,
-            }
+            ...t,
+            rolle: newRole,
+          }
           : t,
       ),
     );
@@ -254,9 +254,9 @@ export default function TeilnehmerScreen() {
         prev.map((t) =>
           t.personId === personId
             ? {
-                ...t,
-                rolle: current,
-              }
+              ...t,
+              rolle: current,
+            }
             : t,
         ),
       );
@@ -514,8 +514,8 @@ export default function TeilnehmerScreen() {
                       ? 1
                       : 0.5
                     : selAssigned.length
-                    ? 1
-                    : 0.5,
+                      ? 1
+                      : 0.5,
               }}
             >
               {mobileMode === "available" ? (

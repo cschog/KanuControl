@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Box, Button, Typography, Paper } from "@mui/material";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import { getActiveVeranstaltung } from "@/api/services/veranstaltungApi";
-import { VeranstaltungDetail } from "@/api/types/VeranstaltungDetail";
+import { VeranstaltungDetail } from "@/api/types/veranstaltung/VeranstaltungDetail";
 import apiClient from "@/api/client/apiClient";
 
 const Erhebungsbogen: React.FC = () => {
@@ -23,61 +23,61 @@ const Erhebungsbogen: React.FC = () => {
 
   /* ================= PDF Download ================= */
 
- const handlePreview = async () => {
-   if (!veranstaltung?.id) return;
+  const handlePreview = async () => {
+    if (!veranstaltung?.id) return;
 
-   const res = await apiClient.get(`/veranstaltungen/${veranstaltung.id}/erhebungsbogen/pdf/view`, {
-     responseType: "blob",
-   });
+    const res = await apiClient.get(`/veranstaltungen/${veranstaltung.id}/erhebungsbogen/pdf/view`, {
+      responseType: "blob",
+    });
 
-   const blob = new Blob([res.data], {
-     type: "application/pdf",
-   });
+    const blob = new Blob([res.data], {
+      type: "application/pdf",
+    });
 
-   const url = window.URL.createObjectURL(blob);
+    const url = window.URL.createObjectURL(blob);
 
-   window.open(url, "_blank");
- };
+    window.open(url, "_blank");
+  };
 
- const handleDownload = async () => {
-   if (!veranstaltung?.id) return;
+  const handleDownload = async () => {
+    if (!veranstaltung?.id) return;
 
-   const res = await apiClient.get(
-     `/veranstaltungen/${veranstaltung.id}/erhebungsbogen/pdf/download`,
-     {
-       responseType: "blob",
-     },
-   );
+    const res = await apiClient.get(
+      `/veranstaltungen/${veranstaltung.id}/erhebungsbogen/pdf/download`,
+      {
+        responseType: "blob",
+      },
+    );
 
-   const disposition = res.headers["content-disposition"];
+    const disposition = res.headers["content-disposition"];
 
-   let filename = "erhebungsbogen.pdf";
+    let filename = "erhebungsbogen.pdf";
 
-   const match = disposition?.match(/filename="?([^";]+)"?/);
+    const match = disposition?.match(/filename="?([^";]+)"?/);
 
-   if (match?.[1]) {
-     filename = match[1];
-   }
+    if (match?.[1]) {
+      filename = match[1];
+    }
 
-   const blob = new Blob([res.data], {
-     type: "application/pdf",
-   });
+    const blob = new Blob([res.data], {
+      type: "application/pdf",
+    });
 
-   const url = window.URL.createObjectURL(blob);
+    const url = window.URL.createObjectURL(blob);
 
-   const link = document.createElement("a");
+    const link = document.createElement("a");
 
-   link.href = url;
-   link.download = filename;
+    link.href = url;
+    link.download = filename;
 
-   document.body.appendChild(link);
+    document.body.appendChild(link);
 
-   link.click();
+    link.click();
 
-   link.remove();
+    link.remove();
 
-   window.URL.revokeObjectURL(url);
- };
+    window.URL.revokeObjectURL(url);
+  };
 
   /* ================= UI ================= */
 

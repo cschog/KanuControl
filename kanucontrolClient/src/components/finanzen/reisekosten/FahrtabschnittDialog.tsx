@@ -15,7 +15,7 @@ import {
   TextField,
 } from "@mui/material";
 
-import { PersonRef } from "@/api/types/PersonRef";
+import { PersonRef } from "@/api/types/person/PersonRef";
 
 import { FahrtabschnittRequest } from "@/api/types/Reisekostenabrechnung";
 
@@ -42,7 +42,7 @@ export default function FahrtabschnittDialog({
   const [kilometer, setKilometer] = useState<number | "">("");
   const [anhaenger, setAnhaenger] = useState(false);
 
- const [mitfahrerIds, setMitfahrerIds] = useState<number[]>([]);
+  const [mitfahrerIds, setMitfahrerIds] = useState<number[]>([]);
 
   useEffect(() => {
     if (!initialData) {

@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material";
 
-import { PersonRef } from "@/api/types/PersonRef";
+import { PersonRef } from "@/api/types/person/PersonRef";
 import { PersonAutocomplete } from "@/components/person/PersonAutocomplete";
 
 interface Props {

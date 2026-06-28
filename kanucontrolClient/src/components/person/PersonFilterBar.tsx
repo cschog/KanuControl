@@ -1,5 +1,5 @@
 import { Box, Button, TextField, MenuItem } from "@mui/material";
-import { PersonFilter } from "@/api/types/PersonFilter";
+import { PersonFilter } from "@/api/types/person/PersonFilter";
 
 interface Props {
   filters: PersonFilter;

@@ -3,8 +3,8 @@ import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Box } from "
 
 import { VeranstaltungBaseForm } from "@/components/veranstaltung/form/VeranstaltungBaseForm";
 import { useVeranstaltungForm } from "@/components/veranstaltung/hook/useVeranstaltungForm";
-import { VeranstaltungSave } from "@/api/types/VeranstaltungSave";
-import { VeranstaltungFormModel } from "@/api/types/VeranstaltungFormModel";
+import { VeranstaltungSave } from "@/api/types/veranstaltung/VeranstaltungSave";
+import { VeranstaltungFormModel } from "@/api/types/veranstaltung/VeranstaltungFormModel";
 
 interface BeitragsstrukturDTO {
   id: number;
@@ -31,13 +31,13 @@ export const VeranstaltungCreateDialog: React.FC<Props> = ({
   const { form, update, reset, buildSavePayload, isValid } = useVeranstaltungForm(null);
 
   // Dialog öffnen → Form reset
- useEffect(() => {
-   if (open) {
-     reset(initialData);
-   }
+  useEffect(() => {
+    if (open) {
+      reset(initialData);
+    }
 
-   // eslint-disable-next-line react-hooks/exhaustive-deps
- }, [open]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   if (!form) return null;
 

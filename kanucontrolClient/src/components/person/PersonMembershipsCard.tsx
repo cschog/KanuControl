@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import StarIcon from "@mui/icons-material/Star";
 
-import { PersonDetail } from "@/api/types/Person";
+import { PersonDetail } from "@/api/types/person/Person";
 import { MitgliedFunktion, MitgliedFunktionLabel } from "@/api/types/MitgliedFunktion";
 
 interface PersonMembershipsCardProps {
@@ -71,40 +71,40 @@ export const PersonMembershipsCard: React.FC<PersonMembershipsCardProps> = ({
               </Stack>
 
               {/* RIGHT */}
-             
-                <Stack direction="row" spacing={1} alignItems="center">
-                  {/* FUNKTION */}
-                  <Select
-                    size="small"
-                    value={m.funktion ?? ""}
-                    displayEmpty
-                    sx={{ minWidth: 180 }}
-                    onChange={(e) =>
-                      onChangeFunktion(m.id, (e.target.value || null) as MitgliedFunktion | null)
-                    }
-                  >
-                    <MenuItem value="">— keine Funktion —</MenuItem>
 
-                    {Object.entries(MitgliedFunktionLabel).map(([key, label]) => (
-                      <MenuItem key={key} value={key}>
-                        {label}
-                      </MenuItem>
-                    ))}
-                  </Select>
+              <Stack direction="row" spacing={1} alignItems="center">
+                {/* FUNKTION */}
+                <Select
+                  size="small"
+                  value={m.funktion ?? ""}
+                  displayEmpty
+                  sx={{ minWidth: 180 }}
+                  onChange={(e) =>
+                    onChangeFunktion(m.id, (e.target.value || null) as MitgliedFunktion | null)
+                  }
+                >
+                  <MenuItem value="">— keine Funktion —</MenuItem>
 
-                  {/* HAUPTVEREIN */}
-                  {!m.hauptVerein && (
-                    <Button size="small" onClick={() => onSetHauptverein(m.id)}>
-                      Hauptverein
-                    </Button>
-                  )}
+                  {Object.entries(MitgliedFunktionLabel).map(([key, label]) => (
+                    <MenuItem key={key} value={key}>
+                      {label}
+                    </MenuItem>
+                  ))}
+                </Select>
 
-                  {/* DELETE */}
-                  <Button size="small" color="error" onClick={() => onDeleteMitglied(m.id)}>
-                    Entfernen
+                {/* HAUPTVEREIN */}
+                {!m.hauptVerein && (
+                  <Button size="small" onClick={() => onSetHauptverein(m.id)}>
+                    Hauptverein
                   </Button>
-                </Stack>
-              
+                )}
+
+                {/* DELETE */}
+                <Button size="small" color="error" onClick={() => onDeleteMitglied(m.id)}>
+                  Entfernen
+                </Button>
+              </Stack>
+
             </Box>
           ))}
         </Stack>

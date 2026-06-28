@@ -1,8 +1,8 @@
 import React from "react";
 import { TextField, MenuItem, Checkbox, FormControlLabel } from "@mui/material";
-import { FormFeld } from "@/components/common/FormFeld";
+import FormFeld from "@/components/common/FormFeld";
 import { FormFeldDate } from "@/components/common/FormFeldDate";
-import { PersonSave } from "@/api/types/Person";
+import { PersonSave } from "@/api/types/person/Person";
 import { Sex } from "@/api/enums/Sex";
 import { COUNTRIES } from "@/api/enums/CountryCode";
 import PostalCodeAutocomplete from "@/components/common/PostalCodeAutocomplete";

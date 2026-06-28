@@ -3,14 +3,15 @@ import { Box, Typography } from "@mui/material";
 import { PersonBaseForm } from "@/components/person/form/PersonBaseForm";
 import { PersonMembershipsCard } from "./PersonMembershipsCard";
 import { PersonActionBar } from "@/components/person/PersonActionBar";
-import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
+import ConfirmDeleteDialog  from "@/components/common/ConfirmDeleteDialog";
 import { AddMembershipDialog } from "@/components/person/membership/AddMembershipDialog";
 import { usePersonForm } from "@/components/person/hooks/usePersonForm";
 import { updateMitgliedFunktion } from "@/api/services/mitgliedApi";
 
-import { PersonDetail, PersonSave } from "@/api/types/Person";
+import { PersonDetail, PersonSave } from "@/api/types/person/Person";
 import apiClient from "@/api/client/apiClient";
-import { VereinRef } from "@/api/types/VereinRef";
+import { VereinRef } from "@/api/types/verein/VereinRef";
+import EmptyState from "@/components/common/EmptyState";
 
 /* =========================================================
    Props
@@ -72,13 +73,14 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
 
   if (!personDetail || !form) {
     return (
-      <Typography align="center" sx={{ mt: 4 }} color="text.secondary">
-        Bitte wählen Sie eine Person aus.
-      </Typography>
+        <EmptyState
+            title="Keine Person ausgewählt"
+            description="Bitte wählen Sie eine Person aus."
+        />
     );
-  }
+}
 
- const zugeordneteIds = new Set((personDetail.mitgliedschaften ?? []).map((m) => m.verein.id));
+  const zugeordneteIds = new Set((personDetail.mitgliedschaften ?? []).map((m) => m.verein.id));
 
   const verfügbareVereine = vereine.filter((v) => !zugeordneteIds.has(v.id));
 
@@ -100,7 +102,7 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
       {/* MEMBERSHIPS */}
       <Box maxWidth="xl" mx="auto" sx={{ mt: 3 }}>
         <PersonMembershipsCard
-          person={{ ... personDetail, mitgliedschaften: personDetail.mitgliedschaften ?? [] }}
+          person={{ ...personDetail, mitgliedschaften: personDetail.mitgliedschaften ?? [] }}
           editMode={editMode}
           onSetHauptverein={onSetHauptverein}
           onDeleteMitglied={onDeleteMitglied}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { VeranstaltungFormModel } from "@/api/types/VeranstaltungFormModel";
-import { VeranstaltungSave } from "@/api/types/VeranstaltungSave";
+import { VeranstaltungFormModel } from "@/api/types/veranstaltung/VeranstaltungFormModel";
+import { VeranstaltungSave } from "@/api/types/veranstaltung/VeranstaltungSave";
 import { VeranstaltungTyp } from "@/api/enums/VeranstaltungTyp";
 import { VeranstaltungScope } from "@/api/enums/VeranstaltungScope";
 
@@ -12,40 +12,40 @@ import { VeranstaltungScope } from "@/api/enums/VeranstaltungScope";
 function emptyVeranstaltung(): VeranstaltungFormModel {
   const today = new Date().toISOString().slice(0, 10);
 
-return {
-  name: "",
-  typ: VeranstaltungTyp.JEM,
+  return {
+    name: "",
+    typ: VeranstaltungTyp.JEM,
 
-  beginnDatum: today,
-  beginnZeit: "10:00",
+    beginnDatum: today,
+    beginnZeit: "10:00",
 
-  endeDatum: today,
-  endeZeit: "18:00",
+    endeDatum: today,
+    endeZeit: "18:00",
 
-  verein: undefined,
-  leiter: undefined,
+    verein: undefined,
+    leiter: undefined,
 
-  /* ===== Detailfelder ===== */
+    /* ===== Detailfelder ===== */
 
-  countryCode: undefined,
-  plz: "",
-  ort: "",
-  artDerUnterkunft: "",
-  artDerVerpflegung: "",
+    countryCode: undefined,
+    plz: "",
+    ort: "",
+    artDerUnterkunft: "",
+    artDerVerpflegung: "",
 
-  individuelleGebuehren: false,
-  beitragsstrukturId: undefined,
-  standardGebuehr: undefined,
-  scope: VeranstaltungScope.VEREIN,
+    individuelleGebuehren: false,
+    beitragsstrukturId: undefined,
+    standardGebuehr: undefined,
+    scope: VeranstaltungScope.VEREIN,
 
-  geplanteTeilnehmerMaennlich: undefined,
-  geplanteTeilnehmerWeiblich: undefined,
-  geplanteTeilnehmerDivers: undefined,
+    geplanteTeilnehmerMaennlich: undefined,
+    geplanteTeilnehmerWeiblich: undefined,
+    geplanteTeilnehmerDivers: undefined,
 
-  geplanteMitarbeiterMaennlich: undefined,
-  geplanteMitarbeiterWeiblich: undefined,
-  geplanteMitarbeiterDivers: undefined,
-};
+    geplanteMitarbeiterMaennlich: undefined,
+    geplanteMitarbeiterWeiblich: undefined,
+    geplanteMitarbeiterDivers: undefined,
+  };
 }
 
 /* =========================================================

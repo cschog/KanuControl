@@ -1,4 +1,4 @@
-import { PersonDetail, PersonSave } from "@/api/types/Person";
+import { PersonDetail, PersonSave } from "@/api/types/person/Person";
 import { MitgliedSaveInPerson } from "@/api/types/Mitglied";
 
 /**

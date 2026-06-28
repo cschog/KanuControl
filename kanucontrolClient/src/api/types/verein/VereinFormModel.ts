@@ -1,6 +1,6 @@
 // src/api/types/VereinFormModel.ts
 
-import { PersonRef } from "@/api/types/PersonRef";
+import { PersonRef } from "@/api/types/person/PersonRef";
 import { CountryCode } from "@/api/enums/CountryCode";
 
 export default interface VereinFormModel {

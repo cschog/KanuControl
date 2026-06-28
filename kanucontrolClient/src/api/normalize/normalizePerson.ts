@@ -1,5 +1,5 @@
 // src/api/normalize/normalizePerson.ts
-import { PersonSave } from "@/api/types/Person";
+import { PersonSave } from "@/api/types/person/Person";
 
 export function normalizePersonPayload(raw: PersonSave): PersonSave {
   const p: PersonSave = { ...raw };

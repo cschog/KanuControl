@@ -1,9 +1,9 @@
 // src/components/verein/hooks/useVereinForm.ts
 
 import { useEffect, useState, useCallback } from "react";
-import Verein from "@/api/types/VereinFormModel";
-import { VereinSave } from "@/api/types/VereinSave";
-import { PersonRef } from "@/api/types/PersonRef";
+import Verein from "@/api/types/verein/VereinFormModel";
+import { VereinSave } from "@/api/types/verein/VereinSave";
+import { PersonRef } from "@/api/types/person/PersonRef";
 
 /* =========================================================
    EMPTY FACTORY

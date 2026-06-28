@@ -1,0 +1,164 @@
+import { useState } from "react";
+
+interface CrudApi<T, C> {
+  getAll: () => Promise<T[]>;
+  create: (dto: C) => Promise<unknown>;
+  update: (id: number, dto: C) => Promise<unknown>;
+  delete: (id: number) => Promise<void>;
+}
+
+interface CrudPageOptions {
+  loadError?: string;
+  saveError?: string;
+  deleteError?: string;
+}
+
+export function useCrudPage<
+  T extends { id: number },
+  C
+>(
+  api: CrudApi<T, C>,
+  options: CrudPageOptions = {},
+) {
+  const {
+    loadError = "Daten konnten nicht geladen werden.",
+    saveError = "Eintrag konnte nicht gespeichert werden.",
+    deleteError = "Eintrag konnte nicht gelöscht werden.",
+  } = options;
+
+  const [data, setData] = useState<T[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const [error, setError] =
+    useState<string | null>(null);
+
+  const [selected, setSelected] =
+    useState<T | null>(null);
+
+  const [editing, setEditing] =
+    useState<T | null>(null);
+
+  const [dialogOpen, setDialogOpen] =
+    useState(false);
+
+  const [deleteOpen, setDeleteOpen] =
+    useState(false);
+
+  /* ========================================= */
+
+  const load = async () => {
+    try {
+      setLoading(true);
+
+      setData(await api.getAll());
+
+      setError(null);
+    } catch (err) {
+      console.error(err);
+
+      setError(loadError);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* ========================================= */
+
+  const handleAdd = () => {
+    setEditing(null);
+
+    setDialogOpen(true);
+  };
+
+  /* ========================================= */
+
+  const handleEdit = (row?: T) => {
+    const entity = row ?? selected;
+
+    if (!entity) return;
+
+    setEditing(entity);
+
+    setDialogOpen(true);
+  };
+
+  /* ========================================= */
+
+  const handleDelete = (row?: T) => {
+    if (row) {
+      setSelected(row);
+    }
+
+    setDeleteOpen(true);
+  };
+
+  /* ========================================= */
+
+  const confirmDelete = async () => {
+    if (!selected) return;
+
+    try {
+      await api.delete(selected.id);
+
+      setDeleteOpen(false);
+
+      setSelected(null);
+
+      await load();
+    } catch (err) {
+      console.error(err);
+
+      setError(deleteError);
+    }
+  };
+
+  /* ========================================= */
+
+  const handleSave = async (dto: C) => {
+    try {
+      if (editing) {
+        await api.update(editing.id, dto);
+      } else {
+        await api.create(dto);
+      }
+
+      setDialogOpen(false);
+
+      setEditing(null);
+
+      await load();
+    } catch (err) {
+      console.error(err);
+
+      setError(saveError);
+    }
+  };
+
+  /* ========================================= */
+
+  return {
+    data,
+    loading,
+    error,
+
+    selected,
+    setSelected,
+
+    editing,
+
+    dialogOpen,
+    deleteOpen,
+
+    setDialogOpen,
+    setDeleteOpen,
+
+    load,
+
+    handleAdd,
+    handleEdit,
+    handleDelete,
+
+    confirmDelete,
+    handleSave,
+  };
+}

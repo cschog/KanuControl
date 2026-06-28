@@ -35,11 +35,20 @@ public class Veranstaltung extends Auditable {
     @Column(nullable = false, length = 3)
     private VeranstaltungTyp typ;
 
-    @Column(name = "art_der_unterkunft", length = 200)
-    private String artDerUnterkunft;
+//    @Column(name = "art_der_unterkunft", length = 200)
+//    private String artDerUnterkunft;
+//
+//    @Column(name = "art_der_verpflegung", length = 200)
+//    private String artDerVerpflegung;
 
-    @Column(name = "art_der_verpflegung", length = 200)
-    private String artDerVerpflegung;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "unterkunftsart_id")
+    private Unterkunftsart unterkunftsart;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "verpflegungsmodell_id")
+    private Verpflegungsmodell verpflegungsmodell;
+
 
     @Column(nullable = true)
     private String plz;

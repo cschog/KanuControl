@@ -1,7 +1,7 @@
 import apiClient from "@/api/client/apiClient";
-import { VeranstaltungList } from "@/api/types/VeranstaltungList";
-import { VeranstaltungDetail } from "@/api/types/VeranstaltungDetail";
-import { VeranstaltungSave } from "@/api/types/VeranstaltungSave";
+import { VeranstaltungList } from "@/api/types/veranstaltung/VeranstaltungList";
+import { VeranstaltungDetail } from "@/api/types/veranstaltung/VeranstaltungDetail";
+import { VeranstaltungSave } from "@/api/types/veranstaltung/VeranstaltungSave";
 import { Page } from "@/api/types/Page";
 import { SaveResponse } from "@/api/types/SaveResponse";
 

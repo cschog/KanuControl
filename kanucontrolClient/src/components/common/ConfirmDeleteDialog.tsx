@@ -1,33 +1,62 @@
-import React from "react";
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button } from "@mui/material";
+// src/components/common/ConfirmDeleteDialog.tsx
+
+import { Button, Typography } from "@mui/material";
+import { ReactNode } from "react";
+
+import BaseDialog from "@/components/common/BaseDialog";
 
 interface ConfirmDeleteDialogProps {
   open: boolean;
-  title?: string;
-  description: string;
+
+  title?: ReactNode;
+
+  description?: ReactNode;
+
   onClose: () => void;
+
   onConfirm: () => void;
+
+  loading?: boolean;
+
+  confirmLabel?: string;
 }
 
-export const ConfirmDeleteDialog: React.FC<ConfirmDeleteDialogProps> = ({
+const ConfirmDeleteDialog = ({
   open,
   title = "Löschen bestätigen",
   description,
   onClose,
   onConfirm,
-}) => {
+  loading = false,
+  confirmLabel = "Löschen",
+}: ConfirmDeleteDialogProps) => {
   return (
-    <Dialog open={open} onClose={onClose}>
-      <DialogTitle>{title}</DialogTitle>
+    <BaseDialog
+      open={open}
+      title={title}
+      onClose={onClose}
+      loading={loading}
+      maxWidth="xs"
+      actions={
+        <>
+          <Button onClick={onClose} disabled={loading}>
+            Abbrechen
+          </Button>
 
-      <DialogContent>{description}</DialogContent>
-
-      <DialogActions>
-        <Button onClick={onClose}>Abbrechen</Button>
-        <Button color="error" onClick={onConfirm}>
-          Löschen
-        </Button>
-      </DialogActions>
-    </Dialog>
+          <Button
+            color="error"
+            variant="contained"
+            onClick={onConfirm}
+            disabled={loading}
+          >
+            {confirmLabel}
+          </Button>
+        </>
+      }
+    >
+      {description && <Typography>{description}</Typography>}
+    </BaseDialog>
   );
 };
+
+export default ConfirmDeleteDialog;

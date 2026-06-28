@@ -32,8 +32,9 @@ import {
   createPerson,
 } from "@/api/services/personApi";
 
-import { PersonList, PersonDetail, PersonSave } from "@/api/types/Person";
+import { PersonList, PersonDetail, PersonSave } from "@/api/types/person/Person";
 import { useDebounce } from "@/components/common/reference/hooks";
+import SearchField from "@/components/common/SearchField";
 
 /* ========================================================= */
 
@@ -325,15 +326,11 @@ export default function PersonenScreen() {
         >
           <Paper sx={{ p: 2 }}>
             <Box display="flex" gap={1} mb={2}>
-              <TextField
-                size="small"
-                label="Suche"
+              <SearchField
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                fullWidth
+                onChange={setSearch}
               />
 
-              <Button onClick={resetFilter}>Reset</Button>
             </Box>
 
             <GenericTableTanstack

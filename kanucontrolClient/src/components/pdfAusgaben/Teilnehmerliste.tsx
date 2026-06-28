@@ -4,7 +4,7 @@ import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import { getActiveVeranstaltung } from "@/api/services/veranstaltungApi";
 import apiClient from "@/api/client/apiClient";
 
-import { VeranstaltungDetail } from "@/api/types/VeranstaltungDetail";
+import { VeranstaltungDetail } from "@/api/types/veranstaltung/VeranstaltungDetail";
 
 const Teilnehmerliste: React.FC = () => {
   const [veranstaltung, setVeranstaltung] = useState<VeranstaltungDetail | null>(null);

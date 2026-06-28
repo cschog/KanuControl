@@ -113,8 +113,12 @@ public class PDFFmJemReportService {
             /* ================= Veranstaltung ================= */
 
             set(form, "veranstaltung_name", v.getName());
-            set(form, "art_der_unterkunft", v.getArtDerUnterkunft());
-            set(form, "art_der_verpflegung", v.getArtDerVerpflegung());
+            set(form, "art_der_unterkunft", v.getUnterkunftsart() != null
+                    ? v.getUnterkunftsart().getBezeichnung()
+                    : "");
+            set(form, "art_der_verpflegung", v.getVerpflegungsmodell() != null
+                    ? v.getVerpflegungsmodell().getBezeichnung()
+                    : "");
 
             String ortLand = (v.getOrt() != null ? v.getOrt() : "")
                     + (v.getCountryCode() != null ? " (" + v.getCountryCode().name() + ")" : "");

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="20260626-02-default-daten" author="chris">
+
+        <insert tableName="unterkunftsart">
+            <column name="bezeichnung" value="Camping"/>
+            <column name="preis_pro_person_und_nacht" valueNumeric="0"/>
+            <column name="aktiv" valueBoolean="true"/>
+        </insert>
+
+        <insert tableName="unterkunftsart">
+            <column name="bezeichnung" value="Jugendherberge"/>
+            <column name="preis_pro_person_und_nacht" valueNumeric="0"/>
+            <column name="aktiv" valueBoolean="true"/>
+        </insert>
+
+        <insert tableName="unterkunftsart">
+            <column name="bezeichnung" value="Jugendhotel"/>
+            <column name="preis_pro_person_und_nacht" valueNumeric="0"/>
+            <column name="aktiv" valueBoolean="true"/>
+        </insert>
+
+        <insert tableName="verpflegungsmodell">
+            <column name="bezeichnung" value="Selbstversorger"/>
+            <column name="preis_pro_person_und_tag" valueNumeric="0"/>
+            <column name="aktiv" valueBoolean="true"/>
+        </insert>
+
+        <insert tableName="verpflegungsmodell">
+            <column name="bezeichnung" value="Halbpension"/>
+            <column name="preis_pro_person_und_tag" valueNumeric="0"/>
+            <column name="aktiv" valueBoolean="true"/>
+        </insert>
+
+        <insert tableName="verpflegungsmodell">
+            <column name="bezeichnung" value="Vollverpflegung"/>
+            <column name="preis_pro_person_und_tag" valueNumeric="0"/>
+            <column name="aktiv" valueBoolean="true"/>
+        </insert>
+
+    </changeSet>
+
+</databaseChangeLog>

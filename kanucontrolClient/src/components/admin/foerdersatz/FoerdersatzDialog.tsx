@@ -26,6 +26,7 @@ import {
   FoerdersatzDTO,
   VeranstaltungTyp,
 } from "@/api/types/Foerdersatz";
+import PriceField from "@/components/common/MoneyField";
 
 interface Props {
   open: boolean;
@@ -98,10 +99,10 @@ const FoerdersatzDialog = ({ open, initialData, onClose, onSave, loading = false
 
   const handleSave = () => {
 
-      if (!gueltigVon) { 
+    if (!gueltigVon) {
 
-        return;
-      }
+      return;
+    }
 
     const dto: FoerdersatzCreateUpdateDTO = {
       typ,
@@ -175,16 +176,10 @@ const FoerdersatzDialog = ({ open, initialData, onClose, onSave, loading = false
 
           <DatePicker label="Gültig bis" value={gueltigBis} onChange={setGueltigBis} />
 
-          <TextField
+          <PriceField
             label="Fördersatz"
-            type="number"
-            slotProps={{
-              input: {
-                endAdornment: <InputAdornment position="end">€</InputAdornment>,
-              },
-            }}
             value={foerdersatz}
-            onChange={(e) => setFoerdersatz(e.target.value)}
+            onChange={setFoerdersatz}
           />
 
           <TextField

@@ -31,6 +31,12 @@ public interface VeranstaltungMapper {
     @Mapping(source = "verein.id", target = "vereinId")
     @Mapping(source = "leiter.id", target = "leiterId")
 
+    @Mapping(source = "unterkunftsart.id", target = "unterkunftsartId")
+    @Mapping(source = "unterkunftsart.bezeichnung", target = "unterkunftsartBezeichnung")
+
+    @Mapping(source = "verpflegungsmodell.id", target = "verpflegungsmodellId")
+    @Mapping(source = "verpflegungsmodell.bezeichnung", target = "verpflegungsmodellBezeichnung")
+
     @Mapping(source = "beitragsstruktur.id", target = "beitragsstrukturId")
     @Mapping(source = "beitragsstruktur.name", target = "beitragsstrukturName")
 

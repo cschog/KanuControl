@@ -3,9 +3,9 @@ import { Box, Typography } from "@mui/material";
 import { VeranstaltungBaseForm } from "./form/VeranstaltungBaseForm";
 import { VeranstaltungActionBar } from "./VeranstaltungActionBar";
 import { useVeranstaltungForm } from "./hook/useVeranstaltungForm";
-import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
-import { VeranstaltungDetail } from "@/api/types/VeranstaltungDetail";
-import { VeranstaltungSave } from "@/api/types/VeranstaltungSave";
+import ConfirmDeleteDialog  from "@/components/common/ConfirmDeleteDialog";
+import { VeranstaltungDetail } from "@/api/types/veranstaltung/VeranstaltungDetail";
+import { VeranstaltungSave } from "@/api/types/veranstaltung/VeranstaltungSave";
 
 interface Props {
   veranstaltung: VeranstaltungDetail | null;

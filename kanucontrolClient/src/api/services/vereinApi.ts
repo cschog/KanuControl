@@ -1,7 +1,7 @@
 import apiClient from "@/api/client/apiClient";
-import Verein from "@/api/types/VereinFormModel";
-import { VereinSave } from "@/api/types/VereinSave";
-import { VereinRef } from "@/api/types/VereinRef";
+import Verein from "@/api/types/verein/VereinFormModel";
+import { VereinSave } from "@/api/types/verein/VereinSave";
+import { VereinRef } from "@/api/types/verein/VereinRef";
 
 const BASE = "/verein";
 
