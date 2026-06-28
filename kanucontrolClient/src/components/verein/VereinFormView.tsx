@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { Box, Typography } from "@mui/material";
-import Verein from "@/api/types/VereinFormModel";
+import Verein from "@/api/types/verein/VereinFormModel";
 import { VereinBaseForm } from "./form/VereinBaseForm";
 import { VereinActionBar } from "./VereinActionBar";
 import { useVereinForm } from "./hooks/useVereinForm";
-import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
+import  ConfirmDeleteDialog  from "@/components/common/ConfirmDeleteDialog";
 import { PersonAutocomplete } from "@/components/person/PersonAutocomplete";
-import { VereinSave } from "@/api/types/VereinSave";
+import { VereinSave } from "@/api/types/verein/VereinSave";
 
 
 interface VereinFormViewProps {
@@ -48,7 +48,7 @@ export const VereinFormView: React.FC<VereinFormViewProps> = ({
       </Typography>
     );
   }
-  
+
 
   return (
     <>
@@ -86,7 +86,7 @@ export const VereinFormView: React.FC<VereinFormViewProps> = ({
         onDelete={() => setConfirmOpen(true)}
         onBack={onBack}
         onCsvImport={onCsvImport}
-      
+
         disableEdit={disableEdit}
         disableDelete={disableDelete}
       />

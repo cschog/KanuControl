@@ -25,6 +25,7 @@ import { FoerdersatzDTO } from "@/api/types/Foerdersatz";
 import Money from "@/components/common/Money";
 
 import { ColumnDef } from "@tanstack/react-table";
+import CrudToolbar from "@/components/common/CrudToolbar";
 
 /* =========================================================
    COMPONENT
@@ -203,17 +204,11 @@ const FoerdersatzTable = () => {
           HEADER
           ===================================================== */}
 
-      <Stack
-        direction="row"
-        justifyContent="flex-end"
-        sx={{
-          mb: 2,
-        }}
-      >
-        <Button variant="contained" startIcon={<AddIcon />} onClick={handleCreate}>
-          Neuer Fördersatz
-        </Button>
-      </Stack>
+      <CrudToolbar
+        title="Fördersätze"
+        addLabel="Neuer Fördersatz"
+        onAdd={handleCreate}
+      />
 
       {/* =====================================================
           TABLE

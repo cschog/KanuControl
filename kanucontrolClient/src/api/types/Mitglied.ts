@@ -1,6 +1,6 @@
 // api/types/Mitglied.ts
 import { MitgliedFunktion } from "@/api/enums/MitgliedFunktion";
-import { VereinRef } from "./VereinRef";
+import { VereinRef } from "./verein/VereinRef";
 
 /** ============================
  *  LIST / TABLE

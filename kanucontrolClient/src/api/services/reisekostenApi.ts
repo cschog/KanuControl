@@ -2,7 +2,7 @@
 
 import apiClient from "@/api/client/apiClient";
 
-import { PersonRef } from "@/api/types/PersonRef";
+import { PersonRef } from "@/api/types/person/PersonRef";
 import {
   ReisekostenabrechnungListResponse,
   ReisekostenabrechnungDetailResponse,

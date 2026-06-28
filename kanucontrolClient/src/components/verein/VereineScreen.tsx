@@ -14,26 +14,16 @@ import {
 import axios from "axios";
 
 import { MenueHeader } from "@/components/layout/MenueHeader";
-
 import { VereinTable } from "@/components/verein/VereinTable";
-
 import { VereinFormView } from "@/components/verein/VereinFormView";
-
 import { VereinCreateDialog } from "@/components/verein/VereinCreateDialog";
-
 import { VereinCsvImportDialog } from "@/components/verein/import/VereinCsvImportDialog";
-
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
-
 import { renderLoadingOrError } from "@/components/common/loadingOnErrorUtils";
-
 import { navigateToStartMenu } from "@/components/layout/navigateToStartMenue";
-
 import { getAllVereine, deleteVerein, createVerein, updateVerein } from "@/api/services/vereinApi";
-
-import type Verein from "@/api/types/VereinFormModel";
-
-import type { VereinSave } from "@/api/types/VereinSave";
+import type Verein from "@/api/types/verein/VereinFormModel";
+import type { VereinSave } from "@/api/types/verein/VereinSave";
 
 /* ========================================================= */
 

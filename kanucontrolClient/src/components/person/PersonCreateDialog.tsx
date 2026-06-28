@@ -14,7 +14,7 @@ import {
 import { PersonBaseForm } from "@/components/person/form/PersonBaseForm";
 import { usePersonForm } from "@/components/person/hooks/usePersonForm";
 
-import { PersonSave } from "@/api/types/Person";
+import { PersonSave } from "@/api/types/person/Person";
 
 /* =========================================================
    PROPS
@@ -132,7 +132,7 @@ export const PersonCreateDialog: React.FC<PersonCreateDialogProps> = ({
             if (!payload) {
               return;
             }
-        
+
             await onCreate(payload, addToActiveVeranstaltung);
 
             onClose();

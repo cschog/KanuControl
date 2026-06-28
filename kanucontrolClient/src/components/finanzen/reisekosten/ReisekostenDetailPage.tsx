@@ -13,7 +13,7 @@ import { useReisekostenabrechnung } from "@/hooks/reisekosten/useReisekostenabre
 import { updateReisekostenabrechnung } from "@/api/services/reisekostenApi";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { useNavigate } from "react-router-dom";
-import { PersonRef } from "@/api/types/PersonRef";
+import { PersonRef } from "@/api/types/person/PersonRef";
 import { ReisekostenMitfahrerAutocomplete } from "@/components/finanzen/reisekosten/ReisekostenMitfahrerAutocomplete";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";

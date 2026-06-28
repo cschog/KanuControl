@@ -2,7 +2,7 @@ import { Box, Typography } from "@mui/material";
 
 import { GenericTableTanstack } from "@/components/common/GenericTableTanstack";
 
-import { VeranstaltungList } from "@/api/types/VeranstaltungList";
+import { VeranstaltungList } from "@/api/types/veranstaltung/VeranstaltungList";
 
 import { veranstaltungColumnsTanstack } from "./veranstaltungColumnsTanstack";
 

@@ -20,60 +20,60 @@ import apiClient from "@/api/client/apiClient";
 import { getActiveVeranstaltung } from "@/api/services/veranstaltungApi";
 
 
-import { VeranstaltungDetail } from "@/api/types/VeranstaltungDetail";
+import { VeranstaltungDetail } from "@/api/types/veranstaltung/VeranstaltungDetail";
 import { ReisekostenPdfDialog } from "@/components/finanzen/reisekosten/ReisekostenPdfDialog";
 
 const DokumenteScreen: React.FC = () => {
   const navigate = useNavigate();
   const [veranstaltung, setVeranstaltung] = useState<VeranstaltungDetail | null>(null);
 
- const [anmeldungValidation, setAnmeldungValidation] = useState<ValidationResult | null>(null);
+  const [anmeldungValidation, setAnmeldungValidation] = useState<ValidationResult | null>(null);
 
- const [teilnehmerValidation, setTeilnehmerValidation] = useState<ValidationResult | null>(null);
+  const [teilnehmerValidation, setTeilnehmerValidation] = useState<ValidationResult | null>(null);
 
- const [erhebungsbogenValidation, setErhebungsbogenValidation] = useState<ValidationResult | null>(
-   null,
- );
+  const [erhebungsbogenValidation, setErhebungsbogenValidation] = useState<ValidationResult | null>(
+    null,
+  );
 
- const [abrechnungValidation, setAbrechnungValidation] = useState<ValidationResult | null>(null);
+  const [abrechnungValidation, setAbrechnungValidation] = useState<ValidationResult | null>(null);
 
   const [reisekostenOpen, setReisekostenOpen] = useState(false);
- 
+
 
   /* =========================================================
      Aktive Veranstaltung laden
      ========================================================= */
 
-useEffect(() => {
-  (async () => {
-    try {
-      const v = await getActiveVeranstaltung();
+  useEffect(() => {
+    (async () => {
+      try {
+        const v = await getActiveVeranstaltung();
 
-      setVeranstaltung(v);
+        setVeranstaltung(v);
 
-      if (v?.id) {
-        const [anmeldung, teilnehmerliste, erhebungsbogen, abrechnung] = await Promise.all([
-          validateDokument(v.id, PdfDokumentTyp.ANMELDUNG),
-          validateDokument(v.id, PdfDokumentTyp.TEILNEHMERLISTE),
-          validateDokument(v.id, PdfDokumentTyp.ERHEBUNGSBOGEN),
-          validateDokument(v.id, PdfDokumentTyp.ABRECHNUNG),
-        ]);
+        if (v?.id) {
+          const [anmeldung, teilnehmerliste, erhebungsbogen, abrechnung] = await Promise.all([
+            validateDokument(v.id, PdfDokumentTyp.ANMELDUNG),
+            validateDokument(v.id, PdfDokumentTyp.TEILNEHMERLISTE),
+            validateDokument(v.id, PdfDokumentTyp.ERHEBUNGSBOGEN),
+            validateDokument(v.id, PdfDokumentTyp.ABRECHNUNG),
+          ]);
 
-        setAnmeldungValidation(anmeldung);
-        setTeilnehmerValidation(teilnehmerliste);
-        setErhebungsbogenValidation(erhebungsbogen);
-        setAbrechnungValidation(abrechnung);
+          setAnmeldungValidation(anmeldung);
+          setTeilnehmerValidation(teilnehmerliste);
+          setErhebungsbogenValidation(erhebungsbogen);
+          setAbrechnungValidation(abrechnung);
+        }
+      } catch (err) {
+        if (axios.isAxiosError(err)) {
+          console.error("Status:", err.response?.status);
+          console.error("Data:", err.response?.data);
+        } else {
+          console.error(err);
+        }
       }
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
-        console.error("Status:", err.response?.status);
-        console.error("Data:", err.response?.data);
-      } else {
-        console.error(err);
-      }
-    }
-  })();
-}, []);
+    })();
+  }, []);
 
   /* =========================================================
      Generic PDF Preview

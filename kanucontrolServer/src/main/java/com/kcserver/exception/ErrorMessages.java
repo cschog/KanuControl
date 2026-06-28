@@ -23,5 +23,17 @@ public final class ErrorMessages {
     public static final String TEILNEHMER_OHNE_PERSON =
             "Teilnehmer ohne Person gefunden.";
 
+    public static final String UNTERKUNFTSART_NOT_FOUND =
+            "Unterkunftsart nicht gefunden";
+
+    public static final String UNTERKUNFTSART_ALREADY_EXISTS =
+            "Eine Unterkunftsart mit dieser Bezeichnung existiert bereits.";
+
+    public static final String VERPFLEGUNGSMODELL_NOT_FOUND =
+            "Verpflegungsmodell nicht gefunden";
+
+    public static final String VERPFLEGUNGSMODELL_ALREADY_EXISTS =
+            "Ein Verpflegungsmodell mit dieser Bezeichnung existiert bereits.";
+
     private ErrorMessages() {}
 }

@@ -47,7 +47,9 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
     private final BeitragsstrukturService beitragsstrukturService;
     private final BeitragsstrukturMapper beitragsstrukturMapper;
     private final BeitragsstrukturRepository beitragsstrukturRepository;
-    private final TeilnehmerService teilnehmerService;
+
+    private final UnterkunftsartRepository unterkunftsartRepository;
+    private final VerpflegungsmodellRepository verpflegungsmodellRepository;
 
 
     /* =========================================================
@@ -76,10 +78,10 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
         v.setEndeDatum(dto.getEndeDatum());
         v.setBeginnZeit(dto.getBeginnZeit());
         v.setEndeZeit(dto.getEndeZeit());
-        v.setScope(dto.getScope());
         v.setVerein(verein);
         v.setLeiter(leiter);
         v.setAktiv(true);
+
 
         List<String> warnings = adjustFmJemType(v);
 
@@ -207,7 +209,7 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
 
         for (Long personId : personIds) {
 
-            if (personIds == null || personIds.isEmpty()) return;
+            if (personIds.isEmpty()) return;
 
             Person p = personRepository.findById(personId)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -446,8 +448,11 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
         v.setPlz(dto.getPlz());
         v.setOrt(dto.getOrt());
 
-        v.setArtDerUnterkunft(dto.getArtDerUnterkunft());
-        v.setArtDerVerpflegung(dto.getArtDerVerpflegung());
+        v.setUnterkunftsart(
+                getUnterkunftsart(dto.getUnterkunftsartId()));
+
+        v.setVerpflegungsmodell(
+                getVerpflegungsmodell(dto.getVerpflegungsmodellId()));
 
 /* =========================
    GEBÜHREN
@@ -579,5 +584,30 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
 
 
         return warnings;
+    }
+    private Unterkunftsart getUnterkunftsart(Long id) {
+
+        if (id == null) {
+            return null;
+        }
+
+        return unterkunftsartRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        UNTERKUNFTSART_NOT_FOUND
+                ));
+    }
+
+    private Verpflegungsmodell getVerpflegungsmodell(Long id) {
+
+        if (id == null) {
+            return null;
+        }
+
+        return verpflegungsmodellRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        VERPFLEGUNGSMODELL_NOT_FOUND
+                ));
     }
 }

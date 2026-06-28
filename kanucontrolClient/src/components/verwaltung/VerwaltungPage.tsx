@@ -8,9 +8,16 @@ import { useNavigate } from "react-router-dom";
    ========================================================= */
 
 const BeitragsStrukturen = lazy(
-  () => import("@/components/verwaltung/beitraege/BeitragsstrukturTable"),
+  () => import("@/components/verwaltung/beitraege/BeitragsstrukturPage"),
 );
 
+const Unterkunftsarten = lazy(
+  () => import("@/components/verwaltung/unterkunft/UnterkunftsartPage"),
+);
+
+const Verpflegungsmodelle = lazy(
+  () => import("@/components/verwaltung/verpflegung/VerpflegungsmodellPage"),
+);
 /* =========================================================
    COMPONENT
    ========================================================= */
@@ -77,6 +84,8 @@ const VerwaltungPage = () => {
         }}
       >
         <Tab label="Beitragsstrukturen" />
+        <Tab label="Unterkunftsarten" />
+        <Tab label="Verpflegungsmodelle" />
       </Tabs>
 
       {/* =====================================================
@@ -90,6 +99,8 @@ const VerwaltungPage = () => {
           }}
         >
           {tab === 0 && <BeitragsStrukturen />}
+          {tab === 1 && <Unterkunftsarten />}
+          {tab === 2 && <Verpflegungsmodelle />}
         </Box>
       </Suspense>
 

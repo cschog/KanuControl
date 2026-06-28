@@ -3,7 +3,7 @@ import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Box } from "
 
 import { VereinBaseForm } from "@/components/verein/form/VereinBaseForm";
 import { useVereinForm } from "@/components/verein/hooks/useVereinForm";
-import { VereinSave } from "@/api/types/VereinSave";
+import { VereinSave } from "@/api/types/verein/VereinSave";
 
 interface VereinCreateDialogProps {
   open: boolean;

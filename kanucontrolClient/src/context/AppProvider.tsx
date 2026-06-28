@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import apiClient from "@/api/client/apiClient";
 import { getActiveVeranstaltung } from "@/api/services/veranstaltungApi";
-import { VeranstaltungDetail } from "@/api/types/VeranstaltungDetail";
+import { VeranstaltungDetail } from "@/api/types/veranstaltung/VeranstaltungDetail";
 import { AppContext } from "./AppContext";
 import keycloak from "@/auth/keycloak";
 
@@ -25,28 +25,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-useEffect(() => {
-  const waitForAuth = async () => {
-    // warten bis Keycloak Token hat
-    let tries = 0;
-    while (!keycloak.authenticated && tries < 20) {
-      await new Promise((r) => setTimeout(r, 100));
-      tries++;
-    }
+  useEffect(() => {
+    const waitForAuth = async () => {
+      // warten bis Keycloak Token hat
+      let tries = 0;
+      while (!keycloak.authenticated && tries < 20) {
+        await new Promise((r) => setTimeout(r, 100));
+        tries++;
+      }
 
-    await loadContext();
-  };
+      await loadContext();
+    };
 
-  waitForAuth();
-}, []);
+    waitForAuth();
+  }, []);
 
-useEffect(() => {
-  const interval = setInterval(() => {
-    loadContext();
-  }, 60000);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadContext();
+    }, 60000);
 
-  return () => clearInterval(interval);
-}, []);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <AppContext.Provider

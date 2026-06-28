@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { Box, Button, IconButton, Stack, Typography } from "@mui/material";
-import { ConfirmDeleteDialog } from "@/components/common/ConfirmDeleteDialog";
+import ConfirmDeleteDialog  from "@/components/common/ConfirmDeleteDialog";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import { ColumnDef } from "@tanstack/react-table";

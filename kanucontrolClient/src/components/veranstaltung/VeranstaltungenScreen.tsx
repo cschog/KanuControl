@@ -37,10 +37,10 @@ import {
   setActiveVeranstaltung,
 } from "@/api/services/veranstaltungApi";
 
-import { VeranstaltungList } from "@/api/types/VeranstaltungList";
-import { VeranstaltungDetail } from "@/api/types/VeranstaltungDetail";
-import { VeranstaltungSave } from "@/api/types/VeranstaltungSave";
-import { VeranstaltungFormModel } from "@/api/types/VeranstaltungFormModel";
+import { VeranstaltungList } from "@/api/types/veranstaltung/VeranstaltungList";
+import { VeranstaltungDetail } from "@/api/types/veranstaltung/VeranstaltungDetail";
+import { VeranstaltungSave } from "@/api/types/veranstaltung/VeranstaltungSave";
+import { VeranstaltungFormModel } from "@/api/types/veranstaltung/VeranstaltungFormModel";
 
 import { useReloadAppContext } from "@/context/AppContextBridge";
 
@@ -213,11 +213,11 @@ export default function VeranstaltungenScreen() {
 
       setSelectedVeranstaltung(response.data);
 
-     if (response.warnings.length > 0) {
-       setDialogTitle("Hinweise");
-       setWarnings(response.warnings);
-       setWarningDialogOpen(true);
-     }
+      if (response.warnings.length > 0) {
+        setDialogTitle("Hinweise");
+        setWarnings(response.warnings);
+        setWarningDialogOpen(true);
+      }
 
       setEditMode(false);
       setBtnEditDisabled(false);
@@ -270,7 +270,7 @@ export default function VeranstaltungenScreen() {
         setDialogTitle("Veranstaltung kann nicht gelöscht werden");
         setWarnings([
           error.response.data?.message ??
-            "Die Veranstaltung kann nicht gelöscht werden, solange Teilnehmer eingetragen sind. Ausnahme: Es ist nur noch der Leiter vorhanden.",
+          "Die Veranstaltung kann nicht gelöscht werden, solange Teilnehmer eingetragen sind. Ausnahme: Es ist nur noch der Leiter vorhanden.",
         ]);
         setWarningDialogOpen(true);
       } else {

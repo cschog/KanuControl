@@ -23,8 +23,11 @@ public class VeranstaltungDetailDTO {
     private String name;
     private VeranstaltungTyp typ;
 
-    private String artDerUnterkunft;
-    private String artDerVerpflegung;
+    private Long unterkunftsartId;
+    private String unterkunftsartBezeichnung;
+
+    private Long verpflegungsmodellId;
+    private String verpflegungsmodellBezeichnung;
 
     private String plz;
     private String ort;

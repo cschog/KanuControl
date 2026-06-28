@@ -1,4 +1,4 @@
-import Verein from "@/api/types/VereinFormModel";
+import Verein from "@/api/types/verein/VereinFormModel";
 import { Box, Typography } from "@mui/material";
 import { GenericTableTanstack } from "@/components/common/GenericTableTanstack";
 

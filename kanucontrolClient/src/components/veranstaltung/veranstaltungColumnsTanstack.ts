@@ -1,5 +1,5 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { VeranstaltungList } from "@/api/types/VeranstaltungList";
+import { VeranstaltungList } from "@/api/types/veranstaltung/VeranstaltungList";
 
 export const veranstaltungColumnsTanstack: ColumnDef<VeranstaltungList>[] = [
   {

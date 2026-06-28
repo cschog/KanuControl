@@ -1,6 +1,6 @@
 import { VeranstaltungTyp } from "@/api/enums/VeranstaltungTyp";
-import { VereinRef } from "@/api/types/VereinRef";
-import { PersonRef } from "@/api/types/PersonRef";
+import { VereinRef } from "@/api/types/verein/VereinRef";
+import { PersonRef } from "@/api/types/person/PersonRef";
 import { CountryCode } from "@/api/enums/CountryCode";
 
 import { VeranstaltungScope } from "@/api/enums/VeranstaltungScope";

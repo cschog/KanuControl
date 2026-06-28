@@ -9,7 +9,7 @@ import {
   Stack,
 } from "@mui/material";
 import { BtnEditDeleteBack } from "@/components/common/BtnEditDeleteBack";
-import { PersonDetail } from "@/api/types/Person";
+import { PersonDetail } from "@/api/types/person/Person";
 
 interface ButtonNeuePersonProps {
   onNeuePerson: () => void;

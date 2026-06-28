@@ -36,8 +36,23 @@ public class PlanungPosition implements FinanzPosition {
     @Column(nullable = false, length = 40)
     private FinanzKategorie kategorie;
 
+    @Column(precision = 12, scale = 2)
+    private BigDecimal menge;
+
+    @Column(length = 50)
+    private String einheit;
+
+    @Column(name = "einzelpreis", precision = 12, scale = 2)
+    private BigDecimal einzelpreis;
+
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal betrag = BigDecimal.ZERO;
+
+    @Column(name = "automatisch_berechnet", nullable = false)
+    private boolean automatischBerechnet;
+
+    @Column(nullable = false)
+    private boolean editierbar = true;
 
     @Column(length = 500)
     private String kommentar;

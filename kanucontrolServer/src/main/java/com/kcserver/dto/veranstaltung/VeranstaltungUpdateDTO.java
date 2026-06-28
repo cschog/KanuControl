@@ -38,8 +38,8 @@ public class VeranstaltungUpdateDTO {
     private String plz;
     private String ort;
 
-    private String artDerUnterkunft;
-    private String artDerVerpflegung;
+    private Long unterkunftsartId;
+    private Long verpflegungsmodellId;
 
     private Integer geplanteTeilnehmerMaennlich;
     private Integer geplanteTeilnehmerWeiblich;

@@ -13,7 +13,7 @@ import {
   TextField,
 } from "@mui/material";
 
-import { PersonRef } from "@/api/types/PersonRef";
+import { PersonRef } from "@/api/types/person/PersonRef";
 
 import { ReisekostenMitfahrerAutocomplete } from "./ReisekostenMitfahrerAutocomplete";
 

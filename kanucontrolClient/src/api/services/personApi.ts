@@ -1,7 +1,7 @@
-import { PersonFilterState } from "@/api/types/PersonFilterState";
+import { PersonFilterState } from "@/api/types/person/PersonFilterState";
 import apiClient from "@/api/client/apiClient";
-import { PersonSave, PersonDetail, PersonList } from "@/api/types/Person";
-import { PersonRef } from "@/api/types/PersonRef";
+import { PersonSave, PersonDetail, PersonList } from "@/api/types/person/Person";
+import { PersonRef } from "@/api/types/person/PersonRef";
 
 /* =========================================================
    TYPES
@@ -12,9 +12,9 @@ export interface PageResponse<T> {
   totalElements: number;
 }
 
-   /* =========================================================
-   SCROLL (Cursor-based Pagination)
-   ========================================================= */
+/* =========================================================
+SCROLL (Cursor-based Pagination)
+========================================================= */
 
 export interface ScrollResponse<T> {
   content: T[];

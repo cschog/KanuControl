@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import { VeranstaltungDetail } from "@/api/types/VeranstaltungDetail";
+import { VeranstaltungDetail } from "@/api/types/veranstaltung/VeranstaltungDetail";
 
 export interface AppContextType {
   schema: string;
