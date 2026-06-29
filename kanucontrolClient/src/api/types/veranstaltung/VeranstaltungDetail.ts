@@ -4,6 +4,8 @@ import { VeranstaltungScope } from "@/api/enums/VeranstaltungScope";
 import { VereinRef } from "@/api/types/verein/VereinRef";
 import { PersonRef } from "@/api/types/person/PersonRef";
 import { CountryCode } from "@/api/enums/CountryCode";
+import { VerpflegungsmodellRef } from "@/api/types/veranstaltung/VerpflegungsmodellRef";
+import { UnterkunftsartRef } from "@/api/types/unterkunft/UnterkunftsartRef";
 
 export interface VeranstaltungDetail {
   id: number;
@@ -11,8 +13,8 @@ export interface VeranstaltungDetail {
   name: string;
   typ: VeranstaltungTyp;
 
-  artDerUnterkunft?: string;
-  artDerVerpflegung?: string;
+ unterkunftsart?: UnterkunftsartRef;
+verpflegungsmodell?: VerpflegungsmodellRef;
 
   plz?: string;
   ort?: string;

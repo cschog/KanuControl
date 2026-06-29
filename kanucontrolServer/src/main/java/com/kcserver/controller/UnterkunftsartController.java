@@ -3,6 +3,7 @@ package com.kcserver.controller;
 import com.kcserver.api.response.ApiResponse;
 import com.kcserver.dto.unterkunft.UnterkunftsartCreateUpdateDTO;
 import com.kcserver.dto.unterkunft.UnterkunftsartDTO;
+import com.kcserver.dto.unterkunft.UnterkunftsartRefDTO;
 import com.kcserver.service.UnterkunftsartService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,11 @@ public class UnterkunftsartController {
             @PathVariable Long id) {
 
         return ApiResponse.of(service.getById(id));
+    }
+
+    @GetMapping("/refs")
+    public ApiResponse<List<UnterkunftsartRefDTO>> getRefs() {
+        return ApiResponse.of(service.getRefs());
     }
 
     @PostMapping

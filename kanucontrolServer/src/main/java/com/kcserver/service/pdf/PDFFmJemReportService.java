@@ -113,12 +113,8 @@ public class PDFFmJemReportService {
             /* ================= Veranstaltung ================= */
 
             set(form, "veranstaltung_name", v.getName());
-            set(form, "art_der_unterkunft", v.getUnterkunftsart() != null
-                    ? v.getUnterkunftsart().getBezeichnung()
-                    : "");
-            set(form, "art_der_verpflegung", v.getVerpflegungsmodell() != null
-                    ? v.getVerpflegungsmodell().getBezeichnung()
-                    : "");
+            set(form, "art_der_unterkunft", unterkunft(v));
+            set(form, "art_der_verpflegung", verpflegung(v));
 
             String ortLand = (v.getOrt() != null ? v.getOrt() : "")
                     + (v.getCountryCode() != null ? " (" + v.getCountryCode().name() + ")" : "");
@@ -336,6 +332,18 @@ public class PDFFmJemReportService {
         }
 
         return result;
+    }
+
+    private String unterkunft(Veranstaltung v) {
+        return v.getUnterkunftsart() == null
+                ? ""
+                : v.getUnterkunftsart().getBezeichnung();
+    }
+
+    private String verpflegung(Veranstaltung v) {
+        return v.getVerpflegungsmodell() == null
+                ? ""
+                : v.getVerpflegungsmodell().getBezeichnung();
     }
 
 }

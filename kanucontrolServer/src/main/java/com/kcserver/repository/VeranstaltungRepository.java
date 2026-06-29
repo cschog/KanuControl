@@ -1,12 +1,9 @@
 package com.kcserver.repository;
 
-import com.kcserver.entity.Teilnehmer;
 import com.kcserver.entity.Veranstaltung;
 import org.springframework.data.jpa.repository.*;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -19,10 +16,14 @@ public interface VeranstaltungRepository extends
     Optional<Veranstaltung> findTopByOrderByBeginnDatumDesc();
 
     @Query("""
-    select v from Veranstaltung v
-    left join fetch v.verein
-    left join fetch v.leiter
-    where v.id = :id
+select v
+from Veranstaltung v
+left join fetch v.verein
+left join fetch v.leiter
+left join fetch v.unterkunftsart
+left join fetch v.verpflegungsmodell
+left join fetch v.beitragsstruktur
+where v.id = :id
 """)
     Optional<Veranstaltung> findByIdWithRelations(Long id);
 

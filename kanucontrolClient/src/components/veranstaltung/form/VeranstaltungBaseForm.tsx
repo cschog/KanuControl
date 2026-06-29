@@ -1,8 +1,18 @@
 import React from "react";
 import { MenuItem, TextField, FormControlLabel, Switch } from "@mui/material";
 
+import { RefAutocomplete } from "@/components/common/RefAutocomplete";
+
+import { useLoad } from "@/hooks/useLoad";
+
+import { getUnterkunftsartRefs } from "@/api/services/unterkunftsartApi";
+import { getVerpflegungsmodellRefs } from "@/api/services/verpflegungsmodellApi";
+
 import { VeranstaltungFormModel } from "@/api/types/veranstaltung/VeranstaltungFormModel";
 import { VeranstaltungTyp } from "@/api/enums/VeranstaltungTyp";
+
+import { UnterkunftsartRef } from "@/api/types/unterkunft/UnterkunftsartRef";
+import { VerpflegungsmodellRef } from "@/api/types/verpflegung/VerpflegungsmodellRef";
 
 import { VereinAutocomplete } from "@/components/verein/VereinAutocomplete";
 import { PersonAutocomplete } from "@/components/person/PersonAutocomplete";
@@ -26,11 +36,8 @@ interface BeitragsstrukturDTO {
 
 interface Props {
   form: VeranstaltungFormModel;
-
   editMode: boolean;
-
   detailMode?: boolean;
-
   beitragsstrukturen: BeitragsstrukturDTO[];
 
   onChange: <K extends keyof VeranstaltungFormModel>(
@@ -50,6 +57,22 @@ export const VeranstaltungBaseForm: React.FC<Props> = ({
   beitragsstrukturen,
   onChange,
 }) => {
+
+
+const unterkunftsarten = useLoad<UnterkunftsartRef[]>(
+  getUnterkunftsartRefs,
+  {
+    initialData: [],
+  },
+);
+
+ const verpflegungsmodelle = useLoad<VerpflegungsmodellRef[]>(
+  getVerpflegungsmodellRefs,
+  {
+    initialData: [],
+  },
+);
+
   return (
     <>
       {/* ================= NAME ================= */}
@@ -166,20 +189,26 @@ export const VeranstaltungBaseForm: React.FC<Props> = ({
         <>
           {/* ================= UNTERKUNFT ================= */}
 
-          <FormFeld
-            label="Art der Unterkunft"
-            value={form.artDerUnterkunft ?? ""}
+          <RefAutocomplete
+            label="Unterkunftsart"
+            options={unterkunftsarten.data ?? []}
+            loading={unterkunftsarten.loading}
+            value={form.unterkunftsart}
             disabled={!editMode}
-            onChange={(v) => onChange("artDerUnterkunft", v || undefined)}
+            onChange={(value) =>
+              onChange("unterkunftsart", value ?? undefined)
+            }
           />
 
           {/* ================= VERPFLEGUNG ================= */}
 
-          <FormFeld
-            label="Art der Verpflegung"
-            value={form.artDerVerpflegung ?? ""}
+          <RefAutocomplete
+            label="Verpflegungsmodell"
+            options={verpflegungsmodelle.data ?? []}
+            loading={verpflegungsmodelle.loading}
+            value={form.verpflegungsmodell}
             disabled={!editMode}
-            onChange={(v) => onChange("artDerVerpflegung", v || undefined)}
+            onChange={(value) => onChange("verpflegungsmodell", value ?? undefined)}
           />
 
           {/* ================= LAND ================= */}

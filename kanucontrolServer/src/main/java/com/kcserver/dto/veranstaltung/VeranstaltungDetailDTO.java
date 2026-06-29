@@ -1,7 +1,9 @@
 package com.kcserver.dto.veranstaltung;
 
 import com.kcserver.dto.person.PersonDetailDTO;
+import com.kcserver.dto.unterkunft.UnterkunftsartRefDTO;
 import com.kcserver.dto.verein.VereinDTO;
+import com.kcserver.dto.verpflegung.VerpflegungsmodellRefDTO;
 import com.kcserver.enumtype.CountryCode;
 import com.kcserver.enumtype.VeranstaltungScope;
 import com.kcserver.enumtype.VeranstaltungTyp;
@@ -23,11 +25,8 @@ public class VeranstaltungDetailDTO {
     private String name;
     private VeranstaltungTyp typ;
 
-    private Long unterkunftsartId;
-    private String unterkunftsartBezeichnung;
-
-    private Long verpflegungsmodellId;
-    private String verpflegungsmodellBezeichnung;
+    private UnterkunftsartRefDTO unterkunftsart;
+    private VerpflegungsmodellRefDTO verpflegungsmodell;
 
     private String plz;
     private String ort;
@@ -54,7 +53,6 @@ public class VeranstaltungDetailDTO {
     private Long vereinId;
     private Long leiterId;
 
-    // optional für Anzeige
     private VereinDTO verein;
     private PersonDetailDTO leiter;
 

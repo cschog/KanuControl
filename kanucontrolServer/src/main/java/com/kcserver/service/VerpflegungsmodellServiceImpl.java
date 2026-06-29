@@ -2,6 +2,7 @@ package com.kcserver.service;
 
 import com.kcserver.dto.verpflegung.VerpflegungsmodellCreateUpdateDTO;
 import com.kcserver.dto.verpflegung.VerpflegungsmodellDTO;
+import com.kcserver.dto.verpflegung.VerpflegungsmodellRefDTO;
 import com.kcserver.entity.Verpflegungsmodell;
 import com.kcserver.mapper.VerpflegungsmodellMapper;
 import com.kcserver.repository.VerpflegungsmodellRepository;
@@ -73,6 +74,14 @@ public class VerpflegungsmodellServiceImpl implements VerpflegungsmodellService 
         mapper.update(dto, entity);
 
         return mapper.toDTO(repository.save(entity));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<VerpflegungsmodellRefDTO> getRefs() {
+
+        return mapper.toRef(
+                repository.findByAktivTrueOrderByBezeichnungAsc());
     }
 
     @Override

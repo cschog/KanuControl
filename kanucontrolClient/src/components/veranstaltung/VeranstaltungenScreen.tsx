@@ -213,15 +213,11 @@ export default function VeranstaltungenScreen() {
 
       setSelectedVeranstaltung(response.data);
 
-      if (response.warnings.length > 0) {
+      if ((response.warnings ?? []).length > 0) {
         setDialogTitle("Hinweise");
         setWarnings(response.warnings);
         setWarningDialogOpen(true);
       }
-
-      setEditMode(false);
-      setBtnEditDisabled(false);
-      setBtnDeleteDisabled(false);
 
       setError(null);
       setEditMode(false);
@@ -375,8 +371,8 @@ export default function VeranstaltungenScreen() {
       endeDatum: selectedVeranstaltung.endeDatum,
       beginnZeit: selectedVeranstaltung.beginnZeit,
       endeZeit: selectedVeranstaltung.endeZeit,
-      artDerUnterkunft: selectedVeranstaltung.artDerUnterkunft,
-      artDerVerpflegung: selectedVeranstaltung.artDerVerpflegung,
+      unterkunftsart: selectedVeranstaltung.unterkunftsart,
+      verpflegungsmodell: selectedVeranstaltung.verpflegungsmodell,
       countryCode: selectedVeranstaltung.countryCode,
       plz: selectedVeranstaltung.plz,
       ort: selectedVeranstaltung.ort,

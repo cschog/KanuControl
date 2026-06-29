@@ -28,5 +28,6 @@ public class Unterkunftsart {
     @Column(length = 500)
     private String bemerkung;
 
+    @Builder.Default
     private boolean aktiv = true;
 }
