@@ -2,6 +2,7 @@ package com.kcserver.service;
 
 import com.kcserver.dto.unterkunft.UnterkunftsartCreateUpdateDTO;
 import com.kcserver.dto.unterkunft.UnterkunftsartDTO;
+import com.kcserver.dto.unterkunft.UnterkunftsartRefDTO;
 import com.kcserver.entity.Unterkunftsart;
 import com.kcserver.mapper.UnterkunftsartMapper;
 import com.kcserver.repository.UnterkunftsartRepository;
@@ -74,6 +75,14 @@ public class UnterkunftsartServiceImpl implements UnterkunftsartService {
         mapper.update(dto, entity);
 
         return mapper.toDTO(repository.save(entity));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UnterkunftsartRefDTO> getRefs() {
+
+        return mapper.toRef(
+                repository.findByAktivTrueOrderByBezeichnungAsc());
     }
 
     @Override

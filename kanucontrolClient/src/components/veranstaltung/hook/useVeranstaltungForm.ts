@@ -30,8 +30,8 @@ function emptyVeranstaltung(): VeranstaltungFormModel {
     countryCode: undefined,
     plz: "",
     ort: "",
-    artDerUnterkunft: "",
-    artDerVerpflegung: "",
+    unterkunftsart: undefined,
+    verpflegungsmodell: undefined,
 
     individuelleGebuehren: false,
     beitragsstrukturId: undefined,
@@ -74,8 +74,8 @@ export function useVeranstaltungForm(initial: VeranstaltungFormModel | null) {
 
       plz: initial.plz ?? "",
       ort: initial.ort ?? "",
-      artDerUnterkunft: initial.artDerUnterkunft ?? "",
-      artDerVerpflegung: initial.artDerVerpflegung ?? "",
+      unterkunftsart: initial.unterkunftsart,
+      verpflegungsmodell: initial.verpflegungsmodell,
 
       individuelleGebuehren: initial.individuelleGebuehren ?? false,
       beitragsstrukturId: initial.beitragsstrukturId ?? undefined,
@@ -152,8 +152,8 @@ export function useVeranstaltungForm(initial: VeranstaltungFormModel | null) {
       countryCode: form.countryCode,
       plz: form.plz || undefined,
       ort: form.ort || undefined,
-      artDerUnterkunft: form.artDerUnterkunft || undefined,
-      artDerVerpflegung: form.artDerVerpflegung || undefined,
+      unterkunftsartId: form.unterkunftsart?.id,
+      verpflegungsmodellId: form.verpflegungsmodell?.id,
 
       individuelleGebuehren: form.individuelleGebuehren ?? false,
 

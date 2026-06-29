@@ -3,6 +3,7 @@ package com.kcserver.controller;
 import com.kcserver.api.response.ApiResponse;
 import com.kcserver.dto.verpflegung.VerpflegungsmodellCreateUpdateDTO;
 import com.kcserver.dto.verpflegung.VerpflegungsmodellDTO;
+import com.kcserver.dto.verpflegung.VerpflegungsmodellRefDTO;
 import com.kcserver.service.VerpflegungsmodellService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,11 @@ public class VerpflegungsmodellController {
             @PathVariable Long id) {
 
         return ApiResponse.of(service.getById(id));
+    }
+
+    @GetMapping("/refs")
+    public ApiResponse<List<VerpflegungsmodellRefDTO>> getRefs() {
+        return ApiResponse.of(service.getRefs());
     }
 
     @PostMapping

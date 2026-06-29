@@ -32,5 +32,6 @@ public class Verpflegungsmodell {
     @Column(length = 500)
     private String bemerkung;
 
+    @Builder.Default
     private boolean aktiv = true;
 }

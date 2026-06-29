@@ -66,4 +66,82 @@ public class BeitragsregelService {
 
         return Optional.empty();
     }
+
+    public Optional<Beitragsregel> findPlanungsRegelTeilnehmer(
+            Beitragsstruktur struktur,
+            int foerderHoechstalter
+    ) {
+
+        if (struktur == null || struktur.getRegeln() == null) {
+            return Optional.empty();
+        }
+
+        return struktur.getRegeln()
+                .stream()
+                // nur Standardregeln (Teilnehmer)
+                .filter(r -> r.getRolle() == null)
+                .sorted(
+                        Comparator.comparing(
+                                Beitragsregel::getSortierung,
+                                Comparator.nullsLast(Integer::compareTo)
+                        )
+                )
+                // erste Altersstufe, die das Förderhöchstalter einschließt
+                .filter(r ->
+                        r.getAlterBis() == null ||
+                                r.getAlterBis() >= foerderHoechstalter
+                )
+                .findFirst();
+    }
+
+    private Optional<Beitragsregel> findRegelFuerRolleOderStandard(
+            Beitragsstruktur struktur,
+            TeilnehmerRolle rolle
+    ) {
+
+        if (struktur == null || struktur.getRegeln() == null) {
+            return Optional.empty();
+        }
+
+        // 1. Rollenregel suchen
+        Optional<Beitragsregel> rollenRegel =
+                struktur.getRegeln()
+                        .stream()
+                        .filter(r -> r.getRolle() == rolle)
+                        .sorted(Comparator.comparing(
+                                Beitragsregel::getSortierung,
+                                Comparator.nullsLast(Integer::compareTo)
+                        ))
+                        .findFirst();
+
+        if (rollenRegel.isPresent()) {
+            return rollenRegel;
+        }
+
+        // 2. Höchste Standardregel
+        return struktur.getRegeln()
+                .stream()
+                .filter(r -> r.getRolle() == null)
+                .max(Comparator.comparing(
+                        Beitragsregel::getBeitrag
+                ));
+    }
+
+    public Optional<Beitragsregel> findPlanungsRegelMitarbeiter(
+            Beitragsstruktur struktur
+    ) {
+        return findRegelFuerRolleOderStandard(
+                struktur,
+                TeilnehmerRolle.MITARBEITER
+        );
+    }
+
+    public Optional<Beitragsregel> findPlanungsRegelLeiter(
+            Beitragsstruktur struktur
+    ) {
+        return findRegelFuerRolleOderStandard(
+                struktur,
+                TeilnehmerRolle.LEITER
+        );
+    }
 }

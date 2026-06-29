@@ -10,12 +10,24 @@ import {
   VerpflegungsmodellCreateUpdateDTO,
 } from "@/api/types/verpflegung/VerpflegungsmodellCreateUpdateDTO";
 
+import {
+  VerpflegungsmodellRef,
+} from "@/api/types/veranstaltung/VerpflegungsmodellRef";
+
 /* =========================================================
    GET ALL
    ========================================================= */
 
 export const getVerpflegungsmodelle = async (): Promise<VerpflegungsmodellDTO[]> => {
   const response = await apiClient.get<VerpflegungsmodellDTO[]>("/verpflegungsmodelle");
+
+  return response.data;
+};
+
+export const getVerpflegungsmodellRefs = async (): Promise<VerpflegungsmodellRef[]> => {
+  const response = await apiClient.get<VerpflegungsmodellRef[]>(
+    "/verpflegungsmodelle/refs",
+  );
 
   return response.data;
 };

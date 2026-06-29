@@ -274,4 +274,44 @@ public class FoerderService {
                 .add(zuschlag)
                 .min(FoerderConfig.FOERDERDECKEL);
     }
+
+    public BigDecimal berechneGeplanteFoerderung(
+            Veranstaltung veranstaltung
+    ) {
+
+        if (veranstaltung == null) {
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal tagessatz =
+                berechneAngewandtenFoerdersatz(
+                        veranstaltung
+                );
+
+        if (tagessatz == null) {
+            return BigDecimal.ZERO;
+        }
+
+        int tage =
+                berechneFoerdertage(
+                        veranstaltung
+                );
+
+        if (tage <= 0) {
+            return BigDecimal.ZERO;
+        }
+
+        int teilnehmer =
+                n(veranstaltung.getGeplanteTeilnehmerMaennlich())
+                        + n(veranstaltung.getGeplanteTeilnehmerWeiblich())
+                        + n(veranstaltung.getGeplanteTeilnehmerDivers());
+
+        return tagessatz
+                .multiply(BigDecimal.valueOf(teilnehmer))
+                .multiply(BigDecimal.valueOf(tage));
+    }
+
+    private int n(Integer value) {
+        return value == null ? 0 : value;
+    }
 }

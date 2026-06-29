@@ -1,7 +1,7 @@
 package com.kcserver.service;
-
 import com.kcserver.dto.verpflegung.VerpflegungsmodellCreateUpdateDTO;
 import com.kcserver.dto.verpflegung.VerpflegungsmodellDTO;
+import com.kcserver.dto.verpflegung.VerpflegungsmodellRefDTO;
 
 import java.util.List;
 
@@ -19,6 +19,8 @@ public interface VerpflegungsmodellService {
     VerpflegungsmodellDTO update(
             Long id,
             VerpflegungsmodellCreateUpdateDTO dto);
+
+    List<VerpflegungsmodellRefDTO> getRefs();
 
     void delete(Long id);
 }

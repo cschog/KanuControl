@@ -10,12 +10,24 @@ import {
   UnterkunftsartCreateUpdateDTO,
 } from "@/api/types/unterkunft/UnterkunftsartCreateUpdateDTO";
 
+import {
+  UnterkunftsartRef,
+} from "@/api/types/unterkunft/UnterkunftsartRef";
+
 /* =========================================================
    GET ALL
    ========================================================= */
 
 export const getUnterkunftsarten = async (): Promise<UnterkunftsartDTO[]> => {
   const response = await apiClient.get<UnterkunftsartDTO[]>("/unterkunftsarten");
+
+  return response.data;
+};
+
+export const getUnterkunftsartRefs = async (): Promise<UnterkunftsartRef[]> => {
+  const response = await apiClient.get<UnterkunftsartRef[]>(
+    "/unterkunftsarten/refs",
+  );
 
   return response.data;
 };
