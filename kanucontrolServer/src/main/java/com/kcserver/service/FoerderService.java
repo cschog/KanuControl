@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
@@ -21,6 +20,7 @@ public class FoerderService {
     private final FoerdersatzService foerdersatzService;
     private final KikZuschlagService kikZuschlagService;
     private final AltersService altersService;
+    private final VeranstaltungBerechnungsService veranstaltungBerechnungsService;
 
     private static final int MAX_FOERDERTAGE_FM_JEM = 21;
     private boolean isFmJem(Veranstaltung veranstaltung) {
@@ -102,10 +102,7 @@ public class FoerderService {
                 || veranstaltung.getEndeDatum() == null) {
             return 0;
         }
-        int tage = (int) ChronoUnit.DAYS.between(
-                veranstaltung.getBeginnDatum(),
-                veranstaltung.getEndeDatum()
-        ) + 1;
+        int tage = (int) veranstaltungBerechnungsService.ermittleTage(veranstaltung);
 
         if (isFmJem(veranstaltung)) {
             return Math.min(tage, MAX_FOERDERTAGE_FM_JEM);

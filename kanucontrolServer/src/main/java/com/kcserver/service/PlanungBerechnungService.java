@@ -20,6 +20,8 @@ public class PlanungBerechnungService {
     private final BeitragsregelService beitragsregelService;
     private final FoerderService foerderService;
 
+    private final VeranstaltungBerechnungsService veranstaltungBerechnungsService;
+
     public BigDecimal berechneTeilnehmerbeitraege(
             Veranstaltung veranstaltung
     ) {
@@ -50,8 +52,8 @@ public class PlanungBerechnungService {
         }
 
         int personen =
-                getGeplanteTeilnehmer(veranstaltung)
-                        + getGeplanteMitarbeiter(veranstaltung);
+                veranstaltungBerechnungsService
+                        .ermittleGeplanteGesamtPersonen(veranstaltung);
 
         return gebuehr.multiply(BigDecimal.valueOf(personen));
     }
@@ -86,10 +88,12 @@ public class PlanungBerechnungService {
                         .orElse(BigDecimal.ZERO);
 
         return teilnehmerBeitrag.multiply(
-                        BigDecimal.valueOf(getGeplanteTeilnehmer(veranstaltung)))
+                        BigDecimal.valueOf(veranstaltungBerechnungsService
+                                .ermittleGeplanteTeilnehmer(veranstaltung)))
                 .add(
                         mitarbeiterBeitrag.multiply(
-                                BigDecimal.valueOf(getGeplanteMitarbeiter(veranstaltung))
+                                BigDecimal.valueOf(veranstaltungBerechnungsService
+                                        .ermittleGeplanteMitarbeiter(veranstaltung))
                         )
                 );
     }
@@ -97,28 +101,6 @@ public class PlanungBerechnungService {
     /* =========================================================
        HILFSMETHODEN
        ========================================================= */
-
-    private int getGeplanteTeilnehmer(
-            Veranstaltung veranstaltung
-    ) {
-
-        return n(veranstaltung.getGeplanteTeilnehmerMaennlich())
-                + n(veranstaltung.getGeplanteTeilnehmerWeiblich())
-                + n(veranstaltung.getGeplanteTeilnehmerDivers());
-    }
-
-    private int getGeplanteMitarbeiter(
-            Veranstaltung veranstaltung
-    ) {
-
-        return n(veranstaltung.getGeplanteMitarbeiterMaennlich())
-                + n(veranstaltung.getGeplanteMitarbeiterWeiblich())
-                + n(veranstaltung.getGeplanteMitarbeiterDivers());
-    }
-
-    private int n(Integer value) {
-        return value == null ? 0 : value;
-    }
 
     public BigDecimal berechneKjfpZuschuss(
             Veranstaltung veranstaltung
