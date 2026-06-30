@@ -5,6 +5,11 @@ export interface PlanungPosition {
   kategorie: FinanzKategorie;
   betrag: number;
   kommentar?: string;
+  automatischBerechnet: boolean;
+  editierbar: boolean;
+  menge?: number;
+  einzelpreis?: number;
+  einheit?: string;
 }
 
 export interface PlanungDetail {

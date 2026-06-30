@@ -9,6 +9,7 @@ import com.kcserver.mapper.PlanungMapper;
 import com.kcserver.repository.PlanungRepository;
 import com.kcserver.repository.TeilnehmerRepository;
 import com.kcserver.repository.VeranstaltungRepository;
+import com.kcserver.service.PlanungsSimulationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ public class PlanungService {
     private final PlanungMapper mapper;
     private final FinanzService finanzService;
     private final TeilnehmerRepository teilnehmerRepository;
+    private final PlanungsSimulationService planungsSimulationService;
 
     /* =========================================================
        GET OR CREATE
@@ -33,8 +35,15 @@ public class PlanungService {
     public PlanungDetailDTO getOrCreate(Long veranstaltungId) {
 
         Planung p = planungRepository
-                .findByVeranstaltungId(veranstaltungId)
+                .findByVeranstaltungIdWithPositionen(veranstaltungId)
                 .orElseGet(() -> createPlanung(veranstaltungId));
+
+        boolean changed =
+                planungsSimulationService
+                        .aktualisiereAutomatischePositionen(p);
+        if (changed) {
+            planungRepository.save(p);
+        }
 
         PlanungDetailDTO dto = mapper.toDTO(p);
 

@@ -12,4 +12,10 @@ public class PlanungPositionDTO {
     private FinanzKategorie kategorie;
     private BigDecimal betrag;
     private String kommentar;
+    private BigDecimal menge;
+
+    private String einheit;
+    private BigDecimal einzelpreis;
+    private boolean automatischBerechnet;
+    private boolean editierbar;
 }

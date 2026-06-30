@@ -98,6 +98,74 @@ public class PlanungBerechnungService {
                 );
     }
 
+    public BigDecimal berechneUnterkunft(
+            Veranstaltung veranstaltung
+    ) {
+
+        if (veranstaltung == null
+                || veranstaltung.getUnterkunftsart() == null) {
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal preis =
+                veranstaltung.getUnterkunftsart()
+                        .getPreisProPersonUndNacht();
+
+        if (preis == null) {
+            return BigDecimal.ZERO;
+        }
+
+        int personen =
+                veranstaltungBerechnungsService
+                        .ermittleGeplanteGesamtPersonen(
+                                veranstaltung
+                        );
+
+        long naechte =
+                veranstaltungBerechnungsService
+                        .ermittleNaechte(
+                                veranstaltung
+                        );
+
+        return preis
+                .multiply(BigDecimal.valueOf(personen))
+                .multiply(BigDecimal.valueOf(naechte));
+    }
+
+    public BigDecimal berechneVerpflegung(
+            Veranstaltung veranstaltung
+    ) {
+
+        if (veranstaltung == null
+                || veranstaltung.getVerpflegungsmodell() == null) {
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal preis =
+                veranstaltung.getVerpflegungsmodell()
+                        .getPreisProPersonUndTag();
+
+        if (preis == null) {
+            return BigDecimal.ZERO;
+        }
+
+        int personen =
+                veranstaltungBerechnungsService
+                        .ermittleGeplanteGesamtPersonen(
+                                veranstaltung
+                        );
+
+        long tage =
+                veranstaltungBerechnungsService
+                        .ermittleTage(
+                                veranstaltung
+                        );
+
+        return preis
+                .multiply(BigDecimal.valueOf(personen))
+                .multiply(BigDecimal.valueOf(tage));
+    }
+
     /* =========================================================
        HILFSMETHODEN
        ========================================================= */
