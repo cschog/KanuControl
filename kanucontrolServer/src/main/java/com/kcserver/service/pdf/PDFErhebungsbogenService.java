@@ -4,9 +4,10 @@ import com.kcserver.entity.Person;
 import com.kcserver.entity.Teilnehmer;
 import com.kcserver.entity.Veranstaltung;
 import com.kcserver.enumtype.PdfDokumentTyp;
-import com.kcserver.enumtype.Sex;
 import com.kcserver.repository.TeilnehmerRepository;
 import com.kcserver.repository.VeranstaltungRepository;
+import com.kcserver.service.AltersService;
+import com.kcserver.service.VeranstaltungBerechnungsService;
 import com.kcserver.util.PdfFilenameUtil;
 import lombok.RequiredArgsConstructor;
 import org.apache.pdfbox.Loader;
@@ -19,13 +20,11 @@ import org.springframework.util.StreamUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.Period;
-import java.time.temporal.ChronoUnit;
-import java.util.EnumMap;
 import java.util.List;
 
 import static com.kcserver.util.StringUtils.formatDate;
+import static com.kcserver.util.StringUtils.join;
+
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +32,8 @@ public class PDFErhebungsbogenService {
 
     private final VeranstaltungRepository veranstaltungRepository;
     private final TeilnehmerRepository teilnehmerRepository;
+    private final VeranstaltungBerechnungsService veranstaltungBerechnungsService;
+    private final AltersService altersService;
 
     /* =========================================================
        PUBLIC ENTRY
@@ -59,38 +60,7 @@ public class PDFErhebungsbogenService {
        STATISTIK BERECHNEN
        ========================================================= */
 
-    private Statistik berechneStatistik(
-            List<Teilnehmer> teilnehmer,
-            LocalDate stichtag
-    ) {
 
-        Statistik s = new Statistik();
-
-        for (Teilnehmer t : teilnehmer) {
-
-            Person p = t.getPerson();
-            if (p.getGeburtsdatum() == null || p.getSex() == null)
-                continue;
-
-            int alter =
-                    Period.between(p.getGeburtsdatum(), stichtag).getYears();
-
-            Altersgruppe gruppe = ermittleAltersgruppe(alter);
-
-            s.increment(p.getSex(), gruppe);
-        }
-
-        return s;
-    }
-
-    private Altersgruppe ermittleAltersgruppe(int alter) {
-
-        if (alter < 10) return Altersgruppe.UNTER_10;
-        if (alter <= 13) return Altersgruppe.ZEHN_BIS_13;
-        if (alter <= 17) return Altersgruppe.VIERZEHN_BIS_17;
-        if (alter <= 26) return Altersgruppe.ACHTZEHN_BIS_26;
-        return Altersgruppe.SIEBENUNDZWANZIG_PLUS;
-    }
 
     /* =========================================================
        PDF GENERATION
@@ -150,12 +120,12 @@ public class PDFErhebungsbogenService {
 
             var l = v.getLeiter();
 
-            String name = concat(l.getVorname(), l.getName());
+            String name = join(" ", l.getVorname(), l.getName());
             set(form, "leitung_name", name);
 
             set(form, "leitung_anschrift", l.getStrasse());
 
-            String plzOrt = concat(l.getPlz(), l.getOrt());
+            String plzOrt = join(" ", l.getPlz(), l.getOrt());
             set(form, "leitung_plz_ort", plzOrt);
 
             set(form, "leitung_telefon", l.getTelefon());
@@ -191,14 +161,16 @@ public class PDFErhebungsbogenService {
 
         if (v.getBeginnDatum() != null && v.getEndeDatum() != null) {
 
-            long dauer = ChronoUnit.DAYS.between(
-                    v.getBeginnDatum(),
-                    v.getEndeDatum()
-            ) + 1;
+            long tage =
+                    veranstaltungBerechnungsService
+                            .ermittleTage(v);
 
-            set(form, "veranstaltung_tage", String.valueOf(dauer));
-            set(form, "veranstaltung_anz_uebernachtungen",
-                    String.valueOf(Math.max(dauer - 1, 0)));
+            long naechte =
+                    veranstaltungBerechnungsService
+                            .ermittleNaechte(v);
+
+            set(form, "veranstaltung_tage", String.valueOf(tage));
+            set(form, "veranstaltung_anz_uebernachtungen", String.valueOf(naechte));
         }
 
         /* ================= Durchführungsort ================= */
@@ -260,12 +232,15 @@ public class PDFErhebungsbogenService {
                 case WEIBLICH -> 0;
                 case MAENNLICH -> 1;
                 case DIVERS -> 2;
-                default -> throw new IllegalStateException(
-                        "Unbekannter Wert für Sex: " + p.getSex()
-                );
             };
 
-            int age = calcAge(p.getGeburtsdatum(), v.getBeginnDatum());
+            Integer age =
+                    altersService.berechneAlterBeiBeginn(
+                            p.getGeburtsdatum(),
+                            v.getBeginnDatum());
+            if (age == null) {
+                continue;
+            }
 
             int ageGroup;
             if (age < 10) ageGroup = 0;
@@ -340,52 +315,5 @@ public class PDFErhebungsbogenService {
         PDField f = form.getField(field);
         if (f != null) f.setValue(value);
     }
-
-    class Statistik {
-
-        private final EnumMap<Sex, EnumMap<Altersgruppe, Integer>> data =
-                new EnumMap<>(Sex.class);
-
-        Statistik() {
-            for (Sex s : Sex.values()) {
-                EnumMap<Altersgruppe, Integer> map =
-                        new EnumMap<>(Altersgruppe.class);
-                for (Altersgruppe a : Altersgruppe.values()) {
-                    map.put(a, 0);
-                }
-                data.put(s, map);
-            }
-        }
-
-        void increment(Sex sex, Altersgruppe gruppe) {
-            data.get(sex).put(gruppe,
-                    data.get(sex).get(gruppe) + 1);
-        }
-
-        String get(Sex sex, Altersgruppe gruppe) {
-            return String.valueOf(data.get(sex).get(gruppe));
-        }
-    }
-
-    enum Altersgruppe {
-        UNTER_10,
-        ZEHN_BIS_13,
-        VIERZEHN_BIS_17,
-        ACHTZEHN_BIS_26,
-        SIEBENUNDZWANZIG_PLUS
-    }
-
-    private String concat(String a, String b) {
-        String s1 = a == null ? "" : a.trim();
-        String s2 = b == null ? "" : b.trim();
-        return (s1 + " " + s2).trim();
-    }
-
-
-    private int calcAge(LocalDate birth, LocalDate ref) {
-        if (birth == null || ref == null) return 0;
-        return Period.between(birth, ref).getYears();
-    }
-
 
 }
