@@ -2,6 +2,7 @@ import {
   Alert,
   Box,
   Button,
+  Chip,
   Typography,
   Stack,
   Divider,
@@ -16,6 +17,10 @@ import {
   TableBody,
   Paper,
 } from "@mui/material";
+import IconButton from "@mui/material/IconButton";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import Tooltip from "@mui/material/Tooltip";
 import { useEffect, useState, useCallback } from "react";
 import {
   getPlanung,
@@ -75,6 +80,9 @@ export default function PlanungPage({ veranstaltungId }: Props) {
     load();
   };
 
+  const hasEditable = (data: PlanungPosition[]) =>
+    data.some((p) => p.editierbar);
+
   const renderTable = (title: string, data: PlanungPosition[], typ: "KOSTEN" | "EINNAHME") => (
     <Box mb={4}>
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
@@ -99,31 +107,57 @@ export default function PlanungPage({ veranstaltungId }: Props) {
             <TableRow>
               <TableCell>Kategorie</TableCell>
               <TableCell align="right">Betrag (€)</TableCell>
-              {!planung.eingereicht && <TableCell width={160}>Aktionen</TableCell>}
+
+              {!planung.eingereicht && hasEditable(data) && (
+                <TableCell width={160}>Aktionen</TableCell>
+              )}
             </TableRow>
           </TableHead>
           <TableBody>
             {data.map((p) => (
               <TableRow key={p.id}>
-                <TableCell>{p.kategorie.replaceAll("_", " ")}</TableCell>
+                <TableCell>
+                  {p.kategorie.replaceAll("_", " ")}
+
+                  {p.automatischBerechnet && (
+                    <Chip
+                      size="small"
+                      label="automatisch"
+                      color="info"
+                      sx={{ ml: 1 }}
+                    />
+                  )}
+                </TableCell>
                 <TableCell align="right">{p.betrag.toFixed(2)}</TableCell>
-                {!planung.eingereicht && (
+                {!planung.eingereicht && hasEditable(data) && (
                   <TableCell>
-                    <Stack direction="row" spacing={1}>
-                      <Button
-                        size="small"
-                        onClick={() => {
-                          setEditing(p);
-                          setDialogTyp(typ);
-                          setDialogOpen(true);
-                        }}
-                      >
-                        Bearbeiten
-                      </Button>
-                      <Button size="small" color="error" onClick={() => handleDelete(p.id)}>
-                        Löschen
-                      </Button>
-                    </Stack>
+                    {p.editierbar && (
+                      <Stack direction="row" spacing={0.5}>
+                        <Tooltip title="Bearbeiten">
+                          <IconButton
+                            size="small"
+                            color="primary"
+                            onClick={() => {
+                              setEditing(p);
+                              setDialogTyp(typ);
+                              setDialogOpen(true);
+                            }}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+
+                        <Tooltip title="Löschen">
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => handleDelete(p.id)}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Stack>
+                    )}
                   </TableCell>
                 )}
               </TableRow>
