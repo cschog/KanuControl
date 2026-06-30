@@ -1,11 +1,10 @@
 package com.kcserver.unit;
 
-import com.kcserver.entity.Beitragsregel;
-import com.kcserver.entity.Beitragsstruktur;
-import com.kcserver.entity.Veranstaltung;
+import com.kcserver.entity.*;
 import com.kcserver.service.BeitragsregelService;
 import com.kcserver.service.FoerderService;
 import com.kcserver.service.PlanungBerechnungService;
+import com.kcserver.service.VeranstaltungBerechnungsService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -15,11 +14,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verify;
 
-
 import java.util.Optional;
-
 import static org.mockito.Mockito.when;
-
 
 import java.math.BigDecimal;
 
@@ -31,6 +27,10 @@ class PlanungBerechnungServiceTest {
 
     @Mock
     private FoerderService foerderService;
+
+    @Mock
+
+    private VeranstaltungBerechnungsService veranstaltungBerechnungsService;
 
     @InjectMocks
     private PlanungBerechnungService service;
@@ -49,8 +49,18 @@ class PlanungBerechnungServiceTest {
                 .geplanteMitarbeiterDivers(1)
                 .build();
 
+
+
+        when(
+                veranstaltungBerechnungsService
+                        .ermittleGeplanteGesamtPersonen(veranstaltung)
+        ).thenReturn(30);
+
         BigDecimal betrag =
                 service.berechneTeilnehmerbeitraege(veranstaltung);
+
+        verify(veranstaltungBerechnungsService)
+                .ermittleGeplanteGesamtPersonen(veranstaltung);
 
         assertThat(betrag)
                 .isEqualByComparingTo("2400.00");
@@ -112,8 +122,24 @@ class PlanungBerechnungServiceTest {
                 )
         ).thenReturn(Optional.of(mitarbeiterRegel));
 
+        when(
+                veranstaltungBerechnungsService
+                        .ermittleGeplanteTeilnehmer(veranstaltung)
+        ).thenReturn(18);
+
+        when(
+                veranstaltungBerechnungsService
+                        .ermittleGeplanteMitarbeiter(veranstaltung)
+        ).thenReturn(5);
+
         BigDecimal betrag =
                 service.berechneTeilnehmerbeitraege(veranstaltung);
+
+        verify(veranstaltungBerechnungsService)
+                .ermittleGeplanteTeilnehmer(veranstaltung);
+
+        verify(veranstaltungBerechnungsService)
+                .ermittleGeplanteMitarbeiter(veranstaltung);
 
         assertThat(betrag)
                 .isEqualByComparingTo("3300.00");
@@ -143,7 +169,7 @@ class PlanungBerechnungServiceTest {
     }
 
     @Test
-    void berechneTeilnehmerbeitraege_mitarbeiterregelHatVorrang() {
+    void berechneTeilnehmerbeitraege_berechnetTeilnehmerUndMitarbeiterGetrennt() {
 
         Beitragsstruktur struktur = new Beitragsstruktur();
 
@@ -151,6 +177,7 @@ class PlanungBerechnungServiceTest {
         teilnehmerRegel.setBeitrag(BigDecimal.valueOf(100));
 
         Beitragsregel mitarbeiterRegel = new Beitragsregel();
+
         mitarbeiterRegel.setBeitrag(BigDecimal.valueOf(80));
 
         Veranstaltung veranstaltung = Veranstaltung.builder()
@@ -177,17 +204,22 @@ class PlanungBerechnungServiceTest {
                 )
         ).thenReturn(Optional.of(mitarbeiterRegel));
 
+        when(
+                veranstaltungBerechnungsService
+                        .ermittleGeplanteTeilnehmer(veranstaltung)
+        ).thenReturn(18);
+
+        when(
+                veranstaltungBerechnungsService
+                        .ermittleGeplanteMitarbeiter(veranstaltung)
+        ).thenReturn(5);
+
         BigDecimal betrag =
                 service.berechneTeilnehmerbeitraege(veranstaltung);
 
         assertThat(betrag)
                 .isEqualByComparingTo("2200.00");
 
-        verify(beitragsregelService)
-                .findPlanungsRegelTeilnehmer(struktur, 20);
-
-        verify(beitragsregelService)
-                .findPlanungsRegelMitarbeiter(struktur);
     }
 
     @Test
@@ -214,5 +246,105 @@ class PlanungBerechnungServiceTest {
                 .berechneGeplanteFoerderung(
                         veranstaltung
                 );
+    }
+
+    @Test
+
+    void berechneUnterkunft() {
+
+        Veranstaltung veranstaltung = new Veranstaltung();
+        Unterkunftsart unterkunft = new Unterkunftsart();
+
+        unterkunft.setPreisProPersonUndNacht(
+                BigDecimal.valueOf(35)
+        );
+
+        veranstaltung.setUnterkunftsart(unterkunft);
+        when(
+                veranstaltungBerechnungsService
+                        .ermittleGeplanteGesamtPersonen(veranstaltung)
+        ).thenReturn(24);
+        when(
+                veranstaltungBerechnungsService
+                        .ermittleNaechte(veranstaltung)
+
+        ).thenReturn(5L);
+
+        BigDecimal betrag =
+                service.berechneUnterkunft(
+                        veranstaltung
+
+                );
+
+        assertThat(betrag)
+                .isEqualByComparingTo("4200.00");
+
+    }
+
+    @Test
+
+    void berechneVerpflegung() {
+
+        Veranstaltung veranstaltung = new Veranstaltung();
+        Verpflegungsmodell verpflegung =
+                new Verpflegungsmodell();
+
+        verpflegung.setPreisProPersonUndTag(
+
+                BigDecimal.valueOf(18)
+
+        );
+
+        veranstaltung.setVerpflegungsmodell(
+
+                verpflegung
+
+        );
+
+        when(
+
+                veranstaltungBerechnungsService
+
+                        .ermittleGeplanteGesamtPersonen(veranstaltung)
+
+        ).thenReturn(24);
+
+        when(
+                veranstaltungBerechnungsService
+                        .ermittleTage(veranstaltung)
+
+        ).thenReturn(6L);
+
+        BigDecimal betrag =
+
+                service.berechneVerpflegung(
+
+                        veranstaltung
+
+                );
+
+        assertThat(betrag)
+                .isEqualByComparingTo("2592.00");
+
+    }
+
+    @Test
+    void berechneUnterkunftOhneUnterkunftsart() {
+
+        Veranstaltung veranstaltung = new Veranstaltung();
+
+        assertThat(
+                service.berechneUnterkunft(veranstaltung)
+        ).isEqualByComparingTo(BigDecimal.ZERO);
+    }
+
+    @Test
+    void berechneVerpflegungOhneVerpflegungsmodell() {
+
+        Veranstaltung veranstaltung = new Veranstaltung();
+
+        assertThat(
+                service.berechneVerpflegung(veranstaltung)
+        ).isEqualByComparingTo(BigDecimal.ZERO);
     }
 }

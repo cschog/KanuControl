@@ -6,9 +6,6 @@ import com.kcserver.entity.Planung;
 import com.kcserver.entity.PlanungPosition;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 @Component
 public class PlanungMapper {
 
@@ -16,27 +13,32 @@ public class PlanungMapper {
        ENTITY → DTO
        ========================================================= */
 
-    public PlanungDetailDTO toDTO(Planung p) {
+    public PlanungDetailDTO toDTO(
+            Planung planung
+    ) {
 
-        if (p == null) return null;
+        if (planung == null) {
+            return null;
+        }
 
         PlanungDetailDTO dto = new PlanungDetailDTO();
 
         dto.setVeranstaltungId(
-                p.getVeranstaltung() != null
-                        ? p.getVeranstaltung().getId()
+                planung.getVeranstaltung() != null
+                        ? planung.getVeranstaltung().getId()
                         : null
         );
 
-        List<PlanungPositionDTO> positionen =
-                p.getPositionen()
+        dto.setEingereicht(
+                planung.isEingereicht()
+        );
+
+        dto.setPositionen(
+                planung.getPositionen()
                         .stream()
                         .map(this::toPositionDTO)
-                        .collect(Collectors.toList());
-
-        dto.setPositionen(positionen);
-
-        dto.setEingereicht(p.isEingereicht());
+                        .toList()
+        );
 
         return dto;
     }
@@ -45,16 +47,37 @@ public class PlanungMapper {
        POSITION → DTO
        ========================================================= */
 
-    public PlanungPositionDTO toPositionDTO(PlanungPosition pos) {
+    public PlanungPositionDTO toPositionDTO(
+            PlanungPosition position
+    ) {
 
-        if (pos == null) return null;
+        if (position == null) {
+            return null;
+        }
 
         PlanungPositionDTO dto = new PlanungPositionDTO();
 
-        dto.setId(pos.getId());
-        dto.setKategorie(pos.getKategorie());
-        dto.setBetrag(pos.getBetrag());
-        dto.setKommentar(pos.getKommentar());
+        dto.setId(position.getId());
+
+        dto.setKategorie(position.getKategorie());
+
+        dto.setMenge(position.getMenge());
+        dto.setEinheit(position.getEinheit());
+        dto.setEinzelpreis(position.getEinzelpreis());
+
+        dto.setBetrag(position.getBetrag());
+
+        dto.setAutomatischBerechnet(
+                position.isAutomatischBerechnet()
+        );
+
+        dto.setEditierbar(
+                position.isEditierbar()
+        );
+
+        dto.setKommentar(
+                position.getKommentar()
+        );
 
         return dto;
     }
