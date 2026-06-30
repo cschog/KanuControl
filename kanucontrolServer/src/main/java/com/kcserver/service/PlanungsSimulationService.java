@@ -68,21 +68,44 @@ public class PlanungsSimulationService {
             BigDecimal betrag
     ) {
 
+        boolean automatisch = istAutomatischeKategorie(kategorie);
+
         PlanungPosition position =
                 findeOderErzeuge(planung, kategorie);
+
+        boolean changed = false;
+
+        if (position.isAutomatischBerechnet() != automatisch) {
+            position.setAutomatischBerechnet(automatisch);
+            changed = true;
+        }
+
+        if (position.isEditierbar() == automatisch) {
+            position.setEditierbar(!automatisch);
+            changed = true;
+        }
 
         BigDecimal neu =
                 betrag == null
                         ? BigDecimal.ZERO
                         : betrag;
 
-        if (neu.compareTo(position.getBetrag()) == 0) {
-            return false;
+        if (neu.compareTo(position.getBetrag()) != 0) {
+            position.setBetrag(neu);
+            changed = true;
         }
 
-        position.setBetrag(neu);
+        return changed;
+    }
 
-        return true;
+    private boolean istAutomatischeKategorie(FinanzKategorie kategorie) {
+        return switch (kategorie) {
+            case UNTERKUNFT,
+                 VERPFLEGUNG,
+                 TEILNEHMERBEITRAG,
+                 KJFP_ZUSCHUSS -> true;
+            default -> false;
+        };
     }
 
     private PlanungPosition findeOderErzeuge(
