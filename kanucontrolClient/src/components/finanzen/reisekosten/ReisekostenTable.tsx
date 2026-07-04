@@ -2,7 +2,14 @@
 
 import { useMemo } from "react";
 import { Box, Button, IconButton, Stack, Typography } from "@mui/material";
-import ConfirmDeleteDialog  from "@/components/common/ConfirmDeleteDialog";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+} from "@mui/material";
+import ConfirmDeleteDialog from "@/components/common/ConfirmDeleteDialog";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import { ColumnDef } from "@tanstack/react-table";
@@ -20,7 +27,10 @@ import { useState } from "react";
 
 import ReisekostenCreateDialog from "./ReisekostenCreateDialog";
 
-import { createReisekostenabrechnung } from "@/api/services/reisekostenApi";
+import {
+  createReisekostenabrechnung,
+  getVerfuegbareReisekostenPersonen,
+} from "@/api/services/reisekostenApi";
 
 interface Props {
   veranstaltungId: number;
@@ -35,6 +45,8 @@ const ReisekostenTable = ({ veranstaltungId }: Props) => {
 
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const queryClient = useQueryClient();
+
+  const [infoDialogOpen, setInfoDialogOpen] = useState(false);
 
   const columns = useMemo<ColumnDef<ReisekostenabrechnungListResponse>[]>(
     () => [
@@ -91,6 +103,17 @@ const ReisekostenTable = ({ veranstaltungId }: Props) => {
     [navigate, veranstaltungId],
   );
 
+  const handleNeueReisekostenabrechnung = async () => {
+    const fahrer = await getVerfuegbareReisekostenPersonen(veranstaltungId);
+
+    if (fahrer.length === 0) {
+      setInfoDialogOpen(true);
+      return;
+    }
+
+    setDialogOpen(true);
+  };
+
   return (
     <Box>
       <ReisekostenCreateDialog
@@ -111,7 +134,11 @@ const ReisekostenTable = ({ veranstaltungId }: Props) => {
         }}
       />
       <Stack direction="row" justifyContent="flex-end" sx={{ mb: 2 }}>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={() => setDialogOpen(true)}>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={handleNeueReisekostenabrechnung}
+        >
           Neue Fahrkostenabrechnung
         </Button>
       </Stack>
@@ -175,6 +202,31 @@ const ReisekostenTable = ({ veranstaltungId }: Props) => {
         }}
         description="Soll die Fahrkostenabrechnung wirklich gelöscht werden?"
       />
+      <Dialog
+        open={infoDialogOpen}
+        onClose={() => setInfoDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          Keine neue Fahrkostenabrechnung möglich
+        </DialogTitle>
+
+        <DialogContent>
+          <DialogContentText>
+            Für alle möglichen Fahrer dieser Veranstaltung existiert bereits eine Fahrkostenabrechnung.
+            <br />
+            <strong>Eine Fahrkostenabrechnung sammelt alle Fahrten eines Fahrers innerhalb einer Veranstaltung.</strong> Weitere Fahrten werden deshalb als zusätzliche <strong>Fahrtabschnitte</strong> in der vorhandenen Fahrkostenabrechnung erfasst.
+          </DialogContentText>
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={() => setInfoDialogOpen(false)}>
+            Vorhandene Fahrkostenabrechnungen anzeigen
+          </Button>
+        </DialogActions>
+      </Dialog>
+
     </Box>
   );
 };
