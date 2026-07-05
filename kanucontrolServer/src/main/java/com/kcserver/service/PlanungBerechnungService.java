@@ -22,8 +22,6 @@ public class PlanungBerechnungService {
     private final BeitragsregelService beitragsregelService;
     private final FoerderService foerderService;
 
-    private final VeranstaltungBerechnungsService veranstaltungBerechnungsService;
-
     private final PlanungsSimulationFactory simulationFactory;
 
     public BigDecimal berechneTeilnehmerbeitraege(
@@ -34,50 +32,39 @@ public class PlanungBerechnungService {
             return BigDecimal.ZERO;
         }
 
-        if (!veranstaltung.isIndividuelleGebuehren()) {
-            return berechneStandardGebuehr(veranstaltung);
-        }
-
-        return berechneBeitragsstruktur(veranstaltung);
+        return berechneTeilnehmerbeitraege(
+                simulationFactory.fromVeranstaltung(veranstaltung)
+        );
     }
 
-    /* =========================================================
-       STANDARDGEBÜHR
-       ========================================================= */
-
-    private BigDecimal berechneStandardGebuehr(
-            Veranstaltung veranstaltung
+    public BigDecimal berechneTeilnehmerbeitraege(
+            PlanungsSimulation simulation
     ) {
 
-        BigDecimal gebuehr = veranstaltung.getStandardGebuehr();
-
-        if (gebuehr == null) {
+        if (simulation == null) {
             return BigDecimal.ZERO;
         }
 
-        int personen =
-                veranstaltungBerechnungsService
-                        .ermittleGeplanteGesamtPersonen(veranstaltung);
+        if (simulation.getBeitragsstruktur() == null) {
 
-        return gebuehr.multiply(BigDecimal.valueOf(personen));
-    }
+            BigDecimal gebuehr = simulation.getStandardGebuehr();
 
-    /* =========================================================
-       BEITRAGSSTRUKTUR
-       ========================================================= */
+            if (gebuehr == null) {
+                return BigDecimal.ZERO;
+            }
 
-    private BigDecimal berechneBeitragsstruktur(
-            Veranstaltung veranstaltung
-    ) {
-
-        if (veranstaltung.getBeitragsstruktur() == null) {
-            return BigDecimal.ZERO;
+            return gebuehr.multiply(
+                    BigDecimal.valueOf(
+                            simulation.getTeilnehmer()
+                                    + simulation.getMitarbeiter()
+                    )
+            );
         }
 
         BigDecimal teilnehmerBeitrag =
                 beitragsregelService
                         .findPlanungsRegelTeilnehmer(
-                                veranstaltung.getBeitragsstruktur(),
+                                simulation.getBeitragsstruktur(),
                                 FOERDER_HOECHSTALTER
                         )
                         .map(Beitragsregel::getBeitrag)
@@ -86,21 +73,20 @@ public class PlanungBerechnungService {
         BigDecimal mitarbeiterBeitrag =
                 beitragsregelService
                         .findPlanungsRegelMitarbeiter(
-                                veranstaltung.getBeitragsstruktur()
+                                simulation.getBeitragsstruktur()
                         )
                         .map(Beitragsregel::getBeitrag)
                         .orElse(BigDecimal.ZERO);
 
         return teilnehmerBeitrag.multiply(
-                        BigDecimal.valueOf(veranstaltungBerechnungsService
-                                .ermittleGeplanteTeilnehmer(veranstaltung)))
+                        BigDecimal.valueOf(simulation.getTeilnehmer()))
                 .add(
                         mitarbeiterBeitrag.multiply(
-                                BigDecimal.valueOf(veranstaltungBerechnungsService
-                                        .ermittleGeplanteMitarbeiter(veranstaltung))
+                                BigDecimal.valueOf(simulation.getMitarbeiter())
                         )
                 );
     }
+
 
     public BigDecimal berechneUnterkunft(
             Veranstaltung veranstaltung
@@ -178,7 +164,7 @@ public class PlanungBerechnungService {
     }
 
     /* =========================================================
-       HILFSMETHODEN
+       KJFP
        ========================================================= */
 
     public BigDecimal berechneKjfpZuschuss(

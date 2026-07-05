@@ -4,22 +4,18 @@ import com.kcserver.entity.*;
 import com.kcserver.service.BeitragsregelService;
 import com.kcserver.service.FoerderService;
 import com.kcserver.service.PlanungBerechnungService;
-import com.kcserver.service.VeranstaltungBerechnungsService;
-import com.kcserver.simulation.PlanungsSimulationFactory;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verify;
 
 import java.util.Optional;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
-import com.kcserver.simulation.PlanungsSimulationFactory;
 import com.kcserver.simulation.PlanungsSimulation;
 
 @ExtendWith(MockitoExtension.class)
@@ -31,201 +27,74 @@ class PlanungBerechnungServiceTest {
     @Mock
     private FoerderService foerderService;
 
-    @Mock
-    private VeranstaltungBerechnungsService veranstaltungBerechnungsService;
-
-    @Mock
-    private PlanungsSimulationFactory simulationFactory;
-
     @InjectMocks
     private PlanungBerechnungService service;
 
     @Test
-    void berechneTeilnehmerbeitraege_standardgebuehr() {
+    void berechneTeilnehmerbeitraegeSimulation_standardgebuehr() {
 
-        Veranstaltung veranstaltung = Veranstaltung.builder()
-                .individuelleGebuehren(false)
-                .standardGebuehr(BigDecimal.valueOf(80))
-                .geplanteTeilnehmerMaennlich(10)
-                .geplanteTeilnehmerWeiblich(12)
-                .geplanteTeilnehmerDivers(2)
-                .geplanteMitarbeiterMaennlich(2)
-                .geplanteMitarbeiterWeiblich(3)
-                .geplanteMitarbeiterDivers(1)
-                .build();
-
-
-
-        when(
-                veranstaltungBerechnungsService
-                        .ermittleGeplanteGesamtPersonen(veranstaltung)
-        ).thenReturn(30);
+        PlanungsSimulation simulation =
+                PlanungsSimulation.builder()
+                        .teilnehmer(24)
+                        .mitarbeiter(6)
+                        .standardGebuehr(BigDecimal.valueOf(80))
+                        .build();
 
         BigDecimal betrag =
-                service.berechneTeilnehmerbeitraege(veranstaltung);
-
-        verify(veranstaltungBerechnungsService)
-                .ermittleGeplanteGesamtPersonen(veranstaltung);
+                service.berechneTeilnehmerbeitraege(simulation);
 
         assertThat(betrag)
-                .isEqualByComparingTo("2400.00");
+                .isEqualByComparingTo("2400");
     }
 
     @Test
-    void berechneTeilnehmerbeitraege_keineStandardgebuehr() {
-
-        Veranstaltung veranstaltung = Veranstaltung.builder()
-                .individuelleGebuehren(false)
-                .standardGebuehr(null)
-                .geplanteTeilnehmerMaennlich(10)
-                .geplanteTeilnehmerWeiblich(12)
-                .geplanteTeilnehmerDivers(2)
-                .geplanteMitarbeiterMaennlich(2)
-                .geplanteMitarbeiterWeiblich(3)
-                .geplanteMitarbeiterDivers(1)
-                .build();
-
-        BigDecimal betrag =
-                service.berechneTeilnehmerbeitraege(veranstaltung);
-
-        assertThat(betrag)
-                .isEqualByComparingTo(BigDecimal.ZERO);
-    }
-
-    @Test
-    void berechneTeilnehmerbeitraege_beitragsstruktur() {
+    void berechneTeilnehmerbeitraegeSimulation_beitragsstruktur() {
 
         Beitragsstruktur struktur = new Beitragsstruktur();
 
-        Beitragsregel teilnehmerRegel = new Beitragsregel();
-        teilnehmerRegel.setBeitrag(BigDecimal.valueOf(100));
+        Beitragsregel teilnehmer = new Beitragsregel();
+        teilnehmer.setBeitrag(BigDecimal.valueOf(100));
 
-        Beitragsregel mitarbeiterRegel = new Beitragsregel();
-        mitarbeiterRegel.setBeitrag(BigDecimal.valueOf(300));
+        Beitragsregel mitarbeiter = new Beitragsregel();
+        mitarbeiter.setBeitrag(BigDecimal.valueOf(300));
 
-        Veranstaltung veranstaltung = Veranstaltung.builder()
-                .individuelleGebuehren(true)
-                .beitragsstruktur(struktur)
-                .geplanteTeilnehmerMaennlich(10)
-                .geplanteTeilnehmerWeiblich(8)
-                .geplanteTeilnehmerDivers(0)
-                .geplanteMitarbeiterMaennlich(2)
-                .geplanteMitarbeiterWeiblich(2)
-                .geplanteMitarbeiterDivers(1)
-                .build();
+        when(beitragsregelService.findPlanungsRegelTeilnehmer(
+                struktur,
+                20))
+                .thenReturn(Optional.of(teilnehmer));
 
-        when(
-                beitragsregelService.findPlanungsRegelTeilnehmer(
-                        struktur,
-                        20
-                )
-        ).thenReturn(Optional.of(teilnehmerRegel));
+        when(beitragsregelService.findPlanungsRegelMitarbeiter(
+                struktur))
+                .thenReturn(Optional.of(mitarbeiter));
 
-        when(
-                beitragsregelService.findPlanungsRegelMitarbeiter(
-                        struktur
-                )
-        ).thenReturn(Optional.of(mitarbeiterRegel));
-
-        when(
-                veranstaltungBerechnungsService
-                        .ermittleGeplanteTeilnehmer(veranstaltung)
-        ).thenReturn(18);
-
-        when(
-                veranstaltungBerechnungsService
-                        .ermittleGeplanteMitarbeiter(veranstaltung)
-        ).thenReturn(5);
+        PlanungsSimulation simulation =
+                PlanungsSimulation.builder()
+                        .teilnehmer(18)
+                        .mitarbeiter(5)
+                        .beitragsstruktur(struktur)
+                        .build();
 
         BigDecimal betrag =
-                service.berechneTeilnehmerbeitraege(veranstaltung);
-
-        verify(veranstaltungBerechnungsService)
-                .ermittleGeplanteTeilnehmer(veranstaltung);
-
-        verify(veranstaltungBerechnungsService)
-                .ermittleGeplanteMitarbeiter(veranstaltung);
+                service.berechneTeilnehmerbeitraege(simulation);
 
         assertThat(betrag)
-                .isEqualByComparingTo("3300.00");
+                .isEqualByComparingTo("3300");
     }
 
     @Test
-    void berechneTeilnehmerbeitraege_keineBeitragsstruktur() {
+    void berechneTeilnehmerbeitraegeSimulation_keineBeitragsstruktur() {
 
-        Veranstaltung veranstaltung = Veranstaltung.builder()
-                .individuelleGebuehren(true)
-                .beitragsstruktur(null)
-                .geplanteTeilnehmerMaennlich(10)
-                .geplanteTeilnehmerWeiblich(8)
-                .geplanteTeilnehmerDivers(0)
-                .geplanteMitarbeiterMaennlich(2)
-                .geplanteMitarbeiterWeiblich(2)
-                .geplanteMitarbeiterDivers(1)
-                .build();
+        PlanungsSimulation simulation =
+                PlanungsSimulation.builder()
+                        .teilnehmer(18)
+                        .mitarbeiter(5)
+                        .build();
 
-        BigDecimal betrag =
-                service.berechneTeilnehmerbeitraege(veranstaltung);
-
-        assertThat(betrag)
-                .isEqualByComparingTo(BigDecimal.ZERO);
-
-        verifyNoInteractions(beitragsregelService);
+        assertThat(
+                service.berechneTeilnehmerbeitraege(simulation)
+        ).isEqualByComparingTo(BigDecimal.ZERO);
     }
 
-    @Test
-    void berechneTeilnehmerbeitraege_berechnetTeilnehmerUndMitarbeiterGetrennt() {
-
-        Beitragsstruktur struktur = new Beitragsstruktur();
-
-        Beitragsregel teilnehmerRegel = new Beitragsregel();
-        teilnehmerRegel.setBeitrag(BigDecimal.valueOf(100));
-
-        Beitragsregel mitarbeiterRegel = new Beitragsregel();
-
-        mitarbeiterRegel.setBeitrag(BigDecimal.valueOf(80));
-
-        Veranstaltung veranstaltung = Veranstaltung.builder()
-                .individuelleGebuehren(true)
-                .beitragsstruktur(struktur)
-                .geplanteTeilnehmerMaennlich(10)
-                .geplanteTeilnehmerWeiblich(8)
-                .geplanteTeilnehmerDivers(0)
-                .geplanteMitarbeiterMaennlich(2)
-                .geplanteMitarbeiterWeiblich(2)
-                .geplanteMitarbeiterDivers(1)
-                .build();
-
-        when(
-                beitragsregelService.findPlanungsRegelTeilnehmer(
-                        struktur,
-                        20
-                )
-        ).thenReturn(Optional.of(teilnehmerRegel));
-
-        when(
-                beitragsregelService.findPlanungsRegelMitarbeiter(
-                        struktur
-                )
-        ).thenReturn(Optional.of(mitarbeiterRegel));
-
-        when(
-                veranstaltungBerechnungsService
-                        .ermittleGeplanteTeilnehmer(veranstaltung)
-        ).thenReturn(18);
-
-        when(
-                veranstaltungBerechnungsService
-                        .ermittleGeplanteMitarbeiter(veranstaltung)
-        ).thenReturn(5);
-
-        BigDecimal betrag =
-                service.berechneTeilnehmerbeitraege(veranstaltung);
-
-        assertThat(betrag)
-                .isEqualByComparingTo("2200.00");
-
-    }
 
     @Test
     void berechneKjfpZuschuss() {
@@ -319,5 +188,60 @@ class PlanungBerechnungServiceTest {
         assertThat(
                 service.berechneVerpflegung(simulation)
         ).isEqualByComparingTo(BigDecimal.ZERO);
+    }
+
+    @Test
+    void berechneTeilnehmerbeitraege_keineStandardgebuehr() {
+
+        PlanungsSimulation simulation =
+                PlanungsSimulation.builder()
+                        .teilnehmer(24)
+                        .mitarbeiter(6)
+                        .standardGebuehr(null)
+                        .build();
+
+        BigDecimal betrag =
+                service.berechneTeilnehmerbeitraege(simulation);
+
+        assertThat(betrag)
+                .isEqualByComparingTo(BigDecimal.ZERO);
+    }
+
+    @Test
+    void berechneTeilnehmerbeitraege_berechnetTeilnehmerUndMitarbeiterGetrennt() {
+
+        Beitragsstruktur struktur = new Beitragsstruktur();
+
+        Beitragsregel teilnehmerRegel = new Beitragsregel();
+        teilnehmerRegel.setBeitrag(BigDecimal.valueOf(100));
+
+        Beitragsregel mitarbeiterRegel = new Beitragsregel();
+        mitarbeiterRegel.setBeitrag(BigDecimal.valueOf(80));
+
+        when(
+                beitragsregelService.findPlanungsRegelTeilnehmer(
+                        struktur,
+                        20
+                )
+        ).thenReturn(Optional.of(teilnehmerRegel));
+
+        when(
+                beitragsregelService.findPlanungsRegelMitarbeiter(
+                        struktur
+                )
+        ).thenReturn(Optional.of(mitarbeiterRegel));
+
+        PlanungsSimulation simulation =
+                PlanungsSimulation.builder()
+                        .teilnehmer(18)
+                        .mitarbeiter(5)
+                        .beitragsstruktur(struktur)
+                        .build();
+
+        BigDecimal betrag =
+                service.berechneTeilnehmerbeitraege(simulation);
+
+        assertThat(betrag)
+                .isEqualByComparingTo("2200.00");
     }
 }
