@@ -26,6 +26,12 @@ public class PlanungsSimulationFactory {
                         berechnungsService
                                 .ermittleGeplanteMitarbeiter(v)
                 )
+                .beginnDatum(v.getBeginnDatum())
+
+                .kikZertifiziert(
+                        v.getVerein() != null
+                                && v.getVerein().isKikZertifiziertAm(v.getBeginnDatum())
+                )
                 .tage(
                         berechnungsService
                                 .ermittleTage(v)

@@ -95,22 +95,22 @@ class PlanungBerechnungServiceTest {
         ).isEqualByComparingTo(BigDecimal.ZERO);
     }
 
-
     @Test
-    void berechneKjfpZuschuss() {
+    void berechneKjfpZuschussSimulation() {
 
-        Veranstaltung veranstaltung = Veranstaltung.builder()
-                .build();
+        PlanungsSimulation simulation =
+                PlanungsSimulation.builder()
+                        .build();
 
         when(
                 foerderService.berechneGeplanteFoerderung(
-                        veranstaltung
+                        simulation
                 )
         ).thenReturn(BigDecimal.valueOf(1800));
 
         BigDecimal betrag =
                 service.berechneKjfpZuschuss(
-                        veranstaltung
+                        simulation
                 );
 
         assertThat(betrag)
@@ -118,9 +118,10 @@ class PlanungBerechnungServiceTest {
 
         verify(foerderService)
                 .berechneGeplanteFoerderung(
-                        veranstaltung
+                        simulation
                 );
     }
+
 
     @Test
     void berechneUnterkunftSimulation() {

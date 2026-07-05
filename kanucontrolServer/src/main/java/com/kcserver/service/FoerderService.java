@@ -4,6 +4,8 @@ import com.kcserver.config.FoerderConfig;
 import com.kcserver.dto.foerder.FoerdersatzLookupResult;
 import com.kcserver.entity.*;
 import com.kcserver.enumtype.VeranstaltungTyp;
+import com.kcserver.simulation.PlanungsSimulation;
+import com.kcserver.simulation.PlanungsSimulationFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,22 +22,21 @@ public class FoerderService {
     private final FoerdersatzService foerdersatzService;
     private final KikZuschlagService kikZuschlagService;
     private final AltersService altersService;
-    private final VeranstaltungBerechnungsService veranstaltungBerechnungsService;
+    private final PlanungsSimulationFactory simulationFactory;
 
     private static final int MAX_FOERDERTAGE_FM_JEM = 21;
-    private boolean isFmJem(Veranstaltung veranstaltung) {
-        return veranstaltung.getTyp() == VeranstaltungTyp.FM
-                || veranstaltung.getTyp() == VeranstaltungTyp.JEM;
+
+    private boolean isFmJem(VeranstaltungTyp typ) {
+
+        return typ == VeranstaltungTyp.FM
+                || typ == VeranstaltungTyp.JEM;
     }
 
     public boolean istFoerderfaehig(
 
             Veranstaltung veranstaltung,
-
             Teilnehmer teilnehmer
-
     ) {
-
         if (veranstaltung == null || teilnehmer == null) {
             return false;
         }
@@ -43,17 +44,12 @@ public class FoerderService {
         VeranstaltungTyp typ = veranstaltung.getTyp();
 
         if (typ == null || !typ.isFoerderfaehig()) {
-
             return false;
-
         }
 
         // Mitarbeiter/Leiter nicht förderfähig
-
         if (teilnehmer.getRolle() != null) {
-
             return false;
-
         }
 
         LocalDate geburt =
@@ -68,14 +64,11 @@ public class FoerderService {
                 );
 
         if (alter == null) {
-
             return false;
-
         }
 
         return alter >= typ.getMindestalter()
                 && alter <= typ.getHoechstalter();
-
     }
 
     public long countFoerderfaehigeTeilnehmer(
@@ -95,21 +88,35 @@ public class FoerderService {
 
     public int berechneFoerdertage(
             Veranstaltung veranstaltung
-
     ) {
-        if (veranstaltung == null
-                || veranstaltung.getBeginnDatum() == null
-                || veranstaltung.getEndeDatum() == null) {
+
+        if (veranstaltung == null) {
             return 0;
         }
-        int tage = (int) veranstaltungBerechnungsService.ermittleTage(veranstaltung);
 
-        if (isFmJem(veranstaltung)) {
-            return Math.min(tage, MAX_FOERDERTAGE_FM_JEM);
+        return berechneFoerdertage(
+                simulationFactory.fromVeranstaltung(
+                        veranstaltung
+                )
+        );
+    }
+
+    public int berechneFoerdertage(
+            PlanungsSimulation simulation
+    ) {
+
+        if (simulation == null) {
+            return 0;
         }
 
-        return tage;
+        if (isFmJem(simulation.getTyp())) {
+            return (int) Math.min(
+                    simulation.getTage(),
+                    MAX_FOERDERTAGE_FM_JEM
+            );
+        }
 
+        return (int) simulation.getTage();
     }
 
     /**
@@ -124,67 +131,13 @@ public class FoerderService {
             return BigDecimal.ZERO;
         }
 
-        LocalDate datum = veranstaltung.getBeginnDatum();
-
-        if (datum == null) {
-            return BigDecimal.ZERO;
-        }
-
         if (!istFoerderfaehig(veranstaltung, teilnehmer)) {
             return BigDecimal.ZERO;
         }
 
-        FoerdersatzLookupResult result =
-                foerdersatzService.getGueltigOderLetztenMitInfo(
-                        veranstaltung.getTyp(),
-                        datum
-                );
-
-        Foerdersatz fs = result.foerdersatz();
-
-        if (fs.getFoerdersatz() == null) {
-            return BigDecimal.ZERO;
-        }
-
-        BigDecimal grund = fs.getFoerdersatz();
-        BigDecimal deckel = FoerderConfig.FOERDERDECKEL;
-
-        BigDecimal zuschlag = BigDecimal.ZERO;
-
-        if (
-                veranstaltung.getVerein() != null
-                        && veranstaltung.getVerein()
-                        .isKikZertifiziertAm(datum)
-        ) {
-
-            KikZuschlag kik =
-                    kikZuschlagService.findOptionalGueltigAm(datum);
-
-            if (kik != null && kik.getKikZuschlag() != null) {
-                zuschlag = kik.getKikZuschlag();
-            }
-        }
-
-        BigDecimal gesamt = grund.add(zuschlag);
-
-        if (deckel != null) {
-            gesamt = gesamt.min(deckel);
-        }
-
-        return gesamt;
-    }
-
-
-    private boolean istFmOderJem(Veranstaltung veranstaltung) {
-
-        if (veranstaltung == null) {
-            return false;
-        }
-
-        VeranstaltungTyp typ = veranstaltung.getTyp();
-
-        return typ == VeranstaltungTyp.FM
-                || typ == VeranstaltungTyp.JEM;
+        return berechneAngewandtenFoerdersatz(
+                veranstaltung
+        );
     }
 
     public BigDecimal berechneGesamtfoerderung(
@@ -228,48 +181,30 @@ public class FoerderService {
             return BigDecimal.ZERO;
         }
 
-        LocalDate datum =
-                veranstaltung.getBeginnDatum();
-
-        if (datum == null) {
-            return BigDecimal.ZERO;
-        }
-
-        FoerdersatzLookupResult result =
-                foerdersatzService.getGueltigOderLetztenMitInfo(
-                        veranstaltung.getTyp(),
-                        datum
-                );
-
-        Foerdersatz fs = result.foerdersatz();
-
-        if (fs.getFoerdersatz() == null) {
-            return BigDecimal.ZERO;
-        }
-
-        BigDecimal grund =
-                fs.getFoerdersatz();
-
-        BigDecimal zuschlag =
-                BigDecimal.ZERO;
-
-        if (
+        return ermittleTagessatz(
+                veranstaltung.getTyp(),
+                veranstaltung.getBeginnDatum(),
                 veranstaltung.getVerein() != null
                         && veranstaltung.getVerein()
-                        .isKikZertifiziertAm(datum)
-        ) {
+                        .isKikZertifiziertAm(
+                                veranstaltung.getBeginnDatum()
+                        )
+        );
+    }
 
-            KikZuschlag kik =
-                    kikZuschlagService.findOptionalGueltigAm(datum);
+    public BigDecimal berechneAngewandtenFoerdersatz(
+            PlanungsSimulation simulation
+    ) {
 
-            if (kik != null && kik.getKikZuschlag() != null) {
-                zuschlag = kik.getKikZuschlag();
-            }
+        if (simulation == null) {
+            return BigDecimal.ZERO;
         }
 
-        return grund
-                .add(zuschlag)
-                .min(FoerderConfig.FOERDERDECKEL);
+        return ermittleTagessatz(
+                simulation.getTyp(),
+                simulation.getBeginnDatum(),
+                simulation.isKikZertifiziert()
+        );
     }
 
     public BigDecimal berechneGeplanteFoerderung(
@@ -280,35 +215,84 @@ public class FoerderService {
             return BigDecimal.ZERO;
         }
 
-        BigDecimal tagessatz =
-                berechneAngewandtenFoerdersatz(
+        return berechneGeplanteFoerderung(
+                simulationFactory.fromVeranstaltung(
                         veranstaltung
-                );
-
-        if (tagessatz == null) {
-            return BigDecimal.ZERO;
-        }
-
-        int tage =
-                berechneFoerdertage(
-                        veranstaltung
-                );
-
-        if (tage <= 0) {
-            return BigDecimal.ZERO;
-        }
-
-        int teilnehmer =
-                n(veranstaltung.getGeplanteTeilnehmerMaennlich())
-                        + n(veranstaltung.getGeplanteTeilnehmerWeiblich())
-                        + n(veranstaltung.getGeplanteTeilnehmerDivers());
-
-        return tagessatz
-                .multiply(BigDecimal.valueOf(teilnehmer))
-                .multiply(BigDecimal.valueOf(tage));
+                )
+        );
     }
 
-    private int n(Integer value) {
-        return value == null ? 0 : value;
+    public BigDecimal berechneGeplanteFoerderung(
+            PlanungsSimulation simulation
+    ) {
+
+        if (simulation == null) {
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal tagessatz =
+                berechneAngewandtenFoerdersatz(simulation);
+
+        return tagessatz
+                .multiply(BigDecimal.valueOf(simulation.getTeilnehmer()))
+                .multiply(
+                        BigDecimal.valueOf(
+                                berechneFoerdertage(simulation)
+                        )
+                );
+    }
+
+    private BigDecimal ermittleTagessatz(
+            VeranstaltungTyp typ,
+            LocalDate datum,
+            boolean kikZertifiziert
+    ) {
+
+        if (typ == null
+                || datum == null
+                || !typ.isFoerderfaehig()) {
+            return BigDecimal.ZERO;
+        }
+
+        FoerdersatzLookupResult result =
+                foerdersatzService.getGueltigOderLetztenMitInfo(
+                        typ,
+                        datum
+                );
+
+        if (result == null
+                || result.foerdersatz() == null
+                || result.foerdersatz().getFoerdersatz() == null) {
+            return BigDecimal.ZERO;
+        }
+
+        return result.foerdersatz()
+                .getFoerdersatz()
+                .add(
+                        ermittleKikZuschlag(
+                                datum,
+                                kikZertifiziert
+                        )
+                )
+                .min(FoerderConfig.FOERDERDECKEL);
+    }
+
+    private BigDecimal ermittleKikZuschlag(
+            LocalDate datum,
+            boolean kikZertifiziert
+    ) {
+
+        if (!kikZertifiziert) {
+            return BigDecimal.ZERO;
+        }
+
+        KikZuschlag kik =
+                kikZuschlagService.findOptionalGueltigAm(datum);
+
+        if (kik == null || kik.getKikZuschlag() == null) {
+            return BigDecimal.ZERO;
+        }
+
+        return kik.getKikZuschlag();
     }
 }

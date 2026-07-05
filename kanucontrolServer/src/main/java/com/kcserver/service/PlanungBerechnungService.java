@@ -164,8 +164,8 @@ public class PlanungBerechnungService {
     }
 
     /* =========================================================
-       KJFP
-       ========================================================= */
+   HILFSMETHODEN
+   ========================================================= */
 
     public BigDecimal berechneKjfpZuschuss(
             Veranstaltung veranstaltung
@@ -175,12 +175,22 @@ public class PlanungBerechnungService {
             return BigDecimal.ZERO;
         }
 
-        return foerderService.berechneGeplanteFoerderung(
-                veranstaltung
+        return berechneKjfpZuschuss(
+                simulationFactory.fromVeranstaltung(veranstaltung)
         );
     }
 
+    public BigDecimal berechneKjfpZuschuss(
+            PlanungsSimulation simulation
+    ) {
 
+        if (simulation == null) {
+            return BigDecimal.ZERO;
+        }
 
+        return foerderService.berechneGeplanteFoerderung(
+                simulation
+        );
+    }
 
 }

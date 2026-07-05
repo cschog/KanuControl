@@ -67,9 +67,7 @@ public class SimulationEngine {
         positionen.add(berechneUnterkunft(simulation));
         positionen.add(berechneVerpflegung(simulation));
         positionen.add(berechneTeilnehmerbeitraege(simulation));
-
-        // später
-        // positionen.add(berechneKjfp(simulation));
+        positionen.add(berechneKjfp(simulation));
 
         return positionen;
     }
@@ -107,15 +105,15 @@ public class SimulationEngine {
         );
     }
 
-//    private SimulationPosition berechneKjfp(
-//            PlanungsSimulation simulation
-//    ) {
-//
-//        return position(
-//                FinanzKategorie.KJFP_ZUSCHUSS,
-//                berechnung.berechneKjfpZuschuss(simulation)
-//        );
-//    }
+    private SimulationPosition berechneKjfp(
+            PlanungsSimulation simulation
+    ) {
+
+        return position(
+                FinanzKategorie.KJFP_ZUSCHUSS,
+                berechnung.berechneKjfpZuschuss(simulation)
+        );
+    }
 
     /* =========================================================
    HILFSMETHODEN
