@@ -5,6 +5,7 @@ import com.kcserver.service.BeitragsregelService;
 import com.kcserver.service.FoerderService;
 import com.kcserver.service.PlanungBerechnungService;
 import com.kcserver.service.VeranstaltungBerechnungsService;
+import com.kcserver.simulation.PlanungsSimulationFactory;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -18,6 +19,8 @@ import java.util.Optional;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
+import com.kcserver.simulation.PlanungsSimulationFactory;
+import com.kcserver.simulation.PlanungsSimulation;
 
 @ExtendWith(MockitoExtension.class)
 class PlanungBerechnungServiceTest {
@@ -29,8 +32,10 @@ class PlanungBerechnungServiceTest {
     private FoerderService foerderService;
 
     @Mock
-
     private VeranstaltungBerechnungsService veranstaltungBerechnungsService;
+
+    @Mock
+    private PlanungsSimulationFactory simulationFactory;
 
     @InjectMocks
     private PlanungBerechnungService service;
@@ -249,102 +254,70 @@ class PlanungBerechnungServiceTest {
     }
 
     @Test
+    void berechneUnterkunftSimulation() {
 
-    void berechneUnterkunft() {
-
-        Veranstaltung veranstaltung = new Veranstaltung();
-        Unterkunftsart unterkunft = new Unterkunftsart();
-
-        unterkunft.setPreisProPersonUndNacht(
-                BigDecimal.valueOf(35)
-        );
-
-        veranstaltung.setUnterkunftsart(unterkunft);
-        when(
-                veranstaltungBerechnungsService
-                        .ermittleGeplanteGesamtPersonen(veranstaltung)
-        ).thenReturn(24);
-        when(
-                veranstaltungBerechnungsService
-                        .ermittleNaechte(veranstaltung)
-
-        ).thenReturn(5L);
+        PlanungsSimulation simulation =
+                PlanungsSimulation.builder()
+                        .teilnehmer(18)
+                        .mitarbeiter(6)
+                        .naechte(5)
+                        .unterkunftPreisProPersonUndNacht(
+                                BigDecimal.valueOf(35)
+                        )
+                        .build();
 
         BigDecimal betrag =
-                service.berechneUnterkunft(
-                        veranstaltung
-
-                );
+                service.berechneUnterkunft(simulation);
 
         assertThat(betrag)
                 .isEqualByComparingTo("4200.00");
-
     }
 
     @Test
+    void berechneVerpflegungSimulation() {
 
-    void berechneVerpflegung() {
-
-        Veranstaltung veranstaltung = new Veranstaltung();
-        Verpflegungsmodell verpflegung =
-                new Verpflegungsmodell();
-
-        verpflegung.setPreisProPersonUndTag(
-
-                BigDecimal.valueOf(18)
-
-        );
-
-        veranstaltung.setVerpflegungsmodell(
-
-                verpflegung
-
-        );
-
-        when(
-
-                veranstaltungBerechnungsService
-
-                        .ermittleGeplanteGesamtPersonen(veranstaltung)
-
-        ).thenReturn(24);
-
-        when(
-                veranstaltungBerechnungsService
-                        .ermittleTage(veranstaltung)
-
-        ).thenReturn(6L);
+        PlanungsSimulation simulation =
+                PlanungsSimulation.builder()
+                        .teilnehmer(18)
+                        .mitarbeiter(6)
+                        .tage(6)
+                        .verpflegungPreisProPersonUndTag(
+                                BigDecimal.valueOf(18)
+                        )
+                        .build();
 
         BigDecimal betrag =
-
-                service.berechneVerpflegung(
-
-                        veranstaltung
-
-                );
+                service.berechneVerpflegung(simulation);
 
         assertThat(betrag)
                 .isEqualByComparingTo("2592.00");
-
     }
 
     @Test
-    void berechneUnterkunftOhneUnterkunftsart() {
+    void berechneUnterkunftOhnePreis() {
 
-        Veranstaltung veranstaltung = new Veranstaltung();
+        PlanungsSimulation simulation =
+                PlanungsSimulation.builder()
+                        .teilnehmer(20)
+                        .naechte(5)
+                        .build();
 
         assertThat(
-                service.berechneUnterkunft(veranstaltung)
+                service.berechneUnterkunft(simulation)
         ).isEqualByComparingTo(BigDecimal.ZERO);
     }
 
     @Test
-    void berechneVerpflegungOhneVerpflegungsmodell() {
+    void berechneVerpflegungOhnePreis() {
 
-        Veranstaltung veranstaltung = new Veranstaltung();
+        PlanungsSimulation simulation =
+                PlanungsSimulation.builder()
+                        .teilnehmer(20)
+                        .tage(6)
+                        .build();
 
         assertThat(
-                service.berechneVerpflegung(veranstaltung)
+                service.berechneVerpflegung(simulation)
         ).isEqualByComparingTo(BigDecimal.ZERO);
     }
 }
