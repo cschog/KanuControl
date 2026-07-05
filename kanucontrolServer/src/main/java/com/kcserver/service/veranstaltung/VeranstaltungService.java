@@ -1,4 +1,4 @@
-package com.kcserver.service;
+package com.kcserver.service.veranstaltung;
 
 import com.kcserver.api.response.ApiResponse;
 import com.kcserver.dto.beitrag.BeitragsstrukturDTO;

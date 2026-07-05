@@ -1,4 +1,4 @@
-// src/api/types/enums/VeranstaltungTyp.ts
+// src/api/enums/VeranstaltungTyp.ts
 export enum VeranstaltungTyp {
   JEM = "JEM",
   FM = "FM",

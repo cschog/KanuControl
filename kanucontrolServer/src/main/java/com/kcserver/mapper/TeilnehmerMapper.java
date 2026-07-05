@@ -9,7 +9,7 @@ import com.kcserver.entity.Mitglied;
 import com.kcserver.entity.Person;
 import com.kcserver.entity.Teilnehmer;
 import com.kcserver.service.AltersService;
-import com.kcserver.service.TeilnehmerBeitragService;
+import com.kcserver.service.beitrag.TeilnehmerBeitragService;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;

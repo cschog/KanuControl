@@ -2,7 +2,7 @@ package com.kcserver.controller;
 
 import com.kcserver.dto.reisekosten.ReisekostenabrechnungListResponse;
 import com.kcserver.dto.veranstaltung.VeranstaltungDetailDTO;
-import com.kcserver.service.VeranstaltungService;
+import com.kcserver.service.veranstaltung.VeranstaltungService;
 import com.kcserver.service.pdf.*;
 import com.kcserver.service.reisekosten.ReisekostenabrechnungService;
 import lombok.RequiredArgsConstructor;

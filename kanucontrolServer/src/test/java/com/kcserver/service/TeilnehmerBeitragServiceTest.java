@@ -6,6 +6,8 @@ import com.kcserver.entity.Person;
 import com.kcserver.entity.Teilnehmer;
 import com.kcserver.entity.Veranstaltung;
 import com.kcserver.enumtype.TeilnehmerRolle;
+import com.kcserver.service.beitrag.BeitragsregelService;
+import com.kcserver.service.beitrag.TeilnehmerBeitragService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

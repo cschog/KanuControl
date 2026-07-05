@@ -1,4 +1,4 @@
-package com.kcserver.service;
+package com.kcserver.service.beitrag;
 
 import com.kcserver.entity.Beitragsregel;
 import com.kcserver.entity.Beitragsstruktur;

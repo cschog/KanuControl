@@ -1,4 +1,4 @@
-package com.kcserver.service;
+package com.kcserver.service.veranstaltung;
 
 import com.kcserver.dto.validation.ValidationResultDTO;
 import com.kcserver.entity.Teilnehmer;

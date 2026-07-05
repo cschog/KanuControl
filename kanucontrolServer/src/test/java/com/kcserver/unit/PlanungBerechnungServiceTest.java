@@ -1,7 +1,7 @@
 package com.kcserver.unit;
 
 import com.kcserver.entity.*;
-import com.kcserver.service.BeitragsregelService;
+import com.kcserver.service.beitrag.BeitragsregelService;
 import com.kcserver.service.FoerderService;
 import com.kcserver.service.PlanungBerechnungService;
 import org.junit.jupiter.api.Test;
@@ -16,7 +16,7 @@ import java.util.Optional;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
-import com.kcserver.simulation.PlanungsSimulation;
+import com.kcserver.dto.simulation.PlanungsSimulation;
 
 @ExtendWith(MockitoExtension.class)
 class PlanungBerechnungServiceTest {

@@ -6,6 +6,7 @@ import com.kcserver.dto.finanzen.FoerderungDashboardDTO;
 import com.kcserver.entity.*;
 import com.kcserver.enumtype.FinanzKategorie;
 import com.kcserver.repository.*;
+import com.kcserver.service.beitrag.TeilnehmerBeitragService;
 import com.kcserver.service.reisekosten.ReisekostenabrechnungService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

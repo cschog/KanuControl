@@ -2,10 +2,10 @@ package com.kcserver.unit;
 
 import com.kcserver.enumtype.FinanzKategorie;
 import com.kcserver.service.PlanungBerechnungService;
-import com.kcserver.simulation.PlanungsSimulation;
-import com.kcserver.simulation.SimulationEngine;
-import com.kcserver.simulation.SimulationErgebnis;
-import com.kcserver.simulation.SimulationPosition;
+import com.kcserver.dto.simulation.PlanungsSimulation;
+import com.kcserver.service.simulation.SimulationEngine;
+import com.kcserver.dto.simulation.SimulationErgebnis;
+import com.kcserver.dto.simulation.SimulationPosition;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

@@ -1,7 +1,8 @@
-package com.kcserver.simulation;
+package com.kcserver.service.simulation;
 
+import com.kcserver.dto.simulation.PlanungsSimulation;
 import com.kcserver.entity.Veranstaltung;
-import com.kcserver.service.VeranstaltungBerechnungsService;
+import com.kcserver.service.veranstaltung.VeranstaltungBerechnungsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import java.math.BigDecimal;

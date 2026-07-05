@@ -7,7 +7,7 @@ import com.kcserver.enumtype.PdfDokumentTyp;
 import com.kcserver.repository.TeilnehmerRepository;
 import com.kcserver.repository.VeranstaltungRepository;
 import com.kcserver.service.AltersService;
-import com.kcserver.service.VeranstaltungBerechnungsService;
+import com.kcserver.service.veranstaltung.VeranstaltungBerechnungsService;
 import com.kcserver.util.PdfFilenameUtil;
 import lombok.RequiredArgsConstructor;
 import org.apache.pdfbox.Loader;

@@ -5,7 +5,7 @@ import com.kcserver.dto.teilnehmer.TeilnehmerBulkDeleteDTO;
 import com.kcserver.dto.veranstaltung.*;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.service.TeilnehmerService;
-import com.kcserver.service.VeranstaltungService;
+import com.kcserver.service.veranstaltung.VeranstaltungService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

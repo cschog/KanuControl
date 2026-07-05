@@ -11,7 +11,7 @@ import com.kcserver.finanz.PlanungPositionService;
 import com.kcserver.finanz.PlanungService;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
 import com.kcserver.repository.*;
-import com.kcserver.service.VeranstaltungService;
+import com.kcserver.service.veranstaltung.VeranstaltungService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;

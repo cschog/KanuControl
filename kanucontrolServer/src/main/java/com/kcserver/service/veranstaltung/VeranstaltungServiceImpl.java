@@ -1,4 +1,4 @@
-package com.kcserver.service;
+package com.kcserver.service.veranstaltung;
 
 import com.kcserver.api.response.ApiResponse;
 import com.kcserver.dto.beitrag.BeitragsstrukturDTO;
@@ -13,6 +13,7 @@ import com.kcserver.repository.VeranstaltungSpecs;
 import com.kcserver.mapper.PersonMapper;
 import com.kcserver.mapper.VeranstaltungMapper;
 import com.kcserver.repository.*;
+import com.kcserver.service.beitrag.BeitragsstrukturService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -530,12 +531,12 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
         return new ApiResponse<>(dtoResult, warnings);
     }
 
-    public Veranstaltung findEntityById(
-            Long id
-    ) {
+    @Override
+    @Transactional(readOnly = true)
+    public Veranstaltung findEntityById(Long id) {
 
         return veranstaltungRepository
-                .findById(id)
+                .findByIdWithRelations(id)
                 .orElseThrow(() ->
                         new EntityNotFoundException(
                                 VERANSTALTUNG_NOT_FOUND

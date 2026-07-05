@@ -1,5 +1,8 @@
-package com.kcserver.simulation;
+package com.kcserver.service.simulation;
 
+import com.kcserver.dto.simulation.PlanungsSimulation;
+import com.kcserver.dto.simulation.SimulationErgebnis;
+import com.kcserver.dto.simulation.SimulationPosition;
 import com.kcserver.enumtype.FinanzKategorie;
 import com.kcserver.service.PlanungBerechnungService;
 import lombok.RequiredArgsConstructor;

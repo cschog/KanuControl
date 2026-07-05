@@ -5,7 +5,7 @@ import com.kcserver.enumtype.PdfDokumentTyp;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.repository.*;
 import com.kcserver.service.FoerderService;
-import com.kcserver.service.VeranstaltungValidator;
+import com.kcserver.service.veranstaltung.VeranstaltungValidator;
 import com.kcserver.util.PdfFilenameUtil;
 import lombok.RequiredArgsConstructor;
 import org.apache.pdfbox.Loader;

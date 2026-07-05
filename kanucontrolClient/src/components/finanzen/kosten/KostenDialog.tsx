@@ -38,7 +38,7 @@ const KostenDialog = ({ open, onClose }: Props) => {
       kommentar,
     };
 
-    console.log("Neue Buchung", data);
+  
 
     onClose();
   };

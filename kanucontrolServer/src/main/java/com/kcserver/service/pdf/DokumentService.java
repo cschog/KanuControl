@@ -4,7 +4,7 @@ import com.kcserver.dto.teilnehmer.TeilnehmerDetailDTO;
 import com.kcserver.dto.veranstaltung.VeranstaltungDetailDTO;
 import com.kcserver.enumtype.PdfDokumentTyp;
 import com.kcserver.service.TeilnehmerService;
-import com.kcserver.service.VeranstaltungService;
+import com.kcserver.service.veranstaltung.VeranstaltungService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;

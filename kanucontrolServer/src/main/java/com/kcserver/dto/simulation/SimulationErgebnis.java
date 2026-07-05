@@ -1,4 +1,4 @@
-package com.kcserver.simulation;
+package com.kcserver.dto.simulation;
 
 import lombok.*;
 import java.math.BigDecimal;

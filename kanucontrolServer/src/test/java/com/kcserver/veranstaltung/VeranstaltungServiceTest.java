@@ -12,7 +12,7 @@ import com.kcserver.repository.PersonRepository;
 import com.kcserver.repository.TeilnehmerRepository;
 import com.kcserver.repository.VeranstaltungRepository;
 import com.kcserver.repository.VereinRepository;
-import com.kcserver.service.VeranstaltungService;
+import com.kcserver.service.veranstaltung.VeranstaltungService;
 import com.kcserver.support.builder.PersonBuilder;
 import com.kcserver.support.builder.VeranstaltungBuilder;
 import com.kcserver.support.builder.VeranstaltungCreateDTOBuilder;

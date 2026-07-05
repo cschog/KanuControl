@@ -59,8 +59,6 @@ class FoerdersatzIntegrationTest extends AbstractFinanzIntegrationTest {
     @BeforeEach
     void setup() {
 
-        System.out.println("Foerdersätze vor Test:");
-
         foerdersatzRepository.findAll().forEach(f ->
 
                 System.out.println(

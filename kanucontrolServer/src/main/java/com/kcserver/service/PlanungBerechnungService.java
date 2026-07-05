@@ -2,10 +2,11 @@ package com.kcserver.service;
 
 import com.kcserver.entity.Beitragsregel;
 import com.kcserver.entity.Veranstaltung;
-import com.kcserver.simulation.PlanungsSimulationFactory;
+import com.kcserver.service.beitrag.BeitragsregelService;
+import com.kcserver.service.simulation.PlanungsSimulationFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import com.kcserver.simulation.PlanungsSimulation;
+import com.kcserver.dto.simulation.PlanungsSimulation;
 
 import java.math.BigDecimal;
 

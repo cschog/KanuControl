@@ -6,7 +6,7 @@ import com.kcserver.dto.teilnehmer.TeilnehmerBezahltDTO;
 import com.kcserver.dto.teilnehmer.TeilnehmerListDTO;
 import com.kcserver.entity.Veranstaltung;
 import com.kcserver.service.TeilnehmerService;
-import com.kcserver.service.VeranstaltungService;
+import com.kcserver.service.veranstaltung.VeranstaltungService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 

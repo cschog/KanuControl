@@ -8,8 +8,8 @@ import PlanungPage from "@/components/finanzen/planung/PlanungPage";
 import BuchungenPage from "@/components/finanzen/buchung/BuchungenPage";
 import BeitraegePage from "@/components/finanzen/beitraege/BeitraegePage";
 import ReisekostenPage from "@/components/finanzen/reisekosten/ReisekostenPage";
-import AbrechnungPage from "@/components/finanzen/AbrechnungPage";
 import KuerzelPage from "@/components/finanzen/KuerzelPage";
+import SimulationPage from "@/components/simulation/SimulationPage";
 
 const Finanzen = () => {
   const { veranstaltungId } = useParams<{ veranstaltungId: string }>();
@@ -58,7 +58,7 @@ const Finanzen = () => {
         <Tab label="Buchungen" />
         <Tab label="Beiträge" />
         <Tab label="Fahrkosten" />
-        <Tab label="Abrechnung" />
+        <Tab label="Simulation" />
         <Tab label="Kürzel" />
       </Tabs>
 
@@ -67,7 +67,11 @@ const Finanzen = () => {
       {tab === 2 && <BuchungenPage veranstaltungId={id} />}
       {tab === 3 && <BeitraegePage veranstaltungId={id} />}
       {tab === 4 && <ReisekostenPage veranstaltungId={id} />}
-      {tab === 5 && <AbrechnungPage veranstaltungId={id} />}
+      {tab === 5 && (
+    <SimulationPage
+        veranstaltungId={id}
+    />
+)}
       {tab === 6 && <KuerzelPage veranstaltungId={id} />}
     </Box>
   );

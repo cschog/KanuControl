@@ -13,8 +13,8 @@ export interface VeranstaltungDetail {
   name: string;
   typ: VeranstaltungTyp;
 
- unterkunftsart?: UnterkunftsartRef;
-verpflegungsmodell?: VerpflegungsmodellRef;
+  unterkunftsart?: UnterkunftsartRef;
+  verpflegungsmodell?: VerpflegungsmodellRef;
 
   plz?: string;
   ort?: string;

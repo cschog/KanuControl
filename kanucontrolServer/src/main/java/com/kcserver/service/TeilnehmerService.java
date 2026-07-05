@@ -10,6 +10,7 @@ import com.kcserver.mapper.PersonMapper;
 import com.kcserver.mapper.TeilnehmerMapper;
 import com.kcserver.persistence.specification.TeilnehmerSpecification;
 import com.kcserver.repository.*;
+import com.kcserver.service.beitrag.BeitragsService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;

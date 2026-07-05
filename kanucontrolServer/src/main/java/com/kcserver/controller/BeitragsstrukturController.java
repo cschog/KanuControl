@@ -4,7 +4,7 @@ import com.kcserver.api.response.ApiResponse;
 import com.kcserver.dto.beitrag.BeitragsregelCreateDTO;
 import com.kcserver.dto.beitrag.BeitragsstrukturDTO;
 import com.kcserver.dto.beitrag.BeitragsstrukturUpdateDTO;
-import com.kcserver.service.BeitragsstrukturService;
+import com.kcserver.service.beitrag.BeitragsstrukturService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

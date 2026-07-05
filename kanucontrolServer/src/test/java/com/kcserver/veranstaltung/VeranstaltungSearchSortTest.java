@@ -46,7 +46,6 @@ public class VeranstaltungSearchSortTest
                         objectMapper
                 );
         vereinId = vereinFactory.create("TV", "Test Verein");
-        System.out.println("vereinId = " + vereinId);
 
         leiterId = personFactory.createWithVerein(vereinId, b ->
                 b.withVorname("leiter")

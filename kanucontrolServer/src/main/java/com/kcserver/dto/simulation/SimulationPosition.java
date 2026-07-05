@@ -1,4 +1,4 @@
-package com.kcserver.simulation;
+package com.kcserver.dto.simulation;
 
 import com.kcserver.enumtype.FinanzKategorie;
 import lombok.*;

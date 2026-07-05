@@ -41,7 +41,7 @@ const rows: KostenRow[] = [
 
 const KostenTable = ({ onDelete }: Props) => {
   const handleEdit = (id: number) => {
-    console.log("Edit Buchung", id);
+  
   };
 
   const columns = kostenColumns(handleEdit, onDelete);

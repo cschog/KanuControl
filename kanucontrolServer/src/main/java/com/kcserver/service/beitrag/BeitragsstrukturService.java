@@ -1,4 +1,4 @@
-package com.kcserver.service;
+package com.kcserver.service.beitrag;
 
 import com.kcserver.dto.beitrag.BeitragsregelCreateDTO;
 import com.kcserver.dto.beitrag.BeitragsstrukturDTO;

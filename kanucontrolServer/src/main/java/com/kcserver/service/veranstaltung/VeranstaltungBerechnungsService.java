@@ -1,4 +1,4 @@
-package com.kcserver.service;
+package com.kcserver.service.veranstaltung;
 
 import com.kcserver.entity.Veranstaltung;
 import org.springframework.stereotype.Service;

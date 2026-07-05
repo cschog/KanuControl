@@ -15,7 +15,7 @@ const KostenPage = () => {
 
   const confirmDelete = () => {
     if (deleteId) {
-      console.log("delete booking", deleteId);
+      
     }
 
     setDeleteId(null);
