@@ -9,7 +9,7 @@ import com.kcserver.mapper.PlanungMapper;
 import com.kcserver.repository.PlanungRepository;
 import com.kcserver.repository.TeilnehmerRepository;
 import com.kcserver.repository.VeranstaltungRepository;
-import com.kcserver.service.PlanungsSimulationService;
+import com.kcserver.service.PlanungAutomatikService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -26,7 +26,7 @@ public class PlanungService {
     private final PlanungMapper mapper;
     private final FinanzService finanzService;
     private final TeilnehmerRepository teilnehmerRepository;
-    private final PlanungsSimulationService planungsSimulationService;
+    private final PlanungAutomatikService planungsSimulationService;
 
     /* =========================================================
        GET OR CREATE

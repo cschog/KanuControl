@@ -5,7 +5,7 @@ import com.kcserver.entity.PlanungPosition;
 import com.kcserver.entity.Veranstaltung;
 import com.kcserver.enumtype.FinanzKategorie;
 import com.kcserver.service.PlanungBerechnungService;
-import com.kcserver.service.PlanungsSimulationService;
+import com.kcserver.service.PlanungAutomatikService;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -22,7 +22,7 @@ class PlanungsSimulationServiceTest {
     private PlanungBerechnungService planungBerechnungService;
 
     @InjectMocks
-    private PlanungsSimulationService service;
+    private PlanungAutomatikService service;
 
     @Test
     void aktualisiereAutomatischePositionen_legtAutomatischePositionenAn() {

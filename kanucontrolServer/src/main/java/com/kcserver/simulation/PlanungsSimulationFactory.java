@@ -40,13 +40,13 @@ public class PlanungsSimulationFactory {
                 .beitragsstruktur(
                         v.getBeitragsstruktur()
                 )
-                .unterkunftPreis(
+                .unterkunftPreisProPersonUndNacht(
                         v.getUnterkunftsart() == null
                                 ? BigDecimal.ZERO
                                 : v.getUnterkunftsart()
                                 .getPreisProPersonUndNacht()
                 )
-                .verpflegungPreis(
+                .verpflegungPreisProPersonUndTag(
                         v.getVerpflegungsmodell() == null
                                 ? BigDecimal.ZERO
                                 : v.getVerpflegungsmodell()

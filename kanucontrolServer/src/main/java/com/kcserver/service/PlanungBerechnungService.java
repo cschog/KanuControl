@@ -2,8 +2,10 @@ package com.kcserver.service;
 
 import com.kcserver.entity.Beitragsregel;
 import com.kcserver.entity.Veranstaltung;
+import com.kcserver.simulation.PlanungsSimulationFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import com.kcserver.simulation.PlanungsSimulation;
 
 import java.math.BigDecimal;
 
@@ -21,6 +23,8 @@ public class PlanungBerechnungService {
     private final FoerderService foerderService;
 
     private final VeranstaltungBerechnungsService veranstaltungBerechnungsService;
+
+    private final PlanungsSimulationFactory simulationFactory;
 
     public BigDecimal berechneTeilnehmerbeitraege(
             Veranstaltung veranstaltung
@@ -102,68 +106,75 @@ public class PlanungBerechnungService {
             Veranstaltung veranstaltung
     ) {
 
-        if (veranstaltung == null
-                || veranstaltung.getUnterkunftsart() == null) {
+        if (veranstaltung == null) {
             return BigDecimal.ZERO;
         }
 
-        BigDecimal preis =
-                veranstaltung.getUnterkunftsart()
-                        .getPreisProPersonUndNacht();
+        return berechneUnterkunft(
+                simulationFactory.fromVeranstaltung(
+                        veranstaltung
+                )
+        );
+    }
 
-        if (preis == null) {
+    public BigDecimal berechneUnterkunft(
+            PlanungsSimulation simulation
+    ) {
+
+        if (simulation.getUnterkunftPreisProPersonUndNacht() == null) {
             return BigDecimal.ZERO;
         }
 
-        int personen =
-                veranstaltungBerechnungsService
-                        .ermittleGeplanteGesamtPersonen(
-                                veranstaltung
-                        );
+        return simulation.getUnterkunftPreisProPersonUndNacht()
+                .multiply(
+                        BigDecimal.valueOf(
+                                simulation.getTeilnehmer()
+                                        + simulation.getMitarbeiter()
+                        )
+                )
 
-        long naechte =
-                veranstaltungBerechnungsService
-                        .ermittleNaechte(
-                                veranstaltung
-                        );
+                .multiply(
+                        BigDecimal.valueOf(
+                                simulation.getNaechte()
+                        )
+                );
 
-        return preis
-                .multiply(BigDecimal.valueOf(personen))
-                .multiply(BigDecimal.valueOf(naechte));
     }
 
     public BigDecimal berechneVerpflegung(
             Veranstaltung veranstaltung
     ) {
 
-        if (veranstaltung == null
-                || veranstaltung.getVerpflegungsmodell() == null) {
+        if (veranstaltung == null) {
             return BigDecimal.ZERO;
         }
 
-        BigDecimal preis =
-                veranstaltung.getVerpflegungsmodell()
-                        .getPreisProPersonUndTag();
+        return berechneVerpflegung(
+                simulationFactory.fromVeranstaltung(
+                        veranstaltung
+                )
+        );
+    }
 
-        if (preis == null) {
+    public BigDecimal berechneVerpflegung(
+            PlanungsSimulation simulation
+    ) {
+        if (simulation.getVerpflegungPreisProPersonUndTag() == null) {
             return BigDecimal.ZERO;
         }
 
-        int personen =
-                veranstaltungBerechnungsService
-                        .ermittleGeplanteGesamtPersonen(
-                                veranstaltung
-                        );
-
-        long tage =
-                veranstaltungBerechnungsService
-                        .ermittleTage(
-                                veranstaltung
-                        );
-
-        return preis
-                .multiply(BigDecimal.valueOf(personen))
-                .multiply(BigDecimal.valueOf(tage));
+        return simulation.getVerpflegungPreisProPersonUndTag()
+                .multiply(
+                        BigDecimal.valueOf(
+                                simulation.getTeilnehmer()
+                                        + simulation.getMitarbeiter()
+                        )
+                )
+                .multiply(
+                        BigDecimal.valueOf(
+                                simulation.getTage()
+                        )
+                );
     }
 
     /* =========================================================
@@ -182,4 +193,8 @@ public class PlanungBerechnungService {
                 veranstaltung
         );
     }
+
+
+
+
 }

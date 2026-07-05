@@ -25,8 +25,8 @@ public class PlanungsSimulation {
     private Beitragsstruktur beitragsstruktur;
 
     // Preise
-    private BigDecimal unterkunftPreis;
-    private BigDecimal verpflegungPreis;
+    private BigDecimal unterkunftPreisProPersonUndNacht;
+    private BigDecimal verpflegungPreisProPersonUndTag;
 
     // Förderung
     private VeranstaltungTyp typ;

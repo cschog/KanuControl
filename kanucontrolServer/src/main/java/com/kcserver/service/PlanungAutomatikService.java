@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 
 @Service
 @RequiredArgsConstructor
-public class PlanungsSimulationService {
+public class PlanungAutomatikService {
 
     private final PlanungBerechnungService planungBerechnungService;
 
