@@ -533,4 +533,25 @@ public class BeitragsstrukturService {
 
         return mapper.toDTO(saved);
     }
+
+    @Transactional(readOnly = true)
+    public Beitragsstruktur findEntityById(Long strukturId) {
+
+        return repository.findById(strukturId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Beitragsstruktur nicht gefunden: " + strukturId
+                        )
+                );
+    }
+
+    @Transactional(readOnly = true)
+    public Beitragsstruktur findEntityMitRegelnById(Long id) {
+
+        return repository.findWithRegelnById(id)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Beitragsstruktur nicht gefunden: " + id
+                        ));
+    }
 }

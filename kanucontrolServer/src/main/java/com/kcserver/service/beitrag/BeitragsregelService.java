@@ -3,14 +3,20 @@ package com.kcserver.service.beitrag;
 import com.kcserver.entity.Beitragsregel;
 import com.kcserver.entity.Beitragsstruktur;
 import com.kcserver.enumtype.TeilnehmerRolle;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class BeitragsregelService {
+
+    private final BeitragsstrukturService beitragsstrukturService;
 
     public Optional<Beitragsregel> findPassendeRegel(
             Beitragsstruktur struktur,
@@ -107,12 +113,10 @@ public class BeitragsregelService {
         Optional<Beitragsregel> rollenRegel =
                 struktur.getRegeln()
                         .stream()
-                        .filter(r -> r.getRolle() == rolle)
-                        .sorted(Comparator.comparing(
+                        .filter(r -> r.getRolle() == rolle).min(Comparator.comparing(
                                 Beitragsregel::getSortierung,
                                 Comparator.nullsLast(Integer::compareTo)
-                        ))
-                        .findFirst();
+                        ));
 
         if (rollenRegel.isPresent()) {
             return rollenRegel;
@@ -143,5 +147,53 @@ public class BeitragsregelService {
                 struktur,
                 TeilnehmerRolle.LEITER
         );
+    }
+
+    public Optional<Beitragsregel> findPlanungsRegelTeilnehmer(
+            Long beitragsstrukturId,
+            int foerderHoechstalter
+    ) {
+
+        if (beitragsstrukturId == null) {
+            return Optional.empty();
+        }
+
+        return findPlanungsRegelTeilnehmer(
+                beitragsstrukturService.findEntityMitRegelnById(beitragsstrukturId),
+                foerderHoechstalter
+        );
+    }
+
+    public Optional<Beitragsregel> findPlanungsRegelMitarbeiter(
+            Long beitragsstrukturId
+    ) {
+
+        if (beitragsstrukturId == null) {
+            return Optional.empty();
+        }
+
+        return findPlanungsRegelMitarbeiter(
+                beitragsstrukturService.findEntityMitRegelnById(beitragsstrukturId)
+        );
+    }
+    public BigDecimal ermittlePlanungsTeilnehmerBeitrag(
+            Beitragsstruktur struktur
+    ) {
+        return findPlanungsRegelTeilnehmer(
+                struktur,
+                20
+        )
+                .map(Beitragsregel::getBeitrag)
+                .orElse(BigDecimal.ZERO);
+    }
+
+    public BigDecimal ermittlePlanungsMitarbeiterBeitrag(
+            Beitragsstruktur struktur
+    ) {
+        return findPlanungsRegelMitarbeiter(
+                struktur
+        )
+                .map(Beitragsregel::getBeitrag)
+                .orElse(BigDecimal.ZERO);
     }
 }

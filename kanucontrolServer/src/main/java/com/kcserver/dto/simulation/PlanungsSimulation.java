@@ -13,7 +13,16 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class PlanungsSimulation {
 
-    // Personen
+    private LocalDate beginnDatum;
+
+    private boolean kikZertifiziert;
+
+    // Gebühren
+    private Long beitragsstrukturId;
+    private BigDecimal teilnehmerBeitragUnter21Jahre;
+    private BigDecimal mitarbeiterBeitrag;
+
+    // Personen (Eingabewerte)
     private int teilnehmer;
     private int mitarbeiter;
 
@@ -21,17 +30,21 @@ public class PlanungsSimulation {
     private long tage;
     private long naechte;
 
-    private LocalDate beginnDatum;
-
-    private boolean kikZertifiziert;
-
-    // Gebühren
-    private BigDecimal standardGebuehr;
-    private Beitragsstruktur beitragsstruktur;
-
     // Preise
     private BigDecimal unterkunftPreisProPersonUndNacht;
     private BigDecimal verpflegungPreisProPersonUndTag;
+
+    // Kosten (Eingabewerte)
+    private BigDecimal honorare;
+    private BigDecimal fahrtkosten;
+    private BigDecimal verbrauchsmaterialProTag;
+    private BigDecimal kultur;
+    private BigDecimal miete;
+    private BigDecimal sonstigeKostenProTag;
+
+    // Einnahmen (Eingabewerte)
+    private BigDecimal pfand;
+    private BigDecimal sonstigeEinnahmenProTag;
 
     // Förderung
     private VeranstaltungTyp typ;

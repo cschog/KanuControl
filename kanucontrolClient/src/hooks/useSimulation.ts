@@ -19,13 +19,12 @@ export function useSimulation(
         useState<SimulationErgebnis>();
 
     const [loading, setLoading] =
-        useState(false);
+        useState(true);
 
     const [error, setError] =
         useState<string>();
 
     const load = useCallback(async () => {
-
 
         if (!veranstaltungId) {
             return;
@@ -35,39 +34,9 @@ export function useSimulation(
 
             setLoading(true);
 
-            const sim = await getSimulation(veranstaltungId);
-
-            setSimulation(sim);
-
-            const result = await simulate(sim);
-
-            setErgebnis(result);
-
-            setError(undefined);
-
-        } catch {
-
-            setError("Simulation konnte nicht geladen werden.");
-
-        } finally {
-
-            setLoading(false);
-
-        }
-
-    }, [veranstaltungId]);
-
-
-    const recalculate = useCallback(async (
-
-        sim: PlanungsSimulation
-
-
-    ) => {
-
-        try {
-
-            setLoading(true);
+            const sim = await getSimulation(
+                veranstaltungId
+            );
 
             setSimulation(sim);
 
@@ -80,12 +49,37 @@ export function useSimulation(
 
         } catch {
 
-            setError("Simulation konnte nicht berechnet werden.");
+            setError(
+                "Simulation konnte nicht geladen werden."
+            );
 
         } finally {
 
             setLoading(false);
+        }
 
+    }, [veranstaltungId]);
+
+    const recalculate = useCallback(async (
+        sim: PlanungsSimulation
+    ) => {
+
+        try {
+
+            // simulation NICHT überschreiben!
+
+            const result =
+                await simulate(sim);
+
+            setErgebnis(result);
+
+            setError(undefined);
+
+        } catch {
+
+            setError(
+                "Simulation konnte nicht berechnet werden."
+            );
         }
 
     }, []);
@@ -104,7 +98,6 @@ export function useSimulation(
         loading,
         error,
 
-        setSimulation,
         recalculate,
         reload: load,
     };

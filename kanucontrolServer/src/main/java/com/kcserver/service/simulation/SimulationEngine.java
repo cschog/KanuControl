@@ -67,56 +67,71 @@ public class SimulationEngine {
 
         List<SimulationPosition> positionen = new ArrayList<>();
 
-        positionen.add(berechneUnterkunft(simulation));
-        positionen.add(berechneVerpflegung(simulation));
-        positionen.add(berechneTeilnehmerbeitraege(simulation));
-        positionen.add(berechneKjfp(simulation));
+        // Kosten
+        positionen.add(position(
+                FinanzKategorie.UNTERKUNFT,
+                berechnung.berechneUnterkunft(simulation)
+        ));
+
+        positionen.add(position(
+                FinanzKategorie.VERPFLEGUNG,
+                berechnung.berechneVerpflegung(simulation)
+        ));
+
+        positionen.add(position(
+                FinanzKategorie.HONORARE,
+                berechnung.berechneHonorare(simulation)
+        ));
+
+        positionen.add(position(
+                FinanzKategorie.FAHRTKOSTEN,
+                berechnung.berechneFahrtkosten(simulation)
+        ));
+
+        positionen.add(position(
+                FinanzKategorie.VERBRAUCHSMATERIAL,
+                berechnung.berechneVerbrauchsmaterial(simulation)
+        ));
+
+        positionen.add(position(
+                FinanzKategorie.KULTUR,
+                berechnung.berechneKultur(simulation)
+        ));
+
+        positionen.add(position(
+                FinanzKategorie.MIETE,
+                berechnung.berechneMiete(simulation)
+        ));
+
+        positionen.add(position(
+                FinanzKategorie.SONSTIGE_KOSTEN,
+                berechnung.berechneSonstigeKosten(simulation)
+        ));
+
+        // Einnahmen
+        positionen.add(position(
+                FinanzKategorie.TEILNEHMERBEITRAG,
+                berechnung.berechneTeilnehmerbeitraege(simulation)
+        ));
+
+        positionen.add(position(
+                FinanzKategorie.PFAND,
+                berechnung.berechnePfand(simulation)
+        ));
+
+        positionen.add(position(
+                FinanzKategorie.SONSTIGE_EINNAHMEN,
+                berechnung.berechneSonstigeEinnahmen(simulation)
+        ));
+
+        positionen.add(position(
+                FinanzKategorie.KJFP_ZUSCHUSS,
+                berechnung.berechneKjfpZuschuss(simulation)
+        ));
 
         return positionen;
     }
 
-    /* =========================================================
-   EINZELPOSITIONEN
-   ========================================================= */
-    private SimulationPosition berechneUnterkunft(
-            PlanungsSimulation simulation
-    ) {
-
-        return position(
-                FinanzKategorie.UNTERKUNFT,
-                berechnung.berechneUnterkunft(simulation)
-        );
-    }
-
-    private SimulationPosition berechneVerpflegung(
-            PlanungsSimulation simulation
-    ) {
-
-        return position(
-                FinanzKategorie.VERPFLEGUNG,
-                berechnung.berechneVerpflegung(simulation)
-        );
-    }
-
-    private SimulationPosition berechneTeilnehmerbeitraege(
-            PlanungsSimulation simulation
-    ) {
-
-        return position(
-                FinanzKategorie.TEILNEHMERBEITRAG,
-                berechnung.berechneTeilnehmerbeitraege(simulation)
-        );
-    }
-
-    private SimulationPosition berechneKjfp(
-            PlanungsSimulation simulation
-    ) {
-
-        return position(
-                FinanzKategorie.KJFP_ZUSCHUSS,
-                berechnung.berechneKjfpZuschuss(simulation)
-        );
-    }
 
     /* =========================================================
    HILFSMETHODEN

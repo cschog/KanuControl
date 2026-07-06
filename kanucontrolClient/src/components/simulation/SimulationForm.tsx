@@ -1,6 +1,10 @@
+// src/components/simulation/SimulationForm.tsx
+
+import { useEffect } from "react";
 import {
     Card,
     CardContent,
+    Divider,
     FormControlLabel,
     Grid,
     MenuItem,
@@ -8,12 +12,14 @@ import {
     TextField,
     Typography,
 } from "@mui/material";
+import InputAdornment from "@mui/material/InputAdornment";
+
+import SliderNumberField from "@/components/common/SliderNumberField";
 
 import { PlanungsSimulation } from "@/api/types/simulation/PlanungsSimulation";
 import { VeranstaltungTyp } from "@/api/enums/VeranstaltungTyp";
 
 interface SimulationFormProps {
-
     simulation: PlanungsSimulation;
 
     onChange(
@@ -22,30 +28,30 @@ interface SimulationFormProps {
 }
 
 export default function SimulationForm({
-
     simulation,
     onChange,
-
 }: SimulationFormProps) {
+
+    console.log("SimulationForm render");
+
+    useEffect(() => {
+        console.log("SimulationForm mounted");
+
+        return () => console.log("SimulationForm unmounted");
+    }, []);
 
     const update = <K extends keyof PlanungsSimulation>(
         key: K,
         value: PlanungsSimulation[K]
     ) => {
-
         onChange({
-
             ...simulation,
-
             [key]: value,
-
         });
     };
 
     return (
-
         <Card>
-
             <CardContent>
 
                 <Typography
@@ -60,13 +66,21 @@ export default function SimulationForm({
                     spacing={2}
                 >
 
-                    <Grid size={{ xs: 12, md: 6 }}>
+                    {/* Allgemein */}
 
+                    <Grid size={12}>
+                        <Typography variant="subtitle1">
+                            Allgemein
+                        </Typography>
+                        <Divider />
+                    </Grid>
+
+                    <Grid size={{ xs: 12, md: 6 }}>
                         <TextField
                             select
                             fullWidth
                             label="Veranstaltungstyp"
-                            value={simulation.typ || ""}
+                            value={simulation.typ}
                             onChange={(e) =>
                                 update(
                                     "typ",
@@ -83,28 +97,21 @@ export default function SimulationForm({
                                 </MenuItem>
                             ))}
                         </TextField>
-
                     </Grid>
 
                     <Grid size={{ xs: 6, md: 3 }}>
-
-                        <TextField
-                            fullWidth
-                            type="number"
+                        <SliderNumberField
                             label="Teilnehmer"
                             value={simulation.teilnehmer}
-                            onChange={(e) =>
-                                update(
-                                    "teilnehmer",
-                                    Number(e.target.value)
-                                )
+                            min={7}
+                            max={50}
+                            onChange={(value) =>
+                                update("teilnehmer", value)
                             }
                         />
-
                     </Grid>
 
                     <Grid size={{ xs: 6, md: 3 }}>
-
                         <TextField
                             fullWidth
                             type="number"
@@ -117,11 +124,9 @@ export default function SimulationForm({
                                 )
                             }
                         />
-
                     </Grid>
 
                     <Grid size={{ xs: 6, md: 3 }}>
-
                         <TextField
                             fullWidth
                             type="number"
@@ -134,11 +139,9 @@ export default function SimulationForm({
                                 )
                             }
                         />
-
                     </Grid>
 
                     <Grid size={{ xs: 6, md: 3 }}>
-
                         <TextField
                             fullWidth
                             type="number"
@@ -151,68 +154,9 @@ export default function SimulationForm({
                                 )
                             }
                         />
-
                     </Grid>
 
                     <Grid size={{ xs: 6, md: 3 }}>
-
-                        <TextField
-                            fullWidth
-                            type="number"
-                            label="Unterkunft €/Nacht"
-                            value={
-                                simulation.unterkunftPreisProPersonUndNacht ?? ""
-                            }
-                            onChange={(e) =>
-                                update(
-                                    "unterkunftPreisProPersonUndNacht",
-                                    Number(e.target.value)
-                                )
-                            }
-                        />
-
-                    </Grid>
-
-                    <Grid size={{ xs: 6, md: 3 }}>
-
-                        <TextField
-                            fullWidth
-                            type="number"
-                            label="Verpflegung €/Tag"
-                            value={
-                                simulation.verpflegungPreisProPersonUndTag ?? ""
-                            }
-                            onChange={(e) =>
-                                update(
-                                    "verpflegungPreisProPersonUndTag",
-                                    Number(e.target.value)
-                                )
-                            }
-                        />
-
-                    </Grid>
-
-                    <Grid size={{ xs: 6, md: 3 }}>
-
-                        <TextField
-                            fullWidth
-                            type="number"
-                            label="Teilnehmerbeitrag"
-                            value={
-                                simulation.standardGebuehr ?? ""
-                            }
-                            onChange={(e) =>
-                                update(
-                                    "standardGebuehr",
-                                    Number(e.target.value)
-                                )
-                            }
-                        />
-
-                    </Grid>
-
-                    <Grid size={{ xs: 6, md: 3 }}>
-
                         <FormControlLabel
                             control={
                                 <Switch
@@ -227,13 +171,205 @@ export default function SimulationForm({
                             }
                             label="KiK zertifiziert"
                         />
+                    </Grid>
 
+                    {/* Preise */}
+
+                    <Grid size={12}>
+                        <Typography variant="subtitle1">
+                            Preise
+                        </Typography>
+                        <Divider />
+                    </Grid>
+
+                    <Grid size={{ xs: 6, md: 4 }}>
+                        <TextField
+                            fullWidth
+                            type="number"
+                            label="Unterkunft €/Person/Nacht"
+                            value={simulation.unterkunftPreisProPersonUndNacht ?? ""}
+                            onChange={(e) =>
+                                update(
+                                    "unterkunftPreisProPersonUndNacht",
+                                    Number(e.target.value)
+                                )
+                            }
+                        />
+                    </Grid>
+
+                    <Grid size={{ xs: 6, md: 4 }}>
+                        <TextField
+                            fullWidth
+                            type="number"
+                            label="Verpflegung €/Person/Tag"
+                            value={simulation.verpflegungPreisProPersonUndTag ?? ""}
+                            onChange={(e) =>
+                                update(
+                                    "verpflegungPreisProPersonUndTag",
+                                    Number(e.target.value)
+                                )
+                            }
+                        />
+                    </Grid>
+
+                    <Grid size={{ xs: 6, md: 3 }}>
+                        <SliderNumberField
+                            label="TN-Beitrag (<21 Jahre)"
+                            value={simulation.teilnehmerBeitragUnter21Jahre ?? 0}
+                            min={0}
+                            max={300}
+                            step={5}
+                            suffix="€"
+                            onChange={(value) =>
+                                update(
+                                    "teilnehmerBeitragUnter21Jahre",
+                                    value
+                                )
+                            }
+                        />
+                    </Grid>
+
+                    <Grid size={{ xs: 6, md: 3 }}>
+                        <TextField
+                            fullWidth
+                            type="number"
+                            label="MA-Beitrag"
+                            value={simulation.mitarbeiterBeitrag ?? ""}
+                            onChange={(e) =>
+                                update(
+                                    "mitarbeiterBeitrag",
+                                    Number(e.target.value)
+                                )
+                            }
+                        />
+                    </Grid>
+
+                    {/* Kosten */}
+
+                    <Grid size={12}>
+                        <Typography variant="subtitle1">
+                            Kosten
+                        </Typography>
+                        <Divider />
+                    </Grid>
+
+                    <Grid size={{ xs: 6, md: 4 }}>
+                        <TextField
+                            fullWidth
+                            type="number"
+                            label="Honorare"
+                            value={simulation.honorare ?? ""}
+                            onChange={(e) =>
+                                update("honorare", Number(e.target.value))
+                            }
+                        />
+                    </Grid>
+
+                    <Grid size={{ xs: 6, md: 4 }}>
+                        <TextField
+                            fullWidth
+                            type="number"
+                            label="Fahrtkosten"
+                            value={simulation.fahrtkosten ?? ""}
+                            onChange={(e) =>
+                                update("fahrtkosten", Number(e.target.value))
+                            }
+                        />
+                    </Grid>
+
+                    <Grid size={{ xs: 6, md: 4 }}>
+                        <TextField
+                            fullWidth
+                            type="number"
+                            label="Verbrauchsmaterial / Tag"
+                            value={simulation.verbrauchsmaterialProTag ?? ""}
+                            onChange={(e) =>
+                                update(
+                                    "verbrauchsmaterialProTag",
+                                    Number(e.target.value)
+                                )
+                            }
+                        />
+                    </Grid>
+
+                    <Grid size={{ xs: 6, md: 4 }}>
+                        <TextField
+                            fullWidth
+                            type="number"
+                            label="Kultur"
+                            value={simulation.kultur ?? ""}
+                            onChange={(e) =>
+                                update("kultur", Number(e.target.value))
+                            }
+                        />
+                    </Grid>
+
+                    <Grid size={{ xs: 6, md: 4 }}>
+                        <TextField
+                            fullWidth
+                            type="number"
+                            label="Miete"
+                            value={simulation.miete ?? ""}
+                            onChange={(e) =>
+                                update("miete", Number(e.target.value))
+                            }
+                        />
+                    </Grid>
+
+                    <Grid size={{ xs: 6, md: 4 }}>
+                        <TextField
+                            fullWidth
+                            type="number"
+                            label="Sonstige Kosten / Tag"
+                            value={simulation.sonstigeKostenProTag ?? ""}
+                            onChange={(e) =>
+                                update(
+                                    "sonstigeKostenProTag",
+                                    Number(e.target.value)
+                                )
+                            }
+                        />
+                    </Grid>
+
+                    {/* Einnahmen */}
+
+                    <Grid size={12}>
+                        <Typography variant="subtitle1">
+                            Einnahmen
+                        </Typography>
+                        <Divider />
+                    </Grid>
+
+                    <Grid size={{ xs: 6, md: 4 }}>
+                        <TextField
+                            fullWidth
+                            type="number"
+                            label="Pfand"
+                            value={simulation.pfand ?? ""}
+                            onChange={(e) =>
+                                update("pfand", Number(e.target.value))
+                            }
+                        />
+                    </Grid>
+
+                    <Grid size={{ xs: 6, md: 4 }}>
+                        <TextField
+                            fullWidth
+                            type="number"
+                            label="Sonstige Einnahmen / Tag"
+                            value={simulation.sonstigeEinnahmenProTag ?? ""}
+                            onChange={(e) =>
+                                update(
+                                    "sonstigeEinnahmenProTag",
+                                    Number(e.target.value)
+                                )
+                            }
+                        />
                     </Grid>
 
                 </Grid>
 
             </CardContent>
-
         </Card>
     );
 }

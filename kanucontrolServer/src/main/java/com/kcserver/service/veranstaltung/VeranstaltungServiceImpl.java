@@ -487,8 +487,6 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
 
         if (v.isIndividuelleGebuehren()) {
 
-            // Standardgebühr wird nicht verwendet
-            v.setStandardGebuehr(null);
 
             // Struktur zwingend erforderlich
             if (v.getBeitragsstruktur() == null) {

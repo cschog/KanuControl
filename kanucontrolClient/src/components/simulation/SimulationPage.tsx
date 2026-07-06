@@ -1,7 +1,8 @@
-import { useParams } from "react-router-dom";
+// src/components/simulation/SimulationPage.tsx
 
+import { useEffect, useState } from "react";
 import { useSimulation } from "@/hooks/useSimulation";
-
+import { PlanungsSimulation } from "@/api/types/simulation/PlanungsSimulation";
 import SimulationForm from "./SimulationForm";
 import SimulationSummary from "./SimulationSummary";
 import SimulationPositionTable from "./SimulationPositionTable";
@@ -16,34 +17,54 @@ export default function SimulationPage({
     veranstaltungId,
 }: SimulationPageProps) {
 
-   const {
+    const {
+        simulation,
+        ergebnis,
+        loading,
+        error,
+        recalculate
+    } = useSimulation(veranstaltungId);
 
-    simulation,
-    ergebnis,
+    const [localSimulation, setLocalSimulation] =
+        useState<PlanungsSimulation>();
 
-    loading,
+ useEffect(() => {
 
-    error,
+    if (!localSimulation && simulation) {
+        setLocalSimulation(simulation);
+    }
 
-    recalculate
+}, [simulation, localSimulation]);
 
-} = useSimulation(veranstaltungId);
+    useEffect(() => {
+        if (!localSimulation) {
+            return;
+        }
+
+        const timer = setTimeout(() => {
+            recalculate(localSimulation);
+        }, 300);
+
+        return () => clearTimeout(timer);
+
+    }, [localSimulation, recalculate]);
 
     if (loading) {
         return <>Lade Simulation…</>;
     }
 
-    if (!simulation || !ergebnis) {
+    if (!localSimulation || !ergebnis) {
         return <>Keine Daten vorhanden.</>;
     }
+
 
     return (
 
         <>
 
             <SimulationForm
-                simulation={simulation}
-                onChange={recalculate}
+                simulation={localSimulation}
+                onChange={setLocalSimulation}
             />
 
             <SimulationSummary

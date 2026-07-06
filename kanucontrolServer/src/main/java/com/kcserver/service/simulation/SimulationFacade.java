@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class SimulationFacade {
 
     private final VeranstaltungService veranstaltungService;
-    private final PlanungsSimulationFactory factory;
+    private final SimulationFactory factory;
     private final SimulationEngine engine;
 
 
@@ -36,7 +36,7 @@ public class SimulationFacade {
                         veranstaltungId
                 );
 
-        return factory.fromVeranstaltung(
+        return factory.createDefault(
                 veranstaltung
         );
     }

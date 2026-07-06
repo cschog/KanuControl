@@ -5,7 +5,7 @@ import com.kcserver.dto.foerder.FoerdersatzLookupResult;
 import com.kcserver.entity.*;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.dto.simulation.PlanungsSimulation;
-import com.kcserver.service.simulation.PlanungsSimulationFactory;
+import com.kcserver.service.simulation.SimulationFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,7 +22,7 @@ public class FoerderService {
     private final FoerdersatzService foerdersatzService;
     private final KikZuschlagService kikZuschlagService;
     private final AltersService altersService;
-    private final PlanungsSimulationFactory simulationFactory;
+    private final SimulationFactory simulationFactory;
 
     private static final int MAX_FOERDERTAGE_FM_JEM = 21;
 

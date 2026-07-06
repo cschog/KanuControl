@@ -1,9 +1,7 @@
 package com.kcserver.service;
 
-import com.kcserver.entity.Beitragsregel;
 import com.kcserver.entity.Veranstaltung;
-import com.kcserver.service.beitrag.BeitragsregelService;
-import com.kcserver.service.simulation.PlanungsSimulationFactory;
+import com.kcserver.service.simulation.SimulationFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import com.kcserver.dto.simulation.PlanungsSimulation;
@@ -18,12 +16,10 @@ public class PlanungBerechnungService {
      * Aktuell fest im Code.
      * Später aus den Fördersätzen bzw. der Konfiguration ermitteln.
      */
-    private static final int FOERDER_HOECHSTALTER = 20;
 
-    private final BeitragsregelService beitragsregelService;
     private final FoerderService foerderService;
 
-    private final PlanungsSimulationFactory simulationFactory;
+    private final SimulationFactory simulationFactory;
 
     public BigDecimal berechneTeilnehmerbeitraege(
             Veranstaltung veranstaltung
@@ -46,45 +42,11 @@ public class PlanungBerechnungService {
             return BigDecimal.ZERO;
         }
 
-        if (simulation.getBeitragsstruktur() == null) {
-
-            BigDecimal gebuehr = simulation.getStandardGebuehr();
-
-            if (gebuehr == null) {
-                return BigDecimal.ZERO;
-            }
-
-            return gebuehr.multiply(
-                    BigDecimal.valueOf(
-                            simulation.getTeilnehmer()
-                                    + simulation.getMitarbeiter()
-                    )
-            );
-        }
-
-        BigDecimal teilnehmerBeitrag =
-                beitragsregelService
-                        .findPlanungsRegelTeilnehmer(
-                                simulation.getBeitragsstruktur(),
-                                FOERDER_HOECHSTALTER
-                        )
-                        .map(Beitragsregel::getBeitrag)
-                        .orElse(BigDecimal.ZERO);
-
-        BigDecimal mitarbeiterBeitrag =
-                beitragsregelService
-                        .findPlanungsRegelMitarbeiter(
-                                simulation.getBeitragsstruktur()
-                        )
-                        .map(Beitragsregel::getBeitrag)
-                        .orElse(BigDecimal.ZERO);
-
-        return teilnehmerBeitrag.multiply(
-                        BigDecimal.valueOf(simulation.getTeilnehmer()))
+        return simulation.getTeilnehmerBeitragUnter21Jahre()
+                .multiply(BigDecimal.valueOf(simulation.getTeilnehmer()))
                 .add(
-                        mitarbeiterBeitrag.multiply(
-                                BigDecimal.valueOf(simulation.getMitarbeiter())
-                        )
+                        simulation.getMitarbeiterBeitrag()
+                                .multiply(BigDecimal.valueOf(simulation.getMitarbeiter()))
                 );
     }
 
@@ -192,6 +154,82 @@ public class PlanungBerechnungService {
         return foerderService.berechneGeplanteFoerderung(
                 simulation
         );
+    }
+
+    public BigDecimal berechneHonorare(
+            PlanungsSimulation simulation
+    ) {
+        return simulation == null || simulation.getHonorare() == null
+                ? BigDecimal.ZERO
+                : simulation.getHonorare();
+    }
+
+    public BigDecimal berechneFahrtkosten(
+            PlanungsSimulation simulation
+    ) {
+        return simulation == null || simulation.getFahrtkosten() == null
+                ? BigDecimal.ZERO
+                : simulation.getFahrtkosten();
+    }
+
+    public BigDecimal berechneVerbrauchsmaterial(
+            PlanungsSimulation simulation
+    ) {
+        if (simulation == null
+                || simulation.getVerbrauchsmaterialProTag() == null) {
+            return BigDecimal.ZERO;
+        }
+
+        return simulation.getVerbrauchsmaterialProTag()
+                .multiply(BigDecimal.valueOf(simulation.getTage()));
+    }
+
+    public BigDecimal berechneKultur(
+            PlanungsSimulation simulation
+    ) {
+        return simulation == null || simulation.getKultur() == null
+                ? BigDecimal.ZERO
+                : simulation.getKultur();
+    }
+
+    public BigDecimal berechneMiete(
+            PlanungsSimulation simulation
+    ) {
+        return simulation == null || simulation.getMiete() == null
+                ? BigDecimal.ZERO
+                : simulation.getMiete();
+    }
+
+    public BigDecimal berechneSonstigeKosten(
+            PlanungsSimulation simulation
+    ) {
+        if (simulation == null
+                || simulation.getSonstigeKostenProTag() == null) {
+            return BigDecimal.ZERO;
+        }
+
+        return simulation.getSonstigeKostenProTag()
+                .multiply(BigDecimal.valueOf(simulation.getTage()));
+    }
+
+    public BigDecimal berechnePfand(
+            PlanungsSimulation simulation
+    ) {
+        return simulation == null || simulation.getPfand() == null
+                ? BigDecimal.ZERO
+                : simulation.getPfand();
+    }
+
+    public BigDecimal berechneSonstigeEinnahmen(
+            PlanungsSimulation simulation
+    ) {
+        if (simulation == null
+                || simulation.getSonstigeEinnahmenProTag() == null) {
+            return BigDecimal.ZERO;
+        }
+
+        return simulation.getSonstigeEinnahmenProTag()
+                .multiply(BigDecimal.valueOf(simulation.getTage()));
     }
 
 }
