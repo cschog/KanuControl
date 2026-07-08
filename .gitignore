@@ -21,3 +21,4 @@ Thumbs.db
 # Secrets
 .env
 secrets/kanucontrolClient/tsconfig.tsbuildinfo
+node_modules/
