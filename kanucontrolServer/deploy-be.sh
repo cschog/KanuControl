@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 ssh-add --apple-load-keychain >/dev/null 2>&1
 

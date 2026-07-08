@@ -316,21 +316,6 @@ export default function SimulationForm({
                         />
                     </Grid>
 
-                    <Grid size={{ xs: 6, md: 4 }}>
-                        <TextField
-                            fullWidth
-                            type="number"
-                            label="Sonstige Kosten / Tag"
-                            value={simulation.sonstigeKostenProTag ?? ""}
-                            onChange={(e) =>
-                                update(
-                                    "sonstigeKostenProTag",
-                                    Number(e.target.value)
-                                )
-                            }
-                        />
-                    </Grid>
-
                     {/* Einnahmen */}
 
                     <Grid size={12}>
@@ -348,21 +333,6 @@ export default function SimulationForm({
                             value={simulation.pfand ?? ""}
                             onChange={(e) =>
                                 update("pfand", Number(e.target.value))
-                            }
-                        />
-                    </Grid>
-
-                    <Grid size={{ xs: 6, md: 4 }}>
-                        <TextField
-                            fullWidth
-                            type="number"
-                            label="Sonstige Einnahmen / Tag"
-                            value={simulation.sonstigeEinnahmenProTag ?? ""}
-                            onChange={(e) =>
-                                update(
-                                    "sonstigeEinnahmenProTag",
-                                    Number(e.target.value)
-                                )
                             }
                         />
                     </Grid>

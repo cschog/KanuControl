@@ -31,7 +31,6 @@ export interface PlanungsSimulation {
     verbrauchsmaterialProTag?: number;
     kultur?: number;
     miete?: number;
-    sonstigeKostenProTag?: number;
 
     pfand?: number;
     sonstigeEinnahmenProTag?: number;

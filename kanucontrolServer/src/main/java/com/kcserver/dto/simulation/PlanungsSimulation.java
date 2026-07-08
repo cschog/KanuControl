@@ -1,6 +1,5 @@
 package com.kcserver.dto.simulation;
 
-import com.kcserver.entity.Beitragsstruktur;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import lombok.*;
 import java.math.BigDecimal;
@@ -44,7 +43,6 @@ public class PlanungsSimulation {
 
     // Einnahmen (Eingabewerte)
     private BigDecimal pfand;
-    private BigDecimal sonstigeEinnahmenProTag;
 
     // Förderung
     private VeranstaltungTyp typ;

@@ -24,7 +24,6 @@ public class SimulationFactory {
     private static final BigDecimal STANDARD_SONSTIGE_KOSTEN_PRO_TAG = BigDecimal.valueOf(10);
 
     private static final BigDecimal STANDARD_PFAND = BigDecimal.ZERO;
-    private static final BigDecimal STANDARD_SONSTIGE_EINNAHMEN_PRO_TAG = BigDecimal.valueOf(150);
 
     private final VeranstaltungBerechnungsService berechnungsService;
     private final BeitragsregelService beitragsregelService;
@@ -82,9 +81,7 @@ public class SimulationFactory {
                 .miete(STANDARD_MIETE)
                 .sonstigeKostenProTag(STANDARD_SONSTIGE_KOSTEN_PRO_TAG)
                 .pfand(STANDARD_PFAND)
-                .sonstigeEinnahmenProTag(
-                        STANDARD_SONSTIGE_EINNAHMEN_PRO_TAG
-                )
+
                 .typ(v.getTyp())
                 .build();
     }
@@ -143,9 +140,7 @@ public class SimulationFactory {
                 .miete(STANDARD_MIETE)
                 .sonstigeKostenProTag(STANDARD_SONSTIGE_KOSTEN_PRO_TAG)
                 .pfand(STANDARD_PFAND)
-                .sonstigeEinnahmenProTag(
-                        STANDARD_SONSTIGE_EINNAHMEN_PRO_TAG
-                )
+
                 .typ(v.getTyp())
                 .build();
     }

@@ -98,7 +98,7 @@ export default function SimulationSummary({
                             variant="subtitle2"
                             color="text.secondary"
                         >
-                            Saldo
+                            Eigenleistung
                         </Typography>
 
                         <Typography
@@ -113,11 +113,8 @@ export default function SimulationSummary({
                         </Typography>
 
                     </CardContent>
-
                 </Card>
-
             </Grid>
-
         </Grid>
 
     );

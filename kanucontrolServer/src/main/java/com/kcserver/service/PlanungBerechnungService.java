@@ -220,16 +220,4 @@ public class PlanungBerechnungService {
                 : simulation.getPfand();
     }
 
-    public BigDecimal berechneSonstigeEinnahmen(
-            PlanungsSimulation simulation
-    ) {
-        if (simulation == null
-                || simulation.getSonstigeEinnahmenProTag() == null) {
-            return BigDecimal.ZERO;
-        }
-
-        return simulation.getSonstigeEinnahmenProTag()
-                .multiply(BigDecimal.valueOf(simulation.getTage()));
-    }
-
 }

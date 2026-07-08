@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSimulation } from "@/hooks/useSimulation";
+import SimulationCockpit from "./SimulationCockpit";
 import { PlanungsSimulation } from "@/api/types/simulation/PlanungsSimulation";
 import SimulationForm from "./SimulationForm";
 import SimulationSummary from "./SimulationSummary";
@@ -28,13 +29,13 @@ export default function SimulationPage({
     const [localSimulation, setLocalSimulation] =
         useState<PlanungsSimulation>();
 
- useEffect(() => {
+    useEffect(() => {
 
-    if (!localSimulation && simulation) {
-        setLocalSimulation(simulation);
-    }
+        if (!localSimulation && simulation) {
+            setLocalSimulation(simulation);
+        }
 
-}, [simulation, localSimulation]);
+    }, [simulation, localSimulation]);
 
     useEffect(() => {
         if (!localSimulation) {
@@ -57,18 +58,14 @@ export default function SimulationPage({
         return <>Keine Daten vorhanden.</>;
     }
 
-
     return (
 
         <>
 
-            <SimulationForm
+            <SimulationCockpit
                 simulation={localSimulation}
-                onChange={setLocalSimulation}
-            />
-
-            <SimulationSummary
                 ergebnis={ergebnis}
+                onChange={setLocalSimulation}
             />
 
             <SimulationPositionTable

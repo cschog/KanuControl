@@ -40,7 +40,6 @@ class PlanungBerechnungServiceTest {
                 PlanungsSimulation.builder()
                         .teilnehmer(24)
                         .mitarbeiter(6)
-                        .standardGebuehr(BigDecimal.valueOf(80))
                         .build();
 
         BigDecimal betrag =
@@ -201,7 +200,6 @@ class PlanungBerechnungServiceTest {
                 PlanungsSimulation.builder()
                         .teilnehmer(24)
                         .mitarbeiter(6)
-                        .standardGebuehr(null)
                         .build();
 
         BigDecimal betrag =

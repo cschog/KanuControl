@@ -120,11 +120,6 @@ public class SimulationEngine {
         ));
 
         positionen.add(position(
-                FinanzKategorie.SONSTIGE_EINNAHMEN,
-                berechnung.berechneSonstigeEinnahmen(simulation)
-        ));
-
-        positionen.add(position(
                 FinanzKategorie.KJFP_ZUSCHUSS,
                 berechnung.berechneKjfpZuschuss(simulation)
         ));
