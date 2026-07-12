@@ -1,5 +1,6 @@
 package com.kcserver.unit;
 
+import com.kcserver.dto.simulation.VeranstaltungsInfo;
 import com.kcserver.entity.*;
 import com.kcserver.service.beitrag.BeitragsregelService;
 import com.kcserver.service.FoerderService;
@@ -132,7 +133,11 @@ class PlanungBerechnungServiceTest {
                 PlanungsSimulation.builder()
                         .teilnehmer(18)
                         .mitarbeiter(6)
-                        .naechte(5)
+                        .veranstaltung(
+                                VeranstaltungsInfo.builder()
+                                        .naechte(5)
+                                        .build()
+                        )
                         .unterkunftPreisProPersonUndNacht(
                                 BigDecimal.valueOf(35)
                         )
@@ -152,7 +157,11 @@ class PlanungBerechnungServiceTest {
                 PlanungsSimulation.builder()
                         .teilnehmer(18)
                         .mitarbeiter(6)
-                        .tage(6)
+                        .veranstaltung(
+                                VeranstaltungsInfo.builder()
+                                        .tage(6)
+                                        .build()
+                        )
                         .verpflegungPreisProPersonUndTag(
                                 BigDecimal.valueOf(18)
                         )
@@ -171,7 +180,11 @@ class PlanungBerechnungServiceTest {
         PlanungsSimulation simulation =
                 PlanungsSimulation.builder()
                         .teilnehmer(20)
-                        .naechte(5)
+                        .veranstaltung(
+                                VeranstaltungsInfo.builder()
+                                        .naechte(5)
+                                        .build()
+                        )
                         .build();
 
         assertThat(
@@ -185,7 +198,11 @@ class PlanungBerechnungServiceTest {
         PlanungsSimulation simulation =
                 PlanungsSimulation.builder()
                         .teilnehmer(20)
-                        .tage(6)
+                        .veranstaltung(
+                                VeranstaltungsInfo.builder()
+                                        .tage(6)
+                                        .build()
+                        )
                         .build();
 
         assertThat(

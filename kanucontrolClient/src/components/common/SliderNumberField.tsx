@@ -26,24 +26,24 @@ interface SliderNumberFieldProps {
     suffix?: string;
 
     disabled?: boolean;
+
+    marks?: boolean;
+
+    valueLabelDisplay?: "off" | "auto" | "on";
 }
 
 export default function SliderNumberField({
 
     label,
-
     value,
-
     onChange,
-
     min,
     max,
-
     step = 1,
-
     suffix,
-
     disabled = false,
+    marks = false,
+    valueLabelDisplay = "auto",
 
 }: SliderNumberFieldProps) {
 
@@ -69,8 +69,9 @@ export default function SliderNumberField({
                     min={min}
                     max={max}
                     step={step}
+                    marks={marks}
                     disabled={disabled}
-                    valueLabelDisplay="auto"
+                    valueLabelDisplay={valueLabelDisplay}
                     sx={{ flex: 1 }}
                     onChange={(_, newValue) =>
                         onChange(newValue as number)

@@ -2,11 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { useSimulation } from "@/hooks/useSimulation";
-import SimulationCockpit from "./SimulationCockpit";
 import { PlanungsSimulation } from "@/api/types/simulation/PlanungsSimulation";
 import SimulationForm from "./SimulationForm";
 import SimulationSummary from "./SimulationSummary";
 import SimulationPositionTable from "./SimulationPositionTable";
+import {
+    Accordion,
+    AccordionSummary,
+    AccordionDetails,
+    Box,
+    Typography,
+} from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 interface SimulationPageProps {
 
@@ -28,6 +35,9 @@ export default function SimulationPage({
 
     const [localSimulation, setLocalSimulation] =
         useState<PlanungsSimulation>();
+
+    const [simulationOpen, setSimulationOpen] = useState(true);
+    const [positionenOpen, setPositionenOpen] = useState(false);
 
     useEffect(() => {
 
@@ -59,20 +69,82 @@ export default function SimulationPage({
     }
 
     return (
-
         <>
+            <Box
+                sx={{
+                    position: "sticky",
+                    top: 0,
+                    zIndex: 100,
+                    bgcolor: "background.default",
+                    pb: 2,
+                    borderRadius: 2,
+                }}
+            >
+                <SimulationSummary
+                    ergebnis={ergebnis}
+                />
+            </Box>
 
-            <SimulationCockpit
-                simulation={localSimulation}
-                ergebnis={ergebnis}
-                onChange={setLocalSimulation}
-            />
+            <Accordion
+                expanded={simulationOpen}
+                onChange={(_, expanded) => setSimulationOpen(expanded)}
+                sx={{
+                    mt: 2,
+                    bgcolor: "grey.100",
+                    borderRadius: 2,
+                }}
+            >
+                <AccordionSummary
+                    expandIcon={<ExpandMoreIcon />}
+                >
+                    <Typography variant="h5">
+                        Simulation
+                    </Typography>
+                </AccordionSummary>
 
-            <SimulationPositionTable
-                positionen={ergebnis.positionen}
-            />
+                <AccordionDetails
+                    sx={{
+                        bgcolor: "grey.200",
+                        borderTop: 1,
+                        borderColor: "divider",
+                    }}
+                >
+                    <SimulationForm
+                        simulation={localSimulation}
+                        onChange={setLocalSimulation}
+                    />
+                </AccordionDetails>
+            </Accordion>
 
+            <Accordion
+                expanded={positionenOpen}
+                onChange={(_, expanded) => setPositionenOpen(expanded)}
+                sx={{
+                    mt: 2,
+                    bgcolor: "grey.100",
+                    borderRadius: 2,
+                }}
+            >
+                <AccordionSummary
+                    expandIcon={<ExpandMoreIcon />}
+                >
+                    <Typography variant="h5">
+                        Berechnungspositionen
+                    </Typography>
+                </AccordionSummary>
+
+                <AccordionDetails
+                    sx={{
+                        bgcolor: "grey.200",
+                        borderTop: 1,
+                        borderColor: "divider",
+                    }}
+                >
+                    <SimulationPositionTable
+                        positionen={ergebnis.positionen}
+                    />
+                </AccordionDetails>
+            </Accordion>
         </>
-
     );
 }

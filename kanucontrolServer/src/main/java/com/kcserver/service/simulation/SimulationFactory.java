@@ -1,6 +1,7 @@
 package com.kcserver.service.simulation;
 
 import com.kcserver.dto.simulation.PlanungsSimulation;
+import com.kcserver.dto.simulation.VeranstaltungsInfo;
 import com.kcserver.entity.Veranstaltung;
 import com.kcserver.service.beitrag.BeitragsregelService;
 import com.kcserver.service.veranstaltung.VeranstaltungBerechnungsService;
@@ -28,6 +29,7 @@ public class SimulationFactory {
     private final VeranstaltungBerechnungsService berechnungsService;
     private final BeitragsregelService beitragsregelService;
 
+
     /**
      * Übernimmt die aktuellen Werte einer Veranstaltung.
      */
@@ -40,17 +42,14 @@ public class SimulationFactory {
                 .mitarbeiter(
                         berechnungsService.ermittleGeplanteMitarbeiter(v)
                 )
-                .beginnDatum(v.getBeginnDatum())
-                .kikZertifiziert(
-                        v.getVerein() != null
-                                && v.getVerein().isKikZertifiziertAm(v.getBeginnDatum())
+
+                .veranstaltung(
+                        createVeranstaltungsInfo(
+                                v,
+                                VeranstaltungsInfoModus.VERANSTALTUNG
+                        )
                 )
-                .tage(
-                        berechnungsService.ermittleTage(v)
-                )
-                .naechte(
-                        berechnungsService.ermittleNaechte(v)
-                )
+
                 .teilnehmerBeitragUnter21Jahre(
                         beitragsregelService.ermittlePlanungsTeilnehmerBeitrag(
                                         v.getBeitragsstruktur()
@@ -82,7 +81,6 @@ public class SimulationFactory {
                 .sonstigeKostenProTag(STANDARD_SONSTIGE_KOSTEN_PRO_TAG)
                 .pfand(STANDARD_PFAND)
 
-                .typ(v.getTyp())
                 .build();
     }
 
@@ -97,17 +95,14 @@ public class SimulationFactory {
         return PlanungsSimulation.builder()
                 .teilnehmer(teilnehmer)
                 .mitarbeiter(mitarbeiter)
-                .beginnDatum(v.getBeginnDatum())
-                .kikZertifiziert(
-                        v.getVerein() != null
-                                && v.getVerein().isKikZertifiziertAm(v.getBeginnDatum())
+
+                .veranstaltung(
+                        createVeranstaltungsInfo(
+                                v,
+                                VeranstaltungsInfoModus.PLANUNG
+                        )
                 )
-                .tage(
-                        berechnungsService.ermittleTage(v)
-                )
-                .naechte(
-                        berechnungsService.ermittleNaechte(v)
-                )
+
                 .teilnehmerBeitragUnter21Jahre(
                         beitragsregelService.ermittlePlanungsTeilnehmerBeitrag(
                                 v.getBeitragsstruktur()
@@ -141,11 +136,80 @@ public class SimulationFactory {
                 .sonstigeKostenProTag(STANDARD_SONSTIGE_KOSTEN_PRO_TAG)
                 .pfand(STANDARD_PFAND)
 
-                .typ(v.getTyp())
                 .build();
     }
 
     private int berechneMitarbeiter(int teilnehmer) {
         return (int) Math.ceil((double) teilnehmer / TEILNEHMER_PRO_MITARBEITER);
     }
+
+    private VeranstaltungsInfo createVeranstaltungsInfo(
+            Veranstaltung v,
+            VeranstaltungsInfoModus modus
+    ) {
+
+        boolean kik = false;
+
+        if (v.getVerein() != null) {
+
+            kik = switch (modus) {
+
+                case VERANSTALTUNG ->
+                        v.getVerein().isKikZertifiziertAm(
+                                v.getBeginnDatum()
+                        );
+
+                case PLANUNG ->
+                        v.getVerein().istKikPlanungsfaehig(
+                                v.getBeginnDatum()
+                        );
+            };
+        }
+
+        return VeranstaltungsInfo.builder()
+                .id(v.getId())
+                .name(v.getName())
+                .beginnDatum(v.getBeginnDatum())
+                .endeDatum(v.getEndeDatum())
+                .typ(v.getTyp())
+                .tage(berechnungsService.ermittleTage(v))
+                .naechte(berechnungsService.ermittleNaechte(v))
+                .vereinKikZertifiziert(kik)
+
+                .beitragsstrukturId(
+                        v.getBeitragsstruktur() == null
+                                ? null
+                                : v.getBeitragsstruktur().getId()
+                )
+                .beitragsstrukturName(
+                        v.getBeitragsstruktur() == null
+                                ? null
+                                : v.getBeitragsstruktur().getName()
+                )
+
+                .unterkunftsartId(
+                        v.getUnterkunftsart() == null
+                                ? null
+                                : v.getUnterkunftsart().getId()
+                )
+                .unterkunftsartName(
+                        v.getUnterkunftsart() == null
+                                ? null
+                                : v.getUnterkunftsart().getBezeichnung()
+                )
+
+                .verpflegungsmodellId(
+                        v.getVerpflegungsmodell() == null
+                                ? null
+                                : v.getVerpflegungsmodell().getId()
+                )
+                .verpflegungsmodellName(
+                        v.getVerpflegungsmodell() == null
+                                ? null
+                                : v.getVerpflegungsmodell().getBezeichnung()
+                )
+
+                .build();
+    }
+
 }

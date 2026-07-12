@@ -28,7 +28,7 @@ import java.math.BigDecimal;
 
 @Service
 @RequiredArgsConstructor
-public class PDFReisekostenabrechnungService {
+public class PDFFahrkostenabrechnungService {
 
     private final ReisekostenabrechnungRepository repository;
     private final ReisekostenKonfigurationRepository configRepository;
@@ -91,7 +91,7 @@ public class PDFReisekostenabrechnungService {
                         document.getDocumentInformation();
 
                 info.setTitle(
-                        "Reisekostenabrechnung_"
+                        "Fahrkostenabrechnung_"
                                 + abrechnung.getId()
                 );
 
@@ -109,7 +109,7 @@ public class PDFReisekostenabrechnungService {
         } catch (IOException e) {
 
             throw new RuntimeException(
-                    "Reisekostenabrechnung PDF konnte nicht erzeugt werden",
+                    "Fahrkostenabrechnung PDF konnte nicht erzeugt werden",
                     e
             );
         }
@@ -197,20 +197,16 @@ public class PDFReisekostenabrechnungService {
         for (Fahrtabschnitt abschnitt :
                 abrechnung.getFahrtabschnitte()
                         .stream()
-                        .sorted((a, b) ->
-                                Integer.compare(
-                                        a.getReihenfolge(),
-                                        b.getReihenfolge()
-                                ))
+                        .sorted(Comparator.comparingInt(Fahrtabschnitt::getReihenfolge))
                         .toList()) {
 
-            if (row > 12) {
+            if (row > 15) {
                 break;
             }
 
             set(
                     form,
-                    "Fahrabschnitt-von-nachRow" + row,
+                    "Fahrabschnitte-von-nachRow" + row,
                     buildVonNach(abschnitt)
             );
 
@@ -232,16 +228,15 @@ public class PDFReisekostenabrechnungService {
 
             set(
                     form,
-                    "MFRow" + row,
-                    String.valueOf(
-                            abschnitt.getMitfahrer()
-                                    .size()
-                    )
+                    "MF" + row,
+                    abschnitt.getMitfahrer().isEmpty()
+                            ? ""
+                            : String.valueOf(abschnitt.getMitfahrer().size())
             );
 
             set(
                     form,
-                    "HaengerRow" + row,
+                    "H" + row,
                     abschnitt.isAnhaenger()
                             ? "x"
                             : ""
@@ -565,8 +560,14 @@ public class PDFReisekostenabrechnungService {
 
             set(
                     form,
-                    "FMFRow" + row,
-                    z.getRolle()
+                    "FRow" + row,
+                    "F".equals(z.getRolle()) ? "x" : ""
+            );
+
+            set(
+                    form,
+                    "MFRow" + row,
+                    "MF".equals(z.getRolle()) ? "x" : ""
             );
 
             set(
@@ -621,4 +622,6 @@ public class PDFReisekostenabrechnungService {
                 .toPlainString()
                 .replace('.', ',');
     }
+
+
 }

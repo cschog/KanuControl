@@ -84,7 +84,7 @@ public class PlanungBerechnungService {
 
                 .multiply(
                         BigDecimal.valueOf(
-                                simulation.getNaechte()
+                                simulation.getVeranstaltung().getNaechte()
                         )
                 );
 
@@ -121,7 +121,7 @@ public class PlanungBerechnungService {
                 )
                 .multiply(
                         BigDecimal.valueOf(
-                                simulation.getTage()
+                                simulation.getVeranstaltung().getTage()
                         )
                 );
     }
@@ -181,7 +181,7 @@ public class PlanungBerechnungService {
         }
 
         return simulation.getVerbrauchsmaterialProTag()
-                .multiply(BigDecimal.valueOf(simulation.getTage()));
+                .multiply(BigDecimal.valueOf(simulation.getVeranstaltung().getTage()));
     }
 
     public BigDecimal berechneKultur(
@@ -209,7 +209,7 @@ public class PlanungBerechnungService {
         }
 
         return simulation.getSonstigeKostenProTag()
-                .multiply(BigDecimal.valueOf(simulation.getTage()));
+                .multiply(BigDecimal.valueOf(simulation.getVeranstaltung().getTage()));
     }
 
     public BigDecimal berechnePfand(

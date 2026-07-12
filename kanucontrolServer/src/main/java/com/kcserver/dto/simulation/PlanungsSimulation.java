@@ -1,9 +1,7 @@
 package com.kcserver.dto.simulation;
 
-import com.kcserver.enumtype.VeranstaltungTyp;
 import lombok.*;
 import java.math.BigDecimal;
-import java.time.LocalDate;
 
 @Builder
 @Getter
@@ -12,28 +10,22 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class PlanungsSimulation {
 
-    private LocalDate beginnDatum;
-
-    private boolean kikZertifiziert;
+    private VeranstaltungsInfo veranstaltung;
 
     // Gebühren
     private Long beitragsstrukturId;
     private BigDecimal teilnehmerBeitragUnter21Jahre;
     private BigDecimal mitarbeiterBeitrag;
 
-    // Personen (Eingabewerte)
+    // Personen
     private int teilnehmer;
     private int mitarbeiter;
-
-    // Dauer
-    private long tage;
-    private long naechte;
 
     // Preise
     private BigDecimal unterkunftPreisProPersonUndNacht;
     private BigDecimal verpflegungPreisProPersonUndTag;
 
-    // Kosten (Eingabewerte)
+    // Kosten
     private BigDecimal honorare;
     private BigDecimal fahrtkosten;
     private BigDecimal verbrauchsmaterialProTag;
@@ -41,9 +33,6 @@ public class PlanungsSimulation {
     private BigDecimal miete;
     private BigDecimal sonstigeKostenProTag;
 
-    // Einnahmen (Eingabewerte)
+    // Einnahmen
     private BigDecimal pfand;
-
-    // Förderung
-    private VeranstaltungTyp typ;
 }

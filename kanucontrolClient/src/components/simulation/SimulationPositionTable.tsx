@@ -35,50 +35,80 @@ export default function SimulationPositionTable({
 
 }: SimulationPositionTableProps) {
 
+    const tableFontSize = {
+        xs: "1rem",
+        lg: "1.15rem",
+        xl: "1.25rem",
+    };
+
+    const tablePadding = {
+        xs: 1.5,
+        lg: 2,
+    };
+
     return (
 
         <TableContainer
             component={Paper}
             sx={{ mt: 2 }}
         >
-
             <Typography
-                variant="h6"
-                sx={{ p: 2 }}
+                variant="h5"
+                sx={{
+                    p: 2,
+                    fontWeight: "bold",
+                    fontSize: tableFontSize,
+                }}
             >
-                Positionen
+                Berechnungspositionen
             </Typography>
 
             <Table>
 
                 <TableHead>
-
                     <TableRow>
-
-                        <TableCell>
+                        <TableCell
+                            sx={{
+                                fontWeight: "bold",
+                                fontSize: tableFontSize,
+                            }}
+                        >
                             Kategorie
                         </TableCell>
 
-                        <TableCell align="right">
+                        <TableCell
+                            align="right"
+                            sx={{
+                                fontWeight: "bold",
+                                fontSize: tableFontSize,
+                            }}
+                        >
                             Betrag
                         </TableCell>
 
-                        <TableCell align="center">
+                        <TableCell
+                            align="center"
+                            sx={{
+                                fontWeight: "bold",
+                                fontSize: tableFontSize,
+                            }}
+                        >
                             Automatisch
                         </TableCell>
-
                     </TableRow>
-
                 </TableHead>
 
                 <TableBody>
-
                     {positionen.map((position) => (
-
                         <TableRow
                             key={position.kategorie}
+                            sx={{
+                                "& td": {
+                                    fontSize: tableFontSize,
+                                    py: tablePadding,
+                                },
+                            }}
                         >
-
                             <TableCell>
                                 {position.kategorie}
                             </TableCell>
@@ -88,19 +118,13 @@ export default function SimulationPositionTable({
                             </TableCell>
 
                             <TableCell align="center">
-                                {position.automatisch
-                                    ? "Ja"
-                                    : "Nein"}
+                                {position.automatisch ? "Ja" : "Nein"}
                             </TableCell>
-
                         </TableRow>
-
                     ))}
-
                 </TableBody>
 
             </Table>
-
         </TableContainer>
 
     );

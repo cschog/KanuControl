@@ -109,14 +109,14 @@ public class FoerderService {
             return 0;
         }
 
-        if (isFmJem(simulation.getTyp())) {
+        if (isFmJem(simulation.getVeranstaltung().getTyp())) {
             return (int) Math.min(
-                    simulation.getTage(),
+                    simulation.getVeranstaltung().getTage(),
                     MAX_FOERDERTAGE_FM_JEM
             );
         }
 
-        return (int) simulation.getTage();
+        return (int) simulation.getVeranstaltung().getTage();
     }
 
     /**
@@ -201,9 +201,9 @@ public class FoerderService {
         }
 
         return ermittleTagessatz(
-                simulation.getTyp(),
-                simulation.getBeginnDatum(),
-                simulation.isKikZertifiziert()
+                simulation.getVeranstaltung().getTyp(),
+                simulation.getVeranstaltung().getBeginnDatum(),
+                simulation.getVeranstaltung().isVereinKikZertifiziert()
         );
     }
 

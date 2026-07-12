@@ -1,5 +1,4 @@
-// api/types/simulation/PlanungsSimulation.ts
-import { VeranstaltungTyp } from "@/api/enums/VeranstaltungTyp";
+import { VeranstaltungsInfo } from "./VeranstaltungsInfo";
 
 export interface Beitragsstruktur {
     id: number;
@@ -8,30 +7,35 @@ export interface Beitragsstruktur {
 
 export interface PlanungsSimulation {
 
-    typ: VeranstaltungTyp;
-
-    beginnDatum?: string;
-    kikZertifiziert: boolean;
+    veranstaltung: VeranstaltungsInfo;
 
     beitragsstrukturId?: number;
+
     teilnehmerBeitragUnter21Jahre?: number;
+
     mitarbeiterBeitrag?: number;
 
     teilnehmer: number;
+
     mitarbeiter: number;
 
-    tage: number;
-    naechte: number;
-
     unterkunftPreisProPersonUndNacht?: number;
+
     verpflegungPreisProPersonUndTag?: number;
 
     honorare?: number;
+
     fahrtkosten?: number;
+
     verbrauchsmaterialProTag?: number;
+
+    sonstigeKostenProTag?: number;
+
     kultur?: number;
+
     miete?: number;
 
     pfand?: number;
+
     sonstigeEinnahmenProTag?: number;
 }

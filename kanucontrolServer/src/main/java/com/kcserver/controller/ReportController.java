@@ -25,7 +25,7 @@ public class ReportController {
     private final DokumentService dokumentService;
     private final DokumentValidationService dokumentValidationService;
     private final VeranstaltungService veranstaltungService;
-    private final PDFReisekostenabrechnungService reisekostenPdfService;
+    private final PDFFahrkostenabrechnungService reisekostenPdfService;
     private final ReisekostenabrechnungService reisekostenabrechnungService;
 
    /* =========================================================
