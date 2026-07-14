@@ -40,9 +40,13 @@ function KpiCard({
     return (
         <Card sx={{ height: "100%" }}>
             <CardContent
+
                 sx={{
-                    py: 2,
-                    "&:last-child": { pb: 2 },
+                    py: { xs: 1, sm: 2 },
+                    px: { xs: 1.5, sm: 2 },
+                    "&:last-child": {
+                        pb: { xs: 1, sm: 2 },
+                    },
                 }}
             >
                 <Box
@@ -53,8 +57,14 @@ function KpiCard({
                 >
                     {icon}
                     <Typography
-                        variant="subtitle2"
+                        variant="caption"
                         color="text.secondary"
+                        sx={{
+                            fontSize: {
+                                xs: "0.70rem",
+                                sm: "0.85rem",
+                            },
+                        }}
                     >
                         {title}
                     </Typography>
@@ -82,7 +92,7 @@ export default function SimulationSummary({
     return (
         <Grid container spacing={2} sx={{ mb: 2 }}>
 
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Grid size={{ xs: 6, sm: 6, md: 3 }}>
                 <KpiCard
                     title="Gesamtkosten"
                     value={
@@ -92,11 +102,16 @@ export default function SimulationSummary({
                             align="center"
                         />
                     }
-                    icon={<AccountBalanceWalletIcon color="primary" />}
+                    icon={(
+                        <AccountBalanceWalletIcon
+                            color="primary"
+                            fontSize="small"
+                        />
+                    )}
                 />
             </Grid>
 
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Grid size={{ xs: 6, sm: 6, md: 3 }}>
                 <KpiCard
                     title="Gesamteinnahmen"
                     value={
@@ -106,12 +121,14 @@ export default function SimulationSummary({
                             align="center"
                         />
                     }
-                    icon={<PaymentsIcon color="success" />}
+                    icon={(
+                        <PaymentsIcon color="success" fontSize="small" />
+                    )}
                 />
 
             </Grid>
 
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Grid size={{ xs: 6, sm: 6, md: 3 }}>
                 <KpiCard
                     title="Eigenanteil"
                     value={
@@ -122,11 +139,13 @@ export default function SimulationSummary({
                             colorize
                         />
                     }
-                    icon={<BalanceIcon />}
+                    icon={(
+                        <BalanceIcon fontSize="small"/>
+                    )}
                 />
             </Grid>
 
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Grid size={{ xs: 6, sm: 6, md: 3 }}>
                 <KpiCard
                     title="KJFP-Zuschuss"
                     value={
@@ -136,7 +155,7 @@ export default function SimulationSummary({
                             align="center"
                         />
                     }
-                    icon={<VolunteerActivismIcon color="primary" />}
+                    icon={<VolunteerActivismIcon color="primary" fontSize="small" />}
                 />
             </Grid>
 

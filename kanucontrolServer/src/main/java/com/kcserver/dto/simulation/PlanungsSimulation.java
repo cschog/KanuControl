@@ -12,27 +12,36 @@ public class PlanungsSimulation {
 
     private VeranstaltungsInfo veranstaltung;
 
-    // Gebühren
-    private Long beitragsstrukturId;
-    private BigDecimal teilnehmerBeitragUnter21Jahre;
-    private BigDecimal mitarbeiterBeitrag;
+    /**
+     * Soll der KiK-Zuschlag berücksichtigt werden?
+     */
+    private boolean kikZertifiziert;
 
-    // Personen
+    /* Stammdaten */
+
+    private Long beitragsstrukturId;
+
+    /* Teilnehmer */
+
     private int teilnehmer;
     private int mitarbeiter;
 
-    // Preise
+    /* Beiträge */
+
+    private BigDecimal teilnehmerBeitragUnter21Jahre;
+    private BigDecimal mitarbeiterBeitrag;
+
+    /* Preise */
+
     private BigDecimal unterkunftPreisProPersonUndNacht;
     private BigDecimal verpflegungPreisProPersonUndTag;
 
-    // Kosten
+    /* Kosten */
+
     private BigDecimal honorare;
     private BigDecimal fahrtkosten;
     private BigDecimal verbrauchsmaterialProTag;
     private BigDecimal kultur;
     private BigDecimal miete;
     private BigDecimal sonstigeKostenProTag;
-
-    // Einnahmen
-    private BigDecimal pfand;
 }

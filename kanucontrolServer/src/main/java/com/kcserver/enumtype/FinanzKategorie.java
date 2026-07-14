@@ -86,6 +86,13 @@ public enum FinanzKategorie {
             130
     ),
 
+    EIGENANTEIL(
+            "Eigenanteil Verein",
+            FinanzTyp.EINNAHME,
+            true,
+            150
+    ),
+
     SONSTIGE_EINNAHMEN(
             "Sonstige Einnahmen",
             FinanzTyp.EINNAHME,

@@ -29,8 +29,8 @@ public class PlanungMapper {
                         : null
         );
 
-        dto.setEingereicht(
-                planung.isEingereicht()
+        dto.setStatus(
+                planung.getStatus()
         );
 
         dto.setPositionen(

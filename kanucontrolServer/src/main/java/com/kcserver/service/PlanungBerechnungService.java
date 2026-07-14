@@ -211,13 +211,4 @@ public class PlanungBerechnungService {
         return simulation.getSonstigeKostenProTag()
                 .multiply(BigDecimal.valueOf(simulation.getVeranstaltung().getTage()));
     }
-
-    public BigDecimal berechnePfand(
-            PlanungsSimulation simulation
-    ) {
-        return simulation == null || simulation.getPfand() == null
-                ? BigDecimal.ZERO
-                : simulation.getPfand();
-    }
-
 }

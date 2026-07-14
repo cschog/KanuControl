@@ -203,7 +203,7 @@ public class FoerderService {
         return ermittleTagessatz(
                 simulation.getVeranstaltung().getTyp(),
                 simulation.getVeranstaltung().getBeginnDatum(),
-                simulation.getVeranstaltung().isVereinKikZertifiziert()
+                simulation.isKikZertifiziert()
         );
     }
 
@@ -287,7 +287,7 @@ public class FoerderService {
         }
 
         KikZuschlag kik =
-                kikZuschlagService.findOptionalGueltigAm(datum);
+                kikZuschlagService.findOptionalOderLetztenGueltigen(datum);
 
         if (kik == null || kik.getKikZuschlag() == null) {
             return BigDecimal.ZERO;

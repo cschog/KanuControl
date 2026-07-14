@@ -2,6 +2,7 @@ package com.kcserver.unit;
 
 import com.kcserver.dto.planung.PlanungPositionCreateDTO;
 import com.kcserver.enumtype.FinanzKategorie;
+import com.kcserver.enumtype.PlanungsStatus;
 import com.kcserver.finanz.PlanungPositionService;
 import com.kcserver.finanz.PlanungService;
 import com.kcserver.support.api.PersonTestFactory;
@@ -82,6 +83,7 @@ class PlanungServiceTest extends AbstractTenantIntegrationTest {
 
         service.einreichen(veranstaltungId);
 
-        assertThat(service.getOrCreate(veranstaltungId).isEingereicht()).isTrue();
+        assertThat(service.getOrCreate(veranstaltungId).getStatus())
+                .isEqualTo(PlanungsStatus.EINGEREICHT);
     }
 }

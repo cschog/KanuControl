@@ -72,26 +72,11 @@ public class Verein extends Auditable {
         return startOk && endOk;
     }
 
-    public boolean istKikPlanungsfaehig(LocalDate veranstaltungsbeginn) {
-
-        if (veranstaltungsbeginn == null || kikZertifiziertBis == null) {
-            return false;
-        }
-
-        LocalDate stichtag = LocalDate.of(
-                veranstaltungsbeginn.getYear() - 1,
-                1,
-                1
-        );
-
-        return !kikZertifiziertBis.isBefore(stichtag);
-    }
-
     /**
      * 🔗 NEU: Kontoinhaber als Person
      */
-    @OneToOne(optional = true)
-    @JoinColumn(name = "kontoinhaber_id", nullable = true)
+    @OneToOne
+    @JoinColumn(name = "kontoinhaber_id")
     private Person kontoinhaber;
 
     @OneToMany(

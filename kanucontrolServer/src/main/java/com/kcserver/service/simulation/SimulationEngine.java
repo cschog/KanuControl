@@ -115,11 +115,6 @@ public class SimulationEngine {
         ));
 
         positionen.add(position(
-                FinanzKategorie.PFAND,
-                berechnung.berechnePfand(simulation)
-        ));
-
-        positionen.add(position(
                 FinanzKategorie.KJFP_ZUSCHUSS,
                 berechnung.berechneKjfpZuschuss(simulation)
         ));

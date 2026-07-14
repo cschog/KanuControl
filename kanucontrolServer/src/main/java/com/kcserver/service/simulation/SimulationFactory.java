@@ -6,6 +6,7 @@ import com.kcserver.entity.Veranstaltung;
 import com.kcserver.service.beitrag.BeitragsregelService;
 import com.kcserver.service.veranstaltung.VeranstaltungBerechnungsService;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -24,8 +25,6 @@ public class SimulationFactory {
     private static final BigDecimal STANDARD_MIETE = BigDecimal.ZERO;
     private static final BigDecimal STANDARD_SONSTIGE_KOSTEN_PRO_TAG = BigDecimal.valueOf(10);
 
-    private static final BigDecimal STANDARD_PFAND = BigDecimal.ZERO;
-
     private final VeranstaltungBerechnungsService berechnungsService;
     private final BeitragsregelService beitragsregelService;
 
@@ -35,7 +34,11 @@ public class SimulationFactory {
      */
     public PlanungsSimulation fromVeranstaltung(Veranstaltung v) {
 
+        VeranstaltungsInfo info = createVeranstaltungsInfo(v);
+
         return PlanungsSimulation.builder()
+                .veranstaltung(info)
+                .kikZertifiziert(info.isVereinKikZertifiziert())
                 .teilnehmer(
                         berechnungsService.ermittleGeplanteTeilnehmer(v)
                 )
@@ -45,8 +48,7 @@ public class SimulationFactory {
 
                 .veranstaltung(
                         createVeranstaltungsInfo(
-                                v,
-                                VeranstaltungsInfoModus.VERANSTALTUNG
+                                v
                         )
                 )
 
@@ -79,7 +81,7 @@ public class SimulationFactory {
                 .kultur(STANDARD_KULTUR)
                 .miete(STANDARD_MIETE)
                 .sonstigeKostenProTag(STANDARD_SONSTIGE_KOSTEN_PRO_TAG)
-                .pfand(STANDARD_PFAND)
+
 
                 .build();
     }
@@ -92,14 +94,17 @@ public class SimulationFactory {
         int teilnehmer = STANDARD_TEILNEHMER;
         int mitarbeiter = berechneMitarbeiter(teilnehmer);
 
+        VeranstaltungsInfo info = createVeranstaltungsInfo(v);
+
         return PlanungsSimulation.builder()
+                .veranstaltung(info)
+                .kikZertifiziert(info.isVereinKikZertifiziert())
                 .teilnehmer(teilnehmer)
                 .mitarbeiter(mitarbeiter)
 
                 .veranstaltung(
                         createVeranstaltungsInfo(
-                                v,
-                                VeranstaltungsInfoModus.PLANUNG
+                                v
                         )
                 )
 
@@ -134,7 +139,7 @@ public class SimulationFactory {
                 .kultur(STANDARD_KULTUR)
                 .miete(STANDARD_MIETE)
                 .sonstigeKostenProTag(STANDARD_SONSTIGE_KOSTEN_PRO_TAG)
-                .pfand(STANDARD_PFAND)
+
 
                 .build();
     }
@@ -144,27 +149,12 @@ public class SimulationFactory {
     }
 
     private VeranstaltungsInfo createVeranstaltungsInfo(
-            Veranstaltung v,
-            VeranstaltungsInfoModus modus
+            @NonNull Veranstaltung v
     ) {
 
-        boolean kik = false;
 
-        if (v.getVerein() != null) {
-
-            kik = switch (modus) {
-
-                case VERANSTALTUNG ->
-                        v.getVerein().isKikZertifiziertAm(
-                                v.getBeginnDatum()
-                        );
-
-                case PLANUNG ->
-                        v.getVerein().istKikPlanungsfaehig(
-                                v.getBeginnDatum()
-                        );
-            };
-        }
+        boolean kik = v.getVerein() != null
+                && v.getVerein().isKikZertifiziertAm(v.getBeginnDatum());
 
         return VeranstaltungsInfo.builder()
                 .id(v.getId())

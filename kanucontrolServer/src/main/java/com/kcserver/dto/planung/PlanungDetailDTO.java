@@ -1,6 +1,7 @@
 package com.kcserver.dto.planung;
 
 import com.kcserver.dto.finanzen.FinanzSummaryDTO;
+import com.kcserver.enumtype.PlanungsStatus;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -14,7 +15,7 @@ public class PlanungDetailDTO {
 
     private Long veranstaltungId;
 
-    private boolean eingereicht;
+    private PlanungsStatus status;
 
     private List<PlanungPositionDTO> positionen;
 

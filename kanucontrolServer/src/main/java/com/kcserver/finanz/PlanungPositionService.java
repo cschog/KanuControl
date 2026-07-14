@@ -5,6 +5,7 @@ import com.kcserver.dto.planung.PlanungPositionDTO;
 import com.kcserver.entity.Planung;
 import com.kcserver.entity.PlanungPosition;
 import com.kcserver.entity.Veranstaltung;
+import com.kcserver.enumtype.PlanungsStatus;
 import com.kcserver.exception.ErrorMessages;
 import com.kcserver.mapper.PlanungMapper;
 import com.kcserver.repository.PlanungPositionRepository;
@@ -138,7 +139,7 @@ public class PlanungPositionService {
 
     private void assertEditable(Planung planung) {
 
-        if (planung.isEingereicht()) {
+        if (planung.istEingereicht()) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
                     "Planung bereits eingereicht"

@@ -9,6 +9,8 @@ export interface PlanungsSimulation {
 
     veranstaltung: VeranstaltungsInfo;
 
+    kikZertifiziert: boolean;
+
     beitragsstrukturId?: number;
 
     teilnehmerBeitragUnter21Jahre?: number;

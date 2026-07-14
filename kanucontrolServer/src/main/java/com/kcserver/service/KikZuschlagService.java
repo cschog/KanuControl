@@ -72,4 +72,11 @@ public class KikZuschlagService {
     public void delete(Long id) {
         repository.deleteById(id);
     }
+
+    public KikZuschlag findOptionalOderLetztenGueltigen(LocalDate datum) {
+
+        return repository.findGueltigAm(datum)
+                .or(() -> repository.findFirstByGueltigVonLessThanEqualOrderByGueltigVonDesc(datum))
+                .orElse(null);
+    }
 }

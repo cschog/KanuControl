@@ -18,4 +18,8 @@ public interface KikZuschlagRepository
         order by k.gueltigVon desc
     """)
     Optional<KikZuschlag> findGueltigAm(LocalDate datum);
+
+    Optional<KikZuschlag> findTopByGueltigVonLessThanEqualOrderByGueltigVonDesc(LocalDate datum);
+
+    Optional<KikZuschlag> findFirstByGueltigVonLessThanEqualOrderByGueltigVonDesc(LocalDate datum);
 }

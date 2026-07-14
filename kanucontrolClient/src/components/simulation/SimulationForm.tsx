@@ -8,6 +8,8 @@ import {
     Grid,
     Paper,
     Typography,
+    FormControlLabel,
+    Switch,
 } from "@mui/material";
 
 import PaidIcon from "@mui/icons-material/Paid";
@@ -50,6 +52,8 @@ export default function SimulationForm({
     };
 
 
+
+
     useEffect(() => {
 
         return () => console.log("SimulationForm unmounted");
@@ -88,6 +92,33 @@ export default function SimulationForm({
                         />
                     </Grid>
 
+                    {!simulation.veranstaltung.vereinKikZertifiziert && (
+
+                        // Schalter anzeigen
+                        <Grid size={12}>
+                            <Paper
+                                variant="outlined"
+                                sx={{
+                                    p: 2,
+                                    display: "flex",
+                                    alignItems: "center",
+                                }}
+                            >
+                                <FormControlLabel
+                                    control={
+                                        <Switch
+                                            checked={simulation.kikZertifiziert}
+                                            onChange={(e) =>
+                                                update("kikZertifiziert", e.target.checked)
+                                            }
+                                        />
+                                    }
+                                    label="KiK-Zertifikat für die Veranstaltung vorhanden"
+                                />
+                            </Paper>
+                        </Grid>
+                    )}
+                    
                     <Grid size={12}>
                         <Typography
                             variant="h6"

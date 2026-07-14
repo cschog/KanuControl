@@ -4,6 +4,7 @@ import com.kcserver.dto.finanzen.FinanzSummaryDTO;
 import com.kcserver.dto.planung.PlanungDetailDTO;
 import com.kcserver.entity.Planung;
 import com.kcserver.entity.Veranstaltung;
+import com.kcserver.enumtype.PlanungsStatus;
 import com.kcserver.exception.ErrorMessages;
 import com.kcserver.mapper.PlanungMapper;
 import com.kcserver.repository.PlanungRepository;
@@ -71,7 +72,7 @@ public class PlanungService {
                         "Planung nicht gefunden"
                 ));
 
-        if (p.isEingereicht()) {
+        if (p.istEingereicht()) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
                     "Planung bereits eingereicht"
@@ -80,7 +81,7 @@ public class PlanungService {
 
         finanzService.validateAusgeglichen(p.getPositionen());
 
-        p.setEingereicht(true);
+        p.setStatus(PlanungsStatus.EINGEREICHT);
     }
 
     @Transactional
@@ -91,7 +92,7 @@ public class PlanungService {
                         "Planung not found"
                 ));
 
-        planung.setEingereicht(false);
+        planung.setStatus(PlanungsStatus.IN_BEARBEITUNG);
     }
 
     /* =========================================================
