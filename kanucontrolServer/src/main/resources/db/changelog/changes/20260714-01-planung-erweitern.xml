@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+            http://www.liquibase.org/xml/ns/dbchangelog
+            https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20260714-01-planung-erweitern" author="chris">
+
+        <!-- ========================================================= -->
+        <!-- Auditing                                                  -->
+        <!-- ========================================================= -->
+
+        <addColumn tableName="planung">
+
+            <column name="created_at"
+                    type="timestamp"/>
+
+            <column name="created_by"
+                    type="varchar(255)"/>
+
+            <column name="last_modified_at"
+                    type="timestamp"/>
+
+            <column name="last_modified_by"
+                    type="varchar(255)"/>
+
+        </addColumn>
+
+        <!-- vorhandene Datensätze initialisieren -->
+        <update tableName="planung">
+            <column name="created_at"
+                    valueComputed="CURRENT_TIMESTAMP"/>
+        </update>
+
+        <addNotNullConstraint
+                tableName="planung"
+                columnName="created_at"
+                columnDataType="timestamp"/>
+
+        <!-- ========================================================= -->
+        <!-- Status                                                    -->
+        <!-- ========================================================= -->
+
+        <addColumn tableName="planung">
+
+            <column name="status"
+                    type="varchar(30)"
+                    defaultValue="IN_BEARBEITUNG"/>
+
+        </addColumn>
+
+        <addNotNullConstraint
+                tableName="planung"
+                columnName="status"
+                columnDataType="varchar(30)"/>
+
+        <!-- Default nur für die Migration -->
+        <dropDefaultValue
+                tableName="planung"
+                columnName="status"
+                columnDataType="varchar(30)"/>
+
+        <!-- ========================================================= -->
+        <!-- Antragsdaten                                               -->
+        <!-- ========================================================= -->
+
+        <addColumn tableName="planung">
+
+            <column name="geplante_teilnehmer_maennlich"
+                    type="integer"/>
+
+            <column name="geplante_teilnehmer_weiblich"
+                    type="integer"/>
+
+            <column name="geplante_teilnehmer_divers"
+                    type="integer"/>
+
+            <column name="geplante_mitarbeiter_maennlich"
+                    type="integer"/>
+
+            <column name="geplante_mitarbeiter_weiblich"
+                    type="integer"/>
+
+            <column name="geplante_mitarbeiter_divers"
+                    type="integer"/>
+
+        </addColumn>
+
+        <!-- ========================================================= -->
+        <!-- Simulationsparameter                                      -->
+        <!-- ========================================================= -->
+
+        <addColumn tableName="planung">
+
+            <column name="teilnehmer"
+                    type="integer"/>
+
+            <column name="mitarbeiter"
+                    type="integer"/>
+
+            <column name="kik_zertifiziert"
+                    type="boolean"/>
+
+            <column name="teilnehmer_beitrag_unter21_jahre"
+                    type="numeric(10,2)"/>
+
+            <column name="mitarbeiter_beitrag"
+                    type="numeric(10,2)"/>
+
+            <column name="unterkunft_preis_pro_person_und_nacht"
+                    type="numeric(10,2)"/>
+
+            <column name="verpflegung_preis_pro_person_und_tag"
+                    type="numeric(10,2)"/>
+
+            <column name="honorare"
+                    type="numeric(10,2)"/>
+
+            <column name="fahrtkosten"
+                    type="numeric(10,2)"/>
+
+            <column name="verbrauchsmaterial_pro_tag"
+                    type="numeric(10,2)"/>
+
+            <column name="kultur"
+                    type="numeric(10,2)"/>
+
+            <column name="miete"
+                    type="numeric(10,2)"/>
+
+            <column name="sonstige_kosten_pro_tag"
+                    type="numeric(10,2)"/>
+
+        </addColumn>
+
+        <!-- ========================================================= -->
+        <!-- Alte Struktur entfernen                                   -->
+        <!-- ========================================================= -->
+
+        <dropColumn
+                tableName="planung"
+                columnName="eingereicht"/>
+
+    </changeSet>
+
+</databaseChangeLog>

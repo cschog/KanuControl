@@ -17,8 +17,9 @@ public class PlanungDetailDTO {
 
     private PlanungsStatus status;
 
+    private PlanungsSimulation simulation;
+
     private List<PlanungPositionDTO> positionen;
 
     private FinanzSummaryDTO finanz;
-
 }

@@ -2,48 +2,38 @@ import {
   Alert,
   Box,
   Button,
-  Chip,
+  Card,
+  CardContent,
   Typography,
   Stack,
   Divider,
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
-  Paper,
+  DialogActions
 } from "@mui/material";
-import IconButton from "@mui/material/IconButton";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import Tooltip from "@mui/material/Tooltip";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import PlanungspositionenTable from "@/components/simulation/PlanungspositionenTable";
 import { useEffect, useState, useCallback } from "react";
 import {
   getPlanung,
-  addPosition,
-  updatePosition,
-  deletePosition,
   einreichen,
   wiederOeffnen,
 } from "@/api/services/planungApi";
-import FinanzPositionDialog from "@/components/finanzen/FinanzPositionDialog";
-import { PlanungDetail, PlanungPosition, PlanungPositionCreate } from "@/api/types/planung";
+import { PlanungDetail } from "@/api/types/planung";
 import { kategorieZuTyp } from "@/api/types/finanz";
 
 
 interface Props {
   veranstaltungId: number;
+  onOpenSimulation: () => void;
 }
 
-export default function PlanungPage({ veranstaltungId }: Props) {
+export default function PlanungPage({
+  veranstaltungId,
+  onOpenSimulation,
+}: Props) {
   const [planung, setPlanung] = useState<PlanungDetail | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogTyp, setDialogTyp] = useState<"KOSTEN" | "EINNAHME">("KOSTEN");
-  const [editing, setEditing] = useState<PlanungPosition | undefined>();
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const load = useCallback(async () => {
@@ -55,7 +45,56 @@ export default function PlanungPage({ veranstaltungId }: Props) {
     load();
   }, [load]);
 
-  if (!planung) return null;
+  if (!planung) {
+    return (
+      <Box p={3}>
+        <Typography
+          variant="h5"
+          gutterBottom
+        >
+          Finanzplanung
+        </Typography>
+
+        <Card>
+          <CardContent>
+
+            <Box
+              display="flex"
+              alignItems="center"
+              gap={2}
+              mb={2}
+            >
+              <InfoOutlinedIcon
+                color="info"
+                fontSize="large"
+              />
+
+              <Typography variant="h6">
+                Es liegt noch keine Planung vor.
+              </Typography>
+            </Box>
+
+            <Typography
+              color="text.secondary"
+              paragraph
+            >
+              Erstellen Sie zunächst eine Simulation und
+              speichern Sie diese. Anschließend kann die
+              Planung hier eingesehen und eingereicht werden.
+            </Typography>
+
+            <Button
+              variant="contained"
+              onClick={onOpenSimulation}
+            >
+              Zur Simulation
+            </Button>
+
+          </CardContent>
+        </Card>
+      </Box>
+    );
+  }
 
   const kosten = planung.positionen.filter((p) => kategorieZuTyp[p.kategorie] === "KOSTEN");
   const einnahmen = planung.positionen.filter((p) => kategorieZuTyp[p.kategorie] === "EINNAHME");
@@ -64,124 +103,21 @@ export default function PlanungPage({ veranstaltungId }: Props) {
   const sumEinnahmen = einnahmen.reduce((a, b) => a + b.betrag, 0);
   const saldo = sumEinnahmen - sumKosten;
 
-  const handleSave = async (data: PlanungPositionCreate) => {
-    if (editing) {
-      await updatePosition(veranstaltungId, editing.id, data);
-    } else {
-      await addPosition(veranstaltungId, data);
-    }
-    setDialogOpen(false);
-    setEditing(undefined);
-    load();
-  };
+  const saldoColor =
+    saldo <= -500
+      ? "success.main"
+      : saldo <= -250
+        ? "warning.main"
+        : "error.main";
 
-  const handleDelete = async (id: number) => {
-    await deletePosition(veranstaltungId, id);
-    load();
-  };
-
-  const hasEditable = (data: PlanungPosition[]) =>
-    data.some((p) => p.editierbar);
-
-  const renderTable = (title: string, data: PlanungPosition[], typ: "KOSTEN" | "EINNAHME") => (
-    <Box mb={4}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
-        <Typography variant="h6">{title}</Typography>
-        {!planung.eingereicht && (
-          <Button
-            size="small"
-            variant="contained"
-            onClick={() => {
-              setDialogTyp(typ);
-              setDialogOpen(true);
-            }}
-          >
-            + {typ === "KOSTEN" ? "Ausgabe" : "Einnahme"}
-          </Button>
-        )}
-      </Stack>
-
-      <Paper variant="outlined">
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Kategorie</TableCell>
-              <TableCell align="right">Betrag (€)</TableCell>
-
-              {!planung.eingereicht && hasEditable(data) && (
-                <TableCell width={160}>Aktionen</TableCell>
-              )}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {data.map((p) => (
-              <TableRow key={p.id}>
-                <TableCell>
-                  {p.kategorie.replaceAll("_", " ")}
-
-                  {p.automatischBerechnet && (
-                    <Chip
-                      size="small"
-                      label="automatisch"
-                      color="info"
-                      sx={{ ml: 1 }}
-                    />
-                  )}
-                </TableCell>
-                <TableCell align="right">{p.betrag.toFixed(2)}</TableCell>
-                {!planung.eingereicht && hasEditable(data) && (
-                  <TableCell>
-                    {p.editierbar && (
-                      <Stack direction="row" spacing={0.5}>
-                        <Tooltip title="Bearbeiten">
-                          <IconButton
-                            size="small"
-                            color="primary"
-                            onClick={() => {
-                              setEditing(p);
-                              setDialogTyp(typ);
-                              setDialogOpen(true);
-                            }}
-                          >
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-
-                        <Tooltip title="Löschen">
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => handleDelete(p.id)}
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      </Stack>
-                    )}
-                  </TableCell>
-                )}
-              </TableRow>
-            ))}
-            {data.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={3}>
-                  <Typography variant="body2" color="text.secondary">
-                    Keine Einträge vorhanden
-                  </Typography>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </Paper>
-    </Box>
-  );
 
   return (
     <Box p={3}>
       <Typography variant="h5" gutterBottom>
         Finanzplanung
       </Typography>
+
+
 
       {planung.eingereicht && (
         <Alert severity="warning" sx={{ mb: 2 }}>
@@ -199,39 +135,59 @@ export default function PlanungPage({ veranstaltungId }: Props) {
         </Alert>
       )}
 
-      <Stack direction="row" spacing={4} mb={3}>
+      <Stack
+        direction="row"
+        spacing={4}
+        mb={3}
+      >
         <Typography>
-          💰 Einnahmen: <strong>{sumEinnahmen.toFixed(2)} €</strong>
+          Einnahmen: <strong>{sumEinnahmen.toFixed(2)} €</strong>
         </Typography>
+
         <Typography>
-          💸 Ausgaben: <strong>{sumKosten.toFixed(2)} €</strong>
+          Ausgaben: <strong>{sumKosten.toFixed(2)} €</strong>
         </Typography>
-        <Typography>
-          📊 Saldo:{" "}
-          <strong style={{ color: saldo >= 0 ? "green" : "red" }}>{saldo.toFixed(2)} €</strong>
+
+        <Typography color={saldoColor}>
+          Eigenanteil: <strong>{saldo.toFixed(2)} €</strong>
         </Typography>
       </Stack>
 
-      <Divider sx={{ mb: 3 }} />
+      <PlanungspositionenTable
+        positionen={planung.positionen}
+      />
 
-      {renderTable("Einnahmen", einnahmen, "EINNAHME")}
-      {renderTable("Ausgaben", kosten, "KOSTEN")}
+      <Divider sx={{ my: 3 }} />
+
+
 
       {!planung.eingereicht && (
-        <Box textAlign="right">
-          <Button variant="outlined" color="warning" onClick={() => setConfirmOpen(true)}>
+        <Box
+          display="flex"
+          justifyContent="center"
+          mt={3}
+        >
+          <Button
+            variant="contained"
+            color="warning"
+            size="large"
+            onClick={async () => {
+              try {
+                await einreichen(veranstaltungId);
+                setConfirmOpen(false);
+                load();
+              } catch (e) {
+                console.error(e);
+                alert("Planung konnte nicht eingereicht werden.");
+              }
+            }}
+          >
             Planung einreichen
           </Button>
         </Box>
       )}
 
-      <FinanzPositionDialog
-        open={dialogOpen}
-        typ={dialogTyp}
-        initialData={editing}
-        onClose={() => setDialogOpen(false)}
-        onSave={handleSave}
-      />
+
 
       <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
         <DialogTitle>Planung wirklich einreichen?</DialogTitle>

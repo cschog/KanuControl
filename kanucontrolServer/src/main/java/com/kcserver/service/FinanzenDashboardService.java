@@ -31,6 +31,7 @@ public class FinanzenDashboardService {
     private final AbrechnungBuchungRepository abrechnungBuchungRepository;
     private final ReisekostenabrechnungService reisekostenabrechnungService;
     private final TeilnehmerBeitragService teilnehmerBeitragService;
+    private final PlanungRepository planungRepository;
 
     public FinanzenDashboardDTO getDashboard(
             Long veranstaltungId
@@ -165,6 +166,11 @@ public class FinanzenDashboardService {
         FoerderungDashboardDTO f =
                 new FoerderungDashboardDTO();
 
+        Planung planung =
+                planungRepository
+                        .findByVeranstaltungId(veranstaltungId)
+                        .orElse(null);
+
         long foerderfaehige =
                 foerderService.countFoerderfaehigeTeilnehmer(
                         veranstaltung,
@@ -184,7 +190,7 @@ public class FinanzenDashboardService {
 
         BigDecimal foerdersatz =
                 foerderService.berechneAngewandtenFoerdersatz(
-                        veranstaltung
+                        planung
                 );
 
         f.setFoerderfaehigeTeilnehmer(

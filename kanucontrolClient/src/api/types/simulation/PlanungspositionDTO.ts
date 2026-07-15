@@ -1,6 +1,6 @@
 import { FinanzKategorie } from "@/api/types/finanz";
 
-export interface SimulationPosition {
+export interface PlanungspositionDTO {
 
     kategorie: FinanzKategorie;
 

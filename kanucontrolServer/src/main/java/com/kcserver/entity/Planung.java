@@ -32,13 +32,23 @@ public class Planung extends Auditable{
        Antragsdaten
        ========================================== */
 
-    private Integer geplanteTeilnehmerMaennlich;
-    private Integer geplanteTeilnehmerWeiblich;
+    @Column(name = "geplante_mitarbeiter_divers")
+    private Integer geplanteMitarbeiterDivers;
+
+    @Column(name = "geplante_mitarbeiter_maennlich")
+    private Integer geplanteMitarbeiterMaennlich;
+
+    @Column(name = "geplante_mitarbeiter_weiblich")
+    private Integer geplanteMitarbeiterWeiblich;
+
+    @Column(name = "geplante_teilnehmer_divers")
     private Integer geplanteTeilnehmerDivers;
 
-    private Integer geplanteMitarbeiterMaennlich;
-    private Integer geplanteMitarbeiterWeiblich;
-    private Integer geplanteMitarbeiterDivers;
+    @Column(name = "geplante_teilnehmer_maennlich")
+    private Integer geplanteTeilnehmerMaennlich;
+
+    @Column(name = "geplante_teilnehmer_weiblich")
+    private Integer geplanteTeilnehmerWeiblich;
 
     /* ==========================================
        Simulationsparameter
@@ -47,18 +57,19 @@ public class Planung extends Auditable{
     private Integer teilnehmer;
     private Integer mitarbeiter;
 
+    @Column(name = "kik_zertifiziert")
     private boolean kikZertifiziert;
 
-    @Column(precision = 10, scale = 2)
+    @Column(precision = 10, scale = 2, name = "teilnehmer_beitrag_unter21_jahre")
     private BigDecimal teilnehmerBeitragUnter21Jahre;
 
-    @Column(precision = 10, scale = 2)
+    @Column(name = "mitarbeiter_beitrag", precision = 10, scale = 2)
     private BigDecimal mitarbeiterBeitrag;
 
-    @Column(precision = 10, scale = 2)
+    @Column(precision = 10, scale = 2, name = "unterkunft_preis_pro_person_und_nacht")
     private BigDecimal unterkunftPreisProPersonUndNacht;
 
-    @Column(precision = 10, scale = 2)
+    @Column(precision = 10, scale = 2, name = "verpflegung_preis_pro_person_und_tag")
     private BigDecimal verpflegungPreisProPersonUndTag;
 
     @Column(precision = 10, scale = 2)
@@ -67,7 +78,7 @@ public class Planung extends Auditable{
     @Column(precision = 10, scale = 2)
     private BigDecimal fahrtkosten;
 
-    @Column(precision = 10, scale = 2)
+    @Column(precision = 10, scale = 2, name = "verbrauchsmaterial_pro_tag")
     private BigDecimal verbrauchsmaterialProTag;
 
     @Column(precision = 10, scale = 2)
@@ -76,14 +87,9 @@ public class Planung extends Auditable{
     @Column(precision = 10, scale = 2)
     private BigDecimal miete;
 
-    @Column(precision = 10, scale = 2)
+    @Column(precision = 10, scale = 2, name = "sonstige_kosten_pro_tag")
     private BigDecimal sonstigeKostenProTag;
 
-    @Column(precision = 10, scale = 2)
-    private BigDecimal pfand;
-
-    @Column(precision = 10, scale = 2)
-    private BigDecimal sonstigeEinnahmenProTag;
 
     /* ==========================================
        Berechnetes Ergebnis

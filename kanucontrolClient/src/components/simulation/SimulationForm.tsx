@@ -51,14 +51,6 @@ export default function SimulationForm({
         borderRadius: 2,
     };
 
-
-
-
-    useEffect(() => {
-
-        return () => console.log("SimulationForm unmounted");
-    }, []);
-
     const update = <K extends keyof PlanungsSimulation>(
         key: K,
         value: PlanungsSimulation[K]
@@ -355,45 +347,6 @@ export default function SimulationForm({
                                 onChange={(value) =>
                                     update(
                                         "sonstigeKostenProTag",
-                                        value
-                                    )
-                                }
-                            />
-                        </Grid>
-
-                    </SimulationSection>
-
-                    <SimulationSection title="Einnahmen" icon={<SavingsIcon color="primary"
-                        fontSize="small" />}>
-
-                        <Grid size={fieldSize}>
-                            <SliderNumberField
-                                label="Pfand"
-                                value={simulation.pfand ?? 0}
-                                min={0}
-                                max={200}
-                                step={10}
-                                suffix="€"
-                                onChange={(value) =>
-                                    update(
-                                        "pfand",
-                                        value
-                                    )
-                                }
-                            />
-                        </Grid>
-
-                        <Grid size={fieldSize}>
-                            <SliderNumberField
-                                label="Sonstige Einnahmen / Tag"
-                                value={simulation.sonstigeEinnahmenProTag ?? 0}
-                                min={0}
-                                max={500}
-                                step={10}
-                                suffix="€"
-                                onChange={(value) =>
-                                    update(
-                                        "sonstigeEinnahmenProTag",
                                         value
                                     )
                                 }

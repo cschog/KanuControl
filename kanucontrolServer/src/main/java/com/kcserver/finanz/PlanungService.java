@@ -39,12 +39,8 @@ public class PlanungService {
                 .findByVeranstaltungIdWithPositionen(veranstaltungId)
                 .orElseGet(() -> createPlanung(veranstaltungId));
 
-        boolean changed =
-                planungsSimulationService
-                        .aktualisiereAutomatischePositionen(p);
-        if (changed) {
-            planungRepository.save(p);
-        }
+        planungsSimulationService
+                .aktualisiereAutomatischePositionen(p);
 
         PlanungDetailDTO dto = mapper.toDTO(p);
 
@@ -79,7 +75,7 @@ public class PlanungService {
             );
         }
 
-        finanzService.validateAusgeglichen(p.getPositionen());
+        finanzService.validatePlanung(p.getPositionen());
 
         p.setStatus(PlanungsStatus.EINGEREICHT);
     }

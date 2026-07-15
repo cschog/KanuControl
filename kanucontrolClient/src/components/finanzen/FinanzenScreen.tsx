@@ -18,11 +18,11 @@ const Finanzen = () => {
 
   if (!veranstaltungId) return null;
 
- const id = Number(veranstaltungId);
+  const id = Number(veranstaltungId);
 
- if (Number.isNaN(id)) {
-   return <Alert severity="error">Ungültige Veranstaltungs-ID</Alert>;
- }
+  if (Number.isNaN(id)) {
+    return <Alert severity="error">Ungültige Veranstaltungs-ID</Alert>;
+  }
 
   const handleChange = (_event: SyntheticEvent, value: number) => {
     setTab(value);
@@ -63,15 +63,20 @@ const Finanzen = () => {
       </Tabs>
 
       {tab === 0 && <FinanzenDashboard />}
-      {tab === 1 && <PlanungPage veranstaltungId={id} />}
+      {tab === 1 && (
+        <PlanungPage
+          veranstaltungId={id}
+          onOpenSimulation={() => setTab(5)}
+        />
+      )}
       {tab === 2 && <BuchungenPage veranstaltungId={id} />}
       {tab === 3 && <BeitraegePage veranstaltungId={id} />}
       {tab === 4 && <ReisekostenPage veranstaltungId={id} />}
       {tab === 5 && (
-    <SimulationPage
-        veranstaltungId={id}
-    />
-)}
+        <SimulationPage
+          veranstaltungId={id}
+        />
+      )}
       {tab === 6 && <KuerzelPage veranstaltungId={id} />}
     </Box>
   );

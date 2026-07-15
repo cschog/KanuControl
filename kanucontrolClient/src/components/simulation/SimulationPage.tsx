@@ -5,12 +5,13 @@ import { useSimulation } from "@/hooks/useSimulation";
 import { PlanungsSimulation } from "@/api/types/simulation/PlanungsSimulation";
 import SimulationForm from "./SimulationForm";
 import SimulationSummary from "./SimulationSummary";
-import SimulationPositionTable from "./SimulationPositionTable";
+import PlanungspositionenTable from "./PlanungspositionenTable";
 import {
     Accordion,
     AccordionSummary,
     AccordionDetails,
     Box,
+    Button,
     Typography,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -30,11 +31,14 @@ export default function SimulationPage({
         ergebnis,
         loading,
         error,
-        recalculate
+        recalculate,
+        saveSimulation
     } = useSimulation(veranstaltungId);
 
     const [localSimulation, setLocalSimulation] =
         useState<PlanungsSimulation>();
+
+    const [dirty, setDirty] = useState(false);
 
     const [simulationOpen, setSimulationOpen] = useState(true);
     const [positionenOpen, setPositionenOpen] = useState(false);
@@ -43,6 +47,7 @@ export default function SimulationPage({
 
         if (!localSimulation && simulation) {
             setLocalSimulation(simulation);
+            setDirty(false);
         }
 
     }, [simulation, localSimulation]);
@@ -60,6 +65,7 @@ export default function SimulationPage({
 
     }, [localSimulation, recalculate]);
 
+
     if (loading) {
         return <>Lade Simulation…</>;
     }
@@ -67,6 +73,8 @@ export default function SimulationPage({
     if (!localSimulation || !ergebnis) {
         return <>Keine Daten vorhanden.</>;
     }
+
+
 
     return (
         <>
@@ -83,6 +91,23 @@ export default function SimulationPage({
                 <SimulationSummary
                     ergebnis={ergebnis}
                 />
+            </Box>
+
+            <Box
+                display="flex"
+                justifyContent="flex-end"
+                mb={2}
+            >
+                <Button
+                    variant="contained"
+                    disabled={!dirty}
+                    onClick={async () => {
+                        await saveSimulation(localSimulation);
+                        setDirty(false);
+                    }}
+                >
+                    {dirty ? "Simulation speichern" : "Simulation gespeichert"}
+                </Button>
             </Box>
 
             <Accordion
@@ -111,7 +136,10 @@ export default function SimulationPage({
                 >
                     <SimulationForm
                         simulation={localSimulation}
-                        onChange={setLocalSimulation}
+                        onChange={(sim) => {
+                            setLocalSimulation(sim);
+                            setDirty(true);
+                        }}
                     />
                 </AccordionDetails>
             </Accordion>
@@ -140,7 +168,7 @@ export default function SimulationPage({
                         borderColor: "divider",
                     }}
                 >
-                    <SimulationPositionTable
+                    <PlanungspositionenTable
                         positionen={ergebnis.positionen}
                     />
                 </AccordionDetails>

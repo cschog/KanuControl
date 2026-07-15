@@ -92,6 +92,8 @@ public class GlobalExceptionHandler {
             HttpMessageNotReadableException ex
     ) {
 
+        log.error("JSON konnte nicht gelesen werden", ex);
+
         String message = "Ungültige Anfrage";
 
         Throwable cause = ex.getCause();
@@ -107,11 +109,17 @@ public class GlobalExceptionHandler {
         }
 
         return ResponseEntity.badRequest().body(
+
                 ApiError.simple(
+
                         HttpStatus.BAD_REQUEST.value(),
+
                         "INVALID_REQUEST",
-                        message
+
+                        ex.getMostSpecificCause().getMessage()
+
                 )
+
         );
     }
 

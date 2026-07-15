@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="067-planung-initialisiere-simulationsparameter" author="chris">
+
+        <update tableName="planung">
+
+            <column name="teilnehmer" valueNumeric="0"/>
+            <column name="mitarbeiter" valueNumeric="0"/>
+
+            <column name="kik_zertifiziert" valueBoolean="false"/>
+
+            <column name="teilnehmer_beitrag_unter21_jahre" valueNumeric="0"/>
+            <column name="mitarbeiter_beitrag" valueNumeric="0"/>
+
+            <column name="unterkunft_preis_pro_person_und_nacht" valueNumeric="0"/>
+            <column name="verpflegung_preis_pro_person_und_tag" valueNumeric="0"/>
+
+            <column name="honorare" valueNumeric="0"/>
+            <column name="fahrtkosten" valueNumeric="0"/>
+            <column name="verbrauchsmaterial_pro_tag" valueNumeric="0"/>
+            <column name="kultur" valueNumeric="0"/>
+            <column name="miete" valueNumeric="0"/>
+            <column name="sonstige_kosten_pro_tag" valueNumeric="0"/>
+
+        </update>
+
+    </changeSet>
+
+</databaseChangeLog>

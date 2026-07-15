@@ -27,21 +27,19 @@ class PlanungsSimulationServiceTest {
     @Test
     void aktualisiereAutomatischePositionen_legtAutomatischePositionenAn() {
 
-        Veranstaltung veranstaltung = new Veranstaltung();
-
         Planung planung = new Planung();
-        planung.setVeranstaltung(veranstaltung);
+        planung.setVeranstaltung(new Veranstaltung());
 
-        when(planungBerechnungService.berechneUnterkunft(veranstaltung))
+        when(planungBerechnungService.berechneUnterkunft(planung))
                 .thenReturn(BigDecimal.valueOf(1200));
 
-        when(planungBerechnungService.berechneVerpflegung(veranstaltung))
+        when(planungBerechnungService.berechneVerpflegung(planung))
                 .thenReturn(BigDecimal.valueOf(900));
 
-        when(planungBerechnungService.berechneTeilnehmerbeitraege(veranstaltung))
+        when(planungBerechnungService.berechneTeilnehmerbeitraege(planung))
                 .thenReturn(BigDecimal.valueOf(2500));
 
-        when(planungBerechnungService.berechneKjfpZuschuss(veranstaltung))
+        when(planungBerechnungService.berechneKjfpZuschuss(planung))
                 .thenReturn(BigDecimal.valueOf(1800));
 
         service.aktualisiereAutomatischePositionen(planung);

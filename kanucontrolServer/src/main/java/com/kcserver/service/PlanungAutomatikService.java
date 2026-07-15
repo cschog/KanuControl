@@ -13,99 +13,94 @@ import java.math.BigDecimal;
 @RequiredArgsConstructor
 public class PlanungAutomatikService {
 
-    private final PlanungBerechnungService planungBerechnungService;
+    private final PlanungBerechnungService berechnung;
 
     @Transactional
-    public boolean aktualisiereAutomatischePositionen(
+    public void aktualisiereAutomatischePositionen(
             Planung planung
     ) {
 
-        if (planung == null
-                || planung.getVeranstaltung() == null) {
-            return false;
+        if (planung == null) {
+            return;
         }
 
-        boolean changed = false;
-
-        changed |= aktualisiere(
+        aktualisiere(
                 planung,
                 FinanzKategorie.UNTERKUNFT,
-                planungBerechnungService.berechneUnterkunft(
-                        planung.getVeranstaltung()
-                )
+                berechnung.berechneUnterkunft(planung)
         );
 
-        changed |= aktualisiere(
+        aktualisiere(
                 planung,
                 FinanzKategorie.VERPFLEGUNG,
-                planungBerechnungService.berechneVerpflegung(
-                        planung.getVeranstaltung()
-                )
+                berechnung.berechneVerpflegung(planung)
         );
 
-        changed |= aktualisiere(
+        aktualisiere(
+                planung,
+                FinanzKategorie.HONORARE,
+                berechnung.berechneHonorare(planung)
+        );
+
+        aktualisiere(
+                planung,
+                FinanzKategorie.FAHRTKOSTEN,
+                berechnung.berechneFahrtkosten(planung)
+        );
+
+        aktualisiere(
+                planung,
+                FinanzKategorie.VERBRAUCHSMATERIAL,
+                berechnung.berechneVerbrauchsmaterial(planung)
+        );
+
+        aktualisiere(
+                planung,
+                FinanzKategorie.KULTUR,
+                berechnung.berechneKultur(planung)
+        );
+
+        aktualisiere(
+                planung,
+                FinanzKategorie.MIETE,
+                berechnung.berechneMiete(planung)
+        );
+
+        aktualisiere(
+                planung,
+                FinanzKategorie.SONSTIGE_KOSTEN,
+                berechnung.berechneSonstigeKosten(planung)
+        );
+
+        aktualisiere(
                 planung,
                 FinanzKategorie.TEILNEHMERBEITRAG,
-                planungBerechnungService.berechneTeilnehmerbeitraege(
-                        planung.getVeranstaltung()
-                )
+                berechnung.berechneTeilnehmerbeitraege(planung)
         );
 
-        changed |= aktualisiere(
+        aktualisiere(
                 planung,
                 FinanzKategorie.KJFP_ZUSCHUSS,
-                planungBerechnungService.berechneKjfpZuschuss(
-                        planung.getVeranstaltung()
-                )
+                berechnung.berechneKjfpZuschuss(planung)
         );
-
-        return changed;
     }
 
-    private boolean aktualisiere(
+    private void aktualisiere(
             Planung planung,
             FinanzKategorie kategorie,
             BigDecimal betrag
     ) {
 
-        boolean automatisch = istAutomatischeKategorie(kategorie);
-
         PlanungPosition position =
                 findeOderErzeuge(planung, kategorie);
 
-        boolean changed = false;
-
-        if (position.isAutomatischBerechnet() != automatisch) {
-            position.setAutomatischBerechnet(automatisch);
-            changed = true;
-        }
-
-        if (position.isEditierbar() == automatisch) {
-            position.setEditierbar(!automatisch);
-            changed = true;
-        }
-
-        BigDecimal neu =
+        position.setAutomatischBerechnet(true);
+        position.setEditierbar(false);
+        position.setBetrag(
                 betrag == null
                         ? BigDecimal.ZERO
-                        : betrag;
-
-        if (neu.compareTo(position.getBetrag()) != 0) {
-            position.setBetrag(neu);
-            changed = true;
-        }
-
-        return changed;
-    }
-
-    private boolean istAutomatischeKategorie(FinanzKategorie kategorie) {
-        return switch (kategorie) {
-            case UNTERKUNFT,
-                 VERPFLEGUNG,
-                 TEILNEHMERBEITRAG,
-                 KJFP_ZUSCHUSS -> true;
-            default -> false;
-        };
+                        : betrag
+        );
     }
 
     private PlanungPosition findeOderErzeuge(
@@ -115,15 +110,13 @@ public class PlanungAutomatikService {
 
         return planung.getPositionen()
                 .stream()
-                .filter(position -> position.getKategorie() == kategorie)
+                .filter(p -> p.getKategorie() == kategorie)
                 .findFirst()
                 .orElseGet(() -> {
 
                     PlanungPosition position = new PlanungPosition();
 
                     position.setKategorie(kategorie);
-                    position.setAutomatischBerechnet(true);
-                    position.setEditierbar(false);
 
                     planung.addPosition(position);
 

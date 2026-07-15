@@ -42,6 +42,36 @@ public class FinanzService {
         }
     }
 
+    public void validatePlanung(List<? extends FinanzPosition> list) {
+
+        BigDecimal eigenanteil = saldo(list);
+
+        if (eigenanteil.compareTo(MINDEST_EIGENANTEIL) > 0) {
+
+            throw new ResponseStatusException(
+
+                    HttpStatus.BAD_REQUEST,
+
+                    "Der Eigenanteil muss mindestens 250 € betragen."
+            );
+        }
+    }
+
+    public FinanzAmpel ermittleAmpel(List<? extends FinanzPosition> list) {
+
+        BigDecimal eigenanteil = saldo(list);
+
+        if (eigenanteil.compareTo(EMPFOHLENER_EIGENANTEIL) <= 0) {
+            return FinanzAmpel.GRUEN;
+        }
+
+        if (eigenanteil.compareTo(MINDEST_EIGENANTEIL) <= 0) {
+            return FinanzAmpel.GELB;
+        }
+
+        return FinanzAmpel.ROT;
+    }
+
     private BigDecimal safe(BigDecimal v) {
         return v == null ? BigDecimal.ZERO : v;
     }
@@ -178,6 +208,18 @@ public class FinanzService {
         }
 
         return teilnehmer.getIndividuellerBeitrag();
+    }
+
+    private static final BigDecimal EMPFOHLENER_EIGENANTEIL =
+            BigDecimal.valueOf(-500);
+
+    private static final BigDecimal MINDEST_EIGENANTEIL =
+            BigDecimal.valueOf(-250);
+
+    public enum FinanzAmpel {
+        GRUEN,
+        GELB,
+        ROT
     }
 
 }

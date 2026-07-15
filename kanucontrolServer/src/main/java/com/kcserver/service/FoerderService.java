@@ -5,7 +5,7 @@ import com.kcserver.dto.foerder.FoerdersatzLookupResult;
 import com.kcserver.entity.*;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.dto.simulation.PlanungsSimulation;
-import com.kcserver.service.simulation.SimulationFactory;
+import com.kcserver.service.veranstaltung.VeranstaltungBerechnungsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,7 +22,8 @@ public class FoerderService {
     private final FoerdersatzService foerdersatzService;
     private final KikZuschlagService kikZuschlagService;
     private final AltersService altersService;
-    private final SimulationFactory simulationFactory;
+
+    private final VeranstaltungBerechnungsService veranstaltungBerechnungsService;
 
     private static final int MAX_FOERDERTAGE_FM_JEM = 21;
 
@@ -94,11 +95,38 @@ public class FoerderService {
             return 0;
         }
 
-        return berechneFoerdertage(
-                simulationFactory.fromVeranstaltung(
-                        veranstaltung
-                )
-        );
+        int tage = (int) veranstaltungBerechnungsService
+                .ermittleTage(veranstaltung);
+
+        if (isFmJem(veranstaltung.getTyp())) {
+            return Math.min(tage, MAX_FOERDERTAGE_FM_JEM);
+        }
+
+        return tage;
+    }
+
+    public int berechneFoerdertage(
+            Planung planung
+    ) {
+
+        if (planung == null) {
+            return 0;
+        }
+
+        Veranstaltung veranstaltung = planung.getVeranstaltung();
+
+        if (veranstaltung == null) {
+            return 0;
+        }
+
+        int tage = (int) veranstaltungBerechnungsService
+                .ermittleTage(veranstaltung);
+
+        if (isFmJem(veranstaltung.getTyp())) {
+            return Math.min(tage, MAX_FOERDERTAGE_FM_JEM);
+        }
+
+        return tage;
     }
 
     public int berechneFoerdertage(
@@ -193,6 +221,21 @@ public class FoerderService {
     }
 
     public BigDecimal berechneAngewandtenFoerdersatz(
+            Planung planung
+    ) {
+
+        if (planung == null || planung.getVeranstaltung() == null) {
+            return BigDecimal.ZERO;
+        }
+
+        return ermittleTagessatz(
+                planung.getVeranstaltung().getTyp(),
+                planung.getVeranstaltung().getBeginnDatum(),
+                planung.isKikZertifiziert()
+        );
+    }
+
+    public BigDecimal berechneAngewandtenFoerdersatz(
             PlanungsSimulation simulation
     ) {
 
@@ -204,21 +247,6 @@ public class FoerderService {
                 simulation.getVeranstaltung().getTyp(),
                 simulation.getVeranstaltung().getBeginnDatum(),
                 simulation.isKikZertifiziert()
-        );
-    }
-
-    public BigDecimal berechneGeplanteFoerderung(
-            Veranstaltung veranstaltung
-    ) {
-
-        if (veranstaltung == null) {
-            return BigDecimal.ZERO;
-        }
-
-        return berechneGeplanteFoerderung(
-                simulationFactory.fromVeranstaltung(
-                        veranstaltung
-                )
         );
     }
 
@@ -238,6 +266,26 @@ public class FoerderService {
                 .multiply(
                         BigDecimal.valueOf(
                                 berechneFoerdertage(simulation)
+                        )
+                );
+    }
+
+    public BigDecimal berechneGeplanteFoerderung(
+            Planung planung
+    ) {
+
+        if (planung == null) {
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal tagessatz =
+                berechneAngewandtenFoerdersatz(planung);
+
+        return tagessatz
+                .multiply(BigDecimal.valueOf(planung.getTeilnehmer()))
+                .multiply(
+                        BigDecimal.valueOf(
+                                berechneFoerdertage(planung)
                         )
                 );
     }

@@ -1,8 +1,8 @@
-import { SimulationPosition } from "./SimulationPosition";
+import { PlanungspositionDTO } from "./PlanungspositionDTO";
 
 export interface SimulationErgebnis {
 
-    positionen: SimulationPosition[];
+    positionen: PlanungspositionDTO[];
 
     kosten: number;
 

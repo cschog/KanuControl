@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import {
     getSimulation,
+    saveSimulation,
     simulate,
 } from "@/api/services/simulationApi";
 
@@ -34,20 +35,18 @@ export function useSimulation(
 
             setLoading(true);
 
-            const sim = await getSimulation(
-                veranstaltungId
-            );
+            const sim = await getSimulation(veranstaltungId);
+
+            const result = await simulate(sim);
 
             setSimulation(sim);
-
-            const result =
-                await simulate(sim);
-
             setErgebnis(result);
 
             setError(undefined);
 
-        } catch {
+        } catch (e) {
+
+            console.error(e);
 
             setError(
                 "Simulation konnte nicht geladen werden."
@@ -84,6 +83,35 @@ export function useSimulation(
 
     }, []);
 
+    const save = useCallback(
+        async (sim: PlanungsSimulation) => {
+
+            if (!veranstaltungId) {
+                return;
+            }
+
+            try {
+
+                await saveSimulation(
+                    veranstaltungId,
+                    sim
+                );
+
+                setSimulation(sim);
+
+                setError(undefined);
+
+            } catch {
+
+                setError(
+                    "Simulation konnte nicht gespeichert werden."
+                );
+            }
+
+        },
+        [veranstaltungId]
+    );
+
     useEffect(() => {
 
         load();
@@ -99,6 +127,7 @@ export function useSimulation(
         error,
 
         recalculate,
+        saveSimulation: save,
         reload: load,
     };
 }

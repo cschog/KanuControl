@@ -1,7 +1,7 @@
 package com.kcserver.service;
 
-import com.kcserver.entity.Veranstaltung;
-import com.kcserver.service.simulation.SimulationFactory;
+import com.kcserver.entity.Planung;
+import com.kcserver.service.veranstaltung.VeranstaltungBerechnungsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import com.kcserver.dto.simulation.PlanungsSimulation;
@@ -12,26 +12,23 @@ import java.math.BigDecimal;
 @RequiredArgsConstructor
 public class PlanungBerechnungService {
 
-    /**
-     * Aktuell fest im Code.
-     * Später aus den Fördersätzen bzw. der Konfiguration ermitteln.
-     */
-
     private final FoerderService foerderService;
-
-    private final SimulationFactory simulationFactory;
+    private final VeranstaltungBerechnungsService veranstaltungBerechnungsService;
 
     public BigDecimal berechneTeilnehmerbeitraege(
-            Veranstaltung veranstaltung
+            Planung planung
     ) {
 
-        if (veranstaltung == null) {
+        if (planung == null) {
             return BigDecimal.ZERO;
         }
 
-        return berechneTeilnehmerbeitraege(
-                simulationFactory.fromVeranstaltung(veranstaltung)
-        );
+        return planung.getTeilnehmerBeitragUnter21Jahre()
+                .multiply(BigDecimal.valueOf(planung.getTeilnehmer()))
+                .add(
+                        planung.getMitarbeiterBeitrag()
+                                .multiply(BigDecimal.valueOf(planung.getMitarbeiter()))
+                );
     }
 
     public BigDecimal berechneTeilnehmerbeitraege(
@@ -52,18 +49,26 @@ public class PlanungBerechnungService {
 
 
     public BigDecimal berechneUnterkunft(
-            Veranstaltung veranstaltung
+            Planung planung
     ) {
 
-        if (veranstaltung == null) {
+        if (planung == null
+                || planung.getUnterkunftPreisProPersonUndNacht() == null) {
             return BigDecimal.ZERO;
         }
 
-        return berechneUnterkunft(
-                simulationFactory.fromVeranstaltung(
-                        veranstaltung
+        return planung.getUnterkunftPreisProPersonUndNacht()
+                .multiply(
+                        BigDecimal.valueOf(
+                                planung.getTeilnehmer()
+                                        + planung.getMitarbeiter()
+                        )
                 )
-        );
+                .multiply(
+                        BigDecimal.valueOf(
+                                veranstaltungBerechnungsService.ermittleNaechte(planung.getVeranstaltung())
+                        )
+                );
     }
 
     public BigDecimal berechneUnterkunft(
@@ -91,18 +96,25 @@ public class PlanungBerechnungService {
     }
 
     public BigDecimal berechneVerpflegung(
-            Veranstaltung veranstaltung
+            Planung planung
     ) {
 
-        if (veranstaltung == null) {
+        if (planung == null
+                || planung.getVerpflegungPreisProPersonUndTag() == null) {
             return BigDecimal.ZERO;
         }
 
-        return berechneVerpflegung(
-                simulationFactory.fromVeranstaltung(
-                        veranstaltung
+        long tage = veranstaltungBerechnungsService
+                .ermittleTage(planung.getVeranstaltung());
+
+        return planung.getVerpflegungPreisProPersonUndTag()
+                .multiply(
+                        BigDecimal.valueOf(
+                                planung.getTeilnehmer()
+                                        + planung.getMitarbeiter()
+                        )
                 )
-        );
+                .multiply(BigDecimal.valueOf(tage));
     }
 
     public BigDecimal berechneVerpflegung(
@@ -126,21 +138,15 @@ public class PlanungBerechnungService {
                 );
     }
 
-    /* =========================================================
-   HILFSMETHODEN
-   ========================================================= */
-
     public BigDecimal berechneKjfpZuschuss(
-            Veranstaltung veranstaltung
+            Planung planung
     ) {
 
-        if (veranstaltung == null) {
+        if (planung == null) {
             return BigDecimal.ZERO;
         }
 
-        return berechneKjfpZuschuss(
-                simulationFactory.fromVeranstaltung(veranstaltung)
-        );
+        return foerderService.berechneGeplanteFoerderung(planung);
     }
 
     public BigDecimal berechneKjfpZuschuss(
@@ -154,6 +160,70 @@ public class PlanungBerechnungService {
         return foerderService.berechneGeplanteFoerderung(
                 simulation
         );
+    }
+
+    public BigDecimal berechneHonorare(
+            Planung planung
+    ) {
+        return planung == null || planung.getHonorare() == null
+                ? BigDecimal.ZERO
+                : planung.getHonorare();
+    }
+
+    public BigDecimal berechneFahrtkosten(
+            Planung planung
+    ) {
+        return planung == null || planung.getFahrtkosten() == null
+                ? BigDecimal.ZERO
+                : planung.getFahrtkosten();
+    }
+
+    public BigDecimal berechneVerbrauchsmaterial(
+            Planung planung
+    ) {
+
+        if (planung == null
+                || planung.getVerbrauchsmaterialProTag() == null) {
+            return BigDecimal.ZERO;
+        }
+
+        long tage = veranstaltungBerechnungsService
+                .ermittleTage(planung.getVeranstaltung());
+
+        return planung.getVerbrauchsmaterialProTag()
+                .multiply(BigDecimal.valueOf(tage));
+    }
+
+    public BigDecimal berechneKultur(
+            Planung planung
+    ) {
+        return planung == null || planung.getKultur() == null
+                ? BigDecimal.ZERO
+                : planung.getKultur();
+    }
+
+    public BigDecimal berechneMiete(
+            Planung planung
+    ) {
+        return planung == null || planung.getMiete() == null
+                ? BigDecimal.ZERO
+                : planung.getMiete();
+    }
+
+    public BigDecimal berechneSonstigeKosten(
+            Planung planung
+    ) {
+
+        if (planung == null
+                || planung.getSonstigeKostenProTag() == null) {
+            return BigDecimal.ZERO;
+        }
+
+        long tage = veranstaltungBerechnungsService
+                .ermittleTage(planung.getVeranstaltung());
+
+        return planung.getSonstigeKostenProTag()
+                .multiply(BigDecimal.valueOf(tage));
     }
 
     public BigDecimal berechneHonorare(
@@ -171,6 +241,7 @@ public class PlanungBerechnungService {
                 ? BigDecimal.ZERO
                 : simulation.getFahrtkosten();
     }
+
 
     public BigDecimal berechneVerbrauchsmaterial(
             PlanungsSimulation simulation

@@ -17,10 +17,6 @@ public class PlanungsSimulation {
      */
     private boolean kikZertifiziert;
 
-    /* Stammdaten */
-
-    private Long beitragsstrukturId;
-
     /* Teilnehmer */
 
     private int teilnehmer;
