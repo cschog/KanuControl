@@ -18,7 +18,7 @@ public class DokumentService {
 
     private final DokumentValidationService dokumentValidationService;
 
-    private final PDFFmJemReportService fmJemReportService;
+    private final PDFAnmeldungFmJemService fmJemReportService;
     private final PDFAbrechnungService abrechnungService;
     private final PDFErhebungsbogenService erhebungsbogenService;
     private final PDFTeilnehmerlisteService teilnehmerlisteService;

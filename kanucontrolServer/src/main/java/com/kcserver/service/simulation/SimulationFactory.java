@@ -17,6 +17,8 @@ public class SimulationFactory {
 
     private final VeranstaltungsInfoMapper veranstaltungsInfoMapper;
 
+    private static final int STANDARD_TEILNEHMER = 10;
+    private static final int TEILNEHMER_PRO_MITARBEITER = 5;
     private static final BigDecimal STANDARD_HONORARE = BigDecimal.ZERO;
     private static final BigDecimal STANDARD_FAHRTKOSTEN = BigDecimal.ZERO;
     private static final BigDecimal STANDARD_VERBRAUCHSMATERIAL_PRO_TAG = BigDecimal.valueOf(30);
@@ -27,7 +29,6 @@ public class SimulationFactory {
     private final VeranstaltungBerechnungsService berechnungsService;
     private final BeitragsregelService beitragsregelService;
 
-
     /**
      * Übernimmt die aktuellen Werte einer Veranstaltung.
      */
@@ -36,25 +37,19 @@ public class SimulationFactory {
         VeranstaltungsInfo info =
                 veranstaltungsInfoMapper.toDTO(v);
 
-        return PlanungsSimulation.builder()
+        PlanungsSimulation simulation = PlanungsSimulation.builder()
                 .veranstaltung(info)
                 .kikZertifiziert(info.isVereinKikZertifiziert())
-                .teilnehmer(
-                        berechnungsService.ermittleGeplanteTeilnehmer(v)
-                )
-                .mitarbeiter(
-                        berechnungsService.ermittleGeplanteMitarbeiter(v)
-                )
-
+                .teilnehmer(STANDARD_TEILNEHMER)
+                .mitarbeiter(Math.max(1, STANDARD_TEILNEHMER / TEILNEHMER_PRO_MITARBEITER))
                 .teilnehmerBeitragUnter21Jahre(
                         beitragsregelService.ermittlePlanungsTeilnehmerBeitrag(
-                                        v.getBeitragsstruktur()
-                                ))
+                                v.getBeitragsstruktur()
+                        ))
                 .mitarbeiterBeitrag(
                         beitragsregelService.ermittlePlanungsMitarbeiterBeitrag(
-                                        v.getBeitragsstruktur()
-                                ))
-
+                                v.getBeitragsstruktur()
+                        ))
                 .unterkunftPreisProPersonUndNacht(
                         v.getUnterkunftsart() == null
                                 ? BigDecimal.ZERO
@@ -71,9 +66,14 @@ public class SimulationFactory {
                 .kultur(STANDARD_KULTUR)
                 .miete(STANDARD_MIETE)
                 .sonstigeKostenProTag(STANDARD_SONSTIGE_KOSTEN_PRO_TAG)
-
-
                 .build();
+
+        System.out.println("TN-Beitrag: " + simulation.getTeilnehmerBeitragUnter21Jahre());
+        System.out.println("MA-Beitrag: " + simulation.getMitarbeiterBeitrag());
+        System.out.println("Unterkunft: " + simulation.getUnterkunftPreisProPersonUndNacht());
+        System.out.println("Verpflegung: " + simulation.getVerpflegungPreisProPersonUndTag());
+
+        return simulation;
     }
 
 }

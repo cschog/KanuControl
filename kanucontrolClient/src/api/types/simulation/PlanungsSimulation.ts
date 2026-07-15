@@ -36,8 +36,4 @@ export interface PlanungsSimulation {
     kultur?: number;
 
     miete?: number;
-
-    pfand?: number;
-
-    sonstigeEinnahmenProTag?: number;
 }

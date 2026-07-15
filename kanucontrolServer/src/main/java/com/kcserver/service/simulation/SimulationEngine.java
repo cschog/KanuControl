@@ -1,5 +1,6 @@
 package com.kcserver.service.simulation;
 
+import com.kcserver.dto.beitrag.BeitragsVorschlag;
 import com.kcserver.dto.simulation.PlanungsSimulation;
 import com.kcserver.dto.simulation.SimulationErgebnis;
 import com.kcserver.dto.simulation.SimulationPosition;
@@ -38,6 +39,18 @@ public class SimulationEngine {
         List<SimulationPosition> positionen =
                 berechnePositionen(simulation);
 
+        BigDecimal summeTeilnehmerbeitraege =
+                berechnung.berechneTeilnehmerbeitraege(simulation);
+
+        BigDecimal durchschnittlicherPersonenbeitrag =
+                berechnung.berechneDurchschnittlichenPersonenbeitrag(simulation);
+
+        BigDecimal empfohlenerPersonenbeitrag =
+                berechnung.berechneEmpfohlenenPersonenbeitrag(simulation);
+
+        BeitragsVorschlag beitragsVorschlag =
+                berechnung.berechneBeitragsVorschlag(simulation);
+
         BigDecimal kosten = BigDecimal.ZERO;
         BigDecimal einnahmen = BigDecimal.ZERO;
 
@@ -55,6 +68,10 @@ public class SimulationEngine {
                 .kosten(kosten)
                 .einnahmen(einnahmen)
                 .saldo(einnahmen.subtract(kosten))
+                .summeTeilnehmerbeitraege(summeTeilnehmerbeitraege)
+                .durchschnittlicherPersonenbeitrag(durchschnittlicherPersonenbeitrag)
+                .empfohlenerPersonenbeitrag(empfohlenerPersonenbeitrag)
+                .beitragsVorschlag(beitragsVorschlag)
                 .build();
     }
 

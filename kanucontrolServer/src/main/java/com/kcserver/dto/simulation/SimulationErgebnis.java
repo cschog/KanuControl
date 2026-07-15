@@ -1,5 +1,6 @@
 package com.kcserver.dto.simulation;
 
+import com.kcserver.dto.beitrag.BeitragsVorschlag;
 import lombok.*;
 import java.math.BigDecimal;
 import java.util.List;
@@ -14,4 +15,15 @@ public class SimulationErgebnis {
     private BigDecimal kosten;
     private BigDecimal einnahmen;
     private BigDecimal saldo;
+
+    private BigDecimal summeTeilnehmerbeitraege;
+
+    private BigDecimal durchschnittlicherPersonenbeitrag;
+
+    private BigDecimal empfohlenerPersonenbeitrag;
+
+    private BigDecimal teilnehmerBeitrag;
+    private BigDecimal mitarbeiterBeitrag;
+
+    private BeitragsVorschlag beitragsVorschlag;
 }

@@ -14,11 +14,16 @@ public interface PlanungRepository extends JpaRepository<Planung, Long> {
     Optional<Planung> findByVeranstaltungId(Long veranstaltungId);
 
     @Query("""
-        select p
-        from Planung p
-        left join fetch p.positionen
-        where p.veranstaltung.id = :veranstaltungId
-        """)
+    select distinct p
+    from Planung p
+    join fetch p.veranstaltung v
+    join fetch v.verein
+    left join fetch v.leiter
+    left join fetch v.unterkunftsart
+    left join fetch v.verpflegungsmodell
+    left join fetch p.positionen
+    where v.id = :veranstaltungId
+    """)
     Optional<Planung> findByVeranstaltungIdWithPositionen(Long veranstaltungId);
 
     @Query("""

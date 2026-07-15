@@ -20,6 +20,9 @@ public class Planung extends Auditable{
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
+    private boolean initialisiert = false;
+
     @OneToOne(optional = false)
     @JoinColumn(
             name = "veranstaltung_id",

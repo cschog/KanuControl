@@ -43,6 +43,30 @@ export default function SimulationPage({
     const [simulationOpen, setSimulationOpen] = useState(true);
     const [positionenOpen, setPositionenOpen] = useState(false);
 
+    const uebernehmeBeitragsvorschlag = () => {
+
+        if (!ergebnis?.beitragsVorschlag) {
+            return;
+        }
+
+        setLocalSimulation(prev => {
+
+            if (!prev) {
+                return prev;
+            }
+
+            return {
+                ...prev,
+                teilnehmerBeitragUnter21Jahre:
+                    ergebnis.beitragsVorschlag.teilnehmerBeitragUnter21Jahre,
+                mitarbeiterBeitrag:
+                    ergebnis.beitragsVorschlag.mitarbeiterBeitrag,
+            };
+        });
+
+        setDirty(true);
+    };
+
     useEffect(() => {
 
         if (!localSimulation && simulation) {
@@ -90,14 +114,23 @@ export default function SimulationPage({
             >
                 <SimulationSummary
                     ergebnis={ergebnis}
+                    onBeitragsvorschlagUebernehmen={uebernehmeBeitragsvorschlag}
                 />
             </Box>
 
             <Box
                 display="flex"
-                justifyContent="flex-end"
+                justifyContent="space-between"
+                alignItems="center"
                 mb={2}
             >
+                <Button
+                    variant="outlined"
+                    onClick={uebernehmeBeitragsvorschlag}
+                >
+                    Betragsvorschlag übernehmen
+                </Button>
+
                 <Button
                     variant="contained"
                     disabled={!dirty}

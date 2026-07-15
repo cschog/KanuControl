@@ -1,16 +1,16 @@
 package com.kcserver.service.pdf;
 
 import com.kcserver.entity.Veranstaltung;
-import com.kcserver.repository.VeranstaltungRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
-import java.time.temporal.ChronoUnit;
 
 import static com.kcserver.util.StringUtils.heute;
 import static com.kcserver.util.StringUtils.join;
@@ -20,23 +20,34 @@ import com.kcserver.enumtype.FinanzKategorie;
 import com.kcserver.repository.PlanungRepository;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.temporal.ChronoUnit;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.kcserver.util.CurrencyUtil;
 import com.kcserver.enumtype.PdfDokumentTyp;
 import com.kcserver.util.PdfFilenameUtil;
 import org.springframework.util.StreamUtils;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
-public class PDFFmJemReportService {
+public class PDFAnmeldungFmJemService {
 
-    private final VeranstaltungRepository veranstaltungRepository;
     private final PlanungRepository planungRepository;
 
+    @Transactional(readOnly = true)
     public byte[] generate(Long veranstaltungId) {
 
-        Veranstaltung v = veranstaltungRepository
-                .findByIdWithRelations(veranstaltungId)
-                .orElseThrow();
+        Planung planung =
+                planungRepository
+                        .findByVeranstaltungIdWithPositionen(veranstaltungId)
+                        .orElseThrow(() -> new ResponseStatusException(
+                                HttpStatus.NOT_FOUND,
+                                "Für diese Veranstaltung existiert keine Planung."
+                        ));
+
+        Veranstaltung v = planung.getVeranstaltung();
 
         try (
                 PDDocument doc = Loader.loadPDF(
@@ -124,14 +135,18 @@ public class PDFFmJemReportService {
             set(form, "beginnDatum", v.getBeginnDatum().toString());
             set(form, "endeDatum", v.getEndeDatum().toString());
 
-            long tage = ChronoUnit.DAYS.between(v.getBeginnDatum(), v.getEndeDatum()) + 1;
+            long tage = ChronoUnit.DAYS.between(
+                    v.getBeginnDatum(),
+                    v.getEndeDatum()
+            ) + 1;
+
             set(form, "dauer_tage", String.valueOf(tage));
 
 
             /* ================= Teilnehmer ================= */
 
-            Integer m = v.getGeplanteTeilnehmerMaennlich();
-            Integer w = v.getGeplanteTeilnehmerWeiblich();
+            Integer m = planung.getGeplanteTeilnehmerMaennlich();
+            Integer w = planung.getGeplanteTeilnehmerWeiblich();
 
             set(form, "anz_tn_foerder_maennlich", m);
             set(form, "anz_tn_foerder_weiblich", w);
@@ -140,8 +155,8 @@ public class PDFFmJemReportService {
 
             /* ================= Mitarbeiter ================= */
 
-            Integer mm = v.getGeplanteMitarbeiterMaennlich();
-            Integer mw = v.getGeplanteMitarbeiterWeiblich();
+            Integer mm = planung.getGeplanteMitarbeiterMaennlich();
+            Integer mw = planung.getGeplanteMitarbeiterWeiblich();
 
             set(form, "anz_mitarbeiter_maennlich", mm);
             set(form, "anz_mitarbeiter_weiblich", mw);
@@ -151,15 +166,8 @@ public class PDFFmJemReportService {
                     join(", ", v.getVerein().getOrt(), heute()));
 
             /* =========================
-   PLAN-KOSTEN / EINNAHMEN
-   ========================= */
-
-            Planung planung =
-                    planungRepository
-                            .findByVeranstaltungIdWithPositionen(v.getId())
-                            .orElse(null);
-
-            if (planung != null) {
+               PLAN-KOSTEN / EINNAHMEN
+               ========================= */
 
                 BigDecimal unterkunftVerpflegung = sum(
                         planung,
@@ -192,10 +200,14 @@ public class PDFFmJemReportService {
                         FinanzKategorie.SONSTIGE_KOSTEN
                 );
 
-                BigDecimal tnBeitrag =
-                        v.getStandardGebuehr() != null
-                                ? v.getStandardGebuehr()
+                BigDecimal tnBeitragUnter21 =
+                        planung.getTeilnehmerBeitragUnter21Jahre() != null
+                                ? planung.getTeilnehmerBeitragUnter21Jahre()
                                 : BigDecimal.ZERO;
+                BigDecimal mitarbeiterBeitrag =
+                    planung.getMitarbeiterBeitrag() != null
+                            ? planung.getMitarbeiterBeitrag()
+                            : BigDecimal.ZERO;
 
                 BigDecimal sonstigeEinnahmen = sum(
                         planung,
@@ -224,36 +236,47 @@ public class PDFFmJemReportService {
                 set(form, "sonstige_kosten",
                         CurrencyUtil.decimal(sonstigeKosten));
 
-                set(form, "tn_beitrag", CurrencyUtil.decimal(tnBeitrag));
-
-                set(form, "sonstige_einnahmen",
-                        CurrencyUtil.decimal(sonstigeEinnahmen));
-
                 set(form, "kjfp_zuschuss", CurrencyUtil.decimal(kjfp));
 
                 /* Teilnehmerbeiträge Gesamt */
 
-                int tn =
-                        (m != null ? m : 0)
-                                + (w != null ? w : 0)
-                                + (v.getGeplanteTeilnehmerDivers() != null
-                                ? v.getGeplanteTeilnehmerDivers()
-                                : 0)
-                                + (mm != null ? mm : 0)
-                                + (mw != null ? mw : 0)
-                                + (v.getGeplanteMitarbeiterDivers() != null
-                                ? v.getGeplanteMitarbeiterDivers()
-                                : 0);
+            int anzahlTeilnehmer =
+                    (m != null ? m : 0)
+                            + (w != null ? w : 0)
+                            + (planung.getGeplanteTeilnehmerDivers() != null
+                            ? planung.getGeplanteTeilnehmerDivers() : 0);
 
-                BigDecimal summeTn =
-                        tnBeitrag.multiply(
-                                BigDecimal.valueOf(tn)
-                        );
+            int anzahlMitarbeiter =
+                    (mm != null ? mm : 0)
+                            + (mw != null ? mw : 0)
+                            + (planung.getGeplanteMitarbeiterDivers() != null
+                            ? planung.getGeplanteMitarbeiterDivers() : 0);
 
-                set(form, "anz_tn", tn);
+            BigDecimal summeTnBeitraege =
+                    tnBeitragUnter21.multiply(BigDecimal.valueOf(anzahlTeilnehmer))
+                            .add(
+                                    mitarbeiterBeitrag.multiply(BigDecimal.valueOf(anzahlMitarbeiter))
+                            );
 
-                set(form, "summe_TN_beitraege",
-                        CurrencyUtil.decimal(summeTn));
+            int gesamtPersonen = anzahlTeilnehmer + anzahlMitarbeiter;
+
+            set(form, "anz_tn", gesamtPersonen);
+
+
+            set(form, "summe_TN_beitraege",
+                        CurrencyUtil.decimal(summeTnBeitraege));
+
+            BigDecimal formularBeitrag = BigDecimal.ZERO;
+
+            if (gesamtPersonen > 0) {
+                formularBeitrag = summeTnBeitraege.divide(
+                        BigDecimal.valueOf(gesamtPersonen),
+                        2,
+                        RoundingMode.HALF_UP
+                );
+            }
+
+            set(form, "tn_beitrag", CurrencyUtil.decimal(formularBeitrag));
 
                 /* Summen */
 
@@ -266,16 +289,30 @@ public class PDFFmJemReportService {
                                 .add(sonstigeKosten);
 
                 BigDecimal summeEinnahmen =
-                        summeTn
+                        summeTnBeitraege
                                 .add(sonstigeEinnahmen)
                                 .add(kjfp);
 
-                set(form, "summe_ausgaben",
-                        CurrencyUtil.decimal(summeAusgaben));
+            // Eigenanteil berechnen
 
-                set(form, "summe_einnahmen",
-                        CurrencyUtil.decimal(summeEinnahmen));
-            }
+            BigDecimal eigenanteil = summeAusgaben
+                    .subtract(summeEinnahmen);
+
+            // Im Formular werden die sonstigen Einnahmen inkl. Eigenanteil ausgewiesen
+            BigDecimal sonstigeEinnahmenGesamt = sonstigeEinnahmen.add(eigenanteil);
+
+            set(form, "sonstige_einnahmen",
+                    CurrencyUtil.decimal(sonstigeEinnahmenGesamt));
+
+            set(form, "summe_ausgaben",
+                    CurrencyUtil.decimal(summeAusgaben));
+
+            BigDecimal gesamtSummeinnahmen =
+                    summeEinnahmen
+                            .add(eigenanteil);
+
+            set(form, "summe_einnahmen",
+                    CurrencyUtil.decimal(gesamtSummeinnahmen));
 
             /* ❗ NICHT flatten → Formular bleibt editierbar */
 
@@ -293,7 +330,7 @@ public class PDFFmJemReportService {
             return out.toByteArray();
 
         } catch (Exception e) {
-            throw new RuntimeException("FM/JEM PDF konnte nicht erzeugt werden", e);
+            throw new RuntimeException("Anmeldung FM/JEM PDF konnte nicht erzeugt werden", e);
         }
     }
 
@@ -301,12 +338,24 @@ public class PDFFmJemReportService {
        Helper
        ========================================================= */
 
-    private void set(PDAcroForm form, String field, Object value) {
+    private void set(PDAcroForm form, String fieldName, Object value) {
         try {
-            if (form.getField(field) != null && value != null) {
-                form.getField(field).setValue(String.valueOf(value));
+            PDField field = form.getField(fieldName);
+
+            if (field == null) {
+                System.out.println("PDF-Feld fehlt: " + fieldName);
+                return;
             }
-        } catch (Exception ignored) {
+
+            if (value != null) {
+                field.setValue(String.valueOf(value));
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Fehler beim Setzen des PDF-Feldes '" + fieldName + "' mit Wert '" + value + "'",
+                    e
+            );
         }
     }
 

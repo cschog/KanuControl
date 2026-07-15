@@ -1,164 +1,119 @@
-import {
-    Box,
-    Card,
-    CardContent,
-    Grid,
-    Typography,
-} from "@mui/material";
-
+import FinanzSummary from "@/components/common/FinanzSummary";
 import Money from "@/components/common/Money";
-
-import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
-import PaymentsIcon from "@mui/icons-material/Payments";
-import BalanceIcon from "@mui/icons-material/Balance";
-import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
-
 import { SimulationErgebnis } from "@/api/types/simulation/SimulationErgebnis";
 
-interface SimulationSummaryProps {
+import {
+    Box,
+    Button,
+    Grid,
+    Paper,
+    Typography,
+    Divider,
+} from "@mui/material";
+
+interface Props {
     ergebnis: SimulationErgebnis;
+    onBeitragsvorschlagUebernehmen: () => void;
 }
 
-function formatEuro(value: number): string {
-    return new Intl.NumberFormat("de-DE", {
-        style: "currency",
-        currency: "EUR",
-    }).format(value);
-}
-
-interface KpiCardProps {
-    title: string;
-    value: React.ReactNode;
-    icon: React.ReactNode;
-}
-
-function KpiCard({
-    title,
-    value,
-    icon,
-}: KpiCardProps) {
-    return (
-        <Card sx={{ height: "100%" }}>
-            <CardContent
-
-                sx={{
-                    py: { xs: 1, sm: 2 },
-                    px: { xs: 1.5, sm: 2 },
-                    "&:last-child": {
-                        pb: { xs: 1, sm: 2 },
-                    },
-                }}
-            >
-                <Box
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
-                    gap={1}
-                >
-                    {icon}
-                    <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{
-                            fontSize: {
-                                xs: "0.70rem",
-                                sm: "0.85rem",
-                            },
-                        }}
-                    >
-                        {title}
-                    </Typography>
-                </Box>
-                <Box
-                    display="flex"
-                    justifyContent="center"
-                    mt={1}
-                >
-                    {value}
-                </Box>
-            </CardContent>
-        </Card>
-    );
-}
-
-export default function SimulationSummary({
-    ergebnis,
-}: SimulationSummaryProps) {
+export default function SimulationSummary({ ergebnis, onBeitragsvorschlagUebernehmen }: Props) {
 
     const zuschuss = ergebnis.positionen
-        .filter(position => position.kategorie === "KJFP_ZUSCHUSS")
-        .reduce((summe, position) => summe + position.betrag, 0);
+        .filter(p => p.kategorie === "KJFP_ZUSCHUSS")
+        .reduce((s, p) => s + p.betrag, 0);
+
 
     return (
-        <Grid container spacing={2} sx={{ mb: 2 }}>
+        <>
+            <FinanzSummary
+                kosten={ergebnis.kosten}
+                einnahmen={ergebnis.einnahmen}
+                eigenanteil={ergebnis.saldo}
+                kjfpZuschuss={zuschuss}
+            />
 
-            <Grid size={{ xs: 6, sm: 6, md: 3 }}>
-                <KpiCard
-                    title="Gesamtkosten"
-                    value={
-                        <Money
-                            value={ergebnis.kosten}
-                            variant="h5"
-                            align="center"
-                        />
-                    }
-                    icon={(
-                        <AccountBalanceWalletIcon
-                            color="primary"
-                            fontSize="small"
-                        />
-                    )}
-                />
-            </Grid>
+            <Box mt={2}>
+                <Paper variant="outlined" sx={{ p: 2 }}>
+                    <Typography variant="subtitle1" gutterBottom>
+                        Teilnehmerbeiträge
+                    </Typography>
 
-            <Grid size={{ xs: 6, sm: 6, md: 3 }}>
-                <KpiCard
-                    title="Gesamteinnahmen"
-                    value={
-                        <Money
-                            value={ergebnis.einnahmen}
-                            variant="h5"
-                            align="center"
-                        />
-                    }
-                    icon={(
-                        <PaymentsIcon color="success" fontSize="small" />
-                    )}
-                />
+                    <Grid container spacing={2}>
 
-            </Grid>
+                        <Grid size={{ xs: 12, sm: 4 }}>
+                            <Typography variant="body2" color="text.secondary">
+                                Summe Beiträge
+                            </Typography>
+                            <Money value={ergebnis.summeTeilnehmerbeitraege} />
+                        </Grid>
 
-            <Grid size={{ xs: 6, sm: 6, md: 3 }}>
-                <KpiCard
-                    title="Eigenanteil"
-                    value={
-                        <Money
-                            value={ergebnis.saldo}
-                            variant="h5"
-                            align="center"
-                            colorize
-                        />
-                    }
-                    icon={(
-                        <BalanceIcon fontSize="small"/>
-                    )}
-                />
-            </Grid>
+                        <Grid size={{ xs: 12, sm: 4 }}>
+                            <Typography variant="body2" color="text.secondary">
+                                Ø Personenbeitrag
+                            </Typography>
+                            <Money value={ergebnis.durchschnittlicherPersonenbeitrag} />
+                        </Grid>
 
-            <Grid size={{ xs: 6, sm: 6, md: 3 }}>
-                <KpiCard
-                    title="KJFP-Zuschuss"
-                    value={
-                        <Money
-                            value={zuschuss}
-                            variant="h5"
-                            align="center"
-                        />
-                    }
-                    icon={<VolunteerActivismIcon color="primary" fontSize="small" />}
-                />
-            </Grid>
+                        <Grid size={{ xs: 12, sm: 4 }}>
+                            <Typography variant="body2" color="text.secondary">
+                                Empfohlener Ø-Beitrag
+                            </Typography>
+                            <Money
+                                value={ergebnis.empfohlenerPersonenbeitrag}
+                                sx={{ fontWeight: 700 }}
+                            />
+                        </Grid>
 
-        </Grid>
+                    </Grid>
+
+                    <Divider sx={{ my: 2 }} />
+
+                    <Typography variant="subtitle2" gutterBottom>
+                        Beitragsvorschlag
+                    </Typography>
+
+                    <Grid container spacing={2}>
+
+                        <Grid size={{ xs: 12, sm: 4 }}>
+                            <Typography variant="body2" color="text.secondary">
+                                Teilnehmer U21
+                            </Typography>
+                            <Money
+                                value={
+                                    ergebnis.beitragsVorschlag
+                                        .teilnehmerBeitragUnter21Jahre
+                                }
+                            />
+                        </Grid>
+
+                        <Grid size={{ xs: 12, sm: 4 }}>
+                            <Typography variant="body2" color="text.secondary">
+                                Mitarbeiter
+                            </Typography>
+                            <Money
+                                value={
+                                    ergebnis.beitragsVorschlag
+                                        .mitarbeiterBeitrag
+                                }
+                            />
+                        </Grid>
+
+                        <Grid size={{ xs: 12, sm: 4 }}>
+                            <Typography variant="body2" color="text.secondary">
+                                Ergebnis
+                            </Typography>
+                            <Money
+                                value={
+                                    ergebnis.beitragsVorschlag
+                                        .durchschnittlicherPersonenbeitrag
+                                }
+                                sx={{ fontWeight: 700 }}
+                            />
+                        </Grid>
+
+                    </Grid>
+                </Paper>
+            </Box>
+        </>
     );
 }

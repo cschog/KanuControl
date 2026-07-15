@@ -22,6 +22,7 @@ import {
 } from "@/api/services/planungApi";
 import { PlanungDetail } from "@/api/types/planung";
 import { kategorieZuTyp } from "@/api/types/finanz";
+import FinanzSummary from "@/components/common/FinanzSummary";
 
 
 interface Props {
@@ -103,12 +104,10 @@ export default function PlanungPage({
   const sumEinnahmen = einnahmen.reduce((a, b) => a + b.betrag, 0);
   const saldo = sumEinnahmen - sumKosten;
 
-  const saldoColor =
-    saldo <= -500
-      ? "success.main"
-      : saldo <= -250
-        ? "warning.main"
-        : "error.main";
+
+  const kjfpZuschuss = planung.positionen
+    .filter(p => p.kategorie === "KJFP_ZUSCHUSS")
+    .reduce((sum, p) => sum + p.betrag, 0);
 
 
   return (
@@ -135,23 +134,12 @@ export default function PlanungPage({
         </Alert>
       )}
 
-      <Stack
-        direction="row"
-        spacing={4}
-        mb={3}
-      >
-        <Typography>
-          Einnahmen: <strong>{sumEinnahmen.toFixed(2)} €</strong>
-        </Typography>
-
-        <Typography>
-          Ausgaben: <strong>{sumKosten.toFixed(2)} €</strong>
-        </Typography>
-
-        <Typography color={saldoColor}>
-          Eigenanteil: <strong>{saldo.toFixed(2)} €</strong>
-        </Typography>
-      </Stack>
+      <FinanzSummary
+        kosten={sumKosten}
+        einnahmen={sumEinnahmen}
+        eigenanteil={saldo}
+        kjfpZuschuss={kjfpZuschuss}
+      />
 
       <PlanungspositionenTable
         positionen={planung.positionen}

@@ -27,13 +27,31 @@ public class SimulationService {
 
     private final PlanungAutomatikService planungAutomatikService;
 
+    @Transactional
     public PlanungsSimulation getSimulation(
             Long veranstaltungId
     ) {
 
         return planungRepository
                 .findByVeranstaltungId(veranstaltungId)
-                .map(mapper::toSimulation)
+                .map(planung -> {
+
+                    if (!planung.isInitialisiert()) {
+
+                        mapper.updatePlanung(
+                                planung,
+                                simulationFactory.fromVeranstaltung(
+                                        planung.getVeranstaltung()
+                                )
+                        );
+
+                        planung.setInitialisiert(true);
+
+                        planungRepository.save(planung);
+                    }
+
+                    return mapper.toSimulation(planung);
+                })
                 .orElseGet(() -> {
 
                     Veranstaltung veranstaltung =
@@ -76,9 +94,7 @@ public class SimulationService {
        HELPER
        ========================================================= */
 
-    private Planung createPlanung(
-            Long veranstaltungId
-    ) {
+    private Planung createPlanung(Long veranstaltungId) {
 
         Veranstaltung veranstaltung =
                 veranstaltungRepository.findById(veranstaltungId)
@@ -90,10 +106,14 @@ public class SimulationService {
 
         Planung planung = new Planung();
         planung.setVeranstaltung(veranstaltung);
+        planung.setStatus(PlanungsStatus.IN_BEARBEITUNG);
 
-        planung.setStatus(
-                PlanungsStatus.IN_BEARBEITUNG
+        mapper.updatePlanung(
+                planung,
+                simulationFactory.fromVeranstaltung(veranstaltung)
         );
+
+        planung.setInitialisiert(true);
 
         return planung;
     }

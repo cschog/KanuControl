@@ -10,10 +10,9 @@ import {
 } from "@mui/material";
 
 import {
-    tableFontSize,
-    headingFontSize,
-    tablePadding,
-} from "@/theme/fontSizes";
+    fontSize,
+    padding,
+} from "@/theme/ui";
 
 import { FinanzKategorie, kategorieZuTyp } from "@/api/types/finanz";
 
@@ -77,7 +76,7 @@ export default function PlanungspositionenTable({
                 sx={{
                     p: 2,
                     fontWeight: "bold",
-                    fontSize: tableFontSize,
+                    fontSize: fontSize.table,
                 }}
             >
                 {title}
@@ -90,7 +89,7 @@ export default function PlanungspositionenTable({
                         <TableCell
                             sx={{
                                 fontWeight: "bold",
-                                fontSize: tableFontSize,
+                                fontSize: fontSize.table,
                             }}
                         >
                             Kategorie
@@ -100,7 +99,7 @@ export default function PlanungspositionenTable({
                             align="right"
                             sx={{
                                 fontWeight: "bold",
-                                fontSize: tableFontSize,
+                                fontSize: fontSize.table,
                             }}
                         >
                             Betrag
@@ -111,7 +110,7 @@ export default function PlanungspositionenTable({
                                 align="center"
                                 sx={{
                                     fontWeight: "bold",
-                                    fontSize: tableFontSize,
+                                    fontSize: fontSize.table,
                                 }}
                             >
                                 Automatisch
@@ -141,7 +140,7 @@ export default function PlanungspositionenTable({
                                             sx={{
                                                 bgcolor: "grey.100",
                                                 fontWeight: "bold",
-                                                fontSize: tableFontSize,
+                                                fontSize: fontSize.table,
                                             }}
                                         >
                                             {typ === "KOSTEN"
@@ -155,8 +154,8 @@ export default function PlanungspositionenTable({
                                     key={position.kategorie}
                                     sx={{
                                         "& td": {
-                                            fontSize: tableFontSize,
-                                            py: tablePadding,
+                                            fontSize: fontSize.table,
+                                            py: padding.table,
                                         },
                                     }}
                                 >
