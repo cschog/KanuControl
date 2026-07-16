@@ -149,8 +149,7 @@ public class PlanungBerechnungService {
             return BigDecimal.ZERO;
         }
 
-        long tage = veranstaltungBerechnungsService
-                .ermittleTage(planung.getVeranstaltung());
+        long tage = getBerechnungstage(planung);
 
         return planung.getVerpflegungPreisProPersonUndTag()
                 .multiply(
@@ -178,7 +177,7 @@ public class PlanungBerechnungService {
                 )
                 .multiply(
                         BigDecimal.valueOf(
-                                simulation.getVeranstaltung().getTage()
+                                getBerechnungstage(simulation)
                         )
                 );
     }
@@ -232,8 +231,7 @@ public class PlanungBerechnungService {
             return BigDecimal.ZERO;
         }
 
-        long tage = veranstaltungBerechnungsService
-                .ermittleTage(planung.getVeranstaltung());
+        long tage = getBerechnungstage(planung);
 
         return planung.getVerbrauchsmaterialProTag()
                 .multiply(BigDecimal.valueOf(tage));
@@ -264,8 +262,7 @@ public class PlanungBerechnungService {
             return BigDecimal.ZERO;
         }
 
-        long tage = veranstaltungBerechnungsService
-                .ermittleTage(planung.getVeranstaltung());
+        long tage = getBerechnungstage(planung);
 
         return planung.getSonstigeKostenProTag()
                 .multiply(BigDecimal.valueOf(tage));
@@ -297,7 +294,7 @@ public class PlanungBerechnungService {
         }
 
         return simulation.getVerbrauchsmaterialProTag()
-                .multiply(BigDecimal.valueOf(simulation.getVeranstaltung().getTage()));
+                .multiply(BigDecimal.valueOf(getBerechnungstage(simulation)));
     }
 
     public BigDecimal berechneKultur(
@@ -325,7 +322,7 @@ public class PlanungBerechnungService {
         }
 
         return simulation.getSonstigeKostenProTag()
-                .multiply(BigDecimal.valueOf(simulation.getVeranstaltung().getTage()));
+                .multiply(BigDecimal.valueOf(getBerechnungstage(simulation)));
     }
 
     private static int personen(int teilnehmer, int mitarbeiter) {
@@ -442,6 +439,30 @@ public class PlanungBerechnungService {
                 besterTn,
                 besterMa,
                 besterDurchschnitt
+        );
+    }
+
+    private long getBerechnungstage(Planung planung) {
+
+        if (planung == null || planung.getVeranstaltung() == null) {
+            return 0;
+        }
+
+        return Math.min(
+                veranstaltungBerechnungsService.ermittleTage(planung.getVeranstaltung()),
+                21
+        );
+    }
+
+    private long getBerechnungstage(PlanungsSimulation simulation) {
+
+        if (simulation == null || simulation.getVeranstaltung() == null) {
+            return 0;
+        }
+
+        return Math.min(
+                simulation.getVeranstaltung().getTage(),
+                21
         );
     }
 }

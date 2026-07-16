@@ -24,6 +24,7 @@ import SliderNumberField from "@/components/common/SliderNumberField";
 import RahmendatenAccordion
     from "@/components/simulation/RahmendatenAccordion";
 import { PlanungsSimulation } from "@/api/types/simulation/PlanungsSimulation";
+import { radius } from "@/theme/ui";
 
 interface SimulationFormProps {
     simulation: PlanungsSimulation;
@@ -48,7 +49,7 @@ export default function SimulationForm({
 
     const sectionStyle = {
         p: 2,
-        borderRadius: 2,
+        borderRadius: radius.dialog,
     };
 
     const update = <K extends keyof PlanungsSimulation>(

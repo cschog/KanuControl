@@ -27,7 +27,6 @@ export interface TeilnehmerListDTO {
 }
 
 export interface TeilnehmerBeitraegeResponseDTO {
-  individuelleGebuehren: boolean;
 
   teilnehmer: TeilnehmerListDTO[];
 }

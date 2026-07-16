@@ -123,6 +123,7 @@ public class FinanzService {
                 kosten,
                 einnahmen,
                 saldo,
+                BigDecimal.ZERO,      // kjfpZuschuss
                 deckung,
                 proPerson,
                 notwendigerBeitrag

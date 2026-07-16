@@ -27,6 +27,7 @@ import { useAppContext } from "@/context/AppContext";
 import { getBackendVersion } from "@/api/services/systemApi";
 import apiClient from "@/api/client/apiClient";
 import { InfoPage } from "@/api/enums/InfoPage";
+import { radius } from "@/theme/ui";
 
 const Navigation = () => {
   const navigate = useNavigate();
@@ -156,7 +157,7 @@ const loadOnlineUsers = async () => {
                 minWidth: 0,
                 flexGrow: 1,
                 cursor: "pointer",
-                borderRadius: 1,
+                borderRadius: radius.dialog,
                 transition: "all 0.15s ease",
                 "&:hover": {
                   backgroundColor: "rgba(255,255,255,0.06)",

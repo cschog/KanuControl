@@ -15,12 +15,7 @@ export interface VeranstaltungSave {
   unterkunftsartId?: number;
   verpflegungsmodellId?: number;
 
-  individuelleGebuehren?: boolean;
-  standardGebuehr?: number;
-
   beitragsstrukturId?: number;
-
-  scope: VeranstaltungScope;
 
   countryCode?: CountryCode;
   plz?: string;
@@ -34,11 +29,4 @@ export interface VeranstaltungSave {
   vereinId: number;
   leiterId: number;
 
-  geplanteTeilnehmerMaennlich?: number;
-  geplanteTeilnehmerWeiblich?: number;
-  geplanteTeilnehmerDivers?: number;
-
-  geplanteMitarbeiterMaennlich?: number;
-  geplanteMitarbeiterWeiblich?: number;
-  geplanteMitarbeiterDivers?: number;
 }

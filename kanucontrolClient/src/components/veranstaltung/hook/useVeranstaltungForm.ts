@@ -33,18 +33,8 @@ function emptyVeranstaltung(): VeranstaltungFormModel {
     unterkunftsart: undefined,
     verpflegungsmodell: undefined,
 
-    individuelleGebuehren: false,
     beitragsstrukturId: undefined,
-    standardGebuehr: undefined,
-    scope: VeranstaltungScope.VEREIN,
-
-    geplanteTeilnehmerMaennlich: undefined,
-    geplanteTeilnehmerWeiblich: undefined,
-    geplanteTeilnehmerDivers: undefined,
-
-    geplanteMitarbeiterMaennlich: undefined,
-    geplanteMitarbeiterWeiblich: undefined,
-    geplanteMitarbeiterDivers: undefined,
+  
   };
 }
 
@@ -76,19 +66,7 @@ export function useVeranstaltungForm(initial: VeranstaltungFormModel | null) {
       ort: initial.ort ?? "",
       unterkunftsart: initial.unterkunftsart,
       verpflegungsmodell: initial.verpflegungsmodell,
-
-      individuelleGebuehren: initial.individuelleGebuehren ?? false,
       beitragsstrukturId: initial.beitragsstrukturId ?? undefined,
-      standardGebuehr: initial.standardGebuehr ?? undefined,
-      scope: initial.scope ?? undefined,
-
-      geplanteTeilnehmerMaennlich: initial.geplanteTeilnehmerMaennlich ?? undefined,
-      geplanteTeilnehmerWeiblich: initial.geplanteTeilnehmerWeiblich ?? undefined,
-      geplanteTeilnehmerDivers: initial.geplanteTeilnehmerDivers ?? undefined,
-
-      geplanteMitarbeiterMaennlich: initial.geplanteMitarbeiterMaennlich ?? undefined,
-      geplanteMitarbeiterWeiblich: initial.geplanteMitarbeiterWeiblich ?? undefined,
-      geplanteMitarbeiterDivers: initial.geplanteMitarbeiterDivers ?? undefined,
     });
   }, [initial]);
 
@@ -155,20 +133,7 @@ export function useVeranstaltungForm(initial: VeranstaltungFormModel | null) {
       unterkunftsartId: form.unterkunftsart?.id,
       verpflegungsmodellId: form.verpflegungsmodell?.id,
 
-      individuelleGebuehren: form.individuelleGebuehren ?? false,
-
       beitragsstrukturId: form.beitragsstrukturId ?? undefined,
-
-      standardGebuehr: form.individuelleGebuehren ? undefined : form.standardGebuehr ?? undefined,
-      scope: form.scope,
-
-      geplanteTeilnehmerMaennlich: form.geplanteTeilnehmerMaennlich ?? undefined,
-      geplanteTeilnehmerWeiblich: form.geplanteTeilnehmerWeiblich ?? undefined,
-      geplanteTeilnehmerDivers: form.geplanteTeilnehmerDivers ?? undefined,
-
-      geplanteMitarbeiterMaennlich: form.geplanteMitarbeiterMaennlich ?? undefined,
-      geplanteMitarbeiterWeiblich: form.geplanteMitarbeiterWeiblich ?? undefined,
-      geplanteMitarbeiterDivers: form.geplanteMitarbeiterDivers ?? undefined,
     };
   };
 

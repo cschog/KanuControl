@@ -22,6 +22,7 @@ import { getActiveVeranstaltung } from "@/api/services/veranstaltungApi";
 
 import { VeranstaltungDetail } from "@/api/types/veranstaltung/VeranstaltungDetail";
 import { ReisekostenPdfDialog } from "@/components/finanzen/reisekosten/ReisekostenPdfDialog";
+import { radius } from "@/theme/ui";
 
 const DokumenteScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -149,7 +150,7 @@ const DokumenteScreen: React.FC = () => {
         sx={{
           bgcolor: "#fff3cd",
           border: "1px solid #ffe69c",
-          borderRadius: 2,
+          borderRadius: radius.dialog,
           boxShadow: "none",
         }}
       >
@@ -178,7 +179,7 @@ const DokumenteScreen: React.FC = () => {
       elevation={3}
       sx={{
         p: 3,
-        borderRadius: 3,
+        borderRadius: radius.dialog,
       }}
     >
       <Stack direction="row" alignItems="center" spacing={1} mb={2}>
@@ -280,7 +281,7 @@ const DokumenteScreen: React.FC = () => {
               elevation={3}
               sx={{
                 p: 3,
-                borderRadius: 3,
+                borderRadius: radius.dialog,
               }}
             >
               <Stack direction="row" alignItems="center" spacing={1} mb={2}>
@@ -303,7 +304,7 @@ const DokumenteScreen: React.FC = () => {
         <Paper
           sx={{
             p: 3,
-            borderRadius: 3,
+            borderRadius: radius.dialog,
           }}
         >
           <Typography color="text.secondary">Keine aktive Veranstaltung gefunden</Typography>

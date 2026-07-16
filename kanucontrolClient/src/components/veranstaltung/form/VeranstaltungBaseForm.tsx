@@ -118,22 +118,6 @@ const unterkunftsarten = useLoad<UnterkunftsartRef[]>(
         onChange={(v) => onChange("verein", v)}
       />
 
-      {/* ================= SCOPE ================= */}
-
-      {/* <TextField
-        select
-        fullWidth
-        size="small"
-        label="Scope"
-        value={form.scope ?? ""}
-        disabled={!editMode}
-        onChange={(e) => onChange("scope", e.target.value as VeranstaltungScope)}
-      >
-        <MenuItem value={VeranstaltungScope.VERBAND}>Verband</MenuItem>
-
-        <MenuItem value={VeranstaltungScope.VEREIN}>Verein</MenuItem>
-      </TextField> */}
-
       {/* ================= BEGINN ================= */}
 
       <FormFeldDatePicker
@@ -187,29 +171,6 @@ const unterkunftsarten = useLoad<UnterkunftsartRef[]>(
 
       {detailMode && (
         <>
-          {/* ================= UNTERKUNFT ================= */}
-
-          <RefAutocomplete
-            label="Unterkunftsart"
-            options={unterkunftsarten.data ?? []}
-            loading={unterkunftsarten.loading}
-            value={form.unterkunftsart}
-            disabled={!editMode}
-            onChange={(value) =>
-              onChange("unterkunftsart", value ?? undefined)
-            }
-          />
-
-          {/* ================= VERPFLEGUNG ================= */}
-
-          <RefAutocomplete
-            label="Verpflegungsmodell"
-            options={verpflegungsmodelle.data ?? []}
-            loading={verpflegungsmodelle.loading}
-            value={form.verpflegungsmodell}
-            disabled={!editMode}
-            onChange={(value) => onChange("verpflegungsmodell", value ?? undefined)}
-          />
 
           {/* ================= LAND ================= */}
 
@@ -254,28 +215,6 @@ const unterkunftsarten = useLoad<UnterkunftsartRef[]>(
             disabled={!editMode}
           />
 
-          {/* ================= INDIVIDUELLE GEBÜHREN ================= */}
-
-          <FormControlLabel
-            control={
-              <Switch
-                checked={form.individuelleGebuehren ?? false}
-                disabled={!editMode}
-                onChange={(e) => {
-                  const checked = e.target.checked;
-
-                  onChange("individuelleGebuehren", checked);
-
-                  // Standardgebühr entfernen
-                  if (checked) {
-                    onChange("standardGebuehr", undefined);
-                  }
-                }}
-              />
-            }
-            label="Individuelle Gebühren"
-          />
-
           {/* ================= BEITRAGSSTRUKTUR ================= */}
 
           <TextField
@@ -298,75 +237,30 @@ const unterkunftsarten = useLoad<UnterkunftsartRef[]>(
             ))}
           </TextField>
 
-          {/* ================= STANDARDGEBÜHR ================= */}
+           {/* ================= UNTERKUNFT ================= */}
 
-          <PriceField
-            label="Teilnehmergebühr"
-            value={form.standardGebuehr ?? ""}
-            disabled={!editMode || form.individuelleGebuehren}
-            onChange={(v) => onChange("standardGebuehr", v ? Number(v) : undefined)}
-            helperText={
-              form.individuelleGebuehren
-                ? "Gebühr wird individuell pro Teilnehmer berechnet"
-                : undefined
+          <RefAutocomplete
+            label="Unterkunftsart"
+            options={unterkunftsarten.data ?? []}
+            loading={unterkunftsarten.loading}
+            value={form.unterkunftsart}
+            disabled={!editMode}
+            onChange={(value) =>
+              onChange("unterkunftsart", value ?? undefined)
             }
           />
 
-          {/* ================= PLANUNG ================= */}
+          {/* ================= VERPFLEGUNG ================= */}
 
-          <FormFeld
-            label="Plan: geförderte TN männlich"
-            value={form.geplanteTeilnehmerMaennlich ?? ""}
+          <RefAutocomplete
+            label="Verpflegungsmodell"
+            options={verpflegungsmodelle.data ?? []}
+            loading={verpflegungsmodelle.loading}
+            value={form.verpflegungsmodell}
             disabled={!editMode}
-            onChange={(v) => onChange("geplanteTeilnehmerMaennlich", Number(v))}
-            type="number"
+            onChange={(value) => onChange("verpflegungsmodell", value ?? undefined)}
           />
 
-          <FormFeld
-            label="Plan: geförderte TN weiblich"
-            value={form.geplanteTeilnehmerWeiblich ?? ""}
-            disabled={!editMode}
-            onChange={(v) => onChange("geplanteTeilnehmerWeiblich", Number(v))}
-            type="number"
-          />
-
-          <FormFeld
-            label="Plan: geförderte TN divers"
-            value={form.geplanteTeilnehmerDivers ?? ""}
-            disabled={!editMode}
-            onChange={(v) => onChange("geplanteTeilnehmerDivers", Number(v))}
-            type="number"
-          />
-
-          <FormFeld
-            label="Plan: Mitarbeiter männlich"
-            value={form.geplanteMitarbeiterMaennlich ?? ""}
-            disabled={!editMode}
-            onChange={(v) =>
-              onChange("geplanteMitarbeiterMaennlich", v === "" ? undefined : Number(v))
-            }
-            type="number"
-          />
-
-          <FormFeld
-            label="Plan: Mitarbeiter weiblich"
-            value={form.geplanteMitarbeiterWeiblich ?? ""}
-            disabled={!editMode}
-            onChange={(v) =>
-              onChange("geplanteMitarbeiterWeiblich", v === "" ? undefined : Number(v))
-            }
-            type="number"
-          />
-
-          <FormFeld
-            label="Plan: Mitarbeiter divers"
-            value={form.geplanteMitarbeiterDivers ?? ""}
-            disabled={!editMode}
-            onChange={(v) =>
-              onChange("geplanteMitarbeiterDivers", v === "" ? undefined : Number(v))
-            }
-            type="number"
-          />
         </>
       )}
     </>

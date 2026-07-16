@@ -76,7 +76,7 @@ export default function PlanungspositionenTable({
                 sx={{
                     p: 2,
                     fontWeight: "bold",
-                    fontSize: fontSize.table,
+                    fontSize: fontSize.pageTitle,
                 }}
             >
                 {title}
@@ -89,7 +89,7 @@ export default function PlanungspositionenTable({
                         <TableCell
                             sx={{
                                 fontWeight: "bold",
-                                fontSize: fontSize.table,
+                                fontSize: fontSize.sectionTitle,
                             }}
                         >
                             Kategorie
@@ -99,7 +99,7 @@ export default function PlanungspositionenTable({
                             align="right"
                             sx={{
                                 fontWeight: "bold",
-                                fontSize: fontSize.table,
+                                fontSize: fontSize.sectionTitle,
                             }}
                         >
                             Betrag
@@ -110,7 +110,7 @@ export default function PlanungspositionenTable({
                                 align="center"
                                 sx={{
                                     fontWeight: "bold",
-                                    fontSize: fontSize.table,
+                                    fontSize: fontSize.sectionTitle,
                                 }}
                             >
                                 Automatisch
@@ -140,7 +140,7 @@ export default function PlanungspositionenTable({
                                             sx={{
                                                 bgcolor: "grey.100",
                                                 fontWeight: "bold",
-                                                fontSize: fontSize.table,
+                                                fontSize: fontSize.sectionTitle,
                                             }}
                                         >
                                             {typ === "KOSTEN"
@@ -154,7 +154,7 @@ export default function PlanungspositionenTable({
                                     key={position.kategorie}
                                     sx={{
                                         "& td": {
-                                            fontSize: fontSize.table,
+                                            fontSize: fontSize.sectionTitle,
                                             py: padding.table,
                                         },
                                     }}

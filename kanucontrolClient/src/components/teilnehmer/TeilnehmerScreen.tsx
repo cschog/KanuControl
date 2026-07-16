@@ -23,6 +23,7 @@ import {
 } from "@/api/services/teilnehmerApi";
 import { PersonList } from "@/api/types/person/PersonList";
 import { TeilnehmerList } from "@/api/types/TeilnehmerList";
+import { radius } from "@/theme/ui";
 
 export default function TeilnehmerScreen() {
   const { active } = useAppContext();
@@ -504,7 +505,7 @@ export default function TeilnehmerScreen() {
                 width: 72,
                 height: 88,
 
-                borderRadius: 3,
+                borderRadius: radius.dialog,
 
                 boxShadow: 3,
 
@@ -679,7 +680,7 @@ export default function TeilnehmerScreen() {
 
               alignSelf: "center",
 
-              borderRadius: 3,
+              borderRadius: radius.dialog,
 
               boxShadow: 2,
 
@@ -706,7 +707,7 @@ export default function TeilnehmerScreen() {
 
               alignSelf: "center",
 
-              borderRadius: 3,
+              borderRadius: radius.dialog,
 
               boxShadow: 2,
 

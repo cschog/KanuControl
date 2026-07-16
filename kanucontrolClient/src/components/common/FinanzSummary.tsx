@@ -1,8 +1,11 @@
+// src/components/common/FinanzSummary.tsx
 import {
     Box,
     Card,
     CardContent,
     Grid,
+    Paper,
+    Stack,
     Typography,
 } from "@mui/material";
 
@@ -18,12 +21,62 @@ import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import PaymentsIcon from "@mui/icons-material/Payments";
 import BalanceIcon from "@mui/icons-material/Balance";
 import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
+import { useMediaQuery, useTheme } from "@mui/material";
 
 interface Props {
     kosten: number;
     einnahmen: number;
     eigenanteil: number;
     kjfpZuschuss: number;
+}
+
+interface MobileKpiProps {
+    icon: React.ReactNode;
+    label: string;
+    value: number;
+    color?: string;
+}
+
+function MobileKpi({
+    icon,
+    label,
+    value,
+    color,
+}: MobileKpiProps) {
+    return (
+        <Box>
+            <Stack
+                direction="row"
+                alignItems="center"
+                justifyContent="space-between"
+                spacing={1}
+            >
+                <Stack
+                    direction="row"
+                    alignItems="center"
+                    spacing={0.5}
+                >
+                    {icon}
+
+                    <Typography
+                        variant="body2"
+                        color="text.secondary"
+                    >
+                        {label}
+                    </Typography>
+                </Stack>
+
+                <Money
+                    value={value}
+                    variant="body2"
+                    sx={{
+                        fontWeight: 600,
+                        color,
+                    }}
+                />
+            </Stack>
+        </Box>
+    );
 }
 
 interface KpiCardProps {
@@ -97,6 +150,57 @@ export default function FinanzSummary({
             : eigenanteil <= -250
                 ? "warning.main"
                 : "error.main";
+
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+    if (isMobile) {
+        return (
+            <Paper
+                variant="outlined"
+                sx={{
+                    p: 1.5,
+                    mb: 2,
+                    borderRadius: radius.card,
+                }}
+            >
+                <Grid container spacing={1}>
+                    <Grid size={6}>
+                        <MobileKpi
+                            icon={<AccountBalanceWalletIcon color="primary" />}
+                            label="Kosten"
+                            value={kosten}
+                        />
+                    </Grid>
+
+                    <Grid size={6}>
+                        <MobileKpi
+                            icon={<PaymentsIcon color="success" />}
+                            label="Einnahmen"
+                            value={einnahmen}
+                        />
+                    </Grid>
+
+                    <Grid size={6}>
+                        <MobileKpi
+                            icon={<BalanceIcon sx={{ color: eigenanteilColor }} />}
+                            label="Eigenanteil"
+                            value={eigenanteil}
+                            color={eigenanteilColor}
+                        />
+                    </Grid>
+
+                    <Grid size={6}>
+                        <MobileKpi
+                            icon={<VolunteerActivismIcon color="primary" />}
+                            label="KJFP"
+                            value={kjfpZuschuss}
+                        />
+                    </Grid>
+                </Grid>
+            </Paper>
+        );
+    }
 
     return (
         <Grid

@@ -33,18 +33,5 @@ export interface VeranstaltungFormModel {
   unterkunftsart?: UnterkunftsartRef;
   verpflegungsmodell?: VerpflegungsmodellRef;
 
-  scope: VeranstaltungScope;
-
-  individuelleGebuehren?: boolean;
-  standardGebuehr?: number;
-
   beitragsstrukturId?: number;
-
-  geplanteTeilnehmerMaennlich?: number;
-  geplanteTeilnehmerWeiblich?: number;
-  geplanteTeilnehmerDivers?: number;
-
-  geplanteMitarbeiterMaennlich?: number;
-  geplanteMitarbeiterWeiblich?: number;
-  geplanteMitarbeiterDivers?: number;
 }

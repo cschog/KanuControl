@@ -7,7 +7,5 @@ import java.util.List;
 @Data
 public class TeilnehmerBeitraegeResponseDTO {
 
-    private boolean individuelleGebuehren;
-
     private List<TeilnehmerListDTO> teilnehmer;
 }

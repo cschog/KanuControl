@@ -12,6 +12,7 @@ import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.exception.ErrorMessages;
 import com.kcserver.mapper.AbrechnungMapper;
 import com.kcserver.repository.*;
+import com.kcserver.service.FoerderService;
 import com.kcserver.service.FoerdersatzService;
 import com.kcserver.service.beitrag.TeilnehmerBeitragService;
 import com.kcserver.service.veranstaltung.VeranstaltungValidator;
@@ -45,6 +46,7 @@ public class AbrechnungService {
     private final ReisekostenabrechnungService reisekostenabrechnungService;
     private final TeilnehmerBeitragService teilnehmerBeitragService;
     private final VeranstaltungValidator validator;
+    private final FoerderService foerderService;
 
 
     /* =========================================================
@@ -99,6 +101,12 @@ public class AbrechnungService {
         List<Teilnehmer> teilnehmer =
                 teilnehmerRepository.findAllWithPerson(
                         veranstaltungId
+                );
+
+        BigDecimal kjfpZuschuss =
+                foerderService.berechneGesamtfoerderung(
+                        veranstaltung,
+                        teilnehmer
                 );
 
         BigDecimal teilnehmerbeitraege =
@@ -159,6 +167,8 @@ public class AbrechnungService {
                 summary.getEinnahmen()
                         .add(teilnehmerbeitraege)
         );
+
+        summary.setKjfpZuschuss(kjfpZuschuss);
 
         summary.setSaldo(
                 summary.getEinnahmen()

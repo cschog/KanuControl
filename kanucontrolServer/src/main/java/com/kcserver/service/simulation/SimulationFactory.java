@@ -5,7 +5,6 @@ import com.kcserver.dto.simulation.VeranstaltungsInfo;
 import com.kcserver.entity.Veranstaltung;
 import com.kcserver.mapper.VeranstaltungsInfoMapper;
 import com.kcserver.service.beitrag.BeitragsregelService;
-import com.kcserver.service.veranstaltung.VeranstaltungBerechnungsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -26,7 +25,6 @@ public class SimulationFactory {
     private static final BigDecimal STANDARD_MIETE = BigDecimal.ZERO;
     private static final BigDecimal STANDARD_SONSTIGE_KOSTEN_PRO_TAG = BigDecimal.valueOf(10);
 
-    private final VeranstaltungBerechnungsService berechnungsService;
     private final BeitragsregelService beitragsregelService;
 
     /**
@@ -37,7 +35,7 @@ public class SimulationFactory {
         VeranstaltungsInfo info =
                 veranstaltungsInfoMapper.toDTO(v);
 
-        PlanungsSimulation simulation = PlanungsSimulation.builder()
+        return PlanungsSimulation.builder()
                 .veranstaltung(info)
                 .kikZertifiziert(info.isVereinKikZertifiziert())
                 .teilnehmer(STANDARD_TEILNEHMER)
@@ -67,13 +65,6 @@ public class SimulationFactory {
                 .miete(STANDARD_MIETE)
                 .sonstigeKostenProTag(STANDARD_SONSTIGE_KOSTEN_PRO_TAG)
                 .build();
-
-        System.out.println("TN-Beitrag: " + simulation.getTeilnehmerBeitragUnter21Jahre());
-        System.out.println("MA-Beitrag: " + simulation.getMitarbeiterBeitrag());
-        System.out.println("Unterkunft: " + simulation.getUnterkunftPreisProPersonUndNacht());
-        System.out.println("Verpflegung: " + simulation.getVerpflegungPreisProPersonUndTag());
-
-        return simulation;
     }
 
 }

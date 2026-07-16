@@ -1,5 +1,6 @@
 // src/components/simulation/SimulationField.tsx
 
+import { radius } from "@/theme/ui";
 import { Paper } from "@mui/material";
 import { ReactNode } from "react";
 
@@ -17,7 +18,7 @@ export default function SimulationField({
             sx={{
                 p: 2,
                 height: "100%",
-                borderRadius: 2,
+                borderRadius: radius.dialog,
                 bgcolor: "grey.200",
                 display: "flex",
                 alignItems: "center",

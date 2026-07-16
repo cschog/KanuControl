@@ -28,21 +28,8 @@ export interface VeranstaltungDetail {
   verein: VereinRef;
   leiter: PersonRef;
 
-  scope: VeranstaltungScope;
-
-  individuelleGebuehren: boolean;
-  standardGebuehr: number;
-
   beitragsstrukturId?: number;
   beitragsstrukturName?: string;
-
-  geplanteTeilnehmerMaennlich?: number;
-  geplanteTeilnehmerWeiblich?: number;
-  geplanteTeilnehmerDivers?: number;
-
-  geplanteMitarbeiterMaennlich?: number;
-  geplanteMitarbeiterWeiblich?: number;
-  geplanteMitarbeiterDivers?: number;
 
   aktiv: boolean;
 }

@@ -5,6 +5,7 @@ import { GenericTableTanstack } from "@/components/common/GenericTableTanstack";
 import { VeranstaltungList } from "@/api/types/veranstaltung/VeranstaltungList";
 
 import { veranstaltungColumnsTanstack } from "./veranstaltungColumnsTanstack";
+import { radius } from "@/theme/ui";
 
 interface Props {
   data: VeranstaltungList[];
@@ -57,7 +58,7 @@ export function VeranstaltungTable({
                 sx={{
                   px: 1,
                   py: 0.2,
-                  borderRadius: 1,
+                  borderRadius: radius.dialog,
                   bgcolor: "success.main",
                   color: "white",
                   fontSize: "0.7rem",

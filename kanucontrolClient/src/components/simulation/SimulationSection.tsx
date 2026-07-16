@@ -1,3 +1,4 @@
+import { radius } from "@/theme/ui";
 import {
     Divider,
     Grid,
@@ -25,7 +26,7 @@ export default function SimulationSection({
                 variant="outlined"
                 sx={{
                     p: 2,
-                    borderRadius: 2,
+                    borderRadius: radius.dialog,
                     bgcolor: "grey.100",
                     borderColor: "divider",
                 }}

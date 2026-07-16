@@ -54,29 +54,30 @@ const Finanzen = () => {
         }}
       >
         <Tab label="Dashboard" />
+        <Tab label="Simulation" />
         <Tab label="Planung" />
         <Tab label="Buchungen" />
-        <Tab label="Beiträge" />
         <Tab label="Fahrkosten" />
-        <Tab label="Simulation" />
+        <Tab label="Beiträge" />
+
         <Tab label="Kürzel" />
       </Tabs>
 
       {tab === 0 && <FinanzenDashboard />}
       {tab === 1 && (
+        <SimulationPage
+          veranstaltungId={id}
+        />
+      )}
+      {tab === 2 && (
         <PlanungPage
           veranstaltungId={id}
           onOpenSimulation={() => setTab(5)}
         />
       )}
-      {tab === 2 && <BuchungenPage veranstaltungId={id} />}
-      {tab === 3 && <BeitraegePage veranstaltungId={id} />}
+      {tab === 3 && <BuchungenPage veranstaltungId={id} />}
       {tab === 4 && <ReisekostenPage veranstaltungId={id} />}
-      {tab === 5 && (
-        <SimulationPage
-          veranstaltungId={id}
-        />
-      )}
+      {tab === 5 && <BeitraegePage veranstaltungId={id} />}
       {tab === 6 && <KuerzelPage veranstaltungId={id} />}
     </Box>
   );

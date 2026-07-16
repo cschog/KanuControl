@@ -82,6 +82,8 @@ public class SimulationService {
                 planung,
                 simulation
         );
+
+        planung.setInitialisiert(true);
         mapper.berechneAntragsdaten(planung);
 
         planungAutomatikService

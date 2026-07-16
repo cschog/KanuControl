@@ -111,13 +111,8 @@ export default function PlanungPage({
 
 
   return (
-    <Box p={3}>
-      <Typography variant="h5" gutterBottom>
-        Finanzplanung
-      </Typography>
-
-
-
+        <>
+      
       {planung.eingereicht && (
         <Alert severity="warning" sx={{ mb: 2 }}>
           Diese Planung wurde eingereicht und ist gesperrt.
@@ -199,6 +194,6 @@ export default function PlanungPage({
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+   </>
   );
 }

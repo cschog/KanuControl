@@ -1,3 +1,4 @@
+import { radius } from "@/theme/ui";
 import { createTheme } from "@mui/material/styles";
 
 const theme = createTheme({
@@ -25,7 +26,7 @@ const theme = createTheme({
   },
 
   shape: {
-    borderRadius: 8,
+    borderRadius: radius.dialog,
   },
 });
 

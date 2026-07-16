@@ -13,8 +13,11 @@ import {
     Box,
     Button,
     Typography,
+    useTheme,
+    useMediaQuery,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { radius } from "@/theme/ui";
 
 interface SimulationPageProps {
 
@@ -42,6 +45,10 @@ export default function SimulationPage({
 
     const [simulationOpen, setSimulationOpen] = useState(true);
     const [positionenOpen, setPositionenOpen] = useState(false);
+
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
 
     const uebernehmeBeitragsvorschlag = () => {
 
@@ -104,12 +111,19 @@ export default function SimulationPage({
         <>
             <Box
                 sx={{
-                    position: "sticky",
-                    top: 0,
-                    zIndex: 100,
+                    position: {
+                        xs: "static",
+                        md: "sticky",
+                    },
+                    top: {
+                        md: 0,
+                    },
+                    zIndex: {
+                        md: 100,
+                    },
                     bgcolor: "background.default",
                     pb: 2,
-                    borderRadius: 2,
+                    borderRadius: radius.dialog,
                 }}
             >
                 <SimulationSummary
@@ -149,13 +163,13 @@ export default function SimulationPage({
                 sx={{
                     mt: 2,
                     bgcolor: "grey.100",
-                    borderRadius: 2,
+                    borderRadius: radius.dialog,
                 }}
             >
                 <AccordionSummary
                     expandIcon={<ExpandMoreIcon />}
                 >
-                    <Typography variant="h5">
+                    <Typography variant={isMobile ? "h6" : "h5"}>
                         Simulation
                     </Typography>
                 </AccordionSummary>
@@ -183,13 +197,13 @@ export default function SimulationPage({
                 sx={{
                     mt: 2,
                     bgcolor: "grey.100",
-                    borderRadius: 2,
+                    borderRadius: radius.dialog,
                 }}
             >
                 <AccordionSummary
                     expandIcon={<ExpandMoreIcon />}
                 >
-                    <Typography variant="h5">
+                    <Typography variant={isMobile ? "h6" : "h5"}>
                         Berechnungspositionen
                     </Typography>
                 </AccordionSummary>

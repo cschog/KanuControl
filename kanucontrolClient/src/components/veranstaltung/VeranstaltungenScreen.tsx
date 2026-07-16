@@ -201,11 +201,6 @@ export default function VeranstaltungenScreen() {
     }
 
     try {
-      if (payload.individuelleGebuehren && !payload.beitragsstrukturId) {
-        setError("Bitte zuerst eine Beitragsstruktur auswählen.");
-
-        return;
-      }
 
       const response = await updateVeranstaltung(selectedVeranstaltung.id, payload);
 
@@ -364,7 +359,6 @@ export default function VeranstaltungenScreen() {
     setCopyData({
       name: `${selectedVeranstaltung.name} Kopie`,
       typ: selectedVeranstaltung.typ,
-      scope: selectedVeranstaltung.scope,
       verein: selectedVeranstaltung.verein,
       leiter: selectedVeranstaltung.leiter,
       beginnDatum: selectedVeranstaltung.beginnDatum,
@@ -376,8 +370,6 @@ export default function VeranstaltungenScreen() {
       countryCode: selectedVeranstaltung.countryCode,
       plz: selectedVeranstaltung.plz,
       ort: selectedVeranstaltung.ort,
-      individuelleGebuehren: selectedVeranstaltung.individuelleGebuehren,
-      standardGebuehr: selectedVeranstaltung.standardGebuehr,
       beitragsstrukturId: selectedVeranstaltung.beitragsstrukturId,
     });
 

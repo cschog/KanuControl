@@ -6,6 +6,7 @@ import BelegCard from "@/components/finanzen/buchung/BelegCard";
 import BuchungDialog from "@/components/finanzen/buchung/BuchungDialog";
 import BelegDialog from "@/components/finanzen/buchung/BelegDialog";
 import BelegMitBuchungDialog from "@/components/finanzen/buchung/BelegMitBuchungDialog";
+import FinanzSummary from "@/components/common/FinanzSummary";
 
 import {
   getAbrechnung,
@@ -129,6 +130,9 @@ export default function BuchungenPage({ veranstaltungId }: Props) {
     await load();
   };
 
+  console.log(abrechnung.finanz);
+  console.log(abrechnung);
+
   /* =========================================================
      UI
      ========================================================= */
@@ -145,56 +149,12 @@ export default function BuchungenPage({ veranstaltungId }: Props) {
         </Button>
       )}
 
-      <Stack
-        direction={{
-          xs: "column",
-          sm: "row",
-        }}
-        spacing={{
-          xs: 1,
-          sm: 4,
-        }}
-        mb={3}
-      >
-        <Typography
-          sx={{
-            whiteSpace: "nowrap",
-            fontSize: {
-              xs: "0.95rem",
-              md: "1.5rem",
-            },
-            fontWeight: 500,
-          }}
-        >
-          💸 Kosten: {kosten.toFixed(2)} €
-        </Typography>
-
-        <Typography
-          sx={{
-            whiteSpace: "nowrap",
-            fontSize: {
-              xs: "0.95rem",
-              md: "1.5rem",
-            },
-            fontWeight: 500,
-          }}
-        >
-          💰 Einnahmen: {einnahmen.toFixed(2)} €
-        </Typography>
-
-        <Typography
-          sx={{
-            whiteSpace: "nowrap",
-            fontSize: {
-              xs: "0.95rem",
-              md: "1.5rem",
-            },
-            fontWeight: 500,
-          }}
-        >
-          📊 Saldo: {saldo.toFixed(2)} €
-        </Typography>
-      </Stack>
+      <FinanzSummary
+        kosten={abrechnung.finanz.kosten}
+        einnahmen={abrechnung.finanz.einnahmen}
+        eigenanteil={abrechnung.finanz.saldo}
+        kjfpZuschuss={abrechnung.finanz.kjfpZuschuss}
+      />
 
       <Divider sx={{ mb: 3 }} />
 

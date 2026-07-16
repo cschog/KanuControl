@@ -3,15 +3,57 @@ import {
     Accordion,
     AccordionDetails,
     AccordionSummary,
+    Box,
     Grid,
     Paper,
     Typography,
+    useTheme,
+    useMediaQuery,
 } from "@mui/material";
 
 import { VeranstaltungsInfo } from "@/api/types/simulation/VeranstaltungsInfo";
+import { radius } from "@/theme/ui";
 
 interface RahmendatenAccordionProps {
     veranstaltung: VeranstaltungsInfo;
+}
+
+function MobileInfoRow({
+    label,
+    value,
+}: {
+    label: string;
+    value?: string | number | null;
+}) {
+    return (
+        <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            py={0.75}
+            sx={{
+                borderBottom: "1px solid",
+                borderColor: "divider",
+                "&:last-child": {
+                    borderBottom: "none",
+                },
+            }}
+        >
+            <Typography
+                variant="body2"
+                color="text.secondary"
+            >
+                {label}
+            </Typography>
+
+            <Typography
+                variant="body2"
+                fontWeight={600}
+            >
+                {value || "—"}
+            </Typography>
+        </Box>
+    );
 }
 
 export default function RahmendatenAccordion({
@@ -24,6 +66,9 @@ export default function RahmendatenAccordion({
         md: 4,
         lg: 3,
     };
+
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
     const InfoCard = ({
         titel,
@@ -41,7 +86,7 @@ export default function RahmendatenAccordion({
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "center",
-                    borderRadius: 2,
+                    borderRadius: radius.dialog,
                 }}
             >
                 <Typography
@@ -63,81 +108,120 @@ export default function RahmendatenAccordion({
 
     return (
         <Accordion
-            defaultExpanded
+            defaultExpanded={!isMobile}
             sx={{
                 mb: 2,
                 bgcolor: "grey.100",
-                borderRadius: 2,
+                borderRadius: radius.dialog,
             }}
         >
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography variant="h6">
+                <Typography variant={isMobile ? "h6" : "h5"}>
                     Rahmendaten
                 </Typography>
             </AccordionSummary>
 
-            <AccordionDetails
+           <AccordionDetails
+    sx={{
+        bgcolor: "grey.300",
+        borderTop: 1,
+        borderColor: "divider",
+    }}
+>
+    {isMobile ? (
+        <>
+            <MobileInfoRow
+                label="Veranstaltung"
+                value={veranstaltung.name}
+            />
 
-                sx={{
-                    bgcolor: "grey.300",
-                    borderTop: 1,
-                    borderColor: "divider",
-                }}
+            <MobileInfoRow
+                label="Zeitraum"
+                value={`${veranstaltung.beginnDatum} – ${veranstaltung.endeDatum}`}
+            />
 
-            >
+            <MobileInfoRow
+                label="Typ"
+                value={veranstaltung.typ}
+            />
 
-                <Grid
-                    container
-                    spacing={2}
-                >
+            <MobileInfoRow
+                label="Tage / Nächte"
+                value={`${veranstaltung.tage} / ${veranstaltung.naechte}`}
+            />
 
-                    <InfoCard
-                        titel="Veranstaltung"
-                        wert={veranstaltung.name}
-                    />
+            <MobileInfoRow
+                label="KiK"
+                value={
+                    veranstaltung.vereinKikZertifiziert
+                        ? "Ja"
+                        : "Nein"
+                }
+            />
 
-                    <InfoCard
-                        titel="Zeitraum"
-                        wert={`${veranstaltung.beginnDatum} – ${veranstaltung.endeDatum}`}
-                    />
+            <MobileInfoRow
+                label="Unterkunft"
+                value={veranstaltung.unterkunftsartName}
+            />
 
-                    <InfoCard
-                        titel="Veranstaltungstyp"
-                        wert={veranstaltung.typ}
-                    />
+            <MobileInfoRow
+                label="Verpflegung"
+                value={veranstaltung.verpflegungsmodellName}
+            />
 
-                    <InfoCard
-                        titel="Tage / Nächte"
-                        wert={`${veranstaltung.tage} / ${veranstaltung.naechte}`}
-                    />
+            <MobileInfoRow
+                label="Beiträge"
+                value={veranstaltung.beitragsstrukturName}
+            />
+        </>
+    ) : (
+        <Grid container spacing={2}>
+            <InfoCard
+                titel="Veranstaltung"
+                wert={veranstaltung.name}
+            />
 
-                    <InfoCard
-                        titel="KiK-Zertifiziert"
-                        wert={
-                            veranstaltung.vereinKikZertifiziert
-                                ? "Ja"
-                                : "Nein"
-                        }
-                    />
+            <InfoCard
+                titel="Zeitraum"
+                wert={`${veranstaltung.beginnDatum} – ${veranstaltung.endeDatum}`}
+            />
 
-                    <InfoCard
-                        titel="Unterkunft"
-                        wert={veranstaltung.unterkunftsartName}
-                    />
+            <InfoCard
+                titel="Veranstaltungstyp"
+                wert={veranstaltung.typ}
+            />
 
-                    <InfoCard
-                        titel="Verpflegung"
-                        wert={veranstaltung.verpflegungsmodellName}
-                    />
+            <InfoCard
+                titel="Tage / Nächte"
+                wert={`${veranstaltung.tage} / ${veranstaltung.naechte}`}
+            />
 
-                    <InfoCard
-                        titel="Beitragsstruktur"
-                        wert={veranstaltung.beitragsstrukturName}
-                    />
+            <InfoCard
+                titel="KiK-Zertifiziert"
+                wert={
+                    veranstaltung.vereinKikZertifiziert
+                        ? "Ja"
+                        : "Nein"
+                }
+            />
 
-                </Grid>
+            <InfoCard
+                titel="Unterkunft"
+                wert={veranstaltung.unterkunftsartName}
+            />
 
-            </AccordionDetails>
+            <InfoCard
+                titel="Verpflegung"
+                wert={veranstaltung.verpflegungsmodellName}
+            />
+
+            <InfoCard
+                titel="Beitragsstruktur"
+                wert={veranstaltung.beitragsstrukturName}
+            />
+        </Grid>
+    )}
+</AccordionDetails>
         </Accordion>
     );
 }

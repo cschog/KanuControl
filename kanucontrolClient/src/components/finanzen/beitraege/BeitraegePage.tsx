@@ -12,6 +12,8 @@ import {
   Typography,
 } from "@mui/material";
 
+import { fontSize, padding, radius, spacing, iconSize } from "@/theme/ui";
+
 import { GenericTableTanstack } from "@/components/common/GenericTableTanstack";
 import { beitraegeColumns } from "@/components/finanzen/beitraege/beitraegeColumns";
 import { TeilnehmerBeitraegeResponseDTO, TeilnehmerListDTO } from "@/api/types/beitraege";
@@ -30,7 +32,6 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
 
   const [data, setData] = useState<TeilnehmerListDTO[]>([]);
 
-  const [individuelleGebuehren, setIndividuelleGebuehren] = useState(false);
 
   /* =========================================================
      LOAD
@@ -47,7 +48,6 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
 
         setData(response.data.teilnehmer);
 
-        setIndividuelleGebuehren(response.data.individuelleGebuehren);
       } catch (err) {
         console.error(err);
 
@@ -64,7 +64,7 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
      SUMMEN
      ========================================================= */
 
-  const getBeitrag = (t: TeilnehmerListDTO) => t.individuellerBeitrag ?? t.effektiverBeitrag ?? 0;
+  const getBeitrag = (t: TeilnehmerListDTO) => t.effektiverBeitrag ?? 0;
 
   const summe = data.reduce((sum, t) => sum + getBeitrag(t), 0);
 
@@ -73,10 +73,7 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
   const offenSumme = summe - bezahltSumme;
 
   const chipStyle = {
-    fontSize: {
-      xs: "0.9rem",
-      md: "1.3rem",
-    },
+    fontSize: fontSize.pageTitle,
 
     fontWeight: "bold",
 
@@ -124,10 +121,10 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
         prev.map((t) =>
           t.id === id
             ? {
-                ...t,
-                bezahlt: checked,
-                bezahltAm: checked ? new Date().toISOString().split("T")[0] : undefined,
-              }
+              ...t,
+              bezahlt: checked,
+              bezahltAm: checked ? new Date().toISOString().split("T")[0] : undefined,
+            }
             : t,
         ),
       );
@@ -136,20 +133,8 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
     }
   };
 
-  const handleBeitragSave = async (id: number, beitrag?: number) => {
-    try {
-      await apiClient.patch(`/veranstaltungen/${veranstaltungId}/beitraege/${id}/betrag`, {
-        individuellerBeitrag: beitrag,
-      });
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   const columns = beitraegeColumns({
-    individuelleGebuehren,
     onBezahltChange: handleBezahltChange,
-    onBeitragChange: handleBeitragSave,
     setData,
   });
 
@@ -182,8 +167,18 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
           ===================================================== */}
 
       <Card>
-        <CardContent>
-          <Typography variant="h6" sx={{ mb: 2 }}>
+        <CardContent
+          sx={{
+            p: padding.card,
+          }}
+        >
+          <Typography
+            variant="h6"
+            sx={{
+              fontSize: fontSize.sectionTitle,
+              mb: spacing.card,
+            }}
+          >
             Teilnehmerbeiträge
           </Typography>
 
@@ -214,48 +209,15 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
                     {row.person.name}, {row.person.vorname}
                   </Typography>
 
-                  {individuelleGebuehren ? (
-                    <TextField
-                      type="number"
-                      size="small"
-                      value={row.individuellerBeitrag ?? row.effektiverBeitrag ?? ""}
-                      onChange={(e) => {
-                        const value = e.target.value;
-
-                        setData((prev) =>
-                          prev.map((x) =>
-                            x.id === row.id
-                              ? {
-                                  ...x,
-                                  individuellerBeitrag: value === "" ? undefined : Number(value),
-                                }
-                              : x,
-                          ),
-                        );
-                      }}
-                      onBlur={() => handleBeitragSave(row.id, row.individuellerBeitrag)}
-                      sx={{
-                        width: 72,
-
-                        "& input": {
-                          textAlign: "right",
-                          fontWeight: 700,
-                          fontSize: "1rem",
-                          paddingRight: "6px",
-                        },
-                      }}
-                    />
-                  ) : (
-                    <Typography
-                      sx={{
-                        fontWeight: 700,
-                        color: "primary.main",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {getBeitrag(row).toFixed(2)} €
-                    </Typography>
-                  )}
+                  <Typography
+                    sx={{
+                      fontWeight: 700,
+                      color: "primary.main",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {getBeitrag(row).toFixed(2)} €
+                  </Typography>
                 </Box>
 
                 <Stack

@@ -35,6 +35,7 @@ export interface FinanzSummary {
   kosten: number;
   einnahmen: number;
   saldo: number;
+  kjfpZuschuss: number
   deckung: number;
   teilnehmerKostenProPerson: number;
   empfohlenerTeilnehmerBeitrag: number;

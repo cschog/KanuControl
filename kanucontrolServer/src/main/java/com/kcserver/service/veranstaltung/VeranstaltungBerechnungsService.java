@@ -8,6 +8,8 @@ import java.time.temporal.ChronoUnit;
 @Service
 public class VeranstaltungBerechnungsService {
 
+    private static final long MAX_BERECHNUNGSTAGE = 21;
+
     /* =========================================================
        TEILNEHMER
        ========================================================= */
@@ -115,6 +117,24 @@ public class VeranstaltungBerechnungsService {
 
         return veranstaltung != null
                 && veranstaltung.getVerpflegungsmodell() != null;
+    }
+
+    public long ermittleBerechnungstage(
+            Veranstaltung veranstaltung
+    ) {
+        return Math.min(
+                ermittleTage(veranstaltung),
+                MAX_BERECHNUNGSTAGE
+        );
+    }
+
+    public long ermittleBerechnungsnaechte(
+            Veranstaltung veranstaltung
+    ) {
+        return Math.max(
+                0,
+                ermittleBerechnungstage(veranstaltung) - 1
+        );
     }
 
     /* =========================================================

@@ -2,6 +2,7 @@
 
 import { Button } from "@mui/material";
 import { moduleColors, moduleHover, ModuleType } from "@/theme/moduleColors";
+import { radius } from "@/theme/ui";
 
 interface Props {
   label: string;
@@ -20,7 +21,7 @@ export const ModuleButton: React.FC<Props> = ({ label, moduleType, onClick }) =>
         color: "#fff",
         fontSize: "1.1rem",
         py: 2,
-        borderRadius: 2,
+        borderRadius: radius.dialog,
         boxShadow: 2,
         "&:hover": {
           backgroundColor: moduleHover[moduleType],

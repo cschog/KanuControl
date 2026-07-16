@@ -14,6 +14,7 @@ import StarIcon from "@mui/icons-material/Star";
 
 import { PersonDetail } from "@/api/types/person/Person";
 import { MitgliedFunktion, MitgliedFunktionLabel } from "@/api/types/MitgliedFunktion";
+import { radius } from "@/theme/ui";
 
 interface PersonMembershipsCardProps {
   person: PersonDetail;
@@ -48,7 +49,7 @@ export const PersonMembershipsCard: React.FC<PersonMembershipsCardProps> = ({
                 alignItems: "center",
                 px: 1,
                 py: 0.5,
-                borderRadius: 1,
+                borderRadius: radius.card,
                 bgcolor: m.hauptVerein ? "action.selected" : "transparent",
               }}
             >

@@ -24,6 +24,9 @@ public class PlanungAutomatikService {
             return;
         }
 
+        planung.getPositionen().removeIf(position ->
+                position.getKategorie() == FinanzKategorie.SONSTIGE_EINNAHMEN);
+
         aktualisiere(
                 planung,
                 FinanzKategorie.UNTERKUNFT,
