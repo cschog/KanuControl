@@ -1,13 +1,14 @@
-import { Box, Button, Typography, Stack, Divider } from "@mui/material";
+import { Button, Typography, Divider, Stack } from "@mui/material";
 
 import { useEffect, useState, useCallback } from "react";
 
-import BelegCard from "@/components/finanzen/buchung/BelegCard";
+import SingleBelegRow from "@/components/finanzen/buchung/SingleBelegRow";
+import MultiBelegAccordion from "@/components/finanzen/buchung/MultiBelegAccordion";
 import BuchungDialog from "@/components/finanzen/buchung/BuchungDialog";
 import BelegDialog from "@/components/finanzen/buchung/BelegDialog";
 import BelegMitBuchungDialog from "@/components/finanzen/buchung/BelegMitBuchungDialog";
 import FinanzSummary from "@/components/common/FinanzSummary";
-
+import { AbrechnungsStatus } from "@/api/enums/AbrechnungsStatus";
 import {
   getAbrechnung,
   addBuchung,
@@ -29,6 +30,8 @@ import {
 } from "@/api/types/abrechnung";
 
 import { kategorieZuTyp } from "@/api/types/finanz";
+import { istInBeleglisteSichtbar } from "@/api/utils/belegUtils";
+import { fontSize, spacing } from "@/theme/ui";
 
 interface Props {
   veranstaltungId: number;
@@ -36,7 +39,6 @@ interface Props {
 
 export default function BuchungenPage({ veranstaltungId }: Props) {
   const [abrechnung, setAbrechnung] = useState<AbrechnungDetail | null>(null);
-
   const [finanzgruppen, setFinanzgruppen] = useState<FinanzGruppe[]>([]);
 
   /* =========================================================
@@ -53,9 +55,7 @@ export default function BuchungenPage({ veranstaltungId }: Props) {
      ========================================================= */
 
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-
   const [editingBeleg, setEditingBeleg] = useState<AbrechnungBeleg | null>(null);
 
   /* =========================================================
@@ -78,8 +78,6 @@ export default function BuchungenPage({ veranstaltungId }: Props) {
 
   if (!abrechnung) return null;
 
-  const { kosten, einnahmen, saldo } = abrechnung.finanz;
-
   /* =========================================================
      BUCHUNG CRUD
      ========================================================= */
@@ -92,13 +90,9 @@ export default function BuchungenPage({ veranstaltungId }: Props) {
     } else {
       await addBuchung(veranstaltungId, selectedBeleg.id, data);
     }
-
     setBuchungDialogOpen(false);
-
     setEditingBuchung(undefined);
-
     setSelectedBeleg(null);
-
     await load();
   };
 
@@ -120,90 +114,114 @@ export default function BuchungenPage({ veranstaltungId }: Props) {
 
   const handleUpdateBeleg = async (data: BelegCreate) => {
     if (!editingBeleg) return;
-
     await updateBeleg(veranstaltungId, editingBeleg.id, data);
-
     setEditDialogOpen(false);
-
     setEditingBeleg(null);
-
     await load();
   };
 
-  console.log(abrechnung.finanz);
-  console.log(abrechnung);
+  const handleEditBeleg = (beleg: AbrechnungBeleg) => {
+    setEditingBeleg(beleg);
+    setEditDialogOpen(true);
+  };
+
+  const handleAddPosition = (beleg: AbrechnungBeleg) => {
+    setSelectedBeleg(beleg);
+    setEditingBuchung(undefined);
+    setDialogTyp("KOSTEN");
+    setBuchungDialogOpen(true);
+  };
+
+  const handleEditPosition = (beleg: AbrechnungBeleg, buchung: Buchung) => {
+    setSelectedBeleg(beleg);
+    setEditingBuchung(buchung);
+    setDialogTyp(kategorieZuTyp[buchung.kategorie]);
+    setBuchungDialogOpen(true);
+  };
+
+  const handleDeletePosition = async (belegId: number, buchungId: number) => {
+    if (!confirm("Position wirklich löschen?")) return;
+    await deleteBuchung(veranstaltungId, belegId, buchungId);
+    await load();
+  };
+
+  const handleDeleteBeleg = async (belegId: number) => {
+    if (!confirm("Beleg komplett löschen?")) return;
+    await deleteBeleg(veranstaltungId, belegId);
+    await load();
+  };
 
   /* =========================================================
      UI
      ========================================================= */
 
   return (
-    <Box p={3}>
-      <Typography variant="h5" gutterBottom>
-        Abrechnung – Belege
-      </Typography>
-
-      {abrechnung.status !== "ABGESCHLOSSEN" && (
-        <Button variant="contained" sx={{ mb: 2 }} onClick={() => setCreateDialogOpen(true)}>
-          + Beleg anlegen
-        </Button>
-      )}
-
+    <>
       <FinanzSummary
         kosten={abrechnung.finanz.kosten}
         einnahmen={abrechnung.finanz.einnahmen}
         eigenanteil={abrechnung.finanz.saldo}
         kjfpZuschuss={abrechnung.finanz.kjfpZuschuss}
       />
+      <Stack
+        direction={{ xs: "column", sm: "row" }}
+        justifyContent="space-between"
+        alignItems={{ xs: "stretch", sm: "center" }}
+        spacing={spacing.md}
+        sx={{ mb: spacing.section }}
+      >
+        <Typography
+          variant="h5"
+          sx={{
+            fontSize: fontSize.pageTitle,
+          }}
+        >
+          Abrechnung – Belege
+        </Typography>
+
+        {abrechnung.status !== AbrechnungsStatus.ABGESCHLOSSEN && (
+          <Button
+            variant="contained"
+            onClick={() => setCreateDialogOpen(true)}
+            sx={{
+              alignSelf: { xs: "stretch", sm: "flex-end" },
+            }}
+          >
+            + Beleg anlegen
+          </Button>
+        )}
+      </Stack>
 
       <Divider sx={{ mb: 3 }} />
 
       {[...abrechnung.belege]
         .sort((a, b) => new Date(b.datum).getTime() - new Date(a.datum).getTime())
-        .map((beleg) => (
-          <BelegCard
-            key={beleg.id}
-            beleg={beleg}
-            readOnly={abrechnung.status === "ABGESCHLOSSEN"}
-            onEditBeleg={(beleg) => {
-              setEditingBeleg(beleg);
+        .map((beleg) => {
+          const sichtbarePositionen = beleg.positionen.filter(istInBeleglisteSichtbar);
+          if (sichtbarePositionen.length === 0) {
+            return null;
+          }
 
-              setEditDialogOpen(true);
-            }}
-            onAddPosition={(beleg) => {
-              setSelectedBeleg(beleg);
+          const sichtbarerBeleg = {
+            ...beleg,
+            positionen: sichtbarePositionen,
+          };
 
-              setEditingBuchung(undefined);
+          const Component = sichtbarePositionen.length > 1 ? MultiBelegAccordion : SingleBelegRow;
 
-              setDialogTyp("KOSTEN");
-
-              setBuchungDialogOpen(true);
-            }}
-            onEditPosition={(beleg, buchung) => {
-              setSelectedBeleg(beleg);
-
-              setEditingBuchung(buchung);
-
-              setDialogTyp(kategorieZuTyp[buchung.kategorie]);
-
-              setBuchungDialogOpen(true);
-            }}
-            onDeletePosition={async (belegId, buchungId) => {
-              if (!confirm("Position wirklich löschen?")) return;
-
-              await deleteBuchung(veranstaltungId, belegId, buchungId);
-
-              await load();
-            }}
-            onDeleteBeleg={async (belegId) => {
-              if (!confirm("Beleg komplett löschen?")) return;
-
-              await deleteBeleg(veranstaltungId, belegId);
-
-              await load();
-            }}
-          />
-        ))}
+          return (
+            <Component
+              key={beleg.id}
+              beleg={sichtbarerBeleg}
+              readOnly={abrechnung.status === AbrechnungsStatus.ABGESCHLOSSEN}
+              onEditBeleg={handleEditBeleg}
+              onAddPosition={handleAddPosition}
+              onEditPosition={handleEditPosition}
+              onDeletePosition={handleDeletePosition}
+              onDeleteBeleg={handleDeleteBeleg}
+            />
+          );
+        })}
 
       {/* =====================================================
           BUCHUNG DIALOG
@@ -249,6 +267,6 @@ export default function BuchungenPage({ veranstaltungId }: Props) {
         }}
         onSave={handleUpdateBeleg}
       />
-    </Box>
+    </>
   );
 }

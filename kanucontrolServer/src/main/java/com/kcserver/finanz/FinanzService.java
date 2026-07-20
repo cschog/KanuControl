@@ -1,8 +1,6 @@
 package com.kcserver.finanz;
 
 import com.kcserver.dto.finanzen.FinanzSummaryDTO;
-import com.kcserver.entity.Teilnehmer;
-import com.kcserver.entity.Veranstaltung;
 import com.kcserver.enumtype.FinanzKategorie;
 import com.kcserver.enumtype.FinanzTyp;
 import org.springframework.http.HttpStatus;
@@ -112,6 +110,11 @@ public class FinanzService {
                 RoundingMode.HALF_UP
         );
 
+        BigDecimal kjfpZuschuss = list.stream()
+                .filter(p -> p.getKategorie() == FinanzKategorie.KJFP_ZUSCHUSS)
+                .map(FinanzPosition::getBetrag)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         // ⭐ NEU: notwendiger Teilnehmerbeitrag
         BigDecimal notwendigerBeitrag =
                 berechneNotwendigenTeilnehmerBeitrag(
@@ -119,15 +122,17 @@ public class FinanzService {
                         teilnehmerAnzahl
                 );
 
-        return new FinanzSummaryDTO(
-                kosten,
-                einnahmen,
-                saldo,
-                BigDecimal.ZERO,      // kjfpZuschuss
-                deckung,
-                proPerson,
-                notwendigerBeitrag
-        );
+        FinanzSummaryDTO dto = new FinanzSummaryDTO();
+        dto.setKosten(kosten);
+        dto.setEinnahmen(einnahmen);
+        dto.setSaldo(saldo);
+        dto.setDeckung(deckung);
+        dto.setTeilnehmerKostenProPerson(proPerson);
+        dto.setEmpfohlenerTeilnehmerBeitrag(notwendigerBeitrag);
+        dto.setKjfpZuschuss(kjfpZuschuss);
+
+        return dto;
+
     }
     public BigDecimal berechneNotwendigenTeilnehmerBeitrag(
             List<? extends FinanzPosition> positionen,
@@ -157,58 +162,6 @@ public class FinanzService {
                 2,
                 RoundingMode.HALF_UP
         );
-    }
-
-    public BigDecimal berechneTeilnehmerSumme(
-            Veranstaltung veranstaltung,
-            List<Teilnehmer> teilnehmer
-    ) {
-
-        BigDecimal summe = BigDecimal.ZERO;
-
-        for (Teilnehmer t : teilnehmer) {
-
-            BigDecimal beitrag;
-
-            if (!veranstaltung.isIndividuelleGebuehren()) {
-
-                beitrag = safe(veranstaltung.getStandardGebuehr());
-
-            } else {
-
-                if (t.getIndividuellerBeitrag() == null) {
-                    throw new ResponseStatusException(
-                            HttpStatus.BAD_REQUEST,
-                            "Individueller Beitrag fehlt für Teilnehmer ID="
-                                    + t.getId()
-                    );
-                }
-
-                beitrag = t.getIndividuellerBeitrag();
-            }
-
-            summe = summe.add(beitrag);
-        }
-
-        return summe.setScale(2, RoundingMode.HALF_UP);
-    }
-
-    public BigDecimal berechneGebuehrFuerTeilnehmer(
-            Veranstaltung veranstaltung,
-            Teilnehmer teilnehmer) {
-
-        if (!veranstaltung.isIndividuelleGebuehren()) {
-            return safe(veranstaltung.getStandardGebuehr());
-        }
-
-        if (teilnehmer.getIndividuellerBeitrag() == null) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Individueller Beitrag fehlt für Teilnehmer ID=" + teilnehmer.getId()
-            );
-        }
-
-        return teilnehmer.getIndividuellerBeitrag();
     }
 
     private static final BigDecimal EMPFOHLENER_EIGENANTEIL =

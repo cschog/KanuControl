@@ -1,5 +1,6 @@
 package com.kcserver.entity;
 
+import com.kcserver.enumtype.BuchungsHerkunft;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -56,5 +57,20 @@ public class AbrechnungBeleg {
     public void removePosition(AbrechnungBuchung position) {
         positionen.remove(position);
         position.setBeleg(null);
+    }
+
+    public void removePositionen(BuchungsHerkunft herkunft) {
+        for (AbrechnungBuchung p : new ArrayList<>(positionen)) {
+            if (p.getHerkunft() == herkunft) {
+                removePosition(p);
+            }
+        }
+    }
+
+    public void clearPositionen() {
+
+        for (AbrechnungBuchung position : new ArrayList<>(positionen)) {
+            removePosition(position);
+        }
     }
 }

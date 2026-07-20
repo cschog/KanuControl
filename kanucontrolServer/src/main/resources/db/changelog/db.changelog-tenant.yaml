@@ -111,3 +111,9 @@ databaseChangeLog:
       file: db/changelog/changes/2026-07-14-068-planung-not-null.xml
   - include:
       file: db/changelog/changes/20260715-01-planung-initialisiert.xml
+  - include:
+      file: db/changelog/changes/20260719-01-abrechnung-buchung-herkunft.xml
+  - include:
+      file: db/changelog/changes/20260719-02-finanz-gruppe-system.xml
+  - include:
+      file: db/changelog/changes/20260719-07-abrechnung-buchung-referenzen.xml

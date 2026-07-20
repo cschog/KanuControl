@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="20260719-07-abrechnung-buchung-referenzen"
+               author="chris">
+
+        <addColumn tableName="abrechnung_buchung">
+
+            <column name="teilnehmer_id" type="BIGINT"/>
+
+            <column name="reisekostenabrechnung_id" type="BIGINT"/>
+
+        </addColumn>
+
+        <addForeignKeyConstraint
+                constraintName="fk_abrechnung_buchung_teilnehmer"
+                baseTableName="abrechnung_buchung"
+                baseColumnNames="teilnehmer_id"
+                referencedTableName="teilnehmer"
+                referencedColumnNames="id"/>
+
+        <addForeignKeyConstraint
+                constraintName="fk_abrechnung_buchung_reisekosten"
+                baseTableName="abrechnung_buchung"
+                baseColumnNames="reisekostenabrechnung_id"
+                referencedTableName="reisekostenabrechnung"
+                referencedColumnNames="id"/>
+
+    </changeSet>
+
+</databaseChangeLog>

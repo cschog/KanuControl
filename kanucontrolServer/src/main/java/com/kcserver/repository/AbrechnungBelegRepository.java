@@ -1,9 +1,12 @@
 package com.kcserver.repository;
 
+import com.kcserver.entity.Abrechnung;
 import com.kcserver.entity.AbrechnungBeleg;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.Query;
 
 public interface AbrechnungBelegRepository
@@ -37,4 +40,9 @@ public interface AbrechnungBelegRepository
     WHERE b.abrechnung.id = :abrechnungId
 """)
     Integer findMaxLfdNrByAbrechnungId(Long abrechnungId);
+
+    Optional<AbrechnungBeleg> findByAbrechnungAndBelegnummer(
+            Abrechnung abrechnung,
+            String belegnummer
+    );
 }

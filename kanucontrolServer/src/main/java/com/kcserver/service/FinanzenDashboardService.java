@@ -6,8 +6,7 @@ import com.kcserver.dto.finanzen.FoerderungDashboardDTO;
 import com.kcserver.entity.*;
 import com.kcserver.enumtype.FinanzKategorie;
 import com.kcserver.repository.*;
-import com.kcserver.service.beitrag.TeilnehmerBeitragService;
-import com.kcserver.service.reisekosten.ReisekostenabrechnungService;
+import com.kcserver.service.abrechnung.AbrechnungSynchronisationsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,7 +19,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+@Transactional
 public class FinanzenDashboardService {
 
     private final VeranstaltungRepository veranstaltungRepository;
@@ -29,13 +28,14 @@ public class FinanzenDashboardService {
     private final FoerderService foerderService;
     private final AbrechnungRepository abrechnungRepository;
     private final AbrechnungBuchungRepository abrechnungBuchungRepository;
-    private final ReisekostenabrechnungService reisekostenabrechnungService;
-    private final TeilnehmerBeitragService teilnehmerBeitragService;
     private final PlanungRepository planungRepository;
+    private final AbrechnungSynchronisationsService synchronisationsService;
 
     public FinanzenDashboardDTO getDashboard(
             Long veranstaltungId
     ) {
+
+        synchronisationsService.synchronisieren(veranstaltungId);
 
         Veranstaltung veranstaltung =
                 veranstaltungRepository
@@ -52,11 +52,6 @@ public class FinanzenDashboardService {
                         .findByPlanung_Veranstaltung_Id(
                                 veranstaltungId
                         );
-
-        BigDecimal reisekosten =
-                reisekostenabrechnungService.getReisekostenSumme(
-                        veranstaltungId
-                );
 
         FinanzenDashboardDTO dto =
                 new FinanzenDashboardDTO();
@@ -121,13 +116,6 @@ public class FinanzenDashboardService {
                                 BigDecimal::add
                         );
 
-        BigDecimal teilnehmerbeitraege =
-                teilnehmerBeitragService
-                        .getBezahlteSumme(
-                                veranstaltung,
-                                teilnehmer
-                        );
-
         BigDecimal istEinnahmen =
                 buchungen.stream()
                         .filter(b ->
@@ -139,12 +127,9 @@ public class FinanzenDashboardService {
                                 BigDecimal::add
                         );
 
-        dto.setIstKosten(
-                istKosten.add(reisekosten)
-        );
-        dto.setIstEinnahmen(
-                istEinnahmen.add(teilnehmerbeitraege)
-        );
+        dto.setIstKosten(istKosten);
+
+        dto.setIstEinnahmen(istEinnahmen);
 
         /* =====================================================
            SALDEN
@@ -183,10 +168,10 @@ public class FinanzenDashboardService {
                 );
 
         BigDecimal gesamt =
-                foerderService.berechneGesamtfoerderung(
-                        veranstaltung,
-                        teilnehmer
-                );
+                buchungen.stream()
+                        .filter(b -> b.getKategorie() == FinanzKategorie.KJFP_ZUSCHUSS)
+                        .map(AbrechnungBuchung::getBetrag)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal foerdersatz =
                 foerderService.berechneAngewandtenFoerdersatz(
@@ -277,12 +262,6 @@ public class FinanzenDashboardService {
                                 )
                         );
 
-        kostenNachKategorie.merge(
-                FinanzKategorie.FAHRTKOSTEN,
-                reisekosten,
-                BigDecimal::add
-        );
-
         dto.setIstKostenNachKategorie(
                 kostenNachKategorie
                         .entrySet()
@@ -314,12 +293,6 @@ public class FinanzenDashboardService {
                                         )
                                 )
                         );
-
-        einnahmenNachKategorie.merge(
-                FinanzKategorie.TEILNEHMERBEITRAG,
-                teilnehmerbeitraege,
-                BigDecimal::add
-        );
 
         dto.setIstEinnahmenNachKategorie(
                 einnahmenNachKategorie

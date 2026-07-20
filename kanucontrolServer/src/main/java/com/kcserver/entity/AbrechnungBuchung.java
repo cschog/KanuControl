@@ -1,5 +1,6 @@
 package com.kcserver.entity;
 
+import com.kcserver.enumtype.BuchungsHerkunft;
 import com.kcserver.enumtype.FinanzKategorie;
 import com.kcserver.finanz.FinanzPosition;
 import jakarta.persistence.*;
@@ -7,7 +8,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 
 @Entity
 @Table(name = "abrechnung_buchung")
@@ -23,13 +23,21 @@ public class AbrechnungBuchung implements FinanzPosition {
     @JoinColumn(name = "beleg_id", nullable = false)
     private AbrechnungBeleg beleg;
 
-//    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-//    @JoinColumn(name = "teilnehmer_id", nullable = false)
-//    private Teilnehmer teilnehmer;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "teilnehmer_id")
+    private Teilnehmer teilnehmer;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reisekostenabrechnung_id")
+    private Reisekostenabrechnung reisekostenabrechnung;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private FinanzKategorie kategorie;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private BuchungsHerkunft herkunft = BuchungsHerkunft.MANUELL;
 
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal betrag;

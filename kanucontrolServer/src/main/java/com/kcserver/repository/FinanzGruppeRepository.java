@@ -1,5 +1,6 @@
 package com.kcserver.repository;
 import com.kcserver.entity.FinanzGruppe;
+import com.kcserver.entity.Veranstaltung;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -40,4 +41,8 @@ WHERE fg.veranstaltung.id = :veranstaltungId
     WHERE fg.id = :gruppeId
 """)
     Optional<FinanzGruppe> findWithTeilnehmer(Long gruppeId);
+
+    Optional<FinanzGruppe> findByVeranstaltungAndSystemTrue(
+            Veranstaltung veranstaltung
+    );
 }

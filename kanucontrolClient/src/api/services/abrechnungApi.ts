@@ -1,12 +1,25 @@
+// src/api/services/abrechnungApi.ts
+
 import apiClient from "@/api/client/apiClient";
 import { AbrechnungDetail, Buchung, BelegCreate, BuchungCreate, BelegUpdate } from "@/api/types/abrechnung";
 
-export const getAbrechnung = async (veranstaltungId: number) => {
+export async function getAbrechnung(
+  veranstaltungId: number,
+): Promise<AbrechnungDetail> {
   const { data } = await apiClient.get<AbrechnungDetail>(
     `/veranstaltungen/${veranstaltungId}/abrechnung`,
   );
+
   return data;
-};
+}
+
+export async function synchronisiereAbrechnung(
+  veranstaltungId: number,
+): Promise<void> {
+  await apiClient.post(
+    `/veranstaltungen/${veranstaltungId}/abrechnung/synchronisieren`,
+  );
+}
 
 export const addBuchung = async (
   veranstaltungId: number,
@@ -43,8 +56,12 @@ export const deleteBuchung = async (
   );
 };
 
-export const einreichenAbrechnung = async (veranstaltungId: number) => {
-  await apiClient.post(`/veranstaltungen/${veranstaltungId}/abrechnung/einreichen`);
+export const abschliessenAbrechnung = async (
+  veranstaltungId: number,
+) => {
+  await apiClient.post(
+    `/veranstaltungen/${veranstaltungId}/abrechnung/abschliessen`,
+  );
 };
 
 export const wiederOeffnenAbrechnung = async (veranstaltungId: number) => {

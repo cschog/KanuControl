@@ -72,30 +72,70 @@ Insbesondere sind Geburtsdaten und Postleitzahlen erforderlich.
 
 ---
 
-## 5. Finanzplanung erfassen
+## 5. Planung
 
-Menü:
-**Finanzen → Planung**
+### Planung einer Veranstaltung
 
-Vor der Antragstellung müssen die geplanten Kosten und geplanten Einnahmen erfasst werden.
+Die Planung dient dazu, die Ergebnisse einer Simulation dauerhaft für eine Veranstaltung zu übernehmen. Sie bildet die Grundlage für den späteren Förderantrag sowie für die Erstellung der Anmeldeunterlagen.
 
-Beispiele für geplante Kosten:
+#### Ablauf
 
-- Unterkunft
-- Verpflegung
+1. Wählen Sie zunächst die gewünschte Veranstaltung aus.
+2. Führen Sie eine Simulation durch und passen Sie alle relevanten Werte an (Teilnehmerzahl, Beiträge, Unterkunft, Verpflegung, Fahrtkosten usw.).
+3. Übernehmen Sie die Simulation in die Planung.
+4. Speichern Sie die Planung.
+
+Alle Planungsdaten werden dauerhaft zur Veranstaltung gespeichert.
+
+> **Hinweis:** Bereits gespeicherte Planungen werden beim erneuten Öffnen wieder geladen. Die eingegebenen Werte bleiben somit erhalten und werden nicht durch Standardwerte ersetzt.
+
+### Gespeicherte Planungsdaten
+
+Die Planung speichert unter anderem:
+
+- Anzahl der Teilnehmer und Mitarbeiter
+- Teilnehmerbeiträge
+- Unterkunftskosten
+- Verpflegungskosten
 - Fahrtkosten
 - Honorare
-- Materialkosten
-
-Beispiele für geplante Einnahmen:
-
-- Teilnehmerbeiträge
-- Zuschüsse
+- Verbrauchsmaterial
+- Kulturprogramm
+- Miete
+- Pfand
+- Sonstige Kosten
 - Sonstige Einnahmen
+- Fördermittel (KJFP)
+- KiK-Zuschlag (falls vorhanden)
+- Eigenanteil
+- Gesamtkosten und Gesamteinnahmen
 
-Die Planung bildet die Grundlage für die Förderanmeldung.
+Damit entspricht die Planung dem zum Zeitpunkt der Antragstellung erwarteten Finanzierungsplan der Veranstaltung.
 
----
+### Zusammenhang zwischen Simulation und Planung
+
+Simulation und Planung erfüllen unterschiedliche Aufgaben:
+
+| Simulation | Planung |
+|------------|----------|
+| Beliebig oft veränderbar | Dauerhaft gespeichert |
+| Dient zum Ausprobieren verschiedener Szenarien | Enthält die beschlossene Planung |
+| Änderungen wirken sich nicht auf gespeicherte Daten aus | Grundlage für die weitere Bearbeitung |
+
+Die Simulation dient somit als Planungswerkzeug, während die Planung die verbindlichen Daten der Veranstaltung enthält.
+
+### Verwendung der Planungsdaten
+
+Die gespeicherten Planungsdaten werden im weiteren Verlauf des Arbeitsablaufs mehrfach verwendet.
+
+Sie bilden unter anderem die Grundlage für:
+
+- die Erstellung der Förderanmeldung,
+- die automatische Erzeugung der Anmelde-PDFs,
+- die Berechnung der Fördermittel,
+- die spätere finanzielle Abrechnung der Veranstaltung.
+
+Dadurch müssen die Daten nur einmal erfasst werden und stehen während des gesamten Lebenszyklus einer Veranstaltung konsistent zur Verfügung.
 
 ## 6. Kürzel für Kosten und Einnahmen anlegen
 

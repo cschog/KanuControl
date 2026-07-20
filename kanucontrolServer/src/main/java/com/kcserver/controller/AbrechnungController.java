@@ -4,6 +4,7 @@ import com.kcserver.api.response.ApiResponse;
 import com.kcserver.dto.abrechnung.AbrechnungDetailDTO;
 import com.kcserver.dto.validation.ValidationResultDTO;
 import com.kcserver.finanz.AbrechnungService;
+import com.kcserver.service.abrechnung.AbrechnungSynchronisationsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 public class AbrechnungController {
 
     private final AbrechnungService service;
+    private final AbrechnungSynchronisationsService synchronisationsService;
 
     @GetMapping
     public ApiResponse<AbrechnungDetailDTO> get(
@@ -33,12 +35,12 @@ public class AbrechnungController {
         service.abschliessen(veranstaltungId);
     }
 
-    @PostMapping("/teilnehmer-berechnen")
+    @PostMapping("/synchronisieren")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void berechneTeilnehmer(
+    public void synchronisieren(
             @PathVariable Long veranstaltungId
     ) {
-        service.berechneTeilnehmerEinnahmen(veranstaltungId);
+        synchronisationsService.synchronisieren(veranstaltungId);
     }
 
     @GetMapping("/validierung")

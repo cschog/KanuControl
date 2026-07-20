@@ -19,7 +19,6 @@ import { FinanzKategorie, kategorieZuTyp } from "@/api/types/finanz";
 interface PositionTableRow {
     kategorie: FinanzKategorie;
     betrag: number;
-    automatisch?: boolean;
 }
 
 interface Props {
@@ -43,10 +42,6 @@ export default function PlanungspositionenTable({
     title,
     positionen,
 }: Props) {
-
-    const showAutomatisch = positionen.some(
-        p => p.automatisch !== undefined
-    );
 
     const sortiertePositionen = [...positionen].sort((a, b) => {
 
@@ -104,18 +99,6 @@ export default function PlanungspositionenTable({
                         >
                             Betrag
                         </TableCell>
-
-                        {showAutomatisch && (
-                            <TableCell
-                                align="center"
-                                sx={{
-                                    fontWeight: "bold",
-                                    fontSize: fontSize.sectionTitle,
-                                }}
-                            >
-                                Automatisch
-                            </TableCell>
-                        )}
                     </TableRow>
                 </TableHead>
 
@@ -136,7 +119,7 @@ export default function PlanungspositionenTable({
                                 {typ !== vorherigerTyp && (
                                     <TableRow>
                                         <TableCell
-                                            colSpan={showAutomatisch ? 3 : 2}
+                                            colSpan={2}
                                             sx={{
                                                 bgcolor: "grey.100",
                                                 fontWeight: "bold",
@@ -154,7 +137,7 @@ export default function PlanungspositionenTable({
                                     key={position.kategorie}
                                     sx={{
                                         "& td": {
-                                            fontSize: fontSize.sectionTitle,
+                                            fontSize: fontSize.table,
                                             py: padding.table,
                                         },
                                     }}
@@ -166,12 +149,6 @@ export default function PlanungspositionenTable({
                                     <TableCell align="right">
                                         {formatEuro(position.betrag)}
                                     </TableCell>
-
-                                    {showAutomatisch && (
-                                        <TableCell align="center">
-                                            {position.automatisch ? "Ja" : "Nein"}
-                                        </TableCell>
-                                    )}
                                 </TableRow>
                             </>
                         );

@@ -19,7 +19,7 @@ export interface TeilnehmerListDTO {
 
   bezahlt: boolean;
 
-  bezahltAm?: string;
+  bezahltAm?: string | null;
 
   alterBeiBeginn?: number;
 

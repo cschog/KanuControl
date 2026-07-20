@@ -419,6 +419,7 @@ public class TeilnehmerService {
 
     @Transactional
     public TeilnehmerListDTO updateBezahlt(
+            Long veranstaltungId,
             Long teilnehmerId,
             Boolean bezahlt
     ) {
@@ -431,21 +432,14 @@ public class TeilnehmerService {
                                        TEILNEHMER_NOT_FOUND
                                 )
                         );
-
-        teilnehmer.setBezahlt(
-                Boolean.TRUE.equals(bezahlt)
-        );
-
-        if (Boolean.TRUE.equals(bezahlt)) {
-
-            teilnehmer.setBezahltAm(
-                    LocalDate.now()
+        if (!teilnehmer.getVeranstaltung().getId().equals(veranstaltungId)) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    TEILNEHMER_IN_VERANSTALTUNG_NOT_FOUND
             );
-
-        } else {
-
-            teilnehmer.setBezahltAm(null);
         }
+
+        setBezahlt(teilnehmer, Boolean.TRUE.equals(bezahlt));
 
         Teilnehmer saved =
                 teilnehmerRepository.save(
@@ -453,6 +447,31 @@ public class TeilnehmerService {
                 );
 
         return teilnehmerMapper.toListDTO(saved);
+    }
+
+    @Transactional
+    public void updateAlleBezahlt(
+            Long veranstaltungId,
+            Boolean bezahlt
+    ) {
+
+        List<Teilnehmer> teilnehmer =
+                teilnehmerRepository.findAllWithPerson(veranstaltungId);
+
+        boolean bezahltStatus = Boolean.TRUE.equals(bezahlt);
+
+        for (Teilnehmer t : teilnehmer) {
+
+            if (bezahltStatus) {
+                if (!Boolean.TRUE.equals(t.getBezahlt())) {
+                    setBezahlt(t, true);
+                }
+            } else {
+                setBezahlt(t, false);
+            }
+        }
+
+        teilnehmerRepository.saveAll(teilnehmer);
     }
 
     /* =========================================================
@@ -529,6 +548,19 @@ public class TeilnehmerService {
                     veranstaltungId,
                     personId
             );
+        }
+    }
+
+    private void setBezahlt(
+            Teilnehmer teilnehmer,
+            boolean bezahlt
+    ) {
+        teilnehmer.setBezahlt(bezahlt);
+
+        if (bezahlt) {
+            teilnehmer.setBezahltAm(LocalDate.now());
+        } else {
+            teilnehmer.setBezahltAm(null);
         }
     }
 }

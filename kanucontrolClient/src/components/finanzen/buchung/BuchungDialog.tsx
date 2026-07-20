@@ -22,7 +22,7 @@ interface Props {
   onSave: (data: BuchungCreate) => void | Promise<void>;
 }
 
-export default function BuchungDialog({ open, initialData, onClose, onSave }: Props) {
+export default function BuchungDialog({ open, typ, initialData, onClose, onSave }: Props) {
   const [kategorie, setKategorie] = useState<FinanzKategorie | "">("");
   const [betrag, setBetrag] = useState("");
   const [beschreibung, setBeschreibung] = useState("");
@@ -50,7 +50,9 @@ export default function BuchungDialog({ open, initialData, onClose, onSave }: Pr
      Kategorien filtern (typesafe)
   ========================================================= */
 
-  const gefilterteKategorien = Object.keys(kategorieZuTyp) as FinanzKategorie[];
+  const gefilterteKategorien =
+    (Object.keys(kategorieZuTyp) as FinanzKategorie[])
+      .filter(k => kategorieZuTyp[k] === typ);
 
   /* =========================================================
      SAVE

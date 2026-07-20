@@ -5,6 +5,7 @@ import com.kcserver.dto.reisekosten.ReisekostenabrechnungCreateRequest;
 import com.kcserver.dto.reisekosten.ReisekostenabrechnungDetailResponse;
 import com.kcserver.dto.reisekosten.ReisekostenabrechnungListResponse;
 import com.kcserver.dto.reisekosten.ReisekostenabrechnungUpdateRequest;
+import com.kcserver.entity.Reisekostenabrechnung;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -43,4 +44,6 @@ public interface ReisekostenabrechnungService {
     BigDecimal getReisekostenSumme(
             Long veranstaltungId
     );
+
+    List<Reisekostenabrechnung> findByVeranstaltung(Long veranstaltungId);
 }

@@ -1,18 +1,22 @@
 import FinanzSummary from "@/components/common/FinanzSummary";
 import Money from "@/components/common/Money";
 import { SimulationErgebnis } from "@/api/types/simulation/SimulationErgebnis";
-
 import {
+    fontSize,
+} from "@/theme/ui";
+import {
+    Accordion,
+    AccordionSummary,
+    AccordionDetails,
     Box,
-    Button,
     Grid,
-    Paper,
     Typography,
     Divider,
     useTheme,
     useMediaQuery,
 } from "@mui/material";
-
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { PropsWithChildren } from "react";
 
 interface Props {
     ergebnis: SimulationErgebnis;
@@ -23,6 +27,21 @@ interface MobileValueRowProps {
     label: string;
     value: number;
     bold?: boolean;
+}
+
+function ValueLabel({ children }: PropsWithChildren) {
+    return (
+        <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{
+                fontSize: fontSize.fieldLabel,
+                fontWeight: 500,
+            }}
+        >
+            {children}
+        </Typography>
+    );
 }
 
 function MobileValueRow({
@@ -44,25 +63,20 @@ function MobileValueRow({
                 },
             }}
         >
-            <Typography
-                variant="body2"
-                color="text.secondary"
-            >
-                {label}
-            </Typography>
+            <ValueLabel>{label}</ValueLabel>
 
             <Money
                 value={value}
                 variant="body2"
                 sx={{
-                    fontWeight: bold ? 700 : 500,
+                    fontWeight: bold ? 700 : 500, fontSize: fontSize.sectionTitle,
                 }}
             />
         </Box>
     );
 }
 
-export default function SimulationSummary({ ergebnis, onBeitragsvorschlagUebernehmen }: Props) {
+export default function SimulationSummary({ ergebnis }: Props) {
 
     const zuschuss = ergebnis.positionen
         .filter(p => p.kategorie === "KJFP_ZUSCHUSS")
@@ -81,113 +95,130 @@ export default function SimulationSummary({ ergebnis, onBeitragsvorschlagUeberne
             />
 
             <Box mt={2}>
-                <Paper variant="outlined" sx={{ p: 2 }}>
-                    <Typography variant="subtitle1" gutterBottom>
-                        Teilnehmerbeiträge
-                    </Typography>
+                <Accordion defaultExpanded>
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        <Box
+                            display="flex"
+                            justifyContent="space-between"
+                            alignItems="center"
+                            width="100%"
+                            pr={2}
+                        >
+                            <Typography
+                                variant="subtitle1"
+                                sx={{
+                                    fontSize: fontSize.accordionTitle,
+                                }}
+                            >
+                                Teilnehmerbeiträge
+                            </Typography>
 
-                    {isMobile ? (
-                        <>
-                            <MobileValueRow
-                                label="Summe Beiträge"
-                                value={ergebnis.summeTeilnehmerbeitraege}
-                            />
-
-                            <MobileValueRow
-                                label="Ø Personenbeitrag"
-                                value={ergebnis.durchschnittlicherPersonenbeitrag}
-                            />
-
-                            <MobileValueRow
-                                label="Empfohlener Ø-Beitrag"
+                            <Money
                                 value={ergebnis.empfohlenerPersonenbeitrag}
-                                bold
+                                sx={{
+                                    fontWeight: 700,
+                                    fontSize: fontSize.sectionTitle,
+                                }}
                             />
-                        </>
-                    ) : (
-                        <Grid container spacing={2}>
-                            <Grid size={{ xs: 12, sm: 4 }}>
-                                <Typography variant="body2" color="text.secondary">
-                                    Summe Beiträge
-                                </Typography>
-                                <Money value={ergebnis.summeTeilnehmerbeitraege} />
-                            </Grid>
-
-                            <Grid size={{ xs: 12, sm: 4 }}>
-                                <Typography variant="body2" color="text.secondary">
-                                    Ø Personenbeitrag
-                                </Typography>
-                                <Money value={ergebnis.durchschnittlicherPersonenbeitrag} />
-                            </Grid>
-
-                            <Grid size={{ xs: 12, sm: 4 }}>
-                                <Typography variant="body2" color="text.secondary">
-                                    Empfohlener Ø-Beitrag
-                                </Typography>
-                                <Money
-                                    value={ergebnis.empfohlenerPersonenbeitrag}
-                                    sx={{ fontWeight: 700 }}
+                        </Box>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                        {isMobile ? (
+                            <>
+                                <MobileValueRow
+                                    label="Summe Beiträge"
+                                    value={ergebnis.summeTeilnehmerbeitraege}
                                 />
+                                <MobileValueRow
+                                    label="Ø Personenbeitrag"
+                                    value={ergebnis.durchschnittlicherPersonenbeitrag}
+                                />
+                                <MobileValueRow
+                                    label="Empfohlener Ø-Beitrag"
+                                    value={ergebnis.empfohlenerPersonenbeitrag}
+                                    bold
+                                />
+                            </>
+                        ) : (
+
+                            <Grid container spacing={2}>
+                                <Grid size={{ xs: 12, sm: 4 }}>
+                                    <ValueLabel>Summe Beiträge</ValueLabel>
+                                    <Money value={ergebnis.summeTeilnehmerbeitraege} />
+                                </Grid>
+
+                                <Grid size={{ xs: 12, sm: 4 }}>
+                                    <ValueLabel>Ø Personenbeitrag</ValueLabel>
+                                    <Money value={ergebnis.durchschnittlicherPersonenbeitrag} />
+                                </Grid>
+
+                                <Grid size={{ xs: 12, sm: 4 }}>
+                                    <ValueLabel>Empfohlener Ø-Beitrag</ValueLabel>
+                                    <Money
+                                        value={ergebnis.empfohlenerPersonenbeitrag}
+                                        sx={{
+                                            fontWeight: 700,
+                                            fontSize: fontSize.sectionTitle,
+
+                                        }}
+                                    />
+                                </Grid>
                             </Grid>
-                        </Grid>
-                    )}
-                    <Divider sx={{ my: 2 }} />
+                        )}
+                        <Divider sx={{ my: 2 }} />
 
-                    <Typography variant="subtitle2" gutterBottom>
-                        Beitragsvorschlag
-                    </Typography>
+                        <Typography variant="subtitle2" gutterBottom>
+                            Beitragsvorschlag
+                        </Typography>
 
-                    {isMobile ? (
-                        <>
-                            <MobileValueRow
-                                label="Teilnehmer U21"
-                                value={ergebnis.beitragsVorschlag.teilnehmerBeitragUnter21Jahre}
-                            />
-
-                            <MobileValueRow
-                                label="Mitarbeiter"
-                                value={ergebnis.beitragsVorschlag.mitarbeiterBeitrag}
-                            />
-
-                            <MobileValueRow
-                                label="Ergebnis"
-                                value={ergebnis.beitragsVorschlag.durchschnittlicherPersonenbeitrag}
-                                bold
-                            />
-                        </>
-                    ) : (
-                        <Grid container spacing={2}>
-                            <Grid size={{ xs: 12, sm: 4 }}>
-                                <Typography variant="body2" color="text.secondary">
-                                    Teilnehmer U21
-                                </Typography>
-                                <Money
+                        {isMobile ? (
+                            <>
+                                <MobileValueRow
+                                    label="Teilnehmer U21"
                                     value={ergebnis.beitragsVorschlag.teilnehmerBeitragUnter21Jahre}
                                 />
-                            </Grid>
 
-                            <Grid size={{ xs: 12, sm: 4 }}>
-                                <Typography variant="body2" color="text.secondary">
-                                    Mitarbeiter
-                                </Typography>
-                                <Money
+                                <MobileValueRow
+                                    label="Mitarbeiter"
                                     value={ergebnis.beitragsVorschlag.mitarbeiterBeitrag}
                                 />
-                            </Grid>
 
-                            <Grid size={{ xs: 12, sm: 4 }}>
-                                <Typography variant="body2" color="text.secondary">
-                                    Ergebnis
-                                </Typography>
-                                <Money
+                                <MobileValueRow
+                                    label="Ergebnis"
                                     value={ergebnis.beitragsVorschlag.durchschnittlicherPersonenbeitrag}
-                                    sx={{ fontWeight: 700 }}
+                                    bold
                                 />
-                            </Grid>
-                        </Grid>
-                    )}
+                            </>
+                        ) : (
+                            <Grid container spacing={2}>
+                                <Grid size={{ xs: 12, sm: 4 }}>
+                                    <ValueLabel>Teilnehmer U21</ValueLabel>
+                                    <Money
+                                        value={ergebnis.beitragsVorschlag.teilnehmerBeitragUnter21Jahre}
+                                    />
+                                </Grid>
 
-                </Paper>
+                                <Grid size={{ xs: 12, sm: 4 }}>
+                                    <ValueLabel>Mitarbeiter</ValueLabel>
+                                    <Money
+                                        value={ergebnis.beitragsVorschlag.mitarbeiterBeitrag}
+                                    />
+                                </Grid>
+
+                                <Grid size={{ xs: 12, sm: 4 }}>
+                                    <ValueLabel>Ergebnis</ValueLabel>
+                                    <Money
+                                        value={ergebnis.beitragsVorschlag.durchschnittlicherPersonenbeitrag}
+                                        sx={{
+                                            fontWeight: 700,
+                                            fontSize: fontSize.sectionTitle,
+                                        }}
+                                    />
+                                </Grid>
+                            </Grid>
+                        )}
+                    </AccordionDetails>
+                </Accordion>
 
             </Box>
 

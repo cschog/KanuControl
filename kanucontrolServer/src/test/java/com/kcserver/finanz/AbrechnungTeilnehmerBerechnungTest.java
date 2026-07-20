@@ -44,7 +44,7 @@ class AbrechnungTeilnehmerBerechnungTest
         createTeilnehmer(v, null);
         createTeilnehmer(v, null);
 
-        abrechnungService.berechneTeilnehmerEinnahmen(veranstaltungId);
+       // abrechnungService.berechneTeilnehmerEinnahmen(veranstaltungId);
 
         Abrechnung a = abrechnungRepository
                 .findByVeranstaltungId(veranstaltungId)

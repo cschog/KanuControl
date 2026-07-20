@@ -5,9 +5,7 @@ import com.kcserver.dto.teilnehmer.TeilnehmerBeitraegeResponseDTO;
 
 import com.kcserver.dto.teilnehmer.TeilnehmerBezahltDTO;
 import com.kcserver.dto.teilnehmer.TeilnehmerListDTO;
-import com.kcserver.entity.Veranstaltung;
 import com.kcserver.service.TeilnehmerService;
-import com.kcserver.service.veranstaltung.VeranstaltungService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,16 +15,11 @@ import org.springframework.web.bind.annotation.*;
 public class TeilnehmerBeitragController {
 
     private final TeilnehmerService teilnehmerService;
-    private final VeranstaltungService veranstaltungService;
 
     @GetMapping
     public ApiResponse<TeilnehmerBeitraegeResponseDTO> getBeitraege(
             @PathVariable Long veranstaltungId
     ) {
-
-        Veranstaltung veranstaltung =
-                veranstaltungService.findEntityById(veranstaltungId);
-
 
         TeilnehmerBeitraegeResponseDTO dto =
                 new TeilnehmerBeitraegeResponseDTO();
@@ -44,13 +37,27 @@ public class TeilnehmerBeitragController {
             @PathVariable Long veranstaltungId,
             @PathVariable Long teilnehmerId,
             @RequestBody TeilnehmerBezahltDTO dto
-
     ) {
         return ApiResponse.of(
                 teilnehmerService.updateBezahlt(
+                        veranstaltungId,
                         teilnehmerId,
                         dto.getBezahlt()
                 )
         );
+    }
+
+    @PatchMapping
+    public ApiResponse<Void> updateAlleBezahlt(
+            @PathVariable Long veranstaltungId,
+            @RequestBody TeilnehmerBezahltDTO dto
+    ) {
+
+        teilnehmerService.updateAlleBezahlt(
+                veranstaltungId,
+                dto.getBezahlt()
+        );
+
+        return ApiResponse.of(null);
     }
 }

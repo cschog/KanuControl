@@ -1,6 +1,8 @@
 package com.kcserver.repository;
 
+import com.kcserver.entity.AbrechnungBeleg;
 import com.kcserver.entity.AbrechnungBuchung;
+import com.kcserver.enumtype.BuchungsHerkunft;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
@@ -44,4 +46,9 @@ and b.kategorie in (
     boolean existsEinnahmen(Long veranstaltungId);
 
     boolean existsByBeleg_Abrechnung_Veranstaltung_Id(Long veranstaltungId);
+
+    void deleteByBelegAndHerkunft(
+            AbrechnungBeleg beleg,
+            BuchungsHerkunft herkunft
+    );
 }

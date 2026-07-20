@@ -1,11 +1,23 @@
 import { FinanzKategorie } from "@/api/types/finanz";
 import { WithId } from "@/components/common/GenericTableTanstack";
+import { AbrechnungsStatus } from "@/api/enums/AbrechnungsStatus";
+import { BuchungsHerkunft } from "@/api/types/BuchungsHerkunft";
+
+export interface AbrechnungBeleg {
+  id: number;
+  belegnummer: string;
+  kuerzel: string;
+  datum: string;
+  beschreibung: string;
+  herkunft: BuchungsHerkunft;
+  positionen: Buchung[];
+}
 
 export interface Buchung extends WithId {
   kategorie: FinanzKategorie;
   betrag: number;
   beschreibung?: string;
-  systemGenerated?: boolean;
+  herkunft: BuchungsHerkunft;
 }
 
 export interface BuchungCreate {
@@ -14,18 +26,9 @@ export interface BuchungCreate {
   beschreibung?: string;
 }
 
-export interface AbrechnungBeleg {
-  id: number;
-  belegnummer: string;
-  datum: string;
-  beschreibung?: string;
-  kuerzel: string;
-  positionen: Buchung[];
-}
-
 export interface AbrechnungDetail {
   veranstaltungId: number;
-  status: "OFFEN" | "ABGESCHLOSSEN";
+  status: AbrechnungsStatus;
   belege: AbrechnungBeleg[];
   finanz: FinanzSummary;
   verwendeterFoerdersatz: number;
@@ -35,7 +38,7 @@ export interface FinanzSummary {
   kosten: number;
   einnahmen: number;
   saldo: number;
-  kjfpZuschuss: number
+  kjfpZuschuss: number;
   deckung: number;
   teilnehmerKostenProPerson: number;
   empfohlenerTeilnehmerBeitrag: number;

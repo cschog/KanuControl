@@ -5,6 +5,7 @@ import com.kcserver.enumtype.PdfDokumentTyp;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.repository.*;
 import com.kcserver.service.FoerderService;
+import com.kcserver.service.abrechnung.AbrechnungSynchronisationsService;
 import com.kcserver.service.veranstaltung.VeranstaltungValidator;
 import com.kcserver.util.PdfFilenameUtil;
 import lombok.RequiredArgsConstructor;
@@ -38,11 +39,15 @@ public class PDFAbrechnungService {
     private final AbrechnungRepository abrechnungRepository;
     private final AbrechnungBuchungRepository abrechnungBuchungRepository;
     private final FoerderService foerderService;
+    private final AbrechnungSynchronisationsService synchronisationsService;
 
     private final VeranstaltungValidator validator;
 
     public byte[] generate(Long veranstaltungId) {
 
+        synchronisationsService.synchronisieren(
+                veranstaltungId
+        );
 
         Veranstaltung v = veranstaltungRepository
                 .findByIdWithRelations(veranstaltungId)
@@ -100,13 +105,12 @@ public class PDFAbrechnungService {
             fillFoerderung(
                     form,
                     v,
-                    teilnehmer
+                    teilnehmer,
+                    buchungen
             );
             fillFinanzen(
                     form,
-                    v,
-                    buchungen,
-                    teilnehmer
+                    buchungen
             );
 
             String filename = PdfFilenameUtil.build(
@@ -230,7 +234,8 @@ public class PDFAbrechnungService {
     private void fillFoerderung(
             PDAcroForm form,
             Veranstaltung v,
-            List<Teilnehmer> teilnehmer
+            List<Teilnehmer> teilnehmer,
+            List<AbrechnungBuchung> buchungen
     ) {
 
         long gefoerdert =
@@ -251,11 +256,10 @@ public class PDFAbrechnungService {
                         );
 
         BigDecimal beihilfe =
-                foerderService
-                        .berechneGesamtfoerderung(
-                                v,
-                                teilnehmer
-                        );
+                sum(
+                        buchungen,
+                        FinanzKategorie.KJFP_ZUSCHUSS
+                );
 
         set(form, "anz_teilnehmer_gefoerdert",
                 gefoerdert);
@@ -272,9 +276,7 @@ public class PDFAbrechnungService {
 
     private void fillFinanzen(
             PDAcroForm form,
-            Veranstaltung v,
-            List<AbrechnungBuchung> buchungen,
-            List<Teilnehmer> teilnehmer
+            List<AbrechnungBuchung> buchungen
     ) {
 
         BigDecimal unterkunftVerpflegung =
@@ -323,11 +325,10 @@ public class PDFAbrechnungService {
                 );
 
         BigDecimal kjfp =
-                foerderService
-                        .berechneGesamtfoerderung(
-                                v,
-                                teilnehmer
-                        );
+                sum(
+                        buchungen,
+                        FinanzKategorie.KJFP_ZUSCHUSS
+                );
 
         BigDecimal gesamtKosten =
                 unterkunftVerpflegung

@@ -6,6 +6,7 @@ import com.kcserver.dto.abrechnung.AbrechnungBelegCreateDTO;
 import com.kcserver.dto.abrechnung.AbrechnungBelegDTO;
 import com.kcserver.entity.*;
 import com.kcserver.enumtype.AbrechnungsStatus;
+import com.kcserver.enumtype.BuchungsHerkunft;
 import com.kcserver.mapper.AbrechnungMapper;
 import com.kcserver.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -261,9 +262,72 @@ public class AbrechnungBelegService {
         beleg.setFinanzGruppe(neueGruppe);
     }
 
+    @Transactional
+    public AbrechnungBeleg getOrCreateSystemBeleg(
+            Abrechnung abrechnung,
+            BuchungsHerkunft herkunft
+    ) {
+
+        AbrechnungBeleg beleg = belegRepository
+                .findByAbrechnungAndBelegnummer(
+                        abrechnung,
+                        herkunft.getBelegnummer()
+                )
+                .orElseGet(() -> {
+
+                    FinanzGruppe gruppe =
+                            getOrCreateSystemGruppe(
+                                    abrechnung.getVeranstaltung()
+                            );
+
+                    Integer max =
+                            belegRepository.findMaxLfdNrByAbrechnungId(
+                                    abrechnung.getId()
+                            );
+
+                    int next = (max == null ? 1 : max + 1);
+
+                    AbrechnungBeleg neu = new AbrechnungBeleg();
+
+                    neu.setAbrechnung(abrechnung);
+                    neu.setFinanzGruppe(gruppe);
+                    neu.setLfdNr(next);
+                    neu.setBelegnummer(herkunft.getBelegnummer());
+                    neu.setDatum(LocalDate.now());
+
+                    return belegRepository.save(neu);
+                });
+
+        // Immer synchron halten
+        beleg.setBeschreibung(herkunft.getBeschreibung());
+
+        return beleg;
+    }
+
     /* =========================================================
        HELPER
        ========================================================= */
+
+    private static final String SYSTEM_KUERZEL = "SYS";
+
+    private FinanzGruppe getOrCreateSystemGruppe(
+            Veranstaltung veranstaltung
+    ) {
+
+        return finanzGruppeRepository
+                .findByVeranstaltungAndSystemTrue(veranstaltung)
+                .orElseGet(() -> {
+
+                    FinanzGruppe gruppe = FinanzGruppe.builder()
+                            .kuerzel(SYSTEM_KUERZEL)
+                            .system(true)
+                            .veranstaltung(veranstaltung)
+                            .build();
+
+                    return finanzGruppeRepository.save(gruppe);
+                });
+    }
+
 
     private Abrechnung getAbrechnung(Long veranstaltungId) {
 

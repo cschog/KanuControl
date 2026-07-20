@@ -168,7 +168,7 @@ public class FoerderService {
         );
     }
 
-    public BigDecimal berechneGesamtfoerderung(
+    public BigDecimal berechneKjfpZuschuss(
 
             Veranstaltung veranstaltung,
             List<Teilnehmer> teilnehmer

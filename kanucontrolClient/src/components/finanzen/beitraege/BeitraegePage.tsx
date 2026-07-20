@@ -1,18 +1,22 @@
 import {
   Alert,
   Box,
+  Button,
   Card,
   CardContent,
   Checkbox,
   Chip,
   CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
   Stack,
-
-  TextField,
   Typography,
 } from "@mui/material";
 
-import { fontSize, padding, radius, spacing, iconSize } from "@/theme/ui";
+import { fontSize, padding, chip, layout, spacing } from "@/theme/ui";
 
 import { GenericTableTanstack } from "@/components/common/GenericTableTanstack";
 import { beitraegeColumns } from "@/components/finanzen/beitraege/beitraegeColumns";
@@ -29,9 +33,47 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
   const [loading, setLoading] = useState(true);
 
   const [error, setError] = useState<string | null>(null);
-
   const [data, setData] = useState<TeilnehmerListDTO[]>([]);
+  const hatOffene = data.some((t) => !t.bezahlt);
+  const [confirmResetOpen, setConfirmResetOpen] = useState(false);
 
+  const handleAlleBezahlt = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.currentTarget.blur();
+
+    if (!hatOffene) {
+      setConfirmResetOpen(true);
+      return;
+    }
+
+    updateAlleBezahlt(true);
+  };
+
+  const handleConfirmReset = async () => {
+    setConfirmResetOpen(false);
+    await updateAlleBezahlt(false);
+  };
+
+  const handleCancelReset = () => {
+    setConfirmResetOpen(false);
+  };
+
+  const updateAlleBezahlt = async (bezahlt: boolean) => {
+    try {
+      await apiClient.patch(`/veranstaltungen/${veranstaltungId}/beitraege`, { bezahlt });
+
+      const heute = new Date().toISOString().split("T")[0];
+
+      setData((prev) =>
+        prev.map((t) => ({
+          ...t,
+          bezahlt,
+          bezahltAm: bezahlt ? (t.bezahlt ? t.bezahltAm : heute) : null,
+        })),
+      );
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   /* =========================================================
      LOAD
@@ -47,7 +89,6 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
         );
 
         setData(response.data.teilnehmer);
-
       } catch (err) {
         console.error(err);
 
@@ -74,24 +115,14 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
 
   const chipStyle = {
     fontSize: fontSize.pageTitle,
-
     fontWeight: "bold",
 
-    height: {
-      xs: 42,
-      md: 52,
-    },
+    height: chip.height,
 
-    borderRadius: {
-      xs: 2,
-      md: 3,
-    },
+    borderRadius: chip.borderRadius,
 
     "& .MuiChip-label": {
-      px: {
-        xs: 1.5,
-        md: 2,
-      },
+      px: chip.labelPadding,
     },
   };
 
@@ -101,7 +132,7 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
 
   if (loading) {
     return (
-      <Box sx={{ p: 4 }}>
+      <Box sx={{ p: spacing.lg }}>
         <CircularProgress />
       </Box>
     );
@@ -121,10 +152,10 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
         prev.map((t) =>
           t.id === id
             ? {
-              ...t,
-              bezahlt: checked,
-              bezahltAm: checked ? new Date().toISOString().split("T")[0] : undefined,
-            }
+                ...t,
+                bezahlt: checked,
+                bezahltAm: checked ? new Date().toISOString().split("T")[0] : null,
+              }
             : t,
         ),
       );
@@ -138,22 +169,16 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
     setData,
   });
 
-
   return (
-    <Stack spacing={2}>
+    <Stack spacing={spacing.sm}>
       {/* =====================================================
           HEADER
           ===================================================== */}
       <Box
         sx={{
           display: "grid",
-
-          gridTemplateColumns: {
-            xs: "1fr 1fr",
-            md: "repeat(4, 1fr)",
-          },
-
-          gap: 1.5,
+          gridTemplateColumns: layout.kpiGrid,
+          gap: spacing.chip,
         }}
       >
         <Chip label={`Teilnehmer: ${data.length}`} color="primary" sx={chipStyle} />
@@ -172,15 +197,26 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
             p: padding.card,
           }}
         >
-          <Typography
-            variant="h6"
+          <Box
             sx={{
-              fontSize: fontSize.sectionTitle,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
               mb: spacing.card,
             }}
           >
-            Teilnehmerbeiträge
-          </Typography>
+            <Typography variant="h6" sx={{ fontSize: fontSize.sectionTitle }}>
+              Teilnehmerbeiträge
+            </Typography>
+
+            <Button
+              variant="contained"
+              color={hatOffene ? "success" : "warning"}
+              onClick={handleAlleBezahlt}
+            >
+              {hatOffene ? "Alle bezahlt" : "Alle unbezahlt"}
+            </Button>
+          </Box>
 
           <GenericTableTanstack<TeilnehmerListDTO>
             data={data}
@@ -256,6 +292,25 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
           />
         </CardContent>
       </Card>
+
+      <Dialog open={confirmResetOpen} onClose={handleCancelReset} maxWidth="xs" fullWidth>
+        <DialogTitle>Beiträge zurücksetzen?</DialogTitle>
+
+        <DialogContent>
+          <DialogContentText>
+            Alle Teilnehmer werden als <strong>nicht bezahlt</strong> markiert. Das Zahlungsdatum
+            wird bei allen Teilnehmern entfernt. Möchten Sie fortfahren?
+          </DialogContentText>
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={handleCancelReset}>Abbrechen</Button>
+
+          <Button color="warning" variant="contained" onClick={handleConfirmReset}>
+            Zurücksetzen
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Stack>
   );
 };

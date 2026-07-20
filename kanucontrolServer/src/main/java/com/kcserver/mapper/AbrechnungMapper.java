@@ -2,6 +2,7 @@ package com.kcserver.mapper;
 
 import com.kcserver.dto.abrechnung.*;
 import com.kcserver.entity.*;
+import com.kcserver.enumtype.BuchungsHerkunft;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -53,10 +54,11 @@ public class AbrechnungMapper {
         AbrechnungBelegDTO dto = new AbrechnungBelegDTO();
 
         dto.setId(beleg.getId());
+        dto.setHerkunft(ermittleHerkunft(beleg));
         dto.setDatum(beleg.getDatum());
         dto.setBeschreibung(beleg.getBeschreibung());
+        dto.setBelegnummer(beleg.getBelegnummer());
 
-        // 🔥 HIER ist das Kürzel richtig
         if (beleg.getFinanzGruppe() != null) {
             dto.setKuerzel(beleg.getFinanzGruppe().getKuerzel());
         }
@@ -85,6 +87,7 @@ public class AbrechnungMapper {
         dto.setKategorie(pos.getKategorie());
         dto.setBetrag(pos.getBetrag());
         dto.setBeschreibung(pos.getBeschreibung());
+        dto.setHerkunft(pos.getHerkunft());
 
         return dto;
     }
@@ -95,5 +98,25 @@ public class AbrechnungMapper {
 
     private <T> List<T> safeList(List<T> list) {
         return list != null ? list : List.of();
+    }
+
+    private BuchungsHerkunft ermittleHerkunft(AbrechnungBeleg beleg) {
+
+        List<BuchungsHerkunft> herkuenfte = beleg.getPositionen().stream()
+                .map(AbrechnungBuchung::getHerkunft)
+                .distinct()
+                .toList();
+
+        if (herkuenfte.isEmpty()) {
+            return BuchungsHerkunft.MANUELL;
+        }
+
+        if (herkuenfte.size() > 1) {
+            throw new IllegalStateException(
+                    "Beleg " + beleg.getId() + " enthält Buchungen mit unterschiedlicher Herkunft."
+            );
+        }
+
+        return herkuenfte.getFirst();
     }
 }

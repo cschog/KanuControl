@@ -18,15 +18,6 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.util.List;
 
-/**
- * Migriert alle Tenant-Schemas.
- * Läuft für:
- * - kanu
- * - ekc_*
- * - okc_*
- * - svbt_*
- * - wkc_*
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -58,16 +49,39 @@ public class TenantLiquibaseMigrator {
                 .filter(this::isManagedSchema)
                 .sorted((a, b) -> {
 
-                    // ⭐ kanu immer zuerst
                     if (a.equals("kanu")) return -1;
                     if (b.equals("kanu")) return 1;
 
                     return a.compareTo(b);
                 })
-                .forEach(this::migrateSchema);
+                .forEach(schema -> {
+
+                    try {
+
+                        migrateSchema(schema);
+
+                    } catch (Exception ex) {
+
+                        if ("kanu".equals(schema)) {
+
+                            throw new IllegalStateException(
+                                    "Migration des Hauptschemas 'kanu' fehlgeschlagen.",
+                                    ex
+                            );
+                        }
+
+                        log.error(
+                                "Migration für Schema '{}' fehlgeschlagen. Tenant wird übersprungen.",
+                                schema,
+                                ex
+                        );
+                    }
+                });
+
+        log.info("Alle Tenant-Migrationen abgeschlossen.");
     }
 
-    private void migrateSchema(String schema) {
+    private void migrateSchema(String schema) throws Exception {
 
         log.info("Liquibase migration for schema '{}'", schema);
 
@@ -90,42 +104,41 @@ public class TenantLiquibaseMigrator {
                             database
                     );
 
-            boolean hasPersonTable =
-                    tableExists(schema, "person");
+            boolean emptySchema = isEmptySchema(schema);
+            boolean hasLiquibaseEntries = hasLiquibaseEntries(schema);
 
-            boolean hasLiquibaseEntries =
-                    hasLiquibaseEntries(schema);
+            if (!emptySchema && !hasLiquibaseEntries) {
 
-            /*
-             * =====================================================
-             * ALTSCHEMAS:
-             * Tabellen existieren bereits,
-             * Liquibase kennt sie aber noch nicht
-             * =====================================================
-             */
-            if (hasPersonTable && !hasLiquibaseEntries) {
+                log.warn(
+                        "Schema '{}' enthält Tabellen, aber keine DATABASECHANGELOG. Synchronisiere ChangeLog.",
+                        schema
+                );
 
                 liquibase.changeLogSync(
                         new Contexts(),
                         new LabelExpression()
                 );
             }
-            /*
-             * =====================================================
-             * NORMALE MIGRATION
-             * =====================================================
-             */
+
             liquibase.update();
 
             log.info("Liquibase migration finished for schema '{}'", schema);
-
-        } catch (Exception e) {
-
-            throw new RuntimeException(
-                    "Liquibase migration failed for schema: " + schema,
-                    e
-            );
         }
+    }
+
+    private boolean isEmptySchema(String schema) {
+
+        Integer count = jdbcTemplate.queryForObject(
+                """
+                SELECT count(*)
+                FROM information_schema.tables
+                WHERE table_schema = ?
+                """,
+                Integer.class,
+                schema
+        );
+
+        return count == null || count == 0;
     }
 
     private boolean tableExists(String schema, String table) {

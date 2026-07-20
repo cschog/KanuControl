@@ -108,7 +108,7 @@ export default function RahmendatenAccordion({
 
     return (
         <Accordion
-            defaultExpanded={!isMobile}
+            defaultExpanded={false}
             sx={{
                 mb: 2,
                 bgcolor: "grey.100",

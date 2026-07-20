@@ -176,7 +176,7 @@ export default function FinanzSummary({
                     <Grid size={6}>
                         <MobileKpi
                             icon={<PaymentsIcon color="success" />}
-                            label="Einnahmen"
+                            label="Ein."
                             value={einnahmen}
                         />
                     </Grid>
@@ -184,7 +184,7 @@ export default function FinanzSummary({
                     <Grid size={6}>
                         <MobileKpi
                             icon={<BalanceIcon sx={{ color: eigenanteilColor }} />}
-                            label="Eigenanteil"
+                            label="Eigen"
                             value={eigenanteil}
                             color={eigenanteilColor}
                         />

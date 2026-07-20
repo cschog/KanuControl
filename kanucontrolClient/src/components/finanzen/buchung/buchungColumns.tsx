@@ -5,6 +5,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import Money from "@/components/common/Money";
 import { Buchung } from "@/api/types/abrechnung";
 import { kategorieZuTyp } from "@/api/types/finanz";
+import { istEditierbar } from "@/api/utils/buchungUtils";
 
 interface Props {
   onEdit: (row: Buchung) => void;
@@ -86,19 +87,12 @@ export const buchungColumns = ({ onEdit, onDelete }: Props): ColumnDef<Buchung>[
     },
 
     cell: ({ row }) => {
-      if (row.original.systemGenerated) {
+      if (!istEditierbar(row.original)) {
         return null;
       }
 
       return (
-        <Stack
-          direction="row"
-          spacing={0.5}
-          justifyContent="flex-end"
-          sx={{
-            width: "100%",
-          }}
-        >
+        <Stack direction="row" spacing={0.5} justifyContent="flex-end" sx={{ width: "100%" }}>
           <IconButton size="small" onClick={() => onEdit(row.original)}>
             <EditIcon fontSize="small" />
           </IconButton>

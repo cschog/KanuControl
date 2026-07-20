@@ -56,7 +56,7 @@ const Finanzen = () => {
         <Tab label="Dashboard" />
         <Tab label="Simulation" />
         <Tab label="Planung" />
-        <Tab label="Buchungen" />
+        <Tab label="Abrechnung" />
         <Tab label="Fahrkosten" />
         <Tab label="Beiträge" />
 

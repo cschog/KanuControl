@@ -1,12 +1,13 @@
-import { Box, Button, Paper, Stack, Typography } from "@mui/material";
+import { Paper, Stack } from "@mui/material";
 import { GenericTableTanstack } from "@/components/common/GenericTableTanstack";
 import { buchungColumns } from "@/components/finanzen/buchung/buchungColumns";
 import { AbrechnungBeleg, Buchung } from "@/api/types/abrechnung";
-import { kategorieZuTyp } from "@/api/types/finanz";
+import BelegInfo from "@/components/finanzen/buchung/BelegInfo";
+import BelegActions from "@/components/finanzen/buchung/BelegActions";
+import BuchungRow from "@/components/finanzen/buchung/BuchungRow";
 
 interface Props {
   beleg: AbrechnungBeleg;
-
   readOnly?: boolean;
 
   onEditBeleg: (beleg: AbrechnungBeleg) => void;
@@ -31,8 +32,6 @@ export default function BelegCard({
     onDelete: (buchungId) => onDeletePosition(beleg.id, buchungId),
   });
 
-  const isSystemBeleg = beleg.kuerzel === "__SYSTEM__";
-
   return (
     <Paper
       variant="outlined"
@@ -52,54 +51,14 @@ export default function BelegCard({
         spacing={2}
         mb={2}
       >
-        <Box>
-          <Typography
-            sx={{
-              fontSize: {
-                xs: "0.9rem",
-                sm: "1rem",
-                md: "1.3rem",
-              },
-
-              fontWeight: 600,
-
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-          >
-            {beleg.belegnummer}
-            {" ("}
-            {beleg.kuerzel}
-            {") • "}
-            {beleg.datum}
-            {" • "}
-            {beleg.beschreibung}
-            {isSystemBeleg && (
-              <Typography component="span" color="text.secondary" sx={{ ml: 1 }}>
-                (automatisch)
-              </Typography>
-            )}
-          </Typography>
-
-          {!isSystemBeleg && (
-            <Button size="small" onClick={() => onEditBeleg(beleg)}>
-              Bearbeiten
-            </Button>
-          )}
-        </Box>
-
-        {!readOnly && !isSystemBeleg && (
-          <Stack direction="row" spacing={1}>
-            <Button size="small" variant="contained" onClick={() => onAddPosition(beleg)}>
-              + Position
-            </Button>
-
-            <Button size="small" color="error" onClick={() => onDeleteBeleg(beleg.id)}>
-              Löschen
-            </Button>
-          </Stack>
-        )}
+        <BelegInfo beleg={beleg} />
+        <BelegActions
+          beleg={beleg}
+          readOnly={readOnly}
+          onEditBeleg={onEditBeleg}
+          onAddPosition={onAddPosition}
+          onDeleteBeleg={onDeleteBeleg}
+        />
       </Stack>
 
       {/* =====================================================
@@ -112,77 +71,14 @@ export default function BelegCard({
         loading={false}
         height={350}
         mobileRenderRow={(row) => (
-          <Box>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                gap: 2,
-              }}
-            >
-              <Typography
-                sx={{
-                  fontSize: "0.7rem",
-                  fontWeight: 600,
-                }}
-              >
-                {row.kategorie.replaceAll("_", " ")}
-              </Typography>
-
-              <Typography
-                sx={{
-                  fontSize: "0.9rem",
-                  fontWeight: 700,
-                  whiteSpace: "nowrap",
-
-                  color: kategorieZuTyp[row.kategorie] === "KOSTEN" ? "error.main" : "success.main",
-                }}
-              >
-                {kategorieZuTyp[row.kategorie] === "KOSTEN" ? "-" : "+"}
-                {row.betrag.toFixed(2)} €
-              </Typography>
-            </Box>
-
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{
-                fontSize: "0.8rem",
-              }}
-            >
-              {row.beschreibung}
-            </Typography>
-
-            {!readOnly && !row.systemGenerated && (
-              <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={(e) => {
-                    e.stopPropagation();
-
-                    onEditPosition(beleg, row);
-                  }}
-                >
-                  Bearbeiten
-                </Button>
-
-                <Button
-                  size="small"
-                  color="error"
-                  variant="outlined"
-                  onClick={(e) => {
-                    e.stopPropagation();
-
-                    onDeletePosition(beleg.id, row.id);
-                  }}
-                >
-                  Löschen
-                </Button>
-              </Stack>
-            )}
-          </Box>
+          <BuchungRow
+            beleg={beleg}
+            buchung={row}
+            readOnly={readOnly}
+            stopPropagation
+            onEdit={onEditPosition}
+            onDelete={onDeletePosition}
+          />
         )}
       />
     </Paper>

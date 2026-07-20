@@ -1,5 +1,6 @@
 package com.kcserver.dto.abrechnung;
 
+import com.kcserver.enumtype.BuchungsHerkunft;
 import com.kcserver.enumtype.FinanzKategorie;
 import lombok.Data;
 
@@ -10,11 +11,9 @@ import java.time.LocalDate;
 public class AbrechnungBuchungDTO {
 
     private Long id;
-
+    private BuchungsHerkunft herkunft;
     private FinanzKategorie kategorie;
     private BigDecimal betrag;
 
     private String beschreibung;
-
-    private boolean systemGenerated;
 }

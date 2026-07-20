@@ -32,6 +32,9 @@ public class FinanzGruppe {
     @Column(nullable = false, length = 20)
     private String kuerzel;
 
+    @Column(nullable = false)
+    private boolean system;
+
     /* =========================================================
        RELATION ZUR VERANSTALTUNG
        ========================================================= */

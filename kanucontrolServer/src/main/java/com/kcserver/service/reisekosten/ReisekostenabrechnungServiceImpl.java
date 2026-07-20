@@ -611,6 +611,14 @@ public class ReisekostenabrechnungServiceImpl
                         veranstaltungId
                 );
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Reisekostenabrechnung> findByVeranstaltung(
+            Long veranstaltungId
+    ) {
+        return repository.findByVeranstaltungId(veranstaltungId);
+    }
 }
 
 
