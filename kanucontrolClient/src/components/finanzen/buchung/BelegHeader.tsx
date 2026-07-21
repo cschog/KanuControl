@@ -1,5 +1,4 @@
 import { Box, Chip, Stack } from "@mui/material";
-
 import Money from "@/components/common/Money";
 import BelegActions from "./BelegActions";
 import BelegInfo from "./BelegInfo";
@@ -28,6 +27,7 @@ export default function BelegHeader({
   onAddPosition,
   onDeleteBeleg,
 }: Props) {
+
   return (
     <Box
       sx={{

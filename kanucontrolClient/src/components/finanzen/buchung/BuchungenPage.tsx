@@ -1,6 +1,16 @@
-import { Button, Typography, Divider, Stack } from "@mui/material";
+import {
+  Button,
+  Typography,
+  Divider,
+  Stack,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+} from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { useEffect, useState, useCallback, useMemo } from "react";
 
-import { useEffect, useState, useCallback } from "react";
+import { FinanzKategorie } from "@/api/types/finanz";
 
 import SingleBelegRow from "@/components/finanzen/buchung/SingleBelegRow";
 import MultiBelegAccordion from "@/components/finanzen/buchung/MultiBelegAccordion";
@@ -32,6 +42,7 @@ import {
 import { kategorieZuTyp } from "@/api/types/finanz";
 import { istInBeleglisteSichtbar } from "@/api/utils/belegUtils";
 import { fontSize, spacing } from "@/theme/ui";
+import FinanzpositionenAccordion from "@/components/simulation/FinanzpositionenAccordion";
 
 interface Props {
   veranstaltungId: number;
@@ -75,6 +86,52 @@ export default function BuchungenPage({ veranstaltungId }: Props) {
   useEffect(() => {
     load();
   }, [load]);
+
+  const finanzpositionen = useMemo(() => {
+    if (!abrechnung) {
+      return [];
+    }
+
+    const positionen = Object.values(
+      abrechnung.belege
+        .flatMap((beleg) => beleg.positionen.filter(istInBeleglisteSichtbar))
+        .reduce<
+          Record<
+            FinanzKategorie,
+            {
+              kategorie: FinanzKategorie;
+              betrag: number;
+            }
+          >
+        >(
+          (map, position) => {
+            const vorhanden = map[position.kategorie];
+
+            if (vorhanden) {
+              vorhanden.betrag += position.betrag;
+            } else {
+              map[position.kategorie] = {
+                kategorie: position.kategorie,
+                betrag: position.betrag,
+              };
+            }
+
+            return map;
+          },
+          {} as Record<FinanzKategorie, { kategorie: FinanzKategorie; betrag: number }>,
+        ),
+    );
+
+    // KJFP-Zuschuss ergänzen
+    if (abrechnung.finanz.kjfpZuschuss !== 0) {
+      positionen.push({
+        kategorie: "KJFP_ZUSCHUSS" as FinanzKategorie,
+        betrag: abrechnung.finanz.kjfpZuschuss,
+      });
+    }
+
+    return positionen;
+  }, [abrechnung]);
 
   if (!abrechnung) return null;
 
@@ -194,34 +251,55 @@ export default function BuchungenPage({ veranstaltungId }: Props) {
 
       <Divider sx={{ mb: 3 }} />
 
-      {[...abrechnung.belege]
-        .sort((a, b) => new Date(b.datum).getTime() - new Date(a.datum).getTime())
-        .map((beleg) => {
-          const sichtbarePositionen = beleg.positionen.filter(istInBeleglisteSichtbar);
-          if (sichtbarePositionen.length === 0) {
-            return null;
-          }
+      <Accordion defaultExpanded sx={{ mb: spacing.section }}>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Typography
+            sx={{
+              fontWeight: 700,
+              fontSize: fontSize.sectionTitle,
+            }}
+          >
+            Belege ({abrechnung.belege.length})
+          </Typography>
+        </AccordionSummary>
 
-          const sichtbarerBeleg = {
-            ...beleg,
-            positionen: sichtbarePositionen,
-          };
+        <AccordionDetails>
+          {[...abrechnung.belege]
+            .sort((a, b) => new Date(b.datum).getTime() - new Date(a.datum).getTime())
+            .map((beleg) => {
+              const sichtbarePositionen = beleg.positionen.filter(istInBeleglisteSichtbar);
+              if (sichtbarePositionen.length === 0) {
+                return null;
+              }
 
-          const Component = sichtbarePositionen.length > 1 ? MultiBelegAccordion : SingleBelegRow;
+              const sichtbarerBeleg = {
+                ...beleg,
+                positionen: sichtbarePositionen,
+              };
 
-          return (
-            <Component
-              key={beleg.id}
-              beleg={sichtbarerBeleg}
-              readOnly={abrechnung.status === AbrechnungsStatus.ABGESCHLOSSEN}
-              onEditBeleg={handleEditBeleg}
-              onAddPosition={handleAddPosition}
-              onEditPosition={handleEditPosition}
-              onDeletePosition={handleDeletePosition}
-              onDeleteBeleg={handleDeleteBeleg}
-            />
-          );
-        })}
+              const Component =
+                sichtbarePositionen.length > 1 ? MultiBelegAccordion : SingleBelegRow;
+
+              return (
+                <Component
+                  key={beleg.id}
+                  beleg={sichtbarerBeleg}
+                  readOnly={abrechnung.status === AbrechnungsStatus.ABGESCHLOSSEN}
+                  onEditBeleg={handleEditBeleg}
+                  onAddPosition={handleAddPosition}
+                  onEditPosition={handleEditPosition}
+                  onDeletePosition={handleDeletePosition}
+                  onDeleteBeleg={handleDeleteBeleg}
+                />
+              );
+            })}
+        </AccordionDetails>
+      </Accordion>
+
+      <FinanzpositionenAccordion
+        title="Finanzübersicht der Abrechnung"
+        positionen={finanzpositionen}
+      />
 
       {/* =====================================================
           BUCHUNG DIALOG

@@ -38,7 +38,7 @@ function formatEuro(value: number): string {
 
 }
 
-export default function PlanungspositionenTable({
+export default function FinanzpositionenAccordion({
     title,
     positionen,
 }: Props) {

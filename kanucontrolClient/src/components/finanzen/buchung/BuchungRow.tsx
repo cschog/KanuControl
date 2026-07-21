@@ -1,11 +1,10 @@
-import { Button, Chip, Stack, Typography } from "@mui/material";
+import { Button, Stack, Typography } from "@mui/material";
 
 import { AbrechnungBeleg, Buchung } from "@/api/types/abrechnung";
 import { kategorieZuTyp } from "@/api/types/finanz";
 import { istEditierbar } from "@/api/utils/buchungUtils";
 import Money from "@/components/common/Money";
 import { fontSize } from "@/theme/ui";
-import { istSystemBeleg } from "@/api/utils/belegUtils";
 
 interface Props {
   beleg: AbrechnungBeleg;
@@ -29,7 +28,6 @@ export default function BuchungRow({
 
   const showBetrag = beleg.positionen.length > 1;
   const editierbar = !readOnly && istEditierbar(buchung);
-  const systemBeleg = istSystemBeleg(beleg);
 
 
   return (
@@ -64,7 +62,6 @@ export default function BuchungRow({
       {/* Nur manuelle Buchungen */}
       {editierbar && (
         <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-          {!systemBeleg && <Chip size="small" label={buchung.kategorie.replaceAll("_", " ")} />}
 
           <Button
             size="small"

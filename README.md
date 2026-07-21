@@ -1,254 +1,357 @@
 # KanuControl
 
-> ⚠️ Hinweis:
-> KanuControl befindet sich weiterhin in aktiver Entwicklung.
->
-> Die Anwendung wird bereits produktiv zur Verwaltung von Vereinsdaten eingesetzt und deckt die wesentlichen Anforderungen moderner Kanuvereine ab.
->
-> Der Schwerpunkt der Entwicklung liegt inzwischen auf Stabilisierung, Benutzerfreundlichkeit, Datenschutz, Sicherheit und der Vorbereitung einer breiteren Nutzung.
+> **Die moderne Vereinsverwaltung für Kanuvereine und Kanuverbände**
+
+KanuControl ist eine vollständig webbasierte Vereinsverwaltung zur Planung, Durchführung und Abrechnung von Kanuveranstaltungen. Der Schwerpunkt liegt auf der Verwaltung von Ferienfreizeiten und Jugendmaßnahmen nach den Förderrichtlinien des KJFP (Kinder- und Jugendförderplan).
+
+**Version:** 1.0  
+**Status:** ✅ Funktional abgeschlossen
 
 ---
 
-# 🚀 Release-Status
+# Inhaltsverzeichnis
 
-## Aktueller Stand: v0.9.x
+- [Funktionen](#funktionen)
+- [Technologie](#technologie)
+- [Architektur](#architektur)
+- [Module](#module)
+- [Workflow](#workflow)
+- [Installation](#installation)
+- [Entwicklung](#entwicklung)
+- [Roadmap](#roadmap)
 
-**KanuControl ist eine mandantenfähige Vereinsverwaltungsplattform für Kanuvereine und Verbände.**
+---
 
-Bereits verfügbar:
+# Funktionen
 
-- Vereinsverwaltung
-- Mitgliederverwaltung
-- Benutzer- und Rollenverwaltung
-- Veranstaltungsverwaltung
+## Vereinsverwaltung
+
+- Vereine
+- Mitglieder
+- Ansprechpartner
+- Benutzerverwaltung
+- Rollen und Berechtigungen
+
+## Veranstaltungen
+
+- Planung
 - Teilnehmerverwaltung
-- Reisekostenabrechnung
-- Beitragsverwaltung
-- Finanzverwaltung
-- PDF-Generierung
-- Dashboard & Kennzahlen
-- Multi-Tenant-Betrieb
-- Keycloak-Authentifizierung
-- Datenschutz- und Sicherheitskonzept
-
-Der Schwerpunkt der weiteren Entwicklung liegt auf:
-
-- Produktionsreife
-- Benutzerfreundlichkeit
-- Performance
-- Erweiterte Rollenmodelle
-- Qualitätssicherung
-- Dokumentation
-
----
-
-# 🎯 Ziel von KanuControl
-
-KanuControl ist eine moderne webbasierte Vereinsverwaltungssoftware für Kanuvereine und Verbände.
-
-Die Anwendung unterstützt die digitale Verwaltung von:
-
-- Mitgliedern
-- Vereinen
-- Veranstaltungen
-- Finanzen
-- Beiträgen
+- Mitarbeitende
+- Unterkünfte
+- Verpflegung
 - Reisekosten
-- Zuschüssen und Förderungen
+- Dokumente
 
-Ziel ist die Ablösung papierbasierter Prozesse durch eine sichere, transparente und nachvollziehbare digitale Lösung.
+## Fördermittel
 
----
+Unterstützung des kompletten KJFP-Prozesses
 
-# 🧭 Fachbereiche
+- Simulation
+- Finanzplanung
+- Förderberechnung
+- Planungsverwaltung
+- Förderantrag
+- Zuschüsse
+- Eigenanteil
+
+## Finanzen
+
+- Belege
+- Buchungen
+- Finanzgruppen
+- Einnahmen
+- Ausgaben
+- Automatische Berechnungen
+
+## Abrechnung
+
+- Abrechnung einer Veranstaltung
+- KJFP-Abrechnung
+- Teilnehmerbeiträge
+- Zuschüsse
+- PDF-Auswertungen
 
 ## Stammdaten
 
+Verwaltung aller zentralen Stammdaten
+
+- Beitragsstrukturen
+- Fördersätze
+- Unterkunftsarten
+- Verpflegungsmodelle
+- Finanzgruppen
+- Postleitzahlen
 - Vereine
-- Personen
-- Mitgliedschaften
-- Hauptvereinslogik
-- Kontoinhaber
-- Qualifikationen
-- Vereinsfunktionen
 
 ---
 
-## Benutzerverwaltung
+# Technologie
 
-- Benutzerkonten
-- Rollenverwaltung
-- Vereinsbezogene Berechtigungen
-- Keycloak-Integration
-- OTP-Unterstützung
+## Backend
+
+- Java 17
+- Spring Boot
+- Spring Security
+- Hibernate / JPA
+- Liquibase
+- PostgreSQL
+
+## Frontend
+
+- React
+- TypeScript
+- Material UI
+- TanStack Table
+- React Router
+- Axios
+
+## Infrastruktur
+
+- Docker
+- Keycloak
+- Nginx
+- Prometheus
+- Grafana
+- Loki
+- Uptime Kuma
+
+---
+
+# Architektur
+
+```
+React (Frontend)
+        │
+        ▼
+Spring Boot REST API
+        │
+        ▼
+PostgreSQL
+```
+
+Authentifizierung erfolgt über **Keycloak** mittels OpenID Connect.
+
+Mehrere Vereine können über eine Multi-Tenant-Architektur unabhängig voneinander verwaltet werden.
+
+---
+
+# Module
+
+## Dashboard
+
+Übersicht über
+
+- Veranstaltungen
+- Teilnehmer
+- Finanzen
+- Kennzahlen
+
+---
+
+## Personen
+
+Verwaltung von
+
+- Mitgliedern
+- Mitarbeitenden
+- Referenten
+- Leitungen
 
 ---
 
 ## Veranstaltungen
 
-- Veranstaltungsplanung
-- Teilnehmerverwaltung
-- Veranstaltungsleitung
-- Unterkunft und Verpflegung
-- Gebührenverwaltung
-- Länder und Orte
+Verwaltung kompletter Veranstaltungen inklusive
+
+- Teilnehmer
+- Mitarbeitende
+- Unterkunft
+- Verpflegung
+- Planung
+- Förderung
+- Abrechnung
 
 ---
 
-## Fördermanagement (KJFP)
+## Simulation
 
-- Förderfähigkeitsprüfung
-- Altersgrenzen
-- Zuschlagsregelungen
-- Historisierte Fördersätze
-- Förderberechnung
-- Förderauswertungen
+Berechnung einer Veranstaltung bereits vor der Beantragung.
+
+Berücksichtigt u.a.
+
+- Teilnehmerzahl
+- Mitarbeitende
+- Unterkunft
+- Verpflegung
+- KJFP-Förderung
+- KiK-Zuschlag
+- Eigenanteil
 
 ---
 
-## Finanzverwaltung
+## Planung
 
+Erstellung der Jahresplanung.
+
+- Förderplanung
 - Kostenplanung
-- Einnahmenplanung
-- Finanzgruppen
-- Beitragsverwaltung
-- Reisekostenabrechnung
-- Abrechnungen
-- Dashboard-Auswertungen
+- Finanzierungsübersicht
 
 ---
 
-## Dokumentenerstellung
+## Abrechnung
 
+Erfassung aller
+
+- Belege
+- Buchungen
+- Einnahmen
+- Ausgaben
+
+Automatische Berechnung von
+
+- Zuschüssen
+- Eigenanteil
+- Teilnehmerbeiträgen
+
+---
+
+## PDF-Erzeugung
+
+Automatische Erstellung verschiedener Dokumente.
+
+Beispiele
+
+- Förderantrag
 - Teilnehmerlisten
-- Anmeldungen
-- Förderabrechnungen
-- PDF-Formulare
-- Automatische Berechnungen
+- Finanzübersichten
+- Abrechnungen
 
 ---
 
-# 🌐 Mandantenfähigkeit
+# Workflow
 
-KanuControl ist vollständig mandantenfähig aufgebaut.
+Der typische Lebenszyklus einer Veranstaltung:
 
-## Eigenschaften
-
-- Schema-per-Tenant Architektur
-- Eigene Datenhaltung je Verein
-- Logische Trennung aller Vereinsdaten
-- Keycloak-basierte Mandantenerkennung
-- JWT-basierte Authentifizierung
-- Liquibase-basierte Schemaverwaltung
-
-Jeder Verein arbeitet ausschließlich mit seinen eigenen Daten.
-
-Eine Vermischung von Vereinsdaten unterschiedlicher Mandanten ist technisch ausgeschlossen.
-
----
-
-# 🔐 Sicherheit & Datenschutz
-
-KanuControl wurde unter Berücksichtigung der Anforderungen der DSGVO entwickelt.
-
-## Sicherheitsmaßnahmen
-
-- HTTPS-Verschlüsselung
-- Keycloak-Authentifizierung
-- OTP-Unterstützung
-- Rollenbasierte Berechtigungen
-- Firewall-geschützte Infrastruktur
-- Getrennte Serverdienste
-- Monitoring der Infrastruktur
-- Regelmäßige Sicherheitsupdates
-
-## Datenschutzmaßnahmen
-
-- Mandantentrennung auf Datenbankebene
-- Dokumentierte technische und organisatorische Maßnahmen (TOM)
-- Auftragsverarbeitungsverträge (AVV)
-- Dokumentierte Verarbeitungsbeschreibung
-- Lösch- und Backupkonzept
+```text
+Veranstaltung
+      │
+      ▼
+Simulation
+      │
+      ▼
+Planung
+      │
+      ▼
+Förderantrag
+      │
+      ▼
+Durchführung
+      │
+      ▼
+Abrechnung
+      │
+      ▼
+Archiv
+```
 
 ---
 
-# 🏗️ Infrastruktur
+# Installation
 
-KanuControl wird auf einer Linux-basierten Serverinfrastruktur betrieben.
+## Voraussetzungen
 
-Die Plattform nutzt mehrere getrennte virtuelle Maschinen für:
+- Java 17
+- Node.js
+- PostgreSQL
+- Docker (optional)
 
-- Anwendung
-- Datenbank
-- Authentifizierung
-- Reverse Proxy
-- Monitoring
+## Backend
 
-Zur Sicherstellung der Verfügbarkeit werden tägliche Datensicherungen auf einem separaten System erstellt.
+```bash
+mvn spring-boot:run
+```
 
----
+## Frontend
 
-# 🧪 Qualität
-
-## Testabdeckung
-
-- Controller-Tests
-- Service-Tests
-- Repository-Tests
-- Multi-Tenant-Tests
-- PDF-Tests
-- Förderlogik-Tests
-
-Der Umfang der automatisierten Tests wird kontinuierlich erweitert.
+```bash
+yarn install
+yarn dev
+```
 
 ---
 
-# 🎯 Roadmap
+# Entwicklung
 
-## v0.9.x
+## Backend
 
-Fokus:
+```
+Spring Boot
+ ├── Controller
+ ├── Services
+ ├── Repository
+ ├── Entities
+ └── DTOs
+```
 
-- UX-Optimierung
-- Plausibilitätsprüfungen
-- Erweiterte Rollenmodelle
-- Fehlerbehandlung
-- Dokumentation
+## Frontend
 
----
-
-## v1.0
-
-Ziel:
-
-- Vollständige Produktionsreife
-- Erweiterte Audit-Funktionen
-- Backup- und Restore-Werkzeuge
-- Erweiterte Administrationsfunktionen
-- Performance-Optimierungen
-- Security Hardening
-- Langfristige API-Stabilität
-
----
-
-# 🌍 Open Source
-
-KanuControl wird als Open-Source-Projekt entwickelt.
-
-Ziele:
-
-- Transparenz
-- Nachvollziehbarkeit
-- Nachhaltigkeit
-- Vereinsfreundlichkeit
-- Einfache Erweiterbarkeit
-
-Beiträge in Form von Bugfixes, Tests, Dokumentation und Verbesserungsvorschlägen sind willkommen.
+```
+React
+ ├── Pages
+ ├── Components
+ ├── Dialoge
+ ├── Tabellen
+ ├── API
+ └── Theme
+```
 
 ---
 
-# ❤️ Motivation
+# Roadmap
 
-KanuControl entsteht aus der Praxis für die Praxis.
+## Version 1.1
 
-Ziel ist es, Vereine bei der täglichen Verwaltungsarbeit zu entlasten und gleichzeitig Datenschutz, Transparenz und Nachvollziehbarkeit zu verbessern.
+- Erweiterte Statistiken
+- Weitere PDF-Ausgaben
+- Verbesserte Dashboards
+- Performanceoptimierungen
+
+## Version 1.2
+
+- Mobile Optimierungen
+- Erweiterte Auswertungen
+- API-Erweiterungen
+
+---
+
+# Lizenz
+
+Dieses Projekt wurde für die Verwaltung von Kanuvereinen und Kanuverbänden entwickelt.
+
+---
+
+# Status
+
+| Bereich | Status |
+|----------|--------|
+| Vereinsverwaltung | ✅ |
+| Veranstaltungen | ✅ |
+| Teilnehmer | ✅ |
+| Simulation | ✅ |
+| Planung | ✅ |
+| KJFP | ✅ |
+| Förderung | ✅ |
+| Finanzen | ✅ |
+| Abrechnung | ✅ |
+| PDF-Ausgaben | ✅ |
+| Mehrmandantenfähigkeit | ✅ |
+| Keycloak | ✅ |
+
+---
+
+# KanuControl 1.0
+
+**KanuControl 1.0 markiert den ersten funktional vollständigen Meilenstein des Projekts.**
+
+Die Anwendung unterstützt den kompletten Lebenszyklus einer Veranstaltung – von der Planung über die Förderung bis hin zur vollständigen finanziellen Abrechnung.

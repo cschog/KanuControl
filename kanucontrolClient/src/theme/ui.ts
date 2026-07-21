@@ -63,18 +63,30 @@ export const fontSize = {
 
 export const chip = {
   height: {
-    xs: 42,
-    md: 52,
+    xs: 20,
+    sm: 25,
+    md: 28,
   },
 
   borderRadius: {
-    xs: 2,
-    md: 3,
+    xs: 1,
+    md: 2,
   },
 
   labelPadding: {
-    xs: 1.5,
-    md: 2,
+    xs: 0.75,
+    md: 1.25,
+  },
+
+  fontSize: {
+    small: {
+      xs: "0.3rem",
+      md: "0.4rem",
+    },
+    medium: {
+      xs: "0.5rem",
+      md: "0.7rem",
+    },
   },
 };
 

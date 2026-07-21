@@ -5,221 +5,180 @@ import { useSimulation } from "@/hooks/useSimulation";
 import { PlanungsSimulation } from "@/api/types/simulation/PlanungsSimulation";
 import SimulationForm from "./SimulationForm";
 import SimulationSummary from "./SimulationSummary";
-import PlanungspositionenTable from "./PlanungspositionenTable";
+import PlanungspositionenTable from "./FinanzpositionenAccordion";
 import {
-    Accordion,
-    AccordionSummary,
-    AccordionDetails,
-    Box,
-    Button,
-    Typography,
-    useTheme,
-    useMediaQuery,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Box,
+  Button,
+  Typography,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { radius } from "@/theme/ui";
 
 interface SimulationPageProps {
-
-    veranstaltungId: number;
-
+  veranstaltungId: number;
 }
 
-export default function SimulationPage({
-    veranstaltungId,
-}: SimulationPageProps) {
+export default function SimulationPage({ veranstaltungId }: SimulationPageProps) {
+  const { simulation, ergebnis, loading, recalculate, saveSimulation } =
+    useSimulation(veranstaltungId);
 
-    const {
-        simulation,
-        ergebnis,
-        loading,
-        error,
-        recalculate,
-        saveSimulation
-    } = useSimulation(veranstaltungId);
+  const [localSimulation, setLocalSimulation] = useState<PlanungsSimulation>();
 
-    const [localSimulation, setLocalSimulation] =
-        useState<PlanungsSimulation>();
+  const [dirty, setDirty] = useState(false);
 
-    const [dirty, setDirty] = useState(false);
+  const [simulationOpen, setSimulationOpen] = useState(true);
+  const [positionenOpen, setPositionenOpen] = useState(false);
 
-    const [simulationOpen, setSimulationOpen] = useState(true);
-    const [positionenOpen, setPositionenOpen] = useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-    const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const uebernehmeBeitragsvorschlag = () => {
+    if (!ergebnis?.beitragsVorschlag) {
+      return;
+    }
 
+    setLocalSimulation((prev) => {
+      if (!prev) {
+        return prev;
+      }
 
-    const uebernehmeBeitragsvorschlag = () => {
+      return {
+        ...prev,
+        teilnehmerBeitragUnter21Jahre: ergebnis.beitragsVorschlag.teilnehmerBeitragUnter21Jahre,
+        mitarbeiterBeitrag: ergebnis.beitragsVorschlag.mitarbeiterBeitrag,
+      };
+    });
 
-        if (!ergebnis?.beitragsVorschlag) {
-            return;
-        }
+    setDirty(true);
+  };
 
-        setLocalSimulation(prev => {
+  useEffect(() => {
+    if (!localSimulation && simulation) {
+      setLocalSimulation(simulation);
+      setDirty(false);
+    }
+  }, [simulation, localSimulation]);
 
-            if (!prev) {
-                return prev;
-            }
+  useEffect(() => {
+    if (!localSimulation) {
+      return;
+    }
 
-            return {
-                ...prev,
-                teilnehmerBeitragUnter21Jahre:
-                    ergebnis.beitragsVorschlag.teilnehmerBeitragUnter21Jahre,
-                mitarbeiterBeitrag:
-                    ergebnis.beitragsVorschlag.mitarbeiterBeitrag,
-            };
-        });
+    const timer = setTimeout(() => {
+      recalculate(localSimulation);
+    }, 300);
 
-        setDirty(true);
-    };
+    return () => clearTimeout(timer);
+  }, [localSimulation, recalculate]);
 
-    useEffect(() => {
+  if (loading) {
+    return <>Lade Simulation…</>;
+  }
 
-        if (!localSimulation && simulation) {
-            setLocalSimulation(simulation);
+  if (!localSimulation || !ergebnis) {
+    return <>Keine Daten vorhanden.</>;
+  }
+
+  return (
+    <>
+      <Box
+        sx={{
+          position: {
+            xs: "static",
+            md: "sticky",
+          },
+          top: {
+            md: 0,
+          },
+          zIndex: {
+            md: 100,
+          },
+          bgcolor: "background.default",
+          pb: 2,
+          borderRadius: radius.dialog,
+        }}
+      >
+        <SimulationSummary
+          ergebnis={ergebnis}
+          onBeitragsvorschlagUebernehmen={uebernehmeBeitragsvorschlag}
+        />
+      </Box>
+
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+        <Button variant="outlined" onClick={uebernehmeBeitragsvorschlag}>
+          Betragsvorschlag übernehmen
+        </Button>
+
+        <Button
+          variant="contained"
+          disabled={!dirty}
+          onClick={async () => {
+            await saveSimulation(localSimulation);
             setDirty(false);
-        }
+          }}
+        >
+          {dirty ? "Simulation speichern" : "Simulation gespeichert"}
+        </Button>
+      </Box>
 
-    }, [simulation, localSimulation]);
+      <Accordion
+        expanded={simulationOpen}
+        onChange={(_, expanded) => setSimulationOpen(expanded)}
+        sx={{
+          mt: 2,
+          bgcolor: "grey.100",
+          borderRadius: radius.dialog,
+        }}
+      >
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Typography variant={isMobile ? "h6" : "h5"}>Simulation</Typography>
+        </AccordionSummary>
 
-    useEffect(() => {
-        if (!localSimulation) {
-            return;
-        }
+        <AccordionDetails
+          sx={{
+            bgcolor: "grey.200",
+            borderTop: 1,
+            borderColor: "divider",
+          }}
+        >
+          <SimulationForm
+            simulation={localSimulation}
+            onChange={(sim) => {
+              setLocalSimulation(sim);
+              setDirty(true);
+            }}
+          />
+        </AccordionDetails>
+      </Accordion>
 
-        const timer = setTimeout(() => {
-            recalculate(localSimulation);
-        }, 300);
+      <Accordion
+        expanded={positionenOpen}
+        onChange={(_, expanded) => setPositionenOpen(expanded)}
+        sx={{
+          mt: 2,
+          bgcolor: "grey.100",
+          borderRadius: radius.dialog,
+        }}
+      >
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Typography variant={isMobile ? "h6" : "h5"}>Berechnungspositionen</Typography>
+        </AccordionSummary>
 
-        return () => clearTimeout(timer);
-
-    }, [localSimulation, recalculate]);
-
-
-    if (loading) {
-        return <>Lade Simulation…</>;
-    }
-
-    if (!localSimulation || !ergebnis) {
-        return <>Keine Daten vorhanden.</>;
-    }
-
-
-
-    return (
-        <>
-            <Box
-                sx={{
-                    position: {
-                        xs: "static",
-                        md: "sticky",
-                    },
-                    top: {
-                        md: 0,
-                    },
-                    zIndex: {
-                        md: 100,
-                    },
-                    bgcolor: "background.default",
-                    pb: 2,
-                    borderRadius: radius.dialog,
-                }}
-            >
-                <SimulationSummary
-                    ergebnis={ergebnis}
-                    onBeitragsvorschlagUebernehmen={uebernehmeBeitragsvorschlag}
-                />
-            </Box>
-
-            <Box
-                display="flex"
-                justifyContent="space-between"
-                alignItems="center"
-                mb={2}
-            >
-                <Button
-                    variant="outlined"
-                    onClick={uebernehmeBeitragsvorschlag}
-                >
-                    Betragsvorschlag übernehmen
-                </Button>
-
-                <Button
-                    variant="contained"
-                    disabled={!dirty}
-                    onClick={async () => {
-                        await saveSimulation(localSimulation);
-                        setDirty(false);
-                    }}
-                >
-                    {dirty ? "Simulation speichern" : "Simulation gespeichert"}
-                </Button>
-            </Box>
-
-            <Accordion
-                expanded={simulationOpen}
-                onChange={(_, expanded) => setSimulationOpen(expanded)}
-                sx={{
-                    mt: 2,
-                    bgcolor: "grey.100",
-                    borderRadius: radius.dialog,
-                }}
-            >
-                <AccordionSummary
-                    expandIcon={<ExpandMoreIcon />}
-                >
-                    <Typography variant={isMobile ? "h6" : "h5"}>
-                        Simulation
-                    </Typography>
-                </AccordionSummary>
-
-                <AccordionDetails
-                    sx={{
-                        bgcolor: "grey.200",
-                        borderTop: 1,
-                        borderColor: "divider",
-                    }}
-                >
-                    <SimulationForm
-                        simulation={localSimulation}
-                        onChange={(sim) => {
-                            setLocalSimulation(sim);
-                            setDirty(true);
-                        }}
-                    />
-                </AccordionDetails>
-            </Accordion>
-
-            <Accordion
-                expanded={positionenOpen}
-                onChange={(_, expanded) => setPositionenOpen(expanded)}
-                sx={{
-                    mt: 2,
-                    bgcolor: "grey.100",
-                    borderRadius: radius.dialog,
-                }}
-            >
-                <AccordionSummary
-                    expandIcon={<ExpandMoreIcon />}
-                >
-                    <Typography variant={isMobile ? "h6" : "h5"}>
-                        Berechnungspositionen
-                    </Typography>
-                </AccordionSummary>
-
-                <AccordionDetails
-                    sx={{
-                        bgcolor: "grey.200",
-                        borderTop: 1,
-                        borderColor: "divider",
-                    }}
-                >
-                    <PlanungspositionenTable
-                        positionen={ergebnis.positionen}
-                    />
-                </AccordionDetails>
-            </Accordion>
-        </>
-    );
+        <AccordionDetails
+          sx={{
+            bgcolor: "grey.200",
+            borderTop: 1,
+            borderColor: "divider",
+          }}
+        >
+          <PlanungspositionenTable positionen={ergebnis.positionen} />
+        </AccordionDetails>
+      </Accordion>
+    </>
+  );
 }

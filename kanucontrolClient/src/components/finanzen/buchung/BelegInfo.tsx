@@ -2,7 +2,7 @@ import { Chip, Stack, Typography } from "@mui/material";
 
 import { AbrechnungBeleg } from "@/api/types/abrechnung";
 import { istSystemBeleg } from "@/api/utils/belegUtils";
-import { fontSize } from "@/theme/ui";
+import { chip, fontSize } from "@/theme/ui";
 
 interface Props {
   beleg: AbrechnungBeleg;
@@ -10,20 +10,44 @@ interface Props {
 
 export default function BelegInfo({ beleg }: Props) {
   const system = istSystemBeleg(beleg);
+  const showKategorieChip = !system && beleg.positionen.length === 1;
 
   return (
     <Stack spacing={0.25} sx={{ minWidth: 0 }}>
-      <Typography
-        noWrap
-        sx={{
-          fontSize: fontSize.belegTitle,
-          fontWeight: 700,
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-        }}
+      <Stack
+        direction={{ xs: "column", md: "row" }}
+        spacing={1}
+        alignItems={{ xs: "flex-start", md: "center" }}
+        sx={{ minWidth: 0 }}
       >
-        {system ? beleg.beschreibung : `${beleg.belegnummer} (${beleg.kuerzel}) • ${beleg.datum}`}
-      </Typography>
+        <Typography
+          noWrap
+          sx={{
+            fontSize: fontSize.belegTitle,
+            fontWeight: 700,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+        >
+          {system ? beleg.beschreibung : `${beleg.belegnummer} (${beleg.kuerzel}) • ${beleg.datum}`}
+        </Typography>
+
+        {showKategorieChip && (
+          <Chip
+            label={beleg.positionen[0].kategorie.replaceAll("_", " ")}
+            size="medium"
+            sx={{
+              height: chip.height,
+              borderRadius: chip.borderRadius,
+              "& .MuiChip-label": {
+                px: chip.labelPadding,
+                fontSize: fontSize.cardTitle,
+                fontWeight: 500,
+              },
+            }}
+          />
+        )}
+      </Stack>
 
       {system && (
         <Stack direction="row" spacing={1} alignItems="center">
@@ -42,10 +66,11 @@ export default function BelegInfo({ beleg }: Props) {
             color="info"
             variant="outlined"
             sx={{
-              height: 22,
+              height: chip.height,
+              borderRadius: chip.borderRadius,
               "& .MuiChip-label": {
-                px: 0.75,
-                fontSize: "0.7rem",
+                px: chip.labelPadding,
+                fontSize: chip.fontSize.small,
               },
             }}
           />

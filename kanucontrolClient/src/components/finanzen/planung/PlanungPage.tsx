@@ -9,30 +9,22 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
+  DialogActions,
 } from "@mui/material";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import PlanungspositionenTable from "@/components/simulation/PlanungspositionenTable";
+import PlanungspositionenTable from "@/components/simulation/FinanzpositionenAccordion";
 import { useEffect, useState, useCallback } from "react";
-import {
-  getPlanung,
-  einreichen,
-  wiederOeffnen,
-} from "@/api/services/planungApi";
+import { getPlanung, einreichen, wiederOeffnen } from "@/api/services/planungApi";
 import { PlanungDetail } from "@/api/types/planung";
 import { kategorieZuTyp } from "@/api/types/finanz";
 import FinanzSummary from "@/components/common/FinanzSummary";
-
 
 interface Props {
   veranstaltungId: number;
   onOpenSimulation: () => void;
 }
 
-export default function PlanungPage({
-  veranstaltungId,
-  onOpenSimulation,
-}: Props) {
+export default function PlanungPage({ veranstaltungId, onOpenSimulation }: Props) {
   const [planung, setPlanung] = useState<PlanungDetail | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
@@ -48,48 +40,26 @@ export default function PlanungPage({
   if (!planung) {
     return (
       <Box p={3}>
-        <Typography
-          variant="h5"
-          gutterBottom
-        >
+        <Typography variant="h5" gutterBottom>
           Finanzplanung
         </Typography>
 
         <Card>
           <CardContent>
+            <Box display="flex" alignItems="center" gap={2} mb={2}>
+              <InfoOutlinedIcon color="info" fontSize="large" />
 
-            <Box
-              display="flex"
-              alignItems="center"
-              gap={2}
-              mb={2}
-            >
-              <InfoOutlinedIcon
-                color="info"
-                fontSize="large"
-              />
-
-              <Typography variant="h6">
-                Es liegt noch keine Planung vor.
-              </Typography>
+              <Typography variant="h6">Es liegt noch keine Planung vor.</Typography>
             </Box>
 
-            <Typography
-              color="text.secondary"
-              paragraph
-            >
-              Erstellen Sie zunächst eine Simulation und
-              speichern Sie diese. Anschließend kann die
+            <Typography color="text.secondary" paragraph>
+              Erstellen Sie zunächst eine Simulation und speichern Sie diese. Anschließend kann die
               Planung hier eingesehen und eingereicht werden.
             </Typography>
 
-            <Button
-              variant="contained"
-              onClick={onOpenSimulation}
-            >
+            <Button variant="contained" onClick={onOpenSimulation}>
               Zur Simulation
             </Button>
-
           </CardContent>
         </Card>
       </Box>
@@ -103,15 +73,12 @@ export default function PlanungPage({
   const sumEinnahmen = einnahmen.reduce((a, b) => a + b.betrag, 0);
   const saldo = sumEinnahmen - sumKosten;
 
-
   const kjfpZuschuss = planung.positionen
-    .filter(p => p.kategorie === "KJFP_ZUSCHUSS")
+    .filter((p) => p.kategorie === "KJFP_ZUSCHUSS")
     .reduce((sum, p) => sum + p.betrag, 0);
 
-
   return (
-        <>
-      
+    <>
       {planung.eingereicht && (
         <Alert severity="warning" sx={{ mb: 2 }}>
           Diese Planung wurde eingereicht und ist gesperrt.
@@ -135,20 +102,12 @@ export default function PlanungPage({
         kjfpZuschuss={kjfpZuschuss}
       />
 
-      <PlanungspositionenTable
-        positionen={planung.positionen}
-      />
+      <PlanungspositionenTable positionen={planung.positionen} />
 
       <Divider sx={{ my: 3 }} />
 
-
-
       {!planung.eingereicht && (
-        <Box
-          display="flex"
-          justifyContent="center"
-          mt={3}
-        >
+        <Box display="flex" justifyContent="center" mt={3}>
           <Button
             variant="contained"
             color="warning"
@@ -168,8 +127,6 @@ export default function PlanungPage({
           </Button>
         </Box>
       )}
-
-
 
       <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
         <DialogTitle>Planung wirklich einreichen?</DialogTitle>
@@ -193,6 +150,6 @@ export default function PlanungPage({
           </Button>
         </DialogActions>
       </Dialog>
-   </>
+    </>
   );
 }
