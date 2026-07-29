@@ -7,5 +7,6 @@ import java.util.List;
 public record FinanzGruppeDTO(
         Long id,
         String kuerzel,
+        boolean system,
         List<TeilnehmerKurzDTO> teilnehmer
 ) {}

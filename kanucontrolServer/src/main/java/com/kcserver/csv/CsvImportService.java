@@ -4,7 +4,6 @@ import com.kcserver.dto.person.PersonSaveDTO;
 import com.kcserver.service.MitgliedService;
 import com.kcserver.service.PersonService;
 import com.kcserver.validation.OnCreate;
-import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVRecord;
@@ -48,22 +47,10 @@ public class CsvImportService {
                         ? CsvMappingConfig.load(mapping)
                         : CsvMappingConfig.defaultMapping();
 
-        InputStream csvStream = new BufferedInputStream(csv);
-        Reader reader = CsvEncoding.reader(csvStream);
+        Reader reader = CsvEncoding.reader(new BufferedInputStream(csv));
         List<CSVRecord> records = CsvReader.read(reader);
 
-        if (records.isEmpty()) {
-            throw new IllegalArgumentException(
-                    "Die CSV-Datei enthält keine Mitgliedsdaten."
-            );
-        }
-
-        Set<String> headers = records.get(0).toMap().keySet();
-        if (!headers.contains("Vorname")) {
-            throw new IllegalArgumentException(
-                    "CSV-Header ungültig – Spalte 'Vorname' fehlt"
-            );
-        }
+        validateHeaders(records);
 
         report.setTotalRows(records.size());
 
@@ -77,44 +64,14 @@ public class CsvImportService {
                 PersonSaveDTO dto =
                         CsvPersonImporter.toPersonSaveDTO(row, config);
 
-                // ✅ Bean Validation auch im DryRun
-                var violations = validator.validate(dto, OnCreate.class);
-                if (!violations.isEmpty()) {
-                    for (ConstraintViolation<PersonSaveDTO> v : violations) {
-                        report.addError(
-                                rowNumber,
-                                v.getPropertyPath().toString(),
-                                null,
-                                v.getMessage()
-                        );
-                    }
+                if (!validatePerson(dto, report, rowNumber)) {
                     continue;
                 }
 
-                if (!dryRun) {
-                    var created = personService.createPerson(dto);
-                    mitgliedService.ensureMitglied(created.getId(), vereinId);
-                    report.incrementCreated();
-                } else {
-                    report.incrementSimulated();
-                }
+                importPerson(dto, vereinId, dryRun, report);
 
             } catch (Exception ex) {
-
-                String field = null;
-                String value = null;
-
-                if (ex instanceof CsvFieldException cfe) {
-                    field = cfe.getField();
-                    value = cfe.getValue();
-                }
-
-                report.addError(
-                        rowNumber,
-                        field,
-                        value,
-                        ex.getMessage()
-                );
+                addImportError(report, rowNumber, ex);
             }
         }
 
@@ -128,5 +85,80 @@ public class CsvImportService {
                 dryRun, report.getCreated(), report.getErrors());
 
         return report;
+    }
+
+    private void validateHeaders(List<CSVRecord> records) {
+        if (records.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Die CSV-Datei enthält keine Mitgliedsdaten."
+            );
+        }
+
+        Set<String> headers = records.getFirst().toMap().keySet();
+        if (!headers.contains("Vorname")) {
+            throw new IllegalArgumentException(
+                    "CSV-Header ungültig – Spalte 'Vorname' fehlt"
+            );
+        }
+    }
+
+    private boolean validatePerson(
+            PersonSaveDTO dto,
+            CsvImportReport report,
+            int rowNumber
+    ) {
+        var violations = validator.validate(dto, OnCreate.class);
+
+        if (violations.isEmpty()) {
+            return true;
+        }
+
+        for (var violation : violations) {
+            report.addError(
+                    rowNumber,
+                    violation.getPropertyPath().toString(),
+                    null,
+                    violation.getMessage()
+            );
+        }
+
+        return false;
+    }
+
+    private void importPerson(
+            PersonSaveDTO dto,
+            Long vereinId,
+            boolean dryRun,
+            CsvImportReport report
+    ) {
+        if (dryRun) {
+            report.incrementSimulated();
+            return;
+        }
+
+        var created = personService.createPerson(dto);
+        mitgliedService.ensureMitglied(created.getId(), vereinId);
+        report.incrementCreated();
+    }
+
+    private void addImportError(
+            CsvImportReport report,
+            int rowNumber,
+            Exception ex
+    ) {
+        String field = null;
+        String value = null;
+
+        if (ex instanceof CsvFieldException cfe) {
+            field = cfe.getField();
+            value = cfe.getValue();
+        }
+
+        report.addError(
+                rowNumber,
+                field,
+                value,
+                ex.getMessage()
+        );
     }
 }

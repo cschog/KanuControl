@@ -249,7 +249,7 @@ public class ReportController {
 
         String encodedFilename = URLEncoder
                 .encode(filename, StandardCharsets.UTF_8)
-                .replaceAll("\\+", "%20");
+                .replace("+", "%20");
 
         return ResponseEntity.ok()
                 .header(
@@ -304,19 +304,12 @@ public class ReportController {
 
     @GetMapping("/reisekosten/{abrechnungId}/pdf/download")
     public ResponseEntity<byte[]> downloadReisekosten(
-            @PathVariable Long veranstaltungId,
             @PathVariable Long abrechnungId
     ) {
-
         byte[] pdf = reisekostenPdfService.generate(abrechnungId);
-
-        String filename =
-                reisekostenPdfService.buildFilename(
-                        abrechnungId
-                );
+        String filename = reisekostenPdfService.buildFilename(abrechnungId);
 
         return buildAttachmentResponse(pdf, filename);
-
     }
     @GetMapping("/reisekosten")
     public List<ReisekostenabrechnungListResponse> listReisekosten(

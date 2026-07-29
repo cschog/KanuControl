@@ -57,18 +57,6 @@ public class VeranstaltungDetailDTO {
     private PersonDetailDTO leiter;
 
     /* =========================
-       Plan-Zahlen
-       ========================= */
-
-    private Integer geplanteTeilnehmerMaennlich;
-    private Integer geplanteTeilnehmerWeiblich;
-    private Integer geplanteTeilnehmerDivers;
-
-    private Integer geplanteMitarbeiterMaennlich;
-    private Integer geplanteMitarbeiterWeiblich;
-    private Integer geplanteMitarbeiterDivers;
-
-    /* =========================
        Status
        ========================= */
 

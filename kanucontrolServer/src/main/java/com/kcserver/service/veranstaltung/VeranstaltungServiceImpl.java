@@ -507,18 +507,6 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
             v.setScope(dto.getScope());
         }
 
-/* =========================
-   PLANUNG
-   ========================= */
-
-        v.setGeplanteTeilnehmerMaennlich(dto.getGeplanteTeilnehmerMaennlich());
-        v.setGeplanteTeilnehmerWeiblich(dto.getGeplanteTeilnehmerWeiblich());
-        v.setGeplanteTeilnehmerDivers(dto.getGeplanteTeilnehmerDivers());
-
-        v.setGeplanteMitarbeiterMaennlich(dto.getGeplanteMitarbeiterMaennlich());
-        v.setGeplanteMitarbeiterWeiblich(dto.getGeplanteMitarbeiterWeiblich());
-        v.setGeplanteMitarbeiterDivers(dto.getGeplanteMitarbeiterDivers());
-
         List<String> warnings = adjustFmJemType(v);
         Veranstaltung saved = veranstaltungRepository.save(v);
 

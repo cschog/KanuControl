@@ -20,7 +20,9 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @ExactlyOneHauptverein(groups = OnCreate.class)
-public class PersonSaveDTO implements HasMitgliedschaften {
+public class PersonSaveDTO
+
+        implements HasMitgliedschaften<MitgliedSaveDTO> {
 
     @NotBlank(groups = {OnCreate.class, OnUpdate.class})
     private String name;

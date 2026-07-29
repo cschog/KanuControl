@@ -19,16 +19,18 @@ public interface AbrechnungBelegRepository
     List<AbrechnungBeleg> findByAbrechnungId(Long abrechnungId);
 
     @Query("""
-    SELECT b.finanzGruppe.id, COUNT(b.id)
+    SELECT b.finanzGruppe.id, COUNT(DISTINCT b)
     FROM AbrechnungBeleg b
+    JOIN b.positionen p
     WHERE b.finanzGruppe.veranstaltung.id = :veranstaltungId
     GROUP BY b.finanzGruppe.id
 """)
     List<Object[]> countByVeranstaltungGrouped(Long veranstaltungId);
 
     @Query("""
-    SELECT COUNT(b)
+    SELECT COUNT(DISTINCT b)
     FROM AbrechnungBeleg b
+    JOIN b.positionen p
     WHERE b.abrechnung.veranstaltung.id = :veranstaltungId
       AND b.finanzGruppe.id = :gruppeId
 """)
@@ -44,5 +46,18 @@ public interface AbrechnungBelegRepository
     Optional<AbrechnungBeleg> findByAbrechnungAndBelegnummer(
             Abrechnung abrechnung,
             String belegnummer
+    );
+
+    @Query("""
+    SELECT DISTINCT b
+    FROM AbrechnungBeleg b
+    JOIN b.positionen p
+    WHERE b.abrechnung.veranstaltung.id = :veranstaltungId
+      AND b.finanzGruppe.id = :finanzGruppeId
+    ORDER BY b.datum, b.lfdNr
+""")
+    List<AbrechnungBeleg> findByAbrechnung_Veranstaltung_IdAndFinanzGruppe_IdOrderByDatumAscLfdNrAsc(
+            Long veranstaltungId,
+            Long finanzGruppeId
     );
 }

@@ -3,11 +3,9 @@ import { fontSize } from "@/theme/ui";
 
 type MoneyProps = {
   value: number;
-
   align?: "left" | "right" | "center";
-
   colorize?: boolean;
-
+  color?: TypographyProps["color"];
   sx?: SxProps<Theme>;
 } & Pick<TypographyProps, "variant">;
 
@@ -18,14 +16,9 @@ const formatter = new Intl.NumberFormat("de-DE", {
   maximumFractionDigits: 2,
 });
 
-const Money = ({
-  value,
-  align = "right",
-  colorize = false,
-  variant,
-  sx,
-}: MoneyProps) => {
-  const color = colorize && value !== 0 ? (value > 0 ? "success.main" : "error.main") : "inherit";
+const Money = ({ value, align = "right", colorize = false, color, variant, sx }: MoneyProps) => {
+  const resolvedColor =
+    color ?? (colorize && value !== 0 ? (value > 0 ? "success.main" : "error.main") : "inherit");
 
   return (
     <Typography
@@ -33,7 +26,7 @@ const Money = ({
       variant={variant}
       sx={{
         textAlign: align,
-        color,
+        color: resolvedColor,
         fontVariantNumeric: "tabular-nums",
         fontSize: fontSize.money,
         ...sx,

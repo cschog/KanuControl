@@ -13,6 +13,7 @@ export interface FinanzGruppe {
   id: number;
   kuerzel: string;
   belegCount: number;
+  system: boolean;
   teilnehmer: TeilnehmerKurz[];
 }
 

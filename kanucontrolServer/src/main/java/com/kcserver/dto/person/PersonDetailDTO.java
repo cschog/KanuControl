@@ -1,5 +1,6 @@
 package com.kcserver.dto.person;
 
+import com.kcserver.dto.mitglied.HasMitgliedschaften;
 import com.kcserver.dto.mitglied.MitgliedDetailDTO;
 import com.kcserver.enumtype.Sex;
 import lombok.AllArgsConstructor;
@@ -12,7 +13,8 @@ import java.util.List;
 @Getter
 @Setter
 @AllArgsConstructor
-public class PersonDetailDTO {
+public class PersonDetailDTO
+        implements HasMitgliedschaften<MitgliedDetailDTO> {
 
     private Long id;
     private String vorname;

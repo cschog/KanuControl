@@ -19,19 +19,14 @@ export const kuerzelColumns = ({
 }: Props): ColumnDef<FinanzGruppe>[] => [
   {
     accessorKey: "kuerzel",
-
     header: "Kürzel",
-
     size: 120,
-
     cell: ({ row }) => <Typography fontWeight={600}>{row.original.kuerzel}</Typography>,
   },
 
   {
     id: "teilnehmer",
-
     header: "Teilnehmer",
-
     size: 500,
 
     cell: ({ row }) => (
@@ -41,8 +36,13 @@ export const kuerzelColumns = ({
             key={t.id}
             size="small"
             label={`${t.vorname} ${t.nachname}`}
-            onDelete={() =>
-              onRemoveTeilnehmer(row.original.id, t.personId, `${t.vorname} ${t.nachname}`)
+            onDelete={
+              row.original.system
+                ? undefined
+                : (e) => {
+                    e.stopPropagation();
+                    onRemoveTeilnehmer(row.original.id, t.personId, `${t.vorname} ${t.nachname}`);
+                  }
             }
           />
         ))}
@@ -52,30 +52,42 @@ export const kuerzelColumns = ({
 
   {
     accessorKey: "belegCount",
-
     header: "Belege",
-
     size: 90,
   },
 
   {
     id: "actions",
-
     header: "",
-
     size: 180,
-
     enableSorting: false,
 
     cell: ({ row }) => (
       <Stack direction="row" spacing={1} justifyContent="flex-end">
-        <Button size="small" onClick={() => onAddTeilnehmer(row.original.id)}>
-          + Teilnehmer
-        </Button>
+        {!row.original.system && (
+          <>
+            <Button
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddTeilnehmer(row.original.id);
+              }}
+            >
+              + Teilnehmer
+            </Button>
 
-        <Button size="small" color="error" onClick={() => onDelete(row.original)}>
-          Löschen
-        </Button>
+            <Button
+              size="small"
+              color="error"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(row.original);
+              }}
+            >
+              Löschen
+            </Button>
+          </>
+        )}
       </Stack>
     ),
   },

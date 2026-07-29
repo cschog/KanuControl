@@ -1,9 +1,11 @@
 package com.kcserver.controller;
 
 import com.kcserver.api.response.ApiResponse;
+import com.kcserver.dto.abrechnung.AbrechnungBelegDTO;
 import com.kcserver.dto.teilnehmer.TeilnehmerBulkDeleteDTO;
 import com.kcserver.dto.veranstaltung.*;
 import com.kcserver.enumtype.VeranstaltungTyp;
+import com.kcserver.finanz.AbrechnungBelegService;
 import com.kcserver.service.TeilnehmerService;
 import com.kcserver.service.veranstaltung.VeranstaltungService;
 import jakarta.validation.Valid;
@@ -34,6 +36,7 @@ public class VeranstaltungController {
     private final VeranstaltungService veranstaltungService;
     private final TeilnehmerService teilnehmerService;
     private final FinanzGruppeService finanzGruppeService;
+    private final AbrechnungBelegService belegService;
 
     /* =========================================================
        CREATE
@@ -202,6 +205,19 @@ public class VeranstaltungController {
             @PathVariable Long veranstaltungId) {
 
         return teilnehmerService.findOhneKuerzel(veranstaltungId);
+    }
+
+    @GetMapping("/{veranstaltungId}/finanzgruppen/{finanzGruppeId}/belege")
+    public ApiResponse<List<AbrechnungBelegDTO>> getBelegeByFinanzGruppe(
+            @PathVariable Long veranstaltungId,
+            @PathVariable Long finanzGruppeId
+    ) {
+        return ApiResponse.of(
+                belegService.findByFinanzGruppe(
+                        veranstaltungId,
+                        finanzGruppeId
+                )
+        );
     }
 
     private Pageable sanitizePageable(

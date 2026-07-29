@@ -93,28 +93,6 @@ public class Veranstaltung extends Auditable {
     private Beitragsstruktur beitragsstruktur;
 
     /* =========================
-       Plan-Zahlen (Antrag)
-       ========================= */
-
-    @Column(name = "geplante_teilnehmer_maennlich")
-    private Integer geplanteTeilnehmerMaennlich;
-
-    @Column(name = "geplante_teilnehmer_weiblich")
-    private Integer geplanteTeilnehmerWeiblich;
-
-    @Column(name = "geplante_teilnehmer_divers")
-    private Integer geplanteTeilnehmerDivers;
-
-    @Column(name = "geplante_mitarbeiter_maennlich")
-    private Integer geplanteMitarbeiterMaennlich;
-
-    @Column(name = "geplante_mitarbeiter_weiblich")
-    private Integer geplanteMitarbeiterWeiblich;
-
-    @Column(name = "geplante_mitarbeiter_divers")
-    private Integer geplanteMitarbeiterDivers;
-
-    /* =========================
        Status
        ========================= */
 

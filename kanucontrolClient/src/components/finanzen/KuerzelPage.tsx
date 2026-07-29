@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { GenericTableTanstack } from "@/components/common/GenericTableTanstack";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { kuerzelColumns } from "@/components/finanzen/kuerzelColumns";
+import FinanzGruppeBelege from "@/components/finanzgruppen/FinanzGruppeBelege";
 import {
   Alert,
   Box,
@@ -190,13 +191,13 @@ export default function KuerzelPage({ veranstaltungId }: Props) {
     loadGroups();
   }
 
-const columns = kuerzelColumns({
-  onAddTeilnehmer: openDialog,
+  const columns = kuerzelColumns({
+    onAddTeilnehmer: openDialog,
 
-  onDelete: openDeleteDialog,
+    onDelete: openDeleteDialog,
 
-  onRemoveTeilnehmer: openConfirm,
-});
+    onRemoveTeilnehmer: openConfirm,
+  });
 
   /* ================= UI ================= */
 
@@ -225,6 +226,9 @@ const columns = kuerzelColumns({
         columns={columns}
         loading={false}
         height={500}
+        detailPanel={(gruppe) => (
+          <FinanzGruppeBelege veranstaltungId={veranstaltungId} finanzGruppeId={gruppe.id} />
+        )}
         mobileRenderRow={(row) => (
           <Box>
             <Box
@@ -254,24 +258,32 @@ const columns = kuerzelColumns({
                   key={t.id}
                   size="small"
                   label={`${t.vorname} ${t.nachname}`}
-                  onDelete={() => openConfirm(row.id, t.personId, `${t.vorname} ${t.nachname}`)}
+                  onDelete={
+                    row.system
+                      ? undefined
+                      : () => openConfirm(row.id, t.personId, `${t.vorname} ${t.nachname}`)
+                  }
                 />
               ))}
             </Stack>
 
             <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-              <Button size="small" variant="outlined" onClick={() => openDialog(row.id)}>
-                + Teilnehmer
-              </Button>
+              {!row.system && (
+                <>
+                  <Button size="small" variant="outlined" onClick={() => openDialog(row.id)}>
+                    + Teilnehmer
+                  </Button>
 
-              <Button
-                size="small"
-                color="error"
-                variant="outlined"
-                onClick={() => openDeleteDialog(row)}
-              >
-                Löschen
-              </Button>
+                  <Button
+                    size="small"
+                    color="error"
+                    variant="outlined"
+                    onClick={() => openDeleteDialog(row)}
+                  >
+                    Löschen
+                  </Button>
+                </>
+              )}
             </Stack>
           </Box>
         )}

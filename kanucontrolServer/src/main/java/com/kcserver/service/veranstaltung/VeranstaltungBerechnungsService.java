@@ -10,51 +10,7 @@ public class VeranstaltungBerechnungsService {
 
     private static final long MAX_BERECHNUNGSTAGE = 21;
 
-    /* =========================================================
-       TEILNEHMER
-       ========================================================= */
 
-    public int ermittleGeplanteTeilnehmer(
-            Veranstaltung veranstaltung
-    ) {
-
-        if (veranstaltung == null) {
-            return 0;
-        }
-
-        return n(veranstaltung.getGeplanteTeilnehmerMaennlich())
-                + n(veranstaltung.getGeplanteTeilnehmerWeiblich())
-                + n(veranstaltung.getGeplanteTeilnehmerDivers());
-    }
-
-    /* =========================================================
-       MITARBEITER
-       ========================================================= */
-
-    public int ermittleGeplanteMitarbeiter(
-            Veranstaltung veranstaltung
-    ) {
-
-        if (veranstaltung == null) {
-            return 0;
-        }
-
-        return n(veranstaltung.getGeplanteMitarbeiterMaennlich())
-                + n(veranstaltung.getGeplanteMitarbeiterWeiblich())
-                + n(veranstaltung.getGeplanteMitarbeiterDivers());
-    }
-
-    /* =========================================================
-       GESAMTPERSONEN
-       ========================================================= */
-
-    public int ermittleGeplanteGesamtPersonen(
-            Veranstaltung veranstaltung
-    ) {
-
-        return ermittleGeplanteTeilnehmer(veranstaltung)
-                + ermittleGeplanteMitarbeiter(veranstaltung);
-    }
 
     /* =========================================================
        DAUER

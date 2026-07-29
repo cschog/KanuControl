@@ -4,6 +4,8 @@ import com.kcserver.dto.verein.HasHauptverein;
 
 import java.util.List;
 
-public interface HasMitgliedschaften {
-    List<? extends HasHauptverein> getMitgliedschaften();
+public interface HasMitgliedschaften<T extends HasHauptverein> {
+
+    List<T> getMitgliedschaften();
+
 }

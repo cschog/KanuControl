@@ -117,3 +117,5 @@ databaseChangeLog:
       file: db/changelog/changes/20260719-02-finanz-gruppe-system.xml
   - include:
       file: db/changelog/changes/20260719-07-abrechnung-buchung-referenzen.xml
+  - include:
+      file: db/changelog/changes/20260729-01-sync-veranstaltung.xml

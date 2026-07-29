@@ -28,6 +28,7 @@ public class FinanzGruppeOverviewMapper {
         return new FinanzGruppeOverviewDTO(
                 g.getId(),
                 g.getKuerzel(),
+                g.isSystem(),
                 teilnehmer,
                 belegCount
         );

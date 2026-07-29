@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -51,6 +52,8 @@ public class AbrechnungBelegService {
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
                                 "FinanzGruppe nicht gefunden"));
+
+        checkNotSystem(gruppe);
 
         // 🔥 MAX
         Integer max = belegRepository
@@ -110,6 +113,10 @@ public class AbrechnungBelegService {
                         )
                 );
 
+        validateVeranstaltung(veranstaltungId, beleg);
+        checkEditable(beleg.getAbrechnung());
+        checkNotSystem(beleg);
+
         FinanzGruppe gruppe = finanzGruppeRepository
                 .findByVeranstaltungIdAndKuerzel(
                         veranstaltungId,
@@ -145,6 +152,7 @@ public class AbrechnungBelegService {
         AbrechnungBeleg beleg = getBeleg(belegId);
         validateVeranstaltung(veranstaltungId, beleg);
         checkEditable(beleg.getAbrechnung());
+        checkNotSystem(beleg);
 
         AbrechnungBuchung position = new AbrechnungBuchung();
         position.setBeleg(beleg);
@@ -174,6 +182,7 @@ public class AbrechnungBelegService {
 
         validateVeranstaltung(veranstaltungId, pos.getBeleg());
         checkEditable(pos.getBeleg().getAbrechnung());
+        checkNotSystem(pos.getBeleg());
 
         pos.setKategorie(dto.getKategorie());
         pos.setBetrag(dto.getBetrag());
@@ -198,6 +207,7 @@ public class AbrechnungBelegService {
 
         validateVeranstaltung(veranstaltungId, beleg);
         checkEditable(beleg.getAbrechnung());
+        checkNotSystem(beleg);
 
         // 🔹 Beziehung lösen
         beleg.removePosition(pos);
@@ -223,6 +233,7 @@ public class AbrechnungBelegService {
 
         validateVeranstaltung(veranstaltungId, beleg);
         checkEditable(beleg.getAbrechnung());
+        checkNotSystem(beleg);
 
         beleg.getAbrechnung().removeBeleg(beleg);
         belegRepository.delete(beleg);
@@ -243,6 +254,7 @@ public class AbrechnungBelegService {
 
         validateVeranstaltung(veranstaltungId, beleg);
         checkEditable(beleg.getAbrechnung());
+        checkNotSystem(beleg);
 
         FinanzGruppe neueGruppe = finanzGruppeRepository
                 .findByVeranstaltungIdAndKuerzel(
@@ -252,6 +264,8 @@ public class AbrechnungBelegService {
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
                                 "Kürzel nicht gefunden"));
+
+        checkNotSystem(neueGruppe);
 
         // 🔥 Wechsel nur durchführen wenn es wirklich ein Wechsel ist
         if (beleg.getFinanzGruppe().getId()
@@ -303,6 +317,22 @@ public class AbrechnungBelegService {
 
         return beleg;
     }
+
+    @Transactional(readOnly = true)
+    public List<AbrechnungBelegDTO> findByFinanzGruppe(
+            Long veranstaltungId,
+            Long finanzGruppeId
+    ) {
+        return belegRepository
+                .findByAbrechnung_Veranstaltung_IdAndFinanzGruppe_IdOrderByDatumAscLfdNrAsc(
+                        veranstaltungId,
+                        finanzGruppeId
+                )
+                .stream()
+                .map(mapper::toDTO)
+                .toList();
+    }
+
 
     /* =========================================================
        HELPER
@@ -368,6 +398,24 @@ public class AbrechnungBelegService {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
                     "Abrechnung ist abgeschlossen und nicht mehr änderbar");
+        }
+    }
+
+    private void checkNotSystem(AbrechnungBeleg beleg) {
+
+        if (beleg.getFinanzGruppe().isSystem()) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Systembelege dürfen nicht geändert werden.");
+        }
+    }
+
+    private void checkNotSystem(FinanzGruppe gruppe) {
+
+        if (gruppe.isSystem()) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Der Systemgruppe dürfen keine manuellen Buchungen hinzugefügt werden.");
         }
     }
 }

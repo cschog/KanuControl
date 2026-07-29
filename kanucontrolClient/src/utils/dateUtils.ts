@@ -1,3 +1,4 @@
+// src/utils/dateUtils.ts
 export function normalizeGermanDate(input: string): string | null {
   if (!input) return null;
 
@@ -42,4 +43,30 @@ function buildIsoDate(d: string, m: string, y: string): string | null {
   }
 
   return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+export function formatGermanDate(date: string | null | undefined): string {
+  if (!date) {
+    return "";
+  }
+
+  // ISO-Format
+  if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    const [year, month, day] = date.split("-");
+    return `${day}.${month}.${year}`;
+  }
+
+  // Bereits deutsches Format
+  if (/^\d{1,2}\.\d{1,2}\.\d{4}$/.test(date)) {
+    return date;
+  }
+
+  // Fallback
+  const d = new Date(date);
+
+  if (isNaN(d.getTime())) {
+    return date;
+  }
+
+  return d.toLocaleDateString("de-DE");
 }

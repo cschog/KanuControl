@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="20260729-01-sync-veranstaltung" author="chris">
+
+        <!-- Alte Unterkunft-/Verpflegungstexte entfernen -->
+        <dropColumn tableName="veranstaltung"
+                    columnName="art_der_unterkunft"/>
+
+        <dropColumn tableName="veranstaltung"
+                    columnName="art_der_verpflegung"/>
+
+        <!-- Alte Planungsfelder entfernen -->
+        <dropColumn tableName="veranstaltung"
+                    columnName="geplante_teilnehmer_maennlich"/>
+
+        <dropColumn tableName="veranstaltung"
+                    columnName="geplante_teilnehmer_weiblich"/>
+
+        <dropColumn tableName="veranstaltung"
+                    columnName="geplante_teilnehmer_divers"/>
+
+        <dropColumn tableName="veranstaltung"
+                    columnName="geplante_mitarbeiter_maennlich"/>
+
+        <dropColumn tableName="veranstaltung"
+                    columnName="geplante_mitarbeiter_weiblich"/>
+
+        <dropColumn tableName="veranstaltung"
+                    columnName="geplante_mitarbeiter_divers"/>
+
+    </changeSet>
+
+</databaseChangeLog>

@@ -32,8 +32,9 @@ public class FinanzGruppe {
     @Column(nullable = false, length = 20)
     private String kuerzel;
 
+    @Builder.Default
     @Column(nullable = false)
-    private boolean system;
+    private boolean system = false;
 
     /* =========================================================
        RELATION ZUR VERANSTALTUNG

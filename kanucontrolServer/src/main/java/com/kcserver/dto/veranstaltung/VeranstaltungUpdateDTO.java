@@ -40,12 +40,4 @@ public class VeranstaltungUpdateDTO {
 
     private Long unterkunftsartId;
     private Long verpflegungsmodellId;
-
-    private Integer geplanteTeilnehmerMaennlich;
-    private Integer geplanteTeilnehmerWeiblich;
-    private Integer geplanteTeilnehmerDivers;
-
-    private Integer geplanteMitarbeiterMaennlich;
-    private Integer geplanteMitarbeiterWeiblich;
-    private Integer geplanteMitarbeiterDivers;
 }

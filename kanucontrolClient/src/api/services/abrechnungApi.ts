@@ -1,11 +1,16 @@
 // src/api/services/abrechnungApi.ts
 
 import apiClient from "@/api/client/apiClient";
-import { AbrechnungDetail, Buchung, BelegCreate, BuchungCreate, BelegUpdate } from "@/api/types/abrechnung";
+import {
+  AbrechnungDetail,
+  Buchung,
+  BelegCreate,
+  BuchungCreate,
+  BelegUpdate,
+  AbrechnungBeleg,
+} from "@/api/types/abrechnung";
 
-export async function getAbrechnung(
-  veranstaltungId: number,
-): Promise<AbrechnungDetail> {
+export async function getAbrechnung(veranstaltungId: number): Promise<AbrechnungDetail> {
   const { data } = await apiClient.get<AbrechnungDetail>(
     `/veranstaltungen/${veranstaltungId}/abrechnung`,
   );
@@ -13,12 +18,8 @@ export async function getAbrechnung(
   return data;
 }
 
-export async function synchronisiereAbrechnung(
-  veranstaltungId: number,
-): Promise<void> {
-  await apiClient.post(
-    `/veranstaltungen/${veranstaltungId}/abrechnung/synchronisieren`,
-  );
+export async function synchronisiereAbrechnung(veranstaltungId: number): Promise<void> {
+  await apiClient.post(`/veranstaltungen/${veranstaltungId}/abrechnung/synchronisieren`);
 }
 
 export const addBuchung = async (
@@ -56,12 +57,8 @@ export const deleteBuchung = async (
   );
 };
 
-export const abschliessenAbrechnung = async (
-  veranstaltungId: number,
-) => {
-  await apiClient.post(
-    `/veranstaltungen/${veranstaltungId}/abrechnung/abschliessen`,
-  );
+export const abschliessenAbrechnung = async (veranstaltungId: number) => {
+  await apiClient.post(`/veranstaltungen/${veranstaltungId}/abrechnung/abschliessen`);
 };
 
 export const wiederOeffnenAbrechnung = async (veranstaltungId: number) => {
@@ -75,10 +72,16 @@ export async function createBelegWithBuchung(
     buchung: BuchungCreate;
   },
 ) {
-  return apiClient.post(`/veranstaltungen/${veranstaltungId}/abrechnung/belege/mit-buchung`, payload);
+  return apiClient.post(
+    `/veranstaltungen/${veranstaltungId}/abrechnung/belege/mit-buchung`,
+    payload,
+  );
 }
 
-export async function addBeleg(veranstaltungId: number, payload: BelegCreate): Promise<BelegCreate> {
+export async function addBeleg(
+  veranstaltungId: number,
+  payload: BelegCreate,
+): Promise<BelegCreate> {
   const res = await apiClient.post<BelegCreate>(
     `/veranstaltungen/${veranstaltungId}/abrechnung/belege`,
     payload,
@@ -98,4 +101,15 @@ export async function updateBeleg(veranstaltungId: number, belegId: number, data
   );
 
   return response.data;
+}
+
+export async function getBelegeByFinanzGruppe(
+  veranstaltungId: number,
+  finanzGruppeId: number,
+): Promise<AbrechnungBeleg[]> {
+  const { data } = await apiClient.get<AbrechnungBeleg[]>(
+    `/veranstaltungen/${veranstaltungId}/finanzgruppen/${finanzGruppeId}/belege`,
+  );
+
+  return data;
 }

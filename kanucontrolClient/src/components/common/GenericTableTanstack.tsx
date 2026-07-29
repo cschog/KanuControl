@@ -1,6 +1,8 @@
 import React from "react";
 import { Row } from "@tanstack/react-table";
 import EmptyState from "@/components/common/EmptyState";
+import Collapse from "@mui/material/Collapse";
+import { KeyboardArrowRight, KeyboardArrowDown } from "@mui/icons-material";
 
 import {
   ColumnDef,
@@ -22,7 +24,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Typography,
   useMediaQuery,
 } from "@mui/material";
 
@@ -45,6 +46,7 @@ interface GenericTableTanstackProps<T extends WithId> {
   resetSelectionTrigger?: number;
   fixedColumnWidths?: boolean;
   emptyState?: React.ReactNode;
+  detailPanel?: (row: T) => React.ReactNode;
 
   // ⭐ SERVER SORTING
   sorting?: SortingState;
@@ -73,6 +75,7 @@ export function GenericTableTanstack<T extends WithId>({
   fixedColumnWidths = true,
   enableCheckboxSelection = false,
   emptyState,
+  detailPanel,
 }: GenericTableTanstackProps<T>) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -130,7 +133,27 @@ export function GenericTableTanstack<T extends WithId>({
      FINAL COLUMNS
      ========================================================= */
 
-  const finalColumns = [...(enableCheckboxSelection ? [checkboxColumn] : []), ...columns];
+  
+
+const expandColumn: ColumnDef<T> = {
+  id: "expand",
+  header: "",
+  size: 40,
+  enableSorting: false,
+
+  cell: ({ row }) =>
+    expandedRows.has(row.original.id) ? (
+      <KeyboardArrowDown fontSize="small" />
+    ) : (
+      <KeyboardArrowRight fontSize="small" />
+    ),
+};
+  
+  const finalColumns = [
+    ...(detailPanel ? [expandColumn] : []),
+    ...(enableCheckboxSelection ? [checkboxColumn] : []),
+    ...columns,
+  ];
 
   /* =========================================================
      TABLE
@@ -171,6 +194,19 @@ export function GenericTableTanstack<T extends WithId>({
 
     onRowSelectionChange(selectedRows);
   }, [rowSelection, table, onRowSelectionChange]);
+
+  const [expandedRows, setExpandedRows] = React.useState<Set<number>>(new Set());
+
+  const toggleExpanded = (id: number) => {
+    setExpandedRows((prev) => {
+      const next = new Set(prev);
+
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+
+      return next;
+    });
+  };
 
   /* =========================================================
      HEIGHT
@@ -371,56 +407,76 @@ export function GenericTableTanstack<T extends WithId>({
                 const selected = row.original.id === selectedRowId;
 
                 return (
-                  <TableRow
-                    key={row.id}
-                    hover
-                    selected={selected}
-                    onClick={() => handleRowClick(row)}
-                    sx={{
-                      cursor: "pointer",
-                      "& td": {
-                        py: 0.6,
-                      },
-                    }}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell
-                        key={cell.id}
-                        align={
-                          (cell.column.columnDef.meta as { align?: string })?.align === "right"
-                            ? "right"
-                            : cell.column.id === "select"
-                              ? "center"
-                              : "left"
-                        }
-                        size="small"
-                        padding="normal"
-                        sx={{
-                          ...(fixedColumnWidths && {
-                            width: cell.column.getSize(),
-                            minWidth: cell.column.getSize(),
-                            maxWidth: cell.column.getSize(),
-                          }),
+                  <React.Fragment key={row.id}>
+                    <TableRow
+                      hover
+                      selected={selected}
+                      onClick={() => {
+                        handleRowClick(row);
+                        toggleExpanded(row.original.id);
+                      }}
+                      sx={{
+                        cursor: "pointer",
+                        "& td": {
+                          py: 0.6,
+                        },
+                      }}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell
+                          key={cell.id}
+                          align={
+                            (cell.column.columnDef.meta as { align?: string })?.align === "right"
+                              ? "right"
+                              : cell.column.id === "select"
+                                ? "center"
+                                : "left"
+                          }
+                          size="small"
+                          padding="normal"
+                          sx={{
+                            ...(fixedColumnWidths && {
+                              width: cell.column.getSize(),
+                              minWidth: cell.column.getSize(),
+                              maxWidth: cell.column.getSize(),
+                            }),
+                            py: 0.5,
+                            px: 1,
+                            fontSize: {
+                              xs: "0.82rem",
+                              md: "1.2rem",
+                            },
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            lineHeight: 1.2,
+                          }}
+                        >
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
+                      ))}
+                    </TableRow>
 
-                          py: 0.5,
-                          px: 1,
-
-                          fontSize: {
-                            xs: "0.82rem",
-                            md: "1.2rem",
-                          },
-
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-
-                          whiteSpace: "nowrap",
-                          lineHeight: 1.2,
-                        }}
-                      >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
-                    ))}
-                  </TableRow>
+                    {detailPanel && (
+                      <TableRow>
+                        <TableCell
+                          colSpan={row.getVisibleCells().length}
+                          sx={{
+                            p: 0,
+                            border: 0,
+                          }}
+                        >
+                          <Collapse
+                            in={expandedRows.has(row.original.id)}
+                            timeout="auto"
+                            unmountOnExit
+                          >
+                            <Box p={2}>{detailPanel(row.original)}</Box>
+                          </Collapse>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </React.Fragment>
                 );
               })}
             </TableBody>
@@ -442,9 +498,7 @@ export function GenericTableTanstack<T extends WithId>({
           EMPTY
         ===================================================== */}
 
-      {!loading &&
-        data.length === 0 &&
-        (emptyState ?? <EmptyState />)}
+      {!loading && data.length === 0 && (emptyState ?? <EmptyState />)}
 
       {/* =====================================================
          INFINITE SCROLL

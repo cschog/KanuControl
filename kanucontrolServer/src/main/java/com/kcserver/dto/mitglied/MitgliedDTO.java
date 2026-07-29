@@ -27,4 +27,9 @@ public class MitgliedDTO implements HasHauptverein {
     private MitgliedFunktion funktion;
 
     private Boolean hauptVerein;
+
+    @Override
+    public Boolean getHauptVerein() {
+        return hauptVerein;
+    }
 }
