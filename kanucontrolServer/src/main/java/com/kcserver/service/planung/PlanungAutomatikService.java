@@ -1,4 +1,4 @@
-package com.kcserver.service;
+package com.kcserver.service.planung;
 
 import com.kcserver.entity.Planung;
 import com.kcserver.entity.PlanungPosition;
@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+
+import static com.kcserver.enumtype.FinanzKategorie.*;
 
 @Service
 @RequiredArgsConstructor
@@ -29,19 +31,19 @@ public class PlanungAutomatikService {
 
         aktualisiere(
                 planung,
-                FinanzKategorie.UNTERKUNFT,
+                UNTERKUNFT,
                 berechnung.berechneUnterkunft(planung)
         );
 
         aktualisiere(
                 planung,
-                FinanzKategorie.VERPFLEGUNG,
+                VERPFLEGUNG,
                 berechnung.berechneVerpflegung(planung)
         );
 
         aktualisiere(
                 planung,
-                FinanzKategorie.HONORARE,
+                HONORARE,
                 berechnung.berechneHonorare(planung)
         );
 

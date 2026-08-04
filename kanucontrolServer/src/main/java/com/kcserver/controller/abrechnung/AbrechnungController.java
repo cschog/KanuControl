@@ -1,9 +1,9 @@
-package com.kcserver.controller;
+package com.kcserver.controller.abrechnung;
 
 import com.kcserver.api.response.ApiResponse;
 import com.kcserver.dto.abrechnung.AbrechnungDetailDTO;
 import com.kcserver.dto.validation.ValidationResultDTO;
-import com.kcserver.finanz.AbrechnungService;
+import com.kcserver.service.abrechnung.AbrechnungService;
 import com.kcserver.service.abrechnung.AbrechnungSynchronisationsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

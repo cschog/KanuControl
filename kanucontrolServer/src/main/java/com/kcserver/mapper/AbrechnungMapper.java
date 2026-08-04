@@ -3,13 +3,16 @@ package com.kcserver.mapper;
 import com.kcserver.dto.abrechnung.*;
 import com.kcserver.entity.*;
 import com.kcserver.enumtype.BuchungsHerkunft;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
+@RequiredArgsConstructor
 public class AbrechnungMapper {
+
+    private final BelegDokumentMapper belegDokumentMapper;
 
     /* =========================================================
        ABRECHNUNG → DTO
@@ -37,7 +40,7 @@ public class AbrechnungMapper {
                 safeList(abrechnung.getBelege())
                         .stream()
                         .map(this::toDTO)
-                        .collect(Collectors.toList())
+                        .toList()
         );
 
         return dto;
@@ -55,19 +58,29 @@ public class AbrechnungMapper {
 
         dto.setId(beleg.getId());
         dto.setHerkunft(ermittleHerkunft(beleg));
+
+        dto.setBelegnummer(beleg.getBelegnummer());
+        dto.setExterneBelegnummer(beleg.getExterneBelegnummer());
+        dto.setHaendler(beleg.getHaendler());
+
         dto.setDatum(beleg.getDatum());
         dto.setBeschreibung(beleg.getBeschreibung());
-        dto.setBelegnummer(beleg.getBelegnummer());
 
         if (beleg.getFinanzGruppe() != null) {
             dto.setKuerzel(beleg.getFinanzGruppe().getKuerzel());
         }
 
+        dto.setDokumente(
+                belegDokumentMapper.toDto(
+                        safeList(beleg.getDokumente())
+                )
+        );
+
         dto.setPositionen(
                 safeList(beleg.getPositionen())
                         .stream()
                         .map(this::toDTO)
-                        .collect(Collectors.toList())
+                        .toList()
         );
 
         return dto;
@@ -102,7 +115,8 @@ public class AbrechnungMapper {
 
     private BuchungsHerkunft ermittleHerkunft(AbrechnungBeleg beleg) {
 
-        List<BuchungsHerkunft> herkuenfte = beleg.getPositionen().stream()
+        List<BuchungsHerkunft> herkuenfte = safeList(beleg.getPositionen())
+                .stream()
                 .map(AbrechnungBuchung::getHerkunft)
                 .distinct()
                 .toList();

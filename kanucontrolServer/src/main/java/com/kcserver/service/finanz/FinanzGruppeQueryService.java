@@ -1,4 +1,4 @@
-package com.kcserver.finanz;
+package com.kcserver.service.finanz;
 
 import com.kcserver.dto.finanzen.FinanzGruppeDetailDTO;
 import com.kcserver.dto.finanzen.FinanzGruppeOverviewDTO;

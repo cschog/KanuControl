@@ -2,7 +2,7 @@ package com.kcserver.controller;
 
 import com.kcserver.api.response.ApiResponse;
 import com.kcserver.dto.planung.PlanungDetailDTO;
-import com.kcserver.finanz.PlanungService;
+import com.kcserver.service.planung.PlanungService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -23,7 +23,7 @@ public class PlanungController {
             @PathVariable Long veranstaltungId
     ) {
         return ApiResponse.of(
-                planungService.getOrCreate(veranstaltungId)
+                planungService.get(veranstaltungId)
         );
     }
 

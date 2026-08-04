@@ -1,7 +1,7 @@
 package com.kcserver.unit;
 
 import com.kcserver.enumtype.FinanzKategorie;
-import com.kcserver.service.PlanungBerechnungService;
+import com.kcserver.service.planung.PlanungBerechnungService;
 import com.kcserver.dto.simulation.PlanungsSimulation;
 import com.kcserver.service.simulation.SimulationEngine;
 import com.kcserver.dto.simulation.SimulationErgebnis;
@@ -48,7 +48,7 @@ class SimulationEngineTest {
                 engine.simuliere(simulation);
 
         assertThat(ergebnis.getPositionen())
-                .hasSize(4);
+                .hasSize(10);
 
         assertThat(ergebnis.getKosten())
                 .isEqualByComparingTo("6792");
@@ -102,11 +102,48 @@ class SimulationEngineTest {
 
         assertThat(ergebnis.getPositionen())
                 .extracting(SimulationPosition::getKategorie)
-                .containsExactly(
+                .containsExactlyInAnyOrder(
                         FinanzKategorie.UNTERKUNFT,
                         FinanzKategorie.VERPFLEGUNG,
+                        FinanzKategorie.HONORARE,
+                        FinanzKategorie.FAHRTKOSTEN,
+                        FinanzKategorie.VERBRAUCHSMATERIAL,
+                        FinanzKategorie.KULTUR,
+                        FinanzKategorie.MIETE,
+                        FinanzKategorie.SONSTIGE_KOSTEN,
                         FinanzKategorie.TEILNEHMERBEITRAG,
                         FinanzKategorie.KJFP_ZUSCHUSS
+                );
+    }
+
+
+    @Test
+    void kategorienDuerfenNichtVorkommen() {
+
+        PlanungsSimulation simulation =
+                PlanungsSimulation.builder().build();
+
+        when(berechnung.berechneUnterkunft(simulation))
+                .thenReturn(BigDecimal.ONE);
+
+        when(berechnung.berechneVerpflegung(simulation))
+                .thenReturn(BigDecimal.ONE);
+
+        when(berechnung.berechneTeilnehmerbeitraege(simulation))
+                .thenReturn(BigDecimal.ONE);
+
+        when(berechnung.berechneKjfpZuschuss(simulation))
+                .thenReturn(BigDecimal.ONE);
+
+        SimulationErgebnis ergebnis =
+                engine.simuliere(simulation);
+
+        assertThat(ergebnis.getPositionen())
+                .extracting(SimulationPosition::getKategorie)
+                .doesNotContain(
+                        FinanzKategorie.PFAND,
+                        FinanzKategorie.SONSTIGE_EINNAHMEN,
+                        FinanzKategorie.EIGENANTEIL
                 );
     }
 }

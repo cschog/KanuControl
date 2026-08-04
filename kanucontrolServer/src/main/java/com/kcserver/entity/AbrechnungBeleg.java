@@ -1,5 +1,6 @@
 package com.kcserver.entity;
 
+import com.kcserver.audit.Auditable;
 import com.kcserver.enumtype.BuchungsHerkunft;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -18,7 +19,11 @@ import java.util.List;
 )
 @Getter
 @Setter
-public class AbrechnungBeleg {
+public class AbrechnungBeleg extends Auditable {
+
+    /* =========================================================
+       BASIS
+       ========================================================= */
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,27 +32,64 @@ public class AbrechnungBeleg {
     @Column(name = "lfd_nr", nullable = false)
     private Integer lfdNr;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    /* =========================================================
+       ZUORDNUNGEN
+       ========================================================= */
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "abrechnung_id", nullable = false)
     private Abrechnung abrechnung;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "finanz_gruppe_id", nullable = false)
     private FinanzGruppe finanzGruppe;
 
-    @OneToMany(mappedBy = "beleg",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true)
-    private List<AbrechnungBuchung> positionen = new ArrayList<>();
+    /* =========================================================
+       BELEGMETADATEN
+       ========================================================= */
 
     @Column(name = "beleg_nummer", nullable = false, length = 50)
     private String belegnummer;
+
+    @Column(name = "externe_beleg_nummer", length = 100)
+    private String externeBelegnummer;
+
+    @Column(length = 200)
+    private String haendler;
 
     @Column(nullable = false)
     private LocalDate datum;
 
     @Column(length = 500)
     private String beschreibung;
+
+    /* =========================================================
+       POSITIONEN
+       ========================================================= */
+
+    @OneToMany(
+            mappedBy = "beleg",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    @OrderBy("id ASC")
+    private List<AbrechnungBuchung> positionen = new ArrayList<>();
+
+    /* =========================================================
+       DOKUMENTE
+       ========================================================= */
+
+    @OneToMany(
+            mappedBy = "beleg",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    @OrderBy("reihenfolge ASC")
+    private List<BelegDokument> dokumente = new ArrayList<>();
+
+    /* =========================================================
+       POSITIONEN
+       ========================================================= */
 
     public void addPosition(AbrechnungBuchung position) {
         positionen.add(position);
@@ -59,18 +101,37 @@ public class AbrechnungBeleg {
         position.setBeleg(null);
     }
 
-    public void removePositionen(BuchungsHerkunft herkunft) {
-        for (AbrechnungBuchung p : new ArrayList<>(positionen)) {
-            if (p.getHerkunft() == herkunft) {
-                removePosition(p);
+    public void clearPositionen() {
+        for (AbrechnungBuchung position : new ArrayList<>(positionen)) {
+            removePosition(position);
+        }
+    }
+
+    public void removePositionenByHerkunft(BuchungsHerkunft herkunft) {
+        for (AbrechnungBuchung position : new ArrayList<>(positionen)) {
+            if (position.getHerkunft() == herkunft) {
+                removePosition(position);
             }
         }
     }
 
-    public void clearPositionen() {
+    /* =========================================================
+       DOKUMENTE
+       ========================================================= */
 
-        for (AbrechnungBuchung position : new ArrayList<>(positionen)) {
-            removePosition(position);
+    public void addDokument(BelegDokument dokument) {
+        dokumente.add(dokument);
+        dokument.setBeleg(this);
+    }
+
+    public void removeDokument(BelegDokument dokument) {
+        dokumente.remove(dokument);
+        dokument.setBeleg(null);
+    }
+
+    public void clearDokumente() {
+        for (BelegDokument dokument : new ArrayList<>(dokumente)) {
+            removeDokument(dokument);
         }
     }
 }

@@ -4,8 +4,8 @@ import com.kcserver.entity.Planung;
 import com.kcserver.entity.PlanungPosition;
 import com.kcserver.entity.Veranstaltung;
 import com.kcserver.enumtype.FinanzKategorie;
-import com.kcserver.service.PlanungBerechnungService;
-import com.kcserver.service.PlanungAutomatikService;
+import com.kcserver.service.planung.PlanungBerechnungService;
+import com.kcserver.service.planung.PlanungAutomatikService;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -25,7 +25,7 @@ class PlanungsSimulationServiceTest {
     private PlanungAutomatikService service;
 
     @Test
-    void aktualisiereAutomatischePositionen_legtAutomatischePositionenAn() {
+    void aktualisiereAutomatischePositionen_legtAllePlanungspositionenAn(){
 
         Planung planung = new Planung();
         planung.setVeranstaltung(new Veranstaltung());
@@ -45,7 +45,19 @@ class PlanungsSimulationServiceTest {
         service.aktualisiereAutomatischePositionen(planung);
 
         assertThat(planung.getPositionen())
-                .hasSize(4);
+                .extracting(PlanungPosition::getKategorie)
+                .containsExactlyInAnyOrder(
+                        FinanzKategorie.UNTERKUNFT,
+                        FinanzKategorie.VERPFLEGUNG,
+                        FinanzKategorie.HONORARE,
+                        FinanzKategorie.FAHRTKOSTEN,
+                        FinanzKategorie.VERBRAUCHSMATERIAL,
+                        FinanzKategorie.KULTUR,
+                        FinanzKategorie.MIETE,
+                        FinanzKategorie.SONSTIGE_KOSTEN,
+                        FinanzKategorie.TEILNEHMERBEITRAG,
+                        FinanzKategorie.KJFP_ZUSCHUSS
+                );
 
         assertPosition(planung,
                 FinanzKategorie.UNTERKUNFT,
@@ -62,6 +74,30 @@ class PlanungsSimulationServiceTest {
         assertPosition(planung,
                 FinanzKategorie.KJFP_ZUSCHUSS,
                 "1800.00");
+
+        assertPosition(planung,
+                FinanzKategorie.HONORARE,
+                "0.00");
+
+        assertPosition(planung,
+                FinanzKategorie.FAHRTKOSTEN,
+                "0.00");
+
+        assertPosition(planung,
+                FinanzKategorie.VERBRAUCHSMATERIAL,
+                "0.00");
+
+        assertPosition(planung,
+                FinanzKategorie.KULTUR,
+                "0.00");
+
+        assertPosition(planung,
+                FinanzKategorie.MIETE,
+                "0.00");
+
+        assertPosition(planung,
+                FinanzKategorie.SONSTIGE_KOSTEN,
+                "0.00");
     }
 
     private void assertPosition(

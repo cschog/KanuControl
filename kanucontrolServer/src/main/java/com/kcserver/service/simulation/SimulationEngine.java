@@ -5,7 +5,7 @@ import com.kcserver.dto.simulation.PlanungsSimulation;
 import com.kcserver.dto.simulation.SimulationErgebnis;
 import com.kcserver.dto.simulation.SimulationPosition;
 import com.kcserver.enumtype.FinanzKategorie;
-import com.kcserver.service.PlanungBerechnungService;
+import com.kcserver.service.planung.PlanungBerechnungService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

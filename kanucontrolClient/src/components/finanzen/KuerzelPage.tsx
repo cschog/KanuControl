@@ -204,14 +204,14 @@ export default function KuerzelPage({ veranstaltungId }: Props) {
   return (
     <Box>
       <Typography variant="h5" mb={2}>
-        Kürzel-Verwaltung
+        Finanzgruppen-Verwaltung
       </Typography>
 
       <Paper sx={{ p: 2, mb: 3 }}>
         <Stack direction="row" spacing={2}>
           <TextField
             size="small"
-            placeholder="Neues Kürzel"
+            placeholder="Neue Finanzgruppe"
             value={newKuerzel}
             onChange={(e) => setNewKuerzel(e.target.value)}
           />
@@ -333,7 +333,7 @@ export default function KuerzelPage({ veranstaltungId }: Props) {
         <DialogTitle>Teilnehmer entfernen</DialogTitle>
         <DialogContent>
           <Typography>
-            Möchten Sie <strong>{removeTarget?.name}</strong> wirklich aus diesem Kürzel entfernen?
+            Möchten Sie <strong>{removeTarget?.name}</strong> wirklich aus dieser Finanzgruppe entfernen?
           </Typography>
         </DialogContent>
         <DialogActions>
@@ -346,14 +346,14 @@ export default function KuerzelPage({ veranstaltungId }: Props) {
 
       {/* DELETE KÜRZEL */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Kürzel löschen</DialogTitle>
+        <DialogTitle>Finanzgruppe löschen</DialogTitle>
 
         <DialogContent>
           {deleteError ? (
             <Alert severity="error">{deleteError}</Alert>
           ) : (
             <Typography>
-              Möchten Sie das Kürzel <strong>{deleteTarget?.kuerzel}</strong> wirklich löschen?
+              Möchten Sie die Finanzgruppe <strong>{deleteTarget?.kuerzel}</strong> wirklich löschen?
             </Typography>
           )}
         </DialogContent>

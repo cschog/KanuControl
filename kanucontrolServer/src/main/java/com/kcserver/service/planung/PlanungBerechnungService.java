@@ -1,7 +1,8 @@
-package com.kcserver.service;
+package com.kcserver.service.planung;
 
 import com.kcserver.dto.beitrag.BeitragsVorschlag;
 import com.kcserver.entity.Planung;
+import com.kcserver.service.FoerderService;
 import com.kcserver.service.veranstaltung.VeranstaltungBerechnungsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

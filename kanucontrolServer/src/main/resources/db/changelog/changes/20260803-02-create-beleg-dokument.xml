@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="20260803-02-create-beleg-dokument" author="chris">
+
+        <createTable tableName="beleg_dokument">
+
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"
+                             primaryKeyName="pk_beleg_dokument"
+                             nullable="false"/>
+            </column>
+
+            <column name="beleg_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="reihenfolge" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="titel" type="VARCHAR(200)"/>
+
+            <column name="original_dateiname" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="mime_type" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="dateigroesse" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="inhalt" type="BYTEA">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Audit -->
+
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_by" type="VARCHAR(255)"/>
+
+            <column name="last_modified_at" type="TIMESTAMP"/>
+
+            <column name="last_modified_by" type="VARCHAR(255)"/>
+
+        </createTable>
+
+        <!-- ========================================================= -->
+        <!-- Foreign Key                                                -->
+        <!-- ========================================================= -->
+
+        <addForeignKeyConstraint
+                baseTableName="beleg_dokument"
+                baseColumnNames="beleg_id"
+                constraintName="fk_beleg_dokument_beleg"
+                referencedTableName="abrechnung_beleg"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+
+        <!-- ========================================================= -->
+        <!-- Reihenfolge je Beleg eindeutig                            -->
+        <!-- ========================================================= -->
+
+        <addUniqueConstraint
+                tableName="beleg_dokument"
+                columnNames="beleg_id,reihenfolge"
+                constraintName="uk_beleg_dokument_reihenfolge"/>
+
+        <!-- ========================================================= -->
+        <!-- Index                                                     -->
+        <!-- ========================================================= -->
+
+        <createIndex
+                tableName="beleg_dokument"
+                indexName="idx_beleg_dokument_beleg">
+
+            <column name="beleg_id"/>
+
+        </createIndex>
+
+    </changeSet>
+
+</databaseChangeLog>

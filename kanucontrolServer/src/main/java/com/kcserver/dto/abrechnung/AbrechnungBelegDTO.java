@@ -9,14 +9,43 @@ import java.util.List;
 @Data
 public class AbrechnungBelegDTO {
 
+    /* =========================================================
+       BASIS
+       ========================================================= */
+
     private Long id;
+
+    /* =========================================================
+       SYSTEM
+       ========================================================= */
+
     private BuchungsHerkunft herkunft;
 
+    /* =========================================================
+       BELEGMETADATEN
+       ========================================================= */
+
     private String belegnummer;
+
+    private String externeBelegnummer;
+
+    private String haendler;
+
     private LocalDate datum;
+
     private String beschreibung;
 
     private String kuerzel;
+
+    /* =========================================================
+       DOKUMENTE
+       ========================================================= */
+
+    private List<BelegDokumentDTO> dokumente;
+
+    /* =========================================================
+       POSITIONEN
+       ========================================================= */
 
     private List<AbrechnungBuchungDTO> positionen;
 }

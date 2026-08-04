@@ -1,10 +1,9 @@
 package com.kcserver.unit;
 
-import com.kcserver.dto.planung.PlanungPositionCreateDTO;
-import com.kcserver.enumtype.FinanzKategorie;
+import com.kcserver.dto.simulation.PlanungsSimulation;
 import com.kcserver.enumtype.PlanungsStatus;
-import com.kcserver.finanz.PlanungPositionService;
-import com.kcserver.finanz.PlanungService;
+import com.kcserver.service.planung.PlanungService;
+import com.kcserver.service.simulation.SimulationFacade;
 import com.kcserver.support.api.PersonTestFactory;
 import com.kcserver.support.api.VeranstaltungTestFactory;
 import com.kcserver.support.api.VereinTestFactory;
@@ -13,8 +12,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -22,68 +24,119 @@ import static org.assertj.core.api.Assertions.assertThat;
 class PlanungServiceTest extends AbstractTenantIntegrationTest {
 
     @Autowired
-    PlanungService service;
+    private PlanungService planungService;
 
     @Autowired
-    PlanungPositionService positionService;
+    private SimulationFacade simulationFacade;
 
     @Autowired
-    com.fasterxml.jackson.databind.ObjectMapper objectMapper;
+    private com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
-    Long veranstaltungId;
-
-    // ✅ Factories
-    VereinTestFactory vereinFactory;
-    PersonTestFactory personFactory;
-    VeranstaltungTestFactory veranstaltungFactory;
+    private Long veranstaltungId;
 
     @BeforeEach
     void setup() throws Exception {
 
-        // Factories initialisieren
-        vereinFactory = new VereinTestFactory(mockMvc, objectMapper);
-        personFactory = new PersonTestFactory(mockMvc, objectMapper);
-        veranstaltungFactory =
-                new VeranstaltungTestFactory(
-                        mockMvc,
-                        objectMapper
+        VereinTestFactory vereinFactory =
+                new VereinTestFactory(mockMvc, objectMapper);
+
+        PersonTestFactory personFactory =
+                new PersonTestFactory(mockMvc, objectMapper);
+
+        VeranstaltungTestFactory veranstaltungFactory =
+                new VeranstaltungTestFactory(mockMvc, objectMapper);
+
+        Long vereinId =
+                vereinFactory.create("TV", "Testverein");
+
+        Long leiterId =
+                personFactory.createWithVerein(
+                        vereinId,
+                        b -> b.withVorname("Max")
+                                .withName("Mustermann")
+                                .withGeburtsdatum(LocalDate.of(1990, 1, 1))
                 );
 
-        // 1️⃣ Verein
-        Long vereinId = vereinFactory.create("TV", "Testverein");
-
-        // 2️⃣ Leiter (>=18 wichtig!)
-        Long leiterId = personFactory.createWithVerein(vereinId, b ->
-                b.withVorname("Max")
-                        .withName("Mustermann")
-                        .withGeburtsdatum(java.time.LocalDate.of(1990, 1, 1))
-        );
-
-        // 3️⃣ Veranstaltung
-        veranstaltungId = veranstaltungFactory.create(
-                vereinId,
-                leiterId,
-                "Test Planung"
-        );
+        veranstaltungId =
+                veranstaltungFactory.create(
+                        vereinId,
+                        leiterId,
+                        "Test Planung"
+                );
     }
 
     @Test
-    void shouldSubmitBalancedPlanung() {
+    void shouldSubmitPlanung() {
 
-        PlanungPositionCreateDTO kosten = new PlanungPositionCreateDTO();
-        kosten.setKategorie(FinanzKategorie.UNTERKUNFT);
-        kosten.setBetrag(new BigDecimal("100"));
+        createValidPlanung();
 
-        PlanungPositionCreateDTO einnahme = new PlanungPositionCreateDTO();
-        einnahme.setKategorie(FinanzKategorie.KJFP_ZUSCHUSS);
-        einnahme.setBetrag(new BigDecimal("100"));
+        planungService.einreichen(veranstaltungId);
 
-        positionService.addPosition(veranstaltungId, kosten);
-        positionService.addPosition(veranstaltungId, einnahme);
-
-        service.einreichen(veranstaltungId);
-
-        assertThat(service.getOrCreate(veranstaltungId).getStatus())
+        assertThat(planungService.get(veranstaltungId).getStatus())
                 .isEqualTo(PlanungsStatus.EINGEREICHT);
+    }
+
+    @Test
+    void shouldRejectAlreadySubmittedPlanung() {
+
+        createValidPlanung();
+
+        planungService.einreichen(veranstaltungId);
+
+        assertThatThrownBy(() ->
+                planungService.einreichen(veranstaltungId))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("bereits eingereicht");
+    }
+
+    @Test
+    void shouldReopenPlanung() {
+
+        createValidPlanung();
+
+        planungService.einreichen(veranstaltungId);
+
+        planungService.wiederOeffnen(veranstaltungId);
+
+        assertThat(planungService.get(veranstaltungId).getStatus())
+                .isEqualTo(PlanungsStatus.IN_BEARBEITUNG);
+    }
+
+    @Test
+    void shouldReturn404WhenPlanungDoesNotExist() {
+
+        assertThatThrownBy(() ->
+                planungService.get(veranstaltungId))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("keine Planung");
+    }
+
+    @Test
+    void shouldRejectSubmitWithoutPlanung() {
+
+        assertThatThrownBy(() ->
+                planungService.einreichen(veranstaltungId))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("Planung nicht gefunden");
+    }
+
+    private void createValidPlanung() {
+
+        PlanungsSimulation simulation =
+                simulationFacade.getSimulation(veranstaltungId);
+
+        simulation.setTeilnehmer(20);
+        simulation.setMitarbeiter(4);
+
+        simulation.setUnterkunftPreisProPersonUndNacht(
+                new BigDecimal("20"));
+
+        simulation.setVerpflegungPreisProPersonUndTag(
+                new BigDecimal("12"));
+
+        simulationFacade.saveSimulation(
+                veranstaltungId,
+                simulation
+        );
     }
 }

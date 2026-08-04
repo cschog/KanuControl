@@ -5,7 +5,7 @@ import com.kcserver.dto.abrechnung.AbrechnungBelegDTO;
 import com.kcserver.dto.teilnehmer.TeilnehmerBulkDeleteDTO;
 import com.kcserver.dto.veranstaltung.*;
 import com.kcserver.enumtype.VeranstaltungTyp;
-import com.kcserver.finanz.AbrechnungBelegService;
+import com.kcserver.service.abrechnung.AbrechnungBelegService;
 import com.kcserver.service.TeilnehmerService;
 import com.kcserver.service.veranstaltung.VeranstaltungService;
 import jakarta.validation.Valid;
@@ -20,7 +20,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.web.bind.annotation.*;
-import com.kcserver.finanz.FinanzGruppeService;
+import com.kcserver.service.finanz.FinanzGruppeService;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;

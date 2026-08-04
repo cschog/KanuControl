@@ -23,7 +23,7 @@ Chris Schog
 
 KanuControl
 
-Version: V0.9
+Version: V1.0.1
 
 KanuControl ist eine Software zur Verwaltung von Kanuvereinen und Vereinsveranstaltungen.
 
@@ -55,4 +55,4 @@ Eine Vervielfältigung, Bearbeitung oder Weitergabe außerhalb der vereinbarten 
 
 ---
 
-Stand: Juni 2026
+Stand: Juli 2026

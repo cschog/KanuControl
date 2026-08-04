@@ -24,13 +24,19 @@ Förderanmeldung / PDF
 Teilnehmerverwaltung
       │
       ▼
+Beitragsverwaltung
+      │
+      ▼
 Finanzen & Buchungen
+      │
+      ▼
+Dokumente
       │
       ▼
 Abrechnung
 ```
 
- (Stammdaten)
+## Stammdaten
 
 Bevor Veranstaltungen angelegt werden, müssen die erforderlichen Stammdaten gepflegt werden. Diese bilden die Grundlage für alle weiteren Module.
 
@@ -110,21 +116,49 @@ Die Simulation kann beliebig oft verändert werden, ohne dass bereits gespeicher
 
 ## 3. Planung
 
-Sobald eine geeignete Finanzierung gefunden wurde, werden die Ergebnisse in die Planung übernommen.
+Die Planung dient der finanziellen Vorbereitung einer Veranstaltung.
 
-Die Planung stellt den verbindlichen Finanzierungsplan der Veranstaltung dar und speichert alle relevanten Werte dauerhaft.
+Während der Planung werden sämtliche erwarteten Einnahmen und Ausgaben erfasst und gegenübergestellt.
 
-Gespeichert werden unter anderem:
+### Kennzahlen
 
-- Teilnehmerzahlen
-- Beiträge
-- Unterkunfts- und Verpflegungskosten
-- Fahrtkosten
-- Honorare
-- Materialkosten
-- Fördermittel
+Im oberen Bereich werden die wichtigsten Werte angezeigt.
+
+- Gesamtkosten
+- Gesamteinnahmen
 - Eigenanteil
-- Gesamtkosten und Gesamteinnahmen
+- KJFP-Zuschuss
+
+Diese Kennzahlen aktualisieren sich automatisch nach jeder Änderung.
+
+### Finanzübersicht
+
+Die Finanzübersicht fasst alle geplanten Einnahmen und Ausgaben nach Kategorien zusammen.
+
+Die Kosten werden beispielsweise unterteilt in:
+
+- Unterkunft
+- Verpflegung
+- Fahrtkosten
+- Verbrauchsmaterial
+- Honorare
+- Kultur
+- Miete
+- Sonstige Kosten
+
+Die Einnahmen umfassen unter anderem:
+
+- Teilnehmerbeiträge
+- KJFP-Zuschuss
+- Sonstige Einnahmen
+
+Die Übersicht ermöglicht eine schnelle Kontrolle der geplanten Finanzierung und hilft dabei, finanzielle Risiken frühzeitig zu erkennen.
+
+### Planung einreichen
+
+Nach Abschluss der Planung kann diese eingereicht werden.
+
+Vor dem Einreichen prüft KanuControl automatisch, ob alle erforderlichen Angaben vorhanden sind. Eventuelle Fehler oder fehlende Daten werden angezeigt und können vor dem Einreichen korrigiert werden.
 
 Beim erneuten Öffnen werden diese Daten wieder geladen und stehen für die weitere Bearbeitung zur Verfügung.
 
@@ -172,6 +206,40 @@ Hierzu gehören beispielsweise:
 
 Die Finanzübersicht zeigt jederzeit den aktuellen Stand der Veranstaltung.
 
+### Finanzgruppen
+
+Finanzgruppen dienen dazu, Teilnehmer zusammenzufassen.
+
+Typische Anwendungsfälle sind:
+- Familien
+- Geschwister
+- Vereinsgruppen
+- Sammelzahler
+
+Teilnehmer können einer Finanzgruppe zugeordnet werden.
+
+Buchungen werden immer einer Finanzgruppe zugewiesen.
+
+Die Finanzgruppen bilden die technische Grundlage für zukünftige Erweiterungen der Finanzverwaltung.
+
+### Finanzkategorien
+
+Jede Buchung wird einer Finanzkategorie zugeordnet.
+
+Beispiele:
+- Unterkunft
+- Verpflegung
+- Fahrtkosten
+- Honorare
+- Verbrauchsmaterial
+- Kultur
+- Miete
+- Teilnehmerbeiträge
+- Sonstige Einnahmen
+- Sonstige Kosten
+
+Dadurch entstehen später aussagekräftige Auswertungen.
+
 ---
 
 ## 7. Abrechnung
@@ -185,6 +253,33 @@ Die Abrechnung bildet die Grundlage für:
 - den Verwendungsnachweis,
 - die Dokumentation der Veranstaltung,
 - die Auswertung der Wirtschaftlichkeit.
+
+## Finanzübersicht
+
+Unterhalb der Belegverwaltung befindet sich die Finanzübersicht.
+
+Hier werden sämtliche Buchungen automatisch nach Finanzkategorien zusammengefasst.
+
+Die Übersicht ist in zwei Bereiche gegliedert:
+
+### Kosten
+
+- Unterkunft
+- Verpflegung
+- Fahrtkosten
+- Verbrauchsmaterial
+- Honorare
+- Miete
+- ...
+
+### Einnahmen
+
+- Teilnehmerbeiträge
+- Zuschüsse
+- Pfand
+- Sonstige Einnahmen
+
+Dadurch erhält der Veranstaltungsleiter jederzeit einen schnellen Überblick über die finanzielle Situation der Veranstaltung.
 
 ---
 
@@ -344,27 +439,36 @@ Sie bilden unter anderem die Grundlage für:
 
 Dadurch müssen die Daten nur einmal erfasst werden und stehen während des gesamten Lebenszyklus einer Veranstaltung konsistent zur Verfügung.
 
-## 6. Kürzel für Kosten und Einnahmen anlegen
+## 6. Finanzgruppen für Kosten und Einnahmen anlegen
 
 Menü:
 **Finanzen**
 
-Alle Ist-Kosten und Ist-Einnahmen werden über Kürzel erfasst.
+Alle Ist-Kosten und Ist-Einnahmen werden über Finanzgruppen erfasst.
 
-Vor der Erfassung von Belegen muss daher mindestens ein Kürzel angelegt werden.
+Vor der Erfassung von Belegen muss daher mindestens eine Finanzgruppe angelegt werden.
 
-Ein Kürzel dient der Zuordnung von Kosten und Einnahmen zu einer bestimmten Personengruppe oder Kostenstelle.
+Eine Finanzgruppe dient der Zuordnung von Kosten und Einnahmen zu einer bestimmten Personengruppe oder Kostenstelle.
 
-Jedem Kürzel können eine oder mehrere Personen zugeordnet werden.
+Jeder Finanzgruppe können eine oder mehrere Personen zugeordnet werden.
+
+Die Finanzgruppe SYS gehört dem System/KanuControl und wird für automatisch berechnete Beträge, wie KJFP-Zuschuss, Teilnehmer-Beiträge oder Fahrkosten verwendet.
 
 ---
 
 ## 7. Abrechnung
 
-Menü:
-**Finanzen → Abrechnung**
+Über den Menüpunkt **Abrechnung** werden sämtliche Einnahmen und Ausgaben einer Veranstaltung verwaltet.
 
-Der Menuepunkt ist noch in Vorbereitung
+Die Abrechnung besteht aus mehreren Bereichen:
+
+- Finanz-Dashboard mit den wichtigsten Kennzahlen
+- Verwaltung der Belege
+- Erfassung einzelner Buchungen
+- Übersicht nach Finanzkategorien
+- Auswertung der Gesamteinnahmen und Gesamtausgaben
+
+Dadurch kann jederzeit nachvollzogen werden, wie sich die Kosten einer Veranstaltung zusammensetzen.
 
 ---
 
@@ -408,6 +512,10 @@ Für jede Regel werden folgende Angaben festgelegt:
 Die Regeln werden bei der Berechnung der Teilnehmerbeiträge automatisch ausgewertet. KanuControl ordnet jedem Teilnehmer anhand seines Alters und seiner Rolle den passenden Beitrag zu.
 
 Eine Beitragsstruktur kann beliebig viele Regeln enthalten und für mehrere Veranstaltungen verwendet werden.
+
+Nach Änderungen einer Beitragsstruktur können die Teilnehmerbeiträge jederzeit neu berechnet werden.
+
+Dadurch lassen sich Änderungen an Altersgruppen oder Beitragssätzen ohne manuellen Aufwand übernehmen.
 
 ### Beitragsstruktur einer Veranstaltung zuordnen
 

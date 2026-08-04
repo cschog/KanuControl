@@ -64,7 +64,7 @@ export default function BelegDialog({ open, kuerzelListe, onClose, onSave, initi
         <Stack spacing={2} mt={1}>
           <TextField
             select
-            label="Finanzgruppe (Kürzel)"
+            label="Finanzgruppe"
             value={kuerzel}
             onChange={(e) => setKuerzel(e.target.value)}
             required

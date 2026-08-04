@@ -1,4 +1,4 @@
-package com.kcserver.finanz;
+package com.kcserver.service.abrechnung;
 
 import com.kcserver.dto.abrechnung.AbrechnungDetailDTO;
 import com.kcserver.dto.finanzen.FinanzSummaryDTO;
@@ -7,10 +7,10 @@ import com.kcserver.entity.*;
 import com.kcserver.enumtype.AbrechnungsStatus;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.exception.ErrorMessages;
+import com.kcserver.service.finanz.FinanzService;
 import com.kcserver.mapper.AbrechnungMapper;
 import com.kcserver.repository.*;
 import com.kcserver.service.FoerdersatzService;
-import com.kcserver.service.abrechnung.AbrechnungSynchronisationsService;
 import com.kcserver.service.veranstaltung.VeranstaltungValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

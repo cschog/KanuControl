@@ -60,7 +60,7 @@ const Finanzen = () => {
         <Tab label="Fahrkosten" />
         <Tab label="Beiträge" />
 
-        <Tab label="Kürzel" />
+        <Tab label="Finanzgruppe" />
       </Tabs>
 
       {tab === 0 && <FinanzenDashboard />}

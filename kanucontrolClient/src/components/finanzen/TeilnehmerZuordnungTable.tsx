@@ -84,7 +84,7 @@ const TeilnehmerZuordnungTable: FC<Props> = ({ veranstaltungId }) => {
       setTeilnehmer((prev) => prev.map((t) => (t.id === teilnehmerId ? { ...t, kuerzel } : t)));
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        setError(error.response?.data?.message ?? "Kürzel konnte nicht zugewiesen werden");
+        setError(error.response?.data?.message ?? "Finanzgruppe konnte nicht zugewiesen werden");
       } else {
         setError("Ein unerwarteter Fehler ist aufgetreten");
       }
@@ -102,7 +102,7 @@ const TeilnehmerZuordnungTable: FC<Props> = ({ veranstaltungId }) => {
           <TableHead>
             <TableRow>
               <TableCell>Teilnehmer</TableCell>
-              <TableCell>Kürzel</TableCell>
+              <TableCell>Finanzgruppe</TableCell>
             </TableRow>
           </TableHead>
 
@@ -130,7 +130,7 @@ const TeilnehmerZuordnungTable: FC<Props> = ({ veranstaltungId }) => {
                         ))}
 
                       <MenuItem value="">
-                        <em>Kürzel entfernen</em>
+                        <em>Finanzgruppe entfernen</em>
                       </MenuItem>
                     </Select>
                   ) : (
@@ -142,7 +142,7 @@ const TeilnehmerZuordnungTable: FC<Props> = ({ veranstaltungId }) => {
                       sx={{ minWidth: 140 }}
                     >
                       <MenuItem value="">
-                        <em>Kürzel auswählen…</em>
+                        <em>Finanazgruppe auswählen…</em>
                       </MenuItem>
 
                       {gruppen

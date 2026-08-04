@@ -1,4 +1,4 @@
-package com.kcserver.finanz;
+package com.kcserver.service.finanz;
 
 import com.kcserver.entity.FinanzGruppe;
 import com.kcserver.entity.Teilnehmer;

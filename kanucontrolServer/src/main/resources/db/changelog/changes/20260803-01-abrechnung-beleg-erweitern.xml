@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="20260803-01-abrechnung-beleg-erweitern" author="chris">
+
+        <!-- ========================================================= -->
+        <!-- Neue Spalten                                               -->
+        <!-- ========================================================= -->
+
+        <addColumn tableName="abrechnung_beleg">
+
+            <column name="externe_beleg_nummer" type="varchar(100)"/>
+
+            <column name="haendler" type="varchar(200)"/>
+
+            <column name="created_at" type="timestamp"/>
+
+            <column name="created_by" type="varchar(255)"/>
+
+            <column name="last_modified_at" type="timestamp"/>
+
+            <column name="last_modified_by" type="varchar(255)"/>
+
+        </addColumn>
+
+        <!-- ========================================================= -->
+        <!-- Bestehende Daten übernehmen                               -->
+        <!-- ========================================================= -->
+
+        <sql>
+            UPDATE abrechnung_beleg
+            SET externe_beleg_nummer = rechnungsnummer
+            WHERE rechnungsnummer IS NOT NULL;
+        </sql>
+
+        <sql>
+            UPDATE abrechnung_beleg
+            SET created_at = NOW()
+            WHERE created_at IS NULL;
+        </sql>
+
+        <!-- ========================================================= -->
+        <!-- created_at wird Pflichtfeld                               -->
+        <!-- ========================================================= -->
+
+        <addNotNullConstraint
+                tableName="abrechnung_beleg"
+                columnName="created_at"
+                columnDataType="timestamp"/>
+
+        <!-- ========================================================= -->
+        <!-- Alte Spalte entfernen                                     -->
+        <!-- ========================================================= -->
+
+        <dropColumn
+                tableName="abrechnung_beleg"
+                columnName="rechnungsnummer"/>
+
+    </changeSet>
+
+</databaseChangeLog>

@@ -9,13 +9,13 @@ const PAGE_CONFIG = {
   help: {
     title: "Bedienungsanleitung",
 
-    file: "/info/bedienungsanleitung.md",
+    file: "/info/bedienungsanleitung_neu.md",
   },
 
   news: {
     title: "Was ist neu?",
 
-    file: "/info/releases/v0.9.md",
+    file: "/info/releases/V1.0.md",
   },
 
   privacy: {

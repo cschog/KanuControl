@@ -72,4 +72,4 @@ KanuControl unterstützt den Schutz personenbezogener Daten durch:
 
 ## Stand
 
-Version: V0.9
+Version: V1.0.x

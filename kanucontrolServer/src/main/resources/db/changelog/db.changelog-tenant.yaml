@@ -119,3 +119,9 @@ databaseChangeLog:
       file: db/changelog/changes/20260719-07-abrechnung-buchung-referenzen.xml
   - include:
       file: db/changelog/changes/20260729-01-sync-veranstaltung.xml
+  - include:
+      file: db/changelog/changes/20260803-01-abrechnung-beleg-erweitern.xml
+  - include:
+      file: db/changelog/changes/20260803-02-create-beleg-dokument.xml
+  - include:
+      file: db/changelog/changes/20260803-03-abrechnung-buchung-beschreibung.xml

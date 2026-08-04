@@ -2,7 +2,7 @@ package com.kcserver.entity;
 
 import com.kcserver.enumtype.BuchungsHerkunft;
 import com.kcserver.enumtype.FinanzKategorie;
-import com.kcserver.finanz.FinanzPosition;
+import com.kcserver.service.finanz.FinanzPosition;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -42,7 +42,7 @@ public class AbrechnungBuchung implements FinanzPosition {
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal betrag;
 
-    @Column(length = 500)
+    @Column(length = 1000)
     private String beschreibung;
 
     @Override

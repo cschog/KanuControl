@@ -1,7 +1,7 @@
 package com.kcserver.entity;
 
 import com.kcserver.enumtype.FinanzKategorie;
-import com.kcserver.finanz.FinanzPosition;
+import com.kcserver.service.finanz.FinanzPosition;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

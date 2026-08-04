@@ -1,4 +1,4 @@
-package com.kcserver.finanz;
+package com.kcserver.service.abrechnung;
 
 import com.kcserver.dto.abrechnung.AbrechnungBuchungCreateDTO;
 import com.kcserver.dto.abrechnung.AbrechnungBuchungDTO;
@@ -68,8 +68,10 @@ public class AbrechnungBelegService {
         beleg.setLfdNr(next);
         beleg.setDatum(dto.getDatum() != null ? dto.getDatum() : LocalDate.now());
         beleg.setBeschreibung(dto.getBeschreibung());
-        beleg.setFinanzGruppe(gruppe);
+        beleg.setHaendler(dto.getHaendler());
+        beleg.setExterneBelegnummer(dto.getExterneBelegnummer());
 
+        beleg.setFinanzGruppe(gruppe);
         beleg.setBelegnummer(belegnummer);
 
         abrechnung.addBeleg(beleg);
@@ -89,7 +91,7 @@ public class AbrechnungBelegService {
         // 2. Buchung hinzufügen
         addPosition(veranstaltungId, belegDTO.getId(), buchungDto);
 
-        // 3. OPTIONAL: frisch laden (sauberer für UI)
+        // 3. Beleg mit Positionen neu laden
         AbrechnungBeleg beleg = belegRepository.findById(belegDTO.getId())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
@@ -129,11 +131,15 @@ public class AbrechnungBelegService {
                         )
                 );
 
-        beleg.setDatum(dto.getDatum());
-
-        beleg.setBeschreibung(
-                dto.getBeschreibung()
+        beleg.setDatum(
+                dto.getDatum() != null
+                        ? dto.getDatum()
+                        : beleg.getDatum()
         );
+
+        beleg.setBeschreibung(dto.getBeschreibung());
+        beleg.setHaendler(dto.getHaendler());
+        beleg.setExterneBelegnummer(dto.getExterneBelegnummer());
 
         beleg.setFinanzGruppe(gruppe);
 
@@ -155,7 +161,6 @@ public class AbrechnungBelegService {
         checkNotSystem(beleg);
 
         AbrechnungBuchung position = new AbrechnungBuchung();
-        position.setBeleg(beleg);
         position.setKategorie(dto.getKategorie());
         position.setBetrag(dto.getBetrag());
         position.setBeschreibung(dto.getBeschreibung());
@@ -211,9 +216,7 @@ public class AbrechnungBelegService {
 
         // 🔹 Beziehung lösen
         beleg.removePosition(pos);
-
-        // 🔹 Buchung löschen
-        buchungRepository.delete(pos);
+        belegRepository.save(beleg);
 
         // 🔥 WICHTIG: wenn letzte Position → Beleg löschen
         if (beleg.getPositionen().isEmpty()) {

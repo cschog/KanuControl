@@ -23,7 +23,7 @@ public class Planung extends Auditable{
     @Column(nullable = false)
     private boolean initialisiert = false;
 
-    @OneToOne(optional = false)
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(
             name = "veranstaltung_id",
             nullable = false,
@@ -57,10 +57,13 @@ public class Planung extends Auditable{
        Simulationsparameter
        ========================================== */
 
-    private Integer teilnehmer;
-    private Integer mitarbeiter;
+    @Column(nullable = false)
+    private Integer teilnehmer = 7;
 
-    @Column(name = "kik_zertifiziert")
+    @Column(nullable = false)
+    private Integer mitarbeiter = 2;
+
+    @Column(name = "kik_zertifiziert", nullable = false)
     private boolean kikZertifiziert;
 
     @Column(precision = 10, scale = 2, name = "teilnehmer_beitrag_unter21_jahre")
@@ -103,7 +106,7 @@ public class Planung extends Auditable{
             cascade = CascadeType.ALL,
             orphanRemoval = true
     )
-    private List<PlanungPosition> positionen = new ArrayList<>();
+    private final List<PlanungPosition> positionen = new ArrayList<>();
 
     /* ==========================================
        Status

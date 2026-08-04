@@ -4,7 +4,6 @@ import com.kcserver.entity.*;
 
 import com.kcserver.enumtype.BuchungsHerkunft;
 import com.kcserver.enumtype.FinanzKategorie;
-import com.kcserver.finanz.AbrechnungBelegService;
 import com.kcserver.repository.AbrechnungRepository;
 import com.kcserver.repository.TeilnehmerRepository;
 import com.kcserver.service.FoerderService;
@@ -60,7 +59,7 @@ public class AbrechnungSynchronisationsService {
                 );
 
         // Alte automatisch erzeugte Teilnehmerbeiträge entfernen
-        beleg.removePositionen(
+        beleg.removePositionenByHerkunft(
                 BuchungsHerkunft.TEILNEHMERBEITRAG
         );
 
@@ -104,7 +103,7 @@ public class AbrechnungSynchronisationsService {
                         BuchungsHerkunft.FAHRTKOSTEN
                 );
 
-        beleg.removePositionen(
+        beleg.removePositionenByHerkunft(
                 BuchungsHerkunft.FAHRTKOSTEN
         );
 
@@ -137,7 +136,7 @@ public class AbrechnungSynchronisationsService {
                         BuchungsHerkunft.KJFP
                 );
 
-        beleg.removePositionen(
+        beleg.removePositionenByHerkunft(
                 BuchungsHerkunft.KJFP
         );
 

@@ -2,7 +2,7 @@ package com.kcserver.integration;
 
 import com.kcserver.entity.Teilnehmer;
 import com.kcserver.entity.Veranstaltung;
-import com.kcserver.finanz.FinanzGruppeService;
+import com.kcserver.service.finanz.FinanzGruppeService;
 import com.kcserver.repository.TeilnehmerRepository;
 import com.kcserver.repository.VeranstaltungRepository;
 import org.junit.jupiter.api.Test;

@@ -8,7 +8,7 @@ import com.kcserver.exception.ErrorMessages;
 import com.kcserver.mapper.PlanungSimulationMapper;
 import com.kcserver.repository.PlanungRepository;
 import com.kcserver.repository.VeranstaltungRepository;
-import com.kcserver.service.PlanungAutomatikService;
+import com.kcserver.service.planung.PlanungAutomatikService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;

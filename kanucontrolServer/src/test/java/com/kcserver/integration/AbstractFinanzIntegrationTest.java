@@ -5,10 +5,9 @@ import com.kcserver.entity.*;
 import com.kcserver.enumtype.AbrechnungsStatus;
 import com.kcserver.enumtype.Sex;
 import com.kcserver.enumtype.VeranstaltungTyp;
-import com.kcserver.finanz.AbrechnungBelegService;
-import com.kcserver.finanz.AbrechnungService;
-import com.kcserver.finanz.PlanungPositionService;
-import com.kcserver.finanz.PlanungService;
+import com.kcserver.service.abrechnung.AbrechnungBelegService;
+import com.kcserver.service.abrechnung.AbrechnungService;
+import com.kcserver.service.planung.PlanungService;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
 import com.kcserver.repository.*;
 import com.kcserver.service.veranstaltung.VeranstaltungService;
@@ -28,7 +27,6 @@ public abstract class AbstractFinanzIntegrationTest
     @Autowired protected AbrechnungRepository abrechnungRepository;
 
     @Autowired protected PlanungService planungService;
-    @Autowired protected PlanungPositionService planungPositionService;
 
     @Autowired
     VeranstaltungService veranstaltungService;

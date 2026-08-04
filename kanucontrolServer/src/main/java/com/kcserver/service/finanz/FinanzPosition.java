@@ -1,4 +1,4 @@
-package com.kcserver.finanz;
+package com.kcserver.service.finanz;
 
 import com.kcserver.enumtype.FinanzKategorie;
 import java.math.BigDecimal;

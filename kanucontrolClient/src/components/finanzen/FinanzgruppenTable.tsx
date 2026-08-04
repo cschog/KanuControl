@@ -91,7 +91,7 @@ const FinanzgruppenTable: FC<Props> = ({ veranstaltungId, reloadKey }) => {
       await load();
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        setError(error.response?.data?.message ?? "Kürzel konnte nicht geändert werden");
+        setError(error.response?.data?.message ?? "Finanzgruppe konnte nicht geändert werden");
       } else {
         setError("Ein unerwarteter Fehler ist aufgetreten");
       }
@@ -129,7 +129,7 @@ const FinanzgruppenTable: FC<Props> = ({ veranstaltungId, reloadKey }) => {
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell>Kürzel</TableCell>
+              <TableCell>Finanazgruppe</TableCell>
               <TableCell align="right">Teilnehmer</TableCell>
               <TableCell align="right">Belege</TableCell>
               <TableCell align="right">Aktionen</TableCell>

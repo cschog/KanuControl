@@ -1,16 +1,12 @@
-package com.kcserver.finanz;
+package com.kcserver.service.planung;
 
-import com.kcserver.dto.finanzen.FinanzSummaryDTO;
 import com.kcserver.dto.planung.PlanungDetailDTO;
 import com.kcserver.entity.Planung;
-import com.kcserver.entity.Veranstaltung;
 import com.kcserver.enumtype.PlanungsStatus;
-import com.kcserver.exception.ErrorMessages;
+import com.kcserver.service.finanz.FinanzService;
 import com.kcserver.mapper.PlanungMapper;
 import com.kcserver.repository.PlanungRepository;
 import com.kcserver.repository.TeilnehmerRepository;
-import com.kcserver.repository.VeranstaltungRepository;
-import com.kcserver.service.PlanungAutomatikService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -23,37 +19,10 @@ import org.springframework.web.server.ResponseStatusException;
 public class PlanungService {
 
     private final PlanungRepository planungRepository;
-    private final VeranstaltungRepository veranstaltungRepository;
     private final PlanungMapper mapper;
     private final FinanzService finanzService;
     private final TeilnehmerRepository teilnehmerRepository;
     private final PlanungAutomatikService planungsSimulationService;
-
-    /* =========================================================
-       GET OR CREATE
-       ========================================================= */
-
-    public PlanungDetailDTO getOrCreate(Long veranstaltungId) {
-
-        Planung p = planungRepository
-                .findByVeranstaltungIdWithPositionen(veranstaltungId)
-                .orElseGet(() -> createPlanung(veranstaltungId));
-
-        planungsSimulationService
-                .aktualisiereAutomatischePositionen(p);
-
-        PlanungDetailDTO dto = mapper.toDTO(p);
-
-        FinanzSummaryDTO summary =
-                finanzService.buildSummary(
-                        p.getPositionen(),
-                        teilnehmerRepository.countByVeranstaltungId(veranstaltungId)
-                );
-
-        dto.setFinanz(summary);
-
-        return dto;
-    }
 
     /* =========================================================
        EINREICHEN
@@ -85,28 +54,37 @@ public class PlanungService {
         Planung planung = planungRepository.findByVeranstaltungId(veranstaltungId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
-                        "Planung not found"
+                        "Planung nicht gefunden."
                 ));
 
         planung.setStatus(PlanungsStatus.IN_BEARBEITUNG);
     }
 
-    /* =========================================================
-       HELPER
-       ========================================================= */
+ /* =========================================================
+   PLANUNG LADEN
+   ========================================================= */
 
-    private Planung createPlanung(Long veranstaltungId) {
+    public PlanungDetailDTO get(Long veranstaltungId) {
 
-        Veranstaltung v = veranstaltungRepository
-                .findById(veranstaltungId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        ErrorMessages.VERANSTALTUNG_NOT_FOUND
-                ));
+        Planung p = planungRepository
+                .findByVeranstaltungIdWithPositionen(veranstaltungId)
+                .orElseThrow(() ->
+                        new ResponseStatusException(
+                                HttpStatus.NOT_FOUND,
+                                "Für diese Veranstaltung wurde noch keine Planung gespeichert."
+                        ));
 
-        Planung p = new Planung();
-        p.setVeranstaltung(v);
+        planungsSimulationService.aktualisiereAutomatischePositionen(p);
 
-        return planungRepository.save(p);
+        PlanungDetailDTO dto = mapper.toDTO(p);
+
+        dto.setFinanz(
+                finanzService.buildSummary(
+                        p.getPositionen(),
+                        teilnehmerRepository.countByVeranstaltungId(veranstaltungId)
+                )
+        );
+
+        return dto;
     }
 }
