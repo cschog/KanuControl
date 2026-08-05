@@ -1,10 +1,10 @@
 import { Paper, Stack } from "@mui/material";
 import { GenericTableTanstack } from "@/components/common/GenericTableTanstack";
-import { buchungColumns } from "@/components/finanzen/buchung/buchungColumns";
+import { buchungColumns } from "@/components/finanzen/abrechnung/buchungColumns";
 import { AbrechnungBeleg, Buchung } from "@/api/types/abrechnung";
-import BelegInfo from "@/components/finanzen/buchung/BelegInfo";
-import BelegActions from "@/components/finanzen/buchung/BelegActions";
-import BuchungRow from "@/components/finanzen/buchung/BuchungRow";
+import BelegInfo from "@/components/finanzen/abrechnung/BelegInfo";
+import BelegActions from "@/components/finanzen/abrechnung/BelegActions";
+import BuchungRow from "@/components/finanzen/abrechnung/BuchungRow";
 
 interface Props {
   beleg: AbrechnungBeleg;

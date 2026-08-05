@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { ColumnDef } from "@tanstack/react-table";
-import { Chip, Stack, IconButton } from "@mui/material";
+import { Stack, IconButton } from "@mui/material";
 import Money from "@/components/common/Money";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";

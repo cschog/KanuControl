@@ -1,5 +1,5 @@
 import React from "react";
-import { MenuItem, TextField, FormControlLabel, Switch } from "@mui/material";
+import { MenuItem, TextField } from "@mui/material";
 
 import { RefAutocomplete } from "@/components/common/RefAutocomplete";
 
@@ -23,7 +23,6 @@ import { FormFeldTimePicker } from "@/components/common/FormFeldTimePicker";
 
 import { COUNTRIES } from "@/api/enums/CountryCode";
 import PostalCodeAutocomplete from "@/components/common/PostalCodeAutocomplete";
-import PriceField from "@/components/common/MoneyField";
 
 /* =========================================================
    TYPES

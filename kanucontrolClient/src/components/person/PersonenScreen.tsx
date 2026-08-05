@@ -3,7 +3,6 @@ import {
   Box,
   Paper,
   Typography,
-  TextField,
   Button,
   Dialog,
   DialogTitle,
@@ -79,7 +78,7 @@ export default function PersonenScreen() {
 
   const size = 500;
 
-  const [filterModel, setFilterModel] = useState<GridFilterModel>({
+  const [filterModel] = useState<GridFilterModel>({
     items: [],
   });
 
@@ -280,13 +279,7 @@ export default function PersonenScreen() {
     }
   };
 
-  const resetFilter = () => {
-    setSearch("");
-
-    setFilterModel({
-      items: [],
-    });
-  };
+  
 
   useEffect(() => {
     setEditMode(false);

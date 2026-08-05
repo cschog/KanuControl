@@ -1,7 +1,7 @@
 // src/components/verwaltung/unterkunft/UnterkunftsartPage.tsx
 
 import { useEffect, useState } from "react";
-import { Alert, Box, Button, CircularProgress } from "@mui/material";
+import { Alert, Box, CircularProgress } from "@mui/material";
 
 import CrudToolbar from "@/components/common/CrudToolbar";
 
@@ -60,20 +60,7 @@ const UnterkunftsartPage = () => {
         setDialogOpen(true);
     };
 
-    const handleEdit = () => {
-        if (!selected) return;
 
-        setEditing(selected);
-        setDialogOpen(true);
-    };
-
-    const handleDelete = () => {
-        if (!selected) {
-            return;
-        }
-
-        setDeleteOpen(true);
-    };
 
     const confirmDelete = async () => {
         if (!selected) {

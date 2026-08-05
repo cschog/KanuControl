@@ -5,10 +5,10 @@ import { useParams, useLocation } from "react-router-dom";
 
 import FinanzenDashboard from "@/components/finanzen/FinanzenDashboard";
 import PlanungPage from "@/components/finanzen/planung/PlanungPage";
-import BuchungenPage from "@/components/finanzen/buchung/BuchungenPage";
+import BuchungenPage from "@/components/finanzen/abrechnung/BuchungenPage";
 import BeitraegePage from "@/components/finanzen/beitraege/BeitraegePage";
 import ReisekostenPage from "@/components/finanzen/reisekosten/ReisekostenPage";
-import KuerzelPage from "@/components/finanzen/KuerzelPage";
+import KuerzelPage from "@/components/finanzen/FinanzgruppePage";
 import SimulationPage from "@/components/simulation/SimulationPage";
 
 const Finanzen = () => {
@@ -64,17 +64,8 @@ const Finanzen = () => {
       </Tabs>
 
       {tab === 0 && <FinanzenDashboard />}
-      {tab === 1 && (
-        <SimulationPage
-          veranstaltungId={id}
-        />
-      )}
-      {tab === 2 && (
-        <PlanungPage
-          veranstaltungId={id}
-          onOpenSimulation={() => setTab(5)}
-        />
-      )}
+      {tab === 1 && <SimulationPage veranstaltungId={id} />}
+      {tab === 2 && <PlanungPage veranstaltungId={id} onOpenSimulation={() => setTab(5)} />}
       {tab === 3 && <BuchungenPage veranstaltungId={id} />}
       {tab === 4 && <ReisekostenPage veranstaltungId={id} />}
       {tab === 5 && <BeitraegePage veranstaltungId={id} />}

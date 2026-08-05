@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { GenericTableTanstack } from "@/components/common/GenericTableTanstack";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
-import { kuerzelColumns } from "@/components/finanzen/kuerzelColumns";
+import { kuerzelColumns } from "@/components/finanzen/finanzgruppeColumns";
 import FinanzGruppeBelege from "@/components/finanzgruppen/FinanzGruppeBelege";
 import {
   Alert,

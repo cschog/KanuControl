@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Box, Typography } from "@mui/material";
+import { Box } from "@mui/material";
 import { PersonBaseForm } from "@/components/person/form/PersonBaseForm";
 import { PersonMembershipsCard } from "./PersonMembershipsCard";
 import { PersonActionBar } from "@/components/person/PersonActionBar";

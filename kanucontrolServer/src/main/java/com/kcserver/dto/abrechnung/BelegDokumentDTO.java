@@ -3,6 +3,8 @@ package com.kcserver.dto.abrechnung;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.Instant;
+
 @Getter
 @Setter
 public class BelegDokumentDTO {
@@ -33,4 +35,6 @@ public class BelegDokumentDTO {
      * Dateigröße in Byte.
      */
     private Long dateigroesse;
+
+    private Instant createdAt;
 }

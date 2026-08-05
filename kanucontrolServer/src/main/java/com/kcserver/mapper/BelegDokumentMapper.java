@@ -23,6 +23,7 @@ public class BelegDokumentMapper {
         dto.setOriginalDateiname(entity.getOriginalDateiname());
         dto.setMimeType(entity.getMimeType());
         dto.setDateigroesse(entity.getDateigroesse());
+        dto.setCreatedAt(entity.getCreatedAt());
 
         return dto;
     }

@@ -2,7 +2,6 @@ import { Box, Button, IconButton, Stack, Typography, Chip } from "@mui/material"
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 
-import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 

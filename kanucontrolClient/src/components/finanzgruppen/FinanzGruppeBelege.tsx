@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { GenericTableTanstack } from "@/components/common/GenericTableTanstack";
 import { AbrechnungBeleg } from "@/api/types/abrechnung";
 import { getBelegeByFinanzGruppe } from "@/api/services/abrechnungApi";
-import { belegColumns } from "@/components/finanzen/belegColumns"; 
+import { belegColumns } from "@/components/finanzen/abrechnung/belegColumns"; 
 
 interface Props {
   veranstaltungId: number;

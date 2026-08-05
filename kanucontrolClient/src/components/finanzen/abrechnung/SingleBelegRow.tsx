@@ -1,9 +1,8 @@
 import { Paper, Stack } from "@mui/material";
 
-
 import { AbrechnungBeleg, Buchung } from "@/api/types/abrechnung";
-import BuchungRow from "@/components/finanzen/buchung/BuchungRow";
-import BelegHeader from "@/components/finanzen/buchung/BelegHeader";
+import BuchungRow from "@/components/finanzen/abrechnung/BuchungRow";
+import BelegHeader from "@/components/finanzen/abrechnung/BelegHeader";
 import { berechneBelegsumme } from "@/api/utils/belegUtils";
 
 interface Props {

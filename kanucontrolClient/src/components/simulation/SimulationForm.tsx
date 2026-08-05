@@ -1,6 +1,5 @@
 // src/components/simulation/SimulationForm.tsx
 
-import { useEffect } from "react";
 import {
     Card,
     CardContent,
@@ -13,7 +12,6 @@ import {
 } from "@mui/material";
 
 import PaidIcon from "@mui/icons-material/Paid";
-import SavingsIcon from "@mui/icons-material/Savings";
 import SellIcon from "@mui/icons-material/Sell";
 import GroupsIcon from "@mui/icons-material/Groups";
 
@@ -24,7 +22,6 @@ import SliderNumberField from "@/components/common/SliderNumberField";
 import RahmendatenAccordion
     from "@/components/simulation/RahmendatenAccordion";
 import { PlanungsSimulation } from "@/api/types/simulation/PlanungsSimulation";
-import { radius } from "@/theme/ui";
 
 interface SimulationFormProps {
     simulation: PlanungsSimulation;
@@ -47,10 +44,7 @@ export default function SimulationForm({
         xl: 3,  // großer Desktop: 4 Spalten
     };
 
-    const sectionStyle = {
-        p: 2,
-        borderRadius: radius.dialog,
-    };
+  
 
     const update = <K extends keyof PlanungsSimulation>(
         key: K,

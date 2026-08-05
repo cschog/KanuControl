@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { VeranstaltungFormModel } from "@/api/types/veranstaltung/VeranstaltungFormModel";
 import { VeranstaltungSave } from "@/api/types/veranstaltung/VeranstaltungSave";
 import { VeranstaltungTyp } from "@/api/enums/VeranstaltungTyp";
-import { VeranstaltungScope } from "@/api/enums/VeranstaltungScope";
 
 
 /* =========================================================

@@ -12,11 +12,11 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 
 import { FinanzKategorie } from "@/api/types/finanz";
 
-import SingleBelegRow from "@/components/finanzen/buchung/SingleBelegRow";
-import MultiBelegAccordion from "@/components/finanzen/buchung/MultiBelegAccordion";
-import BuchungDialog from "@/components/finanzen/buchung/BuchungDialog";
-import BelegDialog from "@/components/finanzen/buchung/BelegDialog";
-import BelegMitBuchungDialog from "@/components/finanzen/buchung/BelegMitBuchungDialog";
+import SingleBelegRow from "@/components/finanzen/abrechnung/SingleBelegRow";
+import MultiBelegAccordion from "@/components/finanzen/abrechnung/MultiBelegAccordion";
+import BuchungDialog from "@/components/finanzen/abrechnung/BuchungDialog";
+import BelegDialog from "@/components/finanzen/abrechnung/BelegDialog";
+import BelegMitBuchungDialog from "@/components/finanzen/abrechnung/BelegMitBuchungDialog";
 import FinanzSummary from "@/components/common/FinanzSummary";
 import { AbrechnungsStatus } from "@/api/enums/AbrechnungsStatus";
 import {

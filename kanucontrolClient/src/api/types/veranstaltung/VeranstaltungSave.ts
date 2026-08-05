@@ -1,8 +1,6 @@
 // src/api/types/veranstaltung/VeranstaltungSave.ts
 import { VeranstaltungTyp } from "@/api/enums/VeranstaltungTyp";
 import { CountryCode } from "@/api/enums/CountryCode";
-import { UnterkunftsartRef } from "@/api/types/unterkunft/UnterkunftsartRef";
-import { VerpflegungsmodellRef } from "@/api/types/veranstaltung/VerpflegungsmodellRef";
 
 export type VeranstaltungScope = "VERBAND" | "VEREIN";
 

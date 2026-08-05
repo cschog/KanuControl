@@ -1,6 +1,5 @@
 // src/api/types/veranstaltung/VeranstaltungDetail.ts
 import { VeranstaltungTyp } from "@/api/enums/VeranstaltungTyp";
-import { VeranstaltungScope } from "@/api/enums/VeranstaltungScope";
 import { VereinRef } from "@/api/types/verein/VereinRef";
 import { PersonRef } from "@/api/types/person/PersonRef";
 import { CountryCode } from "@/api/enums/CountryCode";

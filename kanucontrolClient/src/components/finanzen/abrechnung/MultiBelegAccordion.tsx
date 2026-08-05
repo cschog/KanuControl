@@ -2,14 +2,14 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Accordion, AccordionDetails, AccordionSummary, Box } from "@mui/material";
 
 import { GenericTableTanstack } from "@/components/common/GenericTableTanstack";
-import { buchungColumns } from "@/components/finanzen/buchung/buchungColumns";
-import BuchungRow from "@/components/finanzen/buchung/BuchungRow";
+import { buchungColumns } from "@/components/finanzen/abrechnung/buchungColumns";
+import BuchungRow from "@/components/finanzen/abrechnung/BuchungRow";
 
 import { AbrechnungBeleg, Buchung } from "@/api/types/abrechnung";
 
 import { radius, spacing } from "@/theme/ui";
 import { berechneBelegsumme } from "@/api/utils/belegUtils";
-import BelegHeader from "@/components/finanzen/buchung/BelegHeader";
+import BelegHeader from "@/components/finanzen/abrechnung/BelegHeader";
 
 interface Props {
   beleg: AbrechnungBeleg;

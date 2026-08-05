@@ -1,7 +1,7 @@
 // src/components/verwaltung/unterkunft/UnterkunftsartDialog.tsx
 
 import { useEffect, useState } from "react";
-import { Checkbox, FormControlLabel, Stack } from "@mui/material";
+import { Stack } from "@mui/material";
 
 import GenericCrudDialog from "@/components/common/GenericCrudDialog";
 import FormFeld from "@/components/common/FormFeld";

@@ -1,15 +1,13 @@
 // src/components/verwaltung/unterkunft/UnterkunftsartPage.tsx
 
 import { useEffect, useState } from "react";
-import { Alert, Box, Button, CircularProgress } from "@mui/material";
+import { Alert, Box, CircularProgress } from "@mui/material";
 
 import CrudToolbar from "@/components/common/CrudToolbar";
 
 import ConfirmDeleteDialog from "@/components/common/ConfirmDeleteDialog";
 import VerpflegungsmodellTable from "@/components/verwaltung/verpflegung/VerpflegungsmodellTable";
 
-import { UnterkunftsartDTO } from "@/api/types/unterkunft/UnterkunftsartDTO";
-import { UnterkunftsartCreateUpdateDTO } from "@/api/types/unterkunft/UnterkunftsartCreateUpdateDTO";
 import {
     getVerpflegungsmodelle,
     createVerpflegungsmodell,
@@ -19,7 +17,6 @@ import {
 import VerpflegungsmodellDialog from "@/components/verwaltung/verpflegung/VerpflegungsmodellDialog";
 import { VerpflegungsmodellDTO } from "@/api/types/verpflegung/VerpflegungsmodellDTO";
 import { VerpflegungsmodellCreateUpdateDTO } from "@/api/types/verpflegung/VerpflegungsmodellCreateUpdateDTO";
-import UnterkunftsartPage from "@/components/verwaltung/unterkunft/UnterkunftsartPage";
 
 const VerpflegungsmodellPage = () => {
     const [data, setData] = useState<VerpflegungsmodellDTO[]>([]);
@@ -63,20 +60,7 @@ const VerpflegungsmodellPage = () => {
         setDialogOpen(true);
     };
 
-    const handleEdit = () => {
-        if (!selected) return;
 
-        setEditing(selected);
-        setDialogOpen(true);
-    };
-
-    const handleDelete = () => {
-        if (!selected) {
-            return;
-        }
-
-        setDeleteOpen(true);
-    };
 
     const confirmDelete = async () => {
         if (!selected) {

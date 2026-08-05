@@ -55,3 +55,13 @@ export interface BelegUpdate {
   datum: string;
   beschreibung?: string;
 }
+
+export interface BelegDokumentDTO {
+  id: number;
+  reihenfolge: number;
+  titel?: string;
+  originalDateiname: string;
+  mimeType: string;
+  dateigroesse: number;
+  createdAt: string;
+}

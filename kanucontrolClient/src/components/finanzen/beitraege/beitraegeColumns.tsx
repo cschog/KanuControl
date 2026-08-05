@@ -1,6 +1,6 @@
 import { ColumnDef } from "@tanstack/react-table";
 
-import { Box, Checkbox, Chip, TextField, Typography } from "@mui/material";
+import { Box, Checkbox, Chip, Typography } from "@mui/material";
 
 import Money from "@/components/common/Money";
 
@@ -15,7 +15,6 @@ interface Props {
 
 export const beitraegeColumns = ({
   onBezahltChange,
-  setData,
 }: Props): ColumnDef<TeilnehmerListDTO>[] => [
     {
       id: "teilnehmer",

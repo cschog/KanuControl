@@ -3,7 +3,6 @@ import { VereinRef } from "@/api/types/verein/VereinRef";
 import { PersonRef } from "@/api/types/person/PersonRef";
 import { CountryCode } from "@/api/enums/CountryCode";
 
-import { VeranstaltungScope } from "@/api/enums/VeranstaltungScope";
 import { VerpflegungsmodellRef } from "@/api/types/veranstaltung/VerpflegungsmodellRef";
 import { UnterkunftsartRef } from "@/api/types/unterkunft/UnterkunftsartRef";
 
