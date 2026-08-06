@@ -27,7 +27,6 @@ public class FinanzGruppeController {
        ========================= */
 
     @GetMapping
-
     public ApiResponse<List<FinanzGruppeOverviewDTO>> findAll(
             @PathVariable Long veranstaltungId) {
 

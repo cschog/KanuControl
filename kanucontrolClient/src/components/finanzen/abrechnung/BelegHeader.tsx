@@ -2,6 +2,7 @@ import { Box, Chip, Stack } from "@mui/material";
 import Money from "@/components/common/Money";
 import BelegActions from "./BelegActions";
 import BelegInfo from "./BelegInfo";
+import AttachFileIcon from "@mui/icons-material/AttachFile";
 
 import { AbrechnungBeleg } from "@/api/types/abrechnung";
 import { chip, fontSize, spacing } from "@/theme/ui";
@@ -12,10 +13,11 @@ interface Props {
   readOnly?: boolean;
 
   showBuchungsChip?: boolean;
+  onShowDokumente: (beleg: AbrechnungBeleg) => void;
 
   onEditBeleg: (beleg: AbrechnungBeleg) => void;
   onAddPosition: (beleg: AbrechnungBeleg) => void;
-  onDeleteBeleg: (belegId: number) => void;
+  onDeleteBeleg: (beleg: AbrechnungBeleg) => void;
 }
 
 export default function BelegHeader({
@@ -26,7 +28,18 @@ export default function BelegHeader({
   onEditBeleg,
   onAddPosition,
   onDeleteBeleg,
+  onShowDokumente,
 }: Props) {
+  const chipStyle = {
+    height: chip.height,
+    borderRadius: chip.borderRadius,
+    bgcolor: "action.hover",
+    color: "text.secondary",
+    "& .MuiChip-label": {
+      px: chip.labelPadding,
+      fontSize: fontSize.cardTitle,
+    },
+  };
 
   return (
     <Box
@@ -84,21 +97,19 @@ export default function BelegHeader({
           }}
         />
 
-        {showBuchungsChip && (
+        {beleg.dokumente.length > 0 && (
           <Chip
-            label={`${beleg.positionen.length} Buchungen`}
+            clickable
+            icon={<AttachFileIcon />}
+            label={`${beleg.dokumente.length} Dokument${beleg.dokumente.length === 1 ? "" : "e"}`}
+            onClick={() => onShowDokumente(beleg)}
             size="small"
-            sx={{
-              height: chip.height,
-              borderRadius: chip.borderRadius,
-              bgcolor: "action.hover",
-              color: "text.secondary",
-              "& .MuiChip-label": {
-                px: chip.labelPadding,
-                fontSize: fontSize.cardTitle,
-              },
-            }}
+            sx={chipStyle}
           />
+        )}
+
+        {showBuchungsChip && (
+          <Chip label={`${beleg.positionen.length} Buchungen`} size="small" sx={chipStyle} />
         )}
       </Stack>
     </Box>

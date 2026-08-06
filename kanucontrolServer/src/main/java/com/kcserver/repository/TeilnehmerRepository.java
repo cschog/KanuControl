@@ -59,6 +59,26 @@ public interface TeilnehmerRepository extends JpaRepository<Teilnehmer, Long>,
     """)
     List<Teilnehmer> searchRef(Long veranstaltungId, String search);
 
+    @Query("""
+SELECT DISTINCT t
+FROM Teilnehmer t
+JOIN FETCH t.person p
+LEFT JOIN FETCH p.mitgliedschaften m
+LEFT JOIN FETCH m.verein
+WHERE t.veranstaltung.id = :veranstaltungId
+AND t.finanzGruppe IS NULL
+AND (
+    :search IS NULL
+    OR :search = ''
+    OR LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%'))
+    OR LOWER(p.vorname) LIKE LOWER(CONCAT('%', :search, '%'))
+    OR LOWER(CONCAT(p.vorname, ' ', p.name)) LIKE LOWER(CONCAT('%', :search, '%'))
+    OR LOWER(CONCAT(p.name, ' ', p.vorname)) LIKE LOWER(CONCAT('%', :search, '%'))
+)
+ORDER BY p.name, p.vorname
+""")
+    List<Teilnehmer> searchOhneFinanzgruppe(Long veranstaltungId, String search);
+
     /* =========================================================
        AVAILABLE
        ========================================================= */

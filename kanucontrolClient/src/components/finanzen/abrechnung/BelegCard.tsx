@@ -13,8 +13,8 @@ interface Props {
   onEditBeleg: (beleg: AbrechnungBeleg) => void;
   onAddPosition: (beleg: AbrechnungBeleg) => void;
   onEditPosition: (beleg: AbrechnungBeleg, buchung: Buchung) => void;
-  onDeletePosition: (belegId: number, buchungId: number) => void;
-  onDeleteBeleg: (belegId: number) => void;
+  onDeletePosition: (belegId: number, buchung: Buchung) => void;
+  onDeleteBeleg: (beleg: AbrechnungBeleg) => void;
 }
 
 export default function BelegCard({
@@ -29,7 +29,7 @@ export default function BelegCard({
   const columns = buchungColumns({
     onEdit: (buchung) => onEditPosition(beleg, buchung),
 
-    onDelete: (buchungId) => onDeletePosition(beleg.id, buchungId),
+    onDelete: (buchung) => onDeletePosition(beleg.id, buchung),
   });
 
   return (

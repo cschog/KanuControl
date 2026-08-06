@@ -4,7 +4,11 @@ import { Typography } from "@mui/material";
 import { AbrechnungBeleg } from "@/api/types/abrechnung";
 import Money from "@/components/common/Money";
 import { formatGermanDate } from "@/utils/dateUtils";
-import { finanzKategorieLabel, kategorieZuTyp } from "@/api/types/finanz";
+//import { finanzKategorieLabel, kategorieZuTyp } from "@/api/types/finanz";
+import { kategorieZuTyp } from "@/api/types/finanz";
+
+import AttachFileIcon from "@mui/icons-material/AttachFile";
+import { Chip } from "@mui/material";
 
 export const belegColumns: ColumnDef<AbrechnungBeleg>[] = [
   {
@@ -13,18 +17,25 @@ export const belegColumns: ColumnDef<AbrechnungBeleg>[] = [
     size: 110,
   },
 
+  // {
+  //   id: "kategorie",
+  //   header: "Kategorie",
+  //   size: 180,
+  //   enableSorting: false,
+  //   cell: ({ row }) => {
+  //     const positionen = row.original.positionen;
+  //     if (positionen.length !== 1) {
+  //       return "-";
+  //     }
+  //     return finanzKategorieLabel[positionen[0].kategorie];
+  //   },
+  // },
+
   {
-    id: "kategorie",
-    header: "Kategorie",
+    accessorKey: "aussteller",
+    header: "Aussteller",
     size: 180,
-    enableSorting: false,
-    cell: ({ row }) => {
-      const positionen = row.original.positionen;
-      if (positionen.length !== 1) {
-        return "-";
-      }
-      return finanzKategorieLabel[positionen[0].kategorie];
-    },
+    cell: ({ row }) => <Typography noWrap>{row.original.aussteller || "-"}</Typography>,
   },
 
   {
@@ -46,6 +57,19 @@ export const belegColumns: ColumnDef<AbrechnungBeleg>[] = [
     size: 70,
     enableSorting: false,
     cell: ({ row }) => row.original.positionen.length,
+  },
+
+  {
+    id: "dokumente",
+    header: "📎",
+    size: 70,
+    enableSorting: false,
+    cell: ({ row }) =>
+      row.original.dokumente.length > 0 ? (
+        <Chip icon={<AttachFileIcon />} label={row.original.dokumente.length} size="small" />
+      ) : (
+        "-"
+      ),
   },
 
   {

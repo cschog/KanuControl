@@ -13,7 +13,7 @@ interface Props {
 
   onEditBeleg: (beleg: AbrechnungBeleg) => void;
   onAddPosition: (beleg: AbrechnungBeleg) => void;
-  onDeleteBeleg: (belegId: number) => void;
+  onDeleteBeleg: (beleg: AbrechnungBeleg) => void;
 }
 
 export default function BelegActions({
@@ -62,7 +62,7 @@ export default function BelegActions({
           color="error"
           onClick={(e) => {
             e.stopPropagation();
-            onDeleteBeleg(beleg.id);
+            onDeleteBeleg(beleg);
           }}
         >
           <DeleteIcon fontSize="small" />

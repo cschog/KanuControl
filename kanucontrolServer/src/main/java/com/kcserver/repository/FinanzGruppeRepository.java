@@ -6,7 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.Query;
-import java.math.BigDecimal;
 
 public interface FinanzGruppeRepository
         extends JpaRepository<FinanzGruppe, Long> {
@@ -30,15 +29,17 @@ FROM FinanzGruppe fg
 LEFT JOIN FETCH fg.teilnehmer t
 LEFT JOIN FETCH t.person
 WHERE fg.veranstaltung.id = :veranstaltungId
+ORDER BY fg.kuerzel
 """)
     List<FinanzGruppe> findWithTeilnehmerByVeranstaltungId(Long veranstaltungId);
 
     @Query("""
-    SELECT fg
-    FROM FinanzGruppe fg
-    LEFT JOIN FETCH fg.teilnehmer t
-    LEFT JOIN FETCH t.person
-    WHERE fg.id = :gruppeId
+SELECT fg
+FROM FinanzGruppe fg
+LEFT JOIN FETCH fg.teilnehmer t
+LEFT JOIN FETCH t.person
+WHERE fg.id = :gruppeId
+ORDER BY fg.kuerzel
 """)
     Optional<FinanzGruppe> findWithTeilnehmer(Long gruppeId);
 

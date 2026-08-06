@@ -13,7 +13,7 @@ interface Props {
   stopPropagation?: boolean;
 
   onEdit: (beleg: AbrechnungBeleg, buchung: Buchung) => void;
-  onDelete: (belegId: number, buchungId: number) => void;
+  onDelete: (belegId: number, buchung: Buchung) => void;
 }
 
 export default function BuchungRow({
@@ -80,7 +80,7 @@ export default function BuchungRow({
             variant="outlined"
             onClick={(e) => {
               if (stopPropagation) e.stopPropagation();
-              onDelete(beleg.id, buchung.id);
+              onDelete(beleg.id, buchung);
             }}
           >
             Löschen

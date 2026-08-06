@@ -12,8 +12,9 @@ interface Props {
   onEditBeleg: (beleg: AbrechnungBeleg) => void;
   onAddPosition: (beleg: AbrechnungBeleg) => void;
   onEditPosition: (beleg: AbrechnungBeleg, buchung: Buchung) => void;
-  onDeletePosition: (belegId: number, buchungId: number) => void;
-  onDeleteBeleg: (belegId: number) => void;
+  onDeletePosition: (belegId: number, buchung: Buchung) => void;
+  onDeleteBeleg: (beleg: AbrechnungBeleg) => void;
+  onShowDokumente: (beleg: AbrechnungBeleg) => void;
 }
 
 export default function SingleBelegRow({
@@ -24,6 +25,7 @@ export default function SingleBelegRow({
   onEditPosition,
   onDeletePosition,
   onDeleteBeleg,
+  onShowDokumente,
 }: Props) {
   const buchung = beleg.positionen[0];
   const summe = berechneBelegsumme(beleg);
@@ -47,6 +49,7 @@ export default function SingleBelegRow({
             onEditBeleg={onEditBeleg}
             onAddPosition={onAddPosition}
             onDeleteBeleg={onDeleteBeleg}
+            onShowDokumente={onShowDokumente}
           />
         </Stack>
 

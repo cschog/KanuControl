@@ -18,8 +18,10 @@ interface Props {
   onEditBeleg: (beleg: AbrechnungBeleg) => void;
   onAddPosition: (beleg: AbrechnungBeleg) => void;
   onEditPosition: (beleg: AbrechnungBeleg, buchung: Buchung) => void;
-  onDeletePosition: (belegId: number, buchungId: number) => void;
-  onDeleteBeleg: (belegId: number) => void;
+  onDeletePosition: (belegId: number, buchung: Buchung) => void;
+  onDeleteBeleg: (beleg: AbrechnungBeleg) => void;
+
+  onShowDokumente: (beleg: AbrechnungBeleg) => void;
 }
 
 export default function MultiBelegAccordion({
@@ -30,6 +32,7 @@ export default function MultiBelegAccordion({
   onEditPosition,
   onDeletePosition,
   onDeleteBeleg,
+  onShowDokumente,
 }: Props) {
   if (beleg.positionen.length === 0) {
     return null;
@@ -37,7 +40,7 @@ export default function MultiBelegAccordion({
 
   const columns = buchungColumns({
     onEdit: (buchung) => onEditPosition(beleg, buchung),
-    onDelete: (buchungId) => onDeletePosition(beleg.id, buchungId),
+    onDelete: (buchung) => onDeletePosition(beleg.id, buchung),
   });
 
   const summe = berechneBelegsumme(beleg);
@@ -59,6 +62,7 @@ export default function MultiBelegAccordion({
           onEditBeleg={onEditBeleg}
           onAddPosition={onAddPosition}
           onDeleteBeleg={onDeleteBeleg}
+          onShowDokumente={onShowDokumente}
         />
       </AccordionSummary>
 

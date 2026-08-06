@@ -1,4 +1,5 @@
 import {
+  Alert,
   Button,
   Typography,
   Divider,
@@ -6,14 +7,21 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  CircularProgress,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useEffect, useState, useCallback, useMemo } from "react";
+import BelegDokumentDialog from "@/components/finanzen/abrechnung/BelegDokumentDialog";
+
+import { berechneBelegsumme } from "@/api/utils/belegUtils";
+import { formatGermanDate } from "@/utils/dateUtils";
+
+import Money from "@/components/common/Money";
+import DeleteConfirmDialog from "@/components/common/DeleteConfirmDialog";
 
 import { FinanzKategorie } from "@/api/types/finanz";
-
-import SingleBelegRow from "@/components/finanzen/abrechnung/SingleBelegRow";
-import MultiBelegAccordion from "@/components/finanzen/abrechnung/MultiBelegAccordion";
+import { upload } from "@/api/services/belegDokumentApi";
+import FinanzgruppenBelegeAccordion from "@/components/finanzen/abrechnung/FinanzgruppenBelegeAccordion";
 import BuchungDialog from "@/components/finanzen/abrechnung/BuchungDialog";
 import BelegDialog from "@/components/finanzen/abrechnung/BelegDialog";
 import BelegMitBuchungDialog from "@/components/finanzen/abrechnung/BelegMitBuchungDialog";
@@ -24,7 +32,7 @@ import {
   addBuchung,
   updateBuchung,
   deleteBuchung,
-  deleteBeleg,
+  deleteBeleg as deleteBelegApi,
   updateBeleg,
   createBelegWithBuchung,
 } from "@/api/services/abrechnungApi";
@@ -68,6 +76,14 @@ export default function BuchungenPage({ veranstaltungId }: Props) {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingBeleg, setEditingBeleg] = useState<AbrechnungBeleg | null>(null);
+
+  const [dokumentDialogOpen, setDokumentDialogOpen] = useState(false);
+  const [selectedDokumentBeleg, setSelectedDokumentBeleg] = useState<AbrechnungBeleg | null>(null);
+  const [deleteBeleg, setDeleteBeleg] = useState<AbrechnungBeleg | null>(null);
+  const [deletePosition, setDeletePosition] = useState<{
+    belegId: number;
+    buchung: Buchung;
+  } | null>(null);
 
   /* =========================================================
      LOAD
@@ -133,7 +149,9 @@ export default function BuchungenPage({ veranstaltungId }: Props) {
     return positionen;
   }, [abrechnung]);
 
-  if (!abrechnung) return null;
+  if (!abrechnung) {
+    return <CircularProgress />;
+  }
 
   /* =========================================================
      BUCHUNG CRUD
@@ -157,10 +175,36 @@ export default function BuchungenPage({ veranstaltungId }: Props) {
      CREATE BELEG
      ========================================================= */
 
-  const handleCreateBeleg = async (data: { beleg: BelegCreate; buchung: BuchungCreate }) => {
-    await createBelegWithBuchung(veranstaltungId, data);
+  const handleCreateBeleg = async (
+    data: {
+      beleg: BelegCreate;
+      buchung: BuchungCreate;
+    },
+    files: File[],
+  ) => {
+    const beleg = await createBelegWithBuchung(veranstaltungId, data);
+
+    if (files.length > 0) {
+      await Promise.all(files.map((file) => upload(beleg.id, file)));
+    }
 
     setCreateDialogOpen(false);
+
+    await load();
+  };
+
+  const handleDeletePosition = (belegId: number, buchung: Buchung) => {
+    setDeletePosition({ belegId, buchung });
+  };
+
+  const confirmDeletePosition = async () => {
+    if (!deletePosition) {
+      return;
+    }
+
+    await deleteBuchung(veranstaltungId, deletePosition.belegId, deletePosition.buchung.id);
+
+    setDeletePosition(null);
 
     await load();
   };
@@ -182,6 +226,11 @@ export default function BuchungenPage({ veranstaltungId }: Props) {
     setEditDialogOpen(true);
   };
 
+  const handleShowDokumente = (beleg: AbrechnungBeleg) => {
+    setSelectedDokumentBeleg(beleg);
+    setDokumentDialogOpen(true);
+  };
+
   const handleAddPosition = (beleg: AbrechnungBeleg) => {
     setSelectedBeleg(beleg);
     setEditingBuchung(undefined);
@@ -196,16 +245,18 @@ export default function BuchungenPage({ veranstaltungId }: Props) {
     setBuchungDialogOpen(true);
   };
 
-  const handleDeletePosition = async (belegId: number, buchungId: number) => {
-    if (!confirm("Position wirklich löschen?")) return;
-    await deleteBuchung(veranstaltungId, belegId, buchungId);
+  const confirmDeleteBeleg = async () => {
+    if (!deleteBeleg) {
+      return;
+    }
+    await deleteBelegApi(veranstaltungId, deleteBeleg.id);
+    setDeleteBeleg(null);
+
     await load();
   };
 
-  const handleDeleteBeleg = async (belegId: number) => {
-    if (!confirm("Beleg komplett löschen?")) return;
-    await deleteBeleg(veranstaltungId, belegId);
-    await load();
+  const handleDeleteBeleg = (beleg: AbrechnungBeleg) => {
+    setDeleteBeleg(beleg);
   };
 
   /* =========================================================
@@ -264,35 +315,16 @@ export default function BuchungenPage({ veranstaltungId }: Props) {
         </AccordionSummary>
 
         <AccordionDetails>
-          {[...abrechnung.belege]
-            .sort((a, b) => new Date(b.datum).getTime() - new Date(a.datum).getTime())
-            .map((beleg) => {
-              const sichtbarePositionen = beleg.positionen.filter(istInBeleglisteSichtbar);
-              if (sichtbarePositionen.length === 0) {
-                return null;
-              }
-
-              const sichtbarerBeleg = {
-                ...beleg,
-                positionen: sichtbarePositionen,
-              };
-
-              const Component =
-                sichtbarePositionen.length > 1 ? MultiBelegAccordion : SingleBelegRow;
-
-              return (
-                <Component
-                  key={beleg.id}
-                  beleg={sichtbarerBeleg}
-                  readOnly={abrechnung.status === AbrechnungsStatus.ABGESCHLOSSEN}
-                  onEditBeleg={handleEditBeleg}
-                  onAddPosition={handleAddPosition}
-                  onEditPosition={handleEditPosition}
-                  onDeletePosition={handleDeletePosition}
-                  onDeleteBeleg={handleDeleteBeleg}
-                />
-              );
-            })}
+          <FinanzgruppenBelegeAccordion
+            belege={abrechnung.belege}
+            readOnly={abrechnung.status === AbrechnungsStatus.ABGESCHLOSSEN}
+            onEditBeleg={handleEditBeleg}
+            onShowDokumente={handleShowDokumente}
+            onAddPosition={handleAddPosition}
+            onEditPosition={handleEditPosition}
+            onDeletePosition={handleDeletePosition}
+            onDeleteBeleg={handleDeleteBeleg}
+          />
         </AccordionDetails>
       </Accordion>
 
@@ -345,6 +377,102 @@ export default function BuchungenPage({ veranstaltungId }: Props) {
         }}
         onSave={handleUpdateBeleg}
       />
+
+      {selectedDokumentBeleg && (
+        <BelegDokumentDialog
+          open={dokumentDialogOpen}
+          belegId={selectedDokumentBeleg.id}
+          onClose={() => {
+            setDokumentDialogOpen(false);
+            setSelectedDokumentBeleg(null);
+          }}
+        />
+      )}
+
+      <DeleteConfirmDialog
+        open={deleteBeleg !== null}
+        title="Beleg löschen"
+        onClose={() => setDeleteBeleg(null)}
+        onConfirm={() => void confirmDeleteBeleg()}
+      >
+        {deleteBeleg && (
+          <Stack spacing={2}>
+            <Typography color="text.secondary">
+              Der folgende Beleg wird vollständig gelöscht.
+            </Typography>
+
+            <Divider />
+
+            <Stack spacing={1}>
+              <Stack direction="row" justifyContent="space-between">
+                <Typography color="text.secondary">Aussteller</Typography>
+                <Typography>{deleteBeleg.aussteller || "-"}</Typography>
+              </Stack>
+
+              <Stack direction="row" justifyContent="space-between">
+                <Typography color="text.secondary">Datum</Typography>
+                <Typography>{formatGermanDate(deleteBeleg.datum)}</Typography>
+              </Stack>
+
+              <Stack direction="row" justifyContent="space-between">
+                <Typography color="text.secondary">Belegnummer</Typography>
+                <Typography>{deleteBeleg.belegnummer}</Typography>
+              </Stack>
+
+              <Stack direction="row" justifyContent="space-between">
+                <Typography color="text.secondary">Summe</Typography>
+
+                <Money value={berechneBelegsumme(deleteBeleg)} />
+              </Stack>
+
+              <Stack direction="row" justifyContent="space-between">
+                <Typography color="text.secondary">Dokumente</Typography>
+                <Typography>{deleteBeleg.dokumente.length}</Typography>
+              </Stack>
+
+              <Stack direction="row" justifyContent="space-between">
+                <Typography color="text.secondary">Positionen</Typography>
+                <Typography>{deleteBeleg.positionen.length}</Typography>
+              </Stack>
+            </Stack>
+
+            <Alert severity="warning">
+              Alle Dokumente und Buchungen dieses Belegs werden ebenfalls gelöscht.
+            </Alert>
+          </Stack>
+        )}
+      </DeleteConfirmDialog>
+
+      <DeleteConfirmDialog
+        open={deletePosition !== null}
+        title="Position löschen"
+        onClose={() => setDeletePosition(null)}
+        onConfirm={() => void confirmDeletePosition()}
+      >
+        {deletePosition && (
+          <Stack spacing={2}>
+            <Typography color="text.secondary">
+              Die folgende Buchungsposition wird gelöscht.
+            </Typography>
+
+            <Divider />
+
+            <Stack spacing={1}>
+              <Stack direction="row" justifyContent="space-between">
+                <Typography color="text.secondary">Beschreibung</Typography>
+                <Typography>{deletePosition.buchung.beschreibung}</Typography>
+              </Stack>
+
+              <Stack direction="row" justifyContent="space-between">
+                <Typography color="text.secondary">Betrag</Typography>
+                <Money value={deletePosition.buchung.betrag} />
+              </Stack>
+            </Stack>
+
+            <Alert severity="warning">Diese Buchungsposition wird dauerhaft gelöscht.</Alert>
+          </Stack>
+        )}
+      </DeleteConfirmDialog>
     </>
   );
 }

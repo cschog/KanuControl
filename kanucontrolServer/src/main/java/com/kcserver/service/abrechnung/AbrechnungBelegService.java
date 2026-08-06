@@ -68,7 +68,7 @@ public class AbrechnungBelegService {
         beleg.setLfdNr(next);
         beleg.setDatum(dto.getDatum() != null ? dto.getDatum() : LocalDate.now());
         beleg.setBeschreibung(dto.getBeschreibung());
-        beleg.setHaendler(dto.getHaendler());
+        beleg.setAussteller(dto.getAussteller());
         beleg.setExterneBelegnummer(dto.getExterneBelegnummer());
 
         beleg.setFinanzGruppe(gruppe);
@@ -138,7 +138,7 @@ public class AbrechnungBelegService {
         );
 
         beleg.setBeschreibung(dto.getBeschreibung());
-        beleg.setHaendler(dto.getHaendler());
+        beleg.setAussteller(dto.getAussteller());
         beleg.setExterneBelegnummer(dto.getExterneBelegnummer());
 
         beleg.setFinanzGruppe(gruppe);

@@ -55,7 +55,7 @@ public class AbrechnungBeleg extends Auditable {
     private String externeBelegnummer;
 
     @Column(length = 200)
-    private String haendler;
+    private String aussteller;
 
     @Column(nullable = false)
     private LocalDate datum;

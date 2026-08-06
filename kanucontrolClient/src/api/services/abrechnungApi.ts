@@ -67,15 +67,18 @@ export const wiederOeffnenAbrechnung = async (veranstaltungId: number) => {
 
 export async function createBelegWithBuchung(
   veranstaltungId: number,
+
   payload: {
     beleg: BelegCreate;
     buchung: BuchungCreate;
   },
-) {
-  return apiClient.post(
+): Promise<AbrechnungBeleg> {
+  const response = await apiClient.post<AbrechnungBeleg>(
     `/veranstaltungen/${veranstaltungId}/abrechnung/belege/mit-buchung`,
     payload,
   );
+
+  return response.data;
 }
 
 export async function addBeleg(

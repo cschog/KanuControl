@@ -120,13 +120,19 @@ export async function updateTeilnehmerRolle(
 
 export async function searchTeilnehmer(veranstaltungId: number, search: string) {
   const res = await apiClient.get(
-    `/veranstaltungen/${veranstaltungId}/teilnehmer/search`, // ✅ RICHTIG
+    `/veranstaltungen/${veranstaltungId}/teilnehmer/search/ohne-finanzgruppe`,
     {
       params: { search },
     },
   );
 
   return res.data ?? [];
+}
+
+export async function getTeilnehmerCount(veranstaltungId: number): Promise<number> {
+  const res = await apiClient.get(`/veranstaltungen/${veranstaltungId}/teilnehmer/count`);
+
+  return res.data;
 }
 
 export async function removeTeilnehmerFromGruppe(

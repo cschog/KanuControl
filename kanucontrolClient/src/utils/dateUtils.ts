@@ -27,15 +27,16 @@ export function normalizeGermanDate(input: string): string | null {
   return null;
 }
 
-function buildIsoDate(d: string, m: string, y: string): string | null {
+export function buildIsoDate(d: string, m: string, y: string): string | null {
   const day = Number(d);
   const month = Number(m);
   const year = Number(y);
 
-  const date = new Date(year, month - 1, day);
-
   if (month < 1 || month > 12) return null;
   if (day < 1 || day > 31) return null;
+  if (year < 2000 || year > 2200) return null;
+
+  const date = new Date(year, month - 1, day);
 
   // echte Validierung (kein 31.02.)
   if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {

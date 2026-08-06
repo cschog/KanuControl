@@ -6,6 +6,7 @@ import {
   DialogActions,
   Button,
 } from "@mui/material";
+import { ReactNode } from "react";
 
 interface Props {
   open: boolean;
@@ -13,6 +14,7 @@ interface Props {
   message?: string;
   onClose: () => void;
   onConfirm: () => void;
+  children?: ReactNode;
 }
 
 const DeleteConfirmDialog = ({
@@ -21,14 +23,13 @@ const DeleteConfirmDialog = ({
   message = "Soll dieser Eintrag wirklich gelöscht werden?",
   onClose,
   onConfirm,
+  children,
 }: Props) => {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle>{title}</DialogTitle>
 
-      <DialogContent>
-        <DialogContentText>{message}</DialogContentText>
-      </DialogContent>
+      <DialogContent>{children ?? <DialogContentText>{message}</DialogContentText>}</DialogContent>
 
       <DialogActions>
         <Button onClick={onClose}>Abbrechen</Button>

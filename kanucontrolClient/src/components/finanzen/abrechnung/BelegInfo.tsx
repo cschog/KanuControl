@@ -29,7 +29,7 @@ export default function BelegInfo({ beleg }: Props) {
             textOverflow: "ellipsis",
           }}
         >
-          {system ? beleg.beschreibung : `${beleg.belegnummer} (${beleg.kuerzel}) • ${beleg.datum}`}
+          {system ? beleg.beschreibung : `${beleg.belegnummer} • ${beleg.datum}`}
         </Typography>
 
         {showKategorieChip && (

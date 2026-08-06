@@ -8,8 +8,8 @@ import { kategorieZuTyp } from "@/api/types/finanz";
 import { istEditierbar } from "@/api/utils/buchungUtils";
 
 interface Props {
-  onEdit: (row: Buchung) => void;
-  onDelete: (id: number) => void;
+  onEdit: (buchung: Buchung) => void;
+  onDelete: (buchung: Buchung) => void;
 }
 
 export const buchungColumns = ({ onEdit, onDelete }: Props): ColumnDef<Buchung>[] => [
@@ -97,7 +97,7 @@ export const buchungColumns = ({ onEdit, onDelete }: Props): ColumnDef<Buchung>[
             <EditIcon fontSize="small" />
           </IconButton>
 
-          <IconButton size="small" color="error" onClick={() => onDelete(row.original.id)}>
+          <IconButton size="small" color="error" onClick={() => onDelete(row.original)}>
             <DeleteIcon fontSize="small" />
           </IconButton>
         </Stack>

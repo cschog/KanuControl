@@ -61,7 +61,7 @@ public class AbrechnungMapper {
 
         dto.setBelegnummer(beleg.getBelegnummer());
         dto.setExterneBelegnummer(beleg.getExterneBelegnummer());
-        dto.setHaendler(beleg.getHaendler());
+        dto.setAussteller(beleg.getAussteller());
 
         dto.setDatum(beleg.getDatum());
         dto.setBeschreibung(beleg.getBeschreibung());

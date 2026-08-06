@@ -29,7 +29,7 @@ public class AbrechnungBelegDTO {
 
     private String externeBelegnummer;
 
-    private String haendler;
+    private String aussteller;
 
     private LocalDate datum;
 

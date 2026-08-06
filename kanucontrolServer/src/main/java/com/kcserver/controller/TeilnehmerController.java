@@ -52,6 +52,25 @@ public class TeilnehmerController {
         );
     }
 
+    @GetMapping("/count")
+    public ApiResponse<Long> count(
+            @PathVariable Long veranstaltungId
+    ) {
+        return ApiResponse.of(
+                teilnehmerService.count(veranstaltungId)
+        );
+    }
+
+    @GetMapping("/search/ohne-finanzgruppe")
+    public ApiResponse<List<TeilnehmerRefDTO>> searchOhneFinanzgruppe(
+            @PathVariable Long veranstaltungId,
+            @RequestParam(required = false) String search
+    ) {
+        return ApiResponse.of(
+                teilnehmerService.searchOhneFinanzgruppe(veranstaltungId, search)
+        );
+    }
+
     @GetMapping("/available/paged")
 
     public ApiResponse<Page<PersonListDTO>> findAvailablePaged(

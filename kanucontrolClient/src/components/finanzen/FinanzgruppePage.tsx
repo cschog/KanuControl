@@ -28,21 +28,21 @@ import {
   FinanzGruppe,
 } from "@/api/services/finanzgruppenApi";
 
-import { searchTeilnehmer, removeTeilnehmerFromGruppe } from "@/api/services/teilnehmerApi";
+import {
+  searchTeilnehmer,
+  removeTeilnehmerFromGruppe,
+  getTeilnehmerCount,
+} from "@/api/services/teilnehmerApi";
 
 /* =========================================================
    TYPES
    ========================================================= */
 
 type TeilnehmerSearch = {
-  id: number;
   personId: number;
-  person: {
-    id: number;
-    vorname: string;
-    name: string;
-  };
-  rolle: string | null;
+  vorname: string;
+  name: string;
+  hauptvereinAbk?: string;
 };
 
 type Props = {
@@ -75,6 +75,8 @@ export default function KuerzelPage({ veranstaltungId }: Props) {
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const inputRef = useRef<HTMLInputElement>(null);
+  const [gesamtTeilnehmer, setGesamtTeilnehmer] = useState(0);
+  const zugeordnet = groups.reduce((sum, g) => sum + g.teilnehmer.length, 0);
 
   /* ================= LOAD GROUPS ================= */
 
@@ -83,16 +85,17 @@ export default function KuerzelPage({ veranstaltungId }: Props) {
     setGroups(data);
   }, [veranstaltungId]);
 
-  useEffect(() => {
-    loadGroups();
-  }, [loadGroups]);
+  const loadTeilnehmerCount = useCallback(async () => {
+    const count = await getTeilnehmerCount(veranstaltungId);
+    setGesamtTeilnehmer(count);
+  }, [veranstaltungId]);
+
+ useEffect(() => {
+   loadGroups();
+   loadTeilnehmerCount();
+ }, [loadGroups, loadTeilnehmerCount]);
 
   useEffect(() => {
-    if (!search.trim()) {
-      setSearchResults([]);
-      return;
-    }
-
     const timeout = setTimeout(async () => {
       const results = await searchTeilnehmer(veranstaltungId, search);
       setSearchResults(results);
@@ -151,12 +154,14 @@ export default function KuerzelPage({ veranstaltungId }: Props) {
 
   /* ================= ADD TEILNEHMER ================= */
 
-  function openDialog(groupId: number) {
+  async function openDialog(groupId: number) {
     setSelectedGroup(groupId);
     setDialogOpen(true);
     setSearch("");
     setSelectedIds([]);
-    setSearchResults([]);
+
+    const results = await searchTeilnehmer(veranstaltungId, "");
+    setSearchResults(results);
   }
 
   function toggle(personId: number) {
@@ -171,7 +176,7 @@ export default function KuerzelPage({ veranstaltungId }: Props) {
     await assignTeilnehmerBulk(veranstaltungId, selectedGroup, selectedIds);
 
     setDialogOpen(false);
-    loadGroups();
+    await loadGroups();
   }
 
   /* ================= REMOVE TEILNEHMER ================= */
@@ -188,7 +193,8 @@ export default function KuerzelPage({ veranstaltungId }: Props) {
 
     setConfirmOpen(false);
     setRemoveTarget(null);
-    loadGroups();
+   await loadGroups();
+    
   }
 
   const columns = kuerzelColumns({
@@ -203,9 +209,16 @@ export default function KuerzelPage({ veranstaltungId }: Props) {
 
   return (
     <Box>
-      <Typography variant="h5" mb={2}>
-        Finanzgruppen-Verwaltung
-      </Typography>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
+        <Typography variant="h5">Finanzgruppen-Verwaltung</Typography>
+
+        <Typography
+          color={zugeordnet === gesamtTeilnehmer ? "success.main" : "warning.main"}
+          fontWeight={700}
+        >
+          {zugeordnet} / {gesamtTeilnehmer} Teilnehmer zugeordnet
+        </Typography>
+      </Stack>
 
       <Paper sx={{ p: 2, mb: 3 }}>
         <Stack direction="row" spacing={2}>
@@ -315,7 +328,9 @@ export default function KuerzelPage({ veranstaltungId }: Props) {
               }}
               onClick={() => toggle(t.personId)}
             >
-              {t.person.vorname} {t.person.name}
+              <Typography>
+                {t.name}, {t.vorname}
+              </Typography>
             </Box>
           ))}
         </DialogContent>
@@ -333,7 +348,8 @@ export default function KuerzelPage({ veranstaltungId }: Props) {
         <DialogTitle>Teilnehmer entfernen</DialogTitle>
         <DialogContent>
           <Typography>
-            Möchten Sie <strong>{removeTarget?.name}</strong> wirklich aus dieser Finanzgruppe entfernen?
+            Möchten Sie <strong>{removeTarget?.name}</strong> wirklich aus dieser Finanzgruppe
+            entfernen?
           </Typography>
         </DialogContent>
         <DialogActions>
@@ -353,7 +369,8 @@ export default function KuerzelPage({ veranstaltungId }: Props) {
             <Alert severity="error">{deleteError}</Alert>
           ) : (
             <Typography>
-              Möchten Sie die Finanzgruppe <strong>{deleteTarget?.kuerzel}</strong> wirklich löschen?
+              Möchten Sie die Finanzgruppe <strong>{deleteTarget?.kuerzel}</strong> wirklich
+              löschen?
             </Typography>
           )}
         </DialogContent>

@@ -12,8 +12,15 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete";
 import DownloadIcon from "@mui/icons-material/Download";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 
-import { deleteBelegDokument, download, findAll, upload } from "@/api/services/belegDokumentApi";
+import {
+  deleteBelegDokument,
+  download,
+  findAll,
+  preview,
+  upload,
+} from "@/api/services/belegDokumentApi";
 import { BelegDokumentDTO } from "@/api/types/abrechnung";
 
 import LoadingOverlay from "@/components/common/LoadingOverlay";
@@ -21,15 +28,15 @@ import DeleteConfirmDialog from "@/components/common/DeleteConfirmDialog";
 
 interface Props {
   belegId: number;
+  readOnly?: boolean;
 }
 
-export default function BelegDokumentPanel({ belegId }: Props) {
+export default function BelegDokumentPanel({ belegId, readOnly = false }: Props) {
   const [dokumente, setDokumente] = useState<BelegDokumentDTO[]>([]);
   const [loading, setLoading] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
-
 
   const loadDokumente = useCallback(
     async (showLoading = true) => {
@@ -91,12 +98,12 @@ export default function BelegDokumentPanel({ belegId }: Props) {
 
     const url = URL.createObjectURL(blob);
 
-   const a = document.createElement("a");
-   a.href = url;
-   a.download = dokument.originalDateiname;
-   a.click();
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = dokument.originalDateiname;
+    a.click();
 
-   setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
   function formatSize(bytes: number) {
@@ -116,29 +123,33 @@ export default function BelegDokumentPanel({ belegId }: Props) {
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
         <Typography variant="h6">Dokumente</Typography>
 
-        <Button
-          variant="contained"
-          startIcon={<UploadFileIcon />}
-          onClick={() => fileInputRef.current?.click()}
-        >
-          Hochladen
-        </Button>
+        {!readOnly && (
+          <Button
+            variant="contained"
+            startIcon={<UploadFileIcon />}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            Hochladen
+          </Button>
+        )}
 
-        <input
-          hidden
-          type="file"
-          accept=".pdf,image/*"
-          ref={fileInputRef}
-          onChange={(e) => {
-            const file = e.target.files?.[0];
+        {!readOnly && (
+          <input
+            hidden
+            type="file"
+            accept=".pdf,image/*"
+            ref={fileInputRef}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
 
-            if (file) {
-              void handleUpload(file);
-            }
+              if (file) {
+                void handleUpload(file);
+              }
 
-            e.target.value = "";
-          }}
-        />
+              e.target.value = "";
+            }}
+          />
+        )}
       </Stack>
 
       <LoadingOverlay loading={loading} text="Dokumente werden geladen..." />
@@ -155,13 +166,19 @@ export default function BelegDokumentPanel({ belegId }: Props) {
               divider
               secondaryAction={
                 <>
-                  <IconButton onClick={() => void handleDownload(dokument)}>
+                  <IconButton title="Anzeigen" onClick={() => void preview(dokument.id)}>
+                    <VisibilityIcon />
+                  </IconButton>
+
+                  <IconButton title="Herunterladen" onClick={() => void handleDownload(dokument)}>
                     <DownloadIcon />
                   </IconButton>
 
-                  <IconButton color="error" onClick={() => handleDelete(dokument.id)}>
-                    <DeleteIcon />
-                  </IconButton>
+                  {!readOnly && (
+                    <IconButton color="error" onClick={() => handleDelete(dokument.id)}>
+                      <DeleteIcon />
+                    </IconButton>
+                  )}
                 </>
               }
             >

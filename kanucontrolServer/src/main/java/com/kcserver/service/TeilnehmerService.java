@@ -287,6 +287,22 @@ public class TeilnehmerService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public long count(Long veranstaltungId) {
+        return teilnehmerRepository.countByVeranstaltungId(veranstaltungId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<TeilnehmerRefDTO> searchOhneFinanzgruppe(
+            Long veranstaltungId,
+            String search
+    ) {
+        return teilnehmerRepository.searchOhneFinanzgruppe(veranstaltungId, search)
+                .stream()
+                .map(teilnehmerMapper::toRefDTO)
+                .toList();
+    }
+
     /* =========================================================
        AVAILABLE
        ========================================================= */

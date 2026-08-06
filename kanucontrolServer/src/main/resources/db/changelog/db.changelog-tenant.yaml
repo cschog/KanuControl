@@ -125,3 +125,5 @@ databaseChangeLog:
       file: db/changelog/changes/20260803-02-create-beleg-dokument.xml
   - include:
       file: db/changelog/changes/20260803-03-abrechnung-buchung-beschreibung.xml
+  - include:
+      file: db/changelog/changes/20260805-rename-haendler-to-aussteller.xml

@@ -5,11 +5,18 @@ import { BuchungsHerkunft } from "@/api/types/BuchungsHerkunft";
 
 export interface AbrechnungBeleg {
   id: number;
+
   belegnummer: string;
+  externeBelegnummer?: string;
+  aussteller?: string;
+
   kuerzel: string;
   datum: string;
-  beschreibung: string;
+  beschreibung?: string;
+
   herkunft: BuchungsHerkunft;
+
+  dokumente: BelegDokumentDTO[];
   positionen: Buchung[];
 }
 
@@ -46,13 +53,21 @@ export interface FinanzSummary {
 
 export interface BelegCreate {
   kuerzel: string;
+
   datum: string;
+
+  aussteller?: string;
+  externeBelegnummer?: string;
   beschreibung?: string;
 }
 
 export interface BelegUpdate {
   kuerzel: string;
+
   datum: string;
+
+  aussteller?: string;
+  externeBelegnummer?: string;
   beschreibung?: string;
 }
 

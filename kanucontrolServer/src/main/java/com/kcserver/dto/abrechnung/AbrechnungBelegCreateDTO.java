@@ -18,7 +18,7 @@ public class AbrechnungBelegCreateDTO {
     /**
      * Optional: Händler/Lieferant
      */
-    private String haendler;
+    private String aussteller;
 
     /**
      * Optional: Rechnungs- oder Belegnummer des Ausstellers
