@@ -3,6 +3,7 @@ package com.kcserver.dto.teilnehmer;
 import com.kcserver.dto.person.PersonRefDTO;
 import com.kcserver.enumtype.BeitragsQuelle;
 import com.kcserver.enumtype.TeilnehmerRolle;
+import com.kcserver.enumtype.Zahlungsstatus;
 import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -26,11 +27,11 @@ public class TeilnehmerListDTO {
 
     private BigDecimal individuellerBeitrag;
 
-    private Boolean bezahlt;
-
-    private LocalDate bezahltAm;
-
-    private BigDecimal effektiverBeitrag;
-
     private BeitragsQuelle beitragsQuelle;
+
+    private BigDecimal sollBeitrag;
+    private BigDecimal gezahlterBetrag;
+    private Zahlungsstatus zahlungsstatus;
+
+
 }

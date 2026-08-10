@@ -4,6 +4,8 @@ import com.kcserver.entity.*;
 import com.kcserver.enumtype.PdfDokumentTyp;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.repository.*;
+import com.kcserver.repository.abrechnung.AbrechnungBuchungRepository;
+import com.kcserver.repository.abrechnung.AbrechnungRepository;
 import com.kcserver.service.FoerderService;
 import com.kcserver.service.abrechnung.AbrechnungSynchronisationsService;
 import com.kcserver.service.veranstaltung.VeranstaltungValidator;

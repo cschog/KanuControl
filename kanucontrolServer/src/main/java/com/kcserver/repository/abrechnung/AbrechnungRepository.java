@@ -1,4 +1,4 @@
-package com.kcserver.repository;
+package com.kcserver.repository.abrechnung;
 
 import com.kcserver.entity.Abrechnung;
 import org.springframework.data.jpa.repository.JpaRepository;

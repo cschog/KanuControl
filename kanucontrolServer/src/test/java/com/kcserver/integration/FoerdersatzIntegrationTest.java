@@ -12,7 +12,7 @@ import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.service.abrechnung.AbrechnungBelegService;
 import com.kcserver.service.abrechnung.AbrechnungService;
 import com.kcserver.service.finanz.FinanzGruppeService;
-import com.kcserver.repository.AbrechnungRepository;
+import com.kcserver.repository.abrechnung.AbrechnungRepository;
 import com.kcserver.repository.FoerdersatzRepository;
 import com.kcserver.service.FoerdersatzService;
 import org.junit.jupiter.api.BeforeEach;

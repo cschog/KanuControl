@@ -1,4 +1,4 @@
-package com.kcserver.repository;
+package com.kcserver.repository.beitrag;
 
 import com.kcserver.entity.Beitragsstruktur;
 import org.springframework.data.jpa.repository.JpaRepository;

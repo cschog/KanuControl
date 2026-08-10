@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+            http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="20260810-01-zahlungsnachweis-audit" author="chris">
+
+        <dropColumn
+                tableName="zahlungsnachweis"
+                columnName="art"/>
+
+        <renameColumn
+                tableName="zahlungsnachweis"
+                oldColumnName="updated_at"
+                newColumnName="last_modified_at"
+                columnDataType="TIMESTAMP"/>
+
+        <renameColumn
+                tableName="zahlungsnachweis"
+                oldColumnName="updated_by"
+                newColumnName="last_modified_by"
+                columnDataType="VARCHAR(255)"/>
+
+    </changeSet>
+
+</databaseChangeLog>

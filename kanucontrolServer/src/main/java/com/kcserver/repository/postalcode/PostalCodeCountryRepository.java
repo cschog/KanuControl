@@ -1,4 +1,4 @@
-package com.kcserver.repository;
+package com.kcserver.repository.postalcode;
 
 import com.kcserver.entity.PostalCodeCountry;
 import com.kcserver.enumtype.CountryCode;

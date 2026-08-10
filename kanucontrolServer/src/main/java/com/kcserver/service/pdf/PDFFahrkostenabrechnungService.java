@@ -2,8 +2,8 @@ package com.kcserver.service.pdf;
 
 import com.kcserver.dto.reisekosten.KostenZeile;
 import com.kcserver.entity.*;
-import com.kcserver.repository.ReisekostenKonfigurationRepository;
-import com.kcserver.repository.ReisekostenabrechnungRepository;
+import com.kcserver.repository.fahrkosten.ReisekostenKonfigurationRepository;
+import com.kcserver.repository.fahrkosten.ReisekostenabrechnungRepository;
 import com.kcserver.util.PdfFilenameUtil;
 import lombok.RequiredArgsConstructor;
 import org.apache.pdfbox.Loader;

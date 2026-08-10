@@ -62,7 +62,7 @@ class TeilnehmerBeitragServiceTest {
                 null))
                 .thenReturn(Optional.of(regel));
 
-        assertThat(service.getEffektiverBeitrag(
+        assertThat(service.getSollBeitrag(
                 veranstaltung,
                 teilnehmer))
                 .isEqualByComparingTo("50.00");
@@ -95,7 +95,7 @@ class TeilnehmerBeitragServiceTest {
                 any()))
                 .thenReturn(Optional.empty());
 
-        assertThat(service.getEffektiverBeitrag(
+        assertThat(service.getSollBeitrag(
                 veranstaltung,
                 teilnehmer))
                 .isEqualByComparingTo(BigDecimal.ZERO);
@@ -123,7 +123,7 @@ class TeilnehmerBeitragServiceTest {
         Teilnehmer teilnehmer = new Teilnehmer();
         teilnehmer.setPerson(new Person());
 
-        assertThat(service.getEffektiverBeitrag(
+        assertThat(service.getSollBeitrag(
                 veranstaltung,
                 teilnehmer))
                 .isEqualByComparingTo(BigDecimal.ZERO);
@@ -136,7 +136,7 @@ class TeilnehmerBeitragServiceTest {
 
     @Test
     void shouldReturnZeroWhenTeilnehmerIsNull() {
-        assertThat(service.getEffektiverBeitrag(null, null))
+        assertThat(service.getSollBeitrag(null, null))
                 .isEqualByComparingTo(BigDecimal.ZERO);
     }
 }

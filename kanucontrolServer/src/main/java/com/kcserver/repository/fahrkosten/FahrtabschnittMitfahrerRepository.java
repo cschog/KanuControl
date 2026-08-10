@@ -1,4 +1,4 @@
-package com.kcserver.repository;
+package com.kcserver.repository.fahrkosten;
 
 import com.kcserver.entity.FahrtabschnittMitfahrer;
 import org.springframework.data.jpa.repository.JpaRepository;

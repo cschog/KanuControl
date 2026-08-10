@@ -3,12 +3,11 @@ package com.kcserver.service.reisekosten;
 import com.kcserver.dto.reisekosten.ReisekostenKonfigurationResponse;
 import com.kcserver.dto.reisekosten.ReisekostenKonfigurationSaveRequest;
 import com.kcserver.entity.ReisekostenKonfiguration;
-import com.kcserver.repository.ReisekostenKonfigurationRepository;
+import com.kcserver.repository.fahrkosten.ReisekostenKonfigurationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @Service

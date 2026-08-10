@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="20260807-02-zahlungs-position" author="chris">
+
+        <createTable tableName="zahlungs_position">
+
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"
+                             primaryKeyName="pk_zahlungs_position"
+                             nullable="false"/>
+            </column>
+
+            <column name="zahlungsnachweis_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="teilnehmer_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="betrag" type="NUMERIC(10,2)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_by" type="VARCHAR(255)"/>
+
+            <column name="updated_at" type="TIMESTAMP"/>
+
+            <column name="updated_by" type="VARCHAR(255)"/>
+
+        </createTable>
+
+        <addForeignKeyConstraint
+                constraintName="fk_zahlungs_position_nachweis"
+                baseTableName="zahlungs_position"
+                baseColumnNames="zahlungsnachweis_id"
+                referencedTableName="zahlungsnachweis"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint
+                constraintName="fk_zahlungs_position_teilnehmer"
+                baseTableName="zahlungs_position"
+                baseColumnNames="teilnehmer_id"
+                referencedTableName="teilnehmer"
+                referencedColumnNames="id"/>
+
+        <createIndex
+                indexName="idx_zahlungs_position_nachweis"
+                tableName="zahlungs_position">
+            <column name="zahlungsnachweis_id"/>
+        </createIndex>
+
+        <createIndex
+                indexName="idx_zahlungs_position_teilnehmer"
+                tableName="zahlungs_position">
+            <column name="teilnehmer_id"/>
+        </createIndex>
+
+    </changeSet>
+
+</databaseChangeLog>

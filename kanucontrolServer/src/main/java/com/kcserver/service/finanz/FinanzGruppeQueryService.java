@@ -5,7 +5,7 @@ import com.kcserver.dto.finanzen.FinanzGruppeOverviewDTO;
 import com.kcserver.entity.FinanzGruppe;
 import com.kcserver.mapper.FinanzGruppeDetailMapper;
 import com.kcserver.mapper.FinanzGruppeOverviewMapper;
-import com.kcserver.repository.AbrechnungBelegRepository;
+import com.kcserver.repository.abrechnung.AbrechnungBelegRepository;
 import com.kcserver.repository.FinanzGruppeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

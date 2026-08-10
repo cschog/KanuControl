@@ -1,131 +1,139 @@
 import { ColumnDef } from "@tanstack/react-table";
 
-import { Box, Checkbox, Chip, Typography } from "@mui/material";
+import { Box, Chip, Typography } from "@mui/material";
 
 import Money from "@/components/common/Money";
 
 import { TeilnehmerListDTO } from "@/api/types/beitraege";
 import { fontSize } from "@/theme/ui";
 
-interface Props {
-  onBezahltChange: (id: number, checked: boolean) => void;
+export const beitraegeColumns = (): ColumnDef<TeilnehmerListDTO>[] => [
+  {
+    id: "teilnehmer",
 
-  setData: React.Dispatch<React.SetStateAction<TeilnehmerListDTO[]>>;
-}
+    header: "Teilnehmer",
 
-export const beitraegeColumns = ({
-  onBezahltChange,
-}: Props): ColumnDef<TeilnehmerListDTO>[] => [
-    {
-      id: "teilnehmer",
+    size: 240,
 
-      header: "Teilnehmer",
-
-      size: 240,
-
-      cell: ({ row }) => (
-        <Box>
-          <Typography
-            sx={{
-              fontSize: fontSize.sectionTitle,
-              fontWeight: 600,
-            }}
-          >
-            {row.original.person.name}
-          </Typography>
-
-          <Typography
-            color="text.secondary"
-            sx={{
-              fontSize: fontSize.sectionTitle,
-            }}
-          >
-            {row.original.person.vorname}
-          </Typography>
-        </Box>
-      ),
-    },
-
-    {
-      accessorKey: "alterBeiBeginn",
-      header: "Alter",
-      size: 70,
-      meta: {
-        align: "right",
-      },
-
-      cell: ({ row }) => (
-        <Box
+    cell: ({ row }) => (
+      <Box>
+        <Typography
           sx={{
-            width: "100%",
-            textAlign: "right",
+            fontSize: fontSize.sectionTitle,
+            fontWeight: 600,
           }}
         >
-          {row.original.alterBeiBeginn ?? "-"}
-        </Box>
-      ),
+          {row.original.person.name}
+        </Typography>
+
+        <Typography
+          color="text.secondary"
+          sx={{
+            fontSize: fontSize.sectionTitle,
+          }}
+        >
+          {row.original.person.vorname}
+        </Typography>
+      </Box>
+    ),
+  },
+
+  {
+    accessorKey: "alterBeiBeginn",
+    header: "Alter",
+    size: 70,
+
+    meta: {
+      align: "right",
     },
 
-    {
-      id: "verein",
-      header: "Verein",
-      size: 90,
-      cell: ({ row }) => row.original.person.hauptvereinAbk ?? "-",
+    cell: ({ row }) => (
+      <Box
+        sx={{
+          width: "100%",
+          textAlign: "right",
+        }}
+      >
+        {row.original.alterBeiBeginn ?? "-"}
+      </Box>
+    ),
+  },
+
+  {
+    id: "verein",
+
+    header: "Verein",
+
+    size: 90,
+
+    cell: ({ row }) => row.original.person.hauptvereinAbk ?? "-",
+  },
+
+  {
+    accessorKey: "rolle",
+
+    header: "Rolle",
+
+    size: 120,
+
+    cell: ({ row }) => (
+      <>
+        {row.original.rolle === "L" && <Chip size="small" label="Leiter" color="secondary" />}
+
+        {row.original.rolle === "M" && <Chip size="small" label="Mitarbeiter" />}
+      </>
+    ),
+  },
+
+  {
+    id: "beitrag",
+
+    header: "Beitrag",
+
+    size: 140,
+
+    meta: {
+      align: "right",
     },
 
-    {
-      accessorKey: "rolle",
-      header: "Rolle",
-      size: 120,
-      cell: ({ row }) => (
-        <>
-          {row.original.rolle === "L" && <Chip size="small" label="Leiter" color="secondary" />}
+    cell: ({ row }) => <Money value={row.original.sollBeitrag ?? 0} align="right" />,
+  },
 
-          {row.original.rolle === "M" && <Chip size="small" label="Mitarbeiter" />}
-        </>
-      ),
+  {
+    accessorKey: "gezahlterBetrag",
+
+    header: "Gezahlt",
+
+    size: 140,
+
+    meta: {
+      align: "right",
     },
 
-    {
-      id: "beitrag",
-      header: "Beitrag",
-      size: 140,
-      meta: {
-        align: "right",
-      },
+    cell: ({ row }) => <Money value={row.original.gezahlterBetrag ?? 0} align="right" />,
+  },
 
-      cell: ({ row }) => (
-        <Money
-          value={row.original.effektiverBeitrag ?? 0}
-          align="right"
-        />
-      ),
+  {
+    accessorKey: "zahlungsstatus",
+    header: "Status",
+    size: 120,
+
+    meta: {
+      align: "center",
     },
 
-    {
-      accessorKey: "bezahlt",
+    cell: ({ row }) => {
+      const status = row.original.zahlungsstatus;
 
-      header: "Bezahlt",
+      if (status === "GRUEN") {
+        return <Chip size="small" label="Bezahlt" color="success" />;
+      }
 
-      size: 90,
+      if (status === "GELB") {
+        return <Chip size="small" label="Teilweise" color="warning" />;
+      }
 
-      meta: {
-        align: "center",
-      },
-
-      cell: ({ row }) => (
-        <Checkbox
-          checked={row.original.bezahlt}
-          onChange={(e) => onBezahltChange(row.original.id, e.target.checked)}
-        />
-      ),
+      return <Chip size="small" label="Offen" color="error" />;
     },
-
-    {
-      accessorKey: "bezahltAm",
-
-      header: "Bezahlt am",
-
-      size: 120,
-    },
-  ];
+  },
+];

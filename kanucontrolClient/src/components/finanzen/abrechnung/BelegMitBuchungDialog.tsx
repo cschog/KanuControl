@@ -131,14 +131,10 @@ export default function BelegMitBuchungDialog({ open, kuerzelListe, onClose, onS
             disabled={saving}
             ref={fileInputRef}
             type="file"
-            multiple
             accept="image/*,.pdf"
-            capture="environment"
             onChange={(e) => {
               const neueDateien = Array.from(e.target.files ?? []);
-
               setFiles((old) => [...old, ...neueDateien]);
-
               e.target.value = "";
             }}
           />

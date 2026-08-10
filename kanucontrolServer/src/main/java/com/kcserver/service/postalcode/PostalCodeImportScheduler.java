@@ -1,7 +1,7 @@
 package com.kcserver.service.postalcode;
 
 import com.kcserver.entity.PostalCodeCountry;
-import com.kcserver.repository.PostalCodeCountryRepository;
+import com.kcserver.repository.postalcode.PostalCodeCountryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;

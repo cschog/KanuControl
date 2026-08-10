@@ -10,6 +10,7 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 @Entity
 @Table(name = "veranstaltung")
@@ -91,6 +92,13 @@ public class Veranstaltung extends Auditable {
     @ManyToOne
     @JoinColumn(name = "beitragsstruktur_id")
     private Beitragsstruktur beitragsstruktur;
+
+    @OneToMany(
+            mappedBy = "veranstaltung",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<Zahlungsnachweis> zahlungsnachweise;
 
     /* =========================
        Status

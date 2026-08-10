@@ -1,4 +1,4 @@
-package com.kcserver.repository;
+package com.kcserver.repository.abrechnung;
 
 import com.kcserver.entity.AbrechnungBeleg;
 import com.kcserver.entity.AbrechnungBuchung;

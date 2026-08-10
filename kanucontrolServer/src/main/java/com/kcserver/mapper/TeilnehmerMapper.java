@@ -17,8 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 @Mapper(
         componentModel = "spring",
-        unmappedTargetPolicy = ReportingPolicy.ERROR,
-        uses = TeilnehmerBeitragService.class
+        unmappedTargetPolicy = ReportingPolicy.ERROR
 )
 
 public abstract class TeilnehmerMapper {
@@ -37,45 +36,45 @@ public abstract class TeilnehmerMapper {
     @Mapping(source = "person", target = "person")
     @Mapping(source = "rolle", target = "rolle")
     @Mapping(
-            target = "effektiverBeitrag",
+            target = "sollBeitrag",
             expression = """
-        java(
-            teilnehmerBeitragService.getEffektiverBeitrag(
-                teilnehmer.getVeranstaltung(),
-                teilnehmer
-            )
+    java(
+        teilnehmerBeitragService.getSollBeitrag(
+            teilnehmer.getVeranstaltung(),
+            teilnehmer
         )
-    """
+    )
+"""
     )
     @Mapping(
             target = "beitragsQuelle",
             expression = """
-    java(
-        teilnehmer.getIndividuellerBeitrag() != null
-            ? com.kcserver.enumtype.BeitragsQuelle.INDIVIDUELL
-            : (
-                teilnehmer.getVeranstaltung().getBeitragsstruktur() != null
-                    ? com.kcserver.enumtype.BeitragsQuelle.STRUKTUR
-                    : com.kcserver.enumtype.BeitragsQuelle.STANDARD
-            )
-    )
+java(
+    teilnehmer.getIndividuellerBeitrag() != null
+        ? com.kcserver.enumtype.BeitragsQuelle.INDIVIDUELL
+        : (
+            teilnehmer.getVeranstaltung().getBeitragsstruktur() != null
+                ? com.kcserver.enumtype.BeitragsQuelle.STRUKTUR
+                : com.kcserver.enumtype.BeitragsQuelle.STANDARD
+        )
+)
 """
     )
-
     @Mapping(
             target = "alterBeiBeginn",
             expression = """
-    java(
-        teilnehmer.getPerson().getGeburtsdatum() != null
-            ? altersService.berechneAlterBeiBeginn(
-                teilnehmer.getPerson().getGeburtsdatum(),
-                teilnehmer.getVeranstaltung().getBeginnDatum()
-            )
-            : null
+java(
+    teilnehmer.getPerson().getGeburtsdatum() != null
+        ? altersService.berechneAlterBeiBeginn(
+            teilnehmer.getPerson().getGeburtsdatum(),
+            teilnehmer.getVeranstaltung().getBeginnDatum()
+        )
+        : null
     )
 """
     )
-
+    @Mapping(target = "gezahlterBetrag", ignore = true)
+    @Mapping(target = "zahlungsstatus", ignore = true)
     public abstract TeilnehmerListDTO toListDTO(
             Teilnehmer teilnehmer
     );
@@ -121,7 +120,8 @@ public abstract class TeilnehmerMapper {
         if (p.getMitgliedschaften() != null) {
             hauptverein = p.getMitgliedschaften().stream()
                     .filter(Mitglied::getHauptVerein)
-                    .map(m -> m.getVerein() != null ? m.getVerein().getAbk() : null)
+                    .filter(m -> m.getVerein() != null)
+                    .map(m -> m.getVerein().getAbk())
                     .findFirst()
                     .orElse(null);
         }
@@ -145,9 +145,6 @@ public abstract class TeilnehmerMapper {
             if (person == null) {
                 return null;
             }
-
-            // 🔑 Zugriff erzwingen
-            person.getId();
 
             PersonRefDTO dto = new PersonRefDTO();
 

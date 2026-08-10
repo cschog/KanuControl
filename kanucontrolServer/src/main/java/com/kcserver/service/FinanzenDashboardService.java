@@ -6,6 +6,8 @@ import com.kcserver.dto.finanzen.FoerderungDashboardDTO;
 import com.kcserver.entity.*;
 import com.kcserver.enumtype.FinanzKategorie;
 import com.kcserver.repository.*;
+import com.kcserver.repository.abrechnung.AbrechnungBuchungRepository;
+import com.kcserver.repository.abrechnung.AbrechnungRepository;
 import com.kcserver.service.abrechnung.AbrechnungSynchronisationsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

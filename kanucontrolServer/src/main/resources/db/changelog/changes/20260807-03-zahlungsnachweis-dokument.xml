@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+            http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="20260807-03-zahlungsnachweis-dokument" author="chris">
+
+        <createTable tableName="zahlungsnachweis_dokument">
+
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"
+                             primaryKeyName="pk_zahlungsnachweis_dokument"
+                             nullable="false"/>
+            </column>
+
+            <column name="zahlungsnachweis_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="reihenfolge" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="titel" type="VARCHAR(200)"/>
+
+            <column name="original_dateiname" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="mime_type" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="dateigroesse" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="inhalt" type="BYTEA">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_by" type="VARCHAR(255)"/>
+
+            <column name="updated_at" type="TIMESTAMP"/>
+
+            <column name="updated_by" type="VARCHAR(255)"/>
+
+        </createTable>
+
+        <addForeignKeyConstraint
+                constraintName="fk_zahlungsnachweis_dokument_nachweis"
+                baseTableName="zahlungsnachweis_dokument"
+                baseColumnNames="zahlungsnachweis_id"
+                referencedTableName="zahlungsnachweis"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+
+        <createIndex
+                indexName="idx_zahlungsnachweis_dokument_nachweis"
+                tableName="zahlungsnachweis_dokument">
+
+            <column name="zahlungsnachweis_id"/>
+
+        </createIndex>
+
+    </changeSet>
+
+</databaseChangeLog>

@@ -33,7 +33,14 @@ export default function FinanzgruppenBelegeAccordion({
   const gruppen = new Map<string, AbrechnungBeleg[]>();
 
   [...belege]
-    .sort((a, b) => a.kuerzel.localeCompare(b.kuerzel))
+    .sort((a, b) => {
+      const cmp = a.kuerzel.localeCompare(b.kuerzel);
+      if (cmp !== 0) {
+        return cmp;
+      }
+
+      return b.id - a.id;
+    })
     .forEach((beleg) => {
       const sichtbarePositionen = beleg.positionen.filter(istInBeleglisteSichtbar);
 

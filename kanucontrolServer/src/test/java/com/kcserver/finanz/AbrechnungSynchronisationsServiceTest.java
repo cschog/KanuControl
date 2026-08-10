@@ -3,7 +3,7 @@ package com.kcserver.finanz;
 import com.kcserver.entity.*;
 import com.kcserver.enumtype.BuchungsHerkunft;
 import com.kcserver.enumtype.FinanzKategorie;
-import com.kcserver.repository.AbrechnungRepository;
+import com.kcserver.repository.abrechnung.AbrechnungRepository;
 import com.kcserver.repository.TeilnehmerRepository;
 import com.kcserver.service.FoerderService;
 import com.kcserver.service.abrechnung.AbrechnungBelegService;
@@ -88,7 +88,7 @@ class AbrechnungSynchronisationsServiceTest {
         when(beitragService.isBezahlt(any()))
                 .thenReturn(true);
 
-        when(beitragService.getEffektiverBeitrag(
+        when(beitragService.getSollBeitrag(
                 any(),
                 any()))
                 .thenReturn(new BigDecimal("50.00"));

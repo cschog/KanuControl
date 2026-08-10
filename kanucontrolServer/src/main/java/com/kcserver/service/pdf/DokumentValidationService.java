@@ -5,6 +5,7 @@ import com.kcserver.entity.Teilnehmer;
 import com.kcserver.entity.Veranstaltung;
 import com.kcserver.enumtype.PdfDokumentTyp;
 import com.kcserver.repository.*;
+import com.kcserver.repository.abrechnung.AbrechnungBuchungRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

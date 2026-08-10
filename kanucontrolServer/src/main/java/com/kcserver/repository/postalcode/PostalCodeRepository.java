@@ -1,4 +1,4 @@
-package com.kcserver.repository;
+package com.kcserver.repository.postalcode;
 
 import com.kcserver.entity.PostalCode;
 import com.kcserver.enumtype.CountryCode;
@@ -9,7 +9,6 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
-import java.time.LocalDateTime;
 
 @Repository
 

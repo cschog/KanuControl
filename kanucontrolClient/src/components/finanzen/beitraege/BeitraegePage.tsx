@@ -4,25 +4,29 @@ import {
   Button,
   Card,
   CardContent,
-  Checkbox,
   Chip,
   CircularProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
   Stack,
   Typography,
 } from "@mui/material";
 
+import { zahlungsnachweiseColumns } from "@/components/finanzen/beitraege/zahlungsnachweiseColumns";
+import ZahlungsnachweisDialog from "@/components/finanzen/beitraege/ZahlungsnachweisDialog";
 import { fontSize, padding, chip, layout, spacing } from "@/theme/ui";
 
 import { GenericTableTanstack } from "@/components/common/GenericTableTanstack";
 import { beitraegeColumns } from "@/components/finanzen/beitraege/beitraegeColumns";
-import { TeilnehmerBeitraegeResponseDTO, TeilnehmerListDTO } from "@/api/types/beitraege";
+import DeleteConfirmDialog from "@/components/common/DeleteConfirmDialog";
 
-import { useEffect, useState } from "react";
+import {
+  TeilnehmerBeitraegeResponseDTO,
+  TeilnehmerListDTO,
+  TeilnehmerBeitragSummaryDTO,
+  ZahlungsnachweisDetailDTO,
+  ZahlungsnachweisListDTO,
+} from "@/api/types/beitraege";
+
+import { useCallback, useEffect, useState } from "react";
 import apiClient from "@/api/client/apiClient";
 
 interface Props {
@@ -31,87 +35,115 @@ interface Props {
 
 const BeitraegePage = ({ veranstaltungId }: Props) => {
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState<string | null>(null);
+  const [summary, setSummary] = useState<TeilnehmerBeitragSummaryDTO | null>(null);
+  const [zahlungsnachweise, setZahlungsnachweise] = useState<ZahlungsnachweisListDTO[]>([]);
   const [data, setData] = useState<TeilnehmerListDTO[]>([]);
-  const hatOffene = data.some((t) => !t.bezahlt);
-  const [confirmResetOpen, setConfirmResetOpen] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [bearbeiteterZahlungsnachweis, setBearbeiteterZahlungsnachweis] =
+    useState<ZahlungsnachweisDetailDTO | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteZahlungsnachweisId, setDeleteZahlungsnachweisId] = useState<number | null>(null);
 
-  const handleAlleBezahlt = (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.currentTarget.blur();
+  /* =========================================================
+     ZAHLUNGSSTATUS
+  ========================================================= */
 
-    if (!hatOffene) {
-      setConfirmResetOpen(true);
+  const zahlungsstatusLabel = {
+    ROT: "Offen",
+    GELB: "Teilbezahlt",
+    GRUEN: "Bezahlt",
+  } as const;
+
+  const zahlungsstatusColor = {
+    ROT: "error",
+    GELB: "warning",
+    GRUEN: "success",
+  } as const;
+
+  /* =========================================================
+     ZAHLUNGSNACHWEISE
+  ========================================================= */
+
+  const handleEditZahlungsnachweis = async (id: number) => {
+    try {
+      const response = await apiClient.get<ZahlungsnachweisDetailDTO>(
+        `/veranstaltungen/${veranstaltungId}/zahlungsnachweise/${id}`,
+      );
+
+      setBearbeiteterZahlungsnachweis(response.data);
+      setDialogOpen(true);
+    } catch (err) {
+      console.error(err);
+      setError("Zahlungsnachweis konnte nicht geladen werden.");
+    }
+  };
+
+  const handleDeleteZahlungsnachweis = (id: number) => {
+    setDeleteZahlungsnachweisId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDeleteZahlungsnachweis = async () => {
+    if (deleteZahlungsnachweisId === null) {
       return;
     }
 
-    updateAlleBezahlt(true);
-  };
-
-  const handleConfirmReset = async () => {
-    setConfirmResetOpen(false);
-    await updateAlleBezahlt(false);
-  };
-
-  const handleCancelReset = () => {
-    setConfirmResetOpen(false);
-  };
-
-  const updateAlleBezahlt = async (bezahlt: boolean) => {
     try {
-      await apiClient.patch(`/veranstaltungen/${veranstaltungId}/beitraege`, { bezahlt });
-
-      const heute = new Date().toISOString().split("T")[0];
-
-      setData((prev) =>
-        prev.map((t) => ({
-          ...t,
-          bezahlt,
-          bezahltAm: bezahlt ? (t.bezahlt ? t.bezahltAm : heute) : null,
-        })),
+      await apiClient.delete(
+        `/veranstaltungen/${veranstaltungId}/zahlungsnachweise/${deleteZahlungsnachweisId}`,
       );
+
+      setDeleteDialogOpen(false);
+      setDeleteZahlungsnachweisId(null);
+
+      await load();
     } catch (err) {
       console.error(err);
+      setError("Zahlungsnachweis konnte nicht gelöscht werden.");
     }
   };
 
+  const zahlungsnachweiseCols = zahlungsnachweiseColumns({
+    onEdit: handleEditZahlungsnachweis,
+    onDelete: handleDeleteZahlungsnachweis,
+  });
+
   /* =========================================================
      LOAD
-     ========================================================= */
+  ========================================================= */
+
+  const load = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await apiClient.get<TeilnehmerBeitraegeResponseDTO>(
+        `/veranstaltungen/${veranstaltungId}/beitraege`,
+      );
+
+      setSummary(response.data.summary);
+      setZahlungsnachweise(response.data.zahlungsnachweise);
+      setData(response.data.teilnehmer);
+    } catch (err) {
+      console.error(err);
+      setError("Beiträge konnten nicht geladen werden.");
+    } finally {
+      setLoading(false);
+    }
+  }, [veranstaltungId]);
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-
-        const response = await apiClient.get<TeilnehmerBeitraegeResponseDTO>(
-          `/veranstaltungen/${veranstaltungId}/beitraege`,
-        );
-
-        setData(response.data.teilnehmer);
-      } catch (err) {
-        console.error(err);
-
-        setError("Beiträge konnten nicht geladen werden.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     load();
-  }, [veranstaltungId]);
+  }, [load]);
 
   /* =========================================================
      SUMMEN
-     ========================================================= */
+  ========================================================= */
 
-  const getBeitrag = (t: TeilnehmerListDTO) => t.effektiverBeitrag ?? 0;
+  const getBeitrag = (t: TeilnehmerListDTO) => t.sollBeitrag ?? 0;
 
   const summe = data.reduce((sum, t) => sum + getBeitrag(t), 0);
-
-  const bezahltSumme = data.filter((t) => t.bezahlt).reduce((sum, t) => sum + getBeitrag(t), 0);
-
-  const offenSumme = summe - bezahltSumme;
 
   const chipStyle = {
     fontSize: fontSize.pageTitle,
@@ -128,7 +160,7 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
 
   /* =========================================================
      RENDER
-     ========================================================= */
+  ========================================================= */
 
   if (loading) {
     return (
@@ -142,38 +174,14 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
     return <Alert severity="error">{error}</Alert>;
   }
 
-  const handleBezahltChange = async (id: number, checked: boolean) => {
-    try {
-      await apiClient.patch(`/veranstaltungen/${veranstaltungId}/beitraege/${id}`, {
-        bezahlt: checked,
-      });
-
-      setData((prev) =>
-        prev.map((t) =>
-          t.id === id
-            ? {
-                ...t,
-                bezahlt: checked,
-                bezahltAm: checked ? new Date().toISOString().split("T")[0] : null,
-              }
-            : t,
-        ),
-      );
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const columns = beitraegeColumns({
-    onBezahltChange: handleBezahltChange,
-    setData,
-  });
+  const columns = beitraegeColumns();
 
   return (
     <Stack spacing={spacing.sm}>
       {/* =====================================================
           HEADER
-          ===================================================== */}
+      ===================================================== */}
+
       <Box
         sx={{
           display: "grid",
@@ -181,15 +189,74 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
           gap: spacing.chip,
         }}
       >
-        <Chip label={`Teilnehmer: ${data.length}`} color="primary" sx={chipStyle} />
-        <Chip label={`Soll: ${summe.toFixed(2)} €`} color="info" sx={chipStyle} />
-        <Chip label={`Bezahlt: ${bezahltSumme.toFixed(2)} €`} color="success" sx={chipStyle} />
-        <Chip label={`Offen: ${offenSumme.toFixed(2)} €`} color="warning" sx={chipStyle} />
+        <Chip
+          label={`Teilnehmer: ${summary?.anzahlTeilnehmer ?? data.length}`}
+          color="primary"
+          sx={chipStyle}
+        />
+
+        <Chip
+          label={`Soll: ${(summary?.sollSumme ?? summe).toFixed(2)} €`}
+          color="info"
+          sx={chipStyle}
+        />
+
+        <Chip
+          label={`Bezahlt: ${(summary?.bezahltSumme ?? 0).toFixed(2)} €`}
+          color="success"
+          sx={chipStyle}
+        />
+
+        <Chip
+          label={`Offen: ${(summary?.offenSumme ?? 0).toFixed(2)} €`}
+          color="warning"
+          sx={chipStyle}
+        />
       </Box>
 
       {/* =====================================================
-          TABELLE
-          ===================================================== */}
+          ZAHLUNGSNACHWEISE
+      ===================================================== */}
+
+      <Card>
+        <CardContent>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              mb: spacing.card,
+            }}
+          >
+            <Typography variant="h6">Zahlungsnachweise</Typography>
+
+            <Button
+              variant="contained"
+              onClick={() => {
+                setBearbeiteterZahlungsnachweis(null);
+                setDialogOpen(true);
+              }}
+            >
+              Neuer Zahlungsnachweis
+            </Button>
+          </Box>
+
+          {zahlungsnachweise.length === 0 ? (
+            <Alert severity="info">Es wurden noch keine Zahlungsnachweise erfasst.</Alert>
+          ) : (
+            <GenericTableTanstack<ZahlungsnachweisListDTO>
+              data={zahlungsnachweise}
+              columns={zahlungsnachweiseCols}
+              loading={loading}
+              height={250}
+            />
+          )}
+        </CardContent>
+      </Card>
+
+      {/* =====================================================
+          TEILNEHMERBEITRÄGE
+      ===================================================== */}
 
       <Card>
         <CardContent
@@ -205,17 +272,14 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
               mb: spacing.card,
             }}
           >
-            <Typography variant="h6" sx={{ fontSize: fontSize.sectionTitle }}>
+            <Typography
+              variant="h6"
+              sx={{
+                fontSize: fontSize.sectionTitle,
+              }}
+            >
               Teilnehmerbeiträge
             </Typography>
-
-            <Button
-              variant="contained"
-              color={hatOffene ? "success" : "warning"}
-              onClick={handleAlleBezahlt}
-            >
-              {hatOffene ? "Alle bezahlt" : "Alle unbezahlt"}
-            </Button>
           </Box>
 
           <GenericTableTanstack<TeilnehmerListDTO>
@@ -223,94 +287,144 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
             columns={columns}
             loading={loading}
             height={600}
-            mobileRenderRow={(row) => (
-              <Box>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    gap: 1,
-                  }}
-                >
-                  <Typography
-                    sx={{
-                      fontWeight: 700,
-                      fontSize: "1rem",
+            mobileRenderRow={(row) => {
+              const status = row.zahlungsstatus ?? "ROT";
 
-                      flex: 1,
-                      minWidth: 0,
+              return (
+                <Box>
+                  {/* NAME + SOLL */}
+
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      gap: 1,
                     }}
                   >
-                    {row.person.name}, {row.person.vorname}
-                  </Typography>
-
-                  <Typography
-                    sx={{
-                      fontWeight: 700,
-                      color: "primary.main",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {getBeitrag(row).toFixed(2)} €
-                  </Typography>
-                </Box>
-
-                <Stack
-                  direction="row"
-                  alignItems="center"
-                  justifyContent="space-between"
-                  spacing={1}
-                  sx={{ mt: 0.3 }}
-                >
-                  <Typography variant="body2" color="text.secondary">
-                    {row.person.hauptvereinAbk ?? "-"}
-                    {" • Alter: "}
-                    {row.alterBeiBeginn ?? "-"}
-                  </Typography>
-
-                  <Stack direction="row" alignItems="center" spacing={0.3}>
-                    <Checkbox
-                      size="small"
-                      checked={row.bezahlt}
-                      onChange={(e) => handleBezahltChange(row.id, e.target.checked)}
-                    />
-
-                    <Typography variant="caption" color="text.secondary">
-                      bezahlt
+                    <Typography
+                      sx={{
+                        fontWeight: 700,
+                        fontSize: "1rem",
+                        flex: 1,
+                        minWidth: 0,
+                      }}
+                    >
+                      {row.person.name}, {row.person.vorname}
                     </Typography>
-                  </Stack>
-                </Stack>
 
-                {row.rolle && (
-                  <Box sx={{ mt: 0.5 }}>
-                    <Chip size="small" label={row.rolle === "L" ? "Leiter" : "Mitarbeiter"} />
+                    <Typography
+                      sx={{
+                        fontWeight: 700,
+                        color: "primary.main",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {getBeitrag(row).toFixed(2)} €
+                    </Typography>
                   </Box>
-                )}
-              </Box>
-            )}
+
+                  {/* VEREIN + ALTER + STATUS */}
+
+                  <Stack
+                    direction="row"
+                    alignItems="center"
+                    justifyContent="space-between"
+                    spacing={1}
+                    sx={{ mt: 0.5 }}
+                  >
+                    <Typography variant="body2" color="text.secondary">
+                      {row.person.hauptvereinAbk ?? "-"}
+                      {" • Alter: "}
+                      {row.alterBeiBeginn ?? "-"}
+                    </Typography>
+
+                    <Chip
+                      size="small"
+                      label={zahlungsstatusLabel[status]}
+                      color={zahlungsstatusColor[status]}
+                    />
+                  </Stack>
+
+                  {/* GEZAHLTER BETRAG */}
+
+                  {(row.gezahlterBetrag ?? 0) > 0 && (
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{
+                        display: "block",
+                        mt: 0.5,
+                      }}
+                    >
+                      Gezahlt: {(row.gezahlterBetrag ?? 0).toFixed(2)} €
+                    </Typography>
+                  )}
+
+                  {/* ROLLE */}
+
+                  {row.rolle && (
+                    <Box sx={{ mt: 0.5 }}>
+                      <Chip size="small" label={row.rolle === "L" ? "Leiter" : "Mitarbeiter"} />
+                    </Box>
+                  )}
+                </Box>
+              );
+            }}
           />
         </CardContent>
       </Card>
 
-      <Dialog open={confirmResetOpen} onClose={handleCancelReset} maxWidth="xs" fullWidth>
-        <DialogTitle>Beiträge zurücksetzen?</DialogTitle>
+      {/* =====================================================
+          NEUER ZAHLUNGSNACHWEIS
+      ===================================================== */}
 
-        <DialogContent>
-          <DialogContentText>
-            Alle Teilnehmer werden als <strong>nicht bezahlt</strong> markiert. Das Zahlungsdatum
-            wird bei allen Teilnehmern entfernt. Möchten Sie fortfahren?
-          </DialogContentText>
-        </DialogContent>
+      <ZahlungsnachweisDialog
+        open={dialogOpen}
+        veranstaltungId={veranstaltungId}
+        teilnehmer={data}
+        zahlungsnachweis={bearbeiteterZahlungsnachweis}
+        onClose={() => {
+          setDialogOpen(false);
 
-        <DialogActions>
-          <Button onClick={handleCancelReset}>Abbrechen</Button>
+          setBearbeiteterZahlungsnachweis(null);
+        }}
+        onSave={async (dto) => {
+          try {
+            if (bearbeiteterZahlungsnachweis) {
+              await apiClient.put(
+                `/veranstaltungen/${veranstaltungId}/zahlungsnachweise/${bearbeiteterZahlungsnachweis.id}`,
+                dto,
+              );
+            } else {
+              await apiClient.post(`/veranstaltungen/${veranstaltungId}/zahlungsnachweise`, dto);
+            }
 
-          <Button color="warning" variant="contained" onClick={handleConfirmReset}>
-            Zurücksetzen
-          </Button>
-        </DialogActions>
-      </Dialog>
+            setDialogOpen(false);
+            setBearbeiteterZahlungsnachweis(null);
+
+            await load();
+          } catch (err) {
+            console.error(err);
+            setError(
+              bearbeiteterZahlungsnachweis
+                ? "Zahlungsnachweis konnte nicht geändert werden."
+                : "Zahlungsnachweis konnte nicht gespeichert werden.",
+            );
+          }
+        }}
+      />
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        title="Zahlungsnachweis löschen"
+        message="Soll dieser Zahlungsnachweis wirklich gelöscht werden?"
+        onClose={() => {
+          setDeleteDialogOpen(false);
+          setDeleteZahlungsnachweisId(null);
+        }}
+        onConfirm={handleConfirmDeleteZahlungsnachweis}
+      />
     </Stack>
   );
 };

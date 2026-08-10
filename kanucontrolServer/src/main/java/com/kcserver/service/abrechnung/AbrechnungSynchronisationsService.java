@@ -4,7 +4,7 @@ import com.kcserver.entity.*;
 
 import com.kcserver.enumtype.BuchungsHerkunft;
 import com.kcserver.enumtype.FinanzKategorie;
-import com.kcserver.repository.AbrechnungRepository;
+import com.kcserver.repository.abrechnung.AbrechnungRepository;
 import com.kcserver.repository.TeilnehmerRepository;
 import com.kcserver.service.FoerderService;
 import com.kcserver.service.beitrag.TeilnehmerBeitragService;
@@ -71,12 +71,12 @@ public class AbrechnungSynchronisationsService {
         for (Teilnehmer t : teilnehmer) {
 
             // Nur tatsächlich bezahlte Beiträge buchen
-            if (!teilnehmerBeitragService.isBezahlt(t)) {
-                continue;
-            }
+//            if (!teilnehmerBeitragService.isBezahlt(t)) {
+//                continue;
+//            }
 
             BigDecimal beitrag =
-                    teilnehmerBeitragService.getEffektiverBeitrag(
+                    teilnehmerBeitragService.getSollBeitrag(
                             abrechnung.getVeranstaltung(),
                             t
                     );

@@ -2,30 +2,35 @@ package com.kcserver.service;
 
 import com.kcserver.dto.person.PersonListDTO;
 import com.kcserver.dto.teilnehmer.*;
+import com.kcserver.dto.zahlungsnachweis.ZahlungsnachweisListDTO;
 import com.kcserver.entity.Person;
 import com.kcserver.entity.Teilnehmer;
 import com.kcserver.entity.Veranstaltung;
 import com.kcserver.enumtype.TeilnehmerRolle;
+import com.kcserver.enumtype.Zahlungsstatus;
 import com.kcserver.mapper.PersonMapper;
 import com.kcserver.mapper.TeilnehmerMapper;
 import com.kcserver.persistence.specification.TeilnehmerSpecification;
 import com.kcserver.repository.*;
+import com.kcserver.repository.fahrkosten.ReisekostenabrechnungRepository;
 import com.kcserver.service.beitrag.TeilnehmerBeitragService;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import java.math.BigDecimal;
+import com.kcserver.repository.abrechnung.ZahlungsnachweisRepository;
+
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 import static com.kcserver.exception.EntityFinder.getOr404;
 import static com.kcserver.exception.ErrorMessages.*;
 import org.springframework.data.domain.Pageable;
-//import java.math.BigDecimal;
 
 @Service
 @Transactional
@@ -39,6 +44,8 @@ public class TeilnehmerService {
     private final MitgliedRepository mitgliedRepository;
     private final TeilnehmerBeitragService teilnehmerBeitragService;
     private final ReisekostenabrechnungRepository reisekostenabrechnungRepository;
+    private final ZahlungsnachweisRepository zahlungsnachweisRepository;
+    private final ZahlungsstatusService zahlungsstatusService;
 
 
     public TeilnehmerService(
@@ -49,7 +56,9 @@ public class TeilnehmerService {
             TeilnehmerMapper teilnehmerMapper,
             PersonMapper personMapper,
             TeilnehmerBeitragService teilnehmerBeitragService,
-            ReisekostenabrechnungRepository reisekostenabrechnungRepository
+            ReisekostenabrechnungRepository reisekostenabrechnungRepository,
+            ZahlungsnachweisRepository zahlungsnachweisRepository,
+            ZahlungsstatusService zahlungsstatusService
     ) {
         this.teilnehmerRepository = teilnehmerRepository;
         this.veranstaltungRepository = veranstaltungRepository;
@@ -59,6 +68,8 @@ public class TeilnehmerService {
         this.personMapper = personMapper;
         this.teilnehmerBeitragService = teilnehmerBeitragService;
         this.reisekostenabrechnungRepository = reisekostenabrechnungRepository;
+        this.zahlungsnachweisRepository = zahlungsnachweisRepository;
+        this.zahlungsstatusService = zahlungsstatusService;
     }
 
     /* =========================================================
@@ -399,8 +410,7 @@ public class TeilnehmerService {
         );
     }
 
-    public List<TeilnehmerListDTO>
-    findAllByVeranstaltungForBeitraege(
+    public TeilnehmerBeitraegeResponseDTO findAllByVeranstaltungForBeitraege(
             Long veranstaltungId
     ) {
 
@@ -410,84 +420,103 @@ public class TeilnehmerService {
                         .orElseThrow();
 
         List<Teilnehmer> teilnehmer =
-                teilnehmerRepository
-                        .findAllWithPerson(
-                                veranstaltungId
-                        );
-
-        return teilnehmer.stream()
-                .map(t -> {
-
-                    TeilnehmerListDTO dto =
-                            teilnehmerMapper.toListDTO(t);
-
-                    dto.setEffektiverBeitrag(
-                            teilnehmerBeitragService.getEffektiverBeitrag(
-                                    veranstaltung,
-                                    t
-                            )
-                    );
-
-                    return dto;
-                })
-                .toList();
-    }
-
-    @Transactional
-    public TeilnehmerListDTO updateBezahlt(
-            Long veranstaltungId,
-            Long teilnehmerId,
-            Boolean bezahlt
-    ) {
-
-        Teilnehmer teilnehmer =
-                teilnehmerRepository
-                        .findById(teilnehmerId)
-                        .orElseThrow(() ->
-                                new EntityNotFoundException(
-                                       TEILNEHMER_NOT_FOUND
-                                )
-                        );
-        if (!teilnehmer.getVeranstaltung().getId().equals(veranstaltungId)) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    TEILNEHMER_IN_VERANSTALTUNG_NOT_FOUND
-            );
-        }
-
-        setBezahlt(teilnehmer, Boolean.TRUE.equals(bezahlt));
-
-        Teilnehmer saved =
-                teilnehmerRepository.save(
-                        teilnehmer
+                teilnehmerRepository.findAllWithPerson(
+                        veranstaltungId
                 );
 
-        return teilnehmerMapper.toListDTO(saved);
-    }
+        Map<Long, BigDecimal> gezahlteBetraege =
+                zahlungsstatusService.getGezahlteBetraege(veranstaltungId);
 
-    @Transactional
-    public void updateAlleBezahlt(
-            Long veranstaltungId,
-            Boolean bezahlt
-    ) {
+        List<TeilnehmerListDTO> teilnehmerDTOs =
+                teilnehmer.stream()
+                        .map(t -> {
 
-        List<Teilnehmer> teilnehmer =
-                teilnehmerRepository.findAllWithPerson(veranstaltungId);
+                            TeilnehmerListDTO dto =
+                                    teilnehmerMapper.toListDTO(t);
 
-        boolean bezahltStatus = Boolean.TRUE.equals(bezahlt);
+                            BigDecimal sollBeitrag =
+                                    teilnehmerBeitragService.getSollBeitrag(
+                                            veranstaltung,
+                                            t
+                                    );
 
-        for (Teilnehmer t : teilnehmer) {
+                            BigDecimal gezahlterBetrag =
+                                    gezahlteBetraege.getOrDefault(
+                                            t.getId(),
+                                            BigDecimal.ZERO
+                                    );
 
-            if (bezahltStatus) {
-                if (!Boolean.TRUE.equals(t.getBezahlt())) {
-                    setBezahlt(t, true);
-                }
-            } else {
-                setBezahlt(t, false);
-            }
-        }
+                            dto.setSollBeitrag(sollBeitrag);
+                            dto.setGezahlterBetrag(gezahlterBetrag);
+                            dto.setZahlungsstatus(
+                                    zahlungsstatusService.getStatus(
+                                            sollBeitrag,
+                                            gezahlterBetrag
+                                    )
+                            );
 
-        teilnehmerRepository.saveAll(teilnehmer);
+                            return dto;
+                        })
+                        .toList();
+        TeilnehmerBeitraegeResponseDTO response =
+                new TeilnehmerBeitraegeResponseDTO();
+
+        response.setTeilnehmer(teilnehmerDTOs);
+
+/* =========================================================
+   ZAHLUNGSNACHWEISE
+   ========================================================= */
+
+        List<ZahlungsnachweisListDTO> zahlungsnachweise =
+                zahlungsnachweisRepository.findListByVeranstaltungId(
+                        veranstaltungId
+                );
+
+        response.setZahlungsnachweise(zahlungsnachweise);
+
+        TeilnehmerBeitragSummaryDTO summary =
+                new TeilnehmerBeitragSummaryDTO();
+
+        BigDecimal sollSumme =
+                teilnehmerDTOs.stream()
+                        .map(TeilnehmerListDTO::getSollBeitrag)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal bezahltSumme =
+                teilnehmerDTOs.stream()
+                        .map(TeilnehmerListDTO::getGezahlterBetrag)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal offenSumme =
+                sollSumme.subtract(bezahltSumme).max(BigDecimal.ZERO);
+
+        long bezahlt =
+                teilnehmerDTOs.stream()
+                        .filter(t -> t.getZahlungsstatus() == Zahlungsstatus.GRUEN)
+                        .count();
+
+        long teilweise =
+                teilnehmerDTOs.stream()
+                        .filter(t -> t.getZahlungsstatus() == Zahlungsstatus.GELB)
+                        .count();
+
+        long offen =
+                teilnehmerDTOs.stream()
+                        .filter(t -> t.getZahlungsstatus() == Zahlungsstatus.ROT)
+                        .count();
+
+        summary.setAnzahlTeilnehmer(teilnehmerDTOs.size());
+        summary.setBezahlt((int) bezahlt);
+        summary.setTeilweise((int) teilweise);
+        summary.setOffen((int) offen);
+
+        summary.setSollSumme(sollSumme);
+        summary.setBezahltSumme(bezahltSumme);
+        summary.setOffenSumme(offenSumme);
+
+        response.setSummary(summary);
+
+        return response;
     }
 
     /* =========================================================
@@ -554,6 +583,22 @@ public class TeilnehmerService {
                     "Der Teilnehmer wird in einer Reisekostenabrechnung als Fahrer oder Mitfahrer verwendet."
             );
         }
+
+        Teilnehmer teilnehmer = teilnehmerRepository
+                .findByVeranstaltungIdAndPersonId(veranstaltungId, personId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        TEILNEHMER_NOT_FOUND
+                ));
+
+        if (zahlungsnachweisRepository
+                .existsByPositionenTeilnehmerId(teilnehmer.getId())) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Der Teilnehmer kann nicht gelöscht werden, solange Zahlungsnachweise vorhanden sind."
+            );
+        }
     }
     private void validateTeilnehmerKoennenEntferntWerden(
             Long veranstaltungId,
@@ -567,16 +612,5 @@ public class TeilnehmerService {
         }
     }
 
-    private void setBezahlt(
-            Teilnehmer teilnehmer,
-            boolean bezahlt
-    ) {
-        teilnehmer.setBezahlt(bezahlt);
 
-        if (bezahlt) {
-            teilnehmer.setBezahltAm(LocalDate.now());
-        } else {
-            teilnehmer.setBezahltAm(null);
-        }
-    }
 }

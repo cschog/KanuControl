@@ -127,3 +127,17 @@ databaseChangeLog:
       file: db/changelog/changes/20260803-03-abrechnung-buchung-beschreibung.xml
   - include:
       file: db/changelog/changes/20260805-rename-haendler-to-aussteller.xml
+  - include:
+      file: db/changelog/changes/20260807-01-zahlungsnachweis.xml
+  - include:
+      file: db/changelog/changes/20260807-02-zahlungsposition.xml
+  - include:
+      file: db/changelog/changes/20260807-03-zahlungsnachweis-dokument.xml
+  - include:
+      file: db/changelog/changes/2026-08-10-add-betrag-zahlungsnachweis.xml
+  - include:
+      file: db/changelog/changes/20260810-01-zahlungsnachweis-audit.xml
+  - include:
+      file: db/changelog/changes/20260810-02-zahlungs-position-audit.xml
+  - include:
+      file: db/changelog/changes/20260810-zahlungsnachweis-dokument-auditing-001.xml

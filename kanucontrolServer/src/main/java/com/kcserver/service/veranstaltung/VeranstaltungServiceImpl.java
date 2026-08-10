@@ -13,6 +13,7 @@ import com.kcserver.repository.VeranstaltungSpecs;
 import com.kcserver.mapper.PersonMapper;
 import com.kcserver.mapper.VeranstaltungMapper;
 import com.kcserver.repository.*;
+import com.kcserver.repository.beitrag.BeitragsstrukturRepository;
 import com.kcserver.service.beitrag.BeitragsstrukturService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
