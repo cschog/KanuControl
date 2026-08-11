@@ -1,6 +1,7 @@
 import { Box, Alert } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import { useNavigate } from "react-router-dom";
+
 import { MenueHeader } from "@/components/layout/MenueHeader";
 import { useAppContext } from "@/context/AppContext";
 import { ModuleButton } from "@/components/common/ModuleButton";
@@ -20,35 +21,34 @@ const StartMenue = () => {
 
   const admin = isAdmin();
 
-  const buttons = [
+  const allgemeineButtons = [
     { key: "vereine", label: "Vereine", path: "/vereine" },
     { key: "mitglieder", label: "Mitglieder", path: "/personen" },
     { key: "veranstaltungen", label: "Veranstaltungen", path: "/veranstaltungen" },
     { key: "teilnehmer", label: "Teilnehmer", path: "/teilnehmer" },
-
-    ...(active?.id
-      ? [
-          {
-            key: "finanzen",
-            label: "Finanzen",
-            path: `/veranstaltungen/${active.id}/finanzen`,
-          },
-        ]
-      : []),
-
     { key: "dokumente", label: "Dokumente", path: "/dokumente" },
-
     { key: "verwaltung", label: "Verwaltung", path: "/verwaltung" },
-    ...(admin
-      ? [
-          {
-            key: "admin",
-            label: "Administration",
-            path: "/admin",
-          },
-        ]
-      : []),
   ] as const;
+
+  const finanzBereiche = active?.id
+    ? [
+        {
+          key: "vorbereitung",
+          label: "Vorbereitung",
+          path: `/veranstaltungen/${active.id}/finanzen/vorbereitung`,
+        },
+        {
+          key: "durchfuehrung",
+          label: "Durchführung",
+          path: `/veranstaltungen/${active.id}/finanzen/durchfuehrung`,
+        },
+        {
+          key: "auswertung",
+          label: "Auswertung",
+          path: `/veranstaltungen/${active.id}/finanzen/auswertung`,
+        },
+      ]
+    : [];
 
   return (
     <Box>
@@ -56,8 +56,12 @@ const StartMenue = () => {
 
       {loading && <Alert severity="info">Lade Kontext…</Alert>}
 
+      {/* =====================================================
+          ALLGEMEINE MODULE
+         ===================================================== */}
+
       <Grid container spacing={2}>
-        {buttons.map((btn) => (
+        {allgemeineButtons.map((btn) => (
           <Grid key={btn.key} size={{ xs: 12, sm: 6, md: 4 }}>
             <ModuleButton
               label={btn.label}
@@ -67,6 +71,41 @@ const StartMenue = () => {
           </Grid>
         ))}
       </Grid>
+
+      {/* =====================================================
+          FINANZBEREICHE
+         ===================================================== */}
+
+      {finanzBereiche.length > 0 && (
+        <Grid container spacing={2} sx={{ mt: 2 }}>
+          {finanzBereiche.map((bereich) => (
+            <Grid key={bereich.key} size={{ xs: 12, sm: 6, md: 4 }}>
+              <ModuleButton
+                label={bereich.label}
+                moduleType={moduleTypeMap.finanzen}
+                onClick={() => navigate(bereich.path)}
+              />
+            </Grid>
+          ))}
+        </Grid>
+      )}
+
+      {/* =====================================================
+          ADMINISTRATION – IMMER GANZ UNTEN
+         ===================================================== */}
+
+      {admin && (
+        <Grid container spacing={2} sx={{ mt: 2 }}>
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <ModuleButton
+              label="Administration"
+              moduleType={moduleTypeMap.admin}
+              onClick={() => navigate("/admin")}
+            />
+          </Grid>
+        </Grid>
+      )}
+
       <FeedbackFab />
     </Box>
   );

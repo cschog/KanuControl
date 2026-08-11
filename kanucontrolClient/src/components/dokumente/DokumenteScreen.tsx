@@ -235,48 +235,43 @@ const DokumenteScreen: React.FC = () => {
           <Stack spacing={3}>
             {/* FM / JEM */}
             {renderValidationWarning("FM / JEM Antrag derzeit nicht möglich", anmeldungValidation)}
-
             {renderSection(
               "FM / JEM Antrag",
               "fm-jem-report",
               "fm-jem.pdf",
               !anmeldungValidation?.valid,
             )}
-
             {/* Teilnehmerliste */}
             {renderValidationWarning("Teilnehmerliste derzeit nicht möglich", teilnehmerValidation)}
-
             {renderSection(
               "Teilnehmerliste",
               "teilnehmer/pdf",
               "teilnehmerliste.pdf",
               !teilnehmerValidation?.valid,
             )}
-
             {/* Abrechnung */}
             {renderValidationWarning("Abrechnung derzeit nicht möglich", abrechnungValidation)}
-
             {renderSection(
               "Abrechnung",
               "abrechnung/pdf",
               "abrechnung.pdf",
               !abrechnungValidation?.valid,
             )}
-
             {/* Erhebungsbogen */}
             {renderValidationWarning(
               "Erhebungsbogen derzeit nicht möglich",
               erhebungsbogenValidation,
             )}
-
             {renderSection(
               "Erhebungsbogen",
               "erhebungsbogen/pdf",
               "erhebungsbogen.pdf",
               !erhebungsbogenValidation?.valid,
             )}
-
-            {/* Reisekosten */}
+            /* HIER NEU */
+            {/* Zahlungsnachweise */}
+            {renderSection("Zahlungsnachweise", "zahlungsnachweise/pdf", "zahlungsnachweise.pdf")}
+            /* Fahrkosten */
             <Paper
               elevation={3}
               sx={{

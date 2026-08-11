@@ -10,8 +10,10 @@ public enum PdfDokumentTyp {
     ERHEBUNGSBOGEN("Erhebungsbogen"),
     TEILNEHMERLISTE("Teilnehmerliste"),
     ABRECHNUNG("Abrechnung"),
-    REISEKOSTENABRECHNUNG("Fahrkostenabrechnung");
+    REISEKOSTENABRECHNUNG("Fahrkostenabrechnung"),
 
+    ZAHLUNGSNACHWEISE("Zahlungsnachweise"),
+    BELEGE("Belege");
 
     private final String label;
 

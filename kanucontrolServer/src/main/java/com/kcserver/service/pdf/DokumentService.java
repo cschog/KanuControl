@@ -22,9 +22,19 @@ public class DokumentService {
     private final PDFAbrechnungService abrechnungService;
     private final PDFErhebungsbogenService erhebungsbogenService;
     private final PDFTeilnehmerlisteService teilnehmerlisteService;
+    private final PDFZahlungsnachweiseService zahlungsnachweiseService;
 
     private final VeranstaltungService veranstaltungService;
     private final TeilnehmerService teilnehmerService;
+
+    public byte[] generateZahlungsnachweise(
+            Long veranstaltungId
+    ) {
+
+        return zahlungsnachweiseService.generate(
+                veranstaltungId
+        );
+    }
 
     public byte[] generateAnmeldung(
             Long veranstaltungId

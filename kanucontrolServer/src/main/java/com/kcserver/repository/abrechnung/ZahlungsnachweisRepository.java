@@ -24,6 +24,13 @@ public interface ZahlungsnachweisRepository
             Long veranstaltungId
     );
 
+    @EntityGraph(attributePaths = {
+            "dokumente"
+    })
+    List<Zahlungsnachweis> findByVeranstaltungIdOrderByDatumDescIdDesc(
+            Long veranstaltungId
+    );
+
     @Query("""
     select new com.kcserver.dto.zahlungsnachweis.ZahlungsnachweisListDTO(
         z.id,

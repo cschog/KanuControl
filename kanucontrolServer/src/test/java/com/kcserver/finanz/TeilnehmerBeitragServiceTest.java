@@ -102,20 +102,6 @@ class TeilnehmerBeitragServiceTest {
     }
 
     @Test
-    void shouldDetectPaidParticipant() {
-
-        Teilnehmer t = new Teilnehmer();
-
-        t.setBezahlt(true);
-
-        assertThat(service.isBezahlt(t)).isTrue();
-
-        t.setBezahlt(false);
-
-        assertThat(service.isBezahlt(t)).isFalse();
-    }
-
-    @Test
     void shouldReturnZeroWhenNoBeitragsstrukturExists() {
 
         Veranstaltung veranstaltung = new Veranstaltung();
@@ -127,11 +113,6 @@ class TeilnehmerBeitragServiceTest {
                 veranstaltung,
                 teilnehmer))
                 .isEqualByComparingTo(BigDecimal.ZERO);
-    }
-
-    @Test
-    void shouldReturnFalseWhenTeilnehmerIsNull() {
-        assertThat(service.isBezahlt(null)).isFalse();
     }
 
     @Test

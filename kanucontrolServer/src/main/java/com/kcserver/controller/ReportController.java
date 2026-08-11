@@ -238,6 +238,70 @@ public class ReportController {
         return buildAttachmentResponse(pdf, filename);
     }
 
+        /* =========================================================
+       Zahlungsnachweise PDF (Vorschau)
+       ========================================================= */
+
+    @GetMapping("/zahlungsnachweise/pdf/view")
+    public ResponseEntity<byte[]> viewZahlungsnachweise(
+            @PathVariable Long veranstaltungId
+    ) {
+
+        byte[] pdf =
+                dokumentService.generateZahlungsnachweise(
+                        veranstaltungId
+                );
+
+        VeranstaltungDetailDTO veranstaltung =
+                veranstaltungService.getById(
+                        veranstaltungId
+                );
+
+        String filename =
+                PdfFilenameUtil.build(
+                        LocalDate.now(),
+                        PdfDokumentTyp.ZAHLUNGSNACHWEISE,
+                        veranstaltung
+                );
+
+        return buildInlineResponse(
+                pdf,
+                filename
+        );
+    }
+
+    /* =========================================================
+       Zahlungsnachweise PDF (Download)
+       ========================================================= */
+
+    @GetMapping("/zahlungsnachweise/pdf/download")
+    public ResponseEntity<byte[]> downloadZahlungsnachweise(
+            @PathVariable Long veranstaltungId
+    ) {
+
+        byte[] pdf =
+                dokumentService.generateZahlungsnachweise(
+                        veranstaltungId
+                );
+
+        VeranstaltungDetailDTO veranstaltung =
+                veranstaltungService.getById(
+                        veranstaltungId
+                );
+
+        String filename =
+                PdfFilenameUtil.build(
+                        LocalDate.now(),
+                        PdfDokumentTyp.ZAHLUNGSNACHWEISE,
+                        veranstaltung
+                );
+
+        return buildAttachmentResponse(
+                pdf,
+                filename
+        );
+    }
+
     /* =========================================================
        Helper: Attachment Download
        ========================================================= */

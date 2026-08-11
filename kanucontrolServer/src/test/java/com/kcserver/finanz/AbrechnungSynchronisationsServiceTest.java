@@ -68,11 +68,11 @@ class AbrechnungSynchronisationsServiceTest {
 
         Teilnehmer t1 = new Teilnehmer();
         t1.setPerson(person);
-        t1.setBezahlt(true);
+
 
         Teilnehmer t2 = new Teilnehmer();
         t2.setPerson(person);
-        t2.setBezahlt(true);
+
 
         when(abrechnungRepository.findByVeranstaltungId(1L))
                 .thenReturn(Optional.of(abrechnung));
@@ -84,9 +84,6 @@ class AbrechnungSynchronisationsServiceTest {
 
         when(teilnehmerRepository.findAllWithPerson(1L))
                 .thenReturn(List.of(t1, t2));
-
-        when(beitragService.isBezahlt(any()))
-                .thenReturn(true);
 
         when(beitragService.getSollBeitrag(
                 any(),
