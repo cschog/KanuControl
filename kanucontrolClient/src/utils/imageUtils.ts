@@ -1,3 +1,5 @@
+// src/utils/imageUtils.ts
+
 export interface CompressOptions {
   maxWidth?: number;
   maxHeight?: number;

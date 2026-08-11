@@ -17,20 +17,22 @@ public interface ZahlungsnachweisMapper {
     @Mapping(
             target = "anzahlTeilnehmer",
             expression = """
-        java(entity.getPositionen() == null
-            ? 0L
-            : (long) entity.getPositionen().size())
-        """
+                java(entity.getPositionen() == null
+                    ? 0L
+                    : (long) entity.getPositionen().size())
+                """
     )
     @Mapping(
             target = "anzahlDokumente",
             expression = """
-        java(entity.getDokumente() == null
-            ? 0L
-            : (long) entity.getDokumente().size())
-        """
+                java(entity.getDokumente() == null
+                    ? 0L
+                    : (long) entity.getDokumente().size())
+                """
     )
-    ZahlungsnachweisListDTO toListDTO(Zahlungsnachweis entity);
+    ZahlungsnachweisListDTO toListDTO(
+            Zahlungsnachweis entity
+    );
 
     /* =========================================================
        DETAIL
@@ -44,12 +46,18 @@ public interface ZahlungsnachweisMapper {
        POSITION
        ========================================================= */
 
-    @Mapping(target = "teilnehmerId",
-            source = "teilnehmer.id")
-    @Mapping(target = "vorname",
-            source = "teilnehmer.person.vorname")
-    @Mapping(target = "nachname",
-            source = "teilnehmer.person.name")
+    @Mapping(
+            target = "teilnehmerId",
+            source = "teilnehmer.id"
+    )
+    @Mapping(
+            target = "vorname",
+            source = "teilnehmer.person.vorname"
+    )
+    @Mapping(
+            target = "nachname",
+            source = "teilnehmer.person.name"
+    )
     ZahlungsPositionDTO toPositionDTO(
             ZahlungsPosition entity
     );

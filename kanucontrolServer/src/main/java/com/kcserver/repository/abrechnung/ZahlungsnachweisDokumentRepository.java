@@ -4,24 +4,28 @@ import com.kcserver.entity.ZahlungsnachweisDokument;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface ZahlungsnachweisDokumentRepository
         extends JpaRepository<ZahlungsnachweisDokument, Long> {
 
-    List<ZahlungsnachweisDokument>
-    findByZahlungsnachweisIdOrderByReihenfolgeAsc(
+    /**
+     * Alle Dokumente eines Zahlungsnachweises in der definierten Reihenfolge.
+     */
+    List<ZahlungsnachweisDokument> findByZahlungsnachweisIdOrderByReihenfolgeAsc(
             Long zahlungsnachweisId
     );
 
-    Optional<ZahlungsnachweisDokument>
-    findByIdAndZahlungsnachweisId(
-            Long id,
+    /**
+     * Anzahl der Dokumente eines Zahlungsnachweises.
+     */
+    long countByZahlungsnachweisId(
             Long zahlungsnachweisId
     );
 
-    void deleteByIdAndZahlungsnachweisId(
-            Long id,
+    /**
+     * Höchste Reihenfolge eines Zahlungsnachweises.
+     */
+    ZahlungsnachweisDokument findTopByZahlungsnachweisIdOrderByReihenfolgeDesc(
             Long zahlungsnachweisId
     );
 }

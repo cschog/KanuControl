@@ -1,10 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
-ssh-add --apple-load-keychain >/dev/null 2>&1
-
 echo "🛠️ Backend wird gebaut..."
-./mvnw clean package -DskipTests
+./mvnw clean package -Dmaven.test.skip=true
 
 echo "📦 JAR wird kopiert..."
 scp target/kcserver-0.0.1-SNAPSHOT.jar \

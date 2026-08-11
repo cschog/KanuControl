@@ -1,4 +1,4 @@
-package com.kcserver.service;
+package com.kcserver.service.abrechnung;
 
 import com.kcserver.enumtype.Zahlungsstatus;
 import com.kcserver.repository.abrechnung.TeilnehmerZahlungSumme;

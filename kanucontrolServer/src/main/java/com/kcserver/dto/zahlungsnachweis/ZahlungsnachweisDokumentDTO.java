@@ -2,6 +2,8 @@ package com.kcserver.dto.zahlungsnachweis;
 
 import lombok.Data;
 
+import java.time.Instant;
+
 @Data
 public class ZahlungsnachweisDokumentDTO {
 
@@ -16,4 +18,6 @@ public class ZahlungsnachweisDokumentDTO {
     private String mimeType;
 
     private Long dateigroesse;
+
+    private Instant createdAt;
 }

@@ -18,6 +18,9 @@ import { GenericTableTanstack } from "@/components/common/GenericTableTanstack";
 import { beitraegeColumns } from "@/components/finanzen/beitraege/beitraegeColumns";
 import DeleteConfirmDialog from "@/components/common/DeleteConfirmDialog";
 
+import { upload } from "@/api/services/zahlungsnachweisDokumentApi";
+import { optimizeUploadFile } from "@/utils/imageUtils";
+
 import {
   TeilnehmerBeitraegeResponseDTO,
   TeilnehmerListDTO,
@@ -223,8 +226,10 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
           <Box
             sx={{
               display: "flex",
+              flexDirection: { xs: "column", sm: "row" },
               justifyContent: "space-between",
-              alignItems: "center",
+              alignItems: { xs: "stretch", sm: "center" },
+              gap: 1,
               mb: spacing.card,
             }}
           >
@@ -236,8 +241,12 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
                 setBearbeiteterZahlungsnachweis(null);
                 setDialogOpen(true);
               }}
+              sx={{
+                alignSelf: { xs: "flex-end", sm: "auto" },
+                whiteSpace: "nowrap",
+              }}
             >
-              Neuer Zahlungsnachweis
+              + Zahlungsnachweis
             </Button>
           </Box>
 
@@ -389,15 +398,37 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
 
           setBearbeiteterZahlungsnachweis(null);
         }}
-        onSave={async (dto) => {
+        onSave={async (dto, files) => {
           try {
+            let zahlungsnachweisId: number;
+
             if (bearbeiteterZahlungsnachweis) {
+              // Bestehenden Zahlungsnachweis aktualisieren
               await apiClient.put(
                 `/veranstaltungen/${veranstaltungId}/zahlungsnachweise/${bearbeiteterZahlungsnachweis.id}`,
                 dto,
               );
+
+              zahlungsnachweisId = bearbeiteterZahlungsnachweis.id;
             } else {
-              await apiClient.post(`/veranstaltungen/${veranstaltungId}/zahlungsnachweise`, dto);
+              // Neuen Zahlungsnachweis anlegen
+              const response = await apiClient.post(
+                `/veranstaltungen/${veranstaltungId}/zahlungsnachweise`,
+                dto,
+              );
+
+              zahlungsnachweisId = response.data.id;
+
+              // Dokumente erst NACH erfolgreicher Erstellung hochladen
+              if (files.length > 0) {
+                await Promise.all(
+                  files.map(async (file) => {
+                    const optimizedFile = await optimizeUploadFile(file);
+
+                    return upload(veranstaltungId, zahlungsnachweisId, optimizedFile);
+                  }),
+                );
+              }
             }
 
             setDialogOpen(false);
@@ -406,11 +437,7 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
             await load();
           } catch (err) {
             console.error(err);
-            setError(
-              bearbeiteterZahlungsnachweis
-                ? "Zahlungsnachweis konnte nicht geändert werden."
-                : "Zahlungsnachweis konnte nicht gespeichert werden.",
-            );
+            setError("Zahlungsnachweis konnte nicht gespeichert werden.");
           }
         }}
       />
