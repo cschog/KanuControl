@@ -2,25 +2,32 @@ package com.kcserver.service.pdf;
 
 import com.kcserver.entity.Veranstaltung;
 import com.kcserver.entity.Zahlungsnachweis;
+import com.kcserver.entity.ZahlungsnachweisDokument;
 import com.kcserver.enumtype.PdfDokumentTyp;
 import com.kcserver.repository.VeranstaltungRepository;
 import com.kcserver.repository.abrechnung.ZahlungsnachweisRepository;
 import com.kcserver.util.PdfFilenameUtil;
 import lombok.RequiredArgsConstructor;
+import org.apache.pdfbox.multipdf.LayerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -53,6 +60,9 @@ public class PDFZahlungsnachweiseService {
     private final VeranstaltungRepository veranstaltungRepository;
     private final ZahlungsnachweisRepository zahlungsnachweisRepository;
     private final PDFLayoutService layoutService;
+
+    private final A4LayoutEngine layoutEngine;
+    private final PDFDocumentComposer composer;
 
     /**
      * Erzeugt das PDF der Zahlungsnachweise.
@@ -92,24 +102,78 @@ public class PDFZahlungsnachweiseService {
                         .toList();
 
         try (
-                PDDocument document =
-                        new PDDocument();
-
-                ByteArrayOutputStream out =
-                        new ByteArrayOutputStream()
+                PDDocument deckblatt =
+                        new PDDocument()
         ) {
 
+            /*
+             * =====================================================
+             * 1. DECKBLATT
+             * =====================================================
+             */
+
             createDeckblatt(
-                    document,
+                    deckblatt,
                     veranstaltung,
                     nachweise
             );
 
             /*
-             * Footer erst nach Erzeugung
-             * aller Seiten hinzufügen.
+             * =====================================================
+             * 2. BELEGE SAMMELN
+             * =====================================================
              */
-            layoutService.addFooter(document);
+
+            Map<String, byte[]> documents =
+                    collectDocuments(
+                            nachweise
+                    );
+
+            List<A4LayoutItem> items =
+                    createLayoutItems(
+                            nachweise
+                    );
+
+            /*
+             * =====================================================
+             * 3. A4-LAYOUT PLANEN
+             * =====================================================
+             */
+
+            List<A4LayoutPlacement> placements =
+                    layoutEngine.layout(
+                            items
+                    );
+
+            /*
+             * =====================================================
+             * 4. BELEGE ZUSAMMENSETZEN
+             * =====================================================
+             */
+
+            byte[] belegPdf =
+                    composer.composeWithoutFooter(
+                            documents,
+                            placements
+                    );
+
+            /*
+             * =====================================================
+             * 5. DECKBLATT + BELEGE ZUSAMMENFÜHREN
+             * =====================================================
+             */
+
+            byte[] gesamtesPdf =
+                    mergeDocuments(
+                            deckblatt,
+                            belegPdf
+                    );
+
+            /*
+             * =====================================================
+             * 6. FOOTER AUF DAS GESAMTDOKUMENT
+             * =====================================================
+             */
 
             String filename =
                     PdfFilenameUtil.build(
@@ -118,18 +182,33 @@ public class PDFZahlungsnachweiseService {
                             veranstaltung
                     );
 
-            document.getDocumentInformation()
-                    .setTitle(filename);
+            try (
+                    PDDocument document =
+                            org.apache.pdfbox.Loader.loadPDF(
+                                    gesamtesPdf
+                            );
 
-            document.getDocumentInformation()
-                    .setAuthor("KanuControl");
+                    ByteArrayOutputStream out =
+                            new ByteArrayOutputStream()
+            ) {
 
-            document.getDocumentInformation()
-                    .setCreator("KanuControl");
+                layoutService.addFooter(
+                        document
+                );
 
-            document.save(out);
+                document.getDocumentInformation()
+                        .setTitle(filename);
 
-            return out.toByteArray();
+                document.getDocumentInformation()
+                        .setAuthor("KanuControl");
+
+                document.getDocumentInformation()
+                        .setCreator("KanuControl");
+
+                document.save(out);
+
+                return out.toByteArray();
+            }
 
         } catch (Exception e) {
 
@@ -528,5 +607,211 @@ public class PDFZahlungsnachweiseService {
                 0,
                 maxLength - 1
         ) + "…";
+    }
+
+    private Map<String, byte[]> collectDocuments(
+            List<Zahlungsnachweis> nachweise
+    ) {
+
+        Map<String, byte[]> documents =
+                new java.util.LinkedHashMap<>();
+
+        for (Zahlungsnachweis nachweis : nachweise) {
+
+            for (ZahlungsnachweisDokument dokument :
+                    nachweis.getDokumente()) {
+
+                String id =
+                        "ZN-"
+                                + nachweis.getId()
+                                + "-DOC-"
+                                + dokument.getId();
+
+                documents.put(
+                        id,
+                        dokument.getInhalt()
+                );
+            }
+        }
+
+        return documents;
+    }
+
+    private List<A4LayoutItem> createLayoutItems(
+            List<Zahlungsnachweis> nachweise
+    ) throws IOException {
+
+        List<A4LayoutItem> items =
+                new java.util.ArrayList<>();
+
+        for (Zahlungsnachweis nachweis : nachweise) {
+
+            for (ZahlungsnachweisDokument dokument :
+                    nachweis.getDokumente()) {
+
+                String id =
+                        "ZN-"
+                                + nachweis.getId()
+                                + "-DOC-"
+                                + dokument.getId();
+
+                float[] size =
+                        determinePdfSize(
+                                dokument.getInhalt()
+                        );
+
+                items.add(
+                        new A4LayoutItem(
+                                id,
+                                size[0],
+                                size[1]
+                        )
+                );
+            }
+        }
+
+        return items;
+    }
+
+    private float[] determinePdfSize(
+            byte[] content
+    ) throws IOException {
+
+        try (
+                PDDocument document =
+                        org.apache.pdfbox.Loader.loadPDF(content)
+        ) {
+
+            if (document.getNumberOfPages() == 0) {
+                throw new IllegalArgumentException(
+                        "PDF enthält keine Seite."
+                );
+            }
+
+            PDRectangle box =
+                    document
+                            .getPage(0)
+                            .getMediaBox();
+
+            return new float[]{
+                    box.getWidth(),
+                    box.getHeight()
+            };
+        }
+    }
+    private byte[] mergeDocuments(
+            PDDocument deckblatt,
+            byte[] belegPdf
+    ) throws IOException {
+
+        /*
+         * Keine Belege vorhanden.
+         *
+         * Dann besteht das Gesamtdokument ausschließlich
+         * aus dem Deckblatt.
+         */
+        if (belegPdf == null || belegPdf.length == 0) {
+
+            ByteArrayOutputStream out =
+                    new ByteArrayOutputStream();
+
+            deckblatt.save(out);
+
+            return out.toByteArray();
+        }
+
+        try (
+                PDDocument belege =
+                        org.apache.pdfbox.Loader.loadPDF(
+                                belegPdf
+                        );
+
+                PDDocument gesamt =
+                        new PDDocument();
+
+                ByteArrayOutputStream out =
+                        new ByteArrayOutputStream()
+        ) {
+
+            LayerUtility layerUtility =
+                    new LayerUtility(gesamt);
+
+            /*
+             * -------------------------------------------------
+             * DECKBLATT
+             * -------------------------------------------------
+             */
+
+            int deckblattIndex = 0;
+
+            for (PDPage ignored :
+                    deckblatt.getPages()) {
+
+                org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject form =
+                        layerUtility.importPageAsForm(
+                                deckblatt,
+                                deckblattIndex
+                        );
+
+                PDPage targetPage =
+                        new PDPage(
+                                PDFLayoutService.PAGE_SIZE
+                        );
+
+                gesamt.addPage(targetPage);
+
+                try (
+                        PDPageContentStream content =
+                                new PDPageContentStream(
+                                        gesamt,
+                                        targetPage
+                                )
+                ) {
+
+                    content.drawForm(form);
+                }
+
+                deckblattIndex++;
+            }
+
+            /*
+             * -------------------------------------------------
+             * BELEGE
+             * -------------------------------------------------
+             */
+
+            for (int i = 0;
+                 i < belege.getNumberOfPages();
+                 i++) {
+
+                org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject form =
+                        layerUtility.importPageAsForm(
+                                belege,
+                                i
+                        );
+
+                PDPage targetPage =
+                        new PDPage(
+                                PDFLayoutService.PAGE_SIZE
+                        );
+
+                gesamt.addPage(targetPage);
+
+                try (
+                        PDPageContentStream content =
+                                new PDPageContentStream(
+                                        gesamt,
+                                        targetPage
+                                )
+                ) {
+
+                    content.drawForm(form);
+                }
+            }
+
+            gesamt.save(out);
+
+            return out.toByteArray();
+        }
     }
 }
