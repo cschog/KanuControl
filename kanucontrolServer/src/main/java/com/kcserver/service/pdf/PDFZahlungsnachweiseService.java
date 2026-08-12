@@ -15,7 +15,6 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
-import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -57,12 +56,111 @@ public class PDFZahlungsnachweiseService {
                     Locale.GERMANY
             );
 
+    record PlatzierteDokumentZuordnung(
+            A4LayoutPlacement placement,
+            DokumentZuordnung dokumentZuordnung
+    ) {
+    }
+
     private final VeranstaltungRepository veranstaltungRepository;
     private final ZahlungsnachweisRepository zahlungsnachweisRepository;
     private final PDFLayoutService layoutService;
 
     private final A4LayoutEngine layoutEngine;
     private final PDFDocumentComposer composer;
+
+    String createBelegkopf(
+            PDFBelegGruppe gruppe
+    ) {
+
+        Zahlungsnachweis nachweis =
+                gruppe.nachweis();
+
+        return String.format(
+                "#%02d  Zahlungsnachweis %s  %s",
+                gruppe.nummer(),
+                formatDate(nachweis.getDatum()),
+                formatMoney(nachweis.getBetrag())
+        );
+    }
+
+    List<PlatzierteDokumentZuordnung> createPlatzierteDokumentZuordnungen(
+            List<A4LayoutPlacement> placements,
+            List<DokumentZuordnung> zuordnungen
+    ) {
+
+        List<PlatzierteDokumentZuordnung> result =
+                new java.util.ArrayList<>();
+
+        for (A4LayoutPlacement placement : placements) {
+
+            DokumentZuordnung zuordnung =
+                    findeDokumentZuordnung(
+                            placement,
+                            zuordnungen
+                    );
+
+            result.add(
+                    new PlatzierteDokumentZuordnung(
+                            placement,
+                            zuordnung
+                    )
+            );
+        }
+
+        return result;
+    }
+
+    List<PDFBelegGruppe> createGruppen(
+            List<Zahlungsnachweis> nachweise
+    ) throws IOException {
+
+        List<PDFBelegGruppe> gruppen =
+                new java.util.ArrayList<>();
+
+        int nummer = 1;
+
+        for (Zahlungsnachweis nachweis : nachweise) {
+
+            List<A4LayoutItem> dokumente =
+                    new java.util.ArrayList<>();
+
+            for (ZahlungsnachweisDokument dokument :
+                    nachweis.getDokumente()) {
+
+                String itemId =
+                        "ZN-"
+                                + nachweis.getId()
+                                + "-DOC-"
+                                + dokument.getId();
+
+                float[] size =
+                        determinePdfSize(
+                                dokument.getInhalt()
+                        );
+
+                dokumente.add(
+                        new A4LayoutItem(
+                                itemId,
+                                size[0],
+                                size[1]
+                        )
+                );
+            }
+
+            gruppen.add(
+                    new PDFBelegGruppe(
+                            nummer,
+                            nachweis,
+                            dokumente
+                    )
+            );
+
+            nummer++;
+        }
+
+        return gruppen;
+    }
 
     /**
      * Erzeugt das PDF der Zahlungsnachweise.
@@ -124,14 +222,19 @@ public class PDFZahlungsnachweiseService {
              * =====================================================
              */
 
+            List<PDFBelegGruppe> gruppen =
+                    createGruppen(
+                            nachweise
+                    );
+
             Map<String, byte[]> documents =
                     collectDocuments(
-                            nachweise
+                            gruppen
                     );
 
             List<A4LayoutItem> items =
                     createLayoutItems(
-                            nachweise
+                            gruppen
                     );
 
             /*
@@ -143,6 +246,15 @@ public class PDFZahlungsnachweiseService {
             List<A4LayoutPlacement> placements =
                     layoutEngine.layout(
                             items
+                    );
+
+            List<DokumentZuordnung> zuordnungen =
+                    createDokumentZuordnungen(gruppen);
+
+            List<PlatzierteDokumentZuordnung> platzierteDokumente =
+                    createPlatzierteDokumentZuordnungen(
+                            placements,
+                            zuordnungen
                     );
 
             /*
@@ -326,11 +438,13 @@ public class PDFZahlungsnachweiseService {
             float colBeleg = 45f;
             float colDatum = 70f;
             float colBetrag = 75f;
+            float colDokumente = 55f;
 
             float colBemerkung =
                     tableWidth
                             - colBeleg
                             - colDatum
+                            - colDokumente
                             - colBetrag;
 
             /*
@@ -344,6 +458,7 @@ public class PDFZahlungsnachweiseService {
                     tableX,
                     colBeleg,
                     colDatum,
+                    colDokumente,
                     colBemerkung,
                     colBetrag
             );
@@ -383,6 +498,7 @@ public class PDFZahlungsnachweiseService {
                             tableX,
                             colBeleg,
                             colDatum,
+                            colDokumente,
                             colBemerkung,
                             colBetrag
                     );
@@ -420,15 +536,29 @@ public class PDFZahlungsnachweiseService {
                 );
 
                 page.write(
-                        truncate(
-                                safe(
-                                        nachweis.getBemerkung()
-                                ),
-                                65
+                        String.valueOf(
+                                nachweis.getDokumente().size()
                         ),
                         tableX
                                 + colBeleg
                                 + colDatum
+                                + 3,
+                        y - 14,
+                        FONT,
+                        TEXT_SIZE
+                );
+
+                page.write(
+                        truncate(
+                                safe(
+                                        nachweis.getBemerkung()
+                                ),
+                                55
+                        ),
+                        tableX
+                                + colBeleg
+                                + colDatum
+                                + colDokumente
                                 + 3,
                         y - 14,
                         FONT,
@@ -496,6 +626,7 @@ public class PDFZahlungsnachweiseService {
             float x,
             float colBeleg,
             float colDatum,
+            float colDokumente,
             float colBemerkung,
             float colBetrag
     ) throws Exception {
@@ -520,10 +651,22 @@ public class PDFZahlungsnachweiseService {
         );
 
         page.write(
+                "Dokumente",
+                x
+                        + colBeleg
+                        + colDatum
+                        + 3,
+                y - 14,
+                FONT_BOLD,
+                TEXT_SIZE
+        );
+
+        page.write(
                 "Bemerkung",
                 x
                         + colBeleg
                         + colDatum
+                        + colDokumente
                         + 3,
                 y - 14,
                 FONT_BOLD,
@@ -610,20 +753,20 @@ public class PDFZahlungsnachweiseService {
     }
 
     private Map<String, byte[]> collectDocuments(
-            List<Zahlungsnachweis> nachweise
+            List<PDFBelegGruppe> gruppen
     ) {
 
         Map<String, byte[]> documents =
                 new java.util.LinkedHashMap<>();
 
-        for (Zahlungsnachweis nachweis : nachweise) {
+        for (PDFBelegGruppe gruppe : gruppen) {
 
             for (ZahlungsnachweisDokument dokument :
-                    nachweis.getDokumente()) {
+                    gruppe.nachweis().getDokumente()) {
 
                 String id =
                         "ZN-"
-                                + nachweis.getId()
+                                + gruppe.nachweis().getId()
                                 + "-DOC-"
                                 + dokument.getId();
 
@@ -638,36 +781,17 @@ public class PDFZahlungsnachweiseService {
     }
 
     private List<A4LayoutItem> createLayoutItems(
-            List<Zahlungsnachweis> nachweise
-    ) throws IOException {
+            List<PDFBelegGruppe> gruppen
+    ) {
 
         List<A4LayoutItem> items =
                 new java.util.ArrayList<>();
 
-        for (Zahlungsnachweis nachweis : nachweise) {
+        for (PDFBelegGruppe gruppe : gruppen) {
 
-            for (ZahlungsnachweisDokument dokument :
-                    nachweis.getDokumente()) {
-
-                String id =
-                        "ZN-"
-                                + nachweis.getId()
-                                + "-DOC-"
-                                + dokument.getId();
-
-                float[] size =
-                        determinePdfSize(
-                                dokument.getInhalt()
-                        );
-
-                items.add(
-                        new A4LayoutItem(
-                                id,
-                                size[0],
-                                size[1]
-                        )
-                );
-            }
+            items.addAll(
+                    gruppe.dokumente()
+            );
         }
 
         return items;
@@ -813,5 +937,49 @@ public class PDFZahlungsnachweiseService {
 
             return out.toByteArray();
         }
+    }
+
+    List<DokumentZuordnung> createDokumentZuordnungen(
+            List<PDFBelegGruppe> gruppen
+    ) {
+
+        List<DokumentZuordnung> result =
+                new java.util.ArrayList<>();
+
+        for (PDFBelegGruppe gruppe : gruppen) {
+
+            for (A4LayoutItem dokument :
+                    gruppe.dokumente()) {
+
+                result.add(
+                        new DokumentZuordnung(
+                                dokument.id(),
+                                gruppe,
+                                dokument
+                        )
+                );
+            }
+        }
+
+        return result;
+    }
+
+    DokumentZuordnung findeDokumentZuordnung(
+            A4LayoutPlacement placement,
+            List<DokumentZuordnung> zuordnungen
+    ) {
+
+        return zuordnungen.stream()
+                .filter(zuordnung ->
+                        zuordnung.itemId()
+                                .equals(placement.itemId())
+                )
+                .findFirst()
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Keine Dokumentzuordnung für itemId: "
+                                        + placement.itemId()
+                        )
+                );
     }
 }
