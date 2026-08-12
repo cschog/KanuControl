@@ -18,6 +18,10 @@ import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -47,6 +51,8 @@ public class PDFZahlungsnachweiseService {
     private static final float TEXT_SIZE = 9f;
 
     private static final float ROW_HEIGHT = 20f;
+    private static final float MAX_DOCUMENT_WIDTH = 400f;
+    private static final float MAX_DOCUMENT_HEIGHT = 300f;
 
     private static final DateTimeFormatter DATE_FORMAT =
             DateTimeFormatter.ofPattern("dd.MM.yyyy");
@@ -134,10 +140,28 @@ public class PDFZahlungsnachweiseService {
                                 + "-DOC-"
                                 + dokument.getId();
 
-                float[] size =
-                        determinePdfSize(
-                                dokument.getInhalt()
-                        );
+                float[] size;
+
+                try {
+
+                    size =
+                            determinePdfSize(
+                                    dokument.getInhalt()
+                            );
+
+                } catch (IOException e) {
+
+                    throw new IOException(
+                            "Dokument ist kein gültiges PDF: "
+                                    + "Zahlungsnachweis "
+                                    + nachweis.getId()
+                                    + ", Dokument "
+                                    + dokument.getId()
+                                    + ", Dateiname "
+                                    + dokument.getOriginalDateiname(),
+                            e
+                    );
+                }
 
                 dokumente.add(
                         new A4LayoutItem(
@@ -206,10 +230,30 @@ public class PDFZahlungsnachweiseService {
 
             /*
              * =====================================================
-             * 1. DECKBLATT
+             * 1. BELEGGRUPPEN ERZEUGEN
              * =====================================================
+             *
+             * Jeder Zahlungsnachweis bildet eine Beleggruppe.
+             *
+             * Die Gruppe enthält:
+             *
+             * - fortlaufende Belegnummer
+             * - Zahlungsnachweis
+             * - zugehörige Dokumente
              */
+            List<PDFBelegGruppe> gruppen =
+                    createGruppen(
+                            nachweise
+                    );
 
+            /*
+             * =====================================================
+             * 2. DECKBLATT
+             * =====================================================
+             *
+             * Das Deckblatt verwendet dieselben
+             * Zahlungsnachweise wie die Beleggruppen.
+             */
             createDeckblatt(
                     deckblatt,
                     veranstaltung,
@@ -218,20 +262,28 @@ public class PDFZahlungsnachweiseService {
 
             /*
              * =====================================================
-             * 2. BELEGE SAMMELN
+             * 3. DOKUMENTE SAMMELN
              * =====================================================
+             *
+             * Key = eindeutige itemId
+             *
+             * Beispiel:
+             *
+             * ZN-101-DOC-1001
              */
-
-            List<PDFBelegGruppe> gruppen =
-                    createGruppen(
-                            nachweise
-                    );
-
             Map<String, byte[]> documents =
                     collectDocuments(
                             gruppen
                     );
 
+            /*
+             * =====================================================
+             * 4. LAYOUT-ITEMS ERZEUGEN
+             * =====================================================
+             *
+             * Die Layout-Items enthalten die
+             * Originalgröße der Dokumente.
+             */
             List<A4LayoutItem> items =
                     createLayoutItems(
                             gruppen
@@ -239,42 +291,37 @@ public class PDFZahlungsnachweiseService {
 
             /*
              * =====================================================
-             * 3. A4-LAYOUT PLANEN
+             * 5. A4-LAYOUT PLANEN
              * =====================================================
              */
-
             List<A4LayoutPlacement> placements =
                     layoutEngine.layout(
                             items
                     );
-
-            List<DokumentZuordnung> zuordnungen =
-                    createDokumentZuordnungen(gruppen);
-
-            List<PlatzierteDokumentZuordnung> platzierteDokumente =
-                    createPlatzierteDokumentZuordnungen(
-                            placements,
-                            zuordnungen
+            Map<String, String> belegNummern =
+                    createBelegNummern(
+                            gruppen
                     );
 
             /*
              * =====================================================
-             * 4. BELEGE ZUSAMMENSETZEN
+             * 6. BELEGE AUF A4-SEITEN ZUSAMMENSETZEN
              * =====================================================
+             *
+             * Noch ohne Footer.
              */
-
             byte[] belegPdf =
                     composer.composeWithoutFooter(
                             documents,
-                            placements
+                            placements,
+                            belegNummern
                     );
 
             /*
              * =====================================================
-             * 5. DECKBLATT + BELEGE ZUSAMMENFÜHREN
+             * 7. DECKBLATT + BELEGE ZUSAMMENFÜHREN
              * =====================================================
              */
-
             byte[] gesamtesPdf =
                     mergeDocuments(
                             deckblatt,
@@ -283,10 +330,12 @@ public class PDFZahlungsnachweiseService {
 
             /*
              * =====================================================
-             * 6. FOOTER AUF DAS GESAMTDOKUMENT
+             * 8. FOOTER + PDF-METADATEN
              * =====================================================
+             *
+             * Der Footer wird bewusst erst auf das
+             * fertige Gesamtdokument gesetzt.
              */
-
             String filename =
                     PdfFilenameUtil.build(
                             LocalDate.now(),
@@ -329,6 +378,34 @@ public class PDFZahlungsnachweiseService {
                     e
             );
         }
+    }
+
+    private Map<String, String> createBelegNummern(
+            List<PDFBelegGruppe> gruppen
+    ) {
+
+        Map<String, String> result =
+                new java.util.LinkedHashMap<>();
+
+        for (PDFBelegGruppe gruppe : gruppen) {
+
+            String belegNummer =
+                    String.format(
+                            "#%02d",
+                            gruppe.nummer()
+                    );
+
+            for (A4LayoutItem dokument :
+                    gruppe.dokumente()) {
+
+                result.put(
+                        dokument.id(),
+                        belegNummer
+                );
+            }
+        }
+
+        return result;
     }
 
     private boolean hatDokumente(
@@ -801,27 +878,93 @@ public class PDFZahlungsnachweiseService {
             byte[] content
     ) throws IOException {
 
-        try (
-                PDDocument document =
-                        org.apache.pdfbox.Loader.loadPDF(content)
-        ) {
+        /*
+         * =========================================================
+         * PDF
+         * =========================================================
+         */
 
-            if (document.getNumberOfPages() == 0) {
-                throw new IllegalArgumentException(
-                        "PDF enthält keine Seite."
-                );
+        if (content.length >= 5
+                && content[0] == '%'
+                && content[1] == 'P'
+                && content[2] == 'D'
+                && content[3] == 'F'
+                && content[4] == '-') {
+
+            try (
+                    PDDocument document =
+                            org.apache.pdfbox.Loader.loadPDF(content)
+            ) {
+
+                if (document.getNumberOfPages() == 0) {
+                    throw new IllegalArgumentException(
+                            "PDF enthält keine Seite."
+                    );
+                }
+
+                PDRectangle box =
+                        document
+                                .getPage(0)
+                                .getMediaBox();
+
+                /*
+                 * PDFs werden mit ihrer tatsächlichen
+                 * PDF-Seitengröße an die Layout-Engine
+                 * übergeben.
+                 *
+                 * Die Skalierung erfolgt später durch
+                 * die A4LayoutEngine.
+                 */
+                return new float[]{
+                        box.getWidth(),
+                        box.getHeight()
+                };
             }
+        }
 
-            PDRectangle box =
-                    document
-                            .getPage(0)
-                            .getMediaBox();
+        /*
+         * =========================================================
+         * Bild
+         * =========================================================
+         */
+
+        BufferedImage image =
+                ImageIO.read(
+                        new ByteArrayInputStream(content)
+                );
+
+        if (image != null) {
+
+            float width = image.getWidth();
+            float height = image.getHeight();
+
+            /*
+             * Bilder werden auf einen sinnvollen Bereich
+             * für das A4-Layout begrenzt.
+             *
+             * Das Seitenverhältnis bleibt erhalten.
+             */
+            float scale =
+                    Math.min(
+                            MAX_DOCUMENT_WIDTH / width,
+                            MAX_DOCUMENT_HEIGHT / height
+                    );
+
+            /*
+             * Kleine Bilder nicht künstlich vergrößern.
+             */
+            scale = Math.min(scale, 1f);
 
             return new float[]{
-                    box.getWidth(),
-                    box.getHeight()
+                    width * scale,
+                    height * scale
             };
         }
+
+        throw new IOException(
+                "Dokument ist weder ein gültiges PDF noch ein "
+                        + "unterstütztes Bildformat."
+        );
     }
     private byte[] mergeDocuments(
             PDDocument deckblatt,
