@@ -15,6 +15,7 @@ import DownloadIcon from "@mui/icons-material/Download";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { optimizeUploadFile } from "@/utils/imageUtils";
+import ImageCropPreviewDialog from "@/components/common/ImageCropPreviewDialog";
 
 import {
   deleteZahlungsnachweisDokument,
@@ -44,6 +45,9 @@ export default function ZahlungsnachweisDokumentPanel({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [cropDialogOpen, setCropDialogOpen] = useState(false);
+
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   /* =========================================================
      LOAD
@@ -55,15 +59,15 @@ export default function ZahlungsnachweisDokumentPanel({
         setLoading(true);
       }
 
-     try {
-       const data = await findAll(veranstaltungId, zahlungsnachweisId);
+      try {
+        const data = await findAll(veranstaltungId, zahlungsnachweisId);
 
-       setDokumente(data ?? []);
-     } finally {
-       if (showLoading) {
-         setLoading(false);
-       }
-     }
+        setDokumente(data ?? []);
+      } finally {
+        if (showLoading) {
+          setLoading(false);
+        }
+      }
     },
     [veranstaltungId, zahlungsnachweisId],
   );
@@ -76,19 +80,40 @@ export default function ZahlungsnachweisDokumentPanel({
      UPLOAD
   ========================================================= */
 
-async function handleUpload(file: File) {
-  setLoading(true);
+  async function handleUpload(file: File) {
+    if (file.type.startsWith("image/")) {
+      setSelectedFile(file);
+      setCropDialogOpen(true);
+      return;
+    }
 
-  try {
-    const optimizedFile = await optimizeUploadFile(file);
+    setLoading(true);
 
-    await upload(veranstaltungId, zahlungsnachweisId, optimizedFile);
+    try {
+      await upload(veranstaltungId, zahlungsnachweisId, file);
 
-    await loadDokumente(false);
-  } finally {
-    setLoading(false);
+      await loadDokumente(false);
+    } finally {
+      setLoading(false);
+    }
   }
-}
+
+  async function handleCropConfirm(file: File) {
+    setCropDialogOpen(false);
+    setSelectedFile(null);
+
+    setLoading(true);
+
+    try {
+      const optimizedFile = await optimizeUploadFile(file);
+
+      await upload(veranstaltungId, zahlungsnachweisId, optimizedFile);
+
+      await loadDokumente(false);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   /* =========================================================
      DELETE
@@ -243,7 +268,17 @@ async function handleUpload(file: File) {
           ))}
         </List>
       )}
-
+      <ImageCropPreviewDialog
+        open={cropDialogOpen}
+        file={selectedFile}
+        onCancel={() => {
+          setCropDialogOpen(false);
+          setSelectedFile(null);
+        }}
+        onConfirm={(file) => {
+          void handleCropConfirm(file);
+        }}
+      />
       <DeleteConfirmDialog
         open={deleteId !== null}
         title="Dokument löschen"

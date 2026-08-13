@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-import { Box, Typography, Paper, Button, Stack } from "@mui/material";
+import { Box, Typography, Paper, Button, Stack, CircularProgress } from "@mui/material";
 import axios from "axios";
 
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
@@ -19,7 +19,6 @@ import apiClient from "@/api/client/apiClient";
 
 import { getActiveVeranstaltung } from "@/api/services/veranstaltungApi";
 
-
 import { VeranstaltungDetail } from "@/api/types/veranstaltung/VeranstaltungDetail";
 import { ReisekostenPdfDialog } from "@/components/finanzen/reisekosten/ReisekostenPdfDialog";
 import { radius } from "@/theme/ui";
@@ -27,19 +26,14 @@ import { radius } from "@/theme/ui";
 const DokumenteScreen: React.FC = () => {
   const navigate = useNavigate();
   const [veranstaltung, setVeranstaltung] = useState<VeranstaltungDetail | null>(null);
-
   const [anmeldungValidation, setAnmeldungValidation] = useState<ValidationResult | null>(null);
-
   const [teilnehmerValidation, setTeilnehmerValidation] = useState<ValidationResult | null>(null);
-
   const [erhebungsbogenValidation, setErhebungsbogenValidation] = useState<ValidationResult | null>(
     null,
   );
-
   const [abrechnungValidation, setAbrechnungValidation] = useState<ValidationResult | null>(null);
-
   const [reisekostenOpen, setReisekostenOpen] = useState(false);
-
+  const [loadingReport, setLoadingReport] = useState<string | null>(null);
 
   /* =========================================================
      Aktive Veranstaltung laden
@@ -83,17 +77,29 @@ const DokumenteScreen: React.FC = () => {
   const handlePreview = async (endpoint: string) => {
     if (!veranstaltung?.id) return;
 
-    const res = await apiClient.get(`/veranstaltungen/${veranstaltung.id}/${endpoint}/view`, {
-      responseType: "blob",
-    });
+    setLoadingReport(endpoint);
 
-    const blob = new Blob([res.data], {
-      type: "application/pdf",
-    });
+    try {
+      const res = await apiClient.get(`/veranstaltungen/${veranstaltung.id}/${endpoint}/view`, {
+        responseType: "blob",
+      });
 
-    const url = window.URL.createObjectURL(blob);
+      const blob = new Blob([res.data], {
+        type: "application/pdf",
+      });
 
-    window.open(url, "_blank");
+      const url = window.URL.createObjectURL(blob);
+
+      window.open(url, "_blank");
+
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+      }, 60_000);
+    } catch (error) {
+      console.error("PDF-Vorschau konnte nicht erstellt werden:", error);
+    } finally {
+      setLoadingReport(null);
+    }
   };
 
   /* =========================================================
@@ -103,38 +109,46 @@ const DokumenteScreen: React.FC = () => {
   const handleDownload = async (endpoint: string, fallbackFilename: string) => {
     if (!veranstaltung?.id) return;
 
-    const res = await apiClient.get(`/veranstaltungen/${veranstaltung.id}/${endpoint}/download`, {
-      responseType: "blob",
-    });
+    setLoadingReport(endpoint);
 
-    const disposition = res.headers["content-disposition"];
+    try {
+      const res = await apiClient.get(`/veranstaltungen/${veranstaltung.id}/${endpoint}/download`, {
+        responseType: "blob",
+      });
 
-    let filename = fallbackFilename;
+      const disposition = res.headers["content-disposition"];
 
-    const match = disposition?.match(/filename="?([^";]+)"?/);
+      let filename = fallbackFilename;
 
-    if (match?.[1]) {
-      filename = match[1];
+      const match = disposition?.match(/filename="?([^";]+)"?/);
+
+      if (match?.[1]) {
+        filename = match[1];
+      }
+
+      const blob = new Blob([res.data], {
+        type: "application/pdf",
+      });
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = filename;
+
+      document.body.appendChild(link);
+
+      link.click();
+
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("PDF konnte nicht heruntergeladen werden:", error);
+    } finally {
+      setLoadingReport(null);
     }
-
-    const blob = new Blob([res.data], {
-      type: "application/pdf",
-    });
-
-    const url = window.URL.createObjectURL(blob);
-
-    const link = document.createElement("a");
-
-    link.href = url;
-    link.download = filename;
-
-    document.body.appendChild(link);
-
-    link.click();
-
-    link.remove();
-
-    window.URL.revokeObjectURL(url);
   };
 
   /* =========================================================
@@ -169,52 +183,62 @@ const DokumenteScreen: React.FC = () => {
     );
   };
 
-  const renderSection = (
-    title: string,
-    endpoint: string,
-    fallbackFilename: string,
-    disabled: boolean = false,
-  ) => (
-    <Paper
-      elevation={3}
-      sx={{
-        p: 3,
-        borderRadius: radius.dialog,
-      }}
-    >
-      <Stack direction="row" alignItems="center" spacing={1} mb={2}>
-        <PictureAsPdfIcon />
+ const renderSection = (
+   title: string,
+   endpoint: string,
+   fallbackFilename: string,
+   disabled: boolean = false,
+ ) => {
+   const loading = loadingReport === endpoint;
 
-        <Typography variant="h6">{title}</Typography>
-      </Stack>
+   return (
+     <Paper
+       elevation={3}
+       sx={{
+         p: 3,
+         borderRadius: radius.dialog,
+       }}
+     >
+       <Stack direction="row" alignItems="center" spacing={1} mb={2}>
+         <PictureAsPdfIcon />
 
-      <Stack
-        direction={{
-          xs: "column",
-          sm: "row",
-        }}
-        spacing={2}
-      >
-        <Button
-          variant="contained"
-          startIcon={<VisibilityIcon />}
-          onClick={() => handlePreview(endpoint)}
-          disabled={disabled}
-        >
-          Vorschau
-        </Button>
+         <Typography variant="h6">{title}</Typography>
+       </Stack>
 
-        <Button
-          variant="outlined"
-          startIcon={<DownloadIcon />}
-          onClick={() => handleDownload(endpoint, fallbackFilename)}
-          disabled={disabled}
-        >
-          Download
-        </Button>
-      </Stack>
-    </Paper>
-  );
+       <Stack
+         direction={{
+           xs: "column",
+           sm: "row",
+         }}
+         spacing={2}
+       >
+         <Button
+           variant="contained"
+           startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <VisibilityIcon />}
+           onClick={() => void handlePreview(endpoint)}
+           disabled={disabled || loading}
+         >
+           {loading ? "PDF wird erstellt ..." : "Vorschau"}
+         </Button>
+
+         <Button
+           variant="outlined"
+           startIcon={loading ? <CircularProgress size={18} /> : <DownloadIcon />}
+           onClick={() => void handleDownload(endpoint, fallbackFilename)}
+           disabled={disabled || loading}
+         >
+           {loading ? "Bitte warten ..." : "Download"}
+         </Button>
+       </Stack>
+
+       {loading && (
+         <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+           Der Bericht wird erstellt. Das kann etwas dauern ...
+         </Typography>
+       )}
+     </Paper>
+   );
+ };
 
   /* =========================================================
      UI
@@ -268,10 +292,13 @@ const DokumenteScreen: React.FC = () => {
               "erhebungsbogen.pdf",
               !erhebungsbogenValidation?.valid,
             )}
-            /* HIER NEU */
             {/* Zahlungsnachweise */}
             {renderSection("Zahlungsnachweise", "zahlungsnachweise/pdf", "zahlungsnachweise.pdf")}
-            /* Fahrkosten */
+
+            {/* Belege */}
+            {renderSection("Belege", "belege/pdf", "belege.pdf")}
+
+            {/* Fahrkosten */}
             <Paper
               elevation={3}
               sx={{

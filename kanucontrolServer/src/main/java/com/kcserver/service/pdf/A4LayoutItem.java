@@ -1,5 +1,7 @@
 package com.kcserver.service.pdf;
 
+import com.kcserver.enumtype.PdfDocumentDensity;
+
 import java.util.Objects;
 
 /**
@@ -13,11 +15,12 @@ import java.util.Objects;
 public record A4LayoutItem(
         String id,
         float width,
-        float height
+        float height,
+        PdfDocumentDensity density
 ) {
-
     public A4LayoutItem {
         Objects.requireNonNull(id, "id darf nicht null sein.");
+        Objects.requireNonNull(density, "density darf nicht null sein.");
 
         if (width <= 0) {
             throw new IllegalArgumentException(

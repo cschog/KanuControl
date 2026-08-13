@@ -60,4 +60,15 @@ public interface AbrechnungBelegRepository
             Long veranstaltungId,
             Long finanzGruppeId
     );
+
+    @Query("""
+    SELECT DISTINCT b
+    FROM AbrechnungBeleg b
+    LEFT JOIN FETCH b.dokumente
+    WHERE b.abrechnung.veranstaltung.id = :veranstaltungId
+    ORDER BY b.datum, b.lfdNr
+""")
+    List<AbrechnungBeleg> findByVeranstaltungIdWithDokumente(
+            Long veranstaltungId
+    );
 }

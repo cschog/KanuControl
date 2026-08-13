@@ -13,6 +13,8 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import DownloadIcon from "@mui/icons-material/Download";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import ImageCropPreviewDialog from "@/components/common/ImageCropPreviewDialog";
+import { optimizeUploadFile } from "@/utils/imageUtils";
 
 import {
   deleteBelegDokument,
@@ -37,6 +39,9 @@ export default function BelegDokumentPanel({ belegId, readOnly = false }: Props)
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [cropDialogOpen, setCropDialogOpen] = useState(false);
+
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const loadDokumente = useCallback(
     async (showLoading = true) => {
@@ -63,10 +68,37 @@ export default function BelegDokumentPanel({ belegId, readOnly = false }: Props)
   }, [loadDokumente]);
 
   async function handleUpload(file: File) {
+    /*
+     * PDFs werden direkt hochgeladen.
+     * Bilder gehen zuerst durch die Crop-Vorschau.
+     */
+    if (file.type.startsWith("image/")) {
+      setSelectedFile(file);
+      setCropDialogOpen(true);
+      return;
+    }
+
     setLoading(true);
 
     try {
       await upload(belegId, file);
+      await loadDokumente(false);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleCropConfirm(file: File) {
+    setCropDialogOpen(false);
+    setSelectedFile(null);
+
+    setLoading(true);
+
+    try {
+      const optimizedFile = await optimizeUploadFile(file);
+
+      await upload(belegId, optimizedFile);
+
       await loadDokumente(false);
     } finally {
       setLoading(false);
@@ -190,6 +222,17 @@ export default function BelegDokumentPanel({ belegId, readOnly = false }: Props)
           ))}
         </List>
       )}
+      <ImageCropPreviewDialog
+        open={cropDialogOpen}
+        file={selectedFile}
+        onCancel={() => {
+          setCropDialogOpen(false);
+          setSelectedFile(null);
+        }}
+        onConfirm={(file) => {
+          void handleCropConfirm(file);
+        }}
+      />
       <DeleteConfirmDialog
         open={deleteId !== null}
         title="Dokument löschen"

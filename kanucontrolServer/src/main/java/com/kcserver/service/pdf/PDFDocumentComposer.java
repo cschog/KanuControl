@@ -7,7 +7,7 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
-import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
+import org.apache.pdfbox.pdmodel.graphics.image.JPEGFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.util.Matrix;
 import org.springframework.stereotype.Service;
@@ -16,6 +16,7 @@ import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -29,6 +30,9 @@ import java.util.Map;
 public class PDFDocumentComposer {
 
     private final PDFLayoutService layoutService;
+
+    private static final int IMAGE_DPI = 180;
+    private static final float JPEG_QUALITY = 0.85f;
 
     /**
      * Erstellt aus den Quell-PDFs und den Layout-Platzierungen
@@ -169,23 +173,169 @@ public class PDFDocumentComposer {
         PDPage targetPage =
                 target.getPage(pageIndex);
 
-        BufferedImage bufferedImage =
+        BufferedImage original =
                 ImageIO.read(
                         new ByteArrayInputStream(imageBytes)
                 );
 
-        if (bufferedImage == null) {
+        if (original == null) {
+
             throw new IOException(
                     "Bild konnte nicht gelesen werden: "
                             + placement.itemId()
             );
         }
 
-        PDImageXObject image =
-                LosslessFactory.createFromImage(
-                        target,
-                        bufferedImage
+        /*
+         * =========================================================
+         * Benötigte Pixelgröße aus der PDF-Größe berechnen.
+         * =========================================================
+         */
+
+        float displayWidth =
+                placement.width();
+
+        float displayHeight =
+                placement.height();
+
+        int targetWidth =
+                Math.max(
+                        1,
+                        Math.round(
+                                displayWidth
+                                        / 72f
+                                        * IMAGE_DPI
+                        )
                 );
+
+        int targetHeight =
+                Math.max(
+                        1,
+                        Math.round(
+                                displayHeight
+                                        / 72f
+                                        * IMAGE_DPI
+                        )
+                );
+
+        /*
+         * Niemals ein Bild vergrößern.
+         */
+        targetWidth =
+                Math.min(
+                        targetWidth,
+                        original.getWidth()
+                );
+
+        targetHeight =
+                Math.min(
+                        targetHeight,
+                        original.getHeight()
+                );
+
+        /*
+         * Seitenverhältnis des Originalbildes erhalten.
+         */
+        double scale =
+                Math.min(
+                        (double) targetWidth
+                                / original.getWidth(),
+
+                        (double) targetHeight
+                                / original.getHeight()
+                );
+
+        int scaledWidth =
+                Math.max(
+                        1,
+                        (int) Math.round(
+                                original.getWidth()
+                                        * scale
+                        )
+                );
+
+        int scaledHeight =
+                Math.max(
+                        1,
+                        (int) Math.round(
+                                original.getHeight()
+                                        * scale
+                        )
+                );
+
+        BufferedImage image =
+                original;
+
+        /*
+         * Nur skalieren, wenn es tatsächlich nötig ist.
+         */
+        if (scaledWidth != original.getWidth()
+                || scaledHeight != original.getHeight()) {
+
+            image =
+                    new BufferedImage(
+                            scaledWidth,
+                            scaledHeight,
+                            BufferedImage.TYPE_INT_RGB
+                    );
+
+            Graphics2D graphics =
+                    image.createGraphics();
+
+            graphics.setRenderingHint(
+                    RenderingHints.KEY_INTERPOLATION,
+                    RenderingHints.VALUE_INTERPOLATION_BICUBIC
+            );
+
+            graphics.setRenderingHint(
+                    RenderingHints.KEY_RENDERING,
+                    RenderingHints.VALUE_RENDER_QUALITY
+            );
+
+            graphics.setRenderingHint(
+                    RenderingHints.KEY_ANTIALIASING,
+                    RenderingHints.VALUE_ANTIALIAS_ON
+            );
+
+            graphics.drawImage(
+                    original,
+                    0,
+                    0,
+                    scaledWidth,
+                    scaledHeight,
+                    null
+            );
+
+            graphics.dispose();
+        }
+
+        /*
+         * =========================================================
+         * JPEG statt verlustfreier Speicherung.
+         * =========================================================
+         */
+
+        PDImageXObject pdfImage =
+                JPEGFactory.createFromImage(
+                        target,
+                        image,
+                        JPEG_QUALITY
+                );
+
+        /*
+         * Originalbild möglichst schnell freigeben.
+         */
+        if (image != original) {
+            image.flush();
+        }
+
+        original.flush();
+
+        /*
+         * =========================================================
+         * Auf Zielseite platzieren
+         * =========================================================
+         */
 
         try (
                 PDPageContentStream content =
@@ -202,31 +352,34 @@ public class PDFDocumentComposer {
 
             if (placement.rotation() == 90) {
 
-                matrix = new Matrix(
-                        0,
-                        placement.height(),
-                        -placement.width(),
-                        0,
-                        placement.x() + placement.width(),
-                        placement.y()
-                );
+                matrix =
+                        new Matrix(
+                                0,
+                                placement.height(),
+                                -placement.width(),
+                                0,
+                                placement.x()
+                                        + placement.width(),
+                                placement.y()
+                        );
 
             } else {
 
-                matrix = new Matrix(
-                        placement.width(),
-                        0,
-                        0,
-                        placement.height(),
-                        placement.x(),
-                        placement.y()
-                );
+                matrix =
+                        new Matrix(
+                                placement.width(),
+                                0,
+                                0,
+                                placement.height(),
+                                placement.x(),
+                                placement.y()
+                        );
             }
 
             content.transform(matrix);
 
             content.drawImage(
-                    image,
+                    pdfImage,
                     0,
                     0,
                     1,

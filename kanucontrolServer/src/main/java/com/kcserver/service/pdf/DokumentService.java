@@ -23,6 +23,7 @@ public class DokumentService {
     private final PDFErhebungsbogenService erhebungsbogenService;
     private final PDFTeilnehmerlisteService teilnehmerlisteService;
     private final PDFZahlungsnachweiseService zahlungsnachweiseService;
+    private final PDFBelegDokumenteService belegDokumenteService;
 
     private final VeranstaltungService veranstaltungService;
     private final TeilnehmerService teilnehmerService;
@@ -32,6 +33,15 @@ public class DokumentService {
     ) {
 
         return zahlungsnachweiseService.generate(
+                veranstaltungId
+        );
+    }
+
+    public byte[] generateBelege(
+            Long veranstaltungId
+    ) {
+
+        return belegDokumenteService.generate(
                 veranstaltungId
         );
     }

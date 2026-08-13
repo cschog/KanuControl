@@ -18,6 +18,7 @@ import UploadFileIcon from "@mui/icons-material/UploadFile";
 
 import MoneyField from "@/components/common/MoneyField";
 import ZahlungsnachweisDokumentPanel from "@/components/finanzen/beitraege/ZahlungsnachweisDokumentPanel";
+import ImageCropPreviewDialog from "@/components/common/ImageCropPreviewDialog";
 
 import {
   TeilnehmerListDTO,
@@ -61,12 +62,25 @@ const ZahlungsnachweisDialog = ({
 
   const [suche, setSuche] = useState("");
   const [dokumente, setDokumente] = useState<File[]>([]);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [saving, setSaving] = useState(false);
 
-  /* =========================================================
-     RESET / INITIALISIERUNG
-  ========================================================= */
+  /*
+   * =========================================================
+   * CROP / VORSCHAU
+   * =========================================================
+   */
+
+  const [cropDialogOpen, setCropDialogOpen] = useState(false);
+  const [cropFile, setCropFile] = useState<File | null>(null);
+
+  /*
+   * =========================================================
+   * RESET / INITIALISIERUNG
+   * =========================================================
+   */
 
   useEffect(() => {
     if (!open) return;
@@ -90,11 +104,16 @@ const ZahlungsnachweisDialog = ({
 
     setDokumente([]);
     setSuche("");
+
+    setCropDialogOpen(false);
+    setCropFile(null);
   }, [open, zahlungsnachweis]);
 
-  /* =========================================================
-     FILTER
-  ========================================================= */
+  /*
+   * =========================================================
+   * FILTER
+   * =========================================================
+   */
 
   const bestehendeTeilnehmerIds = useMemo(() => {
     return new Set(
@@ -108,13 +127,10 @@ const ZahlungsnachweisDialog = ({
     const suchtext = suche.trim().toLowerCase();
 
     const verfuegbareTeilnehmer = teilnehmer.filter((t) => {
-      // Beim Bearbeiten Teilnehmer des bestehenden ZN
-      // auch dann anzeigen, wenn sie bereits GRUEN sind.
       if (zahlungsnachweis && bestehendeTeilnehmerIds.has(t.id)) {
         return true;
       }
 
-      // Bei neuem ZN nur offene bzw. teilweise bezahlte
       return t.zahlungsstatus !== "GRUEN";
     });
 
@@ -131,9 +147,11 @@ const ZahlungsnachweisDialog = ({
     });
   }, [teilnehmer, suche, zahlungsnachweis, bestehendeTeilnehmerIds]);
 
-  /* =========================================================
-     SELECTION
-  ========================================================= */
+  /*
+   * =========================================================
+   * SELECTION
+   * =========================================================
+   */
 
   const alleGefiltertenAusgewaehlt =
     gefilterteTeilnehmer.length > 0 &&
@@ -159,9 +177,61 @@ const ZahlungsnachweisDialog = ({
     });
   };
 
-  /* =========================================================
-     SAVE
-  ========================================================= */
+  /*
+   * =========================================================
+   * DATEIEN
+   * =========================================================
+   */
+
+  const handleFilesSelected = (selectedFiles: File[]) => {
+    if (selectedFiles.length === 0) {
+      return;
+    }
+
+    /*
+     * Die erste Datei wird sofort zur Vorschau
+     * vorbereitet.
+     *
+     * Weitere Dateien kommen anschließend dran.
+     */
+    const [first, ...rest] = selectedFiles;
+
+    /*
+     * Die restlichen Dateien merken wir uns zunächst.
+     */
+    if (rest.length > 0) {
+      setDokumente((prev) => [...prev, ...rest.filter((file) => !file.type.startsWith("image/"))]);
+    }
+
+    /*
+     * Bild → Crop/Vorschau
+     * PDF → direkt übernehmen
+     */
+    if (first.type.startsWith("image/")) {
+      setCropFile(first);
+      setCropDialogOpen(true);
+    } else {
+      setDokumente((prev) => [...prev, first]);
+    }
+  };
+
+  const handleCropConfirm = (file: File) => {
+    setDokumente((prev) => [...prev, file]);
+
+    setCropDialogOpen(false);
+    setCropFile(null);
+  };
+
+  const handleCropCancel = () => {
+    setCropDialogOpen(false);
+    setCropFile(null);
+  };
+
+  /*
+   * =========================================================
+   * SAVE
+   * =========================================================
+   */
 
   const handleSave = async () => {
     if (saving || !datum || betrag === null || betrag <= 0 || selectedIds.length === 0) {
@@ -203,393 +273,428 @@ const ZahlungsnachweisDialog = ({
     }
   };
 
-  /* =========================================================
-     RENDER
-  ========================================================= */
+  /*
+   * =========================================================
+   * RENDER
+   * =========================================================
+   */
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      fullWidth
-      maxWidth="md"
-      fullScreen={false}
-      slotProps={{
-        paper: {
-          sx: {
-            m: { xs: 1, sm: 2 },
-            width: { xs: "calc(100% - 16px)", sm: "auto" },
-            maxHeight: { xs: "calc(100% - 16px)", sm: "calc(100% - 64px)" },
+    <>
+      <Dialog
+        open={open}
+        onClose={onClose}
+        fullWidth
+        maxWidth="md"
+        fullScreen={false}
+        slotProps={{
+          paper: {
+            sx: {
+              m: {
+                xs: 1,
+                sm: 2,
+              },
+              width: {
+                xs: "calc(100% - 16px)",
+                sm: "auto",
+              },
+              maxHeight: {
+                xs: "calc(100% - 16px)",
+                sm: "calc(100% - 64px)",
+              },
+            },
           },
-        },
-      }}
-    >
-      <DialogTitle
-        sx={{
-          fontSize: { xs: "1.35rem", sm: "1.5rem" },
-          pb: 1,
         }}
       >
-        {zahlungsnachweis ? "Zahlungsnachweis bearbeiten" : "Neuer Zahlungsnachweis"}
-      </DialogTitle>
+        <DialogTitle
+          sx={{
+            fontSize: {
+              xs: "1.35rem",
+              sm: "1.5rem",
+            },
+            pb: 1,
+          }}
+        >
+          {zahlungsnachweis ? "Zahlungsnachweis bearbeiten" : "Neuer Zahlungsnachweis"}
+        </DialogTitle>
 
-      <DialogContent
-        sx={{
-          overflowY: "auto",
-          px: { xs: 1.5, sm: 3 },
-        }}
-      >
-        <Stack spacing={2} sx={{ mt: 1 }}>
-          {/* =================================================
-              DATUM
-          ================================================= */}
-
-          <TextField
-            label="Datum"
-            type="date"
-            value={datum}
-            onChange={(e) => setDatum(e.target.value)}
-            InputLabelProps={{
-              shrink: true,
-            }}
-            fullWidth
-          />
-
-          {/* =================================================
-              BETRAG
-          ================================================= */}
-
-          <MoneyField
-            label="Betrag"
-            value={betrag ?? ""}
-            onChange={(value) => setBetrag(value === "" ? null : Number(value))}
-          />
-
-          {/* =================================================
-              BEMERKUNG
-          ================================================= */}
-
-          <TextField
-            label="Bemerkung"
-            multiline
-            minRows={3}
-            value={bemerkung}
-            onChange={(e) => setBemerkung(e.target.value)}
-            fullWidth
-          />
-
-          {/* =================================================
-              DOKUMENTE
-              ================================================= */}
-
-          <Divider sx={{ my: 1 }} />
-
-          {zahlungsnachweis?.id ? (
-            <ZahlungsnachweisDokumentPanel
-              veranstaltungId={veranstaltungId}
-              zahlungsnachweisId={zahlungsnachweis.id}
-            />
-          ) : (
-            <Box>
-              <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
-                <Typography variant="h6">Dokumente</Typography>
-
-                <Button
-                  variant="outlined"
-                  startIcon={<UploadFileIcon />}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  Dokument hinzufügen
-                </Button>
-
-                <input
-                  hidden
-                  type="file"
-                  accept=".pdf,image/*"
-                  ref={fileInputRef}
-                  multiple
-                  onChange={(e) => {
-                    const files = Array.from(e.target.files ?? []);
-
-                    if (files.length > 0) {
-                      setDokumente((prev) => [...prev, ...files]);
-                    }
-
-                    e.target.value = "";
-                  }}
-                />
-              </Stack>
-
-              {dokumente.length === 0 ? (
-                <Alert severity="info">
-                  Dokumente können hier bereits ausgewählt werden und werden zusammen mit dem
-                  Zahlungsnachweis hochgeladen.
-                </Alert>
-              ) : (
-                <Stack spacing={1}>
-                  {dokumente.map((file, index) => (
-                    <Box
-                      key={`${file.name}-${index}`}
-                      sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        p: 1,
-                        border: 1,
-                        borderColor: "divider",
-                        borderRadius: 1,
-                      }}
-                    >
-                      <Box sx={{ minWidth: 0 }}>
-                        <Typography noWrap>{file.name}</Typography>
-
-                        <Typography variant="caption" color="text.secondary">
-                          {(file.size / 1024 / 1024).toFixed(1)} MB
-                        </Typography>
-                      </Box>
-
-                      <Button
-                        color="error"
-                        size="small"
-                        onClick={() => {
-                          setDokumente((prev) => prev.filter((_, i) => i !== index));
-                        }}
-                      >
-                        Entfernen
-                      </Button>
-                    </Box>
-                  ))}
-                </Stack>
-              )}
-            </Box>
-          )}
-
-          <Divider sx={{ my: 1 }} />
-
-          {/* =================================================
-              TEILNEHMER
-          ================================================= */}
-
-          <Box>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                mb: 1,
-              }}
-            >
-              <Typography variant="h6">Teilnehmer</Typography>
-
-              <Typography variant="body2" color="text.secondary">
-                {selectedIds.length} ausgewählt
-              </Typography>
-            </Box>
+        <DialogContent
+          sx={{
+            overflowY: "auto",
+            px: {
+              xs: 1.5,
+              sm: 3,
+            },
+          }}
+        >
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            {/* DATUM */}
 
             <TextField
-              size="small"
+              label="Datum"
+              type="date"
+              value={datum}
+              onChange={(e) => setDatum(e.target.value)}
+              InputLabelProps={{
+                shrink: true,
+              }}
               fullWidth
-              label="Teilnehmer suchen"
-              placeholder="Name oder Verein"
-              value={suche}
-              onChange={(e) => setSuche(e.target.value)}
-              sx={{ mb: 1 }}
             />
 
-            <Box
-              sx={{
-                border: 1,
-                borderColor: "divider",
-                borderRadius: 1,
-                overflow: "hidden",
-              }}
-            >
-              {/* KOPFZEILE */}
+            {/* BETRAG */}
 
+            <MoneyField
+              label="Betrag"
+              value={betrag ?? ""}
+              onChange={(value) => setBetrag(value === "" ? null : Number(value))}
+            />
+
+            {/* BEMERKUNG */}
+
+            <TextField
+              label="Bemerkung"
+              multiline
+              minRows={3}
+              value={bemerkung}
+              onChange={(e) => setBemerkung(e.target.value)}
+              fullWidth
+            />
+
+            {/* DOKUMENTE */}
+
+            <Divider sx={{ my: 1 }} />
+
+            {zahlungsnachweis?.id ? (
+              <ZahlungsnachweisDokumentPanel
+                veranstaltungId={veranstaltungId}
+                zahlungsnachweisId={zahlungsnachweis.id}
+              />
+            ) : (
+              <Box>
+                <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
+                  <Typography variant="h6">Dokumente</Typography>
+
+                  <Button
+                    variant="outlined"
+                    startIcon={<UploadFileIcon />}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    Dokument hinzufügen
+                  </Button>
+
+                  <input
+                    hidden
+                    type="file"
+                    accept=".pdf,image/*"
+                    ref={fileInputRef}
+                    multiple
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files ?? []);
+
+                      handleFilesSelected(files);
+
+                      e.target.value = "";
+                    }}
+                  />
+                </Stack>
+
+                {dokumente.length === 0 ? (
+                  <Alert severity="info">
+                    Dokumente können hier bereits ausgewählt werden und werden zusammen mit dem
+                    Zahlungsnachweis hochgeladen.
+                  </Alert>
+                ) : (
+                  <Stack spacing={1}>
+                    {dokumente.map((file, index) => (
+                      <Box
+                        key={`${file.name}-${index}`}
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          p: 1,
+                          border: 1,
+                          borderColor: "divider",
+                          borderRadius: 1,
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            minWidth: 0,
+                          }}
+                        >
+                          <Typography noWrap>{file.name}</Typography>
+
+                          <Typography variant="caption" color="text.secondary">
+                            {(file.size / 1024 / 1024).toFixed(1)} MB
+                          </Typography>
+                        </Box>
+
+                        <Button
+                          color="error"
+                          size="small"
+                          onClick={() => {
+                            setDokumente((prev) => prev.filter((_, i) => i !== index));
+                          }}
+                        >
+                          Entfernen
+                        </Button>
+                      </Box>
+                    ))}
+                  </Stack>
+                )}
+              </Box>
+            )}
+
+            <Divider sx={{ my: 1 }} />
+
+            {/* TEILNEHMER */}
+
+            <Box>
               <Box
                 sx={{
-                  display: "grid",
-                  gridTemplateColumns: {
-                    xs: "42px minmax(0, 1fr) 88px",
-                    sm: "52px minmax(0, 1fr) 110px",
-                  },
+                  display: "flex",
+                  justifyContent: "space-between",
                   alignItems: "center",
-                  minHeight: {
-                    xs: 44,
-                    sm: 48,
-                  },
-                  px: {
-                    xs: 0.5,
-                    sm: 1,
-                  },
-                  bgcolor: "action.hover",
-                  borderBottom: 1,
-                  borderColor: "divider",
+                  mb: 1,
                 }}
               >
-                <Checkbox
-                  size="small"
-                  checked={alleGefiltertenAusgewaehlt}
-                  indeterminate={selectedIds.length > 0 && !alleGefiltertenAusgewaehlt}
-                  onChange={handleSelectAll}
-                />
+                <Typography variant="h6">Teilnehmer</Typography>
 
-                <Typography
-                  fontWeight={700}
-                  sx={{
-                    fontSize: {
-                      xs: "0.85rem",
-                      sm: "1rem",
-                    },
-                  }}
-                >
-                  Teilnehmer
-                </Typography>
-
-                <Typography
-                  fontWeight={700}
-                  textAlign="right"
-                  sx={{
-                    pr: { xs: 0.5, sm: 1 },
-                    fontSize: {
-                      xs: "0.8rem",
-                      sm: "1rem",
-                    },
-                  }}
-                >
-                  Offen
+                <Typography variant="body2" color="text.secondary">
+                  {selectedIds.length} ausgewählt
                 </Typography>
               </Box>
 
-              {/* TEILNEHMER */}
+              <TextField
+                size="small"
+                fullWidth
+                label="Teilnehmer suchen"
+                placeholder="Name oder Verein"
+                value={suche}
+                onChange={(e) => setSuche(e.target.value)}
+                sx={{ mb: 1 }}
+              />
 
-              {gefilterteTeilnehmer.length === 0 ? (
-                <Alert severity="info" sx={{ borderRadius: 0 }}>
-                  Keine Teilnehmer gefunden.
-                </Alert>
-              ) : (
-                gefilterteTeilnehmer.map((t) => {
-                  const selected = selectedIds.includes(t.id);
+              <Box
+                sx={{
+                  border: 1,
+                  borderColor: "divider",
+                  borderRadius: 1,
+                  overflow: "hidden",
+                }}
+              >
+                {/* KOPFZEILE */}
 
-                  return (
-                    <Box
-                      key={t.id}
-                      sx={{
-                        display: "grid",
-                        gridTemplateColumns: {
-                          xs: "42px minmax(0, 1fr) 88px",
-                          sm: "52px minmax(0, 1fr) 110px",
-                        },
-                        alignItems: "center",
-                        minHeight: {
-                          xs: 44,
-                          sm: 52,
-                        },
-                        px: {
-                          xs: 0.5,
-                          sm: 1,
-                        },
-                        borderBottom: 1,
-                        borderColor: "divider",
-                        bgcolor: selected ? "action.selected" : "background.paper",
-                        "&:last-child": {
-                          borderBottom: 0,
-                        },
-                      }}
-                    >
-                      <Checkbox
-                        size="small"
-                        checked={selected}
-                        onChange={(e) => handleSelect(t.id, e.target.checked)}
-                      />
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: {
+                      xs: "42px minmax(0, 1fr) 88px",
+                      sm: "52px minmax(0, 1fr) 110px",
+                    },
+                    alignItems: "center",
+                    minHeight: {
+                      xs: 44,
+                      sm: 48,
+                    },
+                    px: {
+                      xs: 0.5,
+                      sm: 1,
+                    },
+                    bgcolor: "action.hover",
+                    borderBottom: 1,
+                    borderColor: "divider",
+                  }}
+                >
+                  <Checkbox
+                    size="small"
+                    checked={alleGefiltertenAusgewaehlt}
+                    indeterminate={selectedIds.length > 0 && !alleGefiltertenAusgewaehlt}
+                    onChange={handleSelectAll}
+                  />
 
+                  <Typography
+                    fontWeight={700}
+                    sx={{
+                      fontSize: {
+                        xs: "0.85rem",
+                        sm: "1rem",
+                      },
+                    }}
+                  >
+                    Teilnehmer
+                  </Typography>
+
+                  <Typography
+                    fontWeight={700}
+                    textAlign="right"
+                    sx={{
+                      pr: {
+                        xs: 0.5,
+                        sm: 1,
+                      },
+                      fontSize: {
+                        xs: "0.8rem",
+                        sm: "1rem",
+                      },
+                    }}
+                  >
+                    Offen
+                  </Typography>
+                </Box>
+
+                {/* TEILNEHMER */}
+
+                {gefilterteTeilnehmer.length === 0 ? (
+                  <Alert
+                    severity="info"
+                    sx={{
+                      borderRadius: 0,
+                    }}
+                  >
+                    Keine Teilnehmer gefunden.
+                  </Alert>
+                ) : (
+                  gefilterteTeilnehmer.map((t) => {
+                    const selected = selectedIds.includes(t.id);
+
+                    return (
                       <Box
+                        key={t.id}
                         sx={{
-                          minWidth: 0,
-                          cursor: "pointer",
-                          py: 0.25,
+                          display: "grid",
+                          gridTemplateColumns: {
+                            xs: "42px minmax(0, 1fr) 88px",
+                            sm: "52px minmax(0, 1fr) 110px",
+                          },
+                          alignItems: "center",
+                          minHeight: {
+                            xs: 44,
+                            sm: 52,
+                          },
+                          px: {
+                            xs: 0.5,
+                            sm: 1,
+                          },
+                          borderBottom: 1,
+                          borderColor: "divider",
+                          bgcolor: selected ? "action.selected" : "background.paper",
+                          "&:last-child": {
+                            borderBottom: 0,
+                          },
                         }}
-                        onClick={() => handleSelect(t.id, !selected)}
                       >
-                        <Typography
-                          fontWeight={selected ? 700 : 500}
-                          noWrap
+                        <Checkbox
+                          size="small"
+                          checked={selected}
+                          onChange={(e) => handleSelect(t.id, e.target.checked)}
+                        />
+
+                        <Box
                           sx={{
+                            minWidth: 0,
+                            cursor: "pointer",
+                            py: 0.25,
+                          }}
+                          onClick={() => handleSelect(t.id, !selected)}
+                        >
+                          <Typography
+                            fontWeight={selected ? 700 : 500}
+                            noWrap
+                            sx={{
+                              fontSize: {
+                                xs: "0.9rem",
+                                sm: "1rem",
+                              },
+                              lineHeight: 1.2,
+                            }}
+                          >
+                            {t.person.name}, {t.person.vorname}
+                          </Typography>
+
+                          <Typography
+                            color="text.secondary"
+                            noWrap
+                            sx={{
+                              fontSize: {
+                                xs: "0.7rem",
+                                sm: "0.75rem",
+                              },
+                              lineHeight: 1.1,
+                            }}
+                          >
+                            {t.person.hauptvereinAbk ?? "-"}
+                            {" • "}
+                            Alter: {t.alterBeiBeginn ?? "-"}
+                          </Typography>
+                        </Box>
+
+                        <Typography
+                          textAlign="right"
+                          fontWeight={600}
+                          sx={{
+                            pr: {
+                              xs: 0.5,
+                              sm: 1,
+                            },
                             fontSize: {
-                              xs: "0.9rem",
+                              xs: "0.85rem",
                               sm: "1rem",
                             },
-                            lineHeight: 1.2,
+                            whiteSpace: "nowrap",
                           }}
                         >
-                          {t.person.name}, {t.person.vorname}
-                        </Typography>
-
-                        <Typography
-                          color="text.secondary"
-                          noWrap
-                          sx={{
-                            fontSize: {
-                              xs: "0.7rem",
-                              sm: "0.75rem",
-                            },
-                            lineHeight: 1.1,
-                          }}
-                        >
-                          {t.person.hauptvereinAbk ?? "-"}
-                          {" • "}
-                          Alter: {t.alterBeiBeginn ?? "-"}
+                          {((t.sollBeitrag ?? 0) - (t.gezahlterBetrag ?? 0)).toFixed(2)} €
                         </Typography>
                       </Box>
+                    );
+                  })
+                )}
+              </Box>
 
-                      <Typography
-                        textAlign="right"
-                        fontWeight={600}
-                        sx={{
-                          pr: { xs: 0.5, sm: 1 },
-                          fontSize: {
-                            xs: "0.85rem",
-                            sm: "1rem",
-                          },
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {((t.sollBeitrag ?? 0) - (t.gezahlterBetrag ?? 0)).toFixed(2)} €
-                      </Typography>
-                    </Box>
-                  );
-                })
+              {selectedIds.length === 0 && (
+                <Alert severity="info" sx={{ mt: 1 }}>
+                  Bitte mindestens einen Teilnehmer auswählen.
+                </Alert>
+              )}
+
+              {selectedIds.length > 0 && betrag !== null && (
+                <Alert severity="info" sx={{ mt: 1 }}>
+                  Der Gesamtbetrag von <strong>{betrag.toFixed(2)} €</strong> wird entsprechend der
+                  offenen Sollbeträge auf die ausgewählten Teilnehmer verteilt.
+                </Alert>
               )}
             </Box>
+          </Stack>
+        </DialogContent>
 
-            {selectedIds.length === 0 && (
-              <Alert severity="info" sx={{ mt: 1 }}>
-                Bitte mindestens einen Teilnehmer auswählen.
-              </Alert>
-            )}
+        <DialogActions>
+          <Button onClick={onClose}>Abbrechen</Button>
 
-            {selectedIds.length > 0 && betrag !== null && (
-              <Alert severity="info" sx={{ mt: 1 }}>
-                Der Gesamtbetrag von <strong>{betrag.toFixed(2)} €</strong> wird entsprechend der
-                offenen Sollbeträge auf die ausgewählten Teilnehmer verteilt.
-              </Alert>
-            )}
-          </Box>
-        </Stack>
-      </DialogContent>
+          <Button
+            variant="contained"
+            onClick={() => void handleSave()}
+            disabled={
+              saving || !datum || betrag === null || betrag <= 0 || selectedIds.length === 0
+            }
+          >
+            {saving ? "Speichern..." : "Speichern"}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
-      <DialogActions>
-        <Button onClick={onClose}>Abbrechen</Button>
+      {/* =====================================================
+          BILD CROPPEN / VORSCHAU
+      ===================================================== */}
 
-        <Button
-          variant="contained"
-          onClick={() => void handleSave()}
-          disabled={saving || !datum || betrag === null || betrag <= 0 || selectedIds.length === 0}
-        >
-          {saving ? "Speichern..." : "Speichern"}
-        </Button>
-      </DialogActions>
-    </Dialog>
+      <ImageCropPreviewDialog
+        open={cropDialogOpen}
+        file={cropFile}
+        onCancel={handleCropCancel}
+        onConfirm={handleCropConfirm}
+      />
+    </>
   );
 };
 

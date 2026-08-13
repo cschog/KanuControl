@@ -303,6 +303,70 @@ public class ReportController {
     }
 
     /* =========================================================
+   Belege PDF (Vorschau)
+   ========================================================= */
+
+    @GetMapping("/belege/pdf/view")
+    public ResponseEntity<byte[]> viewBelege(
+            @PathVariable Long veranstaltungId
+    ) {
+
+        byte[] pdf =
+                dokumentService.generateBelege(
+                        veranstaltungId
+                );
+
+        VeranstaltungDetailDTO veranstaltung =
+                veranstaltungService.getById(
+                        veranstaltungId
+                );
+
+        String filename =
+                PdfFilenameUtil.build(
+                        LocalDate.now(),
+                        PdfDokumentTyp.BELEGE,
+                        veranstaltung
+                );
+
+        return buildInlineResponse(
+                pdf,
+                filename
+        );
+    }
+
+/* =========================================================
+   Belege PDF (Download)
+   ========================================================= */
+
+    @GetMapping("/belege/pdf/download")
+    public ResponseEntity<byte[]> downloadBelege(
+            @PathVariable Long veranstaltungId
+    ) {
+
+        byte[] pdf =
+                dokumentService.generateBelege(
+                        veranstaltungId
+                );
+
+        VeranstaltungDetailDTO veranstaltung =
+                veranstaltungService.getById(
+                        veranstaltungId
+                );
+
+        String filename =
+                PdfFilenameUtil.build(
+                        LocalDate.now(),
+                        PdfDokumentTyp.BELEGE,
+                        veranstaltung
+                );
+
+        return buildAttachmentResponse(
+                pdf,
+                filename
+        );
+    }
+
+    /* =========================================================
        Helper: Attachment Download
        ========================================================= */
 

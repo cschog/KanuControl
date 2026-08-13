@@ -1,26 +1,26 @@
 package com.kcserver.service.pdf;
 
+import com.kcserver.enumtype.PdfDocumentDensity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 /**
  * Plant Dokumente auf DIN-A4-Seiten.
  *
- * Die Engine kennt ausschließlich Dokumentgrößen.
- * Sie rendert keine Dokumente.
+ * Die Engine kennt ausschließlich Dokumentgrößen
+ * und die durch die Bildanalyse ermittelte Density.
  *
  * Grundregeln:
  *
- * - A4-Dokumente werden auf eine eigene Seite skaliert.
- * - A5-Dokumente werden auf einer eigenen Seite platziert,
- *   wenn zwei davon nicht sinnvoll auf eine Seite passen.
- * - A6-Dokumente werden als Raster gepackt.
- * - Kleine Dokumente dürfen bis maximal 70 % verkleinert werden.
- * - Dokumente werden niemals vergrößert.
+ * - HIGH-Dokumente erhalten grundsätzlich eine eigene Seite.
+ * - MEDIUM-Dokumente werden bevorzugt paarweise platziert.
+ * - LOW-Dokumente werden bevorzugt paarweise platziert.
+ * - Eine gemeinsame Platzierung ist nur zulässig,
+ *   wenn die Mindestskalierung beider Dokumente erreicht wird.
+ * - Dokumente werden niemals größer als ihre Originalgröße.
  * - Rotation um 90° ist möglich.
  * - Die ursprüngliche Dokumentreihenfolge bleibt erhalten.
  */
@@ -41,18 +41,20 @@ public class A4LayoutEngine {
     private static final float MAX_SCALE = 1.0f;
 
     /**
-     * Unter 70 % wird ein Dokument nicht skaliert.
+     * Mindestskalierung abhängig von der Density.
+     *
+     * LOW:
+     * Wenig Inhalt -> darf kleiner dargestellt werden.
+     *
+     * MEDIUM:
+     * Normale Informationsdichte.
+     *
+     * HIGH:
+     * Viel Inhalt -> möglichst groß darstellen.
      */
-    private static final float MIN_SCALE = 0.70f;
-
-    /**
-     * Dokumente bis einschließlich A6 werden als
-     * kleine Dokumente behandelt.
-     */
-    private static final float SMALL_DOCUMENT_AREA =
-            PDFLayoutService.A6_WIDTH
-                    * PDFLayoutService.A6_HEIGHT
-                    * 1.10f;
+    private static final float MIN_SCALE_LOW = 0.40f;
+    private static final float MIN_SCALE_MEDIUM = 0.55f;
+    private static final float MIN_SCALE_HIGH = 0.70f;
 
     /*
      * ---------------------------------------------------------
@@ -72,97 +74,110 @@ public class A4LayoutEngine {
                 new ArrayList<>();
 
         int pageNumber = 1;
+        int index = 0;
 
-        /*
-         * Wir arbeiten absichtlich zunächst nach Größe.
-         *
-         * Große Dokumente blockieren dadurch nicht die Fläche,
-         * die wir für viele kleine Quittungen benötigen.
-         */
-        List<A4LayoutItem> sorted =
-                items.stream()
-                        .sorted(
-                                Comparator.comparingDouble(
-                                        this::area
-                                ).reversed()
+        while (index < items.size()) {
+
+            A4LayoutItem current =
+                    items.get(index);
+
+            /*
+             * HIGH bekommt grundsätzlich eine eigene Seite.
+             */
+            if (current.density() == PdfDocumentDensity.HIGH) {
+
+                result.addAll(
+                        placeSingleDocument(
+                                current,
+                                pageNumber
                         )
-                        .toList();
+                );
 
-        List<A4LayoutItem> smallDocuments =
-                new ArrayList<>();
+                pageNumber =
+                        nextPageNumber(
+                                result,
+                                pageNumber
+                        );
 
-        for (A4LayoutItem item : sorted) {
-
-            if (isSmallDocument(item)) {
-
-                smallDocuments.add(item);
+                index++;
 
                 continue;
             }
 
             /*
-             * Große Dokumente bekommen zunächst eine eigene
-             * A4-Seite.
+             * Versuchen, das aktuelle Dokument
+             * gemeinsam mit dem nächsten Dokument
+             * auf einer Seite zu platzieren.
              */
-            A4LayoutPlacement placement =
-                    placeLargeDocument(
-                            item,
+            if (index + 1 < items.size()) {
+
+                A4LayoutItem next =
+                        items.get(index + 1);
+
+                /*
+                 * HIGH soll nicht mit einem anderen
+                 * Dokument kombiniert werden.
+                 */
+                if (next.density() != PdfDocumentDensity.HIGH) {
+
+                    List<A4LayoutPlacement> pair =
+                            placePair(
+                                    current,
+                                    next,
+                                    pageNumber
+                            );
+
+                    if (pair != null) {
+
+                        result.addAll(pair);
+
+                        pageNumber++;
+
+                        index += 2;
+
+                        continue;
+                    }
+                }
+            }
+
+            /*
+             * Paarweise Platzierung nicht möglich:
+             * Dokument bekommt eine eigene Seite.
+             */
+            result.addAll(
+                    placeSingleDocument(
+                            current,
+                            pageNumber
+                    )
+            );
+
+            pageNumber =
+                    nextPageNumber(
+                            result,
                             pageNumber
                     );
 
-            result.add(placement);
-
-            pageNumber++;
+            index++;
         }
 
-        /*
-         * Kleine Dokumente werden anschließend möglichst
-         * kompakt als Raster gepackt.
-         */
-        if (!smallDocuments.isEmpty()) {
-
-            List<A4LayoutPlacement> smallPlacements =
-                    placeSmallDocuments(
-                            smallDocuments,
-                            pageNumber
-                    );
-
-            result.addAll(smallPlacements);
-        }
-
-        /*
-         * Am Ende wieder die ursprüngliche Dokumentreihenfolge
-         * herstellen.
-         */
-        return restoreItemOrder(
-                items,
-                result
-        );
+        return result;
     }
 
-    /**
-     * Breite der für Dokumente verfügbaren Fläche.
-     */
     public float getPackingWidth() {
-
         return layoutService.getContentWidth();
     }
 
-    /**
-     * Höhe der für Dokumente verfügbaren Fläche.
-     */
     public float getPackingHeight() {
-
         return layoutService.getContentHeight();
     }
 
     /*
      * ---------------------------------------------------------
-     * GROSSE DOKUMENTE
+     * EINZELNES DOKUMENT
      * ---------------------------------------------------------
      */
 
-    private A4LayoutPlacement placeLargeDocument(
+    private List<A4LayoutPlacement> placeSingleDocument(
             A4LayoutItem item,
             int pageNumber
     ) {
@@ -173,9 +188,6 @@ public class A4LayoutEngine {
         float contentHeight =
                 layoutService.getContentHeight();
 
-        /*
-         * Normal.
-         */
         Candidate normal =
                 createCandidate(
                         item,
@@ -185,9 +197,6 @@ public class A4LayoutEngine {
                         false
                 );
 
-        /*
-         * Gedreht.
-         */
         Candidate rotated =
                 createCandidate(
                         item,
@@ -203,25 +212,230 @@ public class A4LayoutEngine {
                         rotated
                 );
 
-        if (selected != null) {
+        /*
+         * Das Dokument passt nicht einmal
+         * auf eine A4-Seite.
+         */
+        if (selected == null) {
 
-            return selected.placement();
+            return splitItem(
+                    item,
+                    pageNumber
+            );
         }
 
-        /*
-         * Sollte ein Dokument selbst bei 70 % nicht
-         * auf die Seite passen, wird es auf mehrere Seiten
-         * verteilt.
-         */
-        return splitItem(
-                item,
-                pageNumber
-        ).getFirst();
+        return List.of(
+                selected.placement()
+        );
     }
+
+    /*
+     * ---------------------------------------------------------
+     * PAAR
+     * ---------------------------------------------------------
+     */
+
+    private List<A4LayoutPlacement> placePair(
+            A4LayoutItem first,
+            A4LayoutItem second,
+            int pageNumber
+    ) {
+
+        float contentWidth =
+                layoutService.getContentWidth();
+
+        float contentHeight =
+                layoutService.getContentHeight();
+
+        /*
+         * Variante 1:
+         *
+         * zwei Dokumente untereinander
+         */
+        float cellHeight =
+                (
+                        contentHeight - GAP
+                ) / 2f;
+
+        CandidatePair vertical =
+                createPairCandidate(
+                        first,
+                        second,
+                        pageNumber,
+                        0,
+                        layoutService.getMarginBottom()
+                                + cellHeight
+                                + GAP,
+                        contentWidth,
+                        cellHeight,
+
+                        layoutService.getMarginLeft(),
+                        layoutService.getMarginBottom(),
+                        contentWidth,
+                        cellHeight
+                );
+
+        /*
+         * Variante 2:
+         *
+         * zwei Dokumente nebeneinander
+         */
+        float cellWidth =
+                (
+                        contentWidth - GAP
+                ) / 2f;
+
+        CandidatePair horizontal =
+                createPairCandidate(
+                        first,
+                        second,
+                        pageNumber,
+                        layoutService.getMarginLeft(),
+                        layoutService.getMarginBottom(),
+                        cellWidth,
+                        contentHeight,
+
+                        layoutService.getMarginLeft()
+                                + cellWidth
+                                + GAP,
+                        layoutService.getMarginBottom(),
+                        cellWidth,
+                        contentHeight
+                );
+
+        CandidatePair selected =
+                selectBestPair(
+                        vertical,
+                        horizontal
+                );
+
+        if (selected == null) {
+            return null;
+        }
+
+        return selected.placements();
+    }
+
+    private CandidatePair createPairCandidate(
+            A4LayoutItem first,
+            A4LayoutItem second,
+            int pageNumber,
+
+            float firstX,
+            float firstY,
+            float firstWidth,
+            float firstHeight,
+
+            float secondX,
+            float secondY,
+            float secondWidth,
+            float secondHeight
+    ) {
+
+        Candidate firstNormal =
+                createCandidateInArea(
+                        first,
+                        pageNumber,
+                        firstX,
+                        firstY,
+                        firstWidth,
+                        firstHeight,
+                        false
+                );
+
+        Candidate firstRotated =
+                createCandidateInArea(
+                        first,
+                        pageNumber,
+                        firstX,
+                        firstY,
+                        firstWidth,
+                        firstHeight,
+                        true
+                );
+
+        Candidate firstCandidate =
+                selectBestCandidate(
+                        firstNormal,
+                        firstRotated
+                );
+
+        Candidate secondNormal =
+                createCandidateInArea(
+                        second,
+                        pageNumber,
+                        secondX,
+                        secondY,
+                        secondWidth,
+                        secondHeight,
+                        false
+                );
+
+        Candidate secondRotated =
+                createCandidateInArea(
+                        second,
+                        pageNumber,
+                        secondX,
+                        secondY,
+                        secondWidth,
+                        secondHeight,
+                        true
+                );
+
+        Candidate secondCandidate =
+                selectBestCandidate(
+                        secondNormal,
+                        secondRotated
+                );
+
+        if (firstCandidate == null
+                || secondCandidate == null) {
+
+            return null;
+        }
+
+        return new CandidatePair(
+                List.of(
+                        firstCandidate.placement(),
+                        secondCandidate.placement()
+                ),
+                Math.min(
+                        firstCandidate.scale(),
+                        secondCandidate.scale()
+                )
+        );
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * CANDIDATE
+     * ---------------------------------------------------------
+     */
 
     private Candidate createCandidate(
             A4LayoutItem item,
             int pageNumber,
+            float availableWidth,
+            float availableHeight,
+            boolean rotated
+    ) {
+
+        return createCandidateInArea(
+                item,
+                pageNumber,
+                layoutService.getMarginLeft(),
+                layoutService.getMarginBottom(),
+                availableWidth,
+                availableHeight,
+                rotated
+        );
+    }
+
+    private Candidate createCandidateInArea(
+            A4LayoutItem item,
+            int pageNumber,
+            float x,
+            float y,
             float availableWidth,
             float availableHeight,
             boolean rotated
@@ -256,313 +470,10 @@ public class A4LayoutEngine {
                 );
 
         /*
-         * Wenn das Dokument nur unter 70 %
-         * passen würde, ist diese Variante ungültig.
+         * Density bestimmt,
+         * wie klein das Dokument werden darf.
          */
-        if (scale < MIN_SCALE) {
-            return null;
-        }
-
-        float width =
-                sourceWidth * scale;
-
-        float height =
-                sourceHeight * scale;
-
-        float x =
-                layoutService.getMarginLeft();
-
-        float y =
-                layoutService.getMarginBottom();
-
-        A4LayoutPlacement placement =
-                new A4LayoutPlacement(
-                        item.id(),
-                        pageNumber,
-                        x,
-                        y,
-                        width,
-                        height,
-                        0,
-                        item.height(),
-                        rotated ? 90 : 0,
-                        false
-                );
-
-        return new Candidate(
-                placement,
-                scale
-        );
-    }
-
-    private Candidate selectBestCandidate(
-            Candidate normal,
-            Candidate rotated
-    ) {
-
-        if (normal == null) {
-            return rotated;
-        }
-
-        if (rotated == null) {
-            return normal;
-        }
-
-        /*
-         * Möglichst große Darstellung bevorzugen.
-         */
-        return rotated.scale() > normal.scale()
-                ? rotated
-                : normal;
-    }
-
-    /*
-     * ---------------------------------------------------------
-     * KLEINE DOKUMENTE
-     * ---------------------------------------------------------
-     */
-
-    private List<A4LayoutPlacement> placeSmallDocuments(
-            List<A4LayoutItem> items,
-            int startPage
-    ) {
-
-        List<A4LayoutPlacement> result =
-                new ArrayList<>();
-
-        float availableWidth =
-                layoutService.getContentWidth();
-
-        float availableHeight =
-                layoutService.getContentHeight();
-
-        /*
-         * Wir arbeiten mit maximal vier Dokumenten
-         * pro Seite.
-         *
-         * Das ist insbesondere für A6-Quittungen
-         * das gewünschte 2 × 2 Layout.
-         */
-        int index = 0;
-
-        int page =
-                startPage;
-
-        while (index < items.size()) {
-
-            int remaining =
-                    items.size() - index;
-
-            int count =
-                    Math.min(
-                            4,
-                            remaining
-                    );
-
-            List<A4LayoutItem> pageItems =
-                    items.subList(
-                            index,
-                            index + count
-                    );
-
-            result.addAll(
-                    placeSmallPage(
-                            pageItems,
-                            page
-                    )
-            );
-
-            index += count;
-            page++;
-        }
-
-        return result;
-    }
-
-    /**
-     * Platziert bis zu vier kleine Dokumente.
-     *
-     * Für vier Dokumente:
-     *
-     *   +-------+-------+
-     *   |   1   |   2   |
-     *   +-------+-------+
-     *   |   3   |   4   |
-     *   +-------+-------+
-     */
-    private List<A4LayoutPlacement> placeSmallPage(
-            List<A4LayoutItem> items,
-            int pageNumber
-    ) {
-
-        List<A4LayoutPlacement> result =
-                new ArrayList<>();
-
-        float contentWidth =
-                layoutService.getContentWidth();
-
-        float contentHeight =
-                layoutService.getContentHeight();
-
-        int count =
-                items.size();
-
-        int columns;
-
-        int rows;
-
-        if (count <= 1) {
-
-            columns = 1;
-            rows = 1;
-
-        } else if (count == 2) {
-
-            columns = 1;
-            rows = 2;
-
-        } else {
-
-            columns = 2;
-            rows = 2;
-        }
-
-        float cellWidth =
-                (
-                        contentWidth
-                                - GAP * (columns - 1)
-                )
-                        / columns;
-
-        float cellHeight =
-                (
-                        contentHeight
-                                - GAP * (rows - 1)
-                )
-                        / rows;
-
-        for (int i = 0; i < count; i++) {
-
-            A4LayoutItem item =
-                    items.get(i);
-
-            int column =
-                    i % columns;
-
-            int row =
-                    i / columns;
-
-            float cellX =
-                    layoutService.getMarginLeft()
-                            + column
-                            * (cellWidth + GAP);
-
-            /*
-             * PDF-Koordinaten laufen von unten nach oben.
-             */
-            float cellY =
-                    layoutService.getMarginBottom()
-                            + (
-                            rows
-                                    - 1
-                                    - row
-                    )
-                            * (cellHeight + GAP);
-
-            Candidate normal =
-                    createCandidateInCell(
-                            item,
-                            pageNumber,
-                            cellX,
-                            cellY,
-                            cellWidth,
-                            cellHeight,
-                            false
-                    );
-
-            Candidate rotated =
-                    createCandidateInCell(
-                            item,
-                            pageNumber,
-                            cellX,
-                            cellY,
-                            cellWidth,
-                            cellHeight,
-                            true
-                    );
-
-            Candidate selected =
-                    selectBestCandidate(
-                            normal,
-                            rotated
-                    );
-
-            if (selected != null) {
-
-                result.add(
-                        selected.placement()
-                );
-
-            } else {
-
-                /*
-                 * Ein Dokument passt nicht in die Zelle.
-                 *
-                 * Das sollte bei normalen A6-Quittungen
-                 * nicht vorkommen. Zur Sicherheit wird es
-                 * auf einer eigenen Seite platziert.
-                 */
-                result.add(
-                        placeLargeDocument(
-                                item,
-                                pageNumber
-                        )
-                );
-            }
-        }
-
-        return result;
-    }
-
-    private Candidate createCandidateInCell(
-            A4LayoutItem item,
-            int pageNumber,
-            float x,
-            float y,
-            float cellWidth,
-            float cellHeight,
-            boolean rotated
-    ) {
-
-        float sourceWidth =
-                rotated
-                        ? item.height()
-                        : item.width();
-
-        float sourceHeight =
-                rotated
-                        ? item.width()
-                        : item.height();
-
-        float scaleX =
-                cellWidth / sourceWidth;
-
-        float scaleY =
-                cellHeight / sourceHeight;
-
-        float scale =
-                Math.min(
-                        scaleX,
-                        scaleY
-                );
-
-        scale =
-                Math.min(
-                        scale,
-                        MAX_SCALE
-                );
-
-        if (scale < MIN_SCALE) {
+        if (scale < getMinimumScale(item)) {
             return null;
         }
 
@@ -573,15 +484,15 @@ public class A4LayoutEngine {
                 sourceHeight * scale;
 
         /*
-         * Innerhalb der Zelle zentrieren.
+         * Zentrieren.
          */
         float outputX =
                 x
-                        + (cellWidth - width) / 2f;
+                        + (availableWidth - width) / 2f;
 
         float outputY =
                 y
-                        + (cellHeight - height) / 2f;
+                        + (availableHeight - height) / 2f;
 
         A4LayoutPlacement placement =
                 new A4LayoutPlacement(
@@ -601,6 +512,72 @@ public class A4LayoutEngine {
                 placement,
                 scale
         );
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * AUSWAHL
+     * ---------------------------------------------------------
+     */
+
+    private Candidate selectBestCandidate(
+            Candidate normal,
+            Candidate rotated
+    ) {
+
+        if (normal == null) {
+            return rotated;
+        }
+
+        if (rotated == null) {
+            return normal;
+        }
+
+        return rotated.scale() > normal.scale()
+                ? rotated
+                : normal;
+    }
+
+    private CandidatePair selectBestPair(
+            CandidatePair first,
+            CandidatePair second
+    ) {
+
+        if (first == null) {
+            return second;
+        }
+
+        if (second == null) {
+            return first;
+        }
+
+        return second.minimumScale()
+                > first.minimumScale()
+                ? second
+                : first;
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * MINDESTSKALIERUNG
+     * ---------------------------------------------------------
+     */
+
+    private float getMinimumScale(
+            A4LayoutItem item
+    ) {
+
+        return switch (item.density()) {
+
+            case LOW ->
+                    MIN_SCALE_LOW;
+
+            case MEDIUM ->
+                    MIN_SCALE_MEDIUM;
+
+            case HIGH ->
+                    MIN_SCALE_HIGH;
+        };
     }
 
     /*
@@ -687,46 +664,18 @@ public class A4LayoutEngine {
      * ---------------------------------------------------------
      */
 
-    private boolean isSmallDocument(
-            A4LayoutItem item
+    private int nextPageNumber(
+            List<A4LayoutPlacement> placements,
+            int currentPage
     ) {
-
-        return area(item)
-                <= SMALL_DOCUMENT_AREA;
-    }
-
-    private double area(
-            A4LayoutItem item
-    ) {
-
-        return item.width()
-                * item.height();
-    }
-
-    private List<A4LayoutPlacement> restoreItemOrder(
-            List<A4LayoutItem> items,
-            List<A4LayoutPlacement> placements
-    ) {
-
-        List<String> order =
-                items.stream()
-                        .map(A4LayoutItem::id)
-                        .toList();
 
         return placements.stream()
-                .sorted(
-                        Comparator
-                                .comparingInt(
-                                        (A4LayoutPlacement p) ->
-                                                order.indexOf(
-                                                        p.itemId()
-                                                )
-                                )
-                                .thenComparingInt(
-                                        A4LayoutPlacement::pageNumber
-                                )
+                .mapToInt(
+                        A4LayoutPlacement::pageNumber
                 )
-                .toList();
+                .max()
+                .orElse(currentPage)
+                + 1;
     }
 
     /*
@@ -738,6 +687,12 @@ public class A4LayoutEngine {
     private record Candidate(
             A4LayoutPlacement placement,
             float scale
+    ) {
+    }
+
+    private record CandidatePair(
+            List<A4LayoutPlacement> placements,
+            float minimumScale
     ) {
     }
 }

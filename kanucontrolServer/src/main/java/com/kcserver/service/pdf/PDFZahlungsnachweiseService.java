@@ -3,6 +3,7 @@ package com.kcserver.service.pdf;
 import com.kcserver.entity.Veranstaltung;
 import com.kcserver.entity.Zahlungsnachweis;
 import com.kcserver.entity.ZahlungsnachweisDokument;
+import com.kcserver.enumtype.PdfDocumentDensity;
 import com.kcserver.enumtype.PdfDokumentTyp;
 import com.kcserver.repository.VeranstaltungRepository;
 import com.kcserver.repository.abrechnung.ZahlungsnachweisRepository;
@@ -62,6 +63,13 @@ public class PDFZahlungsnachweiseService {
                     Locale.GERMANY
             );
 
+    record DocumentSize(
+            float width,
+            float height,
+            PdfDocumentDensity density
+    ) {
+    }
+
     record PlatzierteDokumentZuordnung(
             A4LayoutPlacement placement,
             DokumentZuordnung dokumentZuordnung
@@ -74,6 +82,7 @@ public class PDFZahlungsnachweiseService {
 
     private final A4LayoutEngine layoutEngine;
     private final PDFDocumentComposer composer;
+    private final ImageAnalysisService imageAnalysisService;
 
     String createBelegkopf(
             PDFBelegGruppe gruppe
@@ -140,7 +149,7 @@ public class PDFZahlungsnachweiseService {
                                 + "-DOC-"
                                 + dokument.getId();
 
-                float[] size;
+                DocumentSize size;
 
                 try {
 
@@ -166,8 +175,9 @@ public class PDFZahlungsnachweiseService {
                 dokumente.add(
                         new A4LayoutItem(
                                 itemId,
-                                size[0],
-                                size[1]
+                                size.width(),
+                                size.height(),
+                                size.density()
                         )
                 );
             }
@@ -755,6 +765,7 @@ public class PDFZahlungsnachweiseService {
                 x
                         + colBeleg
                         + colDatum
+                        + colDokumente
                         + colBemerkung
                         + colBetrag
                         - 3,
@@ -769,6 +780,7 @@ public class PDFZahlungsnachweiseService {
                 x
                         + colBeleg
                         + colDatum
+                        + colDokumente
                         + colBemerkung
                         + colBetrag,
                 y - ROW_HEIGHT
@@ -874,7 +886,7 @@ public class PDFZahlungsnachweiseService {
         return items;
     }
 
-    private float[] determinePdfSize(
+    private DocumentSize determinePdfSize(
             byte[] content
     ) throws IOException {
 
@@ -893,10 +905,13 @@ public class PDFZahlungsnachweiseService {
 
             try (
                     PDDocument document =
-                            org.apache.pdfbox.Loader.loadPDF(content)
+                            org.apache.pdfbox.Loader.loadPDF(
+                                    content
+                            )
             ) {
 
                 if (document.getNumberOfPages() == 0) {
+
                     throw new IllegalArgumentException(
                             "PDF enthält keine Seite."
                     );
@@ -907,63 +922,62 @@ public class PDFZahlungsnachweiseService {
                                 .getPage(0)
                                 .getMediaBox();
 
-                /*
-                 * PDFs werden mit ihrer tatsächlichen
-                 * PDF-Seitengröße an die Layout-Engine
-                 * übergeben.
-                 *
-                 * Die Skalierung erfolgt später durch
-                 * die A4LayoutEngine.
-                 */
-                return new float[]{
+                return new DocumentSize(
                         box.getWidth(),
-                        box.getHeight()
-                };
+                        box.getHeight(),
+                        PdfDocumentDensity.MEDIUM
+                );
             }
         }
 
         /*
          * =========================================================
-         * Bild
+         * BILD
          * =========================================================
          */
 
         BufferedImage image =
                 ImageIO.read(
-                        new ByteArrayInputStream(content)
+                        new ByteArrayInputStream(
+                                content
+                        )
                 );
 
         if (image != null) {
 
-            float width = image.getWidth();
-            float height = image.getHeight();
+            ImageAnalysis analysis =
+                    imageAnalysisService.analyze(
+                            content
+                    );
 
-            /*
-             * Bilder werden auf einen sinnvollen Bereich
-             * für das A4-Layout begrenzt.
-             *
-             * Das Seitenverhältnis bleibt erhalten.
-             */
+            float width =
+                    image.getWidth();
+
+            float height =
+                    image.getHeight();
+
             float scale =
                     Math.min(
                             MAX_DOCUMENT_WIDTH / width,
                             MAX_DOCUMENT_HEIGHT / height
                     );
 
-            /*
-             * Kleine Bilder nicht künstlich vergrößern.
-             */
-            scale = Math.min(scale, 1f);
+            scale =
+                    Math.min(
+                            scale,
+                            1f
+                    );
 
-            return new float[]{
+            return new DocumentSize(
                     width * scale,
-                    height * scale
-            };
+                    height * scale,
+                    analysis.density()
+            );
         }
 
         throw new IOException(
-                "Dokument ist weder ein gültiges PDF noch ein "
-                        + "unterstütztes Bildformat."
+                "Dokument ist weder ein gültiges PDF "
+                        + "noch ein unterstütztes Bildformat."
         );
     }
     private byte[] mergeDocuments(
