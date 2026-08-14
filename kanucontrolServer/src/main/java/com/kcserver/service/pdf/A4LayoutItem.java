@@ -16,7 +16,8 @@ public record A4LayoutItem(
         String id,
         float width,
         float height,
-        PdfDocumentDensity density
+        PdfDocumentDensity density,
+        boolean rotationAllowed
 ) {
     public A4LayoutItem {
         Objects.requireNonNull(id, "id darf nicht null sein.");

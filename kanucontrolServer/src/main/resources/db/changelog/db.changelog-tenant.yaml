@@ -141,3 +141,7 @@ databaseChangeLog:
       file: db/changelog/changes/20260810-02-zahlungs-position-audit.xml
   - include:
       file: db/changelog/changes/20260810-zahlungsnachweis-dokument-auditing-001.xml
+  - include:
+      file: db/changelog/changes/20260814-01-zahlungsnachweis-zahlungsweg.xml
+  - include:
+      file: db/changelog/changes/20260814-02-finanzgruppe-typ.xml

@@ -198,13 +198,15 @@ public class A4LayoutEngine {
                 );
 
         Candidate rotated =
-                createCandidate(
+                item.rotationAllowed()
+                        ? createCandidate(
                         item,
                         pageNumber,
                         contentWidth,
                         contentHeight,
                         true
-                );
+                )
+                        : null;
 
         Candidate selected =
                 selectBestCandidate(
@@ -344,7 +346,8 @@ public class A4LayoutEngine {
                 );
 
         Candidate firstRotated =
-                createCandidateInArea(
+                first.rotationAllowed()
+                        ? createCandidateInArea(
                         first,
                         pageNumber,
                         firstX,
@@ -352,7 +355,8 @@ public class A4LayoutEngine {
                         firstWidth,
                         firstHeight,
                         true
-                );
+                )
+                        : null;
 
         Candidate firstCandidate =
                 selectBestCandidate(
@@ -372,7 +376,8 @@ public class A4LayoutEngine {
                 );
 
         Candidate secondRotated =
-                createCandidateInArea(
+                second.rotationAllowed()
+                        ? createCandidateInArea(
                         second,
                         pageNumber,
                         secondX,
@@ -380,7 +385,8 @@ public class A4LayoutEngine {
                         secondWidth,
                         secondHeight,
                         true
-                );
+                )
+                        : null;
 
         Candidate secondCandidate =
                 selectBestCandidate(

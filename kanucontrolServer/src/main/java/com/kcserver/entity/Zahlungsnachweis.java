@@ -1,5 +1,6 @@
 package com.kcserver.entity;
 
+import com.kcserver.enumtype.Zahlungsweg;
 import jakarta.persistence.*;
 import com.kcserver.audit.Auditable;
 import lombok.Getter;
@@ -28,6 +29,9 @@ public class Zahlungsnachweis extends Auditable {
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal betrag;
+
+    @Enumerated(EnumType.STRING)
+    private Zahlungsweg zahlungsweg;
 
     private String bemerkung;
 

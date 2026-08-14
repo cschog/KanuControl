@@ -511,6 +511,18 @@ public class PDFDocumentComposer {
                     }
                 }
 
+                System.out.println(
+                        "PDF PLACEMENT: "
+                                + placement.itemId()
+                                + " width=" + placement.width()
+                                + " height=" + placement.height()
+                                + " rotation=" + placement.rotation()
+                                + " formBBox="
+                                + form.getBBox().getWidth()
+                                + "x"
+                                + form.getBBox().getHeight()
+                );
+
                 placeForm(
                         target,
                         form,

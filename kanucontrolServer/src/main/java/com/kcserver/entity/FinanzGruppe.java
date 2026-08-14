@@ -1,5 +1,6 @@
 package com.kcserver.entity;
 
+import com.kcserver.enumtype.FinanzgruppeTyp;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -25,10 +26,6 @@ public class FinanzGruppe {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /* =========================================================
-       KUERZEL
-       ========================================================= */
-
     @Column(nullable = false, length = 20)
     private String kuerzel;
 
@@ -36,8 +33,12 @@ public class FinanzGruppe {
     @Column(nullable = false)
     private boolean system = false;
 
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private FinanzgruppeTyp typ;
+
     /* =========================================================
-       RELATION ZUR VERANSTALTUNG
+       VERANSTALTUNG
        ========================================================= */
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

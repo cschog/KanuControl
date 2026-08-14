@@ -312,7 +312,8 @@ public class PDFBelegDokumenteService {
                                 itemId,
                                 size.width(),
                                 size.height(),
-                                size.density()
+                                size.density(),
+                                false
                         )
                 );
             }
