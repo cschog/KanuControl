@@ -31,6 +31,48 @@ public class FinanzGruppeService {
     private final TeilnehmerRepository teilnehmerRepository;
     private final AbrechnungBelegRepository belegRepository;
 
+    private static final String VK_KUERZEL = "VK";
+
+    private boolean isVereinsFinanzGruppe(FinanzGruppe gruppe) {
+        return VK_KUERZEL.equals(gruppe.getKuerzel());
+    }
+
+    private void checkNotSystem(FinanzGruppe gruppe) {
+
+        if (gruppe.isSystem()) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "System-Finanzgruppen dürfen nicht manuell geändert werden."
+            );
+        }
+    }
+
+    /* =========================================================
+   SYSTEM / VK = Vereinskonto
+   ========================================================= */
+
+    @Transactional
+    public FinanzGruppe getOrCreateVereinsFinanzGruppe(
+            Veranstaltung veranstaltung
+    ) {
+
+        return repository
+                .findByVeranstaltungIdAndKuerzel(
+                        veranstaltung.getId(),
+                        "VK"
+                )
+                .orElseGet(() -> {
+
+                    FinanzGruppe gruppe = FinanzGruppe.builder()
+                            .kuerzel("VK")
+                            .system(true)
+                            .veranstaltung(veranstaltung)
+                            .build();
+
+                    return repository.save(gruppe);
+                });
+    }
+
     /* =========================================================
        CREATE
        ========================================================= */

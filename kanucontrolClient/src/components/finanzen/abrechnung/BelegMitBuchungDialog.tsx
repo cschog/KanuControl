@@ -172,7 +172,7 @@ export default function BelegMitBuchungDialog({ open, kuerzelListe, onClose, onS
           <TextField
             select
             fullWidth
-            label="Finanzgruppe"
+            label="Konto"
             value={kuerzel}
             onChange={(e) => setKuerzel(e.target.value)}
             required

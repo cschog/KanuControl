@@ -206,9 +206,9 @@ Hierzu gehören beispielsweise:
 
 Die Finanzübersicht zeigt jederzeit den aktuellen Stand der Veranstaltung.
 
-### Finanzgruppen
+### Konten
 
-Finanzgruppen dienen dazu, Teilnehmer zusammenzufassen.
+Konten dienen dazu, Teilnehmer zusammenzufassen.
 
 Typische Anwendungsfälle sind:
 - Familien
@@ -216,11 +216,11 @@ Typische Anwendungsfälle sind:
 - Vereinsgruppen
 - Sammelzahler
 
-Teilnehmer können einer Finanzgruppe zugeordnet werden.
+Teilnehmer können einem Konto zugeordnet werden.
 
-Buchungen werden immer einer Finanzgruppe zugewiesen.
+Buchungen werden immer einem Konto zugewiesen.
 
-Die Finanzgruppen bilden die technische Grundlage für zukünftige Erweiterungen der Finanzverwaltung.
+Die Konten bilden die technische Grundlage für zukünftige Erweiterungen der Finanzverwaltung.
 
 ### Finanzkategorien
 
@@ -439,20 +439,20 @@ Sie bilden unter anderem die Grundlage für:
 
 Dadurch müssen die Daten nur einmal erfasst werden und stehen während des gesamten Lebenszyklus einer Veranstaltung konsistent zur Verfügung.
 
-## 6. Finanzgruppen für Kosten und Einnahmen anlegen
+## 6. Konten für Kosten und Einnahmen anlegen
 
 Menü:
 **Finanzen**
 
-Alle Ist-Kosten und Ist-Einnahmen werden über Finanzgruppen erfasst.
+Alle Ist-Kosten und Ist-Einnahmen werden über Konten erfasst.
 
-Vor der Erfassung von Belegen muss daher mindestens eine Finanzgruppe angelegt werden.
+Vor der Erfassung von Belegen muss daher mindestens Konto angelegt werden.
 
-Eine Finanzgruppe dient der Zuordnung von Kosten und Einnahmen zu einer bestimmten Personengruppe oder Kostenstelle.
+Ein Konto dient der Zuordnung von Kosten und Einnahmen zu einer bestimmten Personengruppe oder Kostenstelle.
 
-Jeder Finanzgruppe können eine oder mehrere Personen zugeordnet werden.
+Jedem Konto können eine oder mehrere Personen zugeordnet werden.
 
-Die Finanzgruppe SYS gehört dem System/KanuControl und wird für automatisch berechnete Beträge, wie KJFP-Zuschuss, Teilnehmer-Beiträge oder Fahrkosten verwendet.
+Das Konto SYS gehört dem System/KanuControl und wird für automatisch berechnete Beträge, wie KJFP-Zuschuss, Teilnehmer-Beiträge oder Fahrkosten verwendet.
 
 ---
 

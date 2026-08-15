@@ -37,6 +37,8 @@ public interface ZahlungsnachweisRepository
         z.datum,
         z.betrag,
         z.bemerkung,
+        z.zahlungsweg,
+        z.finanzGruppe.id,
 
         (select count(p)
          from ZahlungsPosition p

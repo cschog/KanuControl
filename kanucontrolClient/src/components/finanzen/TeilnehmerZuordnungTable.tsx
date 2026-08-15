@@ -68,7 +68,7 @@ const TeilnehmerZuordnungTable: FC<Props> = ({ veranstaltungId }) => {
   }, [load]);
 
   /* =========================================================
-     ASSIGN KUERZEL
+     ASSIGN KUERZEL (Konto)
   ========================================================= */
 
   const handleChange = async (teilnehmerId: number, kuerzel: string) => {
@@ -84,7 +84,7 @@ const TeilnehmerZuordnungTable: FC<Props> = ({ veranstaltungId }) => {
       setTeilnehmer((prev) => prev.map((t) => (t.id === teilnehmerId ? { ...t, kuerzel } : t)));
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        setError(error.response?.data?.message ?? "Finanzgruppe konnte nicht zugewiesen werden");
+        setError(error.response?.data?.message ?? "Konto konnte nicht zugewiesen werden");
       } else {
         setError("Ein unerwarteter Fehler ist aufgetreten");
       }
@@ -130,7 +130,7 @@ const TeilnehmerZuordnungTable: FC<Props> = ({ veranstaltungId }) => {
                         ))}
 
                       <MenuItem value="">
-                        <em>Finanzgruppe entfernen</em>
+                        <em>Konto entfernen</em>
                       </MenuItem>
                     </Select>
                   ) : (

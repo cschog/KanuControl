@@ -1,5 +1,6 @@
 package com.kcserver.dto.zahlungsnachweis;
 
+import com.kcserver.enumtype.Zahlungsweg;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -16,7 +17,11 @@ public class ZahlungsnachweisDetailDTO {
 
     private BigDecimal betrag;
 
+    private Zahlungsweg zahlungsweg;
+
     private String bemerkung;
+
+    private Long finanzGruppeId;
 
     private List<ZahlungsPositionDTO> positionen =
             new ArrayList<>();

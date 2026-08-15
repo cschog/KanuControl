@@ -30,47 +30,57 @@ Jede Finanzgruppe besitzt einen Typ:
 -   **SYSTEM**
 -   **NORMAL**
 
-### System-Finanzgruppe
+### 1.1 System-Finanzgruppe SYS
 
-Jeder Verein besitzt genau eine System-Finanzgruppe.
+Die Finanzgruppe **SYS** ist eine technische System-Finanzgruppe der
 
-Die System-Finanzgruppe entspricht dem Verein selbst und wird anhand des
-Kurznamens des Vereins bezeichnet.
+Veranstaltung.
 
-Beispiele:
+Sie dient zur Aufnahme von systemseitig erzeugten bzw. zentralen Finanzbuchungen.
 
-  Verein                        System-Finanzgruppe
-  ----------------------        ---------------------
-  Eschweiler Kanu Club          EKC
-  Oberhausener Kanu Verein      OKV
-  Kanu-Verband NRW              KVNRW
-  Spielvereinigung Boich-Thum   SVBT
+Die SYS-Finanzgruppe ist **keine Finanzgruppe eines Teilnehmers** und nimmt **nicht am Finanzausgleich** teil.
 
-Die System-Finanzgruppe ist die zentrale Finanzgruppe der Veranstaltung.
-Sie übernimmt zentrale Einnahmen und Ausgaben, die auf dem Vereinskonto
-eingegangenen Teilnehmerbeiträge, KJFP-Zuschüsse und die
-Ausgleichszahlungen an normale Finanzgruppen. Der verbleibende
-Eigenanteil des Vereins wird ebenfalls von der System-Finanzgruppe
-getragen.
+Insbesondere erhält SYS keine Ausgleichszahlung.
 
-Die System-Finanzgruppe erhält selbst keine normale Ausgleichszahlung.
 
-### Normale Finanzgruppen
+---
+
+### 1.2 Vereins-Finanzgruppe V-FG
+
+Die **V-FG** repräsentiert das **Vereinskonto innerhalb der Veranstaltung**.
+
+Sie dient insbesondere dazu, Zahlungsein- und abgänge auf dem Vereinskonto abzubilden.
+
+Teilnehmerbeiträge, die per Überweisung auf das Vereinskonto eingehen, werden der V-FG zugeordnet.
+
+Die V-FG nimmt **nicht am Finanzausgleich** teil. Die V-FG ist damit von normalen Finanzgruppen zu unterscheiden:
+
+- V-FG = Vereinskonto
+- normale Finanzgruppe = Gruppe, die Teilnehmer und/oder Ausgaben repräsentiert
+
+Die V-FG wird bei Bedarf für eine Veranstaltung automatisch angelegt.
+
+---
+
+### 1.3 Normale Finanzgruppen
 
 Normale Finanzgruppen können beispielsweise Familien oder sonstige
-Gruppen sein.
+
+Teilnehmergruppen sein.
 
 Eine normale Finanzgruppe kann:
 
--   Teilnehmer zugeordnet bekommen,
--   Ausgaben für die Veranstaltung übernehmen,
--   Teilnehmerbeiträge ihrer Teilnehmer überweisen oder per Quittung
-    nachweisen,
--   eine Ausgleichszahlung erhalten.
+- Teilnehmer zugeordnet bekommen,
+- Ausgaben für die Veranstaltung übernehmen,
+- Teilnehmerbeiträge ihrer Teilnehmer überweisen,
+- Teilnehmerbeiträge ihrer Teilnehmer per Quittung nachweisen,
+- eine Ausgleichszahlung erhalten.
 
-Eine normale Finanzgruppe muss nicht zwingend Teilnehmer enthalten. Für
-den Finanzausgleich ist sie insbesondere dann relevant, wenn sie
-Ausgaben für die Veranstaltung übernimmt.
+Eine normale Finanzgruppe muss nicht zwingend Teilnehmer enthalten.
+
+Für den Finanzausgleich ist sie insbesondere dann relevant, wenn sie Ausgaben für die Veranstaltung übernimmt.
+
+Nur **normale Finanzgruppen** können eine Ausgleichszahlung erhalten.
 
 ## 2. Zuordnung von Teilnehmern zu Finanzgruppen
 
@@ -139,17 +149,31 @@ Der Zahlungsweg unterscheidet:
 -   **UEBERWEISUNG**
 -   **QUITTUNG**
 
-### Überweisung
+Ein Zahlungsnachweis kann sich auf einen oder mehrere Teilnehmer beziehen. Zusätzlich kann ein Zahlungsnachweis einer **Finanzgruppe** zugeordnet sein.
 
-Bei einer Überweisung ist das Geld tatsächlich auf dem Konto des Vereins
-eingegangen. Der Betrag steht damit bereits der System-Finanzgruppe zur
-Verfügung.
+Dabei gilt:
+
+> Ein Zahlungsnachweis gehört höchstens zu einer Finanzgruppe.
+
+Die Zuordnung zur Finanzgruppe und der Zahlungsweg haben unterschiedliche
+
+Bedeutungen.
+
+### 4.1 Überweisung
+
+Bei einer **Überweisung** ist das Geld tatsächlich auf dem Vereinskonto eingegangen.
+
+Der Zahlungseingang wird deshalb der **V-FG** zugeordnet.
+
+Eine Überweisung wird nicht einer normalen Finanzgruppe als Geldbestand zugerechnet.
 
 ### Quittung
 
 Bei einer Quittung wurde der Teilnehmerbeitrag nachweislich bezahlt, das
-Geld ist jedoch nicht auf dem Vereinskonto eingegangen. Der Betrag
-verbleibt bei der jeweiligen Finanzgruppe.
+Das Geld verbleibt bei der Finanzgruppe, der der Zahlungsnachweis
+zugeordnet ist.
+
+Eine Quittung muss daher einer Finanzgruppe zugeordnet werden.
 
 ### Beispiel Hil
 
@@ -170,10 +194,35 @@ Die 800 € Quittung werden bei der Berechnung des Ausgleichsbetrags
 berücksichtigt, weil dieses Geld nicht zusätzlich vom Verein an Hil
 ausgezahlt werden muss.
 
+### Zahlungsnachweis und Finanzgruppe
+
+Für einen Zahlungsnachweis gelten folgende Regeln:
+
+**Überweisung**
+```
+Zahlungsnachweis
+│
+├── Zahlungspositionen → Teilnehmer
+│
+└── Finanzgruppe → V-FG
+``` 
+Das Geld ist auf dem Vereinskonto eingegangen.
+
+
+**Quittung**
+```
+Zahlungsnachweis
+│
+├── Zahlungspositionen → Teilnehmer
+│
+└── Finanzgruppe → normale Finanzgruppe
+```
+Das Geld ist nicht auf dem Vereinskonto eingegangen. Die Finanzgruppe hat den Betrag bereits erhalten.
+
 ## 5. Ausgaben einer Finanzgruppe
 
 Ausgaben werden der Finanzgruppe zugeordnet, die die Ausgabe tatsächlich
-übernommen hat.
+übernommen hat. Dabei handelt es sich grundsätzlich um **normale Finanzgruppen**.
 
 Beispiele:
 
@@ -266,15 +315,20 @@ Der Finanzausgleich darf nicht mit dem Eigenanteil des Vereins
 verwechselt werden.
 
 Die allgemeine Veranstaltungsabrechnung lautet:
-
-**Gesamtausgaben − Teilnehmerbeiträge − KJFP − sonstige Einnahmen =
-Eigenanteil des Vereins**
+```
+Gesamtausgaben
+- Teilnehmerbeiträge
+- KJFP
+- sonstige Einnahmen
+=
+Eigenanteil des Vereins
+```
 
 Der Eigenanteil wird vollständig vom Verein getragen. Er wird **nicht
 auf die Finanzgruppen verteilt**.
 
 Der KJFP-Zuschuss wird bei der hier beschriebenen Berechnung des
-Finanzausgleichs **nicht auf die Finanzgruppen verteilt**. Er gehört
+Finanzausgleichs **nicht auf die normalen Finanzgruppen verteilt**. Er gehört
 ausschließlich zur allgemeinen Veranstaltungsabrechnung.
 
 ## 8. Rückspenden
@@ -285,8 +339,7 @@ oder teilweise wieder an den Verein zurückgespendet werden.
 Diese Rückspenden können den tatsächlichen Verlust bzw. Eigenanteil des
 Vereins nachträglich reduzieren.
 
-Die Rückspenden sind jedoch **nicht Bestandteil der
-KanuControl-Abrechnung**.
+Die Rückspenden sind jedoch **nicht Bestandteil der KanuControl-Abrechnung**.
 
 Insbesondere werden sie nicht als negative Fahrkosten, als Korrektur
 einer Ausgleichszahlung oder als nachträgliche Änderung der
@@ -310,18 +363,40 @@ Der Verein gleicht anschließend den verbleibenden Betrag aus.
 
 Dabei gilt:
 
--   Teilnehmerbeiträge werden aus den Teilnehmern und der
-    Beitragsstruktur ermittelt.
--   Teilnehmer werden optional Finanzgruppen zugeordnet.
--   Ausgaben werden der Finanzgruppe zugeordnet, die sie tatsächlich
-    bezahlt hat.
--   Fahrkosten werden der Finanzgruppe des Fahrers zugeordnet.
--   Der Zahlungsweg eines Teilnehmerbeitrags ist entscheidend.
--   `UEBERWEISUNG` bedeutet: Geld ist beim Verein eingegangen.
--   `QUITTUNG` bedeutet: Geld ist nachgewiesen, aber nicht auf dem
-    Vereinskonto eingegangen.
--   Pro normaler Finanzgruppe gibt es höchstens eine Ausgleichszahlung
-    je Veranstaltung.
--   Die System-Finanzgruppe ist die Finanzgruppe des Vereins.
--   Der Vereins-Eigenanteil wird nicht auf die Finanzgruppen verteilt.
--   Spätere Rückspenden gehören nicht zur KanuControl-Abrechnung.
+- Teilnehmerbeiträge werden aus den Teilnehmern und der Beitragsstruktur ermittelt.
+- Teilnehmer werden optional normalen Finanzgruppen zugeordnet.
+- Ausgaben werden der Finanzgruppe zugeordnet, die sie tatsächlich bezahlt hat.
+- Fahrkosten werden buchhalterisch der SYS-FG zugeordnet.
+- Für den Finanzausgleich wird bei Fahrkosten über den Fahrer und dessen Teilnehmer-Zuordnung die betroffene normale Finanzgruppe ermittelt.
+- Die Fahrkostenbuchung bleibt dabei in SYS und wird nicht in die normale Finanzgruppe verschoben.
+- Ausgaben mit der Vereins-Girokarte gehören zum Vereinskonto bzw. zur V-FG.
+- Der Zahlungsweg eines Teilnehmerbeitrags ist entscheidend.
+- UEBERWEISUNG bedeutet: Geld ist beim Verein eingegangen und wird der V-FG zugeordnet.
+- QUITTUNG bedeutet: Geld ist nachgewiesen, aber nicht auf dem Vereinskonto eingegangen und verbleibt bei der zugeordneten normalen Finanzgruppe.
+- Ein Zahlungsnachweis kann sich auf einen oder mehrere Teilnehmer beziehen.
+- Ein Zahlungsnachweis kann höchstens einer Finanzgruppe zugeordnet sein.
+- Für jede normale Finanzgruppe gibt es höchstens eine Ausgleichszahlung je Veranstaltung.
+- SYS nimmt nicht am Finanzausgleich teil.
+- V-FG nimmt nicht am Finanzausgleich teil.
+- Nur normale Finanzgruppen können eine Ausgleichszahlung erhalten.
+- Der Vereins-Eigenanteil wird nicht auf die Finanzgruppen verteilt.
+- Spätere Rückspenden gehören nicht zur KanuControl-Abrechnung.
+
+
+## 10. Vereins-Girokarte
+
+Ein Einkauf kann direkt mit der Vereins-Girokarte bezahlt werden.
+
+In diesem Fall wurde die Ausgabe **nicht von einer normalen Finanzgruppe** vorgestreckt.
+
+Die Ausgabe wird deshalb der **V-FG bzw. dem Vereinskonto** zugeordnet.
+
+Beispiel:
+```
+Supermarkteinkauf        350,00 €
+Zahlungsart              Vereins-Girokarte
+
+V-FG:
+- 350,00 €
+```
+Dieser Betrag wird nicht als Ausgabe einer normalen Finanzgruppe beim Finanzausgleich berücksichtigt.

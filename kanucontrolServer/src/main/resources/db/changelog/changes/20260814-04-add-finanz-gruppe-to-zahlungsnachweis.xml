@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="2026-08-14-add-finanz-gruppe-to-zahlungsnachweis"
+               author="chris">
+
+        <addColumn tableName="zahlungsnachweis">
+
+            <column name="finanz_gruppe_id"
+                    type="BIGINT"/>
+
+        </addColumn>
+
+        <addForeignKeyConstraint
+                baseTableName="zahlungsnachweis"
+                baseColumnNames="finanz_gruppe_id"
+                constraintName="fk_zahlungsnachweis_finanz_gruppe"
+                referencedTableName="finanz_gruppe"
+                referencedColumnNames="id"
+                onDelete="RESTRICT"/>
+
+        <createIndex
+                indexName="idx_zahlungsnachweis_finanz_gruppe"
+                tableName="zahlungsnachweis">
+
+            <column name="finanz_gruppe_id"/>
+
+        </createIndex>
+
+    </changeSet>
+
+</databaseChangeLog>

@@ -32,6 +32,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import com.kcserver.service.finanz.FinanzGruppeService;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -52,6 +53,7 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
 
     private final UnterkunftsartRepository unterkunftsartRepository;
     private final VerpflegungsmodellRepository verpflegungsmodellRepository;
+    private final FinanzGruppeService finanzGruppeService;
 
 
     /* =========================================================
@@ -88,6 +90,8 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
         List<String> warnings = adjustFmJemType(v);
 
         Veranstaltung saved = veranstaltungRepository.save(v);
+
+        finanzGruppeService.getOrCreateVereinsFinanzGruppe(saved);
 
         Teilnehmer t = new Teilnehmer();
         t.setVeranstaltung(saved);
@@ -509,10 +513,12 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
         }
 
         List<String> warnings = adjustFmJemType(v);
+
         Veranstaltung saved = veranstaltungRepository.save(v);
 
-        VeranstaltungDetailDTO dtoResult =
+        finanzGruppeService.getOrCreateVereinsFinanzGruppe(saved);
 
+        VeranstaltungDetailDTO dtoResult =
                 veranstaltungMapper.toDetailDTO(saved);
 
         return new ApiResponse<>(dtoResult, warnings);

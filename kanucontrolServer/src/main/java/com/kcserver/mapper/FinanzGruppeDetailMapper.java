@@ -25,6 +25,7 @@ public class FinanzGruppeDetailMapper {
         return new FinanzGruppeDetailDTO(
                 g.getId(),
                 g.getKuerzel(),
+                g.getTyp(),
                 g.isSystem(),
                 teilnehmer
         );

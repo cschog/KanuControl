@@ -1,5 +1,6 @@
 package com.kcserver.service.pdf;
 
+import com.kcserver.enumtype.PdfDocumentDensity;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
@@ -27,7 +28,7 @@ class PDFDocumentComposerTest {
             new PDFDocumentComposer(layoutService);
 
     @Test
-    void fuenfA6DokumenteWerdenZuZweiA4SeitenZusammengesetzt()
+    void fuenfA6DokumenteWerdenZuDreiA4SeitenZusammengesetzt()
             throws Exception {
 
         /*
@@ -81,7 +82,7 @@ class PDFDocumentComposerTest {
                         .orElse(0);
 
         assertEquals(
-                2,
+                3,
                 pageCount
         );
 
@@ -117,7 +118,7 @@ class PDFDocumentComposerTest {
         ) {
 
             assertEquals(
-                    2,
+                    3,
                     document.getNumberOfPages()
             );
 
@@ -228,7 +229,7 @@ class PDFDocumentComposerTest {
             String id
     ) {
 
-        return new A4LayoutItem(
+        return item(
                 id,
                 PDFLayoutService.A6_WIDTH,
                 PDFLayoutService.A6_HEIGHT
@@ -270,7 +271,7 @@ class PDFDocumentComposerTest {
 
         List<A4LayoutItem> items =
                 List.of(
-                        new A4LayoutItem(
+                        item(
                                 id,
                                 width,
                                 height
@@ -409,31 +410,31 @@ class PDFDocumentComposerTest {
 
         List<A4LayoutItem> items =
                 List.of(
-                        new A4LayoutItem(
+                        item(
                                 a4Id,
                                 a4Width,
                                 a4Height
                         ),
 
-                        new A4LayoutItem(
+                        item(
                                 a5Id,
                                 a5Width,
                                 a5Height
                         ),
 
-                        new A4LayoutItem(
+                        item(
                                 q1Id,
                                 a6Width,
                                 a6Height
                         ),
 
-                        new A4LayoutItem(
+                        item(
                                 q2Id,
                                 a6Width,
                                 a6Height
                         ),
 
-                        new A4LayoutItem(
+                        item(
                                 rotatedId,
                                 rotatedWidth,
                                 rotatedHeight
@@ -540,4 +541,19 @@ class PDFDocumentComposerTest {
             }
         }
     }
+
+    private A4LayoutItem item(
+            String id,
+            float width,
+            float height
+    ) {
+        return new A4LayoutItem(
+                id,
+                width,
+                height,
+                PdfDocumentDensity.MEDIUM,
+                true
+        );
+    }
+
 }

@@ -4,6 +4,8 @@ export type ZahlungsStatus = "ROT" | "GELB" | "GRUEN";
 
 export type BeitragsQuelle = "INDIVIDUELL" | "STRUKTUR" | "STANDARD";
 
+export type Zahlungsweg = "UEBERWEISUNG" | "QUITTUNG";
+
 export interface PersonRefDTO {
   id: number;
   vorname: string;
@@ -31,6 +33,8 @@ export interface ZahlungsnachweisDetailDTO {
   id: number;
   datum: string;
   betrag: number;
+  zahlungsweg?: Zahlungsweg | null;
+  finanzGruppeId?: number | null;
   bemerkung?: string | null;
   positionen: ZahlungsPositionDTO[];
   dokumente: ZahlungsnachweisDokumentDTO[];
@@ -40,6 +44,8 @@ export interface ZahlungsnachweisListDTO {
   id: number;
   datum?: string;
   betrag: number;
+  zahlungsweg?: Zahlungsweg | null;
+  finanzGruppeId?: number | null;
   bemerkung?: string;
   anzahlTeilnehmer: number;
   anzahlDokumente: number;
@@ -47,6 +53,9 @@ export interface ZahlungsnachweisListDTO {
 
 export interface ZahlungsnachweisUpdateDTO {
   datum?: string;
+  betrag?: number;
+  zahlungsweg?: Zahlungsweg | null;
+  finanzGruppeId?: number | null;
   bemerkung?: string;
   positionen: ZahlungsPositionDTO[];
 }

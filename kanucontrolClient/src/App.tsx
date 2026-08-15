@@ -97,7 +97,7 @@ const App: React.FC = () => {
                   },
                   {
                     key: "finanzgruppen",
-                    label: "Finanzgruppen",
+                    label: "Konten",
                     path: "finanzgruppen",
                   },
                 ]}

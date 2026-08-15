@@ -7,6 +7,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  MenuItem,
   Divider,
   Stack,
   TextField,
@@ -15,6 +16,7 @@ import {
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
+import { getFinanzgruppen, FinanzGruppe } from "@/api/services/finanzgruppenApi";
 
 import MoneyField from "@/components/common/MoneyField";
 import ZahlungsnachweisDokumentPanel from "@/components/finanzen/beitraege/ZahlungsnachweisDokumentPanel";
@@ -24,6 +26,7 @@ import {
   TeilnehmerListDTO,
   ZahlungsPositionDTO,
   ZahlungsnachweisDetailDTO,
+  Zahlungsweg,
 } from "@/api/types/beitraege";
 
 interface Props {
@@ -39,6 +42,8 @@ interface Props {
     data: {
       datum: string;
       betrag: number;
+      zahlungsweg: Zahlungsweg | null;
+      finanzGruppeId: number | null;
       bemerkung: string;
       positionen: ZahlungsPositionDTO[];
     },
@@ -57,6 +62,10 @@ const ZahlungsnachweisDialog = ({
   const [datum, setDatum] = useState("");
   const [bemerkung, setBemerkung] = useState("");
   const [betrag, setBetrag] = useState<number | null>(null);
+  const [zahlungsweg, setZahlungsweg] = useState<Zahlungsweg | null>(null);
+  const [finanzgruppen, setFinanzgruppen] = useState<FinanzGruppe[]>([]);
+  const [finanzGruppeId, setFinanzGruppeId] = useState<number | null>(null);
+  const finanzGruppeFehlt = zahlungsweg === "QUITTUNG" && finanzGruppeId === null;
 
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
@@ -89,6 +98,8 @@ const ZahlungsnachweisDialog = ({
       setDatum(zahlungsnachweis.datum);
       setBemerkung(zahlungsnachweis.bemerkung ?? "");
       setBetrag(zahlungsnachweis.betrag);
+      setZahlungsweg(zahlungsnachweis.zahlungsweg ?? null);
+      setFinanzGruppeId(zahlungsnachweis.finanzGruppeId ?? null);
 
       setSelectedIds(
         zahlungsnachweis.positionen
@@ -99,6 +110,8 @@ const ZahlungsnachweisDialog = ({
       setDatum(new Date().toISOString().split("T")[0]);
       setBemerkung("");
       setBetrag(null);
+      setZahlungsweg(null);
+      setFinanzGruppeId(null);
       setSelectedIds([]);
     }
 
@@ -108,6 +121,32 @@ const ZahlungsnachweisDialog = ({
     setCropDialogOpen(false);
     setCropFile(null);
   }, [open, zahlungsnachweis]);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const loadFinanzgruppen = async () => {
+      try {
+        const gruppen = await getFinanzgruppen(veranstaltungId);
+        setFinanzgruppen(gruppen);
+      } catch (error) {
+        console.error("Fehler beim Laden der Konten", error);
+        setFinanzgruppen([]);
+      }
+    };
+
+    void loadFinanzgruppen();
+  }, [open, veranstaltungId]);
+
+  useEffect(() => {
+    if (zahlungsweg === "UEBERWEISUNG") {
+      const vfg = finanzgruppen.find((gruppe) => gruppe.kuerzel === "VK");
+
+      setFinanzGruppeId(vfg?.id ?? null);
+    }
+  }, [zahlungsweg, finanzgruppen]);
 
   /*
    * =========================================================
@@ -234,7 +273,15 @@ const ZahlungsnachweisDialog = ({
    */
 
   const handleSave = async () => {
-    if (saving || !datum || betrag === null || betrag <= 0 || selectedIds.length === 0) {
+    if (
+      saving ||
+      !datum ||
+      betrag === null ||
+      betrag <= 0 ||
+      zahlungsweg === null ||
+      finanzGruppeFehlt ||
+      selectedIds.length === 0
+    ) {
       return;
     }
 
@@ -263,6 +310,8 @@ const ZahlungsnachweisDialog = ({
         {
           datum,
           betrag,
+          zahlungsweg,
+          finanzGruppeId,
           bemerkung,
           positionen,
         },
@@ -348,6 +397,53 @@ const ZahlungsnachweisDialog = ({
               value={betrag ?? ""}
               onChange={(value) => setBetrag(value === "" ? null : Number(value))}
             />
+
+            {/* ZAHLUNGSWEG */}
+
+            <TextField
+              select
+              label="Zahlungsweg"
+              value={zahlungsweg ?? ""}
+              onChange={(e) =>
+                setZahlungsweg(e.target.value === "" ? null : (e.target.value as Zahlungsweg))
+              }
+              required
+              fullWidth
+            >
+              <MenuItem value="UEBERWEISUNG">Überweisung</MenuItem>
+
+              <MenuItem value="QUITTUNG">Quittung</MenuItem>
+            </TextField>
+
+            {/* Konto */}
+
+            <TextField
+              select
+              label="Konto"
+              value={finanzGruppeId ?? ""}
+              onChange={(e) =>
+                setFinanzGruppeId(e.target.value === "" ? null : Number(e.target.value))
+              }
+              fullWidth
+              disabled={zahlungsweg === "UEBERWEISUNG"}
+              required
+            >
+              {finanzgruppen
+                .filter((gruppe) => {
+                  // VK ist ausschließlich für Überweisungen
+                  if (gruppe.kuerzel === "VK") {
+                    return zahlungsweg === "UEBERWEISUNG";
+                  }
+
+                  // Systemgruppen nicht manuell auswählen
+                  return !gruppe.system;
+                })
+                .map((gruppe) => (
+                  <MenuItem key={gruppe.id} value={gruppe.id}>
+                    {gruppe.kuerzel}
+                  </MenuItem>
+                ))}
+            </TextField>
 
             {/* BEMERKUNG */}
 
@@ -676,7 +772,13 @@ const ZahlungsnachweisDialog = ({
             variant="contained"
             onClick={() => void handleSave()}
             disabled={
-              saving || !datum || betrag === null || betrag <= 0 || selectedIds.length === 0
+              saving ||
+              !datum ||
+              betrag === null ||
+              betrag <= 0 ||
+              zahlungsweg === null ||
+              finanzGruppeFehlt ||
+              selectedIds.length === 0
             }
           >
             {saving ? "Speichern..." : "Speichern"}

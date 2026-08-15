@@ -210,7 +210,7 @@ export default function KuerzelPage({ veranstaltungId }: Props) {
   return (
     <Box>
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h5">Finanzgruppen-Verwaltung</Typography>
+        <Typography variant="h5">Konten-Verwaltung</Typography>
 
         <Typography
           color={zugeordnet === gesamtTeilnehmer ? "success.main" : "warning.main"}
@@ -224,7 +224,7 @@ export default function KuerzelPage({ veranstaltungId }: Props) {
         <Stack direction="row" spacing={2}>
           <TextField
             size="small"
-            placeholder="Neue Finanzgruppe"
+            placeholder="Neues Konto"
             value={newKuerzel}
             onChange={(e) => setNewKuerzel(e.target.value)}
           />
@@ -362,14 +362,14 @@ export default function KuerzelPage({ veranstaltungId }: Props) {
 
       {/* DELETE KÜRZEL */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Finanzgruppe löschen</DialogTitle>
+        <DialogTitle>Konto löschen</DialogTitle>
 
         <DialogContent>
           {deleteError ? (
             <Alert severity="error">{deleteError}</Alert>
           ) : (
             <Typography>
-              Möchten Sie die Finanzgruppe <strong>{deleteTarget?.kuerzel}</strong> wirklich
+              Möchten Sie das Konto <strong>{deleteTarget?.kuerzel}</strong> wirklich
               löschen?
             </Typography>
           )}

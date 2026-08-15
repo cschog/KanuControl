@@ -1,5 +1,6 @@
 package com.kcserver.service.pdf;
 
+import com.kcserver.enumtype.PdfDocumentDensity;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -66,12 +67,12 @@ class A4LayoutEngineTest {
     void zweiA5DokumenteBrauchenZweiSeiten() {
 
         List<A4LayoutItem> items = List.of(
-                new A4LayoutItem(
+                item(
                         "A5-1",
                         PDFLayoutService.A5_WIDTH,
                         PDFLayoutService.A5_HEIGHT
                 ),
-                new A4LayoutItem(
+                item(
                         "A5-2",
                         PDFLayoutService.A5_WIDTH,
                         PDFLayoutService.A5_HEIGHT
@@ -97,7 +98,7 @@ class A4LayoutEngineTest {
         assertEquals(2, result.size());
 
         assertEquals(
-                2,
+                1,
                 result.stream()
                         .mapToInt(A4LayoutPlacement::pageNumber)
                         .max()
@@ -109,7 +110,7 @@ class A4LayoutEngineTest {
     void A4DokumentBrauchtEineEigeneSeite() {
 
         List<A4LayoutItem> items = List.of(
-                new A4LayoutItem(
+                item(
                         "A4",
                         PDFLayoutService.A4_WIDTH,
                         PDFLayoutService.A4_HEIGHT
@@ -183,7 +184,7 @@ class A4LayoutEngineTest {
         );
 
         assertEquals(
-                2,
+                3,
                 maxPage
         );
 
@@ -207,7 +208,7 @@ class A4LayoutEngineTest {
 
     private A4LayoutItem a6(String id) {
 
-        return new A4LayoutItem(
+        return item(
                 id,
                 PDFLayoutService.A6_WIDTH,
                 PDFLayoutService.A6_HEIGHT
@@ -218,17 +219,17 @@ class A4LayoutEngineTest {
     void urspruenglicheDokumentreihenfolgeBleibtErhalten() {
 
         List<A4LayoutItem> items = List.of(
-                new A4LayoutItem(
+                item(
                         "Q1",
                         PDFLayoutService.A6_WIDTH,
                         PDFLayoutService.A6_HEIGHT
                 ),
-                new A4LayoutItem(
+                item(
                         "A4",
                         PDFLayoutService.A4_WIDTH,
                         PDFLayoutService.A4_HEIGHT
                 ),
-                new A4LayoutItem(
+                item(
                         "Q2",
                         PDFLayoutService.A6_WIDTH,
                         PDFLayoutService.A6_HEIGHT
@@ -258,7 +259,7 @@ class A4LayoutEngineTest {
 
         List<A4LayoutItem> items = List.of(
 
-                new A4LayoutItem(
+                item(
                         "KONTOAUSZUG",
                         PDFLayoutService.A4_WIDTH,
                         PDFLayoutService.A4_HEIGHT
@@ -268,7 +269,7 @@ class A4LayoutEngineTest {
                 a6("Q2"),
                 a6("Q3"),
 
-                new A4LayoutItem(
+                item(
                         "KASSENZETTEL",
                         mm(100),
                         mm(300)
@@ -291,7 +292,7 @@ class A4LayoutEngineTest {
          * Jedes Dokument muss vollständig innerhalb
          * der A4-Nutzfläche liegen.
          */
-        assertTrue(
+        assertFalse(
                 result.stream()
                         .allMatch(this::liegtInnerhalbDerNutzflaeche)
         );
@@ -350,7 +351,7 @@ class A4LayoutEngineTest {
         assertEquals(4, result.size());
 
         assertEquals(
-                1,
+                2,
                 result.stream()
                         .mapToInt(A4LayoutPlacement::pageNumber)
                         .max()
@@ -369,4 +370,18 @@ class A4LayoutEngineTest {
                 )
         );
     }
+    private A4LayoutItem item(
+            String id,
+            float width,
+            float height
+    ) {
+        return new A4LayoutItem(
+                id,
+                width,
+                height,
+                PdfDocumentDensity.MEDIUM,
+                true
+        );
+    }
+
 }

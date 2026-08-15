@@ -1,5 +1,6 @@
 package com.kcserver.dto.zahlungsnachweis;
 
+import com.kcserver.enumtype.Zahlungsweg;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -12,6 +13,8 @@ public class ZahlungsnachweisListDTO {
     private LocalDate datum;
     private BigDecimal betrag;
     private String bemerkung;
+    private Zahlungsweg zahlungsweg;
+    private Long finanzGruppeId;
     private Long anzahlTeilnehmer;
     private Long anzahlDokumente;
 
@@ -20,6 +23,8 @@ public class ZahlungsnachweisListDTO {
             LocalDate datum,
             BigDecimal betrag,
             String bemerkung,
+            Zahlungsweg zahlungsweg,
+            Long finanzGruppeId,
             Long anzahlTeilnehmer,
             Long anzahlDokumente
     ) {
@@ -27,6 +32,8 @@ public class ZahlungsnachweisListDTO {
         this.datum = datum;
         this.betrag = betrag;
         this.bemerkung = bemerkung;
+        this.zahlungsweg = zahlungsweg;
+        this.finanzGruppeId = finanzGruppeId;
         this.anzahlTeilnehmer = anzahlTeilnehmer;
         this.anzahlDokumente = anzahlDokumente;
     }

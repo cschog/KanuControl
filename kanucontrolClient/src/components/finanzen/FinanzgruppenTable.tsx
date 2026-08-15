@@ -66,7 +66,7 @@ const FinanzgruppenTable: FC<Props> = ({ veranstaltungId, reloadKey }) => {
       setGruppen(res.data);
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        setError(error.response?.data?.message ?? "Finanzgruppen konnten nicht geladen werden");
+        setError(error.response?.data?.message ?? "Konten konnten nicht geladen werden");
       } else {
         setError("Ein unerwarteter Fehler ist aufgetreten");
       }
@@ -91,7 +91,7 @@ const FinanzgruppenTable: FC<Props> = ({ veranstaltungId, reloadKey }) => {
       await load();
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        setError(error.response?.data?.message ?? "Finanzgruppe konnte nicht geändert werden");
+        setError(error.response?.data?.message ?? "Konto konnte nicht geändert werden");
       } else {
         setError("Ein unerwarteter Fehler ist aufgetreten");
       }
@@ -112,7 +112,7 @@ const FinanzgruppenTable: FC<Props> = ({ veranstaltungId, reloadKey }) => {
       await load();
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        setError(error.response?.data?.message ?? "Gruppe kann nicht gelöscht werden");
+        setError(error.response?.data?.message ?? "Konto kann nicht gelöscht werden");
       } else {
         setError("Ein unerwarteter Fehler ist aufgetreten");
       }

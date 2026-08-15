@@ -4,11 +4,10 @@ import com.kcserver.dto.zahlungsnachweis.ZahlungsPositionDTO;
 import com.kcserver.dto.zahlungsnachweis.ZahlungsnachweisDetailDTO;
 import com.kcserver.dto.zahlungsnachweis.ZahlungsnachweisListDTO;
 import com.kcserver.dto.zahlungsnachweis.ZahlungsnachweisUpdateDTO;
-import com.kcserver.entity.Teilnehmer;
-import com.kcserver.entity.Veranstaltung;
-import com.kcserver.entity.ZahlungsPosition;
-import com.kcserver.entity.Zahlungsnachweis;
+import com.kcserver.entity.*;
+import com.kcserver.enumtype.Zahlungsweg;
 import com.kcserver.mapper.ZahlungsnachweisMapper;
+import com.kcserver.repository.FinanzGruppeRepository;
 import com.kcserver.repository.TeilnehmerRepository;
 import com.kcserver.repository.VeranstaltungRepository;
 import com.kcserver.repository.abrechnung.ZahlungsnachweisRepository;
@@ -35,6 +34,7 @@ public class ZahlungsnachweisService {
     private final TeilnehmerRepository teilnehmerRepository;
     private final ZahlungsnachweisMapper mapper;
     private final TeilnehmerBeitragService teilnehmerBeitragService;
+    private final FinanzGruppeRepository finanzGruppeRepository;
 
     @Transactional(readOnly = true)
     public List<ZahlungsnachweisListDTO> findByVeranstaltung(
@@ -96,8 +96,16 @@ public class ZahlungsnachweisService {
         );
 
         nachweis.setBetrag(dto.getBetrag());
+        nachweis.setZahlungsweg(dto.getZahlungsweg());
         nachweis.setBemerkung(dto.getBemerkung());
         nachweis.setVeranstaltung(veranstaltung);
+        nachweis.setFinanzGruppe(
+                ermittleFinanzGruppe(
+                        veranstaltungId,
+                        dto.getZahlungsweg(),
+                        dto.getFinanzGruppeId()
+                )
+        );
 
         List<Teilnehmer> teilnehmer =
                 ladeTeilnehmer(
@@ -130,6 +138,16 @@ public class ZahlungsnachweisService {
                         zahlungsnachweisId
                 );
 
+        if (dto.getBetrag() == null
+                || dto.getBetrag().compareTo(BigDecimal.ZERO) <= 0) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Der Zahlungsbetrag muss größer als 0 sein."
+            );
+        }
+
+
         Veranstaltung veranstaltung =
                 veranstaltungRepository
                         .findById(veranstaltungId)
@@ -142,7 +160,15 @@ public class ZahlungsnachweisService {
 
         nachweis.setDatum(dto.getDatum());
         nachweis.setBetrag(dto.getBetrag());
+        nachweis.setZahlungsweg(dto.getZahlungsweg());
         nachweis.setBemerkung(dto.getBemerkung());
+        nachweis.setFinanzGruppe(
+                ermittleFinanzGruppe(
+                        veranstaltungId,
+                        dto.getZahlungsweg(),
+                        dto.getFinanzGruppeId()
+                )
+        );
 
         nachweis.clearPositionen();
 
@@ -324,5 +350,53 @@ public class ZahlungsnachweisService {
                                 "Zahlungsnachweis nicht gefunden"
                         )
                 );
+    }
+    private FinanzGruppe ladeFinanzGruppe(
+            Long veranstaltungId,
+            Long finanzGruppeId
+    ) {
+
+        if (finanzGruppeId == null) {
+            return null;
+        }
+
+        return finanzGruppeRepository
+                .findById(finanzGruppeId)
+                .filter(g ->
+                        g.getVeranstaltung()
+                                .getId()
+                                .equals(veranstaltungId)
+                )
+                .orElseThrow(() ->
+                        new ResponseStatusException(
+                                HttpStatus.BAD_REQUEST,
+                                "Finanzgruppe gehört nicht zur Veranstaltung"
+                        )
+                );
+    }
+
+    private FinanzGruppe ermittleFinanzGruppe(
+            Long veranstaltungId,
+            Zahlungsweg zahlungsweg,
+            Long finanzGruppeId
+    ) {
+        if (zahlungsweg == Zahlungsweg.UEBERWEISUNG) {
+            return finanzGruppeRepository
+                    .findByVeranstaltungIdAndKuerzel(
+                            veranstaltungId,
+                            "VK"
+                    )
+                    .orElseThrow(() ->
+                            new ResponseStatusException(
+                                    HttpStatus.CONFLICT,
+                                    "Für die Veranstaltung ist keine VK eingerichtet."
+                            )
+                    );
+        }
+
+        return ladeFinanzGruppe(
+                veranstaltungId,
+                finanzGruppeId
+        );
     }
 }

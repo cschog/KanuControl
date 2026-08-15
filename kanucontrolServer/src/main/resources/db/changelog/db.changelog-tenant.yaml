@@ -145,3 +145,7 @@ databaseChangeLog:
       file: db/changelog/changes/20260814-01-zahlungsnachweis-zahlungsweg.xml
   - include:
       file: db/changelog/changes/20260814-02-finanzgruppe-typ.xml
+  - include:
+      file: db/changelog/changes/20260814-03-zahlungsnachweis-zahlungsweg-not-null.xml
+  - include:
+      file: db/changelog/changes/20260814-04-add-finanz-gruppe-to-zahlungsnachweis.xml

@@ -44,6 +44,9 @@ public class Zahlungsnachweis extends Auditable {
     private List<ZahlungsPosition> positionen = new ArrayList<>();
 
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "finanz_gruppe_id")
+    private FinanzGruppe finanzGruppe;
 
     @OneToMany(
             mappedBy = "zahlungsnachweis",

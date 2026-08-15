@@ -19,7 +19,7 @@ export const kuerzelColumns = ({
 }: Props): ColumnDef<FinanzGruppe>[] => [
   {
     accessorKey: "kuerzel",
-    header: "Finanzgruppe",
+    header: "Konto",
     size: 120,
     cell: ({ row }) => <Typography fontWeight={600}>{row.original.kuerzel}</Typography>,
   },

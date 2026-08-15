@@ -15,6 +15,10 @@ public interface ZahlungsnachweisMapper {
        ========================================================= */
 
     @Mapping(
+            target = "finanzGruppeId",
+            source = "finanzGruppe.id"
+    )
+    @Mapping(
             target = "anzahlTeilnehmer",
             expression = """
                 java(entity.getPositionen() == null
@@ -38,6 +42,10 @@ public interface ZahlungsnachweisMapper {
        DETAIL
        ========================================================= */
 
+    @Mapping(
+            target = "finanzGruppeId",
+            source = "finanzGruppe.id"
+    )
     ZahlungsnachweisDetailDTO toDetailDTO(
             Zahlungsnachweis entity
     );
