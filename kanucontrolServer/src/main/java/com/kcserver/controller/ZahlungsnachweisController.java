@@ -1,12 +1,7 @@
 package com.kcserver.controller;
 
 import com.kcserver.api.response.ApiResponse;
-import com.kcserver.dto.zahlungsnachweis.ZahlungsnachweisDetailDTO;
-import com.kcserver.dto.zahlungsnachweis.ZahlungsnachweisDokumentDTO;
-import com.kcserver.dto.zahlungsnachweis.ZahlungsnachweisListDTO;
-import com.kcserver.dto.zahlungsnachweis.ZahlungsnachweisUpdateDTO;
-import com.kcserver.entity.ZahlungsnachweisDokument;
-import com.kcserver.service.abrechnung.ZahlungsnachweisDokumentService;
+import com.kcserver.dto.zahlungsnachweis.*;
 import com.kcserver.service.abrechnung.ZahlungsnachweisService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +13,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import com.kcserver.dto.abrechnung.DokumentDTO;
+import com.kcserver.entity.Dokument;
+import com.kcserver.service.abrechnung.DokumentService;
 
 @RestController
 @RequiredArgsConstructor
@@ -25,7 +23,7 @@ import java.util.List;
 public class ZahlungsnachweisController {
 
     private final ZahlungsnachweisService zahlungsnachweisService;
-    private final ZahlungsnachweisDokumentService zahlungsnachweisDokumentService;
+    private final DokumentService dokumentService;
 
     /* =========================================================
        ZAHLUNGSNACHWEISE
@@ -102,12 +100,12 @@ public class ZahlungsnachweisController {
        ========================================================= */
 
     @GetMapping("/{zahlungsnachweisId}/dokumente")
-    public ApiResponse<List<ZahlungsnachweisDokumentDTO>> getDokumente(
+    public ApiResponse<List<DokumentDTO>> getDokumente(
             @PathVariable Long veranstaltungId,
             @PathVariable Long zahlungsnachweisId
     ) {
         return ApiResponse.of(
-                zahlungsnachweisDokumentService.findAll(
+                dokumentService.findAllByZahlungsnachweis(
                         veranstaltungId,
                         zahlungsnachweisId
                 )
@@ -116,13 +114,13 @@ public class ZahlungsnachweisController {
 
     @PostMapping("/{zahlungsnachweisId}/dokumente")
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<ZahlungsnachweisDokumentDTO> uploadDokument(
+    public ApiResponse<DokumentDTO> uploadDokument(
             @PathVariable Long veranstaltungId,
             @PathVariable Long zahlungsnachweisId,
             @RequestParam("file") MultipartFile file
     ) {
         return ApiResponse.of(
-                zahlungsnachweisDokumentService.upload(
+                dokumentService.uploadForZahlungsnachweis(
                         veranstaltungId,
                         zahlungsnachweisId,
                         file
@@ -136,7 +134,7 @@ public class ZahlungsnachweisController {
             @PathVariable Long zahlungsnachweisId,
             @PathVariable Long dokumentId
     ) {
-        zahlungsnachweisDokumentService.delete(
+        dokumentService.deleteForZahlungsnachweis(
                 veranstaltungId,
                 zahlungsnachweisId,
                 dokumentId
@@ -151,8 +149,8 @@ public class ZahlungsnachweisController {
             @PathVariable Long zahlungsnachweisId,
             @PathVariable Long dokumentId
     ) {
-        ZahlungsnachweisDokument dokument =
-                zahlungsnachweisDokumentService.get(
+        Dokument dokument =
+                dokumentService.getForZahlungsnachweis(
                         veranstaltungId,
                         zahlungsnachweisId,
                         dokumentId
@@ -171,5 +169,17 @@ public class ZahlungsnachweisController {
                                 "\""
                 )
                 .body(dokument.getInhalt());
+    }
+    @GetMapping("/finanzgruppe/{finanzGruppeId}")
+    public ApiResponse<List<FinanzGruppeZahlungDTO>> getByFinanzGruppe(
+            @PathVariable Long veranstaltungId,
+            @PathVariable Long finanzGruppeId
+    ) {
+        return ApiResponse.of(
+                zahlungsnachweisService.findByFinanzGruppe(
+                        veranstaltungId,
+                        finanzGruppeId
+                )
+        );
     }
 }

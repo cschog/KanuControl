@@ -9,6 +9,8 @@ import {
     Typography,
 } from "@mui/material";
 
+import { Fragment } from "react";
+
 import {
     fontSize,
     padding,
@@ -61,103 +63,84 @@ export default function FinanzpositionenAccordion({
     });
 
     return (
-
-        <TableContainer
-            component={Paper}
-            sx={{ mt: 2 }}
+      <TableContainer component={Paper} sx={{ mt: 2 }}>
+        <Typography
+          variant="h5"
+          sx={{
+            p: 2,
+            fontWeight: "bold",
+            fontSize: fontSize.pageTitle,
+          }}
         >
-            <Typography
-                variant="h5"
+          {title}
+        </Typography>
+
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell
                 sx={{
-                    p: 2,
-                    fontWeight: "bold",
-                    fontSize: fontSize.pageTitle,
+                  fontWeight: "bold",
+                  fontSize: fontSize.sectionTitle,
                 }}
-            >
-                {title}
-            </Typography>
+              >
+                Kategorie
+              </TableCell>
 
-            <Table>
+              <TableCell
+                align="right"
+                sx={{
+                  fontWeight: "bold",
+                  fontSize: fontSize.sectionTitle,
+                }}
+              >
+                Betrag
+              </TableCell>
+            </TableRow>
+          </TableHead>
 
-                <TableHead>
+          <TableBody>
+            {sortiertePositionen.map((position, index) => {
+              const typ = kategorieZuTyp[position.kategorie];
+
+              const vorherigerTyp =
+                index === 0 ? undefined : kategorieZuTyp[sortiertePositionen[index - 1].kategorie];
+
+              return (
+                <Fragment key={`${position.kategorie}-${index}`}>
+                  {typ !== vorherigerTyp && (
                     <TableRow>
-                        <TableCell
-                            sx={{
-                                fontWeight: "bold",
-                                fontSize: fontSize.sectionTitle,
-                            }}
-                        >
-                            Kategorie
-                        </TableCell>
-
-                        <TableCell
-                            align="right"
-                            sx={{
-                                fontWeight: "bold",
-                                fontSize: fontSize.sectionTitle,
-                            }}
-                        >
-                            Betrag
-                        </TableCell>
+                      <TableCell
+                        colSpan={2}
+                        sx={{
+                          bgcolor: "grey.100",
+                          fontWeight: "bold",
+                          fontSize: fontSize.sectionTitle,
+                        }}
+                      >
+                        {typ === "KOSTEN" ? "Kosten" : "Einnahmen"}
+                      </TableCell>
                     </TableRow>
-                </TableHead>
+                  )}
 
-                <TableBody>
-                    {sortiertePositionen.map((position, index) => {
+                  <TableRow
+                    sx={{
+                      "& td": {
+                        fontSize: fontSize.table,
+                        py: padding.table,
+                      },
+                    }}
+                  >
+                    <TableCell>{position.kategorie}</TableCell>
 
-                        const typ = kategorieZuTyp[position.kategorie];
-
-                        const vorherigerTyp =
-                            index === 0
-                                ? undefined
-                                : kategorieZuTyp[
-                                sortiertePositionen[index - 1].kategorie
-                                ];
-
-                        return (
-                            <>
-                                {typ !== vorherigerTyp && (
-                                    <TableRow>
-                                        <TableCell
-                                            colSpan={2}
-                                            sx={{
-                                                bgcolor: "grey.100",
-                                                fontWeight: "bold",
-                                                fontSize: fontSize.sectionTitle,
-                                            }}
-                                        >
-                                            {typ === "KOSTEN"
-                                                ? "Kosten"
-                                                : "Einnahmen"}
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-
-                                <TableRow
-                                    key={position.kategorie}
-                                    sx={{
-                                        "& td": {
-                                            fontSize: fontSize.table,
-                                            py: padding.table,
-                                        },
-                                    }}
-                                >
-                                    <TableCell>
-                                        {position.kategorie}
-                                    </TableCell>
-
-                                    <TableCell align="right">
-                                        {formatEuro(position.betrag)}
-                                    </TableCell>
-                                </TableRow>
-                            </>
-                        );
-                    })}
-                </TableBody>
-
-            </Table>
-        </TableContainer>
-
+                    <TableCell align="right">{formatEuro(position.betrag)}</TableCell>
+                  </TableRow>
+                </Fragment>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </TableContainer>
     );
 
 }

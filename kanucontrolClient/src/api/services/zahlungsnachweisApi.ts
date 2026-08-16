@@ -1,12 +1,13 @@
-// src/api/services/zahlungsnachweisDokumentApi.ts
+// src/api/services/zahlungsnachweisApi.ts
 
 import apiClient from "@/api/client/apiClient";
-import { ZahlungsnachweisDokumentDTO } from "@/api/types/beitraege";
+import { FinanzGruppeZahlungDTO } from "@/api/types/beitraege";
+import { DokumentDTO } from "@/api/types/dokument";
 
 export async function findAll(
   veranstaltungId: number,
   zahlungsnachweisId: number,
-): Promise<ZahlungsnachweisDokumentDTO[]> {
+): Promise<DokumentDTO[]> {
   const response = await apiClient.get(
     `/veranstaltungen/${veranstaltungId}/zahlungsnachweise/${zahlungsnachweisId}/dokumente`,
   );
@@ -20,7 +21,7 @@ export async function upload(
   veranstaltungId: number,
   zahlungsnachweisId: number,
   file: File,
-): Promise<ZahlungsnachweisDokumentDTO> {
+): Promise<DokumentDTO> {
   const formData = new FormData();
 
   formData.append("file", file);
@@ -53,6 +54,17 @@ export async function download(
     {
       responseType: "blob",
     },
+  );
+
+  return response.data;
+}
+
+export async function getZahlungenByFinanzGruppe(
+  veranstaltungId: number,
+  finanzGruppeId: number,
+): Promise<FinanzGruppeZahlungDTO[]> {
+  const response = await apiClient.get<FinanzGruppeZahlungDTO[]>(
+    `/veranstaltungen/${veranstaltungId}/zahlungsnachweise/finanzgruppe/${finanzGruppeId}`,
   );
 
   return response.data;

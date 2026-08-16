@@ -17,11 +17,6 @@ public enum BuchungsHerkunft {
             "TN-Beiträge"
     ),
 
-    FAHRTKOSTEN(
-            "AUTO-RK",
-            "Fahrtkosten"
-    ),
-
     KJFP(
             "AUTO-KJFP",
             "KJFP-Zuschuss"

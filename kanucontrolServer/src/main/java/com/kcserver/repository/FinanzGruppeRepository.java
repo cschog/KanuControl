@@ -1,6 +1,5 @@
 package com.kcserver.repository;
 import com.kcserver.entity.FinanzGruppe;
-import com.kcserver.entity.Veranstaltung;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -23,6 +22,9 @@ public interface FinanzGruppeRepository
     List<FinanzGruppe> findByVeranstaltungIdOrderByKuerzel(
             Long veranstaltungId
     );
+
+    void deleteByVeranstaltungId(Long veranstaltungId);
+
     @Query("""
 SELECT DISTINCT fg
 FROM FinanzGruppe fg
@@ -42,8 +44,4 @@ WHERE fg.id = :gruppeId
 ORDER BY fg.kuerzel
 """)
     Optional<FinanzGruppe> findWithTeilnehmer(Long gruppeId);
-
-    Optional<FinanzGruppe> findByVeranstaltungAndSystemTrue(
-            Veranstaltung veranstaltung
-    );
 }

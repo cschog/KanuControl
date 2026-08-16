@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="2026-08-16-01-update-default-beitragsregel-template"
+               author="chris">
+
+        <!--
+            Das System-Template wurde bisher mit einem alten Regelwerk
+            angelegt. Es wird vollständig auf den aktuellen Standard
+            gebracht.
+        -->
+
+        <delete tableName="beitragsregel">
+            <where>beitragsstruktur_id = 1</where>
+        </delete>
+
+        <!-- =========================
+             Teilnehmer
+             ========================= -->
+
+        <!-- 0-2 Jahre -->
+        <insert tableName="beitragsregel">
+            <column name="beitragsstruktur_id" valueNumeric="1"/>
+            <column name="sortierung" valueNumeric="0"/>
+            <column name="alter_bis" valueNumeric="2"/>
+            <column name="beitrag" valueNumeric="0"/>
+        </insert>
+
+        <!-- 3-10 Jahre -->
+        <insert tableName="beitragsregel">
+            <column name="beitragsstruktur_id" valueNumeric="1"/>
+            <column name="sortierung" valueNumeric="1"/>
+            <column name="alter_bis" valueNumeric="10"/>
+            <column name="beitrag" valueNumeric="100"/>
+        </insert>
+
+        <!-- 11-20 Jahre -->
+        <insert tableName="beitragsregel">
+            <column name="beitragsstruktur_id" valueNumeric="1"/>
+            <column name="sortierung" valueNumeric="2"/>
+            <column name="alter_bis" valueNumeric="20"/>
+            <column name="beitrag" valueNumeric="200"/>
+        </insert>
+
+        <!-- 21-26 Jahre -->
+        <insert tableName="beitragsregel">
+            <column name="beitragsstruktur_id" valueNumeric="1"/>
+            <column name="sortierung" valueNumeric="3"/>
+            <column name="alter_bis" valueNumeric="26"/>
+            <column name="beitrag" valueNumeric="300"/>
+        </insert>
+
+        <!-- ab 27 Jahre -->
+        <insert tableName="beitragsregel">
+            <column name="beitragsstruktur_id" valueNumeric="1"/>
+            <column name="sortierung" valueNumeric="4"/>
+            <column name="beitrag" valueNumeric="400"/>
+        </insert>
+
+        <!-- =========================
+             Mitarbeiter
+             ========================= -->
+
+        <insert tableName="beitragsregel">
+            <column name="beitragsstruktur_id" valueNumeric="1"/>
+            <column name="sortierung" valueNumeric="0"/>
+            <column name="rolle" value="M"/>
+            <column name="beitrag" valueNumeric="0"/>
+        </insert>
+
+        <!-- =========================
+             Leiter
+             ========================= -->
+
+        <insert tableName="beitragsregel">
+            <column name="beitragsstruktur_id" valueNumeric="1"/>
+            <column name="sortierung" valueNumeric="0"/>
+            <column name="rolle" value="L"/>
+            <column name="beitrag" valueNumeric="0"/>
+        </insert>
+
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,7 +1,9 @@
 package com.kcserver.repository.abrechnung;
 
+import com.kcserver.dto.zahlungsnachweis.FinanzGruppeZahlungDTO;
 import com.kcserver.dto.zahlungsnachweis.ZahlungsnachweisListDTO;
 import com.kcserver.entity.Zahlungsnachweis;
+import com.kcserver.enumtype.Zahlungsweg;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -45,7 +47,7 @@ public interface ZahlungsnachweisRepository
          where p.zahlungsnachweis.id = z.id),
 
         (select count(d)
-         from ZahlungsnachweisDokument d
+         from Dokument d
          where d.zahlungsnachweis.id = z.id)
     )
     from Zahlungsnachweis z
@@ -87,4 +89,62 @@ public interface ZahlungsnachweisRepository
             @Param("teilnehmerId") Long teilnehmerId,
             @Param("ausgeschlossenId") Long ausgeschlossenId
     );
+
+    @Query("""
+    SELECT
+        z.finanzGruppe.id,
+        COALESCE(SUM(z.betrag), 0)
+    FROM Zahlungsnachweis z
+    WHERE z.veranstaltung.id = :veranstaltungId
+    GROUP BY z.finanzGruppe.id
+""")
+    List<Object[]> sumBetragByFinanzGruppeGrouped(
+            @Param("veranstaltungId") Long veranstaltungId
+    );
+
+    @Query("""
+    select new com.kcserver.dto.zahlungsnachweis.FinanzGruppeZahlungDTO(
+        z.id,
+        z.datum,
+        z.betrag,
+        z.zahlungsweg,
+        z.bemerkung,
+
+        (select count(d)
+         from Dokument d
+         where d.zahlungsnachweis.id = z.id)
+    )
+    from Zahlungsnachweis z
+    where z.veranstaltung.id = :veranstaltungId
+      and z.finanzGruppe.id = :finanzGruppeId
+    order by z.datum desc, z.id desc
+""")
+    List<FinanzGruppeZahlungDTO> findZahlungenByFinanzGruppe(
+            @Param("veranstaltungId") Long veranstaltungId,
+            @Param("finanzGruppeId") Long finanzGruppeId
+    );
+
+    @Query("""
+    SELECT
+        p.teilnehmer.finanzGruppe.id,
+        COALESCE(SUM(p.betrag), 0)
+    FROM ZahlungsPosition p
+    WHERE p.teilnehmer.veranstaltung.id = :veranstaltungId
+    GROUP BY p.teilnehmer.finanzGruppe.id
+""")
+    List<Object[]> sumPositionBetragByFinanzGruppeGrouped(
+            @Param("veranstaltungId") Long veranstaltungId
+    );
+
+    @Query("""
+    select coalesce(sum(z.betrag), 0)
+    from Zahlungsnachweis z
+    where z.veranstaltung.id = :veranstaltungId
+      and z.zahlungsweg = :zahlungsweg
+""")
+    BigDecimal sumBetragByVeranstaltungAndZahlungsweg(
+            @Param("veranstaltungId") Long veranstaltungId,
+            @Param("zahlungsweg") Zahlungsweg zahlungsweg
+    );
+
 }

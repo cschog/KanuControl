@@ -1,7 +1,7 @@
+// src/components/finanzen/finanzgruppeColumns.tsx
 import { ColumnDef } from "@tanstack/react-table";
-
+import Money from "@/components/common/Money";
 import { Button, Chip, Stack, Typography } from "@mui/material";
-
 import { FinanzGruppe } from "@/api/services/finanzgruppenApi";
 
 interface Props {
@@ -54,6 +54,27 @@ export const kuerzelColumns = ({
     accessorKey: "belegCount",
     header: "Belege",
     size: 90,
+  },
+
+  {
+    accessorKey: "einnahmen",
+    header: "Einnahmen",
+    size: 120,
+    cell: ({ row }) => <Money value={row.original.einnahmen} />,
+  },
+
+  {
+    accessorKey: "ausgaben",
+    header: "Ausgaben",
+    size: 120,
+    cell: ({ row }) => <Money value={row.original.ausgaben} />,
+  },
+
+  {
+    accessorKey: "saldo",
+    header: "Saldo",
+    size: 120,
+    cell: ({ row }) => <Money value={row.original.saldo} />,
   },
 
   {

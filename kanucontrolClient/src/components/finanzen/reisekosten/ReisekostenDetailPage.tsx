@@ -341,11 +341,7 @@ export default function ReisekostenDetailPage() {
             label: "Zurück",
             variant: "outlined",
             onClick: () =>
-              navigate(`/veranstaltungen/${data.veranstaltungId}/finanzen`, {
-                state: {
-                  tab: 4,
-                },
-              }),
+              navigate(`/veranstaltungen/${data.veranstaltungId}/finanzen/durchfuehrung`),
           },
           {
             label: "Fahrtabschnitt hinzufügen",

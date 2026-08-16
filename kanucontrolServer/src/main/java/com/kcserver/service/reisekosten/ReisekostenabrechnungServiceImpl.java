@@ -622,6 +622,37 @@ public class ReisekostenabrechnungServiceImpl
     ) {
         return repository.findByVeranstaltungId(veranstaltungId);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ReisekostenabrechnungListResponse> listByFinanzGruppe(
+            Long veranstaltungId,
+            Long finanzGruppeId
+    ) {
+
+        return repository.findByFinanzGruppe(
+                        veranstaltungId,
+                        finanzGruppeId
+                )
+                .stream()
+                .map(r -> {
+
+                    List<String> fehler = validatePdfData(r);
+
+                    return new ReisekostenabrechnungListResponse(
+                            r.getId(),
+                            r.getFahrer().getId(),
+                            r.getFahrer().getVorname()
+                                    + " "
+                                    + r.getFahrer().getName(),
+                            r.getGesamtKilometer(),
+                            r.getGesamtBetrag(),
+                            fehler.isEmpty(),
+                            fehler
+                    );
+                })
+                .toList();
+    }
 }
 
 

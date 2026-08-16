@@ -11,6 +11,7 @@ import {
   DialogContent,
   DialogActions,
 } from "@mui/material";
+import BackFooter from "@/components/common/BackFooter";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import PlanungspositionenTable from "@/components/simulation/FinanzpositionenAccordion";
 import { useEffect, useState, useCallback } from "react";
@@ -79,7 +80,7 @@ export default function PlanungPage({ veranstaltungId, onOpenSimulation }: Props
 
   return (
     <>
-      {planung.eingereicht && (
+      {planung.status === "EINGEREICHT" && (
         <Alert severity="warning" sx={{ mb: 2 }}>
           Diese Planung wurde eingereicht und ist gesperrt.
           <Button
@@ -106,22 +107,13 @@ export default function PlanungPage({ veranstaltungId, onOpenSimulation }: Props
 
       <Divider sx={{ my: 3 }} />
 
-      {!planung.eingereicht && (
+      {planung.status !== "EINGEREICHT" && (
         <Box display="flex" justifyContent="center" mt={3}>
           <Button
             variant="contained"
             color="warning"
             size="large"
-            onClick={async () => {
-              try {
-                await einreichen(veranstaltungId);
-                setConfirmOpen(false);
-                load();
-              } catch (e) {
-                console.error(e);
-                alert("Planung konnte nicht eingereicht werden.");
-              }
-            }}
+            onClick={() => setConfirmOpen(true)}
           >
             Planung einreichen
           </Button>
@@ -130,26 +122,40 @@ export default function PlanungPage({ veranstaltungId, onOpenSimulation }: Props
 
       <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
         <DialogTitle>Planung wirklich einreichen?</DialogTitle>
+
         <DialogContent>
           <Typography>
             Nach dem Einreichen können keine Änderungen mehr vorgenommen werden.
           </Typography>
         </DialogContent>
+
         <DialogActions>
           <Button onClick={() => setConfirmOpen(false)}>Abbrechen</Button>
+
           <Button
             color="warning"
             variant="contained"
             onClick={async () => {
-              await einreichen(veranstaltungId);
-              setConfirmOpen(false);
-              load();
+              try {
+                await einreichen(veranstaltungId);
+
+                setConfirmOpen(false);
+
+                await load();
+              } catch (e) {
+                console.error(e);
+                alert("Planung konnte nicht eingereicht werden.");
+              }
             }}
           >
             Ja, einreichen
           </Button>
         </DialogActions>
       </Dialog>
+      <BackFooter
+        label="Zurück zu Vorbereitung"
+        path={`/veranstaltungen/${veranstaltungId}/finanzen/vorbereitung`}
+      />
     </>
   );
 }

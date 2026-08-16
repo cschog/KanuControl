@@ -5,6 +5,7 @@ import com.kcserver.dto.teilnehmer.TeilnehmerKurzDTO;
 import com.kcserver.entity.FinanzGruppe;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Component
@@ -12,7 +13,9 @@ public class FinanzGruppeOverviewMapper {
 
     public FinanzGruppeOverviewDTO toDTO(
             FinanzGruppe g,
-            long belegCount
+            long belegCount,
+            BigDecimal einnahmen,
+            BigDecimal ausgaben
     ) {
 
         List<TeilnehmerKurzDTO> teilnehmer =
@@ -25,13 +28,18 @@ public class FinanzGruppeOverviewMapper {
                         ))
                         .toList();
 
+        BigDecimal saldo = einnahmen.subtract(ausgaben);
+
         return new FinanzGruppeOverviewDTO(
                 g.getId(),
                 g.getKuerzel(),
                 g.getTyp(),
                 g.isSystem(),
                 teilnehmer,
-                belegCount
+                belegCount,
+                einnahmen,
+                ausgaben,
+                saldo
         );
     }
 }

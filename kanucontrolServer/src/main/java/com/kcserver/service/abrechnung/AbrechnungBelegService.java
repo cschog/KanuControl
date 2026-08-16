@@ -56,8 +56,6 @@ public class AbrechnungBelegService {
                                 HttpStatus.NOT_FOUND,
                                 "FinanzGruppe nicht gefunden"));
 
-        checkNotSystem(gruppe);
-
         // 🔥 MAX
         Integer max = belegRepository
                 .findMaxLfdNrByAbrechnungId(abrechnung.getId());
@@ -164,9 +162,11 @@ public class AbrechnungBelegService {
         checkNotSystem(beleg);
 
         AbrechnungBuchung position = new AbrechnungBuchung();
+
         position.setKategorie(dto.getKategorie());
         position.setBetrag(dto.getBetrag());
         position.setBeschreibung(dto.getBeschreibung());
+        position.setHerkunft(BuchungsHerkunft.MANUELL);
 
         beleg.addPosition(position);
 
@@ -260,7 +260,6 @@ public class AbrechnungBelegService {
 
         validateVeranstaltung(veranstaltungId, beleg);
         checkEditable(beleg.getAbrechnung());
-        checkNotSystem(beleg);
 
         FinanzGruppe neueGruppe = finanzGruppeRepository
                 .findByVeranstaltungIdAndKuerzel(
@@ -271,57 +270,13 @@ public class AbrechnungBelegService {
                                 HttpStatus.NOT_FOUND,
                                 "Kürzel nicht gefunden"));
 
-        checkNotSystem(neueGruppe);
-
-        // 🔥 Wechsel nur durchführen wenn es wirklich ein Wechsel ist
+        // 🔥 Wechsel nur durchführen, wenn es wirklich ein Wechsel ist
         if (beleg.getFinanzGruppe().getId()
                 .equals(neueGruppe.getId())) {
             return;
         }
 
         beleg.setFinanzGruppe(neueGruppe);
-    }
-
-    @Transactional
-    public AbrechnungBeleg getOrCreateSystemBeleg(
-            Abrechnung abrechnung,
-            BuchungsHerkunft herkunft
-    ) {
-
-        AbrechnungBeleg beleg = belegRepository
-                .findByAbrechnungAndBelegnummer(
-                        abrechnung,
-                        herkunft.getBelegnummer()
-                )
-                .orElseGet(() -> {
-
-                    FinanzGruppe gruppe =
-                            getOrCreateSystemGruppe(
-                                    abrechnung.getVeranstaltung()
-                            );
-
-                    Integer max =
-                            belegRepository.findMaxLfdNrByAbrechnungId(
-                                    abrechnung.getId()
-                            );
-
-                    int next = (max == null ? 1 : max + 1);
-
-                    AbrechnungBeleg neu = new AbrechnungBeleg();
-
-                    neu.setAbrechnung(abrechnung);
-                    neu.setFinanzGruppe(gruppe);
-                    neu.setLfdNr(next);
-                    neu.setBelegnummer(herkunft.getBelegnummer());
-                    neu.setDatum(LocalDate.now());
-
-                    return belegRepository.save(neu);
-                });
-
-        // Immer synchron halten
-        beleg.setBeschreibung(herkunft.getBeschreibung());
-
-        return beleg;
     }
 
     @Transactional(readOnly = true)
@@ -343,26 +298,6 @@ public class AbrechnungBelegService {
     /* =========================================================
        HELPER
        ========================================================= */
-
-    private static final String SYSTEM_KUERZEL = "SYS";
-
-    private FinanzGruppe getOrCreateSystemGruppe(
-            Veranstaltung veranstaltung
-    ) {
-
-        return finanzGruppeRepository
-                .findByVeranstaltungAndSystemTrue(veranstaltung)
-                .orElseGet(() -> {
-
-                    FinanzGruppe gruppe = FinanzGruppe.builder()
-                            .kuerzel(SYSTEM_KUERZEL)
-                            .system(true)
-                            .veranstaltung(veranstaltung)
-                            .build();
-
-                    return finanzGruppeRepository.save(gruppe);
-                });
-    }
 
 
     private Abrechnung getAbrechnung(Long veranstaltungId) {
@@ -409,19 +344,61 @@ public class AbrechnungBelegService {
 
     private void checkNotSystem(AbrechnungBeleg beleg) {
 
-        if (beleg.getFinanzGruppe().isSystem()) {
+        boolean systemBeleg = beleg.getPositionen().stream()
+                .anyMatch(position ->
+                        position.getHerkunft() != BuchungsHerkunft.MANUELL
+                );
+
+        if (systemBeleg) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
                     "Systembelege dürfen nicht geändert werden.");
         }
     }
 
-    private void checkNotSystem(FinanzGruppe gruppe) {
+    @Transactional
+    public AbrechnungBeleg getOrCreateBeleg(
+            Abrechnung abrechnung,
+            FinanzGruppe finanzGruppe,
+            BuchungsHerkunft herkunft
+    ) {
+        AbrechnungBeleg beleg =
+                belegRepository
+                        .findByAbrechnungAndBelegnummer(
+                                abrechnung,
+                                herkunft.getBelegnummer()
+                        )
+                        .orElseGet(() -> {
 
-        if (gruppe.isSystem()) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "Der Systemgruppe dürfen keine manuellen Buchungen hinzugefügt werden.");
-        }
+                            Integer max =
+                                    belegRepository
+                                            .findMaxLfdNrByAbrechnungId(
+                                                    abrechnung.getId()
+                                            );
+
+                            int next =
+                                    max == null ? 1 : max + 1;
+
+                            AbrechnungBeleg neu =
+                                    new AbrechnungBeleg();
+
+                            neu.setAbrechnung(abrechnung);
+                            neu.setFinanzGruppe(finanzGruppe);
+                            neu.setLfdNr(next);
+                            neu.setBelegnummer(
+                                    herkunft.getBelegnummer()
+                            );
+                            neu.setDatum(LocalDate.now());
+
+                            return belegRepository.save(neu);
+                        });
+
+        // Bestehenden Systembeleg ggf. von SYS nach VK verschieben
+        beleg.setFinanzGruppe(finanzGruppe);
+        beleg.setBeschreibung(
+                herkunft.getBeschreibung()
+        );
+
+        return beleg;
     }
 }

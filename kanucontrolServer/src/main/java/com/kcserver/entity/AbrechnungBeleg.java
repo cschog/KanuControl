@@ -75,9 +75,9 @@ public class AbrechnungBeleg extends Auditable {
     @OrderBy("id ASC")
     private List<AbrechnungBuchung> positionen = new ArrayList<>();
 
-    /* =========================================================
-       DOKUMENTE
-       ========================================================= */
+  /* =========================================================
+   DOKUMENTE
+   ========================================================= */
 
     @OneToMany(
             mappedBy = "beleg",
@@ -85,7 +85,7 @@ public class AbrechnungBeleg extends Auditable {
             orphanRemoval = true
     )
     @OrderBy("reihenfolge ASC")
-    private List<BelegDokument> dokumente = new ArrayList<>();
+    private List<Dokument> dokumente = new ArrayList<>();
 
     /* =========================================================
        POSITIONEN
@@ -119,18 +119,18 @@ public class AbrechnungBeleg extends Auditable {
        DOKUMENTE
        ========================================================= */
 
-    public void addDokument(BelegDokument dokument) {
+    public void addDokument(Dokument dokument) {
         dokumente.add(dokument);
         dokument.setBeleg(this);
     }
 
-    public void removeDokument(BelegDokument dokument) {
+    public void removeDokument(Dokument dokument) {
         dokumente.remove(dokument);
         dokument.setBeleg(null);
     }
 
     public void clearDokumente() {
-        for (BelegDokument dokument : new ArrayList<>(dokumente)) {
+        for (Dokument dokument : new ArrayList<>(dokumente)) {
             removeDokument(dokument);
         }
     }

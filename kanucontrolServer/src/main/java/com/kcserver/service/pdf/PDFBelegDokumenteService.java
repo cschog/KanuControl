@@ -2,7 +2,7 @@ package com.kcserver.service.pdf;
 
 import com.kcserver.entity.AbrechnungBeleg;
 import com.kcserver.entity.AbrechnungBuchung;
-import com.kcserver.entity.BelegDokument;
+import com.kcserver.entity.Dokument;
 import com.kcserver.enumtype.PdfDocumentDensity;
 import com.kcserver.enumtype.PdfDokumentTyp;
 import com.kcserver.repository.abrechnung.AbrechnungBelegRepository;
@@ -20,9 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
@@ -36,8 +33,6 @@ import java.math.BigDecimal;
 @Service
 @RequiredArgsConstructor
 public class PDFBelegDokumenteService {
-
-    private final ImageAnalysisService imageAnalysisService;
 
     private static final PDType1Font FONT =
             new PDType1Font(
@@ -68,7 +63,6 @@ public class PDFBelegDokumenteService {
      * Die A4LayoutEngine übernimmt anschließend
      * die tatsächliche Skalierung auf der Seite.
      */
-    private static final float IMAGE_REFERENCE_HEIGHT = 700f;
 
     private static final DateTimeFormatter DATE_FORMAT =
             DateTimeFormatter.ofPattern("dd.MM.yyyy");
@@ -275,7 +269,7 @@ public class PDFBelegDokumenteService {
             List<A4LayoutItem> dokumente =
                     new ArrayList<>();
 
-            for (BelegDokument dokument :
+            for (Dokument dokument :
                     beleg.getDokumente()) {
 
                 String itemId =
@@ -289,9 +283,7 @@ public class PDFBelegDokumenteService {
                 try {
 
                     size =
-                            determineDocumentSize(
-                                    dokument.getInhalt()
-                            );
+                            determineDocumentSize(dokument);
 
                 } catch (IOException e) {
 
@@ -335,9 +327,8 @@ public class PDFBelegDokumenteService {
 
     private String createItemId(
             AbrechnungBeleg beleg,
-            BelegDokument dokument
+            Dokument dokument
     ) {
-
         return "BELEG-"
                 + beleg.getId()
                 + "-DOC-"
@@ -404,7 +395,7 @@ public class PDFBelegDokumenteService {
 
         for (BelegDokumentGruppe gruppe : gruppen) {
 
-            for (BelegDokument dokument :
+            for (Dokument dokument :
                     gruppe.beleg().getDokumente()) {
 
                 documents.put(
@@ -806,8 +797,10 @@ public class PDFBelegDokumenteService {
      */
 
     private DocumentSize determineDocumentSize(
-            byte[] content
+            Dokument dokument
     ) throws IOException {
+
+        byte[] content = dokument.getInhalt();
 
         /*
          * =========================================================
@@ -850,54 +843,34 @@ public class PDFBelegDokumenteService {
          * =========================================================
          */
 
-        BufferedImage image =
-                ImageIO.read(
-                        new ByteArrayInputStream(
-                                content
-                        )
-                );
+        if (dokument.getDokumentBreiteMm() == null
+                || dokument.getDokumentHoeheMm() == null) {
 
-        if (image != null) {
-
-            ImageAnalysis analysis =
-                    imageAnalysisService.analyze(
-                            content
-                    );
-
-            float width =
-                    image.getWidth();
-
-            float height =
-                    image.getHeight();
-
-            /*
-             * Bilder erhalten eine A4-nahe Referenzgröße.
-             *
-             * Die eigentliche Anpassung an die A4-Seite
-             * übernimmt die A4LayoutEngine.
-             */
-            float scale =
-                    IMAGE_REFERENCE_HEIGHT / height;
-
-            /*
-             * Kleine Bilder niemals künstlich vergrößern.
-             */
-            scale =
-                    Math.min(
-                            scale,
-                            1f
-                    );
-
-            return new DocumentSize(
-                    width * scale,
-                    height * scale,
-                    analysis.density()
+            throw new IOException(
+                    "Für das Bild wurde keine physische "
+                            + "Dokumentgröße ermittelt: "
+                            + dokument.getOriginalDateiname()
             );
         }
 
-        throw new IOException(
-                "Dokument ist weder ein gültiges PDF "
-                        + "noch ein unterstütztes Bildformat."
+        float width =
+                (float) (
+                        dokument.getDokumentBreiteMm()
+                                * 72.0
+                                / 25.4
+                );
+
+        float height =
+                (float) (
+                        dokument.getDokumentHoeheMm()
+                                * 72.0
+                                / 25.4
+                );
+
+        return new DocumentSize(
+                width,
+                height,
+                PdfDocumentDensity.MEDIUM
         );
     }
 

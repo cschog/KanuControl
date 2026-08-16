@@ -149,3 +149,11 @@ databaseChangeLog:
       file: db/changelog/changes/20260814-03-zahlungsnachweis-zahlungsweg-not-null.xml
   - include:
       file: db/changelog/changes/20260814-04-add-finanz-gruppe-to-zahlungsnachweis.xml
+  - include:
+      file: db/changelog/changes/20260816-01-update-default-beitragsregel-template.xml
+  - include:
+      file: db/changelog/changes/20260816-02-fix-beitragsstruktur-sequence.xml
+  - include:
+      file: db/changelog/changes/20260816-03-create-dokument.xml
+  - include:
+      file: db/changelog/changes/20260816-04-remove-old-dokument-tables.xml

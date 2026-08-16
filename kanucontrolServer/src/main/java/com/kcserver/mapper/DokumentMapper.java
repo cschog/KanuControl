@@ -1,21 +1,21 @@
 package com.kcserver.mapper;
 
-import com.kcserver.dto.abrechnung.BelegDokumentDTO;
-import com.kcserver.entity.BelegDokument;
+import com.kcserver.dto.abrechnung.DokumentDTO;
+import com.kcserver.entity.Dokument;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Component
-public class BelegDokumentMapper {
+public class DokumentMapper {
 
-    public BelegDokumentDTO toDto(BelegDokument entity) {
+    public DokumentDTO toDto(Dokument entity) {
 
         if (entity == null) {
             return null;
         }
 
-        BelegDokumentDTO dto = new BelegDokumentDTO();
+        DokumentDTO dto = new DokumentDTO();
 
         dto.setId(entity.getId());
         dto.setReihenfolge(entity.getReihenfolge());
@@ -23,12 +23,19 @@ public class BelegDokumentMapper {
         dto.setOriginalDateiname(entity.getOriginalDateiname());
         dto.setMimeType(entity.getMimeType());
         dto.setDateigroesse(entity.getDateigroesse());
+
+        dto.setBildBreitePixel(entity.getBildBreitePixel());
+        dto.setBildHoehePixel(entity.getBildHoehePixel());
+        dto.setDokumentBreiteMm(entity.getDokumentBreiteMm());
+        dto.setDokumentHoeheMm(entity.getDokumentHoeheMm());
+        dto.setReferenzObjekt(entity.getReferenzObjekt());
+
         dto.setCreatedAt(entity.getCreatedAt());
 
         return dto;
     }
 
-    public List<BelegDokumentDTO> toDto(List<BelegDokument> dokumente) {
+    public List<DokumentDTO> toDto(List<Dokument> dokumente) {
 
         return dokumente.stream()
                 .map(this::toDto)

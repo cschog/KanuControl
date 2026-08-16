@@ -22,7 +22,7 @@ import com.kcserver.util.PdfFilenameUtil;
 @RequiredArgsConstructor
 public class ReportController {
 
-    private final DokumentService dokumentService;
+    private final PDFDokumentService dokumentService;
     private final DokumentValidationService dokumentValidationService;
     private final VeranstaltungService veranstaltungService;
     private final PDFFahrkostenabrechnungService reisekostenPdfService;

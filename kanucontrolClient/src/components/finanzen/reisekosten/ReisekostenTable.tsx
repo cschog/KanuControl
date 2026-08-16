@@ -9,6 +9,7 @@ import {
   DialogContentText,
   DialogActions,
 } from "@mui/material";
+import BackFooter from "@/components/common/BackFooter";
 import ConfirmDeleteDialog from "@/components/common/ConfirmDeleteDialog";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
@@ -104,6 +105,9 @@ const ReisekostenTable = ({ veranstaltungId }: Props) => {
   );
 
   const handleNeueReisekostenabrechnung = async () => {
+
+    console.log("Neue Fahrkosten – veranstaltungId:", veranstaltungId);
+
     const fahrer = await getVerfuegbareReisekostenPersonen(veranstaltungId);
 
     if (fahrer.length === 0) {
@@ -121,6 +125,8 @@ const ReisekostenTable = ({ veranstaltungId }: Props) => {
         veranstaltungId={veranstaltungId}
         onClose={() => setDialogOpen(false)}
         onSave={async (fahrerId, abrechnungsdatum, bemerkung) => {
+          console.log("CREATE Fahrkosten – veranstaltungId:", veranstaltungId);
+
           const id = await createReisekostenabrechnung({
             veranstaltungId,
             fahrerId,
@@ -208,15 +214,19 @@ const ReisekostenTable = ({ veranstaltungId }: Props) => {
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>
-          Keine neue Fahrkostenabrechnung möglich
-        </DialogTitle>
+        <DialogTitle>Keine neue Fahrkostenabrechnung möglich</DialogTitle>
 
         <DialogContent>
           <DialogContentText>
-            Für alle möglichen Fahrer dieser Veranstaltung existiert bereits eine Fahrkostenabrechnung.
+            Für alle möglichen Fahrer dieser Veranstaltung existiert bereits eine
+            Fahrkostenabrechnung.
             <br />
-            <strong>Eine Fahrkostenabrechnung sammelt alle Fahrten eines Fahrers innerhalb einer Veranstaltung.</strong> Weitere Fahrten werden deshalb als zusätzliche <strong>Fahrtabschnitte</strong> in der vorhandenen Fahrkostenabrechnung erfasst.
+            <strong>
+              Eine Fahrkostenabrechnung sammelt alle Fahrten eines Fahrers innerhalb einer
+              Veranstaltung.
+            </strong>{" "}
+            Weitere Fahrten werden deshalb als zusätzliche <strong>Fahrtabschnitte</strong> in der
+            vorhandenen Fahrkostenabrechnung erfasst.
           </DialogContentText>
         </DialogContent>
 
@@ -226,7 +236,10 @@ const ReisekostenTable = ({ veranstaltungId }: Props) => {
           </Button>
         </DialogActions>
       </Dialog>
-
+      <BackFooter
+        label="Zurück zu Durchführung"
+        path={`/veranstaltungen/${veranstaltungId}/finanzen/durchfuehrung`}
+      />
     </Box>
   );
 };

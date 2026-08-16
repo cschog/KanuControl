@@ -104,3 +104,14 @@ export async function getReisekostenByVeranstaltung(veranstaltungId: number) {
 
   return res.data;
 }
+
+export async function getReisekostenByFinanzGruppe(
+  veranstaltungId: number,
+  finanzGruppeId: number,
+): Promise<ReisekostenabrechnungListResponse[]> {
+  const response = await apiClient.get<ReisekostenabrechnungListResponse[]>(
+    `/reisekosten/veranstaltung/${veranstaltungId}/finanzgruppe/${finanzGruppeId}`,
+  );
+
+  return response.data;
+}

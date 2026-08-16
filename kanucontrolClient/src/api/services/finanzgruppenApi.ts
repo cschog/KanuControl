@@ -13,6 +13,9 @@ export interface FinanzGruppe {
   id: number;
   kuerzel: string;
   belegCount: number;
+  einnahmen: number;
+  ausgaben: number;
+  saldo: number;
   system: boolean;
   teilnehmer: TeilnehmerKurz[];
 }

@@ -74,7 +74,9 @@ public class PlanungService {
                                 "Für diese Veranstaltung wurde noch keine Planung gespeichert."
                         ));
 
-        planungsSimulationService.aktualisiereAutomatischePositionen(p);
+        if (!p.istEingereicht()) {
+            planungsSimulationService.aktualisiereAutomatischePositionen(p);
+        }
 
         PlanungDetailDTO dto = mapper.toDTO(p);
 

@@ -1,5 +1,7 @@
 import { FinanzKategorie } from "@/api/types/finanz";
 
+export type PlanungsStatus = "IN_BEARBEITUNG" | "EINGEREICHT";
+
 export interface PlanungPosition {
   id: number;
   kategorie: FinanzKategorie;
@@ -15,6 +17,7 @@ export interface PlanungPosition {
 export interface PlanungDetail {
   id: number;
   eingereicht: boolean;
+  status: PlanungsStatus;
   positionen: PlanungPosition[];
 }
 

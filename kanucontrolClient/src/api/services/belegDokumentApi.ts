@@ -1,14 +1,14 @@
 import apiClient from "@/api/client/apiClient";
 import { optimizeUploadFile } from "@/utils/imageUtils";
-import { BelegDokumentDTO } from "@/api/types/abrechnung";
+import { DokumentDTO } from "@/api/types/dokument";
 
-export async function findAll(belegId: number): Promise<BelegDokumentDTO[]> {
-  const response = await apiClient.get<BelegDokumentDTO[]>(`/belege/${belegId}/dokumente`);
+export async function findAll(belegId: number): Promise<DokumentDTO[]> {
+  const response = await apiClient.get<DokumentDTO[]>(`/belege/${belegId}/dokumente`);
 
   return response.data;
 }
 
-export async function upload(belegId: number, file: File): Promise<BelegDokumentDTO> {
+export async function upload(belegId: number, file: File): Promise<DokumentDTO> {
   let uploadFile = file;
 
   try {
@@ -26,7 +26,7 @@ export async function upload(belegId: number, file: File): Promise<BelegDokument
   const formData = new FormData();
   formData.append("file", uploadFile);
 
-  const response = await apiClient.post<BelegDokumentDTO>(`/belege/${belegId}/dokumente`, formData);
+  const response = await apiClient.post<DokumentDTO>(`/belege/${belegId}/dokumente`, formData);
 
   return response.data;
 }

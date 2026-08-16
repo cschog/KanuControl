@@ -23,8 +23,7 @@ import {
   preview,
   upload,
 } from "@/api/services/belegDokumentApi";
-import { BelegDokumentDTO } from "@/api/types/abrechnung";
-
+import { DokumentDTO } from "@/api/types/dokument";
 import LoadingOverlay from "@/components/common/LoadingOverlay";
 import DeleteConfirmDialog from "@/components/common/DeleteConfirmDialog";
 
@@ -34,7 +33,7 @@ interface Props {
 }
 
 export default function BelegDokumentPanel({ belegId, readOnly = false }: Props) {
-  const [dokumente, setDokumente] = useState<BelegDokumentDTO[]>([]);
+  const [dokumente, setDokumente] = useState<DokumentDTO[]>([]);
   const [loading, setLoading] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -125,7 +124,7 @@ export default function BelegDokumentPanel({ belegId, readOnly = false }: Props)
     }
   }
 
-  async function handleDownload(dokument: BelegDokumentDTO) {
+  async function handleDownload(dokument: DokumentDTO) {
     const blob = await download(dokument.id);
 
     const url = URL.createObjectURL(blob);

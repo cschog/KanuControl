@@ -4,6 +4,7 @@ import com.kcserver.dto.teilnehmer.TeilnehmerKurzDTO;
 import com.kcserver.enumtype.FinanzgruppeTyp;
 
 import java.util.List;
+import java.math.BigDecimal;
 
 public record FinanzGruppeOverviewDTO(
         Long id,
@@ -11,5 +12,8 @@ public record FinanzGruppeOverviewDTO(
         FinanzgruppeTyp typ,
         boolean system,
         List<TeilnehmerKurzDTO> teilnehmer,
-        long belegCount
+        long belegCount,
+        BigDecimal einnahmen,
+        BigDecimal ausgaben,
+        BigDecimal saldo
 ) {}

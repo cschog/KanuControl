@@ -86,43 +86,25 @@ public class PlanungSimulationMapper {
         }
 
         return PlanungsSimulation.builder()
-
                 .veranstaltung(
-
                         veranstaltungsInfoMapper.toDTO(
-
                                 planung.getVeranstaltung()
-
                         )
-
                 )
-
+                .status(planung.getStatus())
                 .kikZertifiziert(planung.isKikZertifiziert())
-
                 .teilnehmer(planung.getTeilnehmer())
-
                 .mitarbeiter(planung.getMitarbeiter())
-
                 .teilnehmerBeitragUnter21Jahre(planung.getTeilnehmerBeitragUnter21Jahre())
-
                 .mitarbeiterBeitrag(planung.getMitarbeiterBeitrag())
-
                 .unterkunftPreisProPersonUndNacht(planung.getUnterkunftPreisProPersonUndNacht())
-
                 .verpflegungPreisProPersonUndTag(planung.getVerpflegungPreisProPersonUndTag())
-
                 .honorare(planung.getHonorare())
-
                 .fahrtkosten(planung.getFahrtkosten())
-
                 .verbrauchsmaterialProTag(planung.getVerbrauchsmaterialProTag())
-
                 .kultur(planung.getKultur())
-
                 .miete(planung.getMiete())
-
                 .sonstigeKostenProTag(planung.getSonstigeKostenProTag())
-
                 .build();
     }
 

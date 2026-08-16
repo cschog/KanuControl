@@ -1,0 +1,1557 @@
+===== ENTITIES =====
+
+===== src/main/java/com/kcserver/entity/Zahlungsnachweis.java =====
+package com.kcserver.entity;
+
+import com.kcserver.enumtype.Zahlungsweg;
+import jakarta.persistence.*;
+import com.kcserver.audit.Auditable;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.math.BigDecimal;
+
+@Getter
+@Setter
+@Entity
+@Table(name = "zahlungsnachweis")
+public class Zahlungsnachweis extends Auditable {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "veranstaltung_id", nullable = false)
+    private Veranstaltung veranstaltung;
+
+    private LocalDate datum;
+
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal betrag;
+
+    @Enumerated(EnumType.STRING)
+    private Zahlungsweg zahlungsweg;
+
+    private String bemerkung;
+
+    @OneToMany(
+            mappedBy = "zahlungsnachweis",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    @OrderBy("id ASC")
+    private List<ZahlungsPosition> positionen = new ArrayList<>();
+
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "finanz_gruppe_id")
+    private FinanzGruppe finanzGruppe;
+
+    @OneToMany(
+            mappedBy = "zahlungsnachweis",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    @OrderBy("reihenfolge ASC")
+    private List<ZahlungsnachweisDokument> dokumente = new ArrayList<>();
+
+    public void addPosition(ZahlungsPosition position) {
+        positionen.add(position);
+        position.setZahlungsnachweis(this);
+    }
+
+    public void removePosition(ZahlungsPosition position) {
+        positionen.remove(position);
+        position.setZahlungsnachweis(null);
+    }
+
+    public void addDokument(ZahlungsnachweisDokument dokument) {
+        dokumente.add(dokument);
+        dokument.setZahlungsnachweis(this);
+    }
+
+    public void removeDokument(ZahlungsnachweisDokument dokument) {
+        dokumente.remove(dokument);
+        dokument.setZahlungsnachweis(null);
+    }
+
+    public void clearPositionen() {
+        for (ZahlungsPosition position : new ArrayList<>(positionen)) {
+            removePosition(position);
+        }
+    }
+
+    public void clearDokumente() {
+        for (ZahlungsnachweisDokument dokument : new ArrayList<>(dokumente)) {
+            removeDokument(dokument);
+        }
+    }
+
+}
+
+
+
+===== src/main/java/com/kcserver/entity/ZahlungsPosition.java =====
+package com.kcserver.entity;
+
+import jakarta.persistence.*;
+import com.kcserver.audit.Auditable;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.math.BigDecimal;
+
+@Getter
+@Setter
+@Entity
+@Table(name = "zahlungs_position")
+public class ZahlungsPosition extends Auditable {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "zahlungsnachweis_id", nullable = false)
+    private Zahlungsnachweis zahlungsnachweis;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "teilnehmer_id", nullable = false)
+    private Teilnehmer teilnehmer;
+
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal betrag;
+}
+
+===== src/main/java/com/kcserver/entity/Planung.java =====
+package com.kcserver.entity;
+
+import com.kcserver.enumtype.PlanungsStatus;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.math.BigDecimal;
+import com.kcserver.audit.Auditable;
+
+@Entity
+@Table(name = "planung")
+@Getter
+@Setter
+public class Planung extends Auditable{
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private boolean initialisiert = false;
+
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(
+            name = "veranstaltung_id",
+            nullable = false,
+            unique = true
+    )
+    private Veranstaltung veranstaltung;
+
+    /* ==========================================
+       Antragsdaten
+       ========================================== */
+
+    @Column(name = "geplante_mitarbeiter_divers")
+    private Integer geplanteMitarbeiterDivers;
+
+    @Column(name = "geplante_mitarbeiter_maennlich")
+    private Integer geplanteMitarbeiterMaennlich;
+
+    @Column(name = "geplante_mitarbeiter_weiblich")
+    private Integer geplanteMitarbeiterWeiblich;
+
+    @Column(name = "geplante_teilnehmer_divers")
+    private Integer geplanteTeilnehmerDivers;
+
+    @Column(name = "geplante_teilnehmer_maennlich")
+    private Integer geplanteTeilnehmerMaennlich;
+
+    @Column(name = "geplante_teilnehmer_weiblich")
+    private Integer geplanteTeilnehmerWeiblich;
+
+    /* ==========================================
+       Simulationsparameter
+       ========================================== */
+
+    @Column(nullable = false)
+    private Integer teilnehmer = 7;
+
+    @Column(nullable = false)
+    private Integer mitarbeiter = 2;
+
+    @Column(name = "kik_zertifiziert", nullable = false)
+    private boolean kikZertifiziert;
+
+    @Column(precision = 10, scale = 2, name = "teilnehmer_beitrag_unter21_jahre")
+    private BigDecimal teilnehmerBeitragUnter21Jahre;
+
+    @Column(name = "mitarbeiter_beitrag", precision = 10, scale = 2)
+    private BigDecimal mitarbeiterBeitrag;
+
+    @Column(precision = 10, scale = 2, name = "unterkunft_preis_pro_person_und_nacht")
+    private BigDecimal unterkunftPreisProPersonUndNacht;
+
+    @Column(precision = 10, scale = 2, name = "verpflegung_preis_pro_person_und_tag")
+    private BigDecimal verpflegungPreisProPersonUndTag;
+
+    @Column(precision = 10, scale = 2)
+    private BigDecimal honorare;
+
+    @Column(precision = 10, scale = 2)
+    private BigDecimal fahrtkosten;
+
+    @Column(precision = 10, scale = 2, name = "verbrauchsmaterial_pro_tag")
+    private BigDecimal verbrauchsmaterialProTag;
+
+    @Column(precision = 10, scale = 2)
+    private BigDecimal kultur;
+
+    @Column(precision = 10, scale = 2)
+    private BigDecimal miete;
+
+    @Column(precision = 10, scale = 2, name = "sonstige_kosten_pro_tag")
+    private BigDecimal sonstigeKostenProTag;
+
+
+    /* ==========================================
+       Berechnetes Ergebnis
+       ========================================== */
+
+    @OneToMany(
+            mappedBy = "planung",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private final List<PlanungPosition> positionen = new ArrayList<>();
+
+    /* ==========================================
+       Status
+       ========================================== */
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
+    private PlanungsStatus status = PlanungsStatus.IN_BEARBEITUNG;
+
+    public void addPosition(PlanungPosition position) {
+        positionen.add(position);
+        position.setPlanung(this);
+    }
+
+    public void removePosition(PlanungPosition position) {
+        positionen.remove(position);
+        position.setPlanung(null);
+    }
+
+    public boolean istEingereicht() {
+        return status == PlanungsStatus.EINGEREICHT;
+    }
+
+    public boolean istInBearbeitung() {
+        return status == PlanungsStatus.IN_BEARBEITUNG;
+    }
+}
+
+===== src/main/java/com/kcserver/entity/AbrechnungBeleg.java =====
+package com.kcserver.entity;
+
+import com.kcserver.audit.Auditable;
+import com.kcserver.enumtype.BuchungsHerkunft;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Table(
+        name = "abrechnung_beleg",
+        uniqueConstraints = @UniqueConstraint(
+                columnNames = {"abrechnung_id", "beleg_nummer"}
+        )
+)
+@Getter
+@Setter
+public class AbrechnungBeleg extends Auditable {
+
+    /* =========================================================
+       BASIS
+       ========================================================= */
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "lfd_nr", nullable = false)
+    private Integer lfdNr;
+
+    /* =========================================================
+       ZUORDNUNGEN
+       ========================================================= */
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "abrechnung_id", nullable = false)
+    private Abrechnung abrechnung;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "finanz_gruppe_id", nullable = false)
+    private FinanzGruppe finanzGruppe;
+
+    /* =========================================================
+       BELEGMETADATEN
+       ========================================================= */
+
+    @Column(name = "beleg_nummer", nullable = false, length = 50)
+    private String belegnummer;
+
+    @Column(name = "externe_beleg_nummer", length = 100)
+    private String externeBelegnummer;
+
+    @Column(length = 200)
+    private String aussteller;
+
+    @Column(nullable = false)
+    private LocalDate datum;
+
+    @Column(length = 500)
+    private String beschreibung;
+
+    /* =========================================================
+       POSITIONEN
+       ========================================================= */
+
+    @OneToMany(
+            mappedBy = "beleg",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    @OrderBy("id ASC")
+    private List<AbrechnungBuchung> positionen = new ArrayList<>();
+
+    /* =========================================================
+       DOKUMENTE
+       ========================================================= */
+
+    @OneToMany(
+            mappedBy = "beleg",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    @OrderBy("reihenfolge ASC")
+    private List<BelegDokument> dokumente = new ArrayList<>();
+
+    /* =========================================================
+       POSITIONEN
+       ========================================================= */
+
+    public void addPosition(AbrechnungBuchung position) {
+        positionen.add(position);
+        position.setBeleg(this);
+    }
+
+    public void removePosition(AbrechnungBuchung position) {
+        positionen.remove(position);
+        position.setBeleg(null);
+    }
+
+    public void clearPositionen() {
+        for (AbrechnungBuchung position : new ArrayList<>(positionen)) {
+            removePosition(position);
+        }
+    }
+
+    public void removePositionenByHerkunft(BuchungsHerkunft herkunft) {
+        for (AbrechnungBuchung position : new ArrayList<>(positionen)) {
+            if (position.getHerkunft() == herkunft) {
+                removePosition(position);
+            }
+        }
+    }
+
+    /* =========================================================
+       DOKUMENTE
+       ========================================================= */
+
+    public void addDokument(BelegDokument dokument) {
+        dokumente.add(dokument);
+        dokument.setBeleg(this);
+    }
+
+    public void removeDokument(BelegDokument dokument) {
+        dokumente.remove(dokument);
+        dokument.setBeleg(null);
+    }
+
+    public void clearDokumente() {
+        for (BelegDokument dokument : new ArrayList<>(dokumente)) {
+            removeDokument(dokument);
+        }
+    }
+}
+===== src/main/java/com/kcserver/entity/AbrechnungBuchung.java =====
+package com.kcserver.entity;
+
+import com.kcserver.enumtype.BuchungsHerkunft;
+import com.kcserver.enumtype.FinanzKategorie;
+import com.kcserver.service.finanz.FinanzPosition;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.math.BigDecimal;
+
+@Entity
+@Table(name = "abrechnung_buchung")
+@Getter
+@Setter
+public class AbrechnungBuchung implements FinanzPosition {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "beleg_id", nullable = false)
+    private AbrechnungBeleg beleg;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "teilnehmer_id")
+    private Teilnehmer teilnehmer;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reisekostenabrechnung_id")
+    private Reisekostenabrechnung reisekostenabrechnung;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private FinanzKategorie kategorie;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private BuchungsHerkunft herkunft = BuchungsHerkunft.MANUELL;
+
+    @Column(nullable = false, precision = 12, scale = 2)
+    private BigDecimal betrag;
+
+    @Column(length = 1000)
+    private String beschreibung;
+
+    @Override
+    public FinanzKategorie getKategorie() {
+        return kategorie;
+    }
+
+    @Override
+    public BigDecimal getBetrag() {
+        return betrag;
+    }
+}
+
+===== src/main/java/com/kcserver/entity/Abrechnung.java =====
+package com.kcserver.entity;
+
+import com.kcserver.enumtype.AbrechnungsStatus;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Table(name = "abrechnung")
+@Getter
+@Setter
+public class Abrechnung {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    /* =========================================================
+       VERANSTALTUNG
+       ========================================================= */
+
+    @OneToOne(optional = false)
+    @JoinColumn(
+            name = "veranstaltung_id",
+            nullable = false,
+            unique = true
+    )
+    private Veranstaltung veranstaltung;
+
+    /* =========================================================
+       BELEGE
+       ========================================================= */
+
+    @OneToMany(
+            mappedBy = "abrechnung",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<AbrechnungBeleg> belege = new ArrayList<>();
+
+    /* =========================================================
+       STATUS
+       ========================================================= */
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AbrechnungsStatus status = AbrechnungsStatus.OFFEN;
+
+    /* =========================================================
+       SNAPSHOT FÖRDERSATZ (REVISIONS-SICHER)
+       ========================================================= */
+
+    /**
+     * Der beim Abschließen verwendete Fördersatz pro Teilnehmer.
+     * Wird gesetzt, sobald die Abrechnung abgeschlossen wird.
+     * Danach unveränderlich.
+     */
+    @Column(
+            name = "verwendeter_foerdersatz",
+            precision = 10,
+            scale = 2
+    )
+    private BigDecimal verwendeterFoerdersatz;
+
+    /* =========================================================
+       HELPER
+       ========================================================= */
+
+    public void addBeleg(AbrechnungBeleg beleg) {
+        belege.add(beleg);
+        beleg.setAbrechnung(this);
+    }
+
+    public void removeBeleg(AbrechnungBeleg beleg) {
+        belege.remove(beleg);
+        beleg.setAbrechnung(null);
+    }
+
+    /**
+     * Domain-Regel:
+     * Fördersatz darf nur gesetzt werden,
+     * solange Abrechnung noch OFFEN ist.
+     */
+    public void setVerwendeterFoerdersatzIfOpen(BigDecimal satz) {
+        if (this.status != AbrechnungsStatus.OFFEN) {
+            throw new IllegalStateException(
+                    "Fördersatz kann nur bei offener Abrechnung gesetzt werden"
+            );
+        }
+        this.verwendeterFoerdersatz = satz;
+    }
+}
+===== src/main/java/com/kcserver/entity/ZahlungsnachweisDokument.java =====
+package com.kcserver.entity;
+
+import com.kcserver.audit.Auditable;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+@Entity
+@Table(
+        name = "zahlungsnachweis_dokument",
+        indexes = {
+                @Index(
+                        name = "idx_zahlungsnachweis_dokument_zn",
+                        columnList = "zahlungsnachweis_id"
+                )
+        }
+)
+@Getter
+@Setter
+public class ZahlungsnachweisDokument extends Auditable {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "zahlungsnachweis_id", nullable = false)
+    private Zahlungsnachweis zahlungsnachweis;
+
+    @Column(nullable = false)
+    private Integer reihenfolge;
+
+    @Column(length = 200)
+    private String titel;
+
+    @Column(
+            name = "original_dateiname",
+            nullable = false
+    )
+    private String originalDateiname;
+
+    @Column(name = "mime_type", nullable = false, length = 100)
+    private String mimeType;
+
+    @Column(name = "dateigroesse", nullable = false)
+    private Long dateigroesse;
+
+    @JdbcTypeCode(SqlTypes.VARBINARY)
+    @Column(nullable = false)
+    private byte[] inhalt;
+
+}
+
+
+===== src/main/java/com/kcserver/entity/PlanungPosition.java =====
+package com.kcserver.entity;
+
+import com.kcserver.enumtype.FinanzKategorie;
+import com.kcserver.service.finanz.FinanzPosition;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.math.BigDecimal;
+
+@Entity
+@Table(
+        name = "planung_position",
+        uniqueConstraints = {
+                // Optional: verhindert doppelte Kategorien pro Planung
+                @UniqueConstraint(columnNames = {"planung_id", "kategorie"})
+        }
+)
+@Getter
+@Setter
+public class PlanungPosition implements FinanzPosition {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    /* ================= Beziehung ================= */
+
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "planung_id", nullable = false)
+    private Planung planung;
+
+    /* ================= Finanzdaten ================= */
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 40)
+    private FinanzKategorie kategorie;
+
+    @Column(precision = 12, scale = 2)
+    private BigDecimal menge;
+
+    @Column(length = 50)
+    private String einheit;
+
+    @Column(name = "einzelpreis", precision = 12, scale = 2)
+    private BigDecimal einzelpreis;
+
+    @Column(nullable = false, precision = 12, scale = 2)
+    private BigDecimal betrag = BigDecimal.ZERO;
+
+    @Column(name = "automatisch_berechnet", nullable = false)
+    private boolean automatischBerechnet;
+
+    @Column(nullable = false)
+    private boolean editierbar = true;
+
+    @Column(length = 500)
+    private String kommentar;
+
+    /* ================= Interface ================= */
+
+    @Override
+    public FinanzKategorie getKategorie() {
+        return kategorie;
+    }
+
+    @Override
+    public BigDecimal getBetrag() {
+        return betrag != null ? betrag : BigDecimal.ZERO;
+    }
+}
+===== src/main/java/com/kcserver/entity/Fahrtabschnitt.java =====
+package com.kcserver.entity;
+
+import com.kcserver.enumtype.CountryCode;
+import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.ManyToOne;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Table(name = "fahrtabschnitt")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class Fahrtabschnitt {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(optional = false)
+    @JoinColumn(
+            name = "abrechnung_id",
+            nullable = false
+    )
+    private Reisekostenabrechnung abrechnung;
+
+    @Column(name = "reihenfolge")
+    private Integer reihenfolge;
+
+    @Column(name = "von_plz", length = 20)
+    private String vonPlz;
+
+    @Column(name = "von_ort", nullable = false, length = 200)
+    private String vonOrt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "von_country_code", length = 2)
+    private CountryCode vonCountryCode;
+
+    @Column(name = "nach_plz", length = 20)
+    private String nachPlz;
+
+    @Column(name = "nach_ort", nullable = false, length = 200)
+    private String nachOrt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "nach_country_code", length = 2)
+    private CountryCode nachCountryCode;
+
+    @Column(
+            name = "beschreibung",
+            length = 200
+    )
+    private String beschreibung;
+
+    @Column(
+            name = "kilometer",
+            nullable = false
+    )
+    private Integer kilometer;
+
+    @Column(
+            name = "anhaenger",
+            nullable = false
+    )
+    private boolean anhaenger = false;
+
+    @OneToMany(
+            mappedBy = "fahrtabschnitt",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<FahrtabschnittMitfahrer> mitfahrer =
+            new ArrayList<>();
+}
+
+===== src/main/java/com/kcserver/entity/Reisekostenabrechnung.java =====
+package com.kcserver.entity;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.*;
+import com.kcserver.audit.Auditable;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.math.BigDecimal;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name = "reisekostenabrechnung")
+public class Reisekostenabrechnung extends Auditable {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(optional = false)
+    @JoinColumn(
+            name = "veranstaltung_id",
+            nullable = false
+    )
+    private Veranstaltung veranstaltung;
+
+    @ManyToOne(optional = false)
+    @JoinColumn(
+            name = "fahrer_id",
+            nullable = false
+    )
+    private Person fahrer;
+
+    @ManyToMany
+    @JoinTable(
+            name = "reisekostenabrechnung_mitfahrer",
+            joinColumns = @JoinColumn(name = "abrechnung_id"),
+            inverseJoinColumns = @JoinColumn(name = "person_id")
+    )
+    private Set<Person> mitfahrer = new HashSet<>();
+
+
+    @Column(name = "abrechnungsdatum")
+    private LocalDate abrechnungsdatum;
+
+    @Column(name = "gesamt_kilometer")
+    private Integer gesamtKilometer;
+
+    @Column(
+            name = "gesamt_betrag",
+            precision = 10,
+            scale = 2
+    )
+    private BigDecimal gesamtBetrag;
+
+    @Column(
+            name = "bemerkung",
+            length = 1000
+    )
+    private String bemerkung;
+
+    @OneToMany(
+            mappedBy = "abrechnung",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<Fahrtabschnitt> fahrtabschnitte = new ArrayList<>();
+}
+
+===== src/main/java/com/kcserver/entity/BelegDokument.java =====
+package com.kcserver.entity;
+
+import com.kcserver.audit.Auditable;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+@Entity
+@Table(
+        name = "beleg_dokument",
+        indexes = {
+                @Index(name = "idx_beleg_dokument_beleg", columnList = "beleg_id")
+        }
+)
+@Getter
+@Setter
+public class BelegDokument extends Auditable {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "beleg_id", nullable = false)
+    private AbrechnungBeleg beleg;
+
+    @Column(nullable = false)
+    private Integer reihenfolge;
+
+    @Column(length = 200)
+    private String titel;
+
+    @Column(
+            name = "original_dateiname",
+            nullable = false
+    )
+    private String originalDateiname;
+
+    @Column(name = "mime_type", nullable = false, length = 100)
+    private String mimeType;
+
+    @Column(name = "dateigroesse", nullable = false)
+    private Long dateigroesse;
+
+    @JdbcTypeCode(SqlTypes.VARBINARY)
+    @Column(nullable = false)
+    private byte[] inhalt;
+}
+
+===== src/main/java/com/kcserver/entity/FinanzGruppe.java =====
+package com.kcserver.entity;
+
+import com.kcserver.enumtype.FinanzgruppeTyp;
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Table(
+        name = "finanz_gruppe",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_finanzgruppe_veranstaltung_kuerzel",
+                columnNames = {"veranstaltung_id", "kuerzel"}
+        )
+)
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class FinanzGruppe {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, length = 20)
+    private String kuerzel;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean system = false;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private FinanzgruppeTyp typ;
+
+    /* =========================================================
+       VERANSTALTUNG
+       ========================================================= */
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "veranstaltung_id", nullable = false)
+    private Veranstaltung veranstaltung;
+
+    /* =========================================================
+       TEILNEHMER
+       ========================================================= */
+
+    @OneToMany(
+            mappedBy = "finanzGruppe",
+            cascade = CascadeType.ALL,
+            orphanRemoval = false
+    )
+    @Builder.Default
+    private List<Teilnehmer> teilnehmer = new ArrayList<>();
+}
+===== src/main/java/com/kcserver/entity/FahrtabschnittMitfahrer.java =====
+package com.kcserver.entity;
+
+import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name = "fahrtabschnitt_mitfahrer")
+public class FahrtabschnittMitfahrer {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(optional = false)
+    private Fahrtabschnitt fahrtabschnitt;
+
+    @ManyToOne(optional = false)
+    private Person person;
+}
+===== src/main/java/com/kcserver/entity/Teilnehmer.java =====
+package com.kcserver.entity;
+
+import com.kcserver.audit.Auditable;
+import com.kcserver.enumtype.TeilnehmerRolle;
+import com.kcserver.persistence.converter.TeilnehmerRolleConverter;
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+@Entity
+@Table(
+        name = "teilnehmer",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_teilnehmer_veranstaltung_person",
+                        columnNames = {"veranstaltung_id", "person_id"}
+                )
+        }
+)
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Teilnehmer extends Auditable {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    /* =========================
+       Beziehungen
+       ========================= */
+
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "veranstaltung_id", nullable = false)
+    private Veranstaltung veranstaltung;
+
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "person_id", nullable = false)
+    private Person person;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "finanz_gruppe_id")
+    private FinanzGruppe finanzGruppe;
+
+    /* =========================
+       Rolle in der Veranstaltung
+       ========================= */
+
+    @Convert(converter = TeilnehmerRolleConverter.class)
+    @Column(length = 1)
+    private TeilnehmerRolle rolle;
+
+    @Column(name = "individueller_beitrag", precision = 10, scale = 2)
+    private BigDecimal individuellerBeitrag;
+}
+===== REPOSITORIES =====
+
+===== src/main/java/com/kcserver/repository/abrechnung/AbrechnungBuchungRepository.java =====
+package com.kcserver.repository.abrechnung;
+
+import com.kcserver.entity.AbrechnungBeleg;
+import com.kcserver.entity.AbrechnungBuchung;
+import com.kcserver.enumtype.BuchungsHerkunft;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
+
+import org.springframework.data.jpa.repository.Query;
+
+public interface AbrechnungBuchungRepository
+        extends JpaRepository<AbrechnungBuchung, Long> {
+
+    List<AbrechnungBuchung> findByBeleg_Abrechnung_Id(Long abrechnungId);
+
+    @Query("""
+select count(b) > 0
+from AbrechnungBuchung b
+where b.beleg.abrechnung.veranstaltung.id = :veranstaltungId
+and b.betrag > 0
+and b.kategorie in (
+    com.kcserver.enumtype.FinanzKategorie.UNTERKUNFT,
+    com.kcserver.enumtype.FinanzKategorie.VERPFLEGUNG,
+    com.kcserver.enumtype.FinanzKategorie.HONORARE,
+    com.kcserver.enumtype.FinanzKategorie.FAHRTKOSTEN,
+    com.kcserver.enumtype.FinanzKategorie.VERBRAUCHSMATERIAL,
+    com.kcserver.enumtype.FinanzKategorie.KULTUR,
+    com.kcserver.enumtype.FinanzKategorie.MIETE,
+    com.kcserver.enumtype.FinanzKategorie.SONSTIGE_KOSTEN
+)
+""")
+    boolean existsKosten(Long veranstaltungId);
+
+    @Query("""
+select count(b) > 0
+from AbrechnungBuchung b
+where b.beleg.abrechnung.veranstaltung.id = :veranstaltungId
+and b.betrag > 0
+and b.kategorie in (
+    com.kcserver.enumtype.FinanzKategorie.TEILNEHMERBEITRAG,
+    com.kcserver.enumtype.FinanzKategorie.PFAND,
+    com.kcserver.enumtype.FinanzKategorie.KJFP_ZUSCHUSS,
+    com.kcserver.enumtype.FinanzKategorie.SONSTIGE_EINNAHMEN
+)
+""")
+    boolean existsEinnahmen(Long veranstaltungId);
+
+    boolean existsByBeleg_Abrechnung_Veranstaltung_Id(Long veranstaltungId);
+
+    void deleteByBelegAndHerkunft(
+            AbrechnungBeleg beleg,
+            BuchungsHerkunft herkunft
+    );
+
+    @Query("""
+    SELECT
+        b.beleg.finanzGruppe.id,
+        COALESCE(SUM(
+            CASE
+                WHEN b.betrag > 0
+                AND b.kategorie IN (
+                    com.kcserver.enumtype.FinanzKategorie.PFAND,
+                    com.kcserver.enumtype.FinanzKategorie.KJFP_ZUSCHUSS,
+                    com.kcserver.enumtype.FinanzKategorie.SONSTIGE_EINNAHMEN
+                )
+                THEN b.betrag
+                ELSE 0
+            END
+        ), 0),
+        COALESCE(SUM(
+            CASE
+                WHEN b.betrag > 0
+                AND b.kategorie IN (
+                    com.kcserver.enumtype.FinanzKategorie.UNTERKUNFT,
+                    com.kcserver.enumtype.FinanzKategorie.VERPFLEGUNG,
+                    com.kcserver.enumtype.FinanzKategorie.HONORARE,
+                    com.kcserver.enumtype.FinanzKategorie.FAHRTKOSTEN,
+                    com.kcserver.enumtype.FinanzKategorie.VERBRAUCHSMATERIAL,
+                    com.kcserver.enumtype.FinanzKategorie.KULTUR,
+                    com.kcserver.enumtype.FinanzKategorie.MIETE,
+                    com.kcserver.enumtype.FinanzKategorie.SONSTIGE_KOSTEN
+                )
+                THEN b.betrag
+                ELSE 0
+            END
+        ), 0)
+    FROM AbrechnungBuchung b
+    WHERE b.beleg.abrechnung.veranstaltung.id = :veranstaltungId
+    GROUP BY b.beleg.finanzGruppe.id
+""")
+    List<Object[]> sumFinanzenByVeranstaltungGrouped(Long veranstaltungId);
+}
+===== src/main/java/com/kcserver/repository/abrechnung/AbrechnungRepository.java =====
+package com.kcserver.repository.abrechnung;
+
+import com.kcserver.entity.Abrechnung;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.Optional;
+import org.springframework.data.jpa.repository.Query;
+
+public interface AbrechnungRepository
+        extends JpaRepository<Abrechnung, Long> {
+
+    Optional<Abrechnung> findByVeranstaltungId(Long veranstaltungId);
+
+    @Query("""
+select distinct a
+from Abrechnung a
+left join fetch a.belege b
+left join fetch b.positionen
+where a.veranstaltung.id = :veranstaltungId
+""")
+    Optional<Abrechnung> findByVeranstaltungIdWithDetails(
+            Long veranstaltungId
+    );
+}
+===== src/main/java/com/kcserver/repository/abrechnung/ZahlungsnachweisRepository.java =====
+package com.kcserver.repository.abrechnung;
+
+import com.kcserver.dto.zahlungsnachweis.FinanzGruppeZahlungDTO;
+import com.kcserver.dto.zahlungsnachweis.ZahlungsnachweisListDTO;
+import com.kcserver.entity.Zahlungsnachweis;
+import com.kcserver.enumtype.Zahlungsweg;
+import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import java.math.BigDecimal;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface ZahlungsnachweisRepository
+        extends JpaRepository<Zahlungsnachweis, Long> {
+
+    @EntityGraph(attributePaths = {
+            "positionen",
+            "positionen.teilnehmer",
+            "positionen.teilnehmer.person"
+    })
+    Optional<Zahlungsnachweis> findByIdAndVeranstaltungId(
+            Long id,
+            Long veranstaltungId
+    );
+
+    @EntityGraph(attributePaths = {
+            "dokumente"
+    })
+    List<Zahlungsnachweis> findByVeranstaltungIdOrderByDatumDescIdDesc(
+            Long veranstaltungId
+    );
+
+    @Query("""
+    select new com.kcserver.dto.zahlungsnachweis.ZahlungsnachweisListDTO(
+        z.id,
+        z.datum,
+        z.betrag,
+        z.bemerkung,
+        z.zahlungsweg,
+        z.finanzGruppe.id,
+
+        (select count(p)
+         from ZahlungsPosition p
+         where p.zahlungsnachweis.id = z.id),
+
+        (select count(d)
+         from ZahlungsnachweisDokument d
+         where d.zahlungsnachweis.id = z.id)
+    )
+    from Zahlungsnachweis z
+    where z.veranstaltung.id = :veranstaltungId
+    order by z.datum desc, z.id desc
+""")
+    List<ZahlungsnachweisListDTO> findListByVeranstaltungId(
+            @Param("veranstaltungId") Long veranstaltungId
+    );
+
+    boolean existsByPositionenTeilnehmerId(Long teilnehmerId);
+
+
+    void deleteByIdAndVeranstaltungId(
+            Long id,
+            Long veranstaltungId
+    );
+
+    @Query("""
+    select
+        p.teilnehmer.id as teilnehmerId,
+        coalesce(sum(p.betrag), 0) as gezahlterBetrag
+    from ZahlungsPosition p
+    where p.teilnehmer.veranstaltung.id = :veranstaltungId
+    group by p.teilnehmer.id
+""")
+    List<TeilnehmerZahlungSumme> summeZahlungenByVeranstaltung(
+            @Param("veranstaltungId") Long veranstaltungId
+    );
+
+    @Query("""
+    select coalesce(sum(p.betrag), 0)
+    from ZahlungsPosition p
+    where p.teilnehmer.id = :teilnehmerId
+      and (:ausgeschlossenId is null
+           or p.zahlungsnachweis.id <> :ausgeschlossenId)
+""")
+    BigDecimal sumBetragByTeilnehmerId(
+            @Param("teilnehmerId") Long teilnehmerId,
+            @Param("ausgeschlossenId") Long ausgeschlossenId
+    );
+
+    @Query("""
+    SELECT
+        z.finanzGruppe.id,
+        COALESCE(SUM(z.betrag), 0)
+    FROM Zahlungsnachweis z
+    WHERE z.veranstaltung.id = :veranstaltungId
+    GROUP BY z.finanzGruppe.id
+""")
+    List<Object[]> sumBetragByFinanzGruppeGrouped(
+            @Param("veranstaltungId") Long veranstaltungId
+    );
+
+    @Query("""
+    select new com.kcserver.dto.zahlungsnachweis.FinanzGruppeZahlungDTO(
+        z.id,
+        z.datum,
+        z.betrag,
+        z.zahlungsweg,
+        z.bemerkung,
+
+        (select count(d)
+         from ZahlungsnachweisDokument d
+         where d.zahlungsnachweis.id = z.id)
+    )
+    from Zahlungsnachweis z
+    where z.veranstaltung.id = :veranstaltungId
+      and z.finanzGruppe.id = :finanzGruppeId
+    order by z.datum desc, z.id desc
+""")
+    List<FinanzGruppeZahlungDTO> findZahlungenByFinanzGruppe(
+            @Param("veranstaltungId") Long veranstaltungId,
+            @Param("finanzGruppeId") Long finanzGruppeId
+    );
+
+    @Query("""
+    SELECT
+        p.teilnehmer.finanzGruppe.id,
+        COALESCE(SUM(p.betrag), 0)
+    FROM ZahlungsPosition p
+    WHERE p.teilnehmer.veranstaltung.id = :veranstaltungId
+    GROUP BY p.teilnehmer.finanzGruppe.id
+""")
+    List<Object[]> sumPositionBetragByFinanzGruppeGrouped(
+            @Param("veranstaltungId") Long veranstaltungId
+    );
+
+    @Query("""
+    select coalesce(sum(z.betrag), 0)
+    from Zahlungsnachweis z
+    where z.veranstaltung.id = :veranstaltungId
+      and z.zahlungsweg = :zahlungsweg
+""")
+    BigDecimal sumBetragByVeranstaltungAndZahlungsweg(
+            @Param("veranstaltungId") Long veranstaltungId,
+            @Param("zahlungsweg") Zahlungsweg zahlungsweg
+    );
+
+}
+===== src/main/java/com/kcserver/repository/abrechnung/AbrechnungBelegRepository.java =====
+package com.kcserver.repository.abrechnung;
+
+import com.kcserver.entity.Abrechnung;
+import com.kcserver.entity.AbrechnungBeleg;
+import com.kcserver.entity.FinanzGruppe;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.data.jpa.repository.Query;
+
+public interface AbrechnungBelegRepository
+        extends JpaRepository<AbrechnungBeleg, Long> {
+
+    boolean existsByFinanzGruppe_Id(Long gruppeId);
+
+    long countByFinanzGruppe_Id(Long gruppeId);
+
+    List<AbrechnungBeleg> findByAbrechnungId(Long abrechnungId);
+
+    @Query("""
+    SELECT b.finanzGruppe.id, COUNT(DISTINCT b)
+    FROM AbrechnungBeleg b
+    JOIN b.positionen p
+    WHERE b.finanzGruppe.veranstaltung.id = :veranstaltungId
+    GROUP BY b.finanzGruppe.id
+""")
+    List<Object[]> countByVeranstaltungGrouped(Long veranstaltungId);
+
+    @Query("""
+    SELECT COUNT(DISTINCT b)
+    FROM AbrechnungBeleg b
+    JOIN b.positionen p
+    WHERE b.abrechnung.veranstaltung.id = :veranstaltungId
+      AND b.finanzGruppe.id = :gruppeId
+""")
+    long countByVeranstaltungAndGruppe(Long veranstaltungId, Long gruppeId);
+
+    @Query("""
+    SELECT COALESCE(MAX(b.lfdNr), 0)
+    FROM AbrechnungBeleg b
+    WHERE b.abrechnung.id = :abrechnungId
+""")
+    Integer findMaxLfdNrByAbrechnungId(Long abrechnungId);
+
+    Optional<AbrechnungBeleg> findByAbrechnungAndBelegnummer(
+            Abrechnung abrechnung,
+            String belegnummer
+    );
+
+    Optional<AbrechnungBeleg> findByAbrechnungAndBelegnummerAndFinanzGruppe(
+            Abrechnung abrechnung,
+            String belegnummer,
+            FinanzGruppe finanzGruppe
+    );
+
+
+    @Query("""
+    SELECT DISTINCT b
+    FROM AbrechnungBeleg b
+    JOIN b.positionen p
+    WHERE b.abrechnung.veranstaltung.id = :veranstaltungId
+      AND b.finanzGruppe.id = :finanzGruppeId
+    ORDER BY b.datum, b.lfdNr
+""")
+    List<AbrechnungBeleg> findByAbrechnung_Veranstaltung_IdAndFinanzGruppe_IdOrderByDatumAscLfdNrAsc(
+            Long veranstaltungId,
+            Long finanzGruppeId
+    );
+
+    @Query("""
+    SELECT DISTINCT b
+    FROM AbrechnungBeleg b
+    LEFT JOIN FETCH b.dokumente
+    WHERE b.abrechnung.veranstaltung.id = :veranstaltungId
+    ORDER BY b.datum, b.lfdNr
+""")
+    List<AbrechnungBeleg> findByVeranstaltungIdWithDokumente(
+            Long veranstaltungId
+    );
+}
+===== src/main/java/com/kcserver/repository/fahrkosten/ReisekostenabrechnungRepository.java =====
+package com.kcserver.repository.fahrkosten;
+
+import com.kcserver.entity.Reisekostenabrechnung;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import java.math.BigDecimal;
+
+import java.util.List;
+
+public interface ReisekostenabrechnungRepository
+        extends JpaRepository<Reisekostenabrechnung, Long> {
+
+    List<Reisekostenabrechnung> findByVeranstaltungId(
+            Long veranstaltungId
+    );
+
+    @Query("""
+select count(r) > 0
+from Reisekostenabrechnung r
+where r.veranstaltung.id = :veranstaltungId
+and (
+    r.fahrer.id = :personId
+    or exists (
+        select 1
+        from FahrtabschnittMitfahrer m
+        where m.fahrtabschnitt.abrechnung = r
+        and m.person.id = :personId
+    )
+)
+and (:abrechnungId is null or r.id <> :abrechnungId)
+""")
+    boolean isPersonBereitsFahrzeugZugeordnet(
+            Long veranstaltungId,
+            Long personId,
+            Long abrechnungId
+    );
+    boolean existsByFahrerId(Long personId);
+
+    @Query("""
+select count(r) > 0
+from Reisekostenabrechnung r
+where r.veranstaltung.id = :veranstaltungId
+and (
+    r.fahrer.id = :personId
+    or exists (
+        select 1
+        from FahrtabschnittMitfahrer m
+        where m.fahrtabschnitt.abrechnung = r
+        and m.person.id = :personId
+    )
+)
+""")
+    boolean existsByVeranstaltungAndPersonVerwendet(
+            @Param("veranstaltungId") Long veranstaltungId,
+            @Param("personId") Long personId
+    );
+
+    @Query("""
+    select coalesce(sum(r.gesamtBetrag), 0)
+    from Reisekostenabrechnung r
+    where r.veranstaltung.id = :veranstaltungId
+""")
+    BigDecimal sumGesamtBetragByVeranstaltung(
+            @Param("veranstaltungId") Long veranstaltungId
+    );
+
+    @Query("""
+    SELECT
+        t.finanzGruppe.id,
+        COALESCE(SUM(r.gesamtBetrag), 0)
+    FROM Reisekostenabrechnung r
+    JOIN Teilnehmer t
+        ON t.person.id = r.fahrer.id
+       AND t.veranstaltung.id = r.veranstaltung.id
+    WHERE r.veranstaltung.id = :veranstaltungId
+    GROUP BY t.finanzGruppe.id
+""")
+    List<Object[]> sumGesamtBetragByFinanzGruppeGrouped(
+            @Param("veranstaltungId") Long veranstaltungId
+    );
+
+    @Query("""
+    SELECT r
+    FROM Reisekostenabrechnung r
+    JOIN Teilnehmer t
+        ON t.person.id = r.fahrer.id
+       AND t.veranstaltung.id = r.veranstaltung.id
+    WHERE r.veranstaltung.id = :veranstaltungId
+      AND t.finanzGruppe.id = :finanzGruppeId
+    ORDER BY r.abrechnungsdatum ASC, r.id ASC
+""")
+    List<Reisekostenabrechnung> findByFinanzGruppe(
+            @Param("veranstaltungId") Long veranstaltungId,
+            @Param("finanzGruppeId") Long finanzGruppeId
+    );
+}
+===== src/main/java/com/kcserver/repository/FinanzGruppeRepository.java =====
+package com.kcserver.repository;
+import com.kcserver.entity.FinanzGruppe;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+import java.util.Optional;
+import org.springframework.data.jpa.repository.Query;
+
+public interface FinanzGruppeRepository
+        extends JpaRepository<FinanzGruppe, Long> {
+
+    boolean existsByVeranstaltungIdAndKuerzel(
+            Long veranstaltungId,
+            String kuerzel
+    );
+
+    Optional<FinanzGruppe> findByVeranstaltungIdAndKuerzel(
+            Long veranstaltungId,
+            String kuerzel
+    );
+
+    List<FinanzGruppe> findByVeranstaltungIdOrderByKuerzel(
+            Long veranstaltungId
+    );
+
+    void deleteByVeranstaltungId(Long veranstaltungId);
+
+    @Query("""
+SELECT DISTINCT fg
+FROM FinanzGruppe fg
+LEFT JOIN FETCH fg.teilnehmer t
+LEFT JOIN FETCH t.person
+WHERE fg.veranstaltung.id = :veranstaltungId
+ORDER BY fg.kuerzel
+""")
+    List<FinanzGruppe> findWithTeilnehmerByVeranstaltungId(Long veranstaltungId);
+
+    @Query("""
+SELECT fg
+FROM FinanzGruppe fg
+LEFT JOIN FETCH fg.teilnehmer t
+LEFT JOIN FETCH t.person
+WHERE fg.id = :gruppeId
+ORDER BY fg.kuerzel
+""")
+    Optional<FinanzGruppe> findWithTeilnehmer(Long gruppeId);
+}

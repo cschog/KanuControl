@@ -41,7 +41,7 @@ public class AbrechnungBelegDTO {
        DOKUMENTE
        ========================================================= */
 
-    private List<BelegDokumentDTO> dokumente;
+    private List<DokumentDTO> dokumente;
 
     /* =========================================================
        POSITIONEN

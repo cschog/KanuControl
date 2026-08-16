@@ -36,7 +36,7 @@ public class SimulationService {
                 .findByVeranstaltungId(veranstaltungId)
                 .map(planung -> {
 
-                    if (!planung.isInitialisiert()) {
+                    if (!planung.isInitialisiert() && !planung.istEingereicht()) {
 
                         mapper.updatePlanung(
                                 planung,
@@ -77,6 +77,14 @@ public class SimulationService {
         Planung planung = planungRepository
                 .findByVeranstaltungId(veranstaltungId)
                 .orElseGet(() -> createPlanung(veranstaltungId));
+
+        if (planung.istEingereicht()) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Die Planung wurde bereits eingereicht und ist gesperrt. "
+                            + "Bitte öffnen Sie die Planung zunächst wieder."
+            );
+        }
 
         mapper.updatePlanung(
                 planung,

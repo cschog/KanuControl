@@ -1,8 +1,8 @@
 package com.kcserver.service.pdf;
 
+import com.kcserver.entity.Dokument;
 import com.kcserver.entity.Veranstaltung;
 import com.kcserver.entity.Zahlungsnachweis;
-import com.kcserver.entity.ZahlungsnachweisDokument;
 import com.kcserver.enumtype.PdfDocumentDensity;
 import com.kcserver.enumtype.PdfDokumentTyp;
 import com.kcserver.repository.VeranstaltungRepository;
@@ -140,7 +140,7 @@ public class PDFZahlungsnachweiseService {
             List<A4LayoutItem> dokumente =
                     new java.util.ArrayList<>();
 
-            for (ZahlungsnachweisDokument dokument :
+            for (Dokument dokument :
                     nachweis.getDokumente()) {
 
                 String itemId =
@@ -851,7 +851,7 @@ public class PDFZahlungsnachweiseService {
 
         for (PDFBelegGruppe gruppe : gruppen) {
 
-            for (ZahlungsnachweisDokument dokument :
+            for (Dokument dokument :
                     gruppe.nachweis().getDokumente()) {
 
                 String id =

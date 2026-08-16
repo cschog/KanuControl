@@ -14,7 +14,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class DokumentService {
+public class PDFDokumentService {
 
     private final DokumentValidationService dokumentValidationService;
 

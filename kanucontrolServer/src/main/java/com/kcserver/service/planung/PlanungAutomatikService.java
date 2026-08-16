@@ -22,7 +22,7 @@ public class PlanungAutomatikService {
             Planung planung
     ) {
 
-        if (planung == null) {
+        if (planung == null || planung.istEingereicht()) {
             return;
         }
 

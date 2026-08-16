@@ -1,9 +1,10 @@
 package com.kcserver.mapper;
 
+import com.kcserver.dto.abrechnung.DokumentDTO;
 import com.kcserver.dto.zahlungsnachweis.*;
+import com.kcserver.entity.Dokument;
 import com.kcserver.entity.ZahlungsPosition;
 import com.kcserver.entity.Zahlungsnachweis;
-import com.kcserver.entity.ZahlungsnachweisDokument;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -74,7 +75,7 @@ public interface ZahlungsnachweisMapper {
        DOKUMENT
        ========================================================= */
 
-    ZahlungsnachweisDokumentDTO toDokumentDTO(
-            ZahlungsnachweisDokument entity
+    DokumentDTO toDokumentDTO(
+            Dokument entity
     );
 }

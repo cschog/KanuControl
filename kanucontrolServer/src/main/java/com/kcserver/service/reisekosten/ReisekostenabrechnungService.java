@@ -46,4 +46,9 @@ public interface ReisekostenabrechnungService {
     );
 
     List<Reisekostenabrechnung> findByVeranstaltung(Long veranstaltungId);
+
+    List<ReisekostenabrechnungListResponse> listByFinanzGruppe(
+            Long veranstaltungId,
+            Long finanzGruppeId
+    );
 }

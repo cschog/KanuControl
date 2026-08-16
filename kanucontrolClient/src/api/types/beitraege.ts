@@ -1,9 +1,8 @@
+import { DokumentDTO } from "@/api/types/dokument";
+
 export type TeilnehmerRolle = "L" | "M" | null;
-
 export type ZahlungsStatus = "ROT" | "GELB" | "GRUEN";
-
 export type BeitragsQuelle = "INDIVIDUELL" | "STRUKTUR" | "STANDARD";
-
 export type Zahlungsweg = "UEBERWEISUNG" | "QUITTUNG";
 
 export interface PersonRefDTO {
@@ -37,7 +36,7 @@ export interface ZahlungsnachweisDetailDTO {
   finanzGruppeId?: number | null;
   bemerkung?: string | null;
   positionen: ZahlungsPositionDTO[];
-  dokumente: ZahlungsnachweisDokumentDTO[];
+  dokumente: DokumentDTO[];
 }
 
 export interface ZahlungsnachweisListDTO {
@@ -68,17 +67,6 @@ export interface ZahlungsPositionDTO {
   betrag?: number;
 }
 
-export interface ZahlungsnachweisDokumentDTO {
-  id: number;
-  reihenfolge: number;
-  titel?: string;
-  originalDateiname: string;
-  mimeType: string;
-  dateigroesse: number;
-  createdAt: string;
-}
-
-
 export interface TeilnehmerBeitragSummaryDTO {
   anzahlTeilnehmer: number;
   bezahlt: number;
@@ -93,4 +81,13 @@ export interface TeilnehmerBeitraegeResponseDTO {
   summary: TeilnehmerBeitragSummaryDTO;
   zahlungsnachweise: ZahlungsnachweisListDTO[];
   teilnehmer: TeilnehmerListDTO[];
+}
+
+export interface FinanzGruppeZahlungDTO {
+  zahlungsnachweisId: number;
+  datum: string;
+  betrag: number;
+  zahlungsweg?: Zahlungsweg | null;
+  bemerkung?: string | null;
+  anzahlDokumente: number;
 }

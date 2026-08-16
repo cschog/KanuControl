@@ -1,9 +1,6 @@
 package com.kcserver.service.abrechnung;
 
-import com.kcserver.dto.zahlungsnachweis.ZahlungsPositionDTO;
-import com.kcserver.dto.zahlungsnachweis.ZahlungsnachweisDetailDTO;
-import com.kcserver.dto.zahlungsnachweis.ZahlungsnachweisListDTO;
-import com.kcserver.dto.zahlungsnachweis.ZahlungsnachweisUpdateDTO;
+import com.kcserver.dto.zahlungsnachweis.*;
 import com.kcserver.entity.*;
 import com.kcserver.enumtype.Zahlungsweg;
 import com.kcserver.mapper.ZahlungsnachweisMapper;
@@ -395,6 +392,17 @@ public class ZahlungsnachweisService {
         }
 
         return ladeFinanzGruppe(
+                veranstaltungId,
+                finanzGruppeId
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public List<FinanzGruppeZahlungDTO> findByFinanzGruppe(
+            Long veranstaltungId,
+            Long finanzGruppeId
+    ) {
+        return repository.findZahlungenByFinanzGruppe(
                 veranstaltungId,
                 finanzGruppeId
         );

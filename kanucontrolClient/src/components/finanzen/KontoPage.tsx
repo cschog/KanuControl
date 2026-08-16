@@ -33,6 +33,7 @@ import {
   removeTeilnehmerFromGruppe,
   getTeilnehmerCount,
 } from "@/api/services/teilnehmerApi";
+import BackFooter from "@/components/common/BackFooter";
 
 /* =========================================================
    TYPES
@@ -53,7 +54,7 @@ type Props = {
    COMPONENT
    ========================================================= */
 
-export default function KuerzelPage({ veranstaltungId }: Props) {
+export default function KontoPage({ veranstaltungId }: Props) {
   const [groups, setGroups] = useState<FinanzGruppe[]>([]);
   const [newKuerzel, setNewKuerzel] = useState("");
 
@@ -90,10 +91,10 @@ export default function KuerzelPage({ veranstaltungId }: Props) {
     setGesamtTeilnehmer(count);
   }, [veranstaltungId]);
 
- useEffect(() => {
-   loadGroups();
-   loadTeilnehmerCount();
- }, [loadGroups, loadTeilnehmerCount]);
+  useEffect(() => {
+    loadGroups();
+    loadTeilnehmerCount();
+  }, [loadGroups, loadTeilnehmerCount]);
 
   useEffect(() => {
     const timeout = setTimeout(async () => {
@@ -193,8 +194,7 @@ export default function KuerzelPage({ veranstaltungId }: Props) {
 
     setConfirmOpen(false);
     setRemoveTarget(null);
-   await loadGroups();
-    
+    await loadGroups();
   }
 
   const columns = kuerzelColumns({
@@ -238,7 +238,6 @@ export default function KuerzelPage({ veranstaltungId }: Props) {
         data={groups}
         columns={columns}
         loading={false}
-        height={500}
         detailPanel={(gruppe) => (
           <FinanzGruppeBelege veranstaltungId={veranstaltungId} finanzGruppeId={gruppe.id} />
         )}
@@ -348,7 +347,7 @@ export default function KuerzelPage({ veranstaltungId }: Props) {
         <DialogTitle>Teilnehmer entfernen</DialogTitle>
         <DialogContent>
           <Typography>
-            Möchten Sie <strong>{removeTarget?.name}</strong> wirklich aus dieser Finanzgruppe
+            Möchten Sie <strong>{removeTarget?.name}</strong> wirklich aus diesem Konto
             entfernen?
           </Typography>
         </DialogContent>
@@ -369,8 +368,7 @@ export default function KuerzelPage({ veranstaltungId }: Props) {
             <Alert severity="error">{deleteError}</Alert>
           ) : (
             <Typography>
-              Möchten Sie das Konto <strong>{deleteTarget?.kuerzel}</strong> wirklich
-              löschen?
+              Möchten Sie das Konto <strong>{deleteTarget?.kuerzel}</strong> wirklich löschen?
             </Typography>
           )}
         </DialogContent>
@@ -385,6 +383,10 @@ export default function KuerzelPage({ veranstaltungId }: Props) {
           )}
         </DialogActions>
       </Dialog>
+         <BackFooter
+              label="Zurück zu Durchführung"
+              path={`/veranstaltungen/${veranstaltungId}/finanzen/durchfuehrung`}
+            />
       <BottomActionBar
         left={[
           {

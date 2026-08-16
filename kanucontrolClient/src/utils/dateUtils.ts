@@ -20,7 +20,7 @@ export function normalizeGermanDate(input: string): string | null {
   m = value.match(/^(\d{1,2})\.(\d{1,2})\.(\d{2})$/);
   if (m) {
     const [, d, mo, y] = m;
-    const year = Number(y) < 30 ? `20${y}` : `19${y}`;
+    const year = Number(y) < 50 ? `20${y}` : `19${y}`;
     return buildIsoDate(d, mo, year);
   }
 

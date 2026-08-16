@@ -12,7 +12,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AbrechnungMapper {
 
-    private final BelegDokumentMapper belegDokumentMapper;
+    private final DokumentMapper dokumentMapper;
 
     /* =========================================================
        ABRECHNUNG → DTO
@@ -71,7 +71,7 @@ public class AbrechnungMapper {
         }
 
         dto.setDokumente(
-                belegDokumentMapper.toDto(
+                dokumentMapper.toDto(
                         safeList(beleg.getDokumente())
                 )
         );
@@ -127,7 +127,8 @@ public class AbrechnungMapper {
 
         if (herkuenfte.size() > 1) {
             throw new IllegalStateException(
-                    "Beleg " + beleg.getId() + " enthält Buchungen mit unterschiedlicher Herkunft."
+                    "Beleg " + beleg.getId()
+                            + " enthält Buchungen mit unterschiedlicher Herkunft."
             );
         }
 

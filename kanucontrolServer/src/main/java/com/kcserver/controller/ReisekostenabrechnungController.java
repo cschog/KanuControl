@@ -49,6 +49,19 @@ public class ReisekostenabrechnungController {
         );
     }
 
+    @GetMapping("/veranstaltung/{veranstaltungId}/finanzgruppe/{finanzGruppeId}")
+    public ApiResponse<List<ReisekostenabrechnungListResponse>> listByFinanzGruppe(
+            @PathVariable Long veranstaltungId,
+            @PathVariable Long finanzGruppeId
+    ) {
+        return ApiResponse.of(
+                service.listByFinanzGruppe(
+                        veranstaltungId,
+                        finanzGruppeId
+                )
+        );
+    }
+
     @GetMapping("/veranstaltung/{veranstaltungId}/personen")
     public ApiResponse<List<PersonRefDTO>> getVerfuegbareReisekostenPersonen(
             @PathVariable Long veranstaltungId,

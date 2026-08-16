@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet
+            id="20260816-04-remove-old-dokument-tables"
+            author="chris">
+
+        <dropTable
+                tableName="zahlungsnachweis_dokument"
+                cascadeConstraints="true"/>
+
+        <dropTable
+                tableName="beleg_dokument"
+                cascadeConstraints="true"/>
+
+    </changeSet>
+
+</databaseChangeLog>

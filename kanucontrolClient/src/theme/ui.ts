@@ -13,6 +13,12 @@ export const fontSize = {
     md: "1.4rem",
   },
 
+  subsectionTitle: {
+    xs: "0.95rem",
+    sm: "1.05rem",
+    md: "1.15rem",
+  },
+
   accordionTitle: {
     xs: "1.1rem",
     sm: "1.3rem",

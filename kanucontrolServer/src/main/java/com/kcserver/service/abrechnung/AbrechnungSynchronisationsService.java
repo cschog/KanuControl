@@ -4,11 +4,12 @@ import com.kcserver.entity.*;
 
 import com.kcserver.enumtype.BuchungsHerkunft;
 import com.kcserver.enumtype.FinanzKategorie;
+import com.kcserver.enumtype.Zahlungsweg;
+import com.kcserver.repository.FinanzGruppeRepository;
 import com.kcserver.repository.abrechnung.AbrechnungRepository;
 import com.kcserver.repository.TeilnehmerRepository;
+import com.kcserver.repository.abrechnung.ZahlungsnachweisRepository;
 import com.kcserver.service.FoerderService;
-import com.kcserver.service.beitrag.TeilnehmerBeitragService;
-import com.kcserver.service.reisekosten.ReisekostenabrechnungService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -24,11 +25,11 @@ import java.util.List;
 public class AbrechnungSynchronisationsService {
 
     private final AbrechnungBelegService abrechnungBelegService;
-    private final TeilnehmerBeitragService teilnehmerBeitragService;
     private final TeilnehmerRepository teilnehmerRepository;
     private final AbrechnungRepository abrechnungRepository;
-    private final ReisekostenabrechnungService reisekostenabrechnungService;
     private final FoerderService foerderService;
+    private final FinanzGruppeRepository finanzGruppeRepository;
+    private final ZahlungsnachweisRepository zahlungsnachweisRepository;
 
     public void synchronisieren(Long veranstaltungId) {
 
@@ -40,99 +41,31 @@ public class AbrechnungSynchronisationsService {
                                 "Abrechnung nicht gefunden"
                         ));
 
-        // Einnahmen
         synchronisiereTeilnehmerbeitraege(abrechnung);
         synchronisiereKjfp(abrechnung);
-
-        // Ausgaben
-        synchronisiereReisekosten(abrechnung);
-    }
-
-    private void synchronisiereTeilnehmerbeitraege(
-            Abrechnung abrechnung
-    ) {
-
-        AbrechnungBeleg beleg =
-                abrechnungBelegService.getOrCreateSystemBeleg(
-                        abrechnung,
-                        BuchungsHerkunft.TEILNEHMERBEITRAG
-                );
-
-        // Alte automatisch erzeugte Teilnehmerbeiträge entfernen
-        beleg.removePositionenByHerkunft(
-                BuchungsHerkunft.TEILNEHMERBEITRAG
-        );
-
-        List<Teilnehmer> teilnehmer =
-                teilnehmerRepository.findAllWithPerson(
-                        abrechnung.getVeranstaltung().getId()
-                );
-
-        for (Teilnehmer t : teilnehmer) {
-
-            // Nur tatsächlich bezahlte Beiträge buchen
-//            if (!teilnehmerBeitragService.isBezahlt(t)) {
-//                continue;
-//            }
-
-            BigDecimal beitrag =
-                    teilnehmerBeitragService.getSollBeitrag(
-                            abrechnung.getVeranstaltung(),
-                            t
-                    );
-
-            if (beitrag == null || beitrag.compareTo(BigDecimal.ZERO) <= 0) {
-                continue;
-            }
-
-            addTeilnehmerbeitrag(
-                    beleg,
-                    t,
-                    beitrag
-            );
-        }
-    }
-
-    private void synchronisiereReisekosten(
-            Abrechnung abrechnung
-    ) {
-
-        AbrechnungBeleg beleg =
-                abrechnungBelegService.getOrCreateSystemBeleg(
-                        abrechnung,
-                        BuchungsHerkunft.FAHRTKOSTEN
-                );
-
-        beleg.removePositionenByHerkunft(
-                BuchungsHerkunft.FAHRTKOSTEN
-        );
-
-        List<Reisekostenabrechnung> abrechnungen =
-                reisekostenabrechnungService.findByVeranstaltung(
-                        abrechnung.getVeranstaltung().getId()
-                );
-
-        for (Reisekostenabrechnung rk : abrechnungen) {
-
-            if (rk.getGesamtBetrag() == null
-                    || rk.getGesamtBetrag().compareTo(BigDecimal.ZERO) <= 0) {
-                continue;
-            }
-
-            addReisekosten(
-                    beleg,
-                    rk
-            );
-        }
     }
 
     private void synchronisiereKjfp(
             Abrechnung abrechnung
     ) {
 
+        FinanzGruppe vk =
+                finanzGruppeRepository
+                        .findByVeranstaltungIdAndKuerzel(
+                                abrechnung.getVeranstaltung().getId(),
+                                "VK"
+                        )
+                        .orElseThrow(() ->
+                                new ResponseStatusException(
+                                        HttpStatus.CONFLICT,
+                                        "Für die Veranstaltung ist kein VK-Konto eingerichtet."
+                                )
+                        );
+
         AbrechnungBeleg beleg =
-                abrechnungBelegService.getOrCreateSystemBeleg(
+                abrechnungBelegService.getOrCreateBeleg(
                         abrechnung,
+                        vk,
                         BuchungsHerkunft.KJFP
                 );
 
@@ -163,53 +96,6 @@ public class AbrechnungSynchronisationsService {
         );
     }
 
-    private void addTeilnehmerbeitrag(
-            AbrechnungBeleg beleg,
-            Teilnehmer teilnehmer,
-            BigDecimal betrag
-    ) {
-        AbrechnungBuchung buchung = new AbrechnungBuchung();
-
-        buchung.setKategorie(FinanzKategorie.TEILNEHMERBEITRAG);
-        buchung.setHerkunft(BuchungsHerkunft.TEILNEHMERBEITRAG);
-        buchung.setTeilnehmer(teilnehmer);
-        buchung.setBetrag(betrag);
-
-        buchung.setBeschreibung(
-                teilnehmer.getPerson().getVorname()
-                        + " "
-                        + teilnehmer.getPerson().getName()
-        );
-
-        beleg.addPosition(buchung);
-    }
-
-    private void addReisekosten(
-            AbrechnungBeleg beleg,
-            Reisekostenabrechnung abrechnung
-    ) {
-
-        AbrechnungBuchung buchung = new AbrechnungBuchung();
-
-        buchung.setKategorie(FinanzKategorie.FAHRTKOSTEN);
-        buchung.setHerkunft(BuchungsHerkunft.FAHRTKOSTEN);
-
-        buchung.setReisekostenabrechnung(abrechnung);
-
-        buchung.setBetrag(
-                abrechnung.getGesamtBetrag()
-        );
-
-        buchung.setBeschreibung(
-                "Fahrtkosten "
-                        + abrechnung.getFahrer().getVorname()
-                        + " "
-                        + abrechnung.getFahrer().getName()
-        );
-
-        beleg.addPosition(buchung);
-    }
-
     private void addKjfp(
             AbrechnungBeleg beleg,
             Veranstaltung veranstaltung,
@@ -224,6 +110,66 @@ public class AbrechnungSynchronisationsService {
 
         buchung.setBeschreibung(
                 "KJFP-Zuschuss " + veranstaltung.getName()
+        );
+
+        beleg.addPosition(buchung);
+    }
+
+    private void synchronisiereTeilnehmerbeitraege(
+            Abrechnung abrechnung
+    ) {
+
+        FinanzGruppe vk =
+                finanzGruppeRepository
+                        .findByVeranstaltungIdAndKuerzel(
+                                abrechnung.getVeranstaltung().getId(),
+                                "VK"
+                        )
+                        .orElseThrow(() ->
+                                new ResponseStatusException(
+                                        HttpStatus.CONFLICT,
+                                        "Für die Veranstaltung ist kein VK-Konto eingerichtet."
+                                )
+                        );
+
+        AbrechnungBeleg beleg =
+                abrechnungBelegService.getOrCreateBeleg(
+                        abrechnung,
+                        vk,
+                        BuchungsHerkunft.TEILNEHMERBEITRAG
+                );
+
+        // Alte automatische Position entfernen
+        beleg.removePositionenByHerkunft(
+                BuchungsHerkunft.TEILNEHMERBEITRAG
+        );
+
+        BigDecimal betrag =
+                zahlungsnachweisRepository
+                        .sumBetragByVeranstaltungAndZahlungsweg(
+                                abrechnung.getVeranstaltung().getId(),
+                                Zahlungsweg.UEBERWEISUNG
+                        );
+
+        if (betrag == null
+                || betrag.compareTo(BigDecimal.ZERO) <= 0) {
+            return;
+        }
+
+        AbrechnungBuchung buchung = new AbrechnungBuchung();
+
+        buchung.setKategorie(
+                FinanzKategorie.TEILNEHMERBEITRAG
+        );
+
+        buchung.setHerkunft(
+                BuchungsHerkunft.TEILNEHMERBEITRAG
+        );
+
+        buchung.setBetrag(betrag);
+
+        buchung.setBeschreibung(
+                "TN-Beiträge per Überweisung"
         );
 
         beleg.addPosition(buchung);

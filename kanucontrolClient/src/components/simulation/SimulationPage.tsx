@@ -6,6 +6,7 @@ import { PlanungsSimulation } from "@/api/types/simulation/PlanungsSimulation";
 import SimulationForm from "./SimulationForm";
 import SimulationSummary from "./SimulationSummary";
 import PlanungspositionenTable from "./FinanzpositionenAccordion";
+import BackFooter from "@/components/common/BackFooter";
 import {
   Accordion,
   AccordionSummary,
@@ -33,11 +34,16 @@ export default function SimulationPage({ veranstaltungId }: SimulationPageProps)
 
   const [simulationOpen, setSimulationOpen] = useState(true);
   const [positionenOpen, setPositionenOpen] = useState(false);
+  const istEingereicht = simulation?.status === "EINGEREICHT";
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const uebernehmeBeitragsvorschlag = () => {
+    if (istEingereicht) {
+      return;
+    }
+
     if (!ergebnis?.beitragsVorschlag) {
       return;
     }
@@ -114,15 +120,23 @@ export default function SimulationPage({ veranstaltungId }: SimulationPageProps)
           Betragsvorschlag übernehmen
         </Button>
 
+        <Button variant="outlined" onClick={uebernehmeBeitragsvorschlag}>
+          Betragsvorschlag übernehmen
+        </Button>
+
         <Button
           variant="contained"
-          disabled={!dirty}
+          disabled={istEingereicht || !dirty}
           onClick={async () => {
             await saveSimulation(localSimulation);
             setDirty(false);
           }}
         >
-          {dirty ? "Simulation speichern" : "Simulation gespeichert"}
+          {istEingereicht
+            ? "Planung eingereicht"
+            : dirty
+              ? "Simulation speichern"
+              : "Simulation gespeichert"}
         </Button>
       </Box>
 
@@ -179,6 +193,10 @@ export default function SimulationPage({ veranstaltungId }: SimulationPageProps)
           <PlanungspositionenTable positionen={ergebnis.positionen} />
         </AccordionDetails>
       </Accordion>
+      <BackFooter
+        label="Zurück zu Vorbereitung"
+        path={`/veranstaltungen/${veranstaltungId}/finanzen/vorbereitung`}
+      />
     </>
   );
 }

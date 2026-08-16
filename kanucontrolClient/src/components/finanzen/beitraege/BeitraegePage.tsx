@@ -10,6 +10,8 @@ import {
   Typography,
 } from "@mui/material";
 
+import BackFooter from "@/components/common/BackFooter";
+
 import { zahlungsnachweiseColumns } from "@/components/finanzen/beitraege/zahlungsnachweiseColumns";
 import ZahlungsnachweisDialog from "@/components/finanzen/beitraege/ZahlungsnachweisDialog";
 import { fontSize, padding, chip, layout, spacing } from "@/theme/ui";
@@ -18,7 +20,7 @@ import { GenericTableTanstack } from "@/components/common/GenericTableTanstack";
 import { beitraegeColumns } from "@/components/finanzen/beitraege/beitraegeColumns";
 import DeleteConfirmDialog from "@/components/common/DeleteConfirmDialog";
 
-import { upload } from "@/api/services/zahlungsnachweisDokumentApi";
+import { upload } from "@/api/services/zahlungsnachweisApi";
 import { optimizeUploadFile } from "@/utils/imageUtils";
 
 import {
@@ -452,6 +454,10 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
         }}
         onConfirm={handleConfirmDeleteZahlungsnachweis}
       />
+         <BackFooter
+              label="Zurück zu Durchführung"
+              path={`/veranstaltungen/${veranstaltungId}/finanzen/durchfuehrung`}
+            />
     </Stack>
   );
 };

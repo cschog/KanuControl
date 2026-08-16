@@ -64,4 +64,34 @@ and (
     BigDecimal sumGesamtBetragByVeranstaltung(
             @Param("veranstaltungId") Long veranstaltungId
     );
+
+    @Query("""
+    SELECT
+        t.finanzGruppe.id,
+        COALESCE(SUM(r.gesamtBetrag), 0)
+    FROM Reisekostenabrechnung r
+    JOIN Teilnehmer t
+        ON t.person.id = r.fahrer.id
+       AND t.veranstaltung.id = r.veranstaltung.id
+    WHERE r.veranstaltung.id = :veranstaltungId
+    GROUP BY t.finanzGruppe.id
+""")
+    List<Object[]> sumGesamtBetragByFinanzGruppeGrouped(
+            @Param("veranstaltungId") Long veranstaltungId
+    );
+
+    @Query("""
+    SELECT r
+    FROM Reisekostenabrechnung r
+    JOIN Teilnehmer t
+        ON t.person.id = r.fahrer.id
+       AND t.veranstaltung.id = r.veranstaltung.id
+    WHERE r.veranstaltung.id = :veranstaltungId
+      AND t.finanzGruppe.id = :finanzGruppeId
+    ORDER BY r.abrechnungsdatum ASC, r.id ASC
+""")
+    List<Reisekostenabrechnung> findByFinanzGruppe(
+            @Param("veranstaltungId") Long veranstaltungId,
+            @Param("finanzGruppeId") Long finanzGruppeId
+    );
 }

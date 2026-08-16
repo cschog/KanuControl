@@ -54,7 +54,7 @@ public class Zahlungsnachweis extends Auditable {
             orphanRemoval = true
     )
     @OrderBy("reihenfolge ASC")
-    private List<ZahlungsnachweisDokument> dokumente = new ArrayList<>();
+    private List<Dokument> dokumente = new ArrayList<>();
 
     public void addPosition(ZahlungsPosition position) {
         positionen.add(position);
@@ -66,24 +66,24 @@ public class Zahlungsnachweis extends Auditable {
         position.setZahlungsnachweis(null);
     }
 
-    public void addDokument(ZahlungsnachweisDokument dokument) {
-        dokumente.add(dokument);
-        dokument.setZahlungsnachweis(this);
-    }
-
-    public void removeDokument(ZahlungsnachweisDokument dokument) {
-        dokumente.remove(dokument);
-        dokument.setZahlungsnachweis(null);
-    }
-
     public void clearPositionen() {
         for (ZahlungsPosition position : new ArrayList<>(positionen)) {
             removePosition(position);
         }
     }
 
+    public void addDokument(Dokument dokument) {
+        dokumente.add(dokument);
+        dokument.setZahlungsnachweis(this);
+    }
+
+    public void removeDokument(Dokument dokument) {
+        dokumente.remove(dokument);
+        dokument.setZahlungsnachweis(null);
+    }
+
     public void clearDokumente() {
-        for (ZahlungsnachweisDokument dokument : new ArrayList<>(dokumente)) {
+        for (Dokument dokument : new ArrayList<>(dokumente)) {
             removeDokument(dokument);
         }
     }

@@ -13,7 +13,10 @@ import com.kcserver.repository.VeranstaltungSpecs;
 import com.kcserver.mapper.PersonMapper;
 import com.kcserver.mapper.VeranstaltungMapper;
 import com.kcserver.repository.*;
+import com.kcserver.repository.abrechnung.AbrechnungRepository;
+import com.kcserver.repository.abrechnung.ZahlungsnachweisRepository;
 import com.kcserver.repository.beitrag.BeitragsstrukturRepository;
+import com.kcserver.repository.fahrkosten.ReisekostenabrechnungRepository;
 import com.kcserver.service.beitrag.BeitragsstrukturService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -54,6 +57,10 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
     private final UnterkunftsartRepository unterkunftsartRepository;
     private final VerpflegungsmodellRepository verpflegungsmodellRepository;
     private final FinanzGruppeService finanzGruppeService;
+
+    private final AbrechnungRepository abrechnungRepository;
+    private final ZahlungsnachweisRepository zahlungsnachweisRepository;
+    private final ReisekostenabrechnungRepository reisekostenabrechnungRepository;
 
 
     /* =========================================================
@@ -243,22 +250,100 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
         Veranstaltung v = getVeranstaltungOrThrow(id);
         boolean warAktiv = v.isAktiv();
 
+        // =========================================================
+        // 1. Teilnehmer prüfen
+        // =========================================================
+
         boolean hasTeilnehmer =
                 teilnehmerRepository.existsNonLeiter(id, TeilnehmerRolle.LEITER);
 
         if (hasTeilnehmer) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT);
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Die Veranstaltung kann nicht gelöscht werden, solange weitere Teilnehmer vorhanden sind."
+            );
         }
+
+        // =========================================================
+        // 2. Zahlungsnachweise löschen
+        //
+        //    Cascade:
+        //    Zahlungspositionen
+        //    Dokumente
+        // =========================================================
+
+        List<Zahlungsnachweis> zahlungsnachweise =
+                zahlungsnachweisRepository
+                        .findByVeranstaltungIdOrderByDatumDescIdDesc(id);
+
+        zahlungsnachweisRepository.deleteAll(zahlungsnachweise);
+
+        // =========================================================
+        // 3. Abrechnung löschen
+        //
+        //    Cascade:
+        //    AbrechnungBeleg
+        //    AbrechnungBuchung
+        //    Dokument
+        //
+        //    Wichtig:
+        //    Dadurch verschwinden auch Referenzen von
+        //    AbrechnungBuchung → Reisekostenabrechnung
+        // =========================================================
+
+        abrechnungRepository.findByVeranstaltungId(id)
+                .ifPresent(abrechnungRepository::delete);
+
+        // =========================================================
+        // 4. Reisekostenabrechnungen löschen
+        //
+        //    Cascade:
+        //    Fahrtabschnitt
+        //    FahrtabschnittMitfahrer
+        // =========================================================
+
+        List<Reisekostenabrechnung> reisekosten =
+                reisekostenabrechnungRepository
+                        .findByVeranstaltungId(id);
+
+        reisekostenabrechnungRepository.deleteAll(reisekosten);
+
+        // =========================================================
+        // 5. Planung löschen
+        //
+        //    Cascade:
+        //    PlanungPosition
+        // =========================================================
 
         planungRepository.findByVeranstaltungId(id)
                 .ifPresent(planungRepository::delete);
 
+        // =========================================================
+        // 6. Teilnehmer löschen
+        // =========================================================
+
         teilnehmerRepository.deleteByVeranstaltungId(id);
+
+        // =========================================================
+        // 7. Finanzgruppen löschen
+        // =========================================================
+
+        finanzGruppeService.deleteByVeranstaltungId(id);
+
+        // =========================================================
+        // 8. Veranstaltung löschen
+        // =========================================================
 
         veranstaltungRepository.delete(v);
         veranstaltungRepository.flush();
 
+        // =========================================================
+        // 9. Falls aktive Veranstaltung gelöscht wurde:
+        //    neueste Veranstaltung aktiv setzen
+        // =========================================================
+
         if (warAktiv) {
+
             Optional<Veranstaltung> neuAktiv =
                     veranstaltungRepository
                             .findTopByIdNotOrderByBeginnDatumDescBeginnZeitDesc(id);

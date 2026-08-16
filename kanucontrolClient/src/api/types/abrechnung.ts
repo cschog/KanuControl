@@ -2,6 +2,7 @@ import { FinanzKategorie } from "@/api/types/finanz";
 import { WithId } from "@/components/common/GenericTableTanstack";
 import { AbrechnungsStatus } from "@/api/enums/AbrechnungsStatus";
 import { BuchungsHerkunft } from "@/api/types/BuchungsHerkunft";
+import { DokumentDTO } from "@/api/types/dokument";
 
 export interface AbrechnungBeleg {
   id: number;
@@ -16,7 +17,7 @@ export interface AbrechnungBeleg {
 
   herkunft: BuchungsHerkunft;
 
-  dokumente: BelegDokumentDTO[];
+  dokumente: DokumentDTO[];
   positionen: Buchung[];
 }
 
@@ -69,14 +70,4 @@ export interface BelegUpdate {
   aussteller?: string;
   externeBelegnummer?: string;
   beschreibung?: string;
-}
-
-export interface BelegDokumentDTO {
-  id: number;
-  reihenfolge: number;
-  titel?: string;
-  originalDateiname: string;
-  mimeType: string;
-  dateigroesse: number;
-  createdAt: string;
 }

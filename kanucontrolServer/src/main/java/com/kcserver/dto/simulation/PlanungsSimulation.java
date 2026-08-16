@@ -1,5 +1,6 @@
 package com.kcserver.dto.simulation;
 
+import com.kcserver.enumtype.PlanungsStatus;
 import lombok.*;
 import java.math.BigDecimal;
 
@@ -11,6 +12,8 @@ import java.math.BigDecimal;
 public class PlanungsSimulation {
 
     private VeranstaltungsInfo veranstaltung;
+
+    private PlanungsStatus status;
 
     /**
      * Soll der KiK-Zuschlag berücksichtigt werden?

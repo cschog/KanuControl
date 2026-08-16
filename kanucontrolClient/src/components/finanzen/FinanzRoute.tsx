@@ -6,7 +6,7 @@ import PlanungPage from "@/components/finanzen/planung/PlanungPage";
 import BuchungenPage from "@/components/finanzen/abrechnung/BuchungenPage";
 import BeitraegePage from "@/components/finanzen/beitraege/BeitraegePage";
 import ReisekostenPage from "@/components/finanzen/reisekosten/ReisekostenPage";
-import KuerzelPage from "@/components/finanzen/FinanzgruppePage";
+import KontoPage from "@/components/finanzen/KontoPage";
 import FinanzenDashboard from "@/components/finanzen/FinanzenDashboard";
 
 // später:
@@ -60,7 +60,7 @@ const FinanzRoute = ({ type }: Props) => {
       return <ReisekostenPage veranstaltungId={id} />;
 
     case "finanzgruppen":
-      return <KuerzelPage veranstaltungId={id} />;
+      return <KontoPage veranstaltungId={id} />;
 
     case "dashboard":
       return <FinanzenDashboard />;

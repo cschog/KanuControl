@@ -22,10 +22,9 @@ import {
   download,
   findAll,
   upload,
-} from "@/api/services/zahlungsnachweisDokumentApi";
+} from "@/api/services/zahlungsnachweisApi";
 
-import { ZahlungsnachweisDokumentDTO } from "@/api/types/beitraege";
-
+import { DokumentDTO } from "@/api/types/dokument";
 import LoadingOverlay from "@/components/common/LoadingOverlay";
 import DeleteConfirmDialog from "@/components/common/DeleteConfirmDialog";
 
@@ -40,7 +39,7 @@ export default function ZahlungsnachweisDokumentPanel({
   zahlungsnachweisId,
   readOnly = false,
 }: Props) {
-  const [dokumente, setDokumente] = useState<ZahlungsnachweisDokumentDTO[]>([]);
+  const [dokumente, setDokumente] = useState<DokumentDTO[]>([]);
   const [loading, setLoading] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -145,7 +144,7 @@ export default function ZahlungsnachweisDokumentPanel({
      DOWNLOAD
   ========================================================= */
 
-  async function handleDownload(dokument: ZahlungsnachweisDokumentDTO) {
+  async function handleDownload(dokument: DokumentDTO) {
     const blob = await download(veranstaltungId, zahlungsnachweisId, dokument.id);
 
     const url = URL.createObjectURL(blob);
@@ -162,7 +161,7 @@ export default function ZahlungsnachweisDokumentPanel({
      PREVIEW
   ========================================================= */
 
-  async function handlePreview(dokument: ZahlungsnachweisDokumentDTO) {
+  async function handlePreview(dokument: DokumentDTO) {
     const blob = await download(veranstaltungId, zahlungsnachweisId, dokument.id);
 
     const url = URL.createObjectURL(blob);

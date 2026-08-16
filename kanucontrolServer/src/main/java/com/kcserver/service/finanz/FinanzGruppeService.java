@@ -30,6 +30,7 @@ public class FinanzGruppeService {
     private final VeranstaltungRepository veranstaltungRepository;
     private final TeilnehmerRepository teilnehmerRepository;
     private final AbrechnungBelegRepository belegRepository;
+    private final FinanzGruppeRepository finanzGruppeRepository;
 
     private static final String VK_KUERZEL = "VK";
 
@@ -147,6 +148,10 @@ public class FinanzGruppeService {
     /* =========================================================
        DELETE
        ========================================================= */
+    @Transactional
+    public void deleteByVeranstaltungId(Long veranstaltungId) {
+        finanzGruppeRepository.deleteByVeranstaltungId(veranstaltungId);
+    }
 
     public void delete(Long veranstaltungId, Long gruppeId) {
 

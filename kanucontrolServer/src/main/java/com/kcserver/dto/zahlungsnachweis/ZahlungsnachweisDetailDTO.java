@@ -1,5 +1,6 @@
 package com.kcserver.dto.zahlungsnachweis;
 
+import com.kcserver.dto.abrechnung.DokumentDTO;
 import com.kcserver.enumtype.Zahlungsweg;
 import lombok.Data;
 
@@ -26,6 +27,6 @@ public class ZahlungsnachweisDetailDTO {
     private List<ZahlungsPositionDTO> positionen =
             new ArrayList<>();
 
-    private List<ZahlungsnachweisDokumentDTO> dokumente =
+    private List<DokumentDTO> dokumente =
             new ArrayList<>();
 }

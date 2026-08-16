@@ -2,6 +2,7 @@ package com.kcserver.repository.abrechnung;
 
 import com.kcserver.entity.Abrechnung;
 import com.kcserver.entity.AbrechnungBeleg;
+import com.kcserver.entity.FinanzGruppe;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -47,6 +48,13 @@ public interface AbrechnungBelegRepository
             Abrechnung abrechnung,
             String belegnummer
     );
+
+    Optional<AbrechnungBeleg> findByAbrechnungAndBelegnummerAndFinanzGruppe(
+            Abrechnung abrechnung,
+            String belegnummer,
+            FinanzGruppe finanzGruppe
+    );
+
 
     @Query("""
     SELECT DISTINCT b

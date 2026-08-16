@@ -51,4 +51,42 @@ and b.kategorie in (
             AbrechnungBeleg beleg,
             BuchungsHerkunft herkunft
     );
+
+    @Query("""
+    SELECT
+        b.beleg.finanzGruppe.id,
+        COALESCE(SUM(
+            CASE
+                WHEN b.betrag > 0
+                AND b.kategorie IN (
+                    com.kcserver.enumtype.FinanzKategorie.PFAND,
+                    com.kcserver.enumtype.FinanzKategorie.KJFP_ZUSCHUSS,
+                    com.kcserver.enumtype.FinanzKategorie.SONSTIGE_EINNAHMEN
+                )
+                THEN b.betrag
+                ELSE 0
+            END
+        ), 0),
+        COALESCE(SUM(
+            CASE
+                WHEN b.betrag > 0
+                AND b.kategorie IN (
+                    com.kcserver.enumtype.FinanzKategorie.UNTERKUNFT,
+                    com.kcserver.enumtype.FinanzKategorie.VERPFLEGUNG,
+                    com.kcserver.enumtype.FinanzKategorie.HONORARE,
+                    com.kcserver.enumtype.FinanzKategorie.FAHRTKOSTEN,
+                    com.kcserver.enumtype.FinanzKategorie.VERBRAUCHSMATERIAL,
+                    com.kcserver.enumtype.FinanzKategorie.KULTUR,
+                    com.kcserver.enumtype.FinanzKategorie.MIETE,
+                    com.kcserver.enumtype.FinanzKategorie.SONSTIGE_KOSTEN
+                )
+                THEN b.betrag
+                ELSE 0
+            END
+        ), 0)
+    FROM AbrechnungBuchung b
+    WHERE b.beleg.abrechnung.veranstaltung.id = :veranstaltungId
+    GROUP BY b.beleg.finanzGruppe.id
+""")
+    List<Object[]> sumFinanzenByVeranstaltungGrouped(Long veranstaltungId);
 }
