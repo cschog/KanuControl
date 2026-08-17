@@ -7,8 +7,11 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  MenuItem,
   Divider,
+  FormControlLabel,
+  MenuItem,
+  Radio,
+  RadioGroup,
   Stack,
   TextField,
   Typography,
@@ -20,7 +23,7 @@ import { getFinanzgruppen, FinanzGruppe } from "@/api/services/finanzgruppenApi"
 
 import MoneyField from "@/components/common/MoneyField";
 import ZahlungsnachweisDokumentPanel from "@/components/finanzen/beitraege/ZahlungsnachweisDokumentPanel";
-import ImageCropPreviewDialog from "@/components/common/ImageCropPreviewDialog";
+import { ReferenzObjekt } from "@/api/enums/ReferenzObjekt";
 
 import {
   TeilnehmerListDTO,
@@ -48,8 +51,11 @@ interface Props {
       positionen: ZahlungsPositionDTO[];
     },
     files: File[],
+    referenzObjekt: ReferenzObjekt,
   ) => void | Promise<void>;
 }
+
+const REFERENZ_STORAGE_KEY = "kanucontrol.dokument.referenzObjekt";
 
 const ZahlungsnachweisDialog = ({
   open,
@@ -73,17 +79,17 @@ const ZahlungsnachweisDialog = ({
   const [dokumente, setDokumente] = useState<File[]>([]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-
   const [saving, setSaving] = useState(false);
 
-  /*
-   * =========================================================
-   * CROP / VORSCHAU
-   * =========================================================
-   */
+  const [referenzObjekt, setReferenzObjekt] = useState<ReferenzObjekt>(() => {
+    const gespeichert = localStorage.getItem(REFERENZ_STORAGE_KEY);
 
-  const [cropDialogOpen, setCropDialogOpen] = useState(false);
-  const [cropFile, setCropFile] = useState<File | null>(null);
+    if (gespeichert && Object.values(ReferenzObjekt).includes(gespeichert as ReferenzObjekt)) {
+      return gespeichert as ReferenzObjekt;
+    }
+
+    return ReferenzObjekt.DIN_A6;
+  });
 
   /*
    * =========================================================
@@ -117,9 +123,6 @@ const ZahlungsnachweisDialog = ({
 
     setDokumente([]);
     setSuche("");
-
-    setCropDialogOpen(false);
-    setCropFile(null);
   }, [open, zahlungsnachweis]);
 
   useEffect(() => {
@@ -227,43 +230,7 @@ const ZahlungsnachweisDialog = ({
       return;
     }
 
-    /*
-     * Die erste Datei wird sofort zur Vorschau
-     * vorbereitet.
-     *
-     * Weitere Dateien kommen anschließend dran.
-     */
-    const [first, ...rest] = selectedFiles;
-
-    /*
-     * Die restlichen Dateien merken wir uns zunächst.
-     */
-    if (rest.length > 0) {
-      setDokumente((prev) => [...prev, ...rest.filter((file) => !file.type.startsWith("image/"))]);
-    }
-
-    /*
-     * Bild → Crop/Vorschau
-     * PDF → direkt übernehmen
-     */
-    if (first.type.startsWith("image/")) {
-      setCropFile(first);
-      setCropDialogOpen(true);
-    } else {
-      setDokumente((prev) => [...prev, first]);
-    }
-  };
-
-  const handleCropConfirm = (file: File) => {
-    setDokumente((prev) => [...prev, file]);
-
-    setCropDialogOpen(false);
-    setCropFile(null);
-  };
-
-  const handleCropCancel = () => {
-    setCropDialogOpen(false);
-    setCropFile(null);
+    setDokumente((prev) => [...prev, ...selectedFiles]);
   };
 
   /*
@@ -316,6 +283,7 @@ const ZahlungsnachweisDialog = ({
           positionen,
         },
         dokumente,
+        referenzObjekt,
       );
     } finally {
       setSaving(false);
@@ -467,31 +435,75 @@ const ZahlungsnachweisDialog = ({
               />
             ) : (
               <Box>
-                <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  mb={1}
+                  gap={2}
+                >
                   <Typography variant="h6">Dokumente</Typography>
 
-                  <Button
-                    variant="outlined"
-                    startIcon={<UploadFileIcon />}
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    Dokument hinzufügen
-                  </Button>
+                  <Stack direction="row" alignItems="center" spacing={2}>
+                    <RadioGroup
+                      row
+                      value={referenzObjekt}
+                      onChange={(event) => {
+                        const value = event.target.value as ReferenzObjekt;
 
-                  <input
-                    hidden
-                    type="file"
-                    accept=".pdf,image/*"
-                    ref={fileInputRef}
-                    multiple
-                    onChange={(e) => {
-                      const files = Array.from(e.target.files ?? []);
+                        setReferenzObjekt(value);
 
-                      handleFilesSelected(files);
+                        localStorage.setItem(REFERENZ_STORAGE_KEY, value);
+                      }}
+                    >
+                      <FormControlLabel
+                        value={ReferenzObjekt.DIN_A7}
+                        control={<Radio size="small" />}
+                        label="A7"
+                      />
 
-                      e.target.value = "";
-                    }}
-                  />
+                      <FormControlLabel
+                        value={ReferenzObjekt.DIN_A6}
+                        control={<Radio size="small" />}
+                        label="A6"
+                      />
+
+                      <FormControlLabel
+                        value={ReferenzObjekt.DIN_A5}
+                        control={<Radio size="small" />}
+                        label="A5"
+                      />
+
+                      <FormControlLabel
+                        value={ReferenzObjekt.DIN_A4}
+                        control={<Radio size="small" />}
+                        label="A4"
+                      />
+                    </RadioGroup>
+
+                    <Button
+                      variant="outlined"
+                      startIcon={<UploadFileIcon />}
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      Dokument hinzufügen
+                    </Button>
+
+                    <input
+                      hidden
+                      type="file"
+                      accept=".pdf,image/*"
+                      ref={fileInputRef}
+                      multiple
+                      onChange={(e) => {
+                        const files = Array.from(e.target.files ?? []);
+
+                        handleFilesSelected(files);
+
+                        e.target.value = "";
+                      }}
+                    />
+                  </Stack>
                 </Stack>
 
                 {dokumente.length === 0 ? (
@@ -785,17 +797,6 @@ const ZahlungsnachweisDialog = ({
           </Button>
         </DialogActions>
       </Dialog>
-
-      {/* =====================================================
-          BILD CROPPEN / VORSCHAU
-      ===================================================== */}
-
-      <ImageCropPreviewDialog
-        open={cropDialogOpen}
-        file={cropFile}
-        onCancel={handleCropCancel}
-        onConfirm={handleCropConfirm}
-      />
     </>
   );
 };

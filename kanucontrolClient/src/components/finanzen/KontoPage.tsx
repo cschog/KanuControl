@@ -359,7 +359,7 @@ export default function KontoPage({ veranstaltungId }: Props) {
         </DialogActions>
       </Dialog>
 
-      {/* DELETE KÜRZEL */}
+      {/* DELETE Konto */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
         <DialogTitle>Konto löschen</DialogTitle>
 

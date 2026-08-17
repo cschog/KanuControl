@@ -2,6 +2,7 @@ package com.kcserver.controller;
 
 import com.kcserver.api.response.ApiResponse;
 import com.kcserver.dto.zahlungsnachweis.*;
+import com.kcserver.enumtype.ReferenzObjekt;
 import com.kcserver.service.abrechnung.ZahlungsnachweisService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -117,13 +118,16 @@ public class ZahlungsnachweisController {
     public ApiResponse<DokumentDTO> uploadDokument(
             @PathVariable Long veranstaltungId,
             @PathVariable Long zahlungsnachweisId,
-            @RequestParam("file") MultipartFile file
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "referenzObjekt", required = false)
+            ReferenzObjekt referenzObjekt
     ) {
         return ApiResponse.of(
                 dokumentService.uploadForZahlungsnachweis(
                         veranstaltungId,
                         zahlungsnachweisId,
-                        file
+                        file,
+                        referenzObjekt
                 )
         );
     }

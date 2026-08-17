@@ -2,6 +2,7 @@ package com.kcserver.controller.abrechnung;
 
 import com.kcserver.dto.abrechnung.DokumentDTO;
 import com.kcserver.entity.Dokument;
+import com.kcserver.enumtype.ReferenzObjekt;
 import com.kcserver.service.abrechnung.DokumentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ByteArrayResource;
@@ -46,11 +47,14 @@ public class DokumentController {
     )
     public DokumentDTO uploadForBeleg(
             @PathVariable Long belegId,
-            @RequestParam("file") MultipartFile file
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "referenzObjekt", required = false)
+            ReferenzObjekt referenzObjekt
     ) {
         return dokumentService.uploadForBeleg(
                 belegId,
-                file
+                file,
+                referenzObjekt
         );
     }
 

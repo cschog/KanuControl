@@ -117,11 +117,7 @@ export default function SimulationPage({ veranstaltungId }: SimulationPageProps)
 
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
         <Button variant="outlined" onClick={uebernehmeBeitragsvorschlag}>
-          Betragsvorschlag übernehmen
-        </Button>
-
-        <Button variant="outlined" onClick={uebernehmeBeitragsvorschlag}>
-          Betragsvorschlag übernehmen
+          Beitragsvorschlag übernehmen
         </Button>
 
         <Button

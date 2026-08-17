@@ -2,20 +2,25 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Box,
   Button,
+  FormControl,
+  FormControlLabel,
   IconButton,
   List,
   ListItem,
   ListItemText,
+  Radio,
+  RadioGroup,
   Stack,
   Typography,
 } from "@mui/material";
+
+import { ReferenzObjekt } from "@/api/enums/ReferenzObjekt";
+
 
 import DeleteIcon from "@mui/icons-material/Delete";
 import DownloadIcon from "@mui/icons-material/Download";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import { optimizeUploadFile } from "@/utils/imageUtils";
-import ImageCropPreviewDialog from "@/components/common/ImageCropPreviewDialog";
 
 import {
   deleteZahlungsnachweisDokument,
@@ -34,6 +39,8 @@ interface Props {
   readOnly?: boolean;
 }
 
+const REFERENZ_STORAGE_KEY = "kanucontrol.dokument.referenzObjekt";
+
 export default function ZahlungsnachweisDokumentPanel({
   veranstaltungId,
   zahlungsnachweisId,
@@ -44,9 +51,16 @@ export default function ZahlungsnachweisDokumentPanel({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [cropDialogOpen, setCropDialogOpen] = useState(false);
 
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [referenzObjekt, setReferenzObjekt] = useState<ReferenzObjekt>(() => {
+    const gespeichert = localStorage.getItem(REFERENZ_STORAGE_KEY);
+
+    if (gespeichert && Object.values(ReferenzObjekt).includes(gespeichert as ReferenzObjekt)) {
+      return gespeichert as ReferenzObjekt;
+    }
+
+    return ReferenzObjekt.DIN_A6;
+  });
 
   /* =========================================================
      LOAD
@@ -79,40 +93,9 @@ export default function ZahlungsnachweisDokumentPanel({
      UPLOAD
   ========================================================= */
 
-  async function handleUpload(file: File) {
-    if (file.type.startsWith("image/")) {
-      setSelectedFile(file);
-      setCropDialogOpen(true);
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      await upload(veranstaltungId, zahlungsnachweisId, file);
-
-      await loadDokumente(false);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleCropConfirm(file: File) {
-    setCropDialogOpen(false);
-    setSelectedFile(null);
-
-    setLoading(true);
-
-    try {
-      const optimizedFile = await optimizeUploadFile(file);
-
-      await upload(veranstaltungId, zahlungsnachweisId, optimizedFile);
-
-      await loadDokumente(false);
-    } finally {
-      setLoading(false);
-    }
-  }
+ async function handleUpload(file: File) {
+   await uploadFile(file, referenzObjekt);
+ }
 
   /* =========================================================
      DELETE
@@ -171,6 +154,20 @@ export default function ZahlungsnachweisDokumentPanel({
     setTimeout(() => URL.revokeObjectURL(url), 60_000);
   }
 
+  
+
+ async function uploadFile(file: File, referenz: ReferenzObjekt) {
+   setLoading(true);
+
+   try {
+     await upload(veranstaltungId, zahlungsnachweisId, file, referenz);
+
+     await loadDokumente(false);
+   } finally {
+     setLoading(false);
+   }
+ }
+
   /* =========================================================
      FORMAT SIZE
   ========================================================= */
@@ -197,7 +194,45 @@ export default function ZahlungsnachweisDokumentPanel({
         <Typography variant="h6">Dokumente</Typography>
 
         {!readOnly && (
-          <>
+          <Stack direction="row" spacing={2} alignItems="center">
+            <FormControl>
+              <RadioGroup
+                row
+                value={referenzObjekt}
+                onChange={(event) => {
+                  const value = event.target.value as ReferenzObjekt;
+
+                  setReferenzObjekt(value);
+
+                  localStorage.setItem(REFERENZ_STORAGE_KEY, value);
+                }}
+              >
+                <FormControlLabel
+                  value={ReferenzObjekt.DIN_A7}
+                  control={<Radio size="small" />}
+                  label="A7"
+                />
+
+                <FormControlLabel
+                  value={ReferenzObjekt.DIN_A6}
+                  control={<Radio size="small" />}
+                  label="A6"
+                />
+
+                <FormControlLabel
+                  value={ReferenzObjekt.DIN_A5}
+                  control={<Radio size="small" />}
+                  label="A5"
+                />
+
+                <FormControlLabel
+                  value={ReferenzObjekt.DIN_A4}
+                  control={<Radio size="small" />}
+                  label="A4"
+                />
+              </RadioGroup>
+            </FormControl>
+
             <Button
               variant="contained"
               startIcon={<UploadFileIcon />}
@@ -221,7 +256,7 @@ export default function ZahlungsnachweisDokumentPanel({
                 e.target.value = "";
               }}
             />
-          </>
+          </Stack>
         )}
       </Stack>
 
@@ -267,17 +302,7 @@ export default function ZahlungsnachweisDokumentPanel({
           ))}
         </List>
       )}
-      <ImageCropPreviewDialog
-        open={cropDialogOpen}
-        file={selectedFile}
-        onCancel={() => {
-          setCropDialogOpen(false);
-          setSelectedFile(null);
-        }}
-        onConfirm={(file) => {
-          void handleCropConfirm(file);
-        }}
-      />
+
       <DeleteConfirmDialog
         open={deleteId !== null}
         title="Dokument löschen"
@@ -285,6 +310,7 @@ export default function ZahlungsnachweisDokumentPanel({
         onClose={() => setDeleteId(null)}
         onConfirm={() => void confirmDelete()}
       />
+
     </Box>
   );
 }

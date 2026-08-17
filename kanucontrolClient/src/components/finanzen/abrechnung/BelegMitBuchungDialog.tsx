@@ -3,20 +3,23 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Divider,
   Button,
-  TextField,
   Stack,
-  MenuItem,
   Typography,
+  Radio,
+  RadioGroup,
+  FormControlLabel,
   List,
   ListItem,
   ListItemText,
-  Box,
+  MenuItem,
+  Divider,
+  TextField,
 } from "@mui/material";
+
+import { ReferenzObjekt } from "@/api/enums/ReferenzObjekt";
 import { useState, useEffect, useRef } from "react";
 
-// import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 
 import { kategorieZuTyp, FinanzKategorie } from "@/api/types/finanz";
@@ -32,8 +35,11 @@ interface Props {
       buchung: BuchungCreate;
     },
     files: File[],
+    referenzObjekt: ReferenzObjekt,
   ) => Promise<void>;
 }
+
+const REFERENZ_STORAGE_KEY = "kanucontrol.dokument.referenzObjekt";
 
 export default function BelegMitBuchungDialog({ open, kuerzelListe, onClose, onSave }: Props) {
   const [kuerzel, setKuerzel] = useState("");
@@ -51,6 +57,16 @@ export default function BelegMitBuchungDialog({ open, kuerzelListe, onClose, onS
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [saving, setSaving] = useState(false);
+
+  const [referenzObjekt, setReferenzObjekt] = useState<ReferenzObjekt>(() => {
+    const gespeichert = localStorage.getItem(REFERENZ_STORAGE_KEY);
+
+    if (gespeichert && Object.values(ReferenzObjekt).includes(gespeichert as ReferenzObjekt)) {
+      return gespeichert as ReferenzObjekt;
+    }
+
+    return ReferenzObjekt.DIN_A6;
+  });
 
   useEffect(() => {
     if (open) {
@@ -95,6 +111,7 @@ export default function BelegMitBuchungDialog({ open, kuerzelListe, onClose, onS
           },
         },
         files,
+        referenzObjekt,
       );
     } finally {
       setSaving(false);
@@ -109,35 +126,85 @@ export default function BelegMitBuchungDialog({ open, kuerzelListe, onClose, onS
 
       <DialogContent>
         <Stack spacing={3} mt={1}>
-          <Typography variant="h6">Dokumente</Typography>
+          {/* ================= DOKUMENTE ================= */}
 
-          <Button
-            variant="outlined"
-            startIcon={<UploadFileIcon />}
-            onClick={() => fileInputRef.current?.click()}
-            disabled={saving}
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            justifyContent="space-between"
+            alignItems={{ xs: "stretch", sm: "center" }}
+            spacing={1}
           >
-            {files.length === 0
-              ? "Dokumente hinzufügen"
-              : `${files.length} Dokument${files.length === 1 ? "" : "e"} ausgewählt`}
-          </Button>
+            <Typography variant="h6">Dokumente</Typography>
 
-          <Typography variant="body2" color="text.secondary">
-            PDF, Fotos oder Scans können direkt hinzugefügt werden.
-          </Typography>
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              alignItems={{ xs: "flex-start", sm: "center" }}
+              spacing={1}
+            >
+              <RadioGroup
+                row
+                value={referenzObjekt}
+                onChange={(event) => {
+                  const value = event.target.value as ReferenzObjekt;
 
-          <input
-            hidden
-            disabled={saving}
-            ref={fileInputRef}
-            type="file"
-            accept="image/*,.pdf"
-            onChange={(e) => {
-              const neueDateien = Array.from(e.target.files ?? []);
-              setFiles((old) => [...old, ...neueDateien]);
-              e.target.value = "";
-            }}
-          />
+                  setReferenzObjekt(value);
+
+                  localStorage.setItem(REFERENZ_STORAGE_KEY, value);
+                }}
+              >
+                <FormControlLabel
+                  value={ReferenzObjekt.DIN_A7}
+                  control={<Radio size="small" />}
+                  label="A7"
+                />
+
+                <FormControlLabel
+                  value={ReferenzObjekt.DIN_A6}
+                  control={<Radio size="small" />}
+                  label="A6"
+                />
+
+                <FormControlLabel
+                  value={ReferenzObjekt.DIN_A5}
+                  control={<Radio size="small" />}
+                  label="A5"
+                />
+
+                <FormControlLabel
+                  value={ReferenzObjekt.DIN_A4}
+                  control={<Radio size="small" />}
+                  label="A4"
+                />
+              </RadioGroup>
+
+              <Button
+                variant="outlined"
+                startIcon={<UploadFileIcon />}
+                onClick={() => fileInputRef.current?.click()}
+                disabled={saving}
+              >
+                {files.length === 0
+                  ? "Dokumente hinzufügen"
+                  : `${files.length} Dokument${files.length === 1 ? "" : "e"} ausgewählt`}
+              </Button>
+
+              <input
+                hidden
+                disabled={saving}
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,.pdf"
+                multiple
+                onChange={(e) => {
+                  const neueDateien = Array.from(e.target.files ?? []);
+
+                  setFiles((old) => [...old, ...neueDateien]);
+
+                  e.target.value = "";
+                }}
+              />
+            </Stack>
+          </Stack>
 
           {files.length > 0 && (
             <List dense disablePadding>
@@ -166,8 +233,9 @@ export default function BelegMitBuchungDialog({ open, kuerzelListe, onClose, onS
 
           <Divider />
 
-          <Typography variant="h6">Beleg</Typography>
           {/* ================= BELEG ================= */}
+
+          <Typography variant="h6">Beleg</Typography>
 
           <TextField
             select
@@ -221,58 +289,49 @@ export default function BelegMitBuchungDialog({ open, kuerzelListe, onClose, onS
 
           <Divider />
 
-          <Typography
-            variant="h6"
-            sx={{
-              mt: 1,
-            }}
-          >
-            Erste Buchung
-          </Typography>
+          {/* ================= ERSTE BUCHUNG ================= */}
 
-          {/* ================= BUCHUNG ================= */}
+          <Typography variant="h6">Erste Buchung</Typography>
+
           <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-            <Box flex={1}>
-              <TextField
-                select
-                fullWidth
-                label="Kategorie"
-                value={kategorie}
-                onChange={(e) => setKategorie(e.target.value as FinanzKategorie)}
-                required
-              >
-                {Object.keys(kategorieZuTyp).map((k) => {
-                  const key = k as FinanzKategorie;
+            <TextField
+              select
+              fullWidth
+              label="Kategorie"
+              value={kategorie}
+              onChange={(e) => setKategorie(e.target.value as FinanzKategorie)}
+              required
+            >
+              {Object.keys(kategorieZuTyp).map((k) => {
+                const key = k as FinanzKategorie;
 
-                  return (
-                    <MenuItem key={key} value={key}>
-                      {key.replaceAll("_", " ")}
-                    </MenuItem>
-                  );
-                })}
-              </TextField>
-            </Box>
+                return (
+                  <MenuItem key={key} value={key}>
+                    {key.replaceAll("_", " ")}
+                  </MenuItem>
+                );
+              })}
+            </TextField>
 
-            <Box flex={1}>
-              <TextField
-                type="number"
-                fullWidth
-                label="Betrag (€)"
-                value={betrag}
-                onChange={(e) => setBetrag(e.target.value)}
-                required
-                inputProps={{ min: 0, step: "0.01" }}
-              />
-            </Box>
+            <TextField
+              type="number"
+              fullWidth
+              label="Betrag (€)"
+              value={betrag}
+              onChange={(e) => setBetrag(e.target.value)}
+              required
+              inputProps={{
+                min: 0,
+                step: "0.01",
+              }}
+            />
 
-            <Box flex={1}>
-              <TextField
-                fullWidth
-                label="Beschreibung (Buchung)"
-                value={buchungText}
-                onChange={(e) => setBuchungText(e.target.value)}
-              />
-            </Box>
+            <TextField
+              fullWidth
+              label="Beschreibung (Buchung)"
+              value={buchungText}
+              onChange={(e) => setBuchungText(e.target.value)}
+            />
           </Stack>
         </Stack>
       </DialogContent>

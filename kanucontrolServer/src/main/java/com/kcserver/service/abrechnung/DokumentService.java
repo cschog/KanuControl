@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
+import com.kcserver.enumtype.ReferenzObjekt;
 
 import java.io.IOException;
 import java.util.List;
@@ -72,7 +73,8 @@ public class DokumentService {
      */
     public DokumentDTO uploadForBeleg(
             Long belegId,
-            MultipartFile file
+            MultipartFile file,
+            ReferenzObjekt referenzObjekt
     ) {
 
         AbrechnungBeleg beleg = getBeleg(belegId);
@@ -83,7 +85,8 @@ public class DokumentService {
         Dokument dokument =
                 createDokument(
                         file,
-                        reihenfolge
+                        reihenfolge,
+                        referenzObjekt
                 );
 
         beleg.addDokument(dokument);
@@ -99,7 +102,8 @@ public class DokumentService {
     public DokumentDTO uploadForZahlungsnachweis(
             Long veranstaltungId,
             Long zahlungsnachweisId,
-            MultipartFile file
+            MultipartFile file,
+            ReferenzObjekt referenzObjekt
     ) {
 
         Zahlungsnachweis zahlungsnachweis =
@@ -116,7 +120,8 @@ public class DokumentService {
         Dokument dokument =
                 createDokument(
                         file,
-                        reihenfolge
+                        reihenfolge,
+                        referenzObjekt
                 );
 
         zahlungsnachweis.addDokument(dokument);
@@ -296,10 +301,15 @@ public class DokumentService {
      */
     private Dokument createDokument(
             MultipartFile file,
-            int reihenfolge
+            int reihenfolge,
+            ReferenzObjekt referenzObjekt
     ) {
 
         validateFile(file);
+
+        if (referenzObjekt == null) {
+            referenzObjekt = ReferenzObjekt.DIN_A6;
+        }
 
         String mimeType = file.getContentType();
 
@@ -310,6 +320,21 @@ public class DokumentService {
         Dokument dokument = new Dokument();
 
         dokument.setReihenfolge(reihenfolge);
+
+        /*
+         * Dokumentformat
+         */
+        dokument.setReferenzObjekt(referenzObjekt);
+
+        if (referenzObjekt != null) {
+            dokument.setDokumentBreiteMm(
+                    referenzObjekt.getBreiteMm()
+            );
+
+            dokument.setDokumentHoeheMm(
+                    referenzObjekt.getHoeheMm()
+            );
+        }
 
         String dateiname = file.getOriginalFilename();
 

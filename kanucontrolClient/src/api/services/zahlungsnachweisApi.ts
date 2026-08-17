@@ -3,6 +3,7 @@
 import apiClient from "@/api/client/apiClient";
 import { FinanzGruppeZahlungDTO } from "@/api/types/beitraege";
 import { DokumentDTO } from "@/api/types/dokument";
+import { ReferenzObjekt } from "@/api/enums/ReferenzObjekt";
 
 export async function findAll(
   veranstaltungId: number,
@@ -21,10 +22,15 @@ export async function upload(
   veranstaltungId: number,
   zahlungsnachweisId: number,
   file: File,
+  referenzObjekt?: ReferenzObjekt | null,
 ): Promise<DokumentDTO> {
   const formData = new FormData();
 
   formData.append("file", file);
+
+  if (referenzObjekt) {
+    formData.append("referenzObjekt", referenzObjekt);
+  }
 
   const response = await apiClient.post(
     `/veranstaltungen/${veranstaltungId}/zahlungsnachweise/${zahlungsnachweisId}/dokumente`,

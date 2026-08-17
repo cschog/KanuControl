@@ -1,6 +1,7 @@
 import apiClient from "@/api/client/apiClient";
 import { optimizeUploadFile } from "@/utils/imageUtils";
 import { DokumentDTO } from "@/api/types/dokument";
+import { ReferenzObjekt } from "@/api/enums/ReferenzObjekt";
 
 export async function findAll(belegId: number): Promise<DokumentDTO[]> {
   const response = await apiClient.get<DokumentDTO[]>(`/belege/${belegId}/dokumente`);
@@ -8,7 +9,11 @@ export async function findAll(belegId: number): Promise<DokumentDTO[]> {
   return response.data;
 }
 
-export async function upload(belegId: number, file: File): Promise<DokumentDTO> {
+export async function upload(
+  belegId: number,
+  file: File,
+  referenzObjekt?: ReferenzObjekt | null,
+): Promise<DokumentDTO> {
   let uploadFile = file;
 
   try {
@@ -24,7 +29,12 @@ export async function upload(belegId: number, file: File): Promise<DokumentDTO> 
   }
 
   const formData = new FormData();
+
   formData.append("file", uploadFile);
+
+  if (referenzObjekt) {
+    formData.append("referenzObjekt", referenzObjekt);
+  }
 
   const response = await apiClient.post<DokumentDTO>(`/belege/${belegId}/dokumente`, formData);
 
