@@ -1,11 +1,14 @@
 package com.kcserver.service.pdf;
 
 import com.kcserver.entity.*;
+import com.kcserver.enumtype.BuchungsHerkunft;
 import com.kcserver.enumtype.PdfDokumentTyp;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.repository.*;
 import com.kcserver.repository.abrechnung.AbrechnungBuchungRepository;
 import com.kcserver.repository.abrechnung.AbrechnungRepository;
+import com.kcserver.repository.abrechnung.ZahlungsnachweisRepository;
+import com.kcserver.repository.fahrkosten.ReisekostenabrechnungRepository;
 import com.kcserver.service.FoerderService;
 import com.kcserver.service.abrechnung.AbrechnungSynchronisationsService;
 import com.kcserver.service.veranstaltung.VeranstaltungValidator;
@@ -30,6 +33,7 @@ import static com.kcserver.util.StringUtils.join;
 import com.kcserver.enumtype.FinanzKategorie;
 
 import java.math.BigDecimal;
+
 import com.kcserver.util.CurrencyUtil;
 
 @Service
@@ -42,6 +46,8 @@ public class PDFAbrechnungService {
     private final AbrechnungBuchungRepository abrechnungBuchungRepository;
     private final FoerderService foerderService;
     private final AbrechnungSynchronisationsService synchronisationsService;
+    private final ReisekostenabrechnungRepository reisekostenabrechnungRepository;
+    private final ZahlungsnachweisRepository zahlungsnachweisRepository;
 
     private final VeranstaltungValidator validator;
 
@@ -112,6 +118,7 @@ public class PDFAbrechnungService {
             );
             fillFinanzen(
                     form,
+                    v,
                     buchungen
             );
 
@@ -278,6 +285,7 @@ public class PDFAbrechnungService {
 
     private void fillFinanzen(
             PDAcroForm form,
+            Veranstaltung v,
             List<AbrechnungBuchung> buchungen
     ) {
 
@@ -295,10 +303,10 @@ public class PDFAbrechnungService {
                 );
 
         BigDecimal fahrtkosten =
-                sum(
-                        buchungen,
-                        FinanzKategorie.FAHRTKOSTEN
-                );
+                reisekostenabrechnungRepository
+                        .sumGesamtBetragByVeranstaltung(
+                                v.getId()
+                        );
 
         BigDecimal material =
                 sum(
@@ -314,10 +322,13 @@ public class PDFAbrechnungService {
                 );
 
         BigDecimal tnGesamt =
-                sum(
-                        buchungen,
-                        FinanzKategorie.TEILNEHMERBEITRAG
-                );
+                zahlungsnachweisRepository
+                        .sumBetragByVeranstaltung(v.getId())
+                        .add(
+                                sumVkTeilnehmerbeitragsKorrekturen(
+                                        buchungen
+                                )
+                        );
 
         BigDecimal sonstigeEinnahmen =
                 sum(
@@ -435,6 +446,70 @@ public class PDFAbrechnungService {
                             );
                 }
             }
+        }
+
+        return result;
+    }
+    private BigDecimal sum(
+            List<AbrechnungBuchung> buchungen,
+            FinanzKategorie kategorie,
+            String finanzGruppeKuerzel
+    ) {
+
+        BigDecimal result = BigDecimal.ZERO;
+
+        for (AbrechnungBuchung b : buchungen) {
+
+            if (b.getKategorie() != kategorie
+                    || b.getBetrag() == null
+                    || b.getBeleg() == null
+                    || b.getBeleg().getFinanzGruppe() == null) {
+                continue;
+            }
+
+            if (!finanzGruppeKuerzel.equals(
+                    b.getBeleg()
+                            .getFinanzGruppe()
+                            .getKuerzel()
+            )) {
+                continue;
+            }
+
+            result = result.add(b.getBetrag());
+        }
+
+        return result;
+    }
+    private BigDecimal sumVkTeilnehmerbeitragsKorrekturen(
+            List<AbrechnungBuchung> buchungen
+    ) {
+
+        BigDecimal result = BigDecimal.ZERO;
+
+        for (AbrechnungBuchung b : buchungen) {
+
+            if (b.getKategorie() != FinanzKategorie.TEILNEHMERBEITRAG
+                    || b.getBetrag() == null
+                    || b.getBeleg() == null
+                    || b.getBeleg().getFinanzGruppe() == null) {
+                continue;
+            }
+
+            if (!"VK".equals(
+                    b.getBeleg()
+                            .getFinanzGruppe()
+                            .getKuerzel()
+            )) {
+                continue;
+            }
+
+            // Die automatische VK-Buchung für Überweisungen
+            // ist bereits über die Zahlungsnachweise enthalten.
+            if (b.getHerkunft() == BuchungsHerkunft.TEILNEHMERBEITRAG) {
+                continue;
+            }
+
+            result = result.add(b.getBetrag());
         }
 
         return result;

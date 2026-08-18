@@ -3,6 +3,7 @@ package com.kcserver.repository.abrechnung;
 import com.kcserver.entity.AbrechnungBeleg;
 import com.kcserver.entity.AbrechnungBuchung;
 import com.kcserver.enumtype.BuchungsHerkunft;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
@@ -11,6 +12,10 @@ import org.springframework.data.jpa.repository.Query;
 public interface AbrechnungBuchungRepository
         extends JpaRepository<AbrechnungBuchung, Long> {
 
+    @EntityGraph(attributePaths = {
+            "beleg",
+            "beleg.finanzGruppe"
+    })
     List<AbrechnungBuchung> findByBeleg_Abrechnung_Id(Long abrechnungId);
 
     @Query("""

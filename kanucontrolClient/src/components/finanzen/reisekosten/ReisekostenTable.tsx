@@ -106,8 +106,6 @@ const ReisekostenTable = ({ veranstaltungId }: Props) => {
 
   const handleNeueReisekostenabrechnung = async () => {
 
-    console.log("Neue Fahrkosten – veranstaltungId:", veranstaltungId);
-
     const fahrer = await getVerfuegbareReisekostenPersonen(veranstaltungId);
 
     if (fahrer.length === 0) {
@@ -125,7 +123,6 @@ const ReisekostenTable = ({ veranstaltungId }: Props) => {
         veranstaltungId={veranstaltungId}
         onClose={() => setDialogOpen(false)}
         onSave={async (fahrerId, abrechnungsdatum, bemerkung) => {
-          console.log("CREATE Fahrkosten – veranstaltungId:", veranstaltungId);
 
           const id = await createReisekostenabrechnung({
             veranstaltungId,
@@ -200,9 +197,9 @@ const ReisekostenTable = ({ veranstaltungId }: Props) => {
 
           await deleteReisekostenabrechnung(deleteId);
 
-          await queryClient.invalidateQueries({
-            queryKey: ["reisekosten", veranstaltungId],
-          });
+         await queryClient.invalidateQueries({
+           queryKey: ["reisekosten", "veranstaltung", veranstaltungId],
+         });
 
           setDeleteId(null);
         }}

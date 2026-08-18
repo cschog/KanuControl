@@ -5,14 +5,15 @@ import com.kcserver.entity.AbrechnungBuchung;
 import com.kcserver.entity.Dokument;
 import com.kcserver.enumtype.PdfDocumentDensity;
 import com.kcserver.enumtype.PdfDokumentTyp;
+import com.kcserver.enumtype.ReferenzObjekt;
 import com.kcserver.repository.abrechnung.AbrechnungBelegRepository;
 import com.kcserver.util.PdfFilenameUtil;
+import com.kcserver.util.PdfPaperFormatUtil;
 import lombok.RequiredArgsConstructor;
 import org.apache.pdfbox.multipdf.LayerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.springframework.http.HttpStatus;
@@ -42,7 +43,8 @@ public class PDFBelegDokumenteService {
     private record DocumentSize(
             float width,
             float height,
-            PdfDocumentDensity density
+            PdfDocumentDensity density,
+            ReferenzObjekt referenzObjekt
     ) {
     }
 
@@ -90,14 +92,13 @@ public class PDFBelegDokumenteService {
                                 veranstaltungId
                         )
                         .stream()
-                        .filter(this::hatDokumente)
                         .toList();
 
         if (belege.isEmpty()) {
 
             throw new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
-                    "Für die Abrechnung sind keine Belegdokumente vorhanden."
+                    "Für die Abrechnung sind keine Belege vorhanden."
             );
         }
 
@@ -282,13 +283,12 @@ public class PDFBelegDokumenteService {
 
                 try {
 
-                    size =
-                            determineDocumentSize(dokument);
+                    size = determineDocumentSize(dokument);
 
-                } catch (IOException e) {
+                } catch (IllegalStateException e) {
 
                     throw new RuntimeException(
-                            "Dokument ist kein gültiges PDF/Bild: "
+                            "Keine Dokumentgröße hinterlegt: "
                                     + "Beleg "
                                     + beleg.getId()
                                     + ", Dokument "
@@ -305,7 +305,7 @@ public class PDFBelegDokumenteService {
                                 size.width(),
                                 size.height(),
                                 size.density(),
-                                false
+                                size.referenzObjekt()
                         )
                 );
             }
@@ -606,8 +606,8 @@ public class PDFBelegDokumenteService {
                 );
 
                 page.write(
-                        String.valueOf(
-                                beleg.getDokumente().size()
+                        formatDokumente(
+                                beleg.getDokumente()
                         ),
                         tableX
                                 + colBeleg
@@ -697,6 +697,48 @@ public class PDFBelegDokumenteService {
                     FONT_BOLD,
                     SECTION_SIZE
             );
+            /*
+             * -------------------------------------------------
+             * HINWEIS FEHLENDE BELEGDOKUMENTE
+             * -------------------------------------------------
+             */
+
+            long fehlendeDokumente =
+                    belege.stream()
+                            .filter(beleg -> !hatDokumente(beleg))
+                            .count();
+
+            if (fehlendeDokumente > 0) {
+
+                page.ensureSpace(30f);
+
+                page.moveY(-15f);
+
+                String hinweis;
+
+                if (fehlendeDokumente == 1) {
+
+                    hinweis =
+                            "Hinweis: Für einen Beleg "
+                                    + "ist noch kein Nachweisdokument vorhanden.";
+
+                } else {
+
+                    hinweis =
+                            "Hinweis: Für "
+                                    + fehlendeDokumente
+                                    + " Belege sind noch keine "
+                                    + "Nachweisdokumente vorhanden.";
+                }
+
+                page.write(
+                        hinweis,
+                        tableX,
+                        page.getY(),
+                        FONT_BOLD,
+                        TEXT_SIZE
+                );
+            }
         }
     }
 
@@ -713,8 +755,7 @@ public class PDFBelegDokumenteService {
             float colBeschreibung
     ) throws Exception {
 
-        float xBeleg = x;
-        float xDatum = xBeleg + colBeleg;
+        float xDatum = x + colBeleg;
         float xDokumente = xDatum + colDatum;
         float xBelegnummer = xDokumente + colDokumente;
         float xAussteller = xBelegnummer + colBelegnummer;
@@ -727,7 +768,7 @@ public class PDFBelegDokumenteService {
 
         page.write(
                 "Beleg",
-                xBeleg + 3,
+                x + 3,
                 y - 14,
                 FONT_BOLD,
                 TEXT_SIZE
@@ -798,58 +839,28 @@ public class PDFBelegDokumenteService {
 
     private DocumentSize determineDocumentSize(
             Dokument dokument
-    ) throws IOException {
-
-        byte[] content = dokument.getInhalt();
-
-        /*
-         * =========================================================
-         * PDF
-         * =========================================================
-         */
-
-        if (isPdf(content)) {
-
-            try (
-                    PDDocument document =
-                            org.apache.pdfbox.Loader.loadPDF(
-                                    content
-                            )
-            ) {
-
-                if (document.getNumberOfPages() == 0) {
-
-                    throw new IllegalArgumentException(
-                            "PDF enthält keine Seite."
-                    );
-                }
-
-                PDRectangle box =
-                        document
-                                .getPage(0)
-                                .getMediaBox();
-
-                return new DocumentSize(
-                        box.getWidth(),
-                        box.getHeight(),
-                        PdfDocumentDensity.MEDIUM
-                );
-            }
-        }
-
-        /*
-         * =========================================================
-         * BILD
-         * =========================================================
-         */
+    ) {
 
         if (dokument.getDokumentBreiteMm() == null
                 || dokument.getDokumentHoeheMm() == null) {
 
-            throw new IOException(
-                    "Für das Bild wurde keine physische "
-                            + "Dokumentgröße ermittelt: "
+            throw new IllegalStateException(
+                    "Für Dokument "
+                            + dokument.getId()
+                            + " ("
                             + dokument.getOriginalDateiname()
+                            + ") ist keine Dokumentgröße hinterlegt."
+            );
+        }
+
+        if (dokument.getReferenzObjekt() == null) {
+
+            throw new IllegalStateException(
+                    "Für Dokument "
+                            + dokument.getId()
+                            + " ("
+                            + dokument.getOriginalDateiname()
+                            + ") ist kein Referenzobjekt hinterlegt."
             );
         }
 
@@ -870,23 +881,11 @@ public class PDFBelegDokumenteService {
         return new DocumentSize(
                 width,
                 height,
-                PdfDocumentDensity.MEDIUM
+                PdfDocumentDensity.MEDIUM,
+                dokument.getReferenzObjekt()
         );
     }
 
-
-    private boolean isPdf(
-            byte[] content
-    ) {
-
-        return content != null
-                && content.length >= 5
-                && content[0] == '%'
-                && content[1] == 'P'
-                && content[2] == 'D'
-                && content[3] == 'F'
-                && content[4] == '-';
-    }
 
 
     /*
@@ -1071,5 +1070,26 @@ public class PDFBelegDokumenteService {
                 .map(AbrechnungBuchung::getBetrag)
                 .filter(java.util.Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private String formatDokumente(
+            List<Dokument> dokumente
+    ) {
+
+        if (dokumente == null || dokumente.isEmpty()) {
+            return "0";
+        }
+
+        String formate =
+                dokumente.stream()
+                        .map(PdfPaperFormatUtil::format)
+                        .collect(
+                                java.util.stream.Collectors.joining(", ")
+                        );
+
+        return dokumente.size()
+                + " ("
+                + formate
+                + ")";
     }
 }

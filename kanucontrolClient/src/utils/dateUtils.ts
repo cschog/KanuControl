@@ -34,7 +34,7 @@ export function buildIsoDate(d: string, m: string, y: string): string | null {
 
   if (month < 1 || month > 12) return null;
   if (day < 1 || day > 31) return null;
-  if (year < 2000 || year > 2200) return null;
+  if (year < 1 || year > 9999) return null;
 
   const date = new Date(year, month - 1, day);
 

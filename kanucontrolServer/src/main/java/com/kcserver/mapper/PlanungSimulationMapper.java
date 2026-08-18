@@ -85,6 +85,15 @@ public class PlanungSimulationMapper {
             return null;
         }
 
+        boolean vereinHatGueltigesKik =
+                planung.getVeranstaltung() != null
+                        && planung.getVeranstaltung().getVerein() != null
+                        && planung.getVeranstaltung().getBeginnDatum() != null
+                        && planung.getVeranstaltung().getVerein()
+                        .isKikZertifiziertAm(
+                                planung.getVeranstaltung().getBeginnDatum()
+                        );
+
         return PlanungsSimulation.builder()
                 .veranstaltung(
                         veranstaltungsInfoMapper.toDTO(
@@ -92,7 +101,10 @@ public class PlanungSimulationMapper {
                         )
                 )
                 .status(planung.getStatus())
-                .kikZertifiziert(planung.isKikZertifiziert())
+                .kikZertifiziert(
+                        planung.isKikZertifiziert()
+                                || vereinHatGueltigesKik
+                )
                 .teilnehmer(planung.getTeilnehmer())
                 .mitarbeiter(planung.getMitarbeiter())
                 .teilnehmerBeitragUnter21Jahre(planung.getTeilnehmerBeitragUnter21Jahre())

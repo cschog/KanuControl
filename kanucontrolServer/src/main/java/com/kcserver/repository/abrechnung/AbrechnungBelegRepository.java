@@ -79,4 +79,11 @@ public interface AbrechnungBelegRepository
     List<AbrechnungBeleg> findByVeranstaltungIdWithDokumente(
             Long veranstaltungId
     );
+
+    @Query("""
+    SELECT COUNT(b) > 0
+    FROM AbrechnungBeleg b
+    WHERE b.abrechnung.veranstaltung.id = :veranstaltungId
+""")
+    boolean existsByVeranstaltungId(Long veranstaltungId);
 }

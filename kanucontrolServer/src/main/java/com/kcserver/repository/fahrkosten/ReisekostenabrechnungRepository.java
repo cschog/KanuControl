@@ -94,4 +94,6 @@ and (
             @Param("veranstaltungId") Long veranstaltungId,
             @Param("finanzGruppeId") Long finanzGruppeId
     );
+
+    boolean existsByVeranstaltungId(Long veranstaltungId);
 }

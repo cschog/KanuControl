@@ -5,7 +5,10 @@ import com.kcserver.entity.Teilnehmer;
 import com.kcserver.entity.Veranstaltung;
 import com.kcserver.enumtype.PdfDokumentTyp;
 import com.kcserver.repository.*;
+import com.kcserver.repository.abrechnung.AbrechnungBelegRepository;
 import com.kcserver.repository.abrechnung.AbrechnungBuchungRepository;
+import com.kcserver.repository.abrechnung.ZahlungsnachweisRepository;
+import com.kcserver.repository.fahrkosten.ReisekostenabrechnungRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +26,9 @@ public class DokumentValidationService {
     private final TeilnehmerRepository teilnehmerRepository;
     private final PlanungRepository planungRepository;
     private final AbrechnungBuchungRepository abrechnungBuchungRepository;
+    private final AbrechnungBelegRepository abrechnungBelegRepository;
+    private final ZahlungsnachweisRepository zahlungsnachweisRepository;
+    private final ReisekostenabrechnungRepository reisekostenabrechnungRepository;
 
     public ValidationResult validate(
             Long veranstaltungId,
@@ -61,6 +67,20 @@ public class DokumentValidationService {
                     validateTeilnehmerliste(
                             veranstaltung,
                             teilnehmer
+                    );
+            case REISEKOSTENABRECHNUNG ->
+                    validateReisekostenabrechnung(
+                            veranstaltung
+                    );
+
+            case ZAHLUNGSNACHWEISE ->
+                    validateZahlungsnachweise(
+                            veranstaltung
+                    );
+
+            case BELEGE ->
+                    validateBelege(
+                            veranstaltung
                     );
 
             default ->
@@ -366,5 +386,55 @@ public class DokumentValidationService {
         }
 
     }
+    private ValidationResult validateBelege(
+            Veranstaltung veranstaltung
+    ) {
+
+        List<String> fehler = new ArrayList<>();
+
+        if (!abrechnungBelegRepository.existsByVeranstaltungId(
+                veranstaltung.getId()
+        )) {
+            fehler.add(
+                    "Es wurden noch keine Belege erfasst."
+            );
+        }
+
+        return buildResult(fehler);
+    }
+    private ValidationResult validateReisekostenabrechnung(
+            Veranstaltung veranstaltung
+    ) {
+
+        List<String> fehler = new ArrayList<>();
+
+        if (!reisekostenabrechnungRepository.existsByVeranstaltungId(
+                veranstaltung.getId()
+        )) {
+            fehler.add(
+                    "Es wurde noch keine Fahrkostenabrechnung erfasst."
+            );
+        }
+
+        return buildResult(fehler);
+    }
+
+    private ValidationResult validateZahlungsnachweise(
+            Veranstaltung veranstaltung
+    ) {
+
+        List<String> fehler = new ArrayList<>();
+
+        if (!zahlungsnachweisRepository.existsByVeranstaltungId(
+                veranstaltung.getId()
+        )) {
+            fehler.add(
+                    "Es wurden noch keine Zahlungsnachweise erfasst."
+            );
+        }
+
+        return buildResult(fehler);
+    }
+
 }
 

@@ -1,6 +1,7 @@
 package com.kcserver.service.pdf;
 
 import com.kcserver.enumtype.PdfDocumentDensity;
+import com.kcserver.enumtype.ReferenzObjekt;
 
 import java.util.Objects;
 
@@ -10,6 +11,9 @@ import java.util.Objects;
  * width / height sind die ursprünglichen Abmessungen
  * des Dokuments in PDF-Punkten.
  *
+ * referenzObjekt beschreibt das physische Papierformat
+ * und damit die gewünschte Dokumentausrichtung.
+ *
  * Die Engine selbst kennt den eigentlichen Dokumentinhalt nicht.
  */
 public record A4LayoutItem(
@@ -17,11 +21,25 @@ public record A4LayoutItem(
         float width,
         float height,
         PdfDocumentDensity density,
-        boolean rotationAllowed
+        ReferenzObjekt referenzObjekt
 ) {
+
     public A4LayoutItem {
-        Objects.requireNonNull(id, "id darf nicht null sein.");
-        Objects.requireNonNull(density, "density darf nicht null sein.");
+
+        Objects.requireNonNull(
+                id,
+                "id darf nicht null sein."
+        );
+
+        Objects.requireNonNull(
+                density,
+                "density darf nicht null sein."
+        );
+
+        Objects.requireNonNull(
+                referenzObjekt,
+                "referenzObjekt darf nicht null sein."
+        );
 
         if (width <= 0) {
             throw new IllegalArgumentException(

@@ -31,6 +31,7 @@ export default function SimulationPage({ veranstaltungId }: SimulationPageProps)
   const [localSimulation, setLocalSimulation] = useState<PlanungsSimulation>();
 
   const [dirty, setDirty] = useState(false);
+  const [beitragsvorschlagUebernommen, setBeitragsvorschlagUebernommen] = useState(false);
 
   const [simulationOpen, setSimulationOpen] = useState(true);
   const [positionenOpen, setPositionenOpen] = useState(false);
@@ -61,14 +62,16 @@ export default function SimulationPage({ veranstaltungId }: SimulationPageProps)
     });
 
     setDirty(true);
+    setBeitragsvorschlagUebernommen(true);
   };
 
-  useEffect(() => {
-    if (!localSimulation && simulation) {
-      setLocalSimulation(simulation);
-      setDirty(false);
-    }
-  }, [simulation, localSimulation]);
+ useEffect(() => {
+   if (!localSimulation && simulation) {
+     setLocalSimulation(simulation);
+     setDirty(false);
+     setBeitragsvorschlagUebernommen(false);
+   }
+ }, [simulation, localSimulation]);
 
   useEffect(() => {
     if (!localSimulation) {
@@ -116,7 +119,11 @@ export default function SimulationPage({ veranstaltungId }: SimulationPageProps)
       </Box>
 
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-        <Button variant="outlined" onClick={uebernehmeBeitragsvorschlag}>
+        <Button
+          variant="outlined"
+          disabled={istEingereicht || beitragsvorschlagUebernommen}
+          onClick={uebernehmeBeitragsvorschlag}
+        >
           Beitragsvorschlag übernehmen
         </Button>
 

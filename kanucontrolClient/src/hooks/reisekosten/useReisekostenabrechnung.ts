@@ -1,5 +1,4 @@
 // src/hooks/reisekosten/useReisekostenabrechnung.ts
-
 import { useQuery } from "@tanstack/react-query";
 
 import { getReisekostenabrechnung } from "@/api/services/reisekostenApi";
@@ -8,7 +7,7 @@ import { ReisekostenabrechnungDetailResponse } from "@/api/types/Reisekostenabre
 
 export function useReisekostenabrechnung(id: number) {
   return useQuery<ReisekostenabrechnungDetailResponse>({
-    queryKey: ["reisekosten", id],
+    queryKey: ["reisekosten", "detail", id],
     queryFn: () => getReisekostenabrechnung(id),
     enabled: !!id,
   });

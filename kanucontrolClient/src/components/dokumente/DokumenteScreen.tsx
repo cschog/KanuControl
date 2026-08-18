@@ -34,6 +34,12 @@ const DokumenteScreen: React.FC = () => {
   const [abrechnungValidation, setAbrechnungValidation] = useState<ValidationResult | null>(null);
   const [reisekostenOpen, setReisekostenOpen] = useState(false);
   const [loadingReport, setLoadingReport] = useState<string | null>(null);
+  const [zahlungsnachweiseValidation, setZahlungsnachweiseValidation] =
+    useState<ValidationResult | null>(null);
+
+  const [belegeValidation, setBelegeValidation] = useState<ValidationResult | null>(null);
+
+  const [fahrkostenValidation, setFahrkostenValidation] = useState<ValidationResult | null>(null);
 
   /* =========================================================
      Aktive Veranstaltung laden
@@ -47,17 +53,31 @@ const DokumenteScreen: React.FC = () => {
         setVeranstaltung(v);
 
         if (v?.id) {
-          const [anmeldung, teilnehmerliste, erhebungsbogen, abrechnung] = await Promise.all([
-            validateDokument(v.id, PdfDokumentTyp.ANMELDUNG),
-            validateDokument(v.id, PdfDokumentTyp.TEILNEHMERLISTE),
-            validateDokument(v.id, PdfDokumentTyp.ERHEBUNGSBOGEN),
-            validateDokument(v.id, PdfDokumentTyp.ABRECHNUNG),
-          ]);
+         const [
+           anmeldung,
+           teilnehmerliste,
+           erhebungsbogen,
+           abrechnung,
+           zahlungsnachweise,
+           belege,
+           fahrkosten,
+         ] = await Promise.all([
+           validateDokument(v.id, PdfDokumentTyp.ANMELDUNG),
+           validateDokument(v.id, PdfDokumentTyp.TEILNEHMERLISTE),
+           validateDokument(v.id, PdfDokumentTyp.ERHEBUNGSBOGEN),
+           validateDokument(v.id, PdfDokumentTyp.ABRECHNUNG),
+           validateDokument(v.id, PdfDokumentTyp.ZAHLUNGSNACHWEISE),
+           validateDokument(v.id, PdfDokumentTyp.BELEGE),
+           validateDokument(v.id, PdfDokumentTyp.REISEKOSTENABRECHNUNG),
+         ]);
 
           setAnmeldungValidation(anmeldung);
           setTeilnehmerValidation(teilnehmerliste);
           setErhebungsbogenValidation(erhebungsbogen);
           setAbrechnungValidation(abrechnung);
+          setZahlungsnachweiseValidation(zahlungsnachweise);
+          setBelegeValidation(belege);
+          setFahrkostenValidation(fahrkosten);
         }
       } catch (err) {
         if (axios.isAxiosError(err)) {
@@ -183,62 +203,64 @@ const DokumenteScreen: React.FC = () => {
     );
   };
 
- const renderSection = (
-   title: string,
-   endpoint: string,
-   fallbackFilename: string,
-   disabled: boolean = false,
- ) => {
-   const loading = loadingReport === endpoint;
+  const renderSection = (
+    title: string,
+    endpoint: string,
+    fallbackFilename: string,
+    disabled: boolean = false,
+  ) => {
+    const loading = loadingReport === endpoint;
 
-   return (
-     <Paper
-       elevation={3}
-       sx={{
-         p: 3,
-         borderRadius: radius.dialog,
-       }}
-     >
-       <Stack direction="row" alignItems="center" spacing={1} mb={2}>
-         <PictureAsPdfIcon />
+    return (
+      <Paper
+        elevation={3}
+        sx={{
+          p: 3,
+          borderRadius: radius.dialog,
+        }}
+      >
+        <Stack direction="row" alignItems="center" spacing={1} mb={2}>
+          <PictureAsPdfIcon />
 
-         <Typography variant="h6">{title}</Typography>
-       </Stack>
+          <Typography variant="h6">{title}</Typography>
+        </Stack>
 
-       <Stack
-         direction={{
-           xs: "column",
-           sm: "row",
-         }}
-         spacing={2}
-       >
-         <Button
-           variant="contained"
-           startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <VisibilityIcon />}
-           onClick={() => void handlePreview(endpoint)}
-           disabled={disabled || loading}
-         >
-           {loading ? "PDF wird erstellt ..." : "Vorschau"}
-         </Button>
+        <Stack
+          direction={{
+            xs: "column",
+            sm: "row",
+          }}
+          spacing={2}
+        >
+          <Button
+            variant="contained"
+            startIcon={
+              loading ? <CircularProgress size={18} color="inherit" /> : <VisibilityIcon />
+            }
+            onClick={() => void handlePreview(endpoint)}
+            disabled={disabled || loading}
+          >
+            {loading ? "PDF wird erstellt ..." : "Vorschau"}
+          </Button>
 
-         <Button
-           variant="outlined"
-           startIcon={loading ? <CircularProgress size={18} /> : <DownloadIcon />}
-           onClick={() => void handleDownload(endpoint, fallbackFilename)}
-           disabled={disabled || loading}
-         >
-           {loading ? "Bitte warten ..." : "Download"}
-         </Button>
-       </Stack>
+          <Button
+            variant="outlined"
+            startIcon={loading ? <CircularProgress size={18} /> : <DownloadIcon />}
+            onClick={() => void handleDownload(endpoint, fallbackFilename)}
+            disabled={disabled || loading}
+          >
+            {loading ? "Bitte warten ..." : "Download"}
+          </Button>
+        </Stack>
 
-       {loading && (
-         <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-           Der Bericht wird erstellt. Das kann etwas dauern ...
-         </Typography>
-       )}
-     </Paper>
-   );
- };
+        {loading && (
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+            Der Bericht wird erstellt. Das kann etwas dauern ...
+          </Typography>
+        )}
+      </Paper>
+    );
+  };
 
   /* =========================================================
      UI
@@ -293,12 +315,27 @@ const DokumenteScreen: React.FC = () => {
               !erhebungsbogenValidation?.valid,
             )}
             {/* Zahlungsnachweise */}
-            {renderSection("Zahlungsnachweise", "zahlungsnachweise/pdf", "zahlungsnachweise.pdf")}
+            {renderValidationWarning(
+              "Zahlungsnachweise derzeit nicht möglich",
+              zahlungsnachweiseValidation,
+            )}
+            {renderSection(
+              "Zahlungsnachweise",
+              "zahlungsnachweise/pdf",
+              "zahlungsnachweise.pdf",
+              !zahlungsnachweiseValidation?.valid,
+            )}
 
             {/* Belege */}
-            {renderSection("Belege", "belege/pdf", "belege.pdf")}
+            {renderValidationWarning("Belege derzeit nicht möglich", belegeValidation)}
+            {renderSection("Belege", "belege/pdf", "belege.pdf", !belegeValidation?.valid)}
 
             {/* Fahrkosten */}
+            {renderValidationWarning(
+              "Fahrkostenabrechnung derzeit nicht möglich",
+              fahrkostenValidation,
+            )}
+
             <Paper
               elevation={3}
               sx={{
@@ -311,7 +348,11 @@ const DokumenteScreen: React.FC = () => {
                 <Typography variant="h6">Fahrkosten</Typography>
               </Stack>
 
-              <Button variant="contained" onClick={() => setReisekostenOpen(true)}>
+              <Button
+                variant="contained"
+                onClick={() => setReisekostenOpen(true)}
+                disabled={!fahrkostenValidation?.valid}
+              >
                 Fahrkosten auswählen
               </Button>
             </Paper>

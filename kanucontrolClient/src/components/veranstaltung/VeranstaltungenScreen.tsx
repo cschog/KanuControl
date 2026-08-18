@@ -327,25 +327,22 @@ export default function VeranstaltungenScreen() {
      CREATE
      ========================================================= */
 
-  const handleCreate = async (payload: VeranstaltungSave) => {
-    const response = await createVeranstaltung(payload);
+const handleCreate = async (payload: VeranstaltungSave) => {
+  const response = await createVeranstaltung(payload);
 
-    await fetchData();
-    await reloadContext();
+  console.log("CREATE RESPONSE:", response);
 
-    setCreateOpen(false);
+  await fetchData();
+  await reloadContext();
 
-    setSelectedVeranstaltung(response.data);
-    setSelectedId(response.data.id);
+  setCreateOpen(false);
 
-    if (response.warnings?.length > 0) {
-      // TODO: Dialog/Snackbar
-      alert(response.warnings.join("\n"));
-    }
+  setSelectedVeranstaltung(response);
+  setSelectedId(response.id);
 
-    setBtnEditDisabled(false);
-    setBtnDeleteDisabled(false);
-  };
+  setBtnEditDisabled(false);
+  setBtnDeleteDisabled(false);
+};
 
   /* =========================================================
      COPY

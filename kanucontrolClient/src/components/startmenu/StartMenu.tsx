@@ -1,6 +1,9 @@
 import { Box, Alert } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { getAllVereine } from "@/api/services/vereinApi";
+import { getPersonsPaged } from "@/api/services/personApi";
 
 import { MenueHeader } from "@/components/layout/MenueHeader";
 import { useAppContext } from "@/context/AppContext";
@@ -13,6 +16,29 @@ const StartMenue = () => {
   const { schema, active, loading } = useAppContext();
   const navigate = useNavigate();
 
+  const [vereinCount, setVereinCount] = useState(0);
+  const [personenCount, setPersonenCount] = useState(0);
+  const [loadingStammdaten, setLoadingStammdaten] = useState(true);
+
+  useEffect(() => {
+    const loadStammdaten = async () => {
+      try {
+        setLoadingStammdaten(true);
+
+        const [vereine, personen] = await Promise.all([getAllVereine(), getPersonsPaged(0, 1)]);
+
+        setVereinCount(vereine.length);
+        setPersonenCount(personen.totalElements);
+      } catch (error) {
+        console.error("Fehler beim Laden der Stammdaten", error);
+      } finally {
+        setLoadingStammdaten(false);
+      }
+    };
+
+    loadStammdaten();
+  }, []);
+
   const contextText = active
     ? `Mandant: ${schema} · ${active.name} · ${active.leiter?.vorname ?? ""} ${
         active.leiter?.name ?? ""
@@ -21,14 +47,44 @@ const StartMenue = () => {
 
   const admin = isAdmin();
 
-  const allgemeineButtons = [
-    { key: "vereine", label: "Vereine", path: "/vereine" },
-    { key: "mitglieder", label: "Mitglieder", path: "/personen" },
-    { key: "veranstaltungen", label: "Veranstaltungen", path: "/veranstaltungen" },
-    { key: "teilnehmer", label: "Teilnehmer", path: "/teilnehmer" },
-    { key: "dokumente", label: "Dokumente", path: "/dokumente" },
-    { key: "verwaltung", label: "Verwaltung", path: "/verwaltung" },
-  ] as const;
+const allgemeineButtons = [
+  {
+    key: "vereine",
+    label: "Vereine",
+    path: "/vereine",
+    disabled: false,
+  },
+  {
+    key: "mitglieder",
+    label: "Mitglieder",
+    path: "/personen",
+    disabled: vereinCount === 0,
+  },
+  {
+    key: "veranstaltungen",
+    label: "Veranstaltungen",
+    path: "/veranstaltungen",
+    disabled: vereinCount === 0 || personenCount === 0,
+  },
+  {
+    key: "teilnehmer",
+    label: "Teilnehmer",
+    path: "/teilnehmer",
+    disabled: !active,
+  },
+  {
+    key: "dokumente",
+    label: "Dokumente",
+    path: "/dokumente",
+    disabled: !active,
+  },
+  {
+    key: "verwaltung",
+    label: "Verwaltung",
+    path: "/verwaltung",
+    disabled: false,
+  },
+] as const;
 
   const finanzBereiche = active?.id
     ? [
@@ -66,6 +122,7 @@ const StartMenue = () => {
             <ModuleButton
               label={btn.label}
               moduleType={moduleTypeMap[btn.key]}
+              disabled={btn.disabled || loadingStammdaten}
               onClick={() => navigate(btn.path)}
             />
           </Grid>

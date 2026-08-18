@@ -313,7 +313,11 @@ const ZahlungsnachweisDialog = ({
               },
               width: {
                 xs: "calc(100% - 16px)",
-                sm: "auto",
+                sm: "900px",
+              },
+              maxWidth: {
+                xs: "none",
+                sm: "calc(100% - 64px)",
               },
               maxHeight: {
                 xs: "calc(100% - 16px)",
@@ -388,7 +392,12 @@ const ZahlungsnachweisDialog = ({
             <TextField
               select
               label="Konto"
-              value={finanzGruppeId ?? ""}
+              value={
+                finanzGruppeId !== null &&
+                finanzgruppen.some((gruppe) => gruppe.id === finanzGruppeId)
+                  ? finanzGruppeId
+                  : ""
+              }
               onChange={(e) =>
                 setFinanzGruppeId(e.target.value === "" ? null : Number(e.target.value))
               }

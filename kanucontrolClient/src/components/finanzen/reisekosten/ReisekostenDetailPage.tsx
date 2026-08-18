@@ -3,6 +3,7 @@
 import { Alert, Stack, Box, Button, Paper, Typography } from "@mui/material";
 import Tooltip from "@mui/material/Tooltip";
 import LockIcon from "@mui/icons-material/Lock";
+import { useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import FahrtabschnittDialog from "./FahrtabschnittDialog";
@@ -18,7 +19,6 @@ import { ReisekostenMitfahrerAutocomplete } from "@/components/finanzen/reisekos
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 
-
 export default function ReisekostenDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -31,6 +31,18 @@ export default function ReisekostenDetailPage() {
   const [selectedMitfahrer, setSelectedMitfahrer] = useState<PersonRef | undefined>();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  const excludeIds = useMemo(() => mitfahrerPool.map((p) => p.id), [mitfahrerPool]);
+
+    const sortierteMitfahrer = useMemo(
+      () =>
+        [...mitfahrerPool].sort(
+          (a, b) =>
+            a.name.localeCompare(b.name, "de", { sensitivity: "base" }) ||
+            a.vorname.localeCompare(b.vorname, "de", { sensitivity: "base" }),
+        ),
+      [mitfahrerPool],
+    );
 
   useEffect(() => {
     if (!data) {
@@ -86,7 +98,7 @@ export default function ReisekostenDetailPage() {
         </Typography>
 
         <Stack spacing={1}>
-          {mitfahrerPool.map((p) => (
+          {sortierteMitfahrer.map((p) => (
             <Paper
               key={p.id}
               sx={{
@@ -97,7 +109,7 @@ export default function ReisekostenDetailPage() {
               }}
             >
               <span>
-                {p.vorname} {p.name}
+                {p.name}, {p.vorname}
               </span>
 
               <Tooltip
@@ -129,7 +141,7 @@ export default function ReisekostenDetailPage() {
           <ReisekostenMitfahrerAutocomplete
             veranstaltungId={data.veranstaltungId}
             value={selectedMitfahrer}
-            excludeIds={mitfahrerPool.map((p) => p.id)}
+            excludeIds={excludeIds}
             onChange={async (person) => {
               if (!person) {
                 setSelectedMitfahrer(undefined);

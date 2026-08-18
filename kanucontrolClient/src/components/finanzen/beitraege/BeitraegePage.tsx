@@ -6,9 +6,15 @@ import {
   CardContent,
   Chip,
   CircularProgress,
+  IconButton,
   Stack,
+  Tooltip,
   Typography,
 } from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+
+import Money from "@/components/common/Money";
 
 import BackFooter from "@/components/common/BackFooter";
 
@@ -260,6 +266,72 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
               columns={zahlungsnachweiseCols}
               loading={loading}
               height={250}
+              mobileRenderRow={(row) => (
+                <Box>
+                  {/* DATUM + BETRAG */}
+
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      gap: 1,
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        fontWeight: 700,
+                        fontSize: "1rem",
+                      }}
+                    >
+                      {row.datum}
+                    </Typography>
+
+                    <Typography
+                      sx={{
+                        fontWeight: 700,
+                        color: "primary.main",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      <Money value={row.betrag} />
+                    </Typography>
+                  </Box>
+
+                  {/* TN + DOKUMENTE */}
+
+                  <Stack
+                    direction="row"
+                    alignItems="center"
+                    justifyContent="space-between"
+                    sx={{ mt: 0.5 }}
+                  >
+                    <Typography variant="body2" color="text.secondary">
+                      TN: {row.anzahlTeilnehmer ?? 0}
+                      {" • Dokumente: "}
+                      {row.anzahlDokumente ?? 0}
+                    </Typography>
+
+                    <Stack direction="row" spacing={0}>
+                      <Tooltip title="Bearbeiten">
+                        <IconButton size="small" onClick={() => handleEditZahlungsnachweis(row.id)}>
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+
+                      <Tooltip title="Löschen">
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => handleDeleteZahlungsnachweis(row.id)}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </Stack>
+                  </Stack>
+                </Box>
+              )}
             />
           )}
         </CardContent>
@@ -454,10 +526,10 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
         }}
         onConfirm={handleConfirmDeleteZahlungsnachweis}
       />
-         <BackFooter
-              label="Zurück zu Durchführung"
-              path={`/veranstaltungen/${veranstaltungId}/finanzen/durchfuehrung`}
-            />
+      <BackFooter
+        label="Zurück zu Durchführung"
+        path={`/veranstaltungen/${veranstaltungId}/finanzen/durchfuehrung`}
+      />
     </Stack>
   );
 };

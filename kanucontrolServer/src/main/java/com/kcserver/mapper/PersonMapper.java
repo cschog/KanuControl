@@ -5,15 +5,16 @@ import com.kcserver.dto.person.PersonDetailDTO;
 import com.kcserver.dto.person.PersonListDTO;
 import com.kcserver.dto.person.PersonRefDTO;
 import com.kcserver.dto.person.PersonSaveDTO;
-import com.kcserver.dto.verein.VereinRefDTO;
 import com.kcserver.entity.Mitglied;
 import com.kcserver.entity.Person;
+
 import com.kcserver.entity.Verein;
 import org.mapstruct.*;
 
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.List;
+import org.springframework.lang.Nullable;
 
 @Mapper(
         componentModel = "spring",
@@ -41,9 +42,13 @@ public interface PersonMapper {
     @Mapping(target = "mitgliedschaften", source = "mitgliedschaften")
     PersonDetailDTO toDetailDTO(Person person);
 
+    /* DETAIL OHNE MITGLIEDSCHAFTEN */
+    @Named("toDetailDTOWithoutMitgliedschaften")
+    @Mapping(target = "mitgliedschaften", ignore = true)
+    PersonDetailDTO toDetailDTOWithoutMitgliedschaften(Person person);
+
     @Mapping(target = "personId", ignore = true)
     MitgliedDetailDTO toMitgliedDetailDTO(Mitglied mitglied);
-    VereinRefDTO toVereinRefDTO(Verein verein);
 
     /* WRITE */
     @Mapping(target = "id", ignore = true)
@@ -73,19 +78,25 @@ public interface PersonMapper {
         return Period.between(geburtsdatum, LocalDate.now()).getYears();
     }
 
-    // 🔑 NEU
+    @Nullable
     default String resolveHauptvereinAbk(Person person) {
-        if (person.getMitgliedschaften() == null) return null;
+        if (person == null || person.getMitgliedschaften() == null) {
+            return null;
+        }
 
         return person.getMitgliedschaften().stream()
                 .filter(Mitglied::getHauptVerein)
-                .map(m -> m.getVerein() != null ? m.getVerein().getAbk() : null)
+                .map(Mitglied::getVerein)
+                .filter(java.util.Objects::nonNull)
+                .map(Verein::getAbk)
                 .findFirst()
                 .orElse(null);
     }
 
     default com.kcserver.enumtype.CountryCode mapCountryCode(String code) {
-        if (code == null || code.isBlank()) return null;
+        if (code == null || code.isBlank()) {
+            return com.kcserver.enumtype.CountryCode.DE;
+        }
         return com.kcserver.enumtype.CountryCode.valueOf(code);
     }
 

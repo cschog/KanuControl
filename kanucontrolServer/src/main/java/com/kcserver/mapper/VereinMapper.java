@@ -9,6 +9,8 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.ReportingPolicy;
 import com.kcserver.dto.verein.VereinRefDTO;
+import org.mapstruct.InheritConfiguration;
+import org.mapstruct.Named;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.ERROR)
 public interface VereinMapper {
@@ -19,6 +21,11 @@ public interface VereinMapper {
     @Mapping(expression = "java(verein.getMitglieder() != null ? verein.getMitglieder().size() : 0)", target = "mitgliederCount")
     VereinDTO toDTO(Verein verein);
 
+    @Named("toDTOWithoutMitgliederCount")
+    @InheritConfiguration(name = "toDTO")
+    @Mapping(target = "mitgliederCount", ignore = true)
+    VereinDTO toDTOWithoutMitgliederCount(Verein verein);
+
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "kontoinhaber", ignore = true)
     @Mapping(target = "bic", source = "bic")
@@ -27,10 +34,12 @@ public interface VereinMapper {
     @Mapping(target = "mitglieder", ignore = true)
     Verein toEntity(VereinDTO dto);
 
+    @Named("toRefDTO")
     @Mapping(target = "id", source = "id")
     @Mapping(target = "name", source = "name")
     @Mapping(target = "abk", source = "abk")
     @Mapping(target = "ort", source = "ort")
+    @Mapping(target = "countryCode", source = "countryCode")
     VereinRefDTO toRefDTO(Verein verein);
 
     @Mapping(target = "id", ignore = true)

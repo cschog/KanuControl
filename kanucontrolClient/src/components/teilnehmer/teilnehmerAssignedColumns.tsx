@@ -13,11 +13,17 @@ export function teilnehmerAssignedColumns({ onRoleClick }: Props): ColumnDef<Tei
       id: "fullname",
       header: "Name",
       accessorFn: (row) => `${row.person?.name ?? ""}, ${row.person?.vorname ?? ""}`,
-
       sortingFn: "text",
-
       size: 260,
     },
+
+    {
+      id: "alter",
+      header: "Alter",
+      accessorFn: (row) => row.alterBeiBeginn ?? null,
+      size: 60,
+    },
+
     {
       accessorFn: (row) => row.person?.hauptvereinAbk ?? "",
       id: "verein",

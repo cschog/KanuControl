@@ -16,6 +16,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import com.kcserver.enumtype.ReferenzObjekt;
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
 
 import java.io.IOException;
 import java.util.List;
@@ -26,6 +30,12 @@ import java.util.List;
 public class DokumentService {
 
     private static final long MAX_FILE_SIZE = 10L * 1024 * 1024; // 10 MB
+
+    private record DocumentDimensions(
+            double widthMm,
+            double heightMm
+    ) {
+    }
 
     private final DokumentRepository dokumentRepository;
     private final AbrechnungBelegRepository abrechnungBelegRepository;
@@ -323,18 +333,29 @@ public class DokumentService {
 
         /*
          * Dokumentformat
+         *
+         * Fotos werden bei KanuControl grundsätzlich
+         * im Querformat fotografiert.
+         *
+         * Bei PDFs wird die Ausrichtung aus der
+         * ersten PDF-Seite übernommen.
          */
         dokument.setReferenzObjekt(referenzObjekt);
 
-        if (referenzObjekt != null) {
-            dokument.setDokumentBreiteMm(
-                    referenzObjekt.getBreiteMm()
-            );
+        DocumentDimensions dimensions =
+                determineDocumentDimensions(
+                        file,
+                        referenzObjekt,
+                        mimeType
+                );
 
-            dokument.setDokumentHoeheMm(
-                    referenzObjekt.getHoeheMm()
-            );
-        }
+        dokument.setDokumentBreiteMm(
+                dimensions.widthMm()
+        );
+
+        dokument.setDokumentHoeheMm(
+                dimensions.heightMm()
+        );
 
         String dateiname = file.getOriginalFilename();
 
@@ -358,6 +379,124 @@ public class DokumentService {
         }
 
         return dokument;
+    }
+
+    private DocumentDimensions determineDocumentDimensions(
+            MultipartFile file,
+            ReferenzObjekt referenzObjekt,
+            String mimeType
+    ) {
+
+        /*
+         * =========================================================
+         * FOTO / BILD
+         * =========================================================
+         *
+         * Fotos von Belegen werden bei KanuControl
+         * grundsätzlich im Querformat fotografiert.
+         *
+         * Deshalb:
+         *
+         * DIN A4 -> 297 x 210 mm
+         * DIN A5 -> 210 x 148 mm
+         * DIN A6 -> 148 x 105 mm
+         * DIN A7 -> 105 x 74 mm
+         */
+        if (mimeType != null
+                && mimeType.startsWith("image/")) {
+
+            return new DocumentDimensions(
+                    referenzObjekt.getHoeheMm(),
+                    referenzObjekt.getBreiteMm()
+            );
+        }
+
+        /*
+         * =========================================================
+         * PDF
+         * =========================================================
+         *
+         * Die physische Größe kommt aus dem
+         * ausgewählten Referenzobjekt.
+         *
+         * Die Ausrichtung wird aus der ersten PDF-Seite
+         * ermittelt.
+         */
+        if (MediaType.APPLICATION_PDF_VALUE.equals(mimeType)) {
+
+            try (
+                    PDDocument pdf =
+                            Loader.loadPDF(
+                                    file.getBytes()
+                            )
+            ) {
+
+                if (pdf.getNumberOfPages() == 0) {
+
+                    throw new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST,
+                            "Die PDF-Datei enthält keine Seite."
+                    );
+                }
+
+                PDPage page =
+                        pdf.getPage(0);
+
+                PDRectangle box =
+                        page.getMediaBox();
+
+                float width =
+                        box.getWidth();
+
+                float height =
+                        box.getHeight();
+
+                int rotation =
+                        page.getRotation();
+
+                /*
+                 * Bei 90° bzw. 270° ist die sichtbare
+                 * Ausrichtung gegenüber der MediaBox gedreht.
+                 */
+                boolean landscape =
+                        rotation == 90
+                                || rotation == 270
+                                ? height > width
+                                : width > height;
+
+                if (landscape) {
+
+                    return new DocumentDimensions(
+                            referenzObjekt.getHoeheMm(),
+                            referenzObjekt.getBreiteMm()
+                    );
+
+                } else {
+
+                    return new DocumentDimensions(
+                            referenzObjekt.getBreiteMm(),
+                            referenzObjekt.getHoeheMm()
+                    );
+                }
+
+            } catch (IOException e) {
+
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "PDF-Datei konnte nicht gelesen werden.",
+                        e
+                );
+            }
+        }
+
+        /*
+         * Sollte eigentlich durch validateFile()
+         * ausgeschlossen sein.
+         */
+        throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Nicht unterstützter Dokumenttyp."
+        );
     }
 
     private void validateFile(MultipartFile file) {

@@ -8,13 +8,15 @@ interface Props {
   label: string;
   moduleType: ModuleType;
   onClick?: () => void;
+  disabled?: boolean;
 }
 
-export const ModuleButton: React.FC<Props> = ({ label, moduleType, onClick }) => {
+export const ModuleButton: React.FC<Props> = ({ label, moduleType, onClick, disabled = false }) => {
   return (
     <Button
       fullWidth
       variant="contained"
+      disabled={disabled}
       onClick={onClick}
       sx={{
         backgroundColor: moduleColors[moduleType],

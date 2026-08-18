@@ -2,7 +2,7 @@ package com.kcserver.dto.veranstaltung;
 
 import com.kcserver.dto.person.PersonDetailDTO;
 import com.kcserver.dto.unterkunft.UnterkunftsartRefDTO;
-import com.kcserver.dto.verein.VereinDTO;
+import com.kcserver.dto.verein.VereinRefDTO;
 import com.kcserver.dto.verpflegung.VerpflegungsmodellRefDTO;
 import com.kcserver.enumtype.CountryCode;
 import com.kcserver.enumtype.VeranstaltungScope;
@@ -53,7 +53,7 @@ public class VeranstaltungDetailDTO {
     private Long vereinId;
     private Long leiterId;
 
-    private VereinDTO verein;
+    private VereinRefDTO verein;
     private PersonDetailDTO leiter;
 
     /* =========================

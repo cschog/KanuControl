@@ -5,6 +5,7 @@ import com.kcserver.entity.Veranstaltung;
 import com.kcserver.entity.Zahlungsnachweis;
 import com.kcserver.enumtype.PdfDocumentDensity;
 import com.kcserver.enumtype.PdfDokumentTyp;
+import com.kcserver.enumtype.ReferenzObjekt;
 import com.kcserver.repository.VeranstaltungRepository;
 import com.kcserver.repository.abrechnung.ZahlungsnachweisRepository;
 import com.kcserver.util.PdfFilenameUtil;
@@ -13,16 +14,13 @@ import org.apache.pdfbox.multipdf.LayerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.common.PDRectangle;
+
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -32,6 +30,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import com.kcserver.util.PdfPaperFormatUtil;
 
 @Service
 @RequiredArgsConstructor
@@ -52,8 +51,6 @@ public class PDFZahlungsnachweiseService {
     private static final float TEXT_SIZE = 9f;
 
     private static final float ROW_HEIGHT = 20f;
-    private static final float MAX_DOCUMENT_WIDTH = 400f;
-    private static final float MAX_DOCUMENT_HEIGHT = 300f;
 
     private static final DateTimeFormatter DATE_FORMAT =
             DateTimeFormatter.ofPattern("dd.MM.yyyy");
@@ -63,10 +60,11 @@ public class PDFZahlungsnachweiseService {
                     Locale.GERMANY
             );
 
-    record DocumentSize(
+    private record DocumentSize(
             float width,
             float height,
-            PdfDocumentDensity density
+            PdfDocumentDensity density,
+            ReferenzObjekt referenzObjekt
     ) {
     }
 
@@ -82,7 +80,6 @@ public class PDFZahlungsnachweiseService {
 
     private final A4LayoutEngine layoutEngine;
     private final PDFDocumentComposer composer;
-    private final ImageAnalysisService imageAnalysisService;
 
     String createBelegkopf(
             PDFBelegGruppe gruppe
@@ -154,14 +151,14 @@ public class PDFZahlungsnachweiseService {
                 try {
 
                     size =
-                            determinePdfSize(
-                                    dokument.getInhalt()
+                            determineDocumentSize(
+                                    dokument
                             );
 
-                } catch (IOException e) {
+                } catch (IllegalStateException e) {
 
                     throw new IOException(
-                            "Dokument ist kein gültiges PDF: "
+                            "Keine Dokumentgröße hinterlegt: "
                                     + "Zahlungsnachweis "
                                     + nachweis.getId()
                                     + ", Dokument "
@@ -178,7 +175,7 @@ public class PDFZahlungsnachweiseService {
                                 size.width(),
                                 size.height(),
                                 size.density(),
-                                false
+                                size.referenzObjekt()
                         )
                 );
             }
@@ -229,10 +226,7 @@ public class PDFZahlungsnachweiseService {
                 zahlungsnachweisRepository
                         .findByVeranstaltungIdOrderByDatumDescIdDesc(
                                 veranstaltungId
-                        )
-                        .stream()
-                        .filter(this::hatDokumente)
-                        .toList();
+                        );
 
         try (
                 PDDocument deckblatt =
@@ -624,8 +618,8 @@ public class PDFZahlungsnachweiseService {
                 );
 
                 page.write(
-                        String.valueOf(
-                                nachweis.getDokumente().size()
+                        formatDokumente(
+                                nachweis.getDokumente()
                         ),
                         tableX
                                 + colBeleg
@@ -700,6 +694,49 @@ public class PDFZahlungsnachweiseService {
                     FONT_BOLD,
                     SECTION_SIZE
             );
+
+            /*
+             * -------------------------------------------------
+             * HINWEIS FEHLENDE NACHWEISDOKUMENTE
+             * -------------------------------------------------
+             */
+
+            long fehlendeDokumente =
+                    nachweise.stream()
+                            .filter(nachweis -> !hatDokumente(nachweis))
+                            .count();
+
+            if (fehlendeDokumente > 0) {
+
+                page.ensureSpace(30f);
+
+                page.moveY(-15f);
+
+                String hinweis;
+
+                if (fehlendeDokumente == 1) {
+
+                    hinweis =
+                            "Hinweis: Bei einem Zahlungsnachweis "
+                                    + "fehlt noch das Nachweisdokument.";
+
+                } else {
+
+                    hinweis =
+                            "Hinweis: Bei "
+                                    + fehlendeDokumente
+                                    + " Zahlungsnachweisen fehlen noch "
+                                    + "die Nachweisdokumente.";
+                }
+
+                page.write(
+                        hinweis,
+                        tableX,
+                        page.getY(),
+                        FONT_BOLD,
+                        TEXT_SIZE
+                );
+            }
         }
     }
 
@@ -886,101 +923,55 @@ public class PDFZahlungsnachweiseService {
 
         return items;
     }
+    private DocumentSize determineDocumentSize(
+            Dokument dokument
+    ) {
 
-    private DocumentSize determinePdfSize(
-            byte[] content
-    ) throws IOException {
+        if (dokument.getDokumentBreiteMm() == null
+                || dokument.getDokumentHoeheMm() == null) {
 
-        /*
-         * =========================================================
-         * PDF
-         * =========================================================
-         */
-
-        if (content.length >= 5
-                && content[0] == '%'
-                && content[1] == 'P'
-                && content[2] == 'D'
-                && content[3] == 'F'
-                && content[4] == '-') {
-
-            try (
-                    PDDocument document =
-                            org.apache.pdfbox.Loader.loadPDF(
-                                    content
-                            )
-            ) {
-
-                if (document.getNumberOfPages() == 0) {
-
-                    throw new IllegalArgumentException(
-                            "PDF enthält keine Seite."
-                    );
-                }
-
-                PDRectangle box =
-                        document
-                                .getPage(0)
-                                .getMediaBox();
-
-                return new DocumentSize(
-                        box.getWidth(),
-                        box.getHeight(),
-                        PdfDocumentDensity.MEDIUM
-                );
-            }
-        }
-
-        /*
-         * =========================================================
-         * BILD
-         * =========================================================
-         */
-
-        BufferedImage image =
-                ImageIO.read(
-                        new ByteArrayInputStream(
-                                content
-                        )
-                );
-
-        if (image != null) {
-
-            ImageAnalysis analysis =
-                    imageAnalysisService.analyze(
-                            content
-                    );
-
-            float width =
-                    image.getWidth();
-
-            float height =
-                    image.getHeight();
-
-            float scale =
-                    Math.min(
-                            MAX_DOCUMENT_WIDTH / width,
-                            MAX_DOCUMENT_HEIGHT / height
-                    );
-
-            scale =
-                    Math.min(
-                            scale,
-                            1f
-                    );
-
-            return new DocumentSize(
-                    width * scale,
-                    height * scale,
-                    analysis.density()
+            throw new IllegalStateException(
+                    "Für Dokument "
+                            + dokument.getId()
+                            + " ("
+                            + dokument.getOriginalDateiname()
+                            + ") ist keine Dokumentgröße hinterlegt."
             );
         }
 
-        throw new IOException(
-                "Dokument ist weder ein gültiges PDF "
-                        + "noch ein unterstütztes Bildformat."
+        if (dokument.getReferenzObjekt() == null) {
+
+            throw new IllegalStateException(
+                    "Für Dokument "
+                            + dokument.getId()
+                            + " ("
+                            + dokument.getOriginalDateiname()
+                            + ") ist kein Referenzobjekt hinterlegt."
+            );
+        }
+
+        float width =
+                (float) (
+                        dokument.getDokumentBreiteMm()
+                                * 72.0
+                                / 25.4
+                );
+
+        float height =
+                (float) (
+                        dokument.getDokumentHoeheMm()
+                                * 72.0
+                                / 25.4
+                );
+
+        return new DocumentSize(
+                width,
+                height,
+                PdfDocumentDensity.MEDIUM,
+                dokument.getReferenzObjekt()
         );
     }
+
     private byte[] mergeDocuments(
             PDDocument deckblatt,
             byte[] belegPdf
@@ -1139,5 +1130,25 @@ public class PDFZahlungsnachweiseService {
                                         + placement.itemId()
                         )
                 );
+    }
+    private String formatDokumente(
+            List<Dokument> dokumente
+    ) {
+
+        if (dokumente == null || dokumente.isEmpty()) {
+            return "0";
+        }
+
+        String formate =
+                dokumente.stream()
+                        .map(PdfPaperFormatUtil::format)
+                        .collect(
+                                java.util.stream.Collectors.joining(", ")
+                        );
+
+        return dokumente.size()
+                + " ("
+                + formate
+                + ")";
     }
 }

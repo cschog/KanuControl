@@ -105,9 +105,7 @@ export function setActiveVeranstaltung(id: number) {
    ========================================================= */
 
 export function createVeranstaltung(payload: VeranstaltungSave) {
-  return apiClient
-    .post<SaveResponse<VeranstaltungDetail>>("/veranstaltungen", payload)
-    .then((r) => r.data);
+  return apiClient.post<VeranstaltungDetail>("/veranstaltungen", payload).then((r) => r.data);
 }
 
 /* =========================================================

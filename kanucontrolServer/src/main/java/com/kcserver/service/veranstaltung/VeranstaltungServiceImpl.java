@@ -71,16 +71,35 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
     public ApiResponse<VeranstaltungDetailDTO> create(
             VeranstaltungCreateDTO dto) {
 
+        // =========================================================
+        // 1. Zuerst alle Voraussetzungen prüfen
+        // =========================================================
+
+        Verein verein = vereinRepository.findById(dto.getVereinId())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        VEREIN_NOT_FOUND
+                ));
+
+        Person leiter = personRepository.findById(dto.getLeiterId())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        PERSON_NOT_FOUND
+                ));
+
+        validateLeiterAge(leiter);
+
+        // =========================================================
+        // 2. Erst wenn alle Voraussetzungen erfüllt sind:
+        //    bisherige aktive Veranstaltung deaktivieren
+        // =========================================================
+
         veranstaltungRepository.unsetAktiveVeranstaltung();
         veranstaltungRepository.flush();
 
-        Verein verein = vereinRepository.findById(dto.getVereinId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-        Person leiter = personRepository.findById(dto.getLeiterId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-        validateLeiterAge(leiter);
+        // =========================================================
+        // 3. Veranstaltung erstellen
+        // =========================================================
 
         Veranstaltung v = new Veranstaltung();
         v.setName(dto.getName());
@@ -92,7 +111,6 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
         v.setVerein(verein);
         v.setLeiter(leiter);
         v.setAktiv(true);
-
 
         List<String> warnings = adjustFmJemType(v);
 
@@ -106,8 +124,15 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
         t.setRolle(TeilnehmerRolle.LEITER);
         teilnehmerRepository.save(t);
 
+        Veranstaltung loaded = veranstaltungRepository
+                .findByIdWithRelations(saved.getId())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        VERANSTALTUNG_NOT_FOUND
+                ));
+
         VeranstaltungDetailDTO dtoResult =
-                veranstaltungMapper.toDetailDTO(saved);
+                veranstaltungMapper.toDetailDTO(loaded);
 
         return new ApiResponse<>(dtoResult, warnings);
     }

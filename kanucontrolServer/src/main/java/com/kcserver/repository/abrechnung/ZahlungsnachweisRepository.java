@@ -146,5 +146,14 @@ public interface ZahlungsnachweisRepository
             @Param("veranstaltungId") Long veranstaltungId,
             @Param("zahlungsweg") Zahlungsweg zahlungsweg
     );
+    boolean existsByVeranstaltungId(Long veranstaltungId);
 
+    @Query("""
+    select coalesce(sum(z.betrag), 0)
+    from Zahlungsnachweis z
+    where z.veranstaltung.id = :veranstaltungId
+""")
+    BigDecimal sumBetragByVeranstaltung(
+            @Param("veranstaltungId") Long veranstaltungId
+    );
 }

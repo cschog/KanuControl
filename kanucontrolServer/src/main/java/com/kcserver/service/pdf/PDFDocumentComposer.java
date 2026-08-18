@@ -38,9 +38,6 @@ public class PDFDocumentComposer {
      * Erstellt aus den Quell-PDFs und den Layout-Platzierungen
      * ein gemeinsames A4-PDF.
      *
-     * @param documents Quell-PDFs, keyed by itemId
-     * @param placements Layout-Platzierungen
-     * @return fertiges A4-PDF
      */
     private static final PDType1Font FOOTER_FONT =
             new PDType1Font(
@@ -65,9 +62,15 @@ public class PDFDocumentComposer {
     /**
      * Platziert eine importierte PDF-Seite auf einer A4-Seite.
      */
+    /**
+     * Platziert eine importierte PDF-Seite auf einer A4-Seite.
+     *
+     * Die Rotation wird ausschließlich durch die
+     * A4LayoutPlacement vorgegeben.
+     */
     private void placeForm(
             PDDocument target,
-            org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject form,
+            PDFormXObject form,
             A4LayoutPlacement placement
     ) throws IOException {
 
@@ -95,13 +98,61 @@ public class PDFDocumentComposer {
         float sourceHeight =
                 bbox.getHeight();
 
-        float scaleX =
-                placement.width()
-                        / sourceWidth;
+        /*
+         * Die Layout-Engine hat bereits entschieden,
+         * ob das Dokument gedreht werden soll.
+         */
+        boolean rotate =
+                placement.rotation() == 90;
 
-        float scaleY =
-                placement.height()
-                        / sourceHeight;
+        /*
+         * Nach der Rotation werden Breite und Höhe
+         * des Quelldokuments vertauscht.
+         */
+        float effectiveWidth =
+                rotate
+                        ? sourceHeight
+                        : sourceWidth;
+
+        float effectiveHeight =
+                rotate
+                        ? sourceWidth
+                        : sourceHeight;
+
+        /*
+         * Einheitliche Skalierung innerhalb des von
+         * der Layout-Engine vorgegebenen Rechtecks.
+         */
+        float scale =
+                Math.min(
+                        placement.width()
+                                / effectiveWidth,
+
+                        placement.height()
+                                / effectiveHeight
+                );
+
+        /*
+         * Tatsächliche Ausgabegröße.
+         */
+        float outputWidth =
+                effectiveWidth * scale;
+
+        float outputHeight =
+                effectiveHeight * scale;
+
+        /*
+         * Innerhalb des Layout-Rechtecks zentrieren.
+         */
+        float x =
+                placement.x()
+                        + (placement.width()
+                        - outputWidth) / 2f;
+
+        float y =
+                placement.y()
+                        + (placement.height()
+                        - outputHeight) / 2f;
 
         try (
                 PDPageContentStream content =
@@ -115,37 +166,32 @@ public class PDFDocumentComposer {
         ) {
 
             Matrix matrix;
-            if (placement.rotation() == 90) {
 
-                /*
-                 * 90° Drehung.
-                 *
-                 * Nach der Transformation liegt die
-                 * komplette Quellseite innerhalb der
-                 * Zielrechtecks.
-                 */
-                matrix = new Matrix(
-                        0,
-                        scaleY,
-                        -scaleX,
-                        0,
-                        placement.x()
-                                + placement.width(),
-                        placement.y()
-                );
+            if (rotate) {
+
+                matrix =
+                        new Matrix(
+                                0,
+                                scale,
+                                -scale,
+                                0,
+                                x + outputWidth,
+                                y
+                        );
 
             } else {
 
-                matrix = new Matrix(
-                        scaleX,
-                        0,
-                        0,
-                        scaleY,
-                        placement.x(),
-                        placement.y()
-                );
-
+                matrix =
+                        new Matrix(
+                                scale,
+                                0,
+                                0,
+                                scale,
+                                x,
+                                y
+                        );
             }
+
             content.transform(matrix);
 
             content.drawForm(form);
@@ -355,12 +401,12 @@ public class PDFDocumentComposer {
                 matrix =
                         new Matrix(
                                 0,
-                                placement.height(),
-                                -placement.width(),
+                                -placement.height(),
+                                placement.width(),
                                 0,
-                                placement.x()
-                                        + placement.width(),
+                                placement.x(),
                                 placement.y()
+                                        + placement.height()
                         );
 
             } else {
@@ -510,18 +556,6 @@ public class PDFDocumentComposer {
                         );
                     }
                 }
-
-                System.out.println(
-                        "PDF PLACEMENT: "
-                                + placement.itemId()
-                                + " width=" + placement.width()
-                                + " height=" + placement.height()
-                                + " rotation=" + placement.rotation()
-                                + " formBBox="
-                                + form.getBBox().getWidth()
-                                + "x"
-                                + form.getBBox().getHeight()
-                );
 
                 placeForm(
                         target,
