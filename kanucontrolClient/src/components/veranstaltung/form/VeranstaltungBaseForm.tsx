@@ -96,8 +96,7 @@ const unterkunftsarten = useLoad<UnterkunftsartRef[]>(
       >
         <MenuItem value={VeranstaltungTyp.JEM}>JEM</MenuItem>
         <MenuItem value={VeranstaltungTyp.FM}>FM</MenuItem>
-        <MenuItem value={VeranstaltungTyp.BM}>BM</MenuItem>
-        <MenuItem value={VeranstaltungTyp.GV}>GV</MenuItem>
+  
       </TextField>
 
       {/* ================= LEITUNG ================= */}

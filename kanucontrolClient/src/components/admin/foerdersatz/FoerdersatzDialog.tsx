@@ -40,7 +40,7 @@ interface Props {
   loading?: boolean;
 }
 
-const veranstaltungTypen: VeranstaltungTyp[] = ["FM", "JEM", "BM", "GV"];
+const veranstaltungTypen: VeranstaltungTyp[] = ["FM", "JEM"];
 
 const FoerdersatzDialog = ({ open, initialData, onClose, onSave, loading = false }: Props) => {
   /* =========================================================

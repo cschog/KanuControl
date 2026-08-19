@@ -41,20 +41,20 @@ export async function upload(
   return response.data;
 }
 
-export async function download(dokumentId: number): Promise<Blob> {
-  const response = await apiClient.get<Blob>(`/belege/dokumente/${dokumentId}`, {
+export async function download(belegId: number, dokumentId: number): Promise<Blob> {
+  const response = await apiClient.get<Blob>(`/belege/${belegId}/dokumente/${dokumentId}`, {
     responseType: "blob",
   });
 
   return response.data;
 }
 
-export async function deleteBelegDokument(dokumentId: number): Promise<void> {
-  await apiClient.delete(`/belege/dokumente/${dokumentId}`);
+export async function deleteBelegDokument(belegId: number, dokumentId: number): Promise<void> {
+  await apiClient.delete(`/belege/${belegId}/dokumente/${dokumentId}`);
 }
 
-export async function preview(dokumentId: number): Promise<void> {
-  const blob = await download(dokumentId);
+export async function preview(belegId: number, dokumentId: number): Promise<void> {
+  const blob = await download(belegId, dokumentId);
 
   const url = URL.createObjectURL(blob);
 

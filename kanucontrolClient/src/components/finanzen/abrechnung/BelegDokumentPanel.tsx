@@ -101,29 +101,33 @@ export default function BelegDokumentPanel({ belegId, readOnly = false }: Props)
       return;
     }
 
+    const dokumentId = deleteId;
+
     setLoading(true);
 
     try {
-      await deleteBelegDokument(deleteId);
+      await deleteBelegDokument(belegId, dokumentId);
+
+      setDokumente((aktuell) => aktuell.filter((dokument) => dokument.id !== dokumentId));
+
       setDeleteId(null);
-      await loadDokumente();
     } finally {
       setLoading(false);
     }
   }
 
-  async function handleDownload(dokument: DokumentDTO) {
-    const blob = await download(dokument.id);
+async function handleDownload(dokument: DokumentDTO) {
+  const blob = await download(belegId, dokument.id);
 
-    const url = URL.createObjectURL(blob);
+  const url = URL.createObjectURL(blob);
 
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = dokument.originalDateiname;
-    a.click();
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = dokument.originalDateiname;
+  a.click();
 
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  }
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 
   function formatSize(bytes: number) {
     if (bytes < 1024) {
@@ -223,7 +227,7 @@ export default function BelegDokumentPanel({ belegId, readOnly = false }: Props)
               divider
               secondaryAction={
                 <>
-                  <IconButton title="Anzeigen" onClick={() => void preview(dokument.id)}>
+                  <IconButton title="Anzeigen" onClick={() => void preview(belegId, dokument.id)}>
                     <VisibilityIcon />
                   </IconButton>
 
@@ -247,7 +251,7 @@ export default function BelegDokumentPanel({ belegId, readOnly = false }: Props)
           ))}
         </List>
       )}
-    
+
       <DeleteConfirmDialog
         open={deleteId !== null}
         title="Dokument löschen"

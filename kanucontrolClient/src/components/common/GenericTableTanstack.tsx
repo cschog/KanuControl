@@ -41,7 +41,7 @@ interface GenericTableTanstackProps<T extends WithId> {
   selectedRowId?: number | null;
   onSelectRow?: (row: T) => void;
   onRowSelectionChange?: (rows: T[]) => void;
-  height?: number;
+  height?: number | string;
   enableCheckboxSelection?: boolean;
   resetSelectionTrigger?: number;
   fixedColumnWidths?: boolean;
@@ -90,8 +90,8 @@ export function GenericTableTanstack<T extends WithId>({
   };
 
   /* =========================================================
-     ROW SELECTION
-     ========================================================= */
+   ROW SELECTION
+   ========================================================= */
 
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
 
@@ -100,8 +100,8 @@ export function GenericTableTanstack<T extends WithId>({
   }, [resetSelectionTrigger]);
 
   /* =========================================================
-     CHECKBOX COLUMN
-     ========================================================= */
+   CHECKBOX COLUMN
+   ========================================================= */
 
   const checkboxColumn: ColumnDef<T> = {
     id: "select",
@@ -130,25 +130,23 @@ export function GenericTableTanstack<T extends WithId>({
   };
 
   /* =========================================================
-     FINAL COLUMNS
-     ========================================================= */
+   FINAL COLUMNS
+   ========================================================= */
 
-  
+  const expandColumn: ColumnDef<T> = {
+    id: "expand",
+    header: "",
+    size: 40,
+    enableSorting: false,
 
-const expandColumn: ColumnDef<T> = {
-  id: "expand",
-  header: "",
-  size: 40,
-  enableSorting: false,
+    cell: ({ row }) =>
+      expandedRows.has(row.original.id) ? (
+        <KeyboardArrowDown fontSize="small" />
+      ) : (
+        <KeyboardArrowRight fontSize="small" />
+      ),
+  };
 
-  cell: ({ row }) =>
-    expandedRows.has(row.original.id) ? (
-      <KeyboardArrowDown fontSize="small" />
-    ) : (
-      <KeyboardArrowRight fontSize="small" />
-    ),
-};
-  
   const finalColumns = [
     ...(detailPanel ? [expandColumn] : []),
     ...(enableCheckboxSelection ? [checkboxColumn] : []),
@@ -156,12 +154,11 @@ const expandColumn: ColumnDef<T> = {
   ];
 
   /* =========================================================
-     TABLE
-     ========================================================= */
+   TABLE
+   ========================================================= */
 
   const table = useReactTable({
     data,
-
     columns: finalColumns,
 
     state: {
@@ -177,6 +174,7 @@ const expandColumn: ColumnDef<T> = {
 
     onSortingChange: (updater) => {
       const nextSorting = typeof updater === "function" ? updater(sorting) : updater;
+
       onSortingChange?.(nextSorting);
     },
 
@@ -201,8 +199,11 @@ const expandColumn: ColumnDef<T> = {
     setExpandedRows((prev) => {
       const next = new Set(prev);
 
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
 
       return next;
     });
@@ -212,7 +213,7 @@ const expandColumn: ColumnDef<T> = {
      HEIGHT
      ========================================================= */
 
-  const tableHeight = height ?? (isMobile ? undefined : 650);
+const tableHeight = height ?? (isMobile ? undefined : 650);
 
   /* =========================================================
      INFINITE SCROLL

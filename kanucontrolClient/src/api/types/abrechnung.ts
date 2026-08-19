@@ -50,6 +50,7 @@ export interface FinanzSummary {
   deckung: number;
   teilnehmerKostenProPerson: number;
   empfohlenerTeilnehmerBeitrag: number;
+  fahrtkosten: number;
 }
 
 export interface BelegCreate {

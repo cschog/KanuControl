@@ -6,10 +6,10 @@ import lombok.Getter;
 public enum VeranstaltungTyp {
 
     JEM(true, 6, 20),
-    FM(true, 6, 20),
+    FM(true, 6, 20);
 
-    BM(false, null, null),
-    GV(false, null, null);
+    // BM(false, null, null),
+    // GV(false, null, null);
 
     private final boolean foerderfaehig;
 

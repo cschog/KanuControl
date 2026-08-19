@@ -143,16 +143,6 @@ public class PDFTeilnehmerlisteService {
                     setCheckbox(form, "bm_control", false);
                     setCheckbox(form, "qm_control", false);
                 }
-                case BM -> {
-                    setCheckbox(form, "bm_control", true);
-                    setCheckbox(form, "jem_fm_control", false);
-                    setCheckbox(form, "qm_control", false);
-                }
-                default -> {
-                    setCheckbox(form, "jem_fm_control", false);
-                    setCheckbox(form, "bm_control", false);
-                    setCheckbox(form, "qm_control", false);
-                }
             }
         }
     }

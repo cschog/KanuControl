@@ -89,69 +89,122 @@ public class FinanzService {
             List<? extends FinanzPosition> list,
             long teilnehmerAnzahl
     ) {
+        return buildSummary(
+                list,
+                teilnehmerAnzahl,
+                BigDecimal.ZERO
+        );
+    }
 
-        BigDecimal kosten = sumKosten(list);
+    public FinanzSummaryDTO buildSummary(
+            List<? extends FinanzPosition> list,
+            long teilnehmerAnzahl,
+            BigDecimal fahrtkosten
+    ) {
+
+        fahrtkosten = safe(fahrtkosten);
+
+        BigDecimal kosten =
+                sumKosten(list)
+                        .add(fahrtkosten)
+                        .setScale(2, RoundingMode.HALF_UP);
+
         BigDecimal einnahmen = sumEinnahmen(list);
 
-        BigDecimal saldo = einnahmen.subtract(kosten);
+        BigDecimal saldo =
+                einnahmen.subtract(kosten);
 
-        BigDecimal deckung = kosten.compareTo(BigDecimal.ZERO) == 0
-                ? BigDecimal.valueOf(100)
-                : einnahmen
-                .divide(kosten, 4, RoundingMode.HALF_UP)
-                .multiply(BigDecimal.valueOf(100))
-                .setScale(0, RoundingMode.HALF_UP);
+        BigDecimal deckung =
+                kosten.compareTo(BigDecimal.ZERO) == 0
+                        ? BigDecimal.valueOf(100)
+                        : einnahmen
+                        .divide(
+                                kosten,
+                                4,
+                                RoundingMode.HALF_UP
+                        )
+                        .multiply(BigDecimal.valueOf(100))
+                        .setScale(
+                                0,
+                                RoundingMode.HALF_UP
+                        );
 
-        BigDecimal proPerson = teilnehmerAnzahl == 0
-                ? BigDecimal.ZERO
-                : kosten.divide(
-                BigDecimal.valueOf(teilnehmerAnzahl),
-                2,
-                RoundingMode.HALF_UP
-        );
+        BigDecimal proPerson =
+                teilnehmerAnzahl == 0
+                        ? BigDecimal.ZERO
+                        : kosten.divide(
+                        BigDecimal.valueOf(teilnehmerAnzahl),
+                        2,
+                        RoundingMode.HALF_UP
+                );
 
-        BigDecimal kjfpZuschuss = list.stream()
-                .filter(p -> p.getKategorie() == FinanzKategorie.KJFP_ZUSCHUSS)
-                .map(FinanzPosition::getBetrag)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal kjfpZuschuss =
+                list.stream()
+                        .filter(p ->
+                                p.getKategorie()
+                                        == FinanzKategorie.KJFP_ZUSCHUSS
+                        )
+                        .map(FinanzPosition::getBetrag)
+                        .map(this::safe)
+                        .reduce(
+                                BigDecimal.ZERO,
+                                BigDecimal::add
+                        );
 
-        // ⭐ NEU: notwendiger Teilnehmerbeitrag
         BigDecimal notwendigerBeitrag =
                 berechneNotwendigenTeilnehmerBeitrag(
                         list,
-                        teilnehmerAnzahl
+                        teilnehmerAnzahl,
+                        fahrtkosten
                 );
 
         FinanzSummaryDTO dto = new FinanzSummaryDTO();
+
         dto.setKosten(kosten);
         dto.setEinnahmen(einnahmen);
         dto.setSaldo(saldo);
         dto.setDeckung(deckung);
         dto.setTeilnehmerKostenProPerson(proPerson);
-        dto.setEmpfohlenerTeilnehmerBeitrag(notwendigerBeitrag);
+        dto.setEmpfohlenerTeilnehmerBeitrag(
+                notwendigerBeitrag
+        );
         dto.setKjfpZuschuss(kjfpZuschuss);
+        dto.setFahrtkosten(fahrtkosten);
 
         return dto;
-
     }
     public BigDecimal berechneNotwendigenTeilnehmerBeitrag(
             List<? extends FinanzPosition> positionen,
-            long teilnehmerAnzahl
+            long teilnehmerAnzahl,
+            BigDecimal fahrtkosten
     ) {
 
         if (teilnehmerAnzahl == 0) {
             return BigDecimal.ZERO;
         }
 
-        BigDecimal kosten = sumKosten(positionen);
+        BigDecimal kosten =
+                sumKosten(positionen)
+                        .add(safe(fahrtkosten));
 
         BigDecimal andereEinnahmen = positionen.stream()
-                .filter(p -> p.getKategorie().getTyp() == FinanzTyp.EINNAHME)
-                .filter(p -> p.getKategorie() != FinanzKategorie.TEILNEHMERBEITRAG)
+                .filter(p ->
+                        p.getKategorie().getTyp()
+                                == FinanzTyp.EINNAHME
+                )
+                .filter(p ->
+                        p.getKategorie()
+                                != FinanzKategorie.TEILNEHMERBEITRAG
+                )
                 .map(FinanzPosition::getBetrag)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .map(this::safe)
+                .reduce(
+                        BigDecimal.ZERO,
+                        BigDecimal::add
+                );
 
-        BigDecimal rest = kosten.subtract(andereEinnahmen);
+        BigDecimal rest =
+                kosten.subtract(andereEinnahmen);
 
         if (rest.compareTo(BigDecimal.ZERO) <= 0) {
             return BigDecimal.ZERO;

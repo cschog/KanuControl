@@ -144,15 +144,31 @@ public class AbrechnungSynchronisationsService {
                 BuchungsHerkunft.TEILNEHMERBEITRAG
         );
 
-        BigDecimal betrag =
+        BigDecimal ueberweisungen =
                 zahlungsnachweisRepository
                         .sumBetragByVeranstaltungAndZahlungsweg(
                                 abrechnung.getVeranstaltung().getId(),
                                 Zahlungsweg.UEBERWEISUNG
                         );
 
-        if (betrag == null
-                || betrag.compareTo(BigDecimal.ZERO) <= 0) {
+        BigDecimal quittungen =
+                zahlungsnachweisRepository
+                        .sumBetragByVeranstaltungAndZahlungsweg(
+                                abrechnung.getVeranstaltung().getId(),
+                                Zahlungsweg.QUITTUNG
+                        );
+
+        BigDecimal betrag =
+                (ueberweisungen == null
+                        ? BigDecimal.ZERO
+                        : ueberweisungen)
+                        .add(
+                                quittungen == null
+                                        ? BigDecimal.ZERO
+                                        : quittungen
+                        );
+
+        if (betrag.compareTo(BigDecimal.ZERO) <= 0) {
             return;
         }
 
@@ -169,7 +185,7 @@ public class AbrechnungSynchronisationsService {
         buchung.setBetrag(betrag);
 
         buchung.setBeschreibung(
-                "TN-Beiträge per Überweisung"
+                "TN-Beiträge"
         );
 
         beleg.addPosition(buchung);

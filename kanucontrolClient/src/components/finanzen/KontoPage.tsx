@@ -208,7 +208,15 @@ export default function KontoPage({ veranstaltungId }: Props) {
   /* ================= UI ================= */
 
   return (
-    <Box>
+    <Box
+      sx={{
+        minHeight: {
+          md: "calc(100vh - 140px)",
+        },
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
         <Typography variant="h5">Konten-Verwaltung</Typography>
 
@@ -234,72 +242,80 @@ export default function KontoPage({ veranstaltungId }: Props) {
         </Stack>
       </Paper>
 
-      <GenericTableTanstack<FinanzGruppe>
-        data={groups}
-        columns={columns}
-        loading={false}
-        detailPanel={(gruppe) => (
-          <FinanzGruppeBelege veranstaltungId={veranstaltungId} finanzGruppeId={gruppe.id} />
-        )}
-        mobileRenderRow={(row) => (
-          <Box>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "baseline",
-                mb: 1,
-              }}
-            >
-              <Typography fontWeight={700}>{row.kuerzel}</Typography>
+      <Box
+        sx={{
+          flex: 1,
 
-              <Typography
-                variant="body2"
-                color="text.secondary"
+          minHeight: 0,
+        }}
+      >
+        <GenericTableTanstack<FinanzGruppe>
+          data={groups}
+          columns={columns}
+          loading={false}
+          detailPanel={(gruppe) => (
+            <FinanzGruppeBelege veranstaltungId={veranstaltungId} finanzGruppeId={gruppe.id} />
+          )}
+          mobileRenderRow={(row) => (
+            <Box>
+              <Box
                 sx={{
-                  whiteSpace: "nowrap",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "baseline",
+                  mb: 1,
                 }}
               >
-                {row.belegCount} Belege
-              </Typography>
-            </Box>
+                <Typography fontWeight={700}>{row.kuerzel}</Typography>
 
-            <Stack direction="row" spacing={0.5} useFlexGap flexWrap="wrap">
-              {row.teilnehmer.map((t) => (
-                <Chip
-                  key={t.id}
-                  size="small"
-                  label={`${t.vorname} ${t.nachname}`}
-                  onDelete={
-                    row.system
-                      ? undefined
-                      : () => openConfirm(row.id, t.personId, `${t.vorname} ${t.nachname}`)
-                  }
-                />
-              ))}
-            </Stack>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {row.belegCount} Belege
+                </Typography>
+              </Box>
 
-            <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-              {!row.system && (
-                <>
-                  <Button size="small" variant="outlined" onClick={() => openDialog(row.id)}>
-                    + Teilnehmer
-                  </Button>
-
-                  <Button
+              <Stack direction="row" spacing={0.5} useFlexGap flexWrap="wrap">
+                {row.teilnehmer.map((t) => (
+                  <Chip
+                    key={t.id}
                     size="small"
-                    color="error"
-                    variant="outlined"
-                    onClick={() => openDeleteDialog(row)}
-                  >
-                    Löschen
-                  </Button>
-                </>
-              )}
-            </Stack>
-          </Box>
-        )}
-      />
+                    label={`${t.vorname} ${t.nachname}`}
+                    onDelete={
+                      row.system
+                        ? undefined
+                        : () => openConfirm(row.id, t.personId, `${t.vorname} ${t.nachname}`)
+                    }
+                  />
+                ))}
+              </Stack>
+
+              <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+                {!row.system && (
+                  <>
+                    <Button size="small" variant="outlined" onClick={() => openDialog(row.id)}>
+                      + Teilnehmer
+                    </Button>
+
+                    <Button
+                      size="small"
+                      color="error"
+                      variant="outlined"
+                      onClick={() => openDeleteDialog(row)}
+                    >
+                      Löschen
+                    </Button>
+                  </>
+                )}
+              </Stack>
+            </Box>
+          )}
+        />
+      </Box>
 
       {/* ADD DIALOG */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth>
@@ -347,8 +363,7 @@ export default function KontoPage({ veranstaltungId }: Props) {
         <DialogTitle>Teilnehmer entfernen</DialogTitle>
         <DialogContent>
           <Typography>
-            Möchten Sie <strong>{removeTarget?.name}</strong> wirklich aus diesem Konto
-            entfernen?
+            Möchten Sie <strong>{removeTarget?.name}</strong> wirklich aus diesem Konto entfernen?
           </Typography>
         </DialogContent>
         <DialogActions>
@@ -383,10 +398,10 @@ export default function KontoPage({ veranstaltungId }: Props) {
           )}
         </DialogActions>
       </Dialog>
-         <BackFooter
-              label="Zurück zu Durchführung"
-              path={`/veranstaltungen/${veranstaltungId}/finanzen/durchfuehrung`}
-            />
+      <BackFooter
+        label="Zurück zu Durchführung"
+        path={`/veranstaltungen/${veranstaltungId}/finanzen/durchfuehrung`}
+      />
       <BottomActionBar
         left={[
           {

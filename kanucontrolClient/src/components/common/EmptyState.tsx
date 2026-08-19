@@ -1,7 +1,6 @@
 // src/components/common/EmptyState.tsx
 
 import { Box, Stack, Typography } from "@mui/material";
-import InboxOutlinedIcon from "@mui/icons-material/InboxOutlined";
 
 interface EmptyStateProps {
   title?: string;
@@ -14,7 +13,7 @@ interface EmptyStateProps {
 const EmptyState = ({
   title = "Keine Daten vorhanden",
   description,
-  icon = <InboxOutlinedIcon sx={{ fontSize: 64 }} color="disabled" />,
+  icon,
   minHeight = 140,
   action,
 }: EmptyStateProps) => {
@@ -39,18 +38,11 @@ const EmptyState = ({
       >
         {icon}
 
-        <Typography
-          variant="h6"
-          fontWeight={600}
-        >
+        <Typography variant="h6" fontWeight={600} color="error.main">
           {title}
         </Typography>
 
-        {description && (
-          <Typography variant="body2">
-            {description}
-          </Typography>
-        )}
+        {description && <Typography variant="body2">{description}</Typography>}
 
         {action}
       </Stack>

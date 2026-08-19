@@ -57,6 +57,8 @@ interface Props {
   veranstaltungId: number;
 }
 
+type FinanzUebersichtsKategorie = FinanzKategorie | "FAHRKOSTEN";
+
 export default function BuchungenPage({ veranstaltungId }: Props) {
   const [abrechnung, setAbrechnung] = useState<AbrechnungDetail | null>(null);
   const [finanzgruppen, setFinanzgruppen] = useState<FinanzGruppe[]>([]);
@@ -109,7 +111,10 @@ export default function BuchungenPage({ veranstaltungId }: Props) {
       return [];
     }
 
-    const positionen = Object.values(
+    const positionen: Array<{
+      kategorie: FinanzUebersichtsKategorie;
+      betrag: number;
+    }> = Object.values(
       abrechnung.belege
         .flatMap((beleg) => beleg.positionen.filter(istInBeleglisteSichtbar))
         .reduce<
@@ -135,14 +140,34 @@ export default function BuchungenPage({ veranstaltungId }: Props) {
 
             return map;
           },
-          {} as Record<FinanzKategorie, { kategorie: FinanzKategorie; betrag: number }>,
+          {} as Record<
+            FinanzKategorie,
+            {
+              kategorie: FinanzKategorie;
+              betrag: number;
+            }
+          >,
         ),
     );
 
-    // KJFP-Zuschuss ergänzen
+    // =========================================================
+    // FAHRKOSTEN
+    // =========================================================
+
+    if (abrechnung.finanz.fahrtkosten !== 0) {
+      positionen.push({
+        kategorie: "FAHRKOSTEN",
+        betrag: abrechnung.finanz.fahrtkosten,
+      });
+    }
+
+    // =========================================================
+    // KJFP-ZUSCHUSS
+    // =========================================================
+
     if (abrechnung.finanz.kjfpZuschuss !== 0) {
       positionen.push({
-        kategorie: "KJFP_ZUSCHUSS" as FinanzKategorie,
+        kategorie: "KJFP_ZUSCHUSS",
         betrag: abrechnung.finanz.kjfpZuschuss,
       });
     }

@@ -12,6 +12,7 @@ import com.kcserver.service.finanz.FinanzService;
 import com.kcserver.mapper.AbrechnungMapper;
 import com.kcserver.repository.*;
 import com.kcserver.service.FoerdersatzService;
+import com.kcserver.service.reisekosten.ReisekostenabrechnungService;
 import com.kcserver.service.veranstaltung.VeranstaltungValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -39,6 +40,7 @@ public class AbrechnungService {
     private final FoerdersatzService foerdersatzService;
     private final VeranstaltungValidator validator;
     private final AbrechnungSynchronisationsService synchronisationsService;
+    private final ReisekostenabrechnungService reisekostenabrechnungService;
 
 
     /* =========================================================
@@ -53,6 +55,10 @@ public class AbrechnungService {
 
         synchronisationsService.synchronisieren(veranstaltungId);
 
+        BigDecimal fahrtkosten =
+                reisekostenabrechnungService
+                        .getReisekostenSumme(veranstaltungId);
+
         abrechnung = getEntity(veranstaltungId);
 
         AbrechnungDetailDTO dto = mapper.toDTO(abrechnung);
@@ -65,7 +71,8 @@ public class AbrechnungService {
         FinanzSummaryDTO summary =
                 finanzService.buildSummary(
                         getAllPositionen(abrechnung),
-                        teilnehmer.size()
+                        teilnehmer.size(),
+                        fahrtkosten
                 );
 
         dto.setFinanz(summary);

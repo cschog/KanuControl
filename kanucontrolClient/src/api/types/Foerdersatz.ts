@@ -1,6 +1,6 @@
 // src/api/types/Foerdersatz.ts
 
-export type VeranstaltungTyp = "JEM" | "FM" | "BM" | "GV";
+export type VeranstaltungTyp = "JEM" | "FM";
 
 /* =========================================================
    DTO
