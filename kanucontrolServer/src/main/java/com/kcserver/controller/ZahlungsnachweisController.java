@@ -132,6 +132,23 @@ public class ZahlungsnachweisController {
         );
     }
 
+    @PutMapping("/{zahlungsnachweisId}/dokumente/{dokumentId}/referenz-objekt")
+    public ApiResponse<DokumentDTO> updateDokumentReferenzObjekt(
+            @PathVariable Long veranstaltungId,
+            @PathVariable Long zahlungsnachweisId,
+            @PathVariable Long dokumentId,
+            @RequestParam ReferenzObjekt referenzObjekt
+    ) {
+        return ApiResponse.of(
+                dokumentService.updateReferenzObjektForZahlungsnachweis(
+                        veranstaltungId,
+                        zahlungsnachweisId,
+                        dokumentId,
+                        referenzObjekt
+                )
+        );
+    }
+
     @DeleteMapping("/{zahlungsnachweisId}/dokumente/{dokumentId}")
     public ApiResponse<Void> deleteDokument(
             @PathVariable Long veranstaltungId,

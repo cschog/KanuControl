@@ -75,3 +75,22 @@ export async function getZahlungenByFinanzGruppe(
 
   return response.data;
 }
+
+export async function updateReferenzObjekt(
+  veranstaltungId: number,
+  zahlungsnachweisId: number,
+  dokumentId: number,
+  referenzObjekt: ReferenzObjekt,
+): Promise<DokumentDTO> {
+  const response = await apiClient.put<DokumentDTO>(
+    `/veranstaltungen/${veranstaltungId}/zahlungsnachweise/${zahlungsnachweisId}/dokumente/${dokumentId}/referenz-objekt`,
+    null,
+    {
+      params: {
+        referenzObjekt,
+      },
+    },
+  );
+
+  return response.data;
+}

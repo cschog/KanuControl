@@ -76,6 +76,19 @@ public class DokumentController {
         return createResponse(dokument);
     }
 
+    @PutMapping("/belege/{belegId}/dokumente/{dokumentId}/referenz-objekt")
+    public DokumentDTO updateReferenzObjektForBeleg(
+            @PathVariable Long belegId,
+            @PathVariable Long dokumentId,
+            @RequestParam ReferenzObjekt referenzObjekt
+    ) {
+        return dokumentService.updateReferenzObjektForBeleg(
+                belegId,
+                dokumentId,
+                referenzObjekt
+        );
+    }
+
     /**
      * Dokument eines Belegs löschen.
      */

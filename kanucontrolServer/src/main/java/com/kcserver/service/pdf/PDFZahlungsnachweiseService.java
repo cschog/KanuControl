@@ -3,9 +3,7 @@ package com.kcserver.service.pdf;
 import com.kcserver.entity.Dokument;
 import com.kcserver.entity.Veranstaltung;
 import com.kcserver.entity.Zahlungsnachweis;
-import com.kcserver.enumtype.PdfDocumentDensity;
 import com.kcserver.enumtype.PdfDokumentTyp;
-import com.kcserver.enumtype.ReferenzObjekt;
 import com.kcserver.repository.VeranstaltungRepository;
 import com.kcserver.repository.abrechnung.ZahlungsnachweisRepository;
 import com.kcserver.util.PdfFilenameUtil;
@@ -46,6 +44,8 @@ public class PDFZahlungsnachweiseService {
                     Standard14Fonts.FontName.HELVETICA_BOLD
             );
 
+    private final PDFDocumentSizeService documentSizeService;
+
     private static final float TITLE_SIZE = 18f;
     private static final float SECTION_SIZE = 11f;
     private static final float TEXT_SIZE = 9f;
@@ -59,14 +59,6 @@ public class PDFZahlungsnachweiseService {
             NumberFormat.getCurrencyInstance(
                     Locale.GERMANY
             );
-
-    private record DocumentSize(
-            float width,
-            float height,
-            PdfDocumentDensity density,
-            ReferenzObjekt referenzObjekt
-    ) {
-    }
 
     record PlatzierteDokumentZuordnung(
             A4LayoutPlacement placement,
@@ -146,12 +138,12 @@ public class PDFZahlungsnachweiseService {
                                 + "-DOC-"
                                 + dokument.getId();
 
-                DocumentSize size;
+                PDFDocumentSize size;
 
                 try {
 
                     size =
-                            determineDocumentSize(
+                            documentSizeService.determine(
                                     dokument
                             );
 
@@ -504,6 +496,30 @@ public class PDFZahlungsnachweiseService {
 
                 page.moveY(-15f);
             }
+
+            /*
+             * -------------------------------------------------
+             * HINWEIS ORIGINALBELEGE
+             * -------------------------------------------------
+             */
+
+            page.write(
+                    "Nur für die eigene Dokumentation.",
+                    page.getLeft(),
+                    FONT_BOLD,
+                    TEXT_SIZE
+            );
+
+            page.moveY(-13f);
+
+            page.write(
+                    "Alle Belege müssen weiterhin im Original bei KVNRW eingereicht werden.",
+                    page.getLeft(),
+                    FONT_BOLD,
+                    TEXT_SIZE
+            );
+
+            page.moveY(-25f);
 
             /*
              * -------------------------------------------------
@@ -923,54 +939,6 @@ public class PDFZahlungsnachweiseService {
 
         return items;
     }
-    private DocumentSize determineDocumentSize(
-            Dokument dokument
-    ) {
-
-        if (dokument.getDokumentBreiteMm() == null
-                || dokument.getDokumentHoeheMm() == null) {
-
-            throw new IllegalStateException(
-                    "Für Dokument "
-                            + dokument.getId()
-                            + " ("
-                            + dokument.getOriginalDateiname()
-                            + ") ist keine Dokumentgröße hinterlegt."
-            );
-        }
-
-        if (dokument.getReferenzObjekt() == null) {
-
-            throw new IllegalStateException(
-                    "Für Dokument "
-                            + dokument.getId()
-                            + " ("
-                            + dokument.getOriginalDateiname()
-                            + ") ist kein Referenzobjekt hinterlegt."
-            );
-        }
-
-        float width =
-                (float) (
-                        dokument.getDokumentBreiteMm()
-                                * 72.0
-                                / 25.4
-                );
-
-        float height =
-                (float) (
-                        dokument.getDokumentHoeheMm()
-                                * 72.0
-                                / 25.4
-                );
-
-        return new DocumentSize(
-                width,
-                height,
-                PdfDocumentDensity.MEDIUM,
-                dokument.getReferenzObjekt()
-        );
-    }
 
     private byte[] mergeDocuments(
             PDDocument deckblatt,
@@ -1141,7 +1109,7 @@ public class PDFZahlungsnachweiseService {
 
         String formate =
                 dokumente.stream()
-                        .map(PdfPaperFormatUtil::format)
+                        .map(PdfPaperFormatUtil::referenceFormat)
                         .collect(
                                 java.util.stream.Collectors.joining(", ")
                         );

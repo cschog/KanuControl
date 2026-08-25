@@ -35,6 +35,24 @@ public final class PdfPaperFormatUtil {
         return ermittleFormat(kurz, lang);
     }
 
+    public static String referenceFormat(
+            Dokument dokument
+    ) {
+
+        if (dokument == null
+                || dokument.getReferenzObjekt() == null) {
+
+            return "?";
+        }
+
+        return switch (dokument.getReferenzObjekt()) {
+            case DIN_A4 -> "A4";
+            case DIN_A5 -> "A5";
+            case DIN_A6 -> "A6";
+            case DIN_A7 -> "A7";
+        };
+    }
+
     private static String ermittleFormat(
             double kurz,
             double lang

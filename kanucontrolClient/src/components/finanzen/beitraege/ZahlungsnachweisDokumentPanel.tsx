@@ -8,8 +8,10 @@ import {
   List,
   ListItem,
   ListItemText,
+  MenuItem,
   Radio,
   RadioGroup,
+  Select,
   Stack,
   Typography,
 } from "@mui/material";
@@ -26,6 +28,7 @@ import {
   deleteZahlungsnachweisDokument,
   download,
   findAll,
+  updateReferenzObjekt,
   upload,
 } from "@/api/services/zahlungsnachweisApi";
 
@@ -96,6 +99,25 @@ export default function ZahlungsnachweisDokumentPanel({
  async function handleUpload(file: File) {
    await uploadFile(file, referenzObjekt);
  }
+  
+  async function handleReferenzObjektChange(dokumentId: number, value: ReferenzObjekt) {
+    setLoading(true);
+
+    try {
+      const aktualisiert = await updateReferenzObjekt(
+        veranstaltungId,
+        zahlungsnachweisId,
+        dokumentId,
+        value,
+      );
+
+      setDokumente((aktuell) =>
+        aktuell.map((dokument) => (dokument.id === dokumentId ? aktualisiert : dokument)),
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
 
   /* =========================================================
      DELETE
@@ -296,7 +318,46 @@ export default function ZahlungsnachweisDokumentPanel({
             >
               <ListItemText
                 primary={dokument.originalDateiname}
-                secondary={`${formatSize(dokument.dateigroesse)} • ${dokument.mimeType}`}
+                secondary={
+                  <Stack direction="row" spacing={2} alignItems="center" sx={{ mt: 0.5 }}>
+                    <Typography component="span" variant="body2" color="text.secondary">
+                      {formatSize(dokument.dateigroesse)}
+                      {" • "}
+                      {dokument.mimeType}
+                    </Typography>
+
+                    {!readOnly && (
+                      <Stack direction="row" spacing={0.75} alignItems="center">
+                        <Typography component="span" variant="body2" color="text.secondary">
+                          Format:
+                        </Typography>
+
+                        <FormControl size="small" sx={{ minWidth: 75 }}>
+                          <Select
+                            value={dokument.referenzObjekt ?? ReferenzObjekt.DIN_A6}
+                            onChange={(event) => {
+                              void handleReferenzObjektChange(
+                                dokument.id,
+                                event.target.value as ReferenzObjekt,
+                              );
+                            }}
+                            inputProps={{
+                              "aria-label": "Dokumentformat",
+                            }}
+                          >
+                            <MenuItem value={ReferenzObjekt.DIN_A7}>A7</MenuItem>
+
+                            <MenuItem value={ReferenzObjekt.DIN_A6}>A6</MenuItem>
+
+                            <MenuItem value={ReferenzObjekt.DIN_A5}>A5</MenuItem>
+
+                            <MenuItem value={ReferenzObjekt.DIN_A4}>A4</MenuItem>
+                          </Select>
+                        </FormControl>
+                      </Stack>
+                    )}
+                  </Stack>
+                }
               />
             </ListItem>
           ))}
@@ -310,7 +371,6 @@ export default function ZahlungsnachweisDokumentPanel({
         onClose={() => setDeleteId(null)}
         onConfirm={() => void confirmDelete()}
       />
-
     </Box>
   );
 }

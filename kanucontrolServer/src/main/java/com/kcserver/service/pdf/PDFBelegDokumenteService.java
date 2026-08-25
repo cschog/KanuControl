@@ -3,9 +3,7 @@ package com.kcserver.service.pdf;
 import com.kcserver.entity.AbrechnungBeleg;
 import com.kcserver.entity.AbrechnungBuchung;
 import com.kcserver.entity.Dokument;
-import com.kcserver.enumtype.PdfDocumentDensity;
 import com.kcserver.enumtype.PdfDokumentTyp;
-import com.kcserver.enumtype.ReferenzObjekt;
 import com.kcserver.repository.abrechnung.AbrechnungBelegRepository;
 import com.kcserver.util.PdfFilenameUtil;
 import com.kcserver.util.PdfPaperFormatUtil;
@@ -40,18 +38,12 @@ public class PDFBelegDokumenteService {
                     Standard14Fonts.FontName.HELVETICA
             );
 
-    private record DocumentSize(
-            float width,
-            float height,
-            PdfDocumentDensity density,
-            ReferenzObjekt referenzObjekt
-    ) {
-    }
-
     private static final PDType1Font FONT_BOLD =
             new PDType1Font(
                     Standard14Fonts.FontName.HELVETICA_BOLD
             );
+
+    private final PDFDocumentSizeService documentSizeService;
 
     private static final float TITLE_SIZE = 18f;
     private static final float SECTION_SIZE = 11f;
@@ -279,11 +271,15 @@ public class PDFBelegDokumenteService {
                                 dokument
                         );
 
-                DocumentSize size;
+
+                PDFDocumentSize size;
 
                 try {
 
-                    size = determineDocumentSize(dokument);
+                    size =
+                            documentSizeService.determine(
+                                    dokument
+                            );
 
                 } catch (IllegalStateException e) {
 
@@ -506,6 +502,30 @@ public class PDFBelegDokumenteService {
                     "Zeitraum: " + zeitraum,
                     page.getLeft(),
                     FONT,
+                    TEXT_SIZE
+            );
+
+            page.moveY(-18f);
+
+            /*
+             * -------------------------------------------------
+             * HINWEIS ORIGINALBELEGE
+             * -------------------------------------------------
+             */
+
+            page.write(
+                    "Nur für die eigene Dokumentation.",
+                    page.getLeft(),
+                    FONT_BOLD,
+                    TEXT_SIZE
+            );
+
+            page.moveY(-13f);
+
+            page.write(
+                    "Alle Belege müssen weiterhin im Original bei KVNRW eingereicht werden.",
+                    page.getLeft(),
+                    FONT_BOLD,
                     TEXT_SIZE
             );
 
@@ -830,64 +850,6 @@ public class PDFBelegDokumenteService {
         );
     }
 
-
-    /*
-     * =========================================================
-     * DOKUMENTGRÖSSE
-     * =========================================================
-     */
-
-    private DocumentSize determineDocumentSize(
-            Dokument dokument
-    ) {
-
-        if (dokument.getDokumentBreiteMm() == null
-                || dokument.getDokumentHoeheMm() == null) {
-
-            throw new IllegalStateException(
-                    "Für Dokument "
-                            + dokument.getId()
-                            + " ("
-                            + dokument.getOriginalDateiname()
-                            + ") ist keine Dokumentgröße hinterlegt."
-            );
-        }
-
-        if (dokument.getReferenzObjekt() == null) {
-
-            throw new IllegalStateException(
-                    "Für Dokument "
-                            + dokument.getId()
-                            + " ("
-                            + dokument.getOriginalDateiname()
-                            + ") ist kein Referenzobjekt hinterlegt."
-            );
-        }
-
-        float width =
-                (float) (
-                        dokument.getDokumentBreiteMm()
-                                * 72.0
-                                / 25.4
-                );
-
-        float height =
-                (float) (
-                        dokument.getDokumentHoeheMm()
-                                * 72.0
-                                / 25.4
-                );
-
-        return new DocumentSize(
-                width,
-                height,
-                PdfDocumentDensity.MEDIUM,
-                dokument.getReferenzObjekt()
-        );
-    }
-
-
-
     /*
      * =========================================================
      * MERGE
@@ -1082,7 +1044,7 @@ public class PDFBelegDokumenteService {
 
         String formate =
                 dokumente.stream()
-                        .map(PdfPaperFormatUtil::format)
+                        .map(PdfPaperFormatUtil::referenceFormat)
                         .collect(
                                 java.util.stream.Collectors.joining(", ")
                         );

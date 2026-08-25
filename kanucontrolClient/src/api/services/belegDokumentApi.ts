@@ -62,3 +62,21 @@ export async function preview(belegId: number, dokumentId: number): Promise<void
 
   setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
+
+export async function updateReferenzObjekt(
+  belegId: number,
+  dokumentId: number,
+  referenzObjekt: ReferenzObjekt,
+): Promise<DokumentDTO> {
+  const response = await apiClient.put<DokumentDTO>(
+    `/belege/${belegId}/dokumente/${dokumentId}/referenz-objekt`,
+    null,
+    {
+      params: {
+        referenzObjekt,
+      },
+    },
+  );
+
+  return response.data;
+}

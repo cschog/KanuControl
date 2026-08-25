@@ -8,8 +8,10 @@ import {
   List,
   ListItem,
   ListItemText,
+  MenuItem,
   Radio,
   RadioGroup,
+  Select,
   Stack,
   Typography,
 } from "@mui/material";
@@ -25,6 +27,7 @@ import {
   findAll,
   preview,
   upload,
+  updateReferenzObjekt,
 } from "@/api/services/belegDokumentApi";
 import { DokumentDTO } from "@/api/types/dokument";
 import LoadingOverlay from "@/components/common/LoadingOverlay";
@@ -90,7 +93,19 @@ export default function BelegDokumentPanel({ belegId, readOnly = false }: Props)
     }
   }
 
+  async function handleReferenzObjektChange(dokumentId: number, value: ReferenzObjekt) {
+    setLoading(true);
 
+    try {
+      const aktualisiert = await updateReferenzObjekt(belegId, dokumentId, value);
+
+      setDokumente((aktuell) =>
+        aktuell.map((dokument) => (dokument.id === dokumentId ? aktualisiert : dokument)),
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
 
   function handleDelete(id: number) {
     setDeleteId(id);
@@ -245,7 +260,46 @@ async function handleDownload(dokument: DokumentDTO) {
             >
               <ListItemText
                 primary={dokument.originalDateiname}
-                secondary={`${formatSize(dokument.dateigroesse)} • ${dokument.mimeType}`}
+                secondary={
+                  <Stack direction="row" spacing={2} alignItems="center" sx={{ mt: 0.5 }}>
+                    <Typography component="span" variant="body2" color="text.secondary">
+                      {formatSize(dokument.dateigroesse)}
+                      {" • "}
+                      {dokument.mimeType}
+                    </Typography>
+
+                    {!readOnly && (
+                      <Stack direction="row" spacing={0.75} alignItems="center">
+                        <Typography component="span" variant="body2" color="text.secondary">
+                          Format:
+                        </Typography>
+
+                        <FormControl size="small" sx={{ minWidth: 75 }}>
+                          <Select
+                            value={dokument.referenzObjekt ?? ReferenzObjekt.DIN_A6}
+                            onChange={(event) => {
+                              void handleReferenzObjektChange(
+                                dokument.id,
+                                event.target.value as ReferenzObjekt,
+                              );
+                            }}
+                            inputProps={{
+                              "aria-label": "Dokumentformat",
+                            }}
+                          >
+                            <MenuItem value={ReferenzObjekt.DIN_A7}>A7</MenuItem>
+
+                            <MenuItem value={ReferenzObjekt.DIN_A6}>A6</MenuItem>
+
+                            <MenuItem value={ReferenzObjekt.DIN_A5}>A5</MenuItem>
+
+                            <MenuItem value={ReferenzObjekt.DIN_A4}>A4</MenuItem>
+                          </Select>
+                        </FormControl>
+                      </Stack>
+                    )}
+                  </Stack>
+                }
               />
             </ListItem>
           ))}

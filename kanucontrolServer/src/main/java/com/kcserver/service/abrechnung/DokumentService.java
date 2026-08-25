@@ -78,6 +78,60 @@ public class DokumentService {
         );
     }
 
+    public DokumentDTO updateReferenzObjektForBeleg(
+            Long belegId,
+            Long dokumentId,
+            ReferenzObjekt referenzObjekt
+    ) {
+
+        if (referenzObjekt == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Referenzobjekt darf nicht leer sein."
+            );
+        }
+
+        Dokument dokument =
+                getForBeleg(
+                        belegId,
+                        dokumentId
+                );
+
+        dokument.setReferenzObjekt(
+                referenzObjekt
+        );
+
+        return dokumentMapper.toDto(dokument);
+    }
+
+    public DokumentDTO updateReferenzObjektForZahlungsnachweis(
+            Long veranstaltungId,
+            Long zahlungsnachweisId,
+            Long dokumentId,
+            ReferenzObjekt referenzObjekt
+    ) {
+
+        if (referenzObjekt == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Referenzobjekt darf nicht leer sein."
+            );
+        }
+
+        Dokument dokument =
+                getForZahlungsnachweis(
+                        veranstaltungId,
+                        zahlungsnachweisId,
+                        dokumentId
+                );
+
+        dokument.setReferenzObjekt(
+                referenzObjekt
+        );
+
+        return dokumentMapper.toDto(dokument);
+    }
+
     /**
      * Dokument zu einem Beleg hochladen.
      */
