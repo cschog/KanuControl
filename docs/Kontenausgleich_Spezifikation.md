@@ -1,9 +1,8 @@
-# KontenKontenausgleichausgleich
+# Kontenausgleichausgleich
 
 ## Zweck
 
-Der **Kontenausgleich** einer Veranstaltung sorgt dafür, dass Ausgaben,
-die von einzelnen Konton vorgestreckt wurden, korrekt mit den von
+Der **Kontenausgleich** einer Veranstaltung sorgt dafür, dass Ausgaben, die von einzelnen Konten vorgestreckt wurden, korrekt mit den von
 den zugeordneten Teilnehmern zu zahlenden Teilnehmerbeiträgen verrechnet
 werden.
 
@@ -16,14 +15,14 @@ Dieser Eigenanteil wird **nicht auf die Konton verteilt**.
 Der Kontenausgleich ermittelt dagegen, **welchen Betrag der Verein an
 die einzelnen Konton auszahlen muss**.
 
-## 1. Konton
+## 1. Konten
 
 Für eine Veranstaltung können mehrere Konton verwendet werden.
 
 Eine Konto ist beispielsweise eine Familie oder eine sonstige
 Teilnehmergruppe.
 
-### Kontontypen
+### Kontentypen
 
 Jede Konto besitzt einen Typ:
 
@@ -62,9 +61,9 @@ VK wird für eine Veranstaltung automatisch angelegt.
 
 ---
 
-### 1.3 Normale Konton
+### 1.3 Normale Konten
 
-Normale Konton können beispielsweise Familien oder sonstige Teilnehmergruppen sein.
+Normale Konten können beispielsweise Familien oder sonstige Teilnehmergruppen sein.
 
 Eine normales Konto kann:
 

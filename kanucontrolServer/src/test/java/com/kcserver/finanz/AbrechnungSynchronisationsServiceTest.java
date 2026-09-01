@@ -1,130 +1,242 @@
 package com.kcserver.finanz;
 
-import com.kcserver.entity.*;
+import com.kcserver.entity.Abrechnung;
+import com.kcserver.entity.AbrechnungBeleg;
+import com.kcserver.entity.AbrechnungBuchung;
+import com.kcserver.entity.FinanzGruppe;
+import com.kcserver.entity.Teilnehmer;
+import com.kcserver.entity.Veranstaltung;
 import com.kcserver.enumtype.BuchungsHerkunft;
 import com.kcserver.enumtype.FinanzKategorie;
-import com.kcserver.repository.abrechnung.AbrechnungRepository;
+import com.kcserver.enumtype.Zahlungsweg;
+import com.kcserver.repository.FinanzGruppeRepository;
 import com.kcserver.repository.TeilnehmerRepository;
+import com.kcserver.repository.abrechnung.AbrechnungRepository;
+import com.kcserver.repository.abrechnung.ZahlungsnachweisRepository;
 import com.kcserver.service.FoerderService;
 import com.kcserver.service.abrechnung.AbrechnungBelegService;
 import com.kcserver.service.abrechnung.AbrechnungSynchronisationsService;
-import com.kcserver.service.beitrag.TeilnehmerBeitragService;
-import com.kcserver.service.reisekosten.ReisekostenabrechnungService;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.junit.jupiter.api.Test;
-import java.util.Optional;
-import static org.assertj.core.api.Assertions.assertThat;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.eq;
-
-import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AbrechnungSynchronisationsServiceTest {
 
     @Mock
-    private AbrechnungBelegService belegService;
+    private AbrechnungBelegService abrechnungBelegService;
 
     @Mock
     private TeilnehmerRepository teilnehmerRepository;
 
     @Mock
-    private TeilnehmerBeitragService beitragService;
-
-    @Mock
     private AbrechnungRepository abrechnungRepository;
-
-    @Mock
-    private ReisekostenabrechnungService reisekostenService;
 
     @Mock
     private FoerderService foerderService;
 
+    @Mock
+    private FinanzGruppeRepository finanzGruppeRepository;
+
+    @Mock
+    private ZahlungsnachweisRepository zahlungsnachweisRepository;
+
     @InjectMocks
     private AbrechnungSynchronisationsService service;
 
+
     @Test
-    void shouldCreateBookingsForPaidParticipants() {
+    void shouldCreateBookingForPaidParticipants() {
 
-        Veranstaltung veranstaltung = new Veranstaltung();
+        // ---------------------------------------------------------
+        // Veranstaltung
+        // ---------------------------------------------------------
+
+        Veranstaltung veranstaltung =
+                new Veranstaltung();
+
         veranstaltung.setId(1L);
-
-        Abrechnung abrechnung = new Abrechnung();
-        abrechnung.setVeranstaltung(veranstaltung);
-
-        AbrechnungBeleg beleg = new AbrechnungBeleg();
-
-        Person person = new Person();
-        person.setVorname("Max");
-        person.setName("Mustermann");
-
-        Teilnehmer t1 = new Teilnehmer();
-        t1.setPerson(person);
+        veranstaltung.setName("Testveranstaltung");
 
 
-        Teilnehmer t2 = new Teilnehmer();
-        t2.setPerson(person);
+        // ---------------------------------------------------------
+        // Abrechnung
+        // ---------------------------------------------------------
+
+        Abrechnung abrechnung =
+                new Abrechnung();
+
+        abrechnung.setVeranstaltung(
+                veranstaltung
+        );
 
 
-        when(abrechnungRepository.findByVeranstaltungId(1L))
-                .thenReturn(Optional.of(abrechnung));
+        // ---------------------------------------------------------
+        // VK-Finanzgruppe
+        // ---------------------------------------------------------
 
-        when(belegService.getOrCreateSystemBeleg(
-                any(),
-                eq(BuchungsHerkunft.TEILNEHMERBEITRAG)))
-                .thenReturn(beleg);
+        FinanzGruppe vk =
+                new FinanzGruppe();
 
-        when(teilnehmerRepository.findAllWithPerson(1L))
-                .thenReturn(List.of(t1, t2));
+        vk.setId(10L);
+        vk.setKuerzel("VK");
 
-        when(beitragService.getSollBeitrag(
-                any(),
-                any()))
-                .thenReturn(new BigDecimal("50.00"));
 
-        when(belegService.getOrCreateSystemBeleg(
-                any(),
-                eq(BuchungsHerkunft.KJFP)))
-                .thenReturn(new AbrechnungBeleg());
+        // ---------------------------------------------------------
+        // Systembeleg für Teilnehmerbeiträge
+        // ---------------------------------------------------------
 
-        when(belegService.getOrCreateSystemBeleg(
-                any(),
-                eq(BuchungsHerkunft.FAHRTKOSTEN)))
-                .thenReturn(new AbrechnungBeleg());
+        AbrechnungBeleg beleg =
+                new AbrechnungBeleg();
 
-        when(reisekostenService.findByVeranstaltung(anyLong()))
-                .thenReturn(List.of());
+        beleg.setAbrechnung(
+                abrechnung
+        );
 
-        when(foerderService.berechneKjfpZuschuss(any(), any()))
-                .thenReturn(BigDecimal.ZERO);
+        beleg.setFinanzGruppe(
+                vk
+        );
+
+
+        // ---------------------------------------------------------
+        // Repository
+        // ---------------------------------------------------------
+
+        when(
+                abrechnungRepository.findByVeranstaltungId(1L)
+        )
+                .thenReturn(
+                        Optional.of(abrechnung)
+                );
+
+        when(
+                finanzGruppeRepository
+                        .findByVeranstaltungIdAndKuerzel(
+                                1L,
+                                "VK"
+                        )
+        )
+                .thenReturn(
+                        Optional.of(vk)
+                );
+
+        when(
+                abrechnungBelegService.getOrCreateBeleg(
+                        abrechnung,
+                        vk,
+                        BuchungsHerkunft.TEILNEHMERBEITRAG
+                )
+        )
+                .thenReturn(
+                        beleg
+                );
+
+
+        // ---------------------------------------------------------
+        // Zahlungsnachweise
+        // ---------------------------------------------------------
+
+        when(
+                zahlungsnachweisRepository
+                        .sumBetragByVeranstaltungAndZahlungsweg(
+                                1L,
+                                Zahlungsweg.UEBERWEISUNG
+                        )
+        )
+                .thenReturn(
+                        new BigDecimal("75.00")
+                );
+
+        when(
+                zahlungsnachweisRepository
+                        .sumBetragByVeranstaltungAndZahlungsweg(
+                                1L,
+                                Zahlungsweg.QUITTUNG
+                        )
+        )
+                .thenReturn(
+                        new BigDecimal("25.00")
+                );
+
+
+        // ---------------------------------------------------------
+        // Teilnehmer für KJFP
+        // ---------------------------------------------------------
+
+        Teilnehmer t1 =
+                new Teilnehmer();
+
+        Teilnehmer t2 =
+                new Teilnehmer();
+
+        when(
+                teilnehmerRepository.findAllWithPerson(1L)
+        )
+                .thenReturn(
+                        List.of(t1, t2)
+                );
+
+
+        // ---------------------------------------------------------
+        // KJFP = 0
+        // ---------------------------------------------------------
+
+        when(
+                foerderService.berechneKjfpZuschuss(
+                        any(Veranstaltung.class),
+                        anyList()
+                )
+        )
+                .thenReturn(
+                        BigDecimal.ZERO
+                );
+
+
+        // ---------------------------------------------------------
+        // Ausführen
+        // ---------------------------------------------------------
 
         service.synchronisieren(1L);
 
-        assertThat(beleg.getPositionen())
-                .hasSize(2);
+
+        // ---------------------------------------------------------
+        // Prüfen
+        // ---------------------------------------------------------
 
         assertThat(beleg.getPositionen())
-                .extracting(AbrechnungBuchung::getKategorie)
-                .containsOnly(FinanzKategorie.TEILNEHMERBEITRAG);
+                .hasSize(1);
 
-        assertThat(beleg.getPositionen())
-                .extracting(AbrechnungBuchung::getHerkunft)
-                .containsOnly(BuchungsHerkunft.TEILNEHMERBEITRAG);
+        AbrechnungBuchung buchung =
+                beleg.getPositionen().getFirst();
 
-        BigDecimal summe = beleg.getPositionen()
-                .stream()
-                .map(AbrechnungBuchung::getBetrag)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        assertThat(buchung.getKategorie())
+                .isEqualTo(
+                        FinanzKategorie.TEILNEHMERBEITRAG
+                );
 
-        assertThat(summe)
-                .isEqualByComparingTo("100.00");
+        assertThat(buchung.getHerkunft())
+                .isEqualTo(
+                        BuchungsHerkunft.TEILNEHMERBEITRAG
+                );
+
+        assertThat(buchung.getBetrag())
+                .isEqualByComparingTo(
+                        "100.00"
+                );
+
+        assertThat(buchung.getBeschreibung())
+                .isEqualTo(
+                        "TN-Beiträge"
+                );
     }
 }

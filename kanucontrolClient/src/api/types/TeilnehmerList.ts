@@ -9,11 +9,9 @@ export interface TeilnehmerList {
 
   person?: {
     id: number;
-
     vorname: string;
-
     name: string;
-
     hauptvereinAbk?: string;
+    sex?: "M" | "W" | "D";
   };
 }

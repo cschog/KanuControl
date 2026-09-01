@@ -22,6 +22,7 @@ public class PDFDokumentService {
     private final PDFAbrechnungService abrechnungService;
     private final PDFErhebungsbogenService erhebungsbogenService;
     private final PDFTeilnehmerlisteService teilnehmerlisteService;
+    private final PDFTeilnehmerDatenkontrolleService teilnehmerDatenkontrolleService;
     private final PDFZahlungsnachweiseService zahlungsnachweiseService;
     private final PDFBelegDokumenteService belegDokumenteService;
 
@@ -110,6 +111,20 @@ public class PDFDokumentService {
         return teilnehmerlisteService.generate(
                 veranstaltung,
                 teilnehmer
+        );
+    }
+
+    public byte[] generateTeilnehmerDatenkontrolle(
+            Long veranstaltungId
+    ) {
+
+        validate(
+                veranstaltungId,
+                PdfDokumentTyp.TEILNEHMER_DATENKONTROLLE
+        );
+
+        return teilnehmerDatenkontrolleService.generate(
+                veranstaltungId
         );
     }
 

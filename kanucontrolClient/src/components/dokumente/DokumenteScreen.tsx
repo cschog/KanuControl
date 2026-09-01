@@ -28,6 +28,8 @@ const DokumenteScreen: React.FC = () => {
   const [veranstaltung, setVeranstaltung] = useState<VeranstaltungDetail | null>(null);
   const [anmeldungValidation, setAnmeldungValidation] = useState<ValidationResult | null>(null);
   const [teilnehmerValidation, setTeilnehmerValidation] = useState<ValidationResult | null>(null);
+  const [teilnehmerDatenkontrolleValidation, setTeilnehmerDatenkontrolleValidation] =
+    useState<ValidationResult | null>(null);
   const [erhebungsbogenValidation, setErhebungsbogenValidation] = useState<ValidationResult | null>(
     null,
   );
@@ -56,6 +58,7 @@ const DokumenteScreen: React.FC = () => {
          const [
            anmeldung,
            teilnehmerliste,
+           teilnehmerDatenkontrolle,
            erhebungsbogen,
            abrechnung,
            zahlungsnachweise,
@@ -64,6 +67,7 @@ const DokumenteScreen: React.FC = () => {
          ] = await Promise.all([
            validateDokument(v.id, PdfDokumentTyp.ANMELDUNG),
            validateDokument(v.id, PdfDokumentTyp.TEILNEHMERLISTE),
+           validateDokument(v.id, PdfDokumentTyp.TEILNEHMER_DATENKONTROLLE),
            validateDokument(v.id, PdfDokumentTyp.ERHEBUNGSBOGEN),
            validateDokument(v.id, PdfDokumentTyp.ABRECHNUNG),
            validateDokument(v.id, PdfDokumentTyp.ZAHLUNGSNACHWEISE),
@@ -71,9 +75,10 @@ const DokumenteScreen: React.FC = () => {
            validateDokument(v.id, PdfDokumentTyp.REISEKOSTENABRECHNUNG),
          ]);
 
-          setAnmeldungValidation(anmeldung);
-          setTeilnehmerValidation(teilnehmerliste);
-          setErhebungsbogenValidation(erhebungsbogen);
+         setAnmeldungValidation(anmeldung);
+         setTeilnehmerValidation(teilnehmerliste);
+         setTeilnehmerDatenkontrolleValidation(teilnehmerDatenkontrolle);
+         setErhebungsbogenValidation(erhebungsbogen);
           setAbrechnungValidation(abrechnung);
           setZahlungsnachweiseValidation(zahlungsnachweise);
           setBelegeValidation(belege);
@@ -289,12 +294,27 @@ const DokumenteScreen: React.FC = () => {
             )}
             {/* Teilnehmerliste */}
             {renderValidationWarning("Teilnehmerliste derzeit nicht möglich", teilnehmerValidation)}
+
             {renderSection(
               "Teilnehmerliste",
               "teilnehmer/pdf",
               "teilnehmerliste.pdf",
               !teilnehmerValidation?.valid,
             )}
+
+            {/* Teilnehmer-Datenkontrolle */}
+            {renderValidationWarning(
+              "Teilnehmer-Datenkontrolle derzeit nicht möglich",
+              teilnehmerDatenkontrolleValidation,
+            )}
+
+            {renderSection(
+              "Teilnehmerdaten prüfen",
+              "teilnehmer/datenkontrolle/pdf",
+              "teilnehmer-datenkontrolle.pdf",
+              !teilnehmerDatenkontrolleValidation?.valid,
+            )}
+
             {/* Abrechnung */}
             {renderValidationWarning("Abrechnung derzeit nicht möglich", abrechnungValidation)}
             {renderSection(

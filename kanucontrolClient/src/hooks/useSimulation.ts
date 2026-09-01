@@ -1,133 +1,128 @@
 import { useCallback, useEffect, useState } from "react";
 
-import {
-    getSimulation,
-    saveSimulation,
-    simulate,
-} from "@/api/services/simulationApi";
+import { getSimulation, saveSimulation, simulate } from "@/api/services/simulationApi";
 
 import { PlanungsSimulation } from "@/api/types/simulation/PlanungsSimulation";
 import { SimulationErgebnis } from "@/api/types/simulation/SimulationErgebnis";
 
-export function useSimulation(
-    veranstaltungId?: number
-) {
+interface SimulationNotReady {
+  missing: string[];
+}
 
-    const [simulation, setSimulation] =
-        useState<PlanungsSimulation>();
+function isSimulationNotReadyError(error: unknown): SimulationNotReady | undefined {
+  if (typeof error !== "object" || error === null || !("response" in error)) {
+    return undefined;
+  }
 
-    const [ergebnis, setErgebnis] =
-        useState<SimulationErgebnis>();
+  const response = (
+    error as {
+      response?: {
+        data?: {
+          error?: string;
+          missing?: string[];
+        };
+      };
+    }
+  ).response;
 
-    const [loading, setLoading] =
-        useState(true);
+  const data = response?.data;
 
-    const [error, setError] =
-        useState<string>();
+  if (data?.error !== "SIMULATION_NOT_READY" || !Array.isArray(data.missing)) {
+    return undefined;
+  }
 
-    const load = useCallback(async () => {
+  return {
+    missing: data.missing,
+  };
+}
 
-        if (!veranstaltungId) {
-            return;
-        }
+export function useSimulation(veranstaltungId?: number) {
+  const [simulation, setSimulation] = useState<PlanungsSimulation>();
 
-        try {
+  const [ergebnis, setErgebnis] = useState<SimulationErgebnis>();
 
-            setLoading(true);
+  const [loading, setLoading] = useState(true);
 
-            const sim = await getSimulation(veranstaltungId);
+  const [error, setError] = useState<string>();
 
-            const result = await simulate(sim);
+  const [simulationNotReady, setSimulationNotReady] = useState<SimulationNotReady>();
 
-            setSimulation(sim);
-            setErgebnis(result);
+  const load = useCallback(async () => {
+    if (!veranstaltungId) {
+      return;
+    }
 
-            setError(undefined);
+    try {
+      setLoading(true);
+      setSimulationNotReady(undefined);
+      setError(undefined);
 
-        } catch (e) {
+      const sim = await getSimulation(veranstaltungId);
+      const result = await simulate(sim);
 
-            console.error(e);
+      setSimulation(sim);
+      setErgebnis(result);
+    } catch (e) {
+      console.error(e);
 
-            setError(
-                "Simulation konnte nicht geladen werden."
-            );
+      const notReady = isSimulationNotReadyError(e);
 
-        } finally {
+      if (notReady) {
+        setSimulation(undefined);
+        setErgebnis(undefined);
+        setSimulationNotReady(notReady);
+        setError(undefined);
+      } else {
+        setError("Simulation konnte nicht geladen werden.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [veranstaltungId]);
 
-            setLoading(false);
-        }
+  const recalculate = useCallback(async (sim: PlanungsSimulation) => {
+    try {
+      const result = await simulate(sim);
 
-    }, [veranstaltungId]);
+      setErgebnis(result);
+      setError(undefined);
+    } catch {
+      setError("Simulation konnte nicht berechnet werden.");
+    }
+  }, []);
 
-    const recalculate = useCallback(async (
-        sim: PlanungsSimulation
-    ) => {
+  const save = useCallback(
+    async (sim: PlanungsSimulation) => {
+      if (!veranstaltungId) {
+        return;
+      }
 
-        try {
+      try {
+        await saveSimulation(veranstaltungId, sim);
 
-            // simulation NICHT überschreiben!
+        setSimulation(sim);
+        setError(undefined);
+      } catch {
+        setError("Simulation konnte nicht gespeichert werden.");
+      }
+    },
+    [veranstaltungId],
+  );
 
-            const result =
-                await simulate(sim);
+  useEffect(() => {
+    load();
+  }, [load]);
 
-            setErgebnis(result);
+  return {
+    simulation,
+    ergebnis,
 
-            setError(undefined);
+    loading,
+    error,
+    simulationNotReady,
 
-        } catch {
-
-            setError(
-                "Simulation konnte nicht berechnet werden."
-            );
-        }
-
-    }, []);
-
-    const save = useCallback(
-        async (sim: PlanungsSimulation) => {
-
-            if (!veranstaltungId) {
-                return;
-            }
-
-            try {
-
-                await saveSimulation(
-                    veranstaltungId,
-                    sim
-                );
-
-                setSimulation(sim);
-
-                setError(undefined);
-
-            } catch {
-
-                setError(
-                    "Simulation konnte nicht gespeichert werden."
-                );
-            }
-
-        },
-        [veranstaltungId]
-    );
-
-    useEffect(() => {
-
-        load();
-
-    }, [load]);
-
-    return {
-
-        simulation,
-        ergebnis,
-
-        loading,
-        error,
-
-        recalculate,
-        saveSimulation: save,
-        reload: load,
-    };
+    recalculate,
+    saveSimulation: save,
+    reload: load,
+  };
 }

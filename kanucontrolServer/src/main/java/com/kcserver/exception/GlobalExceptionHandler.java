@@ -35,7 +35,7 @@ public class GlobalExceptionHandler {
                         HttpStatus.BAD_REQUEST.value(),
                         "VALIDATION_ERROR",
                         "Validation failed",
-                        fieldErrors
+                        fieldErrors,null
                 )
         );
     }
@@ -58,7 +58,7 @@ public class GlobalExceptionHandler {
                         400,
                         "VALIDATION_ERROR",
                         "Validation failed",
-                        fieldErrors
+                        fieldErrors,null
                 )
         );
     }
@@ -146,6 +146,20 @@ public class GlobalExceptionHandler {
                         HttpStatus.CONFLICT.value(),
                         "BUSINESS_RULE_VIOLATION",
                         ex.getMessage()
+                )
+        );
+    }
+    @ExceptionHandler(SimulationVoraussetzungenException.class)
+    public ResponseEntity<ApiError> handleSimulationVoraussetzungen(
+            SimulationVoraussetzungenException ex
+    ) {
+
+        return ResponseEntity.badRequest().body(
+                ApiError.withMissing(
+                        HttpStatus.BAD_REQUEST.value(),
+                        "SIMULATION_NOT_READY",
+                        ex.getMessage(),
+                        ex.getFehlendeVoraussetzungen()
                 )
         );
     }

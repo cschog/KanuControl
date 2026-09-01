@@ -9,6 +9,7 @@ public enum PdfDokumentTyp {
     DECKBLATT("Deckblatt"),
     ERHEBUNGSBOGEN("Erhebungsbogen"),
     TEILNEHMERLISTE("Teilnehmerliste"),
+    TEILNEHMER_DATENKONTROLLE("Teilnehmer-Datenkontrolle"),
     ABRECHNUNG("Abrechnung"),
     REISEKOSTENABRECHNUNG("Fahrkostenabrechnung"),
 

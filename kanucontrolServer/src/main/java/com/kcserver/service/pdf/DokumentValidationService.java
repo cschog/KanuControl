@@ -83,6 +83,11 @@ public class DokumentValidationService {
                             veranstaltung
                     );
 
+            case TEILNEHMER_DATENKONTROLLE ->
+                    validateTeilnehmerDatenkontrolle(
+                            veranstaltung
+                    );
+
             default ->
                     ValidationResult.valid();
         };
@@ -161,6 +166,25 @@ public class DokumentValidationService {
         );
 
         return buildResult(fehler);
+    }
+
+    private ValidationResult validateTeilnehmerDatenkontrolle(
+            Veranstaltung veranstaltung
+    ) {
+
+        /*
+         * Die Datenkontrolle soll gerade dazu dienen,
+         * fehlende oder fehlerhafte Teilnehmerdaten
+         * auf der Veranstaltung zu erkennen und
+         * handschriftlich zu korrigieren.
+         *
+         * Deshalb werden hier bewusst KEINE
+         * Teilnehmerdaten validiert.
+         *
+         * Es reicht, dass die Veranstaltung existiert.
+         */
+
+        return ValidationResult.valid();
     }
 
     private boolean isBlank(String value) {

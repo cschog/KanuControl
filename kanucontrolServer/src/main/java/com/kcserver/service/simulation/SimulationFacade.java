@@ -36,6 +36,10 @@ public class SimulationFacade {
     public SimulationErgebnis simuliere(
             PlanungsSimulation simulation
     ) {
+        simulationService.pruefeSimulationVoraussetzungen(
+                simulation
+        );
+
         return engine.simuliere(simulation);
     }
 }

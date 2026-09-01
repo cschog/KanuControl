@@ -1,7 +1,20 @@
 import { useEffect, useState, useCallback } from "react";
 import { getApiErrorMessage } from "@/api/utils/apiError";
 import { ErrorDialog } from "@/components/common/ErrorDialog";
-import { Box, Button, Chip, MenuItem, Typography, Paper, Grid, TextField } from "@mui/material";
+import {
+  Box,
+  Button,
+  Chip,
+  MenuItem,
+  Typography,
+  Paper,
+  Grid,
+  TextField,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useMediaQuery } from "@mui/material";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
@@ -42,6 +55,29 @@ export default function TeilnehmerScreen() {
   const [mobileMode, setMobileMode] = useState<"available" | "assigned">("available");
   const [errorOpen, setErrorOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [roleWarningOpen, setRoleWarningOpen] = useState(false);
+  const [pendingRoleChange, setPendingRoleChange] = useState<{
+    personId: number;
+    current: "L" | "M" | null;
+  } | null>(null);
+
+  const pendingTeilnehmer = pendingRoleChange
+    ? assigned.find((t) => t.personId === pendingRoleChange.personId)
+    : undefined;
+
+ const geschlecht = pendingTeilnehmer?.person?.sex;
+
+ const participantText =
+   geschlecht === "W"
+     ? "Diese Teilnehmerin"
+     : geschlecht === "M"
+       ? "Dieser Teilnehmer"
+       : "Diese Person";
+
+ const employeeText =
+   geschlecht === "W" ? "Mitarbeiterin" : geschlecht === "M" ? "Mitarbeiter" : "Mitarbeitende";
+
+ const pronounText = geschlecht === "W" ? "sie" : geschlecht === "M" ? "ihn" : "die Person";
 
   /* =========================================================
      SORTING
@@ -233,17 +269,45 @@ export default function TeilnehmerScreen() {
   const handleRoleChange = async (current: "L" | "M" | null, personId: number) => {
     if (!active?.id) return;
 
+    // L = Leiter → darf nicht geändert werden
     if (current === "L") return;
 
-    const newRole = current === "M" ? null : "M";
+    // Von M zurück auf normal → keine Warnung notwendig
+    if (current === "M") {
+      await changeRole(personId, current, null);
+      return;
+    }
+
+    // Neuer Mitarbeiter: Alter prüfen
+    const teilnehmer = assigned.find((t) => t.personId === personId);
+
+    if (!teilnehmer) return;
+
+    const alter = teilnehmer.alterBeiBeginn;
+
+    if (alter != null && alter < 21) {
+      setPendingRoleChange({
+        personId,
+        current,
+      });
+
+      setRoleWarningOpen(true);
+      return;
+    }
+
+    await changeRole(personId, current, "M");
+  };
+
+  const changeRole = async (personId: number, current: "L" | "M" | null, newRole: "M" | null) => {
+    if (!active?.id) return;
 
     setAssigned((prev) =>
       prev.map((t) =>
         t.personId === personId
           ? {
-            ...t,
-            rolle: newRole,
-          }
+              ...t,
+              rolle: newRole,
+            }
           : t,
       ),
     );
@@ -255,13 +319,29 @@ export default function TeilnehmerScreen() {
         prev.map((t) =>
           t.personId === personId
             ? {
-              ...t,
-              rolle: current,
-            }
+                ...t,
+                rolle: current,
+              }
             : t,
         ),
       );
     }
+  };
+
+  const confirmRoleChange = async () => {
+    if (!pendingRoleChange) return;
+
+    const { personId, current } = pendingRoleChange;
+
+    setRoleWarningOpen(false);
+    setPendingRoleChange(null);
+
+    await changeRole(personId, current, "M");
+  };
+
+  const cancelRoleChange = () => {
+    setRoleWarningOpen(false);
+    setPendingRoleChange(null);
   };
 
   const assignedColumns = teilnehmerAssignedColumns({
@@ -806,6 +886,36 @@ export default function TeilnehmerScreen() {
         message={errorMessage}
         onClose={() => setErrorOpen(false)}
       />
+
+      <Dialog open={roleWarningOpen} onClose={cancelRoleChange}>
+        <DialogTitle>Mitarbeiterrolle ändern?</DialogTitle>
+
+        <DialogContent>
+          <Typography>{participantText} ist jünger als 21 Jahre.</Typography>
+
+          <Typography sx={{ mt: 1 }}>
+            Wenn{" "}
+            {geschlecht === "W"
+              ? "sie als Mitarbeiterin"
+              : geschlecht === "M"
+                ? "er als Mitarbeiter"
+                : "die Person als Mitarbeitende"}{" "}
+            geführt wird, werden weniger Zuschüsse bewilligt.
+          </Typography>
+
+          <Typography sx={{ mt: 1, fontWeight: 600 }}>
+            Möchtest du {pronounText} trotzdem als {employeeText} setzen?
+          </Typography>
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={cancelRoleChange}>Abbrechen</Button>
+
+          <Button variant="contained" color="warning" onClick={confirmRoleChange}>
+            Trotzdem Mitarbeiter
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

@@ -174,6 +174,20 @@ ORDER BY p.name, p.vorname, t.id
     """)
     List<Teilnehmer> findAllWithPerson(Long veranstaltungId);
 
+    @Query("""
+    SELECT DISTINCT t
+    FROM Teilnehmer t
+    JOIN FETCH t.person p
+    LEFT JOIN FETCH p.mitgliedschaften m
+    LEFT JOIN FETCH m.verein
+    WHERE t.veranstaltung.id = :veranstaltungId
+    ORDER BY p.name, p.vorname
+    """)
+    List<Teilnehmer> findAllForDatenkontrolle(
+            Long veranstaltungId
+    );
+
+
     /* =========================================================
        BUSINESS
        ========================================================= */

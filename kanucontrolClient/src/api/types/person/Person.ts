@@ -14,6 +14,7 @@ export interface PersonList {
   ort?: string;
   hauptvereinAbk?: string;
   mitgliedschaftenCount: number;
+  sex?: "M" | "W" | "D";
 }
 
 /* ============================

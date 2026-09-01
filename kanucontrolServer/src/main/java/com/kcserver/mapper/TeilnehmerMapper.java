@@ -151,6 +151,7 @@ java(
             dto.setId(person.getId());
             dto.setVorname(person.getVorname());
             dto.setName(person.getName());
+            dto.setSex(person.getSex());
 
             // ⭐ Hauptverein bestimmen
             if (person.getMitgliedschaften() != null) {

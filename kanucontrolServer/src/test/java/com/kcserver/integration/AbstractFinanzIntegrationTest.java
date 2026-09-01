@@ -8,6 +8,7 @@ import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.repository.abrechnung.AbrechnungRepository;
 import com.kcserver.service.abrechnung.AbrechnungBelegService;
 import com.kcserver.service.abrechnung.AbrechnungService;
+import com.kcserver.service.finanz.FinanzGruppeService;
 import com.kcserver.service.planung.PlanungService;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
 import com.kcserver.repository.*;
@@ -26,7 +27,8 @@ public abstract class AbstractFinanzIntegrationTest
     @Autowired protected VeranstaltungRepository veranstaltungRepository;
     @Autowired protected TeilnehmerRepository teilnehmerRepository;
     @Autowired protected AbrechnungRepository abrechnungRepository;
-
+    @Autowired protected FinanzGruppeRepository finanzGruppeRepository;
+    @Autowired protected FinanzGruppeService finanzGruppeService;
     @Autowired protected PlanungService planungService;
 
     @Autowired
@@ -39,11 +41,11 @@ public abstract class AbstractFinanzIntegrationTest
 
     protected Long createTestVeranstaltung() {
 
-        String suffix = String.valueOf(counter++); // 1,2,3,...
+        String suffix = String.valueOf(counter++);
 
         Verein verein = new Verein();
         verein.setName("Testverein_" + suffix);
-        verein.setAbk("TV" + suffix); // <= 10 Zeichen!
+        verein.setAbk("TV" + suffix);
         verein = vereinRepository.save(verein);
 
         Person leiter = new Person();
@@ -64,7 +66,12 @@ public abstract class AbstractFinanzIntegrationTest
         v.setEndeZeit(LocalTime.MIDNIGHT);
         v.setAktiv(true);
 
-        return veranstaltungRepository.save(v).getId();
+        v = veranstaltungRepository.save(v);
+
+        // System-Finanzgruppe für das Vereinskonto
+        finanzGruppeService.getOrCreateVereinsFinanzGruppe(v);
+
+        return v.getId();
     }
 
     protected Long createTestVeranstaltung(
@@ -72,18 +79,18 @@ public abstract class AbstractFinanzIntegrationTest
             LocalDate start
     ) {
 
-        String suffix = String.valueOf(counter++);  // 1,2,3,...
+        String suffix = String.valueOf(counter++);
 
         Verein verein = new Verein();
-        verein.setName("TV" + suffix);          // kurz & gültig
-        verein.setAbk("TV" + suffix);           // max 10 Zeichen garantiert
+        verein.setName("TV" + suffix);
+        verein.setAbk("TV" + suffix);
         verein = vereinRepository.save(verein);
 
         Person leiter = new Person();
-        leiter.setVorname("Max" + suffix);           // 🔥 eindeutig
+        leiter.setVorname("Max" + suffix);
         leiter.setName("Mustermann" + suffix);
         leiter.setSex(Sex.WEIBLICH);
-        leiter.setGeburtsdatum(LocalDate.now().minusYears(30)); // wichtig!
+        leiter.setGeburtsdatum(LocalDate.now().minusYears(30));
         leiter.setAktiv(true);
         leiter = personRepository.save(leiter);
 

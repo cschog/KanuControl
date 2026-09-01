@@ -1,5 +1,3 @@
-// src/components/simulation/SimulationPage.tsx
-
 import { useEffect, useState } from "react";
 import { useSimulation } from "@/hooks/useSimulation";
 import { PlanungsSimulation } from "@/api/types/simulation/PlanungsSimulation";
@@ -11,6 +9,7 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  Alert,
   Box,
   Button,
   Typography,
@@ -25,7 +24,7 @@ interface SimulationPageProps {
 }
 
 export default function SimulationPage({ veranstaltungId }: SimulationPageProps) {
-  const { simulation, ergebnis, loading, recalculate, saveSimulation } =
+  const { simulation, ergebnis, loading, simulationNotReady, recalculate, saveSimulation } =
     useSimulation(veranstaltungId);
 
   const [localSimulation, setLocalSimulation] = useState<PlanungsSimulation>();
@@ -35,6 +34,7 @@ export default function SimulationPage({ veranstaltungId }: SimulationPageProps)
 
   const [simulationOpen, setSimulationOpen] = useState(true);
   const [positionenOpen, setPositionenOpen] = useState(false);
+
   const istEingereicht = simulation?.status === "EINGEREICHT";
 
   const theme = useTheme();
@@ -65,13 +65,13 @@ export default function SimulationPage({ veranstaltungId }: SimulationPageProps)
     setBeitragsvorschlagUebernommen(true);
   };
 
- useEffect(() => {
-   if (!localSimulation && simulation) {
-     setLocalSimulation(simulation);
-     setDirty(false);
-     setBeitragsvorschlagUebernommen(false);
-   }
- }, [simulation, localSimulation]);
+  useEffect(() => {
+    if (!localSimulation && simulation) {
+      setLocalSimulation(simulation);
+      setDirty(false);
+      setBeitragsvorschlagUebernommen(false);
+    }
+  }, [simulation, localSimulation]);
 
   useEffect(() => {
     if (!localSimulation) {
@@ -87,6 +87,39 @@ export default function SimulationPage({ veranstaltungId }: SimulationPageProps)
 
   if (loading) {
     return <>Lade Simulation…</>;
+  }
+
+  if (simulationNotReady) {
+    const labels: Record<string, string> = {
+      BEITRAGSSTRUKTUR: "Beitragsstruktur",
+      VERPFLEGUNGSMODELL: "Verpflegungsmodell",
+      UNTERKUNFTSART: "Unterkunftsart",
+    };
+
+    return (
+      <>
+        <Alert severity="warning" sx={{ mb: 3 }}>
+          <Typography variant="subtitle1" fontWeight={600}>
+            Simulation noch nicht möglich
+          </Typography>
+
+          <Typography variant="body2" sx={{ mt: 0.5 }}>
+            Für diese Veranstaltung fehlen noch folgende Voraussetzungen:
+          </Typography>
+
+          <Box component="ul" sx={{ mb: 0, mt: 1 }}>
+            {simulationNotReady.missing.map((item) => (
+              <li key={item}>{labels[item] ?? item}</li>
+            ))}
+          </Box>
+        </Alert>
+
+        <BackFooter
+          label="Zurück zu Vorbereitung"
+          path={`/veranstaltungen/${veranstaltungId}/finanzen/vorbereitung`}
+        />
+      </>
+    );
   }
 
   if (!localSimulation || !ergebnis) {
@@ -196,6 +229,7 @@ export default function SimulationPage({ veranstaltungId }: SimulationPageProps)
           <PlanungspositionenTable positionen={ergebnis.positionen} />
         </AccordionDetails>
       </Accordion>
+
       <BackFooter
         label="Zurück zu Vorbereitung"
         path={`/veranstaltungen/${veranstaltungId}/finanzen/vorbereitung`}

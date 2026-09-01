@@ -418,6 +418,16 @@ const tableHeight = height ?? (isMobile ? undefined : 650);
                       }}
                       sx={{
                         cursor: "pointer",
+
+                        // Geschlossene Zeile leicht grau
+                        backgroundColor: expandedRows.has(row.original.id) ? "#cdcdcd" : "#f5f5f5",
+
+                        "&:hover": {
+                          backgroundColor: expandedRows.has(row.original.id)
+                            ? "#c5c5c5"
+                            : "#e8e8e8",
+                        },
+
                         "& td": {
                           py: 0.6,
                         },

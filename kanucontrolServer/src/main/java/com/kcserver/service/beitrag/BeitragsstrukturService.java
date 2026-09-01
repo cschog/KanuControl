@@ -16,10 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import static com.kcserver.exception.ErrorMessages.BEITRAGSSTRUKTUR_NOT_FOUND;
 
@@ -79,6 +76,188 @@ public class BeitragsstrukturService {
         return mapper.toDTO(
                 repository.save(struktur)
         );
+    }
+
+    /* =========================================================
+   ADD REGEL
+   ========================================================= */
+
+    @Transactional
+    public BeitragsstrukturDTO addRegel(
+            Long strukturId,
+            BeitragsregelCreateDTO dto
+    ) {
+
+        Beitragsstruktur struktur =
+                repository.findById(strukturId)
+                        .orElseThrow(() ->
+                                new IllegalArgumentException(
+                                        "Struktur nicht gefunden"
+                                )
+                        );
+
+        Beitragsregel neueRegel = new Beitragsregel();
+
+        neueRegel.setStruktur(struktur);
+        neueRegel.setRolle(dto.getRolle());
+        neueRegel.setAlterBis(dto.getAlterBis());
+        neueRegel.setBeitrag(dto.getBeitrag());
+
+        struktur.getRegeln().add(neueRegel);
+
+        normalisiereSortierung(
+                struktur,
+                dto.getRolle()
+        );
+
+        validator.validate(struktur.getRegeln());
+
+        Beitragsstruktur saved =
+                repository.save(struktur);
+
+        return mapper.toDTO(saved);
+    }
+
+
+/* =========================================================
+   UPDATE REGEL
+   ========================================================= */
+
+    @Transactional
+    public BeitragsstrukturDTO updateRegel(
+            Long regelId,
+            BeitragsregelCreateDTO dto
+    ) {
+
+        Beitragsregel regel =
+                regelRepository.findById(regelId)
+                        .orElseThrow(() ->
+                                new IllegalArgumentException(
+                                        "Beitragsregel nicht gefunden: " + regelId
+                                )
+                        );
+
+        Beitragsstruktur struktur =
+                regel.getStruktur();
+
+        /*
+         * Rolle merken, bevor sie geändert wird.
+         */
+        TeilnehmerRolle alteRolle =
+                regel.getRolle();
+
+        regel.setAlterBis(dto.getAlterBis());
+        regel.setRolle(dto.getRolle());
+        regel.setBeitrag(dto.getBeitrag());
+
+        normalisiereSortierung(
+                struktur,
+                alteRolle
+        );
+
+        if (!Objects.equals(dto.getRolle(), alteRolle)) {
+
+            normalisiereSortierung(
+                    struktur,
+                    dto.getRolle()
+            );
+        }
+
+        validator.validate(struktur.getRegeln());
+
+        regelRepository.save(regel);
+
+        return mapper.toDTO(struktur);
+    }
+
+
+/* =========================================================
+   DELETE REGEL
+   ========================================================= */
+
+    @Transactional
+    public void deleteRegel(Long regelId) {
+
+        Beitragsregel regel =
+                regelRepository.findById(regelId)
+                        .orElseThrow(() ->
+                                new IllegalArgumentException(
+                                        "Beitragsregel nicht gefunden: " + regelId
+                                )
+                        );
+
+        Beitragsstruktur struktur =
+                regel.getStruktur();
+
+        TeilnehmerRolle rolle =
+                regel.getRolle();
+
+        struktur.getRegeln().remove(regel);
+
+        regelRepository.delete(regel);
+
+        /*
+         * Nach dem Löschen die verbleibenden Regeln
+         * dieser Gruppe neu sortieren.
+         *
+         * Dadurch wird die bisher vorletzte Regel automatisch
+         * zur letzten Regel und damit offen.
+         */
+        normalisiereSortierung(
+                struktur,
+                rolle
+        );
+
+        validator.validate(struktur.getRegeln());
+    }
+
+
+/* =========================================================
+   SORTIERUNG NORMALISIEREN
+   ========================================================= */
+
+    private void normalisiereSortierung(
+            Beitragsstruktur struktur,
+            TeilnehmerRolle rolle
+    ) {
+
+        List<Beitragsregel> gruppenRegeln =
+                struktur.getRegeln()
+                        .stream()
+                        .filter(r ->
+                                (r.getRolle() == null && rolle == null)
+                                        || r.getRolle() == rolle
+                        )
+                        .sorted(
+                                Comparator.comparing(
+                                        Beitragsregel::getAlterBis,
+                                        Comparator.nullsLast(Integer::compareTo)
+                                )
+                        )
+                        .toList();
+
+        for (int i = 0; i < gruppenRegeln.size(); i++) {
+
+            Beitragsregel regel =
+                    gruppenRegeln.get(i);
+
+            regel.setSortierung(i);
+
+            /*
+             * Die letzte Regel ist immer offen.
+             *
+             * Das ist besonders wichtig beim Löschen:
+             *
+             * 0–5
+             * 6–20
+             * 21–∞
+             *
+             * Löscht man 21–∞, wird 6–20 automatisch zu 6–∞.
+             */
+            if (i == gruppenRegeln.size() - 1) {
+                regel.setAlterBis(null);
+            }
+        }
     }
 
     /* =========================================================
@@ -169,54 +348,6 @@ public class BeitragsstrukturService {
         repository.delete(struktur);
     }
 
-    /* =========================================================
-       UPDATE REGEL
-       ========================================================= */
-
-    @Transactional
-    public BeitragsstrukturDTO updateRegel(
-            Long regelId,
-            BeitragsregelCreateDTO dto
-    ) {
-
-        Beitragsregel regel =
-                regelRepository.findById(regelId)
-                        .orElseThrow();
-
-        regel.setAlterBis(dto.getAlterBis());
-
-        regel.setRolle(dto.getRolle());
-
-        regel.setBeitrag(dto.getBeitrag());
-
-        Beitragsstruktur struktur =
-                regel.getStruktur();
-
-        validator.validate(struktur.getRegeln());
-
-        return mapper.toDTO(struktur);
-    }
-
-    /* =========================================================
-       DELETE REGEL
-       ========================================================= */
-
-    @Transactional
-    public void deleteRegel(Long regelId) {
-
-        Beitragsregel regel =
-                regelRepository.findById(regelId)
-                        .orElseThrow();
-
-        Beitragsstruktur struktur =
-                regel.getStruktur();
-
-        struktur.getRegeln().remove(regel);
-
-        regelRepository.delete(regel);
-
-        validator.validate(struktur.getRegeln());
-    }
 
     @Transactional
     public BeitragsstrukturDTO copy(
@@ -484,56 +615,6 @@ public class BeitragsstrukturService {
         repository.save(struktur);
     }
 
-    /* =========================================================
-       ADD REGEL
-       ========================================================= */
-
-    @Transactional
-    public BeitragsstrukturDTO addRegel(
-            Long strukturId,
-            BeitragsregelCreateDTO dto
-    ) {
-
-        Beitragsstruktur struktur =
-                repository.findById(strukturId)
-                        .orElseThrow(() ->
-                                new IllegalArgumentException(
-                                        "Struktur nicht gefunden"
-                                )
-                        );
-
-        int nextSortierung =
-                struktur.getRegeln()
-                        .stream()
-                        .filter(r ->
-                                (r.getRolle() == null && dto.getRolle() == null)
-                                        || (r.getRolle() == dto.getRolle())
-                        )
-                        .map(Beitragsregel::getSortierung)
-                        .max(Integer::compareTo)
-                        .orElse(-1) + 1;
-
-        Beitragsregel regel = new Beitragsregel();
-
-        regel.setStruktur(struktur);
-
-        regel.setSortierung(nextSortierung);
-
-        regel.setAlterBis(dto.getAlterBis());
-
-        regel.setRolle(dto.getRolle());
-
-        regel.setBeitrag(dto.getBeitrag());
-
-        struktur.getRegeln().add(regel);
-
-        validator.validate(struktur.getRegeln());
-
-        Beitragsstruktur saved = repository.save(struktur);
-
-        return mapper.toDTO(saved);
-    }
-
     @Transactional(readOnly = true)
     public Beitragsstruktur findEntityById(Long strukturId) {
 
@@ -553,5 +634,23 @@ public class BeitragsstrukturService {
                         new IllegalArgumentException(
                                 "Beitragsstruktur nicht gefunden: " + id
                         ));
+    }
+    private void setzeLetzteRegelOffen(Beitragsstruktur struktur) {
+
+        Map<TeilnehmerRolle, List<Beitragsregel>> gruppiert =
+                struktur.getRegeln()
+                        .stream()
+                        .collect(Collectors.groupingBy(
+                                Beitragsregel::getRolle
+                        ));
+
+        for (List<Beitragsregel> gruppe : gruppiert.values()) {
+
+            gruppe.stream()
+                    .max(Comparator.comparing(
+                            Beitragsregel::getSortierung
+                    ))
+                    .ifPresent(r -> r.setAlterBis(null));
+        }
     }
 }

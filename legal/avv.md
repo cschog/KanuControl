@@ -41,6 +41,7 @@ Die Vereinbarung gilt für die gesamte Dauer der Nutzung von KanuControl.
 Die Verarbeitung erfolgt insbesondere für:
 
 - Verwaltung von Vereinsmitgliedern
+- Unterstützung bei der Beantragung und Abrechnung von KJFP-Zuschüssen
 - Benutzer- und Rechteverwaltung
 - Verwaltung von Vereinsfunktionen und Ämtern
 - Bereitstellung von Auswertungen und Listen
@@ -56,6 +57,7 @@ Je nach Nutzung können insbesondere folgende Daten verarbeitet werden:
 - Stammdaten von Mitgliedern
 - Kontaktdaten
 - Vereinsbezogene Funktionen und Rollen
+- Veranstaltungsdaten
 - Benutzerkonten
 - Anmelde- und Protokolldaten
 - Zahlungs- und Bankdaten
@@ -163,6 +165,7 @@ Sollten einzelne Bestimmungen dieses Vertrages unwirksam sein oder werden, bleib
 Bestandteil dieses Vertrages ist:
 
 - Anlage 1 – Technische und organisatorische Maßnahmen (TOM)
+- Anlage 2 - Beschreibung der Verarbeitung
 
 ---
 

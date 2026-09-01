@@ -153,13 +153,13 @@ class FoerdersatzIntegrationTest extends AbstractFinanzIntegrationTest {
         foerdersatzService.create(dto1);
 
         FoerdersatzCreateUpdateDTO dto2 = new FoerdersatzCreateUpdateDTO();
-        dto2.setTyp(VeranstaltungTyp.BM);
+        dto2.setTyp(VeranstaltungTyp.FM);
         dto2.setGueltigVon(start);
         dto2.setFoerdersatz(new BigDecimal("30.00"));
 
         FoerdersatzDTO created = foerdersatzService.create(dto2);
 
-        assertThat(created.getTyp()).isEqualTo(VeranstaltungTyp.BM);
+        assertThat(created.getTyp()).isEqualTo(VeranstaltungTyp.FM);
     }
 
     /* =========================================================
@@ -195,7 +195,7 @@ class FoerdersatzIntegrationTest extends AbstractFinanzIntegrationTest {
     void shouldStoreFoerdersatzSnapshotWhenClosing() {
 
         // GIVEN
-        // Aktuell gültigen Fördersatz für den Veranstaltungsbeginn ermitteln
+        // aktuell gültigen Fördersatz für den Veranstaltungsbeginn ermitteln
         Foerdersatz erwarteterFoerdersatz =
                 foerdersatzService.findEntityGueltigFuerTypAm(
                         VeranstaltungTyp.JEM,

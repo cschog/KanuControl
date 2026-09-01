@@ -135,6 +135,70 @@ public class ReportController {
         return buildAttachmentResponse(pdf, filename);
     }
 
+    /* =========================================================
+   Teilnehmer-Datenkontrolle PDF (Vorschau)
+   ========================================================= */
+
+    @GetMapping("/teilnehmer/datenkontrolle/pdf/view")
+    public ResponseEntity<byte[]> viewTeilnehmerDatenkontrollePdf(
+            @PathVariable Long veranstaltungId
+    ) {
+
+        byte[] pdf =
+                dokumentService.generateTeilnehmerDatenkontrolle(
+                        veranstaltungId
+                );
+
+        VeranstaltungDetailDTO veranstaltung =
+                veranstaltungService.getById(
+                        veranstaltungId
+                );
+
+        String filename =
+                PdfFilenameUtil.build(
+                        LocalDate.now(),
+                        PdfDokumentTyp.TEILNEHMER_DATENKONTROLLE,
+                        veranstaltung
+                );
+
+        return buildInlineResponse(
+                pdf,
+                filename
+        );
+    }
+
+    /* =========================================================
+   Teilnehmer-Datenkontrolle PDF (Download)
+   ========================================================= */
+
+    @GetMapping("/teilnehmer/datenkontrolle/pdf/download")
+    public ResponseEntity<byte[]> downloadTeilnehmerDatenkontrollePdf(
+            @PathVariable Long veranstaltungId
+    ) {
+
+        byte[] pdf =
+                dokumentService.generateTeilnehmerDatenkontrolle(
+                        veranstaltungId
+                );
+
+        VeranstaltungDetailDTO veranstaltung =
+                veranstaltungService.getById(
+                        veranstaltungId
+                );
+
+        String filename =
+                PdfFilenameUtil.build(
+                        LocalDate.now(),
+                        PdfDokumentTyp.TEILNEHMER_DATENKONTROLLE,
+                        veranstaltung
+                );
+
+        return buildAttachmentResponse(
+                pdf,
+                filename
+        );
+    }
+
    /* =========================================================
    Erhebungsbogen PDF (Vorschau)
    ========================================================= */

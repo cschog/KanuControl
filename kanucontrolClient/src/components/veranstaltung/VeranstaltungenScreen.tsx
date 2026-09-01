@@ -201,7 +201,6 @@ export default function VeranstaltungenScreen() {
     }
 
     try {
-
       const response = await updateVeranstaltung(selectedVeranstaltung.id, payload);
 
       await fetchData();
@@ -261,7 +260,7 @@ export default function VeranstaltungenScreen() {
         setDialogTitle("Veranstaltung kann nicht gelöscht werden");
         setWarnings([
           error.response.data?.message ??
-          "Die Veranstaltung kann nicht gelöscht werden, solange Teilnehmer eingetragen sind. Ausnahme: Es ist nur noch der Leiter vorhanden.",
+            "Die Veranstaltung kann nicht gelöscht werden, solange Teilnehmer eingetragen sind. Ausnahme: Es ist nur noch der Leiter vorhanden.",
         ]);
         setWarningDialogOpen(true);
       } else {
@@ -327,22 +326,38 @@ export default function VeranstaltungenScreen() {
      CREATE
      ========================================================= */
 
-const handleCreate = async (payload: VeranstaltungSave) => {
-  const response = await createVeranstaltung(payload);
+  const handleCreate = async (payload: VeranstaltungSave) => {
+    try {
+      const response = await createVeranstaltung(payload);
 
-  console.log("CREATE RESPONSE:", response);
+      console.log("CREATE RESPONSE:", response);
 
-  await fetchData();
-  await reloadContext();
+      await fetchData();
+      await reloadContext();
 
-  setCreateOpen(false);
+      setCreateOpen(false);
 
-  setSelectedVeranstaltung(response);
-  setSelectedId(response.id);
+      setSelectedVeranstaltung(response);
+      setSelectedId(response.id);
 
-  setBtnEditDisabled(false);
-  setBtnDeleteDisabled(false);
-};
+      setBtnEditDisabled(false);
+      setBtnDeleteDisabled(false);
+
+      setError(null);
+    } catch (err: unknown) {
+      console.error("CREATE ERROR:", err);
+
+      setDialogTitle("Veranstaltung kann nicht erstellt werden");
+
+      if (axios.isAxiosError(err)) {
+        setWarnings([err.response?.data?.message ?? "Veranstaltung konnte nicht erstellt werden."]);
+      } else {
+        setWarnings(["Veranstaltung konnte nicht erstellt werden."]);
+      }
+
+      setWarningDialogOpen(true);
+    }
+  };
 
   /* =========================================================
      COPY

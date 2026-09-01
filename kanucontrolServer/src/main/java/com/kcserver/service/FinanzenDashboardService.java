@@ -9,6 +9,7 @@ import com.kcserver.repository.*;
 import com.kcserver.repository.abrechnung.AbrechnungBuchungRepository;
 import com.kcserver.repository.abrechnung.AbrechnungRepository;
 import com.kcserver.service.abrechnung.AbrechnungSynchronisationsService;
+import com.kcserver.service.reisekosten.ReisekostenabrechnungService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,12 +33,11 @@ public class FinanzenDashboardService {
     private final AbrechnungBuchungRepository abrechnungBuchungRepository;
     private final PlanungRepository planungRepository;
     private final AbrechnungSynchronisationsService synchronisationsService;
+    private final ReisekostenabrechnungService reisekostenabrechnungService;
 
     public FinanzenDashboardDTO getDashboard(
             Long veranstaltungId
     ) {
-
-        synchronisationsService.synchronisieren(veranstaltungId);
 
         Veranstaltung veranstaltung =
                 veranstaltungRepository
@@ -54,6 +54,23 @@ public class FinanzenDashboardService {
                         .findByPlanung_Veranstaltung_Id(
                                 veranstaltungId
                         );
+
+        /*
+         * Abrechnung ist optional.
+         *
+         * Existiert sie bereits, werden die automatischen
+         * Abrechnungspositionen synchronisiert.
+         */
+        Abrechnung abrechnung =
+                abrechnungRepository
+                        .findByVeranstaltungId(
+                                veranstaltungId
+                        )
+                        .orElse(null);
+
+        if (abrechnung != null) {
+            synchronisationsService.synchronisieren(veranstaltungId);
+        }
 
         FinanzenDashboardDTO dto =
                 new FinanzenDashboardDTO();
@@ -92,13 +109,6 @@ public class FinanzenDashboardService {
            IST
            ===================================================== */
 
-        Abrechnung abrechnung =
-                abrechnungRepository
-                        .findByVeranstaltungId(
-                                veranstaltungId
-                        )
-                        .orElse(null);
-
         List<AbrechnungBuchung> buchungen =
                 abrechnung == null
                         ? List.of()
@@ -107,7 +117,7 @@ public class FinanzenDashboardService {
                                 abrechnung.getId()
                         );
 
-        BigDecimal istKosten =
+        BigDecimal istKostenBuchungen =
                 buchungen.stream()
                         .filter(b ->
                                 b.getKategorie().isKosten()
@@ -117,6 +127,17 @@ public class FinanzenDashboardService {
                                 BigDecimal.ZERO,
                                 BigDecimal::add
                         );
+
+        BigDecimal fahrtkosten =
+                reisekostenabrechnungService
+                        .getReisekostenSumme(veranstaltungId);
+
+        if (fahrtkosten == null) {
+            fahrtkosten = BigDecimal.ZERO;
+        }
+
+        BigDecimal istKosten =
+                istKostenBuchungen.add(fahrtkosten);
 
         BigDecimal istEinnahmen =
                 buchungen.stream()
@@ -263,6 +284,14 @@ public class FinanzenDashboardService {
                                         )
                                 )
                         );
+
+        if (fahrtkosten.compareTo(BigDecimal.ZERO) != 0) {
+            kostenNachKategorie.merge(
+                    FinanzKategorie.FAHRTKOSTEN,
+                    fahrtkosten,
+                    BigDecimal::add
+            );
+        }
 
         dto.setIstKostenNachKategorie(
                 kostenNachKategorie
