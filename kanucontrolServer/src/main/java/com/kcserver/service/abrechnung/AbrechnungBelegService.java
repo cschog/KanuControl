@@ -7,6 +7,7 @@ import com.kcserver.dto.abrechnung.AbrechnungBelegDTO;
 import com.kcserver.entity.*;
 import com.kcserver.enumtype.AbrechnungsStatus;
 import com.kcserver.enumtype.BuchungsHerkunft;
+import com.kcserver.exception.ErrorMessages;
 import com.kcserver.mapper.AbrechnungMapper;
 import com.kcserver.repository.*;
 import com.kcserver.repository.abrechnung.AbrechnungBelegRepository;
@@ -46,7 +47,7 @@ public class AbrechnungBelegService {
         if (dto.getKuerzel() == null || dto.getKuerzel().isBlank()) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Kürzel ist Pflicht");
+                    ErrorMessages.KUERZEL_REQUIRED);
         }
 
         FinanzGruppe gruppe = finanzGruppeRepository
@@ -54,7 +55,7 @@ public class AbrechnungBelegService {
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
-                                "FinanzGruppe nicht gefunden"));
+                                ErrorMessages.KUERZEL_NOT_FOUND));
 
         // 🔥 MAX
         Integer max = belegRepository
@@ -96,7 +97,7 @@ public class AbrechnungBelegService {
         AbrechnungBeleg beleg = belegRepository.findById(belegDTO.getId())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
-                        "Beleg nicht gefunden nach Erstellung"));
+                        ErrorMessages.BELEG_NOT_FOUND_AFTER_CREATION));
 
         return mapper.toDTO(beleg);
     }
@@ -112,7 +113,7 @@ public class AbrechnungBelegService {
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
-                                "Beleg nicht gefunden"
+                                ErrorMessages.BELEG_NOT_FOUND
                         )
                 );
 
@@ -128,7 +129,7 @@ public class AbrechnungBelegService {
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
-                                "Finanzgruppe nicht gefunden"
+                                ErrorMessages.KUERZEL_NOT_FOUND
                         )
                 );
 
@@ -186,7 +187,7 @@ public class AbrechnungBelegService {
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
-                                "Position nicht gefunden"));
+                                ErrorMessages.POSITION_NOT_FOUND));
 
         validateVeranstaltung(veranstaltungId, pos.getBeleg());
         checkEditable(pos.getBeleg().getAbrechnung());
@@ -209,7 +210,7 @@ public class AbrechnungBelegService {
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
-                                "Position nicht gefunden"));
+                                ErrorMessages.POSITION_NOT_FOUND));
 
         AbrechnungBeleg beleg = pos.getBeleg();
 
@@ -253,7 +254,7 @@ public class AbrechnungBelegService {
         if (newKuerzel == null || newKuerzel.isBlank()) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Kürzel ist Pflicht");
+                    ErrorMessages.KUERZEL_REQUIRED);
         }
 
         AbrechnungBeleg beleg = getBeleg(belegId);
@@ -268,7 +269,7 @@ public class AbrechnungBelegService {
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
-                                "Kürzel nicht gefunden"));
+                                ErrorMessages.KUERZEL_NOT_FOUND));
 
         // 🔥 Wechsel nur durchführen, wenn es wirklich ein Wechsel ist
         if (beleg.getFinanzGruppe().getId()
@@ -307,7 +308,7 @@ public class AbrechnungBelegService {
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
-                                "Abrechnung nicht gefunden"));
+                                ErrorMessages.ABRECHNUNG_NOT_FOUND));
     }
 
     private AbrechnungBeleg getBeleg(Long belegId) {
@@ -316,7 +317,7 @@ public class AbrechnungBelegService {
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
-                                "Beleg nicht gefunden"));
+                                ErrorMessages.BELEG_NOT_FOUND));
     }
 
     private void validateVeranstaltung(Long veranstaltungId,
@@ -329,7 +330,7 @@ public class AbrechnungBelegService {
 
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "Beleg gehört zu anderer Veranstaltung");
+                    ErrorMessages.BELEG_WRONG_VERANSTALTUNG);
         }
     }
 
@@ -338,7 +339,7 @@ public class AbrechnungBelegService {
         if (abrechnung.getStatus() == AbrechnungsStatus.ABGESCHLOSSEN) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "Abrechnung ist abgeschlossen und nicht mehr änderbar");
+                   ErrorMessages.ABRECHNUNG_CLOSED);
         }
     }
 
@@ -352,7 +353,7 @@ public class AbrechnungBelegService {
         if (systemBeleg) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "Systembelege dürfen nicht geändert werden.");
+                    ErrorMessages.SYSTEMBELEG_NOT_EDITABLE);
         }
     }
 

@@ -13,8 +13,9 @@ import {
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-
 import Money from "@/components/common/Money";
+import { ErrorDialog } from "@/components/common/ErrorDialog";
+import { getApiErrorMessage } from "@/api/utils/apiError";
 
 import BackFooter from "@/components/common/BackFooter";
 
@@ -84,9 +85,9 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
 
       setBearbeiteterZahlungsnachweis(response.data);
       setDialogOpen(true);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(err);
-      setError("Zahlungsnachweis konnte nicht geladen werden.");
+      setError(getApiErrorMessage(err));
     }
   };
 
@@ -109,9 +110,9 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
       setDeleteZahlungsnachweisId(null);
 
       await load();
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(err);
-      setError("Zahlungsnachweis konnte nicht gelöscht werden.");
+      setError(getApiErrorMessage(err));
     }
   };
 
@@ -136,9 +137,9 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
       setSummary(response.data.summary);
       setZahlungsnachweise(response.data.zahlungsnachweise);
       setData(response.data.teilnehmer);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(err);
-      setError("Beiträge konnten nicht geladen werden.");
+      setError(getApiErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -509,13 +510,13 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
             setBearbeiteterZahlungsnachweis(null);
 
             await load();
-          } catch (err) {
+          } catch (err: unknown) {
             console.error(err);
-            setError("Zahlungsnachweis konnte nicht gespeichert werden.");
+            setError(getApiErrorMessage(err));
           }
         }}
       />
-
+      <ErrorDialog open={!!error} message={error ?? ""} onClose={() => setError(null)} />
       <DeleteConfirmDialog
         open={deleteDialogOpen}
         title="Zahlungsnachweis löschen"

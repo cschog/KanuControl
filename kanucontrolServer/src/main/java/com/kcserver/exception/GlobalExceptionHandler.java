@@ -34,8 +34,9 @@ public class GlobalExceptionHandler {
                 new ApiError(
                         HttpStatus.BAD_REQUEST.value(),
                         "VALIDATION_ERROR",
-                        "Validation failed",
-                        fieldErrors,null
+                        ErrorMessages.VALIDATION_FAILED,
+                        fieldErrors,
+                        null
                 )
         );
     }
@@ -109,19 +110,29 @@ public class GlobalExceptionHandler {
         }
 
         return ResponseEntity.badRequest().body(
-
                 ApiError.simple(
-
                         HttpStatus.BAD_REQUEST.value(),
-
                         "INVALID_REQUEST",
-
-                        ex.getMostSpecificCause().getMessage()
-
+                        message
                 )
-
         );
     }
+    @ExceptionHandler(CsvReadException.class)
+    public ResponseEntity<ApiError> handleCsvReadException(
+            CsvReadException ex
+    ) {
+
+        log.warn("CSV konnte nicht gelesen werden: {}", ex.getMessage());
+
+        return ResponseEntity.badRequest().body(
+                ApiError.simple(
+                        HttpStatus.BAD_REQUEST.value(),
+                        "CSV_INVALID_FORMAT",
+                        ex.getMessage()
+                )
+        );
+    }
+
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleGeneric(Exception ex) {
@@ -130,9 +141,9 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                 ApiError.simple(
-                        500,
-                        ex.getClass().getSimpleName(),
-                        ex.getMessage()
+                        HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                        "INTERNAL_SERVER_ERROR",
+                        ErrorMessages.UNEXPECTED_ERROR
                 )
         );
     }

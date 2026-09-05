@@ -97,8 +97,7 @@ public class SimulationService {
         if (planung.istEingereicht()) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "Die Planung wurde bereits eingereicht und ist gesperrt. "
-                            + "Bitte öffnen Sie die Planung zunächst wieder."
+                   ErrorMessages.PLANUNG_LOCKED
             );
         }
 

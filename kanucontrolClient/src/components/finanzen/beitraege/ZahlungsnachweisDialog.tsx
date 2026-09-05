@@ -17,6 +17,9 @@ import {
   Typography,
 } from "@mui/material";
 
+import { getApiErrorMessage } from "@/api/utils/apiError";
+import { ErrorDialog } from "@/components/common/ErrorDialog";
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { getFinanzgruppen, FinanzGruppe } from "@/api/services/finanzgruppenApi";
@@ -81,6 +84,8 @@ const ZahlungsnachweisDialog = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [saving, setSaving] = useState(false);
 
+  const [error, setError] = useState<string | null>(null);
+
   const [referenzObjekt, setReferenzObjekt] = useState<ReferenzObjekt>(() => {
     const gespeichert = localStorage.getItem(REFERENZ_STORAGE_KEY);
 
@@ -134,8 +139,9 @@ const ZahlungsnachweisDialog = ({
       try {
         const gruppen = await getFinanzgruppen(veranstaltungId);
         setFinanzgruppen(gruppen);
-      } catch (error) {
+      } catch (error: unknown) {
         console.error("Fehler beim Laden der Konten", error);
+        setError(getApiErrorMessage(error));
         setFinanzgruppen([]);
       }
     };
@@ -785,6 +791,7 @@ const ZahlungsnachweisDialog = ({
             </Box>
           </Stack>
         </DialogContent>
+        <ErrorDialog open={!!error} message={error ?? ""} onClose={() => setError(null)} />
 
         <DialogActions>
           <Button onClick={onClose}>Abbrechen</Button>

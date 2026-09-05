@@ -7,21 +7,23 @@ import {
   TableBody,
   IconButton,
   TextField,
-  Snackbar,
-  Alert,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   Button,
+  Chip,
+  Stack,
 } from "@mui/material";
 import { Edit, Delete, Save, Close } from "@mui/icons-material";
 import { useEffect, useState, useCallback } from "react";
 import type { FC } from "react";
-import axios from "axios";
+
 import apiClient from "@/api/client/apiClient";
+import { getApiErrorMessage } from "@/api/utils/apiError";
+import { ErrorDialog } from "@/components/common/ErrorDialog";
 import TeilnehmerDialog from "@/components/teilnehmer/TeilnehmerDialog";
-import { Chip, Stack } from "@mui/material";
+
 import AddIcon from "@mui/icons-material/Add";
 
 interface Props {
@@ -52,24 +54,21 @@ const FinanzgruppenTable: FC<Props> = ({ veranstaltungId, reloadKey }) => {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const [dialogGruppeId, setDialogGruppeId] = useState<number | null>(null);
+
   /* =========================================================
      LOAD
   ========================================================= */
-
-  const [dialogGruppeId, setDialogGruppeId] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     try {
       const res = await apiClient.get<FinanzGruppe[]>(
         `/veranstaltungen/${veranstaltungId}/finanzgruppen`,
       );
+
       setGruppen(res.data);
     } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        setError(error.response?.data?.message ?? "Konten konnten nicht geladen werden");
-      } else {
-        setError("Ein unerwarteter Fehler ist aufgetreten");
-      }
+      setError(getApiErrorMessage(error, "Konten konnten nicht geladen werden."));
     }
   }, [veranstaltungId]);
 
@@ -88,13 +87,10 @@ const FinanzgruppenTable: FC<Props> = ({ veranstaltungId, reloadKey }) => {
       });
 
       setEditId(null);
+
       await load();
     } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        setError(error.response?.data?.message ?? "Konto konnte nicht geändert werden");
-      } else {
-        setError("Ein unerwarteter Fehler ist aufgetreten");
-      }
+      setError(getApiErrorMessage(error, "Konto konnte nicht geändert werden."));
     }
   };
 
@@ -109,13 +105,10 @@ const FinanzgruppenTable: FC<Props> = ({ veranstaltungId, reloadKey }) => {
       await apiClient.delete(`/veranstaltungen/${veranstaltungId}/finanzgruppen/${deleteId}`);
 
       setDeleteId(null);
+
       await load();
     } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        setError(error.response?.data?.message ?? "Konto kann nicht gelöscht werden");
-      } else {
-        setError("Ein unerwarteter Fehler ist aufgetreten");
-      }
+      setError(getApiErrorMessage(error, "Konto kann nicht gelöscht werden."));
     }
   };
 
@@ -129,7 +122,7 @@ const FinanzgruppenTable: FC<Props> = ({ veranstaltungId, reloadKey }) => {
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell>Finanazgruppe</TableCell>
+              <TableCell>Finanzgruppe</TableCell>
               <TableCell align="right">Teilnehmer</TableCell>
               <TableCell align="right">Belege</TableCell>
               <TableCell align="right">Aktionen</TableCell>
@@ -158,6 +151,7 @@ const FinanzgruppenTable: FC<Props> = ({ veranstaltungId, reloadKey }) => {
                     </TableCell>
 
                     <TableCell align="right">{g.teilnehmerCount}</TableCell>
+
                     <TableCell align="right">{g.belegCount}</TableCell>
 
                     <TableCell align="right">
@@ -166,6 +160,7 @@ const FinanzgruppenTable: FC<Props> = ({ veranstaltungId, reloadKey }) => {
                           <IconButton size="small" onClick={() => handleSave(g.id)}>
                             <Save fontSize="small" />
                           </IconButton>
+
                           <IconButton size="small" onClick={() => setEditId(null)}>
                             <Close fontSize="small" />
                           </IconButton>
@@ -196,7 +191,7 @@ const FinanzgruppenTable: FC<Props> = ({ veranstaltungId, reloadKey }) => {
                   </TableRow>
 
                   {/* Teilnehmer-Zeile */}
-                  <TableRow>
+                  <TableRow key={`${g.id}-teilnehmer`}>
                     <TableCell colSpan={4}>
                       <Stack direction="row" spacing={1} flexWrap="wrap">
                         {g.teilnehmer?.map((t) => (
@@ -236,19 +231,19 @@ const FinanzgruppenTable: FC<Props> = ({ veranstaltungId, reloadKey }) => {
       {/* Delete Dialog */}
       <Dialog open={deleteId !== null} onClose={() => setDeleteId(null)}>
         <DialogTitle>Gruppe löschen?</DialogTitle>
+
         <DialogContent>Diese Aktion kann nicht rückgängig gemacht werden.</DialogContent>
+
         <DialogActions>
           <Button onClick={() => setDeleteId(null)}>Abbrechen</Button>
+
           <Button color="error" onClick={handleDelete}>
             Löschen
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Error Snackbar */}
-      <Snackbar open={!!error} autoHideDuration={4000} onClose={() => setError(null)}>
-        <Alert severity="error">{error}</Alert>
-      </Snackbar>
+      <ErrorDialog open={!!error} message={error ?? ""} onClose={() => setError(null)} />
     </>
   );
 };

@@ -191,7 +191,7 @@ public class PersonServiceImpl implements PersonService {
                 )) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "Eine Person mit gleichem Namen und Geburtsdatum existiert bereits"
+                    ErrorMessages.PERSON_ALREADY_EXISTS
             );
         }
 
@@ -215,7 +215,7 @@ public class PersonServiceImpl implements PersonService {
                 Verein verein = vereinRepository.findById(m.getVereinId())
                         .orElseThrow(() -> new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
-                                "Verein nicht gefunden: " + m.getVereinId()
+                                ErrorMessages.VEREIN_NOT_FOUND
                         ));
 
                 Mitglied mitglied = new Mitglied();
@@ -305,7 +305,8 @@ public class PersonServiceImpl implements PersonService {
 
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "Person kann nicht gelöscht werden.\n\nVerwendet in:\n"
+                    ErrorMessages.PERSON_CANNOT_BE_DELETED
+                            + "\n\nVerwendet in:\n"
                             + veranstaltungen
             );
         }
@@ -313,14 +314,14 @@ public class PersonServiceImpl implements PersonService {
         if (reisekostenabrechnungRepository.existsByFahrerId(id)) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "Person kann nicht gelöscht werden. Sie wird als Fahrer in einer Reisekostenabrechnung verwendet."
+                    ErrorMessages.PERSON_USED_AS_FAHRER
             );
         }
 
         if (fahrtabschnittMitfahrerRepository.existsByPersonId(id)) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "Person kann nicht gelöscht werden. Sie wird als Mitfahrer in einer Reisekostenabrechnung verwendet."
+                    ErrorMessages.PERSON_USED_AS_MITFAHRER
             );
         }
 
@@ -379,7 +380,7 @@ public class PersonServiceImpl implements PersonService {
                         Verein verein = vereinRepository.findById(dto.getVereinId())
                                 .orElseThrow(() -> new ResponseStatusException(
                                         HttpStatus.NOT_FOUND,
-                                        "Verein nicht gefunden: " + dto.getVereinId()
+                                        ErrorMessages.VEREIN_NOT_FOUND
                                 ));
 
                         Mitglied m = new Mitglied();
@@ -401,7 +402,7 @@ public class PersonServiceImpl implements PersonService {
         if (hauptvereine.size() > 1) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Eine Person darf nur einen Hauptverein haben"
+                    ErrorMessages.PERSON_ONLY_ONE_HAUPTVEREIN
             );
         }
 
@@ -429,7 +430,7 @@ public class PersonServiceImpl implements PersonService {
                 .ifPresent(p -> {
                     throw new ResponseStatusException(
                             HttpStatus.CONFLICT,
-                            "Eine andere Person mit gleichem Namen und Geburtsdatum existiert bereits"
+                            ErrorMessages.PERSON_ALREADY_EXISTS
                     );
                 });
     }

@@ -70,7 +70,7 @@ public class MitgliedService {
         if (mitgliedRepository.existsByPerson_IdAndVerein_Id(
                 dto.getPersonId(), dto.getVereinId())) {
             throw new BusinessRuleViolationException(
-                    "Person ist schon Mitglied in diesem Verein"
+                    ErrorMessages.PERSON_ALREADY_MEMBER
             );
         }
 
@@ -94,7 +94,7 @@ public class MitgliedService {
     public MitgliedDTO getById(Long id) {
         Mitglied mitglied = mitgliedRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Mitglied not found"
+                        HttpStatus.NOT_FOUND, ErrorMessages.MITGLIED_NOT_FOUND
                 ));
         return mitgliedMapper.toDTO(mitglied);
     }
@@ -103,7 +103,7 @@ public class MitgliedService {
     public Mitglied getEntityByIdWithVerein(Long id) {
         return mitgliedRepository.findByIdWithVerein(id)
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Mitglied not found"
+                        HttpStatus.NOT_FOUND, ErrorMessages.MITGLIED_NOT_FOUND
                 ));
     }
 
@@ -130,7 +130,7 @@ public class MitgliedService {
                 .findByPerson_IdAndHauptVereinTrue(personId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
-                        "No Hauptverein found for person"
+                        ErrorMessages.NO_HAUPTVEREIN_FOUND
                 ));
 
         return mitgliedMapper.toDTO(mitglied);
@@ -145,7 +145,7 @@ public class MitgliedService {
 
         Mitglied mitglied = mitgliedRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Mitglied not found"
+                        HttpStatus.NOT_FOUND, ErrorMessages.MITGLIED_NOT_FOUND
                 ));
 
         Long personId = mitglied.getPerson().getId();
@@ -224,7 +224,7 @@ public class MitgliedService {
 
         Mitglied mitglied = mitgliedRepository.findByIdWithVerein(id)
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Mitglied not found"
+                        HttpStatus.NOT_FOUND, ErrorMessages.MITGLIED_NOT_FOUND
                 ));
 
         // 🔒 Identität darf nicht geändert werden
@@ -232,7 +232,7 @@ public class MitgliedService {
                 !mitglied.getPerson().getId().equals(dto.getPersonId())) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Changing person of Mitglied is not allowed"
+                    ErrorMessages.MITGLIED_PERSON_CHANGE_NOT_ALLOWED
             );
         }
 
@@ -240,7 +240,7 @@ public class MitgliedService {
                 !mitglied.getVerein().getId().equals(dto.getVereinId())) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Changing verein of Mitglied is not allowed"
+                    ErrorMessages.MITGLIED_VEREIN_CHANGE_NOT_ALLOWED
             );
         }
 

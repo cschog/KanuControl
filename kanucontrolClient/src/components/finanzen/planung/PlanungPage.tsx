@@ -19,6 +19,8 @@ import { getPlanung, einreichen, wiederOeffnen } from "@/api/services/planungApi
 import { PlanungDetail } from "@/api/types/planung";
 import { kategorieZuTyp } from "@/api/types/finanz";
 import FinanzSummary from "@/components/common/FinanzSummary";
+import { ErrorDialog } from "@/components/common/ErrorDialog";
+import { getApiErrorMessage } from "@/api/utils/apiError";
 
 interface Props {
   veranstaltungId: number;
@@ -28,11 +30,19 @@ interface Props {
 export default function PlanungPage({ veranstaltungId, onOpenSimulation }: Props) {
   const [planung, setPlanung] = useState<PlanungDetail | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    const data = await getPlanung(veranstaltungId);
-    setPlanung(data);
-  }, [veranstaltungId]);
+ const load = useCallback(async () => {
+   try {
+     setError(null);
+
+     const data = await getPlanung(veranstaltungId);
+     setPlanung(data);
+   } catch (e: unknown) {
+     console.error(e);
+     setError(getApiErrorMessage(e));
+   }
+ }, [veranstaltungId]);
 
   useEffect(() => {
     load();
@@ -87,8 +97,13 @@ export default function PlanungPage({ veranstaltungId, onOpenSimulation }: Props
             size="small"
             sx={{ ml: 2 }}
             onClick={async () => {
-              await wiederOeffnen(veranstaltungId);
-              load();
+              try {
+                await wiederOeffnen(veranstaltungId);
+                await load();
+              } catch (e: unknown) {
+                console.error(e);
+                setError(getApiErrorMessage(e));
+              }
             }}
           >
             Planung wieder öffnen
@@ -128,7 +143,7 @@ export default function PlanungPage({ veranstaltungId, onOpenSimulation }: Props
             Nach dem Einreichen können keine Änderungen mehr vorgenommen werden.
           </Typography>
         </DialogContent>
-
+        <ErrorDialog open={!!error} message={error ?? ""} onClose={() => setError(null)} />
         <DialogActions>
           <Button onClick={() => setConfirmOpen(false)}>Abbrechen</Button>
 
@@ -142,9 +157,9 @@ export default function PlanungPage({ veranstaltungId, onOpenSimulation }: Props
                 setConfirmOpen(false);
 
                 await load();
-              } catch (e) {
+              } catch (e: unknown) {
                 console.error(e);
-                alert("Planung konnte nicht eingereicht werden.");
+                setError(getApiErrorMessage(e));
               }
             }}
           >

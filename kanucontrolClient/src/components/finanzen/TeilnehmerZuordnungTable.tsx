@@ -7,13 +7,13 @@ import {
   TableBody,
   Select,
   MenuItem,
-  Snackbar,
-  Alert,
 } from "@mui/material";
 import { useEffect, useState, useCallback } from "react";
 import type { FC } from "react";
-import axios from "axios";
+
 import apiClient from "@/api/client/apiClient";
+import { getApiErrorMessage } from "@/api/utils/apiError";
+import { ErrorDialog } from "@/components/common/ErrorDialog";
 
 interface Props {
   veranstaltungId: number;
@@ -45,30 +45,26 @@ const TeilnehmerZuordnungTable: FC<Props> = ({ veranstaltungId }) => {
      LOAD
   ========================================================= */
 
- const load = useCallback(async () => {
-   try {
-     const [tRes, gRes] = await Promise.all([
-       apiClient.get(`/veranstaltungen/${veranstaltungId}/teilnehmer`),
-       apiClient.get(`/veranstaltungen/${veranstaltungId}/finanzgruppen`),
-     ]);
+  const load = useCallback(async () => {
+    try {
+      const [tRes, gRes] = await Promise.all([
+        apiClient.get(`/veranstaltungen/${veranstaltungId}/teilnehmer`),
+        apiClient.get(`/veranstaltungen/${veranstaltungId}/finanzgruppen`),
+      ]);
 
-     setTeilnehmer(tRes.data.content ?? []);
-     setGruppen(gRes.data);
-   } catch (error: unknown) {
-     if (axios.isAxiosError(error)) {
-       setError(error.response?.data?.message ?? "Daten konnten nicht geladen werden");
-     } else {
-       setError("Ein unerwarteter Fehler ist aufgetreten");
-     }
-   }
- }, [veranstaltungId]);
+      setTeilnehmer(tRes.data.content ?? []);
+      setGruppen(gRes.data);
+    } catch (error: unknown) {
+      setError(getApiErrorMessage(error, "Daten konnten nicht geladen werden."));
+    }
+  }, [veranstaltungId]);
 
   useEffect(() => {
     load();
   }, [load]);
 
   /* =========================================================
-     ASSIGN KUERZEL (Konto)
+     ASSIGN KUERZEL
   ========================================================= */
 
   const handleChange = async (teilnehmerId: number, kuerzel: string) => {
@@ -83,11 +79,7 @@ const TeilnehmerZuordnungTable: FC<Props> = ({ veranstaltungId }) => {
 
       setTeilnehmer((prev) => prev.map((t) => (t.id === teilnehmerId ? { ...t, kuerzel } : t)));
     } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        setError(error.response?.data?.message ?? "Konto konnte nicht zugewiesen werden");
-      } else {
-        setError("Ein unerwarteter Fehler ist aufgetreten");
-      }
+      setError(getApiErrorMessage(error, "Konto konnte nicht zugewiesen werden."));
     }
   };
 
@@ -142,7 +134,7 @@ const TeilnehmerZuordnungTable: FC<Props> = ({ veranstaltungId }) => {
                       sx={{ minWidth: 140 }}
                     >
                       <MenuItem value="">
-                        <em>Finanazgruppe auswählen…</em>
+                        <em>Finanzgruppe auswählen…</em>
                       </MenuItem>
 
                       {gruppen
@@ -161,9 +153,7 @@ const TeilnehmerZuordnungTable: FC<Props> = ({ veranstaltungId }) => {
         </Table>
       </Paper>
 
-      <Snackbar open={!!error} autoHideDuration={4000} onClose={() => setError(null)}>
-        <Alert severity="error">{error}</Alert>
-      </Snackbar>
+      <ErrorDialog open={!!error} message={error ?? ""} onClose={() => setError(null)} />
     </>
   );
 };

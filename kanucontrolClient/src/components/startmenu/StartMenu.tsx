@@ -11,6 +11,8 @@ import { ModuleButton } from "@/components/common/ModuleButton";
 import { moduleTypeMap } from "@/theme/moduleMap";
 import { FeedbackFab } from "@/components/userFeedBack/featureBase/FeedbackFab";
 import { isAdmin } from "@/auth/useTenant";
+import { ErrorDialog } from "@/components/common/ErrorDialog";
+import { getApiErrorMessage } from "@/api/utils/apiError";
 
 const StartMenue = () => {
   const { schema, active, loading } = useAppContext();
@@ -19,25 +21,27 @@ const StartMenue = () => {
   const [vereinCount, setVereinCount] = useState(0);
   const [personenCount, setPersonenCount] = useState(0);
   const [loadingStammdaten, setLoadingStammdaten] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const loadStammdaten = async () => {
-      try {
-        setLoadingStammdaten(true);
+ useEffect(() => {
+   const loadStammdaten = async () => {
+     try {
+       setLoadingStammdaten(true);
 
-        const [vereine, personen] = await Promise.all([getAllVereine(), getPersonsPaged(0, 1)]);
+       const [vereine, personen] = await Promise.all([getAllVereine(), getPersonsPaged(0, 1)]);
 
-        setVereinCount(vereine.length);
-        setPersonenCount(personen.totalElements);
-      } catch (error) {
-        console.error("Fehler beim Laden der Stammdaten", error);
-      } finally {
-        setLoadingStammdaten(false);
-      }
-    };
+       setVereinCount(vereine.length);
+       setPersonenCount(personen.totalElements);
+     } catch (err: unknown) {
+       console.error("Fehler beim Laden der Stammdaten", err);
+       setError(getApiErrorMessage(err));
+     } finally {
+       setLoadingStammdaten(false);
+     }
+   };
 
-    loadStammdaten();
-  }, []);
+   loadStammdaten();
+ }, []);
 
   const contextText = active
     ? `Mandant: ${schema} · ${active.name} · ${active.leiter?.vorname ?? ""} ${
@@ -164,6 +168,7 @@ const allgemeineButtons = [
       )}
 
       <FeedbackFab />
+      <ErrorDialog open={!!error} message={error ?? ""} onClose={() => setError(null)} />
     </Box>
   );
 };

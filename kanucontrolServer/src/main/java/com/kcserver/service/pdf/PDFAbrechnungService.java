@@ -4,6 +4,7 @@ import com.kcserver.entity.*;
 import com.kcserver.enumtype.BuchungsHerkunft;
 import com.kcserver.enumtype.PdfDokumentTyp;
 import com.kcserver.enumtype.VeranstaltungTyp;
+import com.kcserver.exception.ErrorMessages;
 import com.kcserver.repository.*;
 import com.kcserver.repository.abrechnung.AbrechnungBuchungRepository;
 import com.kcserver.repository.abrechnung.AbrechnungRepository;
@@ -89,7 +90,7 @@ public class PDFAbrechnungService {
 
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Nur FM oder JEM erlaubt"
+                    ErrorMessages.ONLY_FM_OR_JEM_ALLOWED
             );
         }
         try (

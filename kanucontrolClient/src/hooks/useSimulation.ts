@@ -4,6 +4,7 @@ import { getSimulation, saveSimulation, simulate } from "@/api/services/simulati
 
 import { PlanungsSimulation } from "@/api/types/simulation/PlanungsSimulation";
 import { SimulationErgebnis } from "@/api/types/simulation/SimulationErgebnis";
+import { getApiErrorMessage } from "../api/utils/apiError";
 
 interface SimulationNotReady {
   missing: string[];
@@ -38,14 +39,22 @@ function isSimulationNotReadyError(error: unknown): SimulationNotReady | undefin
 
 export function useSimulation(veranstaltungId?: number) {
   const [simulation, setSimulation] = useState<PlanungsSimulation>();
-
   const [ergebnis, setErgebnis] = useState<SimulationErgebnis>();
-
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState<string>();
-
   const [simulationNotReady, setSimulationNotReady] = useState<SimulationNotReady>();
+
+  /* =========================================================
+     ERROR
+     ========================================================= */
+
+  const clearError = useCallback(() => {
+    setError(undefined);
+  }, []);
+
+  /* =========================================================
+     LOAD
+     ========================================================= */
 
   const load = useCallback(async () => {
     if (!veranstaltungId) {
@@ -62,8 +71,8 @@ export function useSimulation(veranstaltungId?: number) {
 
       setSimulation(sim);
       setErgebnis(result);
-    } catch (e) {
-      console.error(e);
+    } catch (e: unknown) {
+      console.error("Fehler beim Laden der Simulation", e);
 
       const notReady = isSimulationNotReadyError(e);
 
@@ -73,12 +82,16 @@ export function useSimulation(veranstaltungId?: number) {
         setSimulationNotReady(notReady);
         setError(undefined);
       } else {
-        setError("Simulation konnte nicht geladen werden.");
+        setError(getApiErrorMessage(e));
       }
     } finally {
       setLoading(false);
     }
   }, [veranstaltungId]);
+
+  /* =========================================================
+     RECALCULATE
+     ========================================================= */
 
   const recalculate = useCallback(async (sim: PlanungsSimulation) => {
     try {
@@ -86,15 +99,20 @@ export function useSimulation(veranstaltungId?: number) {
 
       setErgebnis(result);
       setError(undefined);
-    } catch {
-      setError("Simulation konnte nicht berechnet werden.");
+    } catch (e: unknown) {
+      console.error("Fehler bei der Simulationsberechnung", e);
+      setError(getApiErrorMessage(e));
     }
   }, []);
+
+  /* =========================================================
+     SAVE
+     ========================================================= */
 
   const save = useCallback(
     async (sim: PlanungsSimulation) => {
       if (!veranstaltungId) {
-        return;
+        return false;
       }
 
       try {
@@ -102,8 +120,13 @@ export function useSimulation(veranstaltungId?: number) {
 
         setSimulation(sim);
         setError(undefined);
-      } catch {
-        setError("Simulation konnte nicht gespeichert werden.");
+
+        return true;
+      } catch (e: unknown) {
+        console.error("Fehler beim Speichern der Simulation", e);
+        setError(getApiErrorMessage(e));
+
+        return false;
       }
     },
     [veranstaltungId],
@@ -116,7 +139,6 @@ export function useSimulation(veranstaltungId?: number) {
   return {
     simulation,
     ergebnis,
-
     loading,
     error,
     simulationNotReady,
@@ -124,5 +146,6 @@ export function useSimulation(veranstaltungId?: number) {
     recalculate,
     saveSimulation: save,
     reload: load,
+    clearError,
   };
 }

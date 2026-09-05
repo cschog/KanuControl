@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import static com.kcserver.exception.BusinessRuleViolationException.TEILNEHMER_NOT_IN_VERANSTALTUNG;
 import static com.kcserver.exception.ErrorMessages.*;
 
 
@@ -43,7 +42,7 @@ public class FinanzGruppeService {
         if (gruppe.isSystem()) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "System-Finanzgruppen dürfen nicht manuell geändert werden."
+                    FINANZGRUPPE_SYSTEM_NOT_EDITABLE
             );
         }
     }
@@ -85,13 +84,13 @@ public class FinanzGruppeService {
         if (kuerzel == null || kuerzel.isBlank()) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Kürzel ist Pflicht");
+                    KUERZEL_REQUIRED);
         }
 
         if (repository.existsByVeranstaltungIdAndKuerzel(veranstaltungId, kuerzel)) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "Kürzel existiert bereits");
+                    KUERZEL_ALREADY_EXISTS);
         }
 
         FinanzGruppe gruppe = FinanzGruppe.builder()
@@ -118,7 +117,7 @@ public class FinanzGruppeService {
         if (newKuerzel == null || newKuerzel.isBlank()) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Kürzel ist Pflicht");
+                    ErrorMessages.KUERZEL_REQUIRED);
         }
 
         if (repository.existsByVeranstaltungIdAndKuerzel(
@@ -126,7 +125,7 @@ public class FinanzGruppeService {
 
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "Kürzel existiert bereits");
+                   ErrorMessages.KUERZEL_ALREADY_EXISTS);
         }
 
         // 🔒 NEUE ARCHITEKTUR:
@@ -137,7 +136,7 @@ public class FinanzGruppeService {
         if (hasBelege) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "Kürzel kann nicht geändert werden, da Belege existieren");
+                   KUERZEL_CHANGE_NOT_ALLOWED_WITH_BELEGE);
         }
 
         gruppe.setKuerzel(newKuerzel);
@@ -160,14 +159,14 @@ public class FinanzGruppeService {
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
-                                "Finanzgruppe nicht gefunden"
+                               ErrorMessages.FINANZGRUPPE_NOT_FOUND
                         )
                 );
 
         if (!gruppe.getVeranstaltung().getId().equals(veranstaltungId)) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Gruppe gehört nicht zur Veranstaltung"
+                   GRUPPE_NOT_IN_VERANSTALTUNG
             );
         }
 
@@ -175,7 +174,7 @@ public class FinanzGruppeService {
         if (teilnehmerRepository.existsByFinanzGruppe_Id(gruppeId)) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "Kürzel kann nicht gelöscht werden – Teilnehmer zugeordnet"
+                   KUERZEL_CANNOT_BE_DELETED_WITH_TEILNEHMER
             );
         }
 
@@ -183,7 +182,7 @@ public class FinanzGruppeService {
         if (belegRepository.existsByFinanzGruppe_Id(gruppeId)) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "Kürzel kann nicht gelöscht werden – Belege vorhanden"
+                   ErrorMessages.KUERZEL_CANNOT_BE_DELETED_WITH_BELEGE
             );
         }
 
@@ -202,7 +201,7 @@ public class FinanzGruppeService {
         if (kuerzel == null || kuerzel.isBlank()) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Kürzel ist Pflicht");
+                   ErrorMessages.KUERZEL_REQUIRED);
         }
 
         Teilnehmer teilnehmer = teilnehmerRepository.findById(teilnehmerId)
@@ -238,7 +237,7 @@ public class FinanzGruppeService {
             if (hasBelege) {
                 throw new ResponseStatusException(
                         HttpStatus.CONFLICT,
-                        "Kürzel kann nicht mehr geändert werden, da Belege existieren");
+                        ErrorMessages.KUERZEL_CANNOT_BE_DELETED_WITH_BELEGE);
             }
         }
 
@@ -268,7 +267,7 @@ public class FinanzGruppeService {
 
             if (!t.getVeranstaltung().getId().equals(veranstaltungId)) {
                 throw new BusinessRuleViolationException(
-                        BusinessRuleViolationException.TEILNEHMER_NOT_IN_VERANSTALTUNG
+                        ErrorMessages.TEILNEHMER_NOT_IN_VERANSTALTUNG
                 );
             }
 
@@ -288,14 +287,14 @@ public class FinanzGruppeService {
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
-                                "Finanzgruppe nicht gefunden"
+                                ErrorMessages.FINANZGRUPPE_NOT_FOUND
                         )
                 );
 
         if (!gruppe.getVeranstaltung().getId().equals(veranstaltungId)) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Gruppe gehört nicht zur Veranstaltung"
+                    ErrorMessages.GRUPPE_NOT_IN_VERANSTALTUNG
             );
         }
 
@@ -352,14 +351,14 @@ public class FinanzGruppeService {
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
-                                "FinanzGruppe nicht gefunden"));
+                                ErrorMessages.FINANZGRUPPE_NOT_FOUND));
     }
 
     private void validateVeranstaltung(FinanzGruppe g, Long vid) {
         if (!g.getVeranstaltung().getId().equals(vid)) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "Gruppe gehört zu anderer Veranstaltung");
+                   GRUPPE_BELONGS_TO_OTHER_VERANSTALTUNG);
         }
     }
     @Transactional
@@ -420,14 +419,14 @@ public class FinanzGruppeService {
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
-                                "Finanzgruppe nicht gefunden"
+                               ErrorMessages.FINANZGRUPPE_NOT_FOUND
                         )
                 );
 
         if (!gruppe.getVeranstaltung().getId().equals(veranstaltungId)) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Gruppe gehört nicht zur Veranstaltung"
+                    ErrorMessages.GRUPPE_NOT_IN_VERANSTALTUNG
             );
         }
 
@@ -451,14 +450,14 @@ public class FinanzGruppeService {
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
-                                "Finanzgruppe nicht gefunden"
+                               ErrorMessages.FINANZGRUPPE_NOT_FOUND
                         )
                 );
 
         if (!gruppe.getVeranstaltung().getId().equals(veranstaltungId)) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Gruppe gehört nicht zur Veranstaltung"
+                   ErrorMessages.GRUPPE_NOT_IN_VERANSTALTUNG
             );
         }
 

@@ -4,7 +4,8 @@ import Popover from "@mui/material/Popover";
 import { getOnlineUsers } from "@/api/services/sessionApi";
 import { InfoDialog } from "@/components/info/InfoDialog";
 import { InfoMenuDialog } from "@/components/info/InfoMenuDialog";
-
+import { ErrorDialog } from "@/components/common/ErrorDialog";
+import { getApiErrorMessage } from "@/api/utils/apiError";
 import {
   AppBar,
   Toolbar,
@@ -39,12 +40,17 @@ const Navigation = () => {
   const [backendVersion, setBackendVersion] = useState("...");
   const [menuOpen, setMenuOpen] = useState(false);
   const [infoPage, setInfoPage] = useState<InfoPage | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    getBackendVersion()
-      .then(setBackendVersion)
-      .catch(() => setBackendVersion("n/a"));
-  }, []);
+useEffect(() => {
+  getBackendVersion()
+    .then(setBackendVersion)
+    .catch((err: unknown) => {
+      console.error("Fehler beim Laden der Backend-Version", err);
+      setBackendVersion("n/a");
+      setError(getApiErrorMessage(err));
+    });
+}, []);
 
   const handleHome = () => navigate("/startmenue");
 
@@ -59,7 +65,7 @@ const Navigation = () => {
   const handleLogout = async () => {
     try {
       await apiClient.post("/admin/audit/logout");
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Audit-Logout konnte nicht gespeichert werden", error);
     }
 
@@ -71,10 +77,9 @@ const Navigation = () => {
 const loadOnlineUsers = async () => {
   try {
     const users = await getOnlineUsers();
-
     setOnlineUsers(users);
-  } catch (error) {
-    console.error("Fehler beim Laden der Online-Benutzer", error);
+  } catch (err: unknown) {
+    console.error("Fehler beim Laden der Online-Benutzer", err);
   }
 };
 
@@ -302,6 +307,8 @@ const loadOnlineUsers = async () => {
         onClose={() => setMenuOpen(false)}
         onSelect={(page) => setInfoPage(page)}
       />
+
+      <ErrorDialog open={!!error} message={error ?? ""} onClose={() => setError(null)} />
 
       {infoPage && <InfoDialog open page={infoPage} onClose={() => setInfoPage(null)} />}
     </AppBar>

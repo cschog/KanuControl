@@ -2,87 +2,105 @@ import { Button, Box, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import apiClient from "@/api/client/apiClient";
 import { getActiveVeranstaltung } from "@/api/services/veranstaltungApi";
+import { ErrorDialog } from "@/components/common/ErrorDialog";
+import { getApiErrorMessage } from "@/api/utils/apiError";
 
 const Abrechnung = () => {
   const [veranstaltungId, setVeranstaltungId] = useState<number | null>(null);
   const [veranstaltungName, setVeranstaltungName] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   /* ================= Aktive Veranstaltung laden ================= */
 
- useEffect(() => {
-   const load = async () => {
-     try {
-       const v = await getActiveVeranstaltung();
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const v = await getActiveVeranstaltung();
 
-       if (!v) return;
+        if (!v) return;
 
-       setVeranstaltungId(v.id);
-       setVeranstaltungName(v.name);
-     } catch (err) {
-       console.error("Aktive Veranstaltung konnte nicht geladen werden", err);
-     }
-   };
+        setVeranstaltungId(v.id);
+        setVeranstaltungName(v.name);
+      } catch (err: unknown) {
+        console.error("Aktive Veranstaltung konnte nicht geladen werden", err);
+        setError(getApiErrorMessage(err));
+      }
+    };
 
-   load();
- }, []);
+    load();
+  }, []);
 
   /* ================= PDF öffnen ================= */
 
-const handlePreview = async () => {
-  if (!veranstaltungId) return;
+  const handlePreview = async () => {
+    if (!veranstaltungId) return;
 
-  const response = await apiClient.get(`/veranstaltungen/${veranstaltungId}/abrechnung/pdf/view`, {
-    responseType: "blob",
-  });
+    try {
+      const response = await apiClient.get(
+        `/veranstaltungen/${veranstaltungId}/abrechnung/pdf/view`,
+        {
+          responseType: "blob",
+        },
+      );
 
-  const url = window.URL.createObjectURL(response.data);
+      const url = window.URL.createObjectURL(response.data);
 
-  window.open(url, "_blank");
-};
+      window.open(url, "_blank");
+    } catch (err: unknown) {
+      console.error("Abrechnung konnte nicht als Vorschau geöffnet werden", err);
+      setError(getApiErrorMessage(err));
+    }
+  };
 
-const handleDownload = async () => {
-  if (!veranstaltungId) return;
+  /* ================= PDF Download ================= */
 
-  const response = await apiClient.get(
-    `/veranstaltungen/${veranstaltungId}/abrechnung/pdf/download`,
-    {
-      responseType: "blob",
-    },
-  );
+  const handleDownload = async () => {
+    if (!veranstaltungId) return;
 
-  // Dateiname aus Header lesen
-  const disposition = response.headers["content-disposition"];
+    try {
+      const response = await apiClient.get(
+        `/veranstaltungen/${veranstaltungId}/abrechnung/pdf/download`,
+        {
+          responseType: "blob",
+        },
+      );
 
-  let filename = "download.pdf";
+      // Dateiname aus Header lesen
+      const disposition = response.headers["content-disposition"];
 
-  const match = disposition?.match(/filename="(.+)"/);
+      let filename = "download.pdf";
 
-  if (match?.[1]) {
-    filename = match[1];
-  }
+      const match = disposition?.match(/filename="(.+)"/);
 
-  // Blob erzeugen
-  const blob = new Blob([response.data], {
-    type: "application/pdf",
-  });
+      if (match?.[1]) {
+        filename = match[1];
+      }
 
-  const url = window.URL.createObjectURL(blob);
+      // Blob erzeugen
+      const blob = new Blob([response.data], {
+        type: "application/pdf",
+      });
 
-  // Download-Link erzeugen
-  const a = document.createElement("a");
+      const url = window.URL.createObjectURL(blob);
 
-  a.href = url;
-  a.download = filename;
+      // Download-Link erzeugen
+      const a = document.createElement("a");
 
-  document.body.appendChild(a);
+      a.href = url;
+      a.download = filename;
 
-  a.click();
+      document.body.appendChild(a);
 
-  a.remove();
+      a.click();
 
-  window.URL.revokeObjectURL(url);
-};
+      a.remove();
 
+      window.URL.revokeObjectURL(url);
+    } catch (err: unknown) {
+      console.error("Abrechnung konnte nicht heruntergeladen werden", err);
+      setError(getApiErrorMessage(err));
+    }
+  };
 
   /* ================= UI ================= */
 
@@ -107,6 +125,8 @@ const handleDownload = async () => {
           Abrechnung (Download)
         </Button>
       </Box>
+
+      <ErrorDialog open={!!error} message={error ?? ""} onClose={() => setError(null)} />
     </Box>
   );
 };

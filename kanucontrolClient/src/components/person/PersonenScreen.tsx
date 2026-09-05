@@ -3,12 +3,6 @@ import {
   Box,
   Paper,
   Typography,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
 } from "@mui/material";
 import { GenericTableTanstack } from "@/components/common/GenericTableTanstack";
 import { PersonFormView } from "@/components/person/PersonFormView";
@@ -20,8 +14,8 @@ import { addTeilnehmer } from "@/api/services/teilnehmerApi";
 import { useNavigate } from "react-router-dom";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { GridFilterModel } from "@mui/x-data-grid";
-import axios from "axios";
-import type { ApiError } from "@/api/types/ApiError";
+import { getApiErrorMessage } from "@/api/utils/apiError";
+import { ErrorDialog } from "@/components/common/ErrorDialog";
 
 import {
   getPersonById,
@@ -68,8 +62,7 @@ export default function PersonenScreen() {
   const [copyData, setCopyData] = useState<Partial<PersonSave>>();
 
   const { active } = useAppContext();
-  const [errorMessage, setErrorMessage] = useState("");
-  const [errorOpen, setErrorOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   /* ================= FILTER ================= */
 
@@ -253,33 +246,27 @@ export default function PersonenScreen() {
     loadRef.current();
   };
 
-  const handleDelete = async () => {
-    if (!selectedId) return;
+ const handleDelete = async () => {
+   if (!selectedId) return;
 
-    try {
-      const deletedId = selectedId;
+   try {
+     const deletedId = selectedId;
 
-      await deletePerson(deletedId);
+     await deletePerson(deletedId);
 
-      setRows((prev) => prev.filter((p) => p.id !== deletedId));
-      setTotal((prev) => Math.max(0, prev - 1));
+     setRows((prev) => prev.filter((p) => p.id !== deletedId));
+     setTotal((prev) => Math.max(0, prev - 1));
 
-      setSelectedId(null);
-      setSelectedPerson(null);
-      setEditMode(false);
-      setEditData(null);
-    } catch (error: unknown) {
-      if (axios.isAxiosError<ApiError>(error)) {
-        setErrorMessage(error.response?.data.message ?? "Person konnte nicht gelöscht werden.");
-      } else {
-        setErrorMessage("Person konnte nicht gelöscht werden.");
-      }
+     setSelectedId(null);
+     setSelectedPerson(null);
+     setEditMode(false);
+     setEditData(null);
+   } catch (error: unknown) {
+     console.error("Fehler beim Löschen der Person", error);
 
-      setErrorOpen(true);
-    }
-  };
-
-  
+     setError(getApiErrorMessage(error, "Person konnte nicht gelöscht werden."));
+   }
+ };
 
   useEffect(() => {
     setEditMode(false);
@@ -319,11 +306,7 @@ export default function PersonenScreen() {
         >
           <Paper sx={{ p: 2 }}>
             <Box display="flex" gap={1} mb={2}>
-              <SearchField
-                value={search}
-                onChange={setSearch}
-              />
-
+              <SearchField value={search} onChange={setSearch} />
             </Box>
 
             <GenericTableTanstack
@@ -521,17 +504,12 @@ export default function PersonenScreen() {
         }}
       />
 
-      <Dialog open={errorOpen} onClose={() => setErrorOpen(false)}>
-        <DialogTitle>Löschen nicht möglich</DialogTitle>
-
-        <DialogContent>
-          <DialogContentText sx={{ whiteSpace: "pre-line" }}>{errorMessage}</DialogContentText>
-        </DialogContent>
-
-        <DialogActions>
-          <Button onClick={() => setErrorOpen(false)}>OK</Button>
-        </DialogActions>
-      </Dialog>
+      <ErrorDialog
+        open={error !== null}
+        message={error ?? ""}
+        title="Löschen nicht möglich"
+        onClose={() => setError(null)}
+      />
     </Box>
   );
 }

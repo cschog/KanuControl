@@ -8,6 +8,7 @@ import com.kcserver.entity.Teilnehmer;
 import com.kcserver.entity.Veranstaltung;
 import com.kcserver.enumtype.TeilnehmerRolle;
 import com.kcserver.enumtype.Zahlungsstatus;
+import com.kcserver.exception.ErrorMessages;
 import com.kcserver.mapper.PersonMapper;
 import com.kcserver.mapper.TeilnehmerMapper;
 import com.kcserver.persistence.specification.TeilnehmerSpecification;
@@ -32,6 +33,7 @@ import java.util.Map;
 import static com.kcserver.exception.EntityFinder.getOr404;
 import static com.kcserver.exception.ErrorMessages.*;
 import org.springframework.data.domain.Pageable;
+import com.kcserver.exception.ErrorMessages.*;
 
 @Service
 @Transactional
@@ -81,7 +83,8 @@ public class TeilnehmerService {
 
         Veranstaltung veranstaltung = veranstaltungRepository.findByIdWithRelations(veranstaltungId)
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, VERANSTALTUNG_NOT_FOUND
+                        HttpStatus.NOT_FOUND,
+                        ErrorMessages.VERANSTALTUNG_NOT_FOUND
                 ));
 
         Person person = getPerson(personId);
@@ -93,7 +96,7 @@ public class TeilnehmerService {
 
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "Person ist bereits Teilnehmer"
+                    ErrorMessages.TEILNEHMER_ALREADY_EXISTS
             );
         }
 
@@ -176,7 +179,7 @@ public class TeilnehmerService {
             if (dto.getRolle() == TeilnehmerRolle.LEITER) {
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST,
-                        "Leiter must be set via Veranstaltung"
+                        ErrorMessages.LEITER_MUSS_UEBER_VERANSTALTUNG_GESETZT_WERDEN
                 );
             }
 
@@ -207,7 +210,7 @@ public class TeilnehmerService {
         if (rolle == TeilnehmerRolle.LEITER) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Leiter must be set via Veranstaltung"
+                    ErrorMessages.LEITER_MUSS_UEBER_VERANSTALTUNG_GESETZT_WERDEN
             );
         }
 
@@ -227,14 +230,14 @@ public class TeilnehmerService {
 
         if (!teilnehmer.getVeranstaltung().getId().equals(veranstaltungId)) {
             throw new ResponseStatusException(
-                    HttpStatus.CONFLICT, "Teilnehmer does not belong to Veranstaltung"
+                    HttpStatus.CONFLICT, ErrorMessages.TEILNEHMER_NOT_IN_VERANSTALTUNG
             );
         }
 
         if (teilnehmer.getRolle() == TeilnehmerRolle.LEITER) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "Leiter cannot be removed. Assign another Leiter first."
+                    ErrorMessages.LEITER_DARF_NICHT_ENTFERNT_WERDEN
             );
         }
 
@@ -536,7 +539,7 @@ public class TeilnehmerService {
         if (person.getGeburtsdatum() == null) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Geburtsdatum required for Leiter"
+                    ErrorMessages.GEBURTSDATUM_REQUIRED_FOR_LEITER
             );
         }
 
@@ -546,7 +549,7 @@ public class TeilnehmerService {
 
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Leiter muss mindest 18 Jahre alt sein"
+                    ErrorMessages.LEITER_MIND_ALTER
             );
         }
     }
@@ -581,7 +584,7 @@ public class TeilnehmerService {
 
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "Der Teilnehmer wird in einer Reisekostenabrechnung als Fahrer oder Mitfahrer verwendet."
+                    ErrorMessages.TEILNEHMER_USED_IN_REISEKOSTEN
             );
         }
 
@@ -597,7 +600,7 @@ public class TeilnehmerService {
 
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "Der Teilnehmer kann nicht gelöscht werden, solange Zahlungsnachweise vorhanden sind."
+                    ErrorMessages.TEILNEHMER_HAS_ZAHLUNGSNACHWEISE
             );
         }
     }

@@ -5,6 +5,7 @@ import com.kcserver.dto.foerder.FoerdersatzDTO;
 import com.kcserver.dto.foerder.FoerdersatzLookupResult;
 import com.kcserver.entity.Foerdersatz;
 import com.kcserver.enumtype.VeranstaltungTyp;
+import com.kcserver.exception.ErrorMessages;
 import com.kcserver.mapper.FoerdersatzMapper;
 import com.kcserver.repository.FoerdersatzRepository;
 import lombok.RequiredArgsConstructor;
@@ -56,7 +57,7 @@ public class FoerdersatzService {
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
-                                "Fördersatz nicht gefunden"
+                                ErrorMessages.FOERDERSATZ_NOT_FOUND
                         ));
 
         validateNoOverlap(
@@ -85,7 +86,7 @@ public class FoerdersatzService {
         if (von == null) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "gueltigVon darf nicht null sein"
+                    ErrorMessages.FOERDERSATZ_GUELTIG_VON_REQUIRED
             );
         }
 
@@ -111,7 +112,7 @@ public class FoerdersatzService {
         if (!overlaps.isEmpty()) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "Zeitraum überschneidet sich mit bestehendem Fördersatz"
+                    ErrorMessages.FOERDERSATZ_OVERLAP
             );
         }
     }
@@ -127,7 +128,7 @@ public class FoerdersatzService {
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
-                                "Kein gültiger Fördersatz für Typ gefunden"
+                                ErrorMessages.NO_VALID_FOERDERSATZ
                         ));
     }
 
@@ -138,7 +139,7 @@ public class FoerdersatzService {
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
-                                "Fördersatz nicht gefunden"
+                                ErrorMessages.FOERDERSATZ_NOT_FOUND
                         ));
 
         return mapper.toDTO(entity);
@@ -157,7 +158,7 @@ public class FoerdersatzService {
         if (!repository.existsById(id)) {
             throw new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
-                    "Fördersatz nicht gefunden"
+                    ErrorMessages.FOERDERSATZ_NOT_FOUND
             );
         }
 

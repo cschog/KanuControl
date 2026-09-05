@@ -3,6 +3,7 @@ package com.kcserver.controller;
 import com.kcserver.api.response.ApiResponse;
 import com.kcserver.dto.postalcode.PostalCodeLookupResponse;
 import com.kcserver.enumtype.CountryCode;
+import com.kcserver.exception.ErrorMessages;
 import com.kcserver.service.postalcode.PostalCodeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -30,7 +31,7 @@ public class PostalCodeController {
                         .orElseThrow(() ->
                                 new ResponseStatusException(
                                         HttpStatus.NOT_FOUND,
-                                        "PLZ nicht gefunden"
+                                        ErrorMessages.PLZ_NOT_FOUND
                                 ));
 
         return ApiResponse.of(response);

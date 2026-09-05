@@ -65,29 +65,28 @@ public class VeranstaltungValidator {
             List<Teilnehmer> teilnehmer
     ) {
 
-        List<String> fehler =
-                new ArrayList<>();
+        List<String> fehler = new ArrayList<>();
 
         if (veranstaltung == null) {
-            fehler.add("Keine Veranstaltung vorhanden.");
+            fehler.add(ErrorMessages.VERANSTALTUNG_REQUIRED);
         }
 
         if (veranstaltung != null) {
 
             if (veranstaltung.getTyp() == null) {
-                fehler.add("Veranstaltungstyp fehlt.");
+                fehler.add(ErrorMessages.VERANSTALTUNGSTYP_REQUIRED);
             }
 
             if (veranstaltung.getBeginnDatum() == null) {
-                fehler.add("Beginn-Datum fehlt.");
+                fehler.add(ErrorMessages.VERANSTALTUNG_BEGINN_REQUIRED);
             }
 
             if (veranstaltung.getEndeDatum() == null) {
-                fehler.add("Ende-Datum fehlt.");
+                fehler.add(ErrorMessages.VERANSTALTUNG_ENDE_REQUIRED);
             }
 
             if (veranstaltung.getVerein() == null) {
-                fehler.add("Verein fehlt.");
+                fehler.add(ErrorMessages.VERANSTALTUNG_VEREIN_REQUIRED);
             }
         }
 
@@ -96,7 +95,6 @@ public class VeranstaltungValidator {
         );
 
         if (!fehler.isEmpty()) {
-
             throw new BusinessRuleViolationException(
                     String.join("\n", fehler)
             );
@@ -111,29 +109,22 @@ public class VeranstaltungValidator {
             List<Teilnehmer> teilnehmer
     ) {
 
-        List<String> fehler =
-                new ArrayList<>();
+        List<String> fehler = new ArrayList<>();
 
         if (teilnehmer == null || teilnehmer.isEmpty()) {
-
-            fehler.add("Keine Teilnehmer vorhanden.");
-
+            fehler.add(ErrorMessages.TEILNEHMER_REQUIRED);
             return fehler;
         }
 
         teilnehmer.forEach(t -> {
 
             if (t == null) {
-
-                fehler.add("Leerer Teilnehmerdatensatz.");
-
+                fehler.add(ErrorMessages.TEILNEHMER_EMPTY);
                 return;
             }
 
             if (t.getPerson() == null) {
-                fehler.add(
-                        ErrorMessages.TEILNEHMER_OHNE_PERSON
-                );
+                fehler.add(ErrorMessages.TEILNEHMER_OHNE_PERSON);
                 return;
             }
 
@@ -147,9 +138,8 @@ public class VeranstaltungValidator {
                             : "");
 
             if (t.getPerson().getGeburtsdatum() == null) {
-
                 fehler.add(
-                        "Geburtsdatum fehlt bei: "
+                        ErrorMessages.TEILNEHMER_GEBURTSDATUM_REQUIRED
                                 + name.trim()
                 );
             }
@@ -167,30 +157,27 @@ public class VeranstaltungValidator {
             List<Teilnehmer> teilnehmer
     ) {
 
-        List<String> fehler =
-                new ArrayList<>();
+        List<String> fehler = new ArrayList<>();
 
         if (veranstaltung == null) {
-
-            fehler.add("Keine Veranstaltung vorhanden.");
-
+            fehler.add(ErrorMessages.VERANSTALTUNG_REQUIRED);
             return fehler;
         }
 
         if (veranstaltung.getLeiter() == null) {
-            fehler.add("Leiter fehlt.");
+            fehler.add(ErrorMessages.VERANSTALTUNGSLEITER_REQUIRED);
         }
 
         if (veranstaltung.getBeginnDatum() == null) {
-            fehler.add("Beginn-Datum fehlt.");
+            fehler.add(ErrorMessages.VERANSTALTUNG_BEGINN_REQUIRED);
         }
 
         if (veranstaltung.getEndeDatum() == null) {
-            fehler.add("Ende-Datum fehlt.");
+            fehler.add(ErrorMessages.VERANSTALTUNG_ENDE_REQUIRED);
         }
 
         if (veranstaltung.getTyp() == null) {
-            fehler.add("Veranstaltungstyp fehlt.");
+            fehler.add(ErrorMessages.VERANSTALTUNGSTYP_REQUIRED);
         }
 
         fehler.addAll(

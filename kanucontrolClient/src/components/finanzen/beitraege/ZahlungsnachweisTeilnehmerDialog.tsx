@@ -11,6 +11,8 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import apiClient from "@/api/client/apiClient";
+import { ErrorDialog } from "@/components/common/ErrorDialog";
+import { getApiErrorMessage } from "@/api/utils/apiError";
 
 export interface TeilnehmerOption {
   id: number;
@@ -44,10 +46,13 @@ const ZahlungsnachweisTeilnehmerDialog = ({
   const [options, setOptions] = useState<TeilnehmerOption[]>([]);
   const [selected, setSelected] = useState<TeilnehmerOption[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open || !veranstaltungId) return;
 
+    setError(null);
+    
     const load = async () => {
       try {
         setLoading(true);
@@ -67,8 +72,9 @@ const ZahlungsnachweisTeilnehmerDialog = ({
 
         // Bereits ausgewählte Teilnehmer anzeigen
         setSelected(mapped.filter((t) => selectedIds.includes(t.id)));
-      } catch (error) {
+      } catch (error: unknown) {
         console.error("Teilnehmer konnten nicht geladen werden", error);
+        setError(getApiErrorMessage(error));
       } finally {
         setLoading(false);
       }
@@ -130,6 +136,8 @@ const ZahlungsnachweisTeilnehmerDialog = ({
           )}
         />
       </DialogContent>
+
+      <ErrorDialog open={!!error} message={error ?? ""} onClose={() => setError(null)} />
 
       <DialogActions>
         <Button onClick={onClose}>Abbrechen</Button>

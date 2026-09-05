@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 
 import { Box, Typography, Paper, Button, Stack, CircularProgress } from "@mui/material";
-import axios from "axios";
+import { ErrorDialog } from "@/components/common/ErrorDialog";
+import { getApiErrorMessage } from "@/api/utils/apiError";
 
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -39,6 +40,8 @@ const DokumenteScreen: React.FC = () => {
   const [zahlungsnachweiseValidation, setZahlungsnachweiseValidation] =
     useState<ValidationResult | null>(null);
 
+  const [error, setError] = useState<string | null>(null);
+
   const [belegeValidation, setBelegeValidation] = useState<ValidationResult | null>(null);
 
   const [fahrkostenValidation, setFahrkostenValidation] = useState<ValidationResult | null>(null);
@@ -50,47 +53,45 @@ const DokumenteScreen: React.FC = () => {
   useEffect(() => {
     (async () => {
       try {
+        setError(null);
+
         const v = await getActiveVeranstaltung();
 
         setVeranstaltung(v);
 
         if (v?.id) {
-         const [
-           anmeldung,
-           teilnehmerliste,
-           teilnehmerDatenkontrolle,
-           erhebungsbogen,
-           abrechnung,
-           zahlungsnachweise,
-           belege,
-           fahrkosten,
-         ] = await Promise.all([
-           validateDokument(v.id, PdfDokumentTyp.ANMELDUNG),
-           validateDokument(v.id, PdfDokumentTyp.TEILNEHMERLISTE),
-           validateDokument(v.id, PdfDokumentTyp.TEILNEHMER_DATENKONTROLLE),
-           validateDokument(v.id, PdfDokumentTyp.ERHEBUNGSBOGEN),
-           validateDokument(v.id, PdfDokumentTyp.ABRECHNUNG),
-           validateDokument(v.id, PdfDokumentTyp.ZAHLUNGSNACHWEISE),
-           validateDokument(v.id, PdfDokumentTyp.BELEGE),
-           validateDokument(v.id, PdfDokumentTyp.REISEKOSTENABRECHNUNG),
-         ]);
+          const [
+            anmeldung,
+            teilnehmerliste,
+            teilnehmerDatenkontrolle,
+            erhebungsbogen,
+            abrechnung,
+            zahlungsnachweise,
+            belege,
+            fahrkosten,
+          ] = await Promise.all([
+            validateDokument(v.id, PdfDokumentTyp.ANMELDUNG),
+            validateDokument(v.id, PdfDokumentTyp.TEILNEHMERLISTE),
+            validateDokument(v.id, PdfDokumentTyp.TEILNEHMER_DATENKONTROLLE),
+            validateDokument(v.id, PdfDokumentTyp.ERHEBUNGSBOGEN),
+            validateDokument(v.id, PdfDokumentTyp.ABRECHNUNG),
+            validateDokument(v.id, PdfDokumentTyp.ZAHLUNGSNACHWEISE),
+            validateDokument(v.id, PdfDokumentTyp.BELEGE),
+            validateDokument(v.id, PdfDokumentTyp.REISEKOSTENABRECHNUNG),
+          ]);
 
-         setAnmeldungValidation(anmeldung);
-         setTeilnehmerValidation(teilnehmerliste);
-         setTeilnehmerDatenkontrolleValidation(teilnehmerDatenkontrolle);
-         setErhebungsbogenValidation(erhebungsbogen);
+          setAnmeldungValidation(anmeldung);
+          setTeilnehmerValidation(teilnehmerliste);
+          setTeilnehmerDatenkontrolleValidation(teilnehmerDatenkontrolle);
+          setErhebungsbogenValidation(erhebungsbogen);
           setAbrechnungValidation(abrechnung);
           setZahlungsnachweiseValidation(zahlungsnachweise);
           setBelegeValidation(belege);
           setFahrkostenValidation(fahrkosten);
         }
-      } catch (err) {
-        if (axios.isAxiosError(err)) {
-          console.error("Status:", err.response?.status);
-          console.error("Data:", err.response?.data);
-        } else {
-          console.error(err);
-        }
+      } catch (err: unknown) {
+        console.error("Fehler beim Laden der Dokumente:", err);
+        setError(getApiErrorMessage(err));
       }
     })();
   }, []);
@@ -120,8 +121,9 @@ const DokumenteScreen: React.FC = () => {
       setTimeout(() => {
         window.URL.revokeObjectURL(url);
       }, 60_000);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("PDF-Vorschau konnte nicht erstellt werden:", error);
+      setError(getApiErrorMessage(error));
     } finally {
       setLoadingReport(null);
     }
@@ -169,8 +171,9 @@ const DokumenteScreen: React.FC = () => {
       link.remove();
 
       window.URL.revokeObjectURL(url);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("PDF konnte nicht heruntergeladen werden:", error);
+      setError(getApiErrorMessage(error));
     } finally {
       setLoadingReport(null);
     }
@@ -285,7 +288,7 @@ const DokumenteScreen: React.FC = () => {
 
           <Stack spacing={3}>
             {/* FM / JEM */}
-            {renderValidationWarning("FM / JEM Antrag derzeit nicht möglich", anmeldungValidation)}
+            {renderValidationWarning("FM / JEM Antrag nicht möglich - bitte aufklappen", anmeldungValidation)}
             {renderSection(
               "FM / JEM Antrag",
               "fm-jem-report",
@@ -293,7 +296,7 @@ const DokumenteScreen: React.FC = () => {
               !anmeldungValidation?.valid,
             )}
             {/* Teilnehmerliste */}
-            {renderValidationWarning("Teilnehmerliste derzeit nicht möglich", teilnehmerValidation)}
+            {renderValidationWarning("Teilnehmerliste nicht möglich - bitte aufklappen", teilnehmerValidation)}
 
             {renderSection(
               "Teilnehmerliste",
@@ -304,7 +307,7 @@ const DokumenteScreen: React.FC = () => {
 
             {/* Teilnehmer-Datenkontrolle */}
             {renderValidationWarning(
-              "Teilnehmer-Datenkontrolle derzeit nicht möglich",
+              "Teilnehmer-Datenkontrolle nicht möglich - bitte aufklappen",
               teilnehmerDatenkontrolleValidation,
             )}
 
@@ -316,7 +319,7 @@ const DokumenteScreen: React.FC = () => {
             )}
 
             {/* Abrechnung */}
-            {renderValidationWarning("Abrechnung derzeit nicht möglich", abrechnungValidation)}
+            {renderValidationWarning("Abrechnung nicht möglich - bitte aufklappen", abrechnungValidation)}
             {renderSection(
               "Abrechnung",
               "abrechnung/pdf",
@@ -325,7 +328,7 @@ const DokumenteScreen: React.FC = () => {
             )}
             {/* Erhebungsbogen */}
             {renderValidationWarning(
-              "Erhebungsbogen derzeit nicht möglich",
+              "Erhebungsbogen nicht möglich - bitte aufklappen",
               erhebungsbogenValidation,
             )}
             {renderSection(
@@ -336,7 +339,7 @@ const DokumenteScreen: React.FC = () => {
             )}
             {/* Zahlungsnachweise */}
             {renderValidationWarning(
-              "Zahlungsnachweise derzeit nicht möglich",
+              "Zahlungsnachweise nicht möglich - bitte aufklappen",
               zahlungsnachweiseValidation,
             )}
             {renderSection(
@@ -347,12 +350,12 @@ const DokumenteScreen: React.FC = () => {
             )}
 
             {/* Belege */}
-            {renderValidationWarning("Belege derzeit nicht möglich", belegeValidation)}
+            {renderValidationWarning("Belege nicht möglich - bitte aufklappen", belegeValidation)}
             {renderSection("Belege", "belege/pdf", "belege.pdf", !belegeValidation?.valid)}
 
             {/* Fahrkosten */}
             {renderValidationWarning(
-              "Fahrkostenabrechnung derzeit nicht möglich",
+              "Fahrkostenabrechnung nicht möglich - bitte aufklappen",
               fahrkostenValidation,
             )}
 
@@ -393,6 +396,7 @@ const DokumenteScreen: React.FC = () => {
           <Typography color="text.secondary">Keine aktive Veranstaltung gefunden</Typography>
         </Paper>
       )}
+      <ErrorDialog open={!!error} message={error ?? ""} onClose={() => setError(null)} />
       <BottomActionBar
         left={[
           {

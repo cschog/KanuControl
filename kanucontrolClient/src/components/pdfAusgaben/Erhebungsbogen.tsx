@@ -4,9 +4,12 @@ import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import { getActiveVeranstaltung } from "@/api/services/veranstaltungApi";
 import { VeranstaltungDetail } from "@/api/types/veranstaltung/VeranstaltungDetail";
 import apiClient from "@/api/client/apiClient";
+import { ErrorDialog } from "@/components/common/ErrorDialog";
+import { getApiErrorMessage } from "@/api/utils/apiError";
 
 const Erhebungsbogen: React.FC = () => {
   const [veranstaltung, setVeranstaltung] = useState<VeranstaltungDetail | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   /* ================= Aktive Veranstaltung laden ================= */
 
@@ -15,68 +18,84 @@ const Erhebungsbogen: React.FC = () => {
       try {
         const v = await getActiveVeranstaltung();
         setVeranstaltung(v);
-      } catch {
-        console.error("Keine aktive Veranstaltung gefunden");
+      } catch (err: unknown) {
+        console.error("Aktive Veranstaltung konnte nicht geladen werden", err);
+        setError(getApiErrorMessage(err));
       }
     })();
   }, []);
 
-  /* ================= PDF Download ================= */
+  /* ================= PDF Vorschau ================= */
 
   const handlePreview = async () => {
     if (!veranstaltung?.id) return;
 
-    const res = await apiClient.get(`/veranstaltungen/${veranstaltung.id}/erhebungsbogen/pdf/view`, {
-      responseType: "blob",
-    });
+    try {
+      const res = await apiClient.get(
+        `/veranstaltungen/${veranstaltung.id}/erhebungsbogen/pdf/view`,
+        {
+          responseType: "blob",
+        },
+      );
 
-    const blob = new Blob([res.data], {
-      type: "application/pdf",
-    });
+      const blob = new Blob([res.data], {
+        type: "application/pdf",
+      });
 
-    const url = window.URL.createObjectURL(blob);
+      const url = window.URL.createObjectURL(blob);
 
-    window.open(url, "_blank");
+      window.open(url, "_blank");
+    } catch (err: unknown) {
+      console.error("Erhebungsbogen konnte nicht als Vorschau geöffnet werden", err);
+      setError(getApiErrorMessage(err));
+    }
   };
+
+  /* ================= PDF Download ================= */
 
   const handleDownload = async () => {
     if (!veranstaltung?.id) return;
 
-    const res = await apiClient.get(
-      `/veranstaltungen/${veranstaltung.id}/erhebungsbogen/pdf/download`,
-      {
-        responseType: "blob",
-      },
-    );
+    try {
+      const res = await apiClient.get(
+        `/veranstaltungen/${veranstaltung.id}/erhebungsbogen/pdf/download`,
+        {
+          responseType: "blob",
+        },
+      );
 
-    const disposition = res.headers["content-disposition"];
+      const disposition = res.headers["content-disposition"];
 
-    let filename = "erhebungsbogen.pdf";
+      let filename = "erhebungsbogen.pdf";
 
-    const match = disposition?.match(/filename="?([^";]+)"?/);
+      const match = disposition?.match(/filename="?([^";]+)"?/);
 
-    if (match?.[1]) {
-      filename = match[1];
+      if (match?.[1]) {
+        filename = match[1];
+      }
+
+      const blob = new Blob([res.data], {
+        type: "application/pdf",
+      });
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = filename;
+
+      document.body.appendChild(link);
+
+      link.click();
+
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+    } catch (err: unknown) {
+      console.error("Erhebungsbogen konnte nicht heruntergeladen werden", err);
+      setError(getApiErrorMessage(err));
     }
-
-    const blob = new Blob([res.data], {
-      type: "application/pdf",
-    });
-
-    const url = window.URL.createObjectURL(blob);
-
-    const link = document.createElement("a");
-
-    link.href = url;
-    link.download = filename;
-
-    document.body.appendChild(link);
-
-    link.click();
-
-    link.remove();
-
-    window.URL.revokeObjectURL(url);
   };
 
   /* ================= UI ================= */
@@ -108,6 +127,8 @@ const Erhebungsbogen: React.FC = () => {
           <Typography color="text.secondary">Keine aktive Veranstaltung gefunden</Typography>
         )}
       </Paper>
+
+      <ErrorDialog open={!!error} message={error ?? ""} onClose={() => setError(null)} />
     </Box>
   );
 };

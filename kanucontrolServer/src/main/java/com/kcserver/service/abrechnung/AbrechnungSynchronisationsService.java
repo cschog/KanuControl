@@ -5,6 +5,7 @@ import com.kcserver.entity.*;
 import com.kcserver.enumtype.BuchungsHerkunft;
 import com.kcserver.enumtype.FinanzKategorie;
 import com.kcserver.enumtype.Zahlungsweg;
+import com.kcserver.exception.ErrorMessages;
 import com.kcserver.repository.FinanzGruppeRepository;
 import com.kcserver.repository.abrechnung.AbrechnungRepository;
 import com.kcserver.repository.TeilnehmerRepository;
@@ -38,7 +39,7 @@ public class AbrechnungSynchronisationsService {
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
-                                "Abrechnung nicht gefunden"
+                                ErrorMessages.ABRECHNUNG_NOT_FOUND
                         ));
 
         synchronisiereTeilnehmerbeitraege(abrechnung);
@@ -58,7 +59,7 @@ public class AbrechnungSynchronisationsService {
                         .orElseThrow(() ->
                                 new ResponseStatusException(
                                         HttpStatus.CONFLICT,
-                                        "Für die Veranstaltung ist kein VK-Konto eingerichtet."
+                                        ErrorMessages.VK_KONTO_NOT_CONFIGURED
                                 )
                         );
 
@@ -128,7 +129,7 @@ public class AbrechnungSynchronisationsService {
                         .orElseThrow(() ->
                                 new ResponseStatusException(
                                         HttpStatus.CONFLICT,
-                                        "Für die Veranstaltung ist kein VK-Konto eingerichtet."
+                                        ErrorMessages.VK_NOT_CONFIGURED
                                 )
                         );
 

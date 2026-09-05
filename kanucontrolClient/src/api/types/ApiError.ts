@@ -3,4 +3,5 @@ export interface ApiError {
   error: string;
   message?: string;
   fieldErrors?: Record<string, string> | null;
+  missing?: string[] | null;
 }

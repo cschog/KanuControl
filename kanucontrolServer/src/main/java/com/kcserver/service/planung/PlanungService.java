@@ -3,6 +3,7 @@ package com.kcserver.service.planung;
 import com.kcserver.dto.planung.PlanungDetailDTO;
 import com.kcserver.entity.Planung;
 import com.kcserver.enumtype.PlanungsStatus;
+import com.kcserver.exception.ErrorMessages;
 import com.kcserver.service.finanz.FinanzService;
 import com.kcserver.mapper.PlanungMapper;
 import com.kcserver.repository.PlanungRepository;
@@ -34,13 +35,13 @@ public class PlanungService {
                 .findByVeranstaltungId(veranstaltungId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
-                        "Planung nicht gefunden"
+                        ErrorMessages.PLANUNG_NOT_FOUND
                 ));
 
         if (p.istEingereicht()) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "Planung bereits eingereicht"
+                    ErrorMessages.PLANUNG_ALREADY_SUBMITTED
             );
         }
 
@@ -54,7 +55,7 @@ public class PlanungService {
         Planung planung = planungRepository.findByVeranstaltungId(veranstaltungId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
-                        "Planung nicht gefunden."
+                        ErrorMessages.PLANUNG_NOT_FOUND
                 ));
 
         planung.setStatus(PlanungsStatus.IN_BEARBEITUNG);
@@ -71,7 +72,7 @@ public class PlanungService {
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
-                                "Für diese Veranstaltung wurde noch keine Planung gespeichert."
+                                ErrorMessages.NO_PLANUNG_FOR_VERANSTALTUNG
                         ));
 
         if (!p.istEingereicht()) {

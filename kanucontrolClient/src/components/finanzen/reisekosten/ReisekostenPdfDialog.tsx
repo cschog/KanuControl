@@ -15,7 +15,8 @@ import {
 import Checkbox from "@mui/material/Checkbox";
 import apiClient from "@/api/client/apiClient";
 import { ReisekostenabrechnungListResponse } from "@/api/types/Reisekostenabrechnung";
-
+import { ErrorDialog } from "@/components/common/ErrorDialog";
+import { getApiErrorMessage } from "@/api/utils/apiError";
 interface ReisekostenPdfDialogProps {
   open: boolean;
   veranstaltungId: number;
@@ -30,7 +31,7 @@ export const ReisekostenPdfDialog: React.FC<ReisekostenPdfDialogProps> = ({
   const [loading, setLoading] = useState(false);
 
   const [abrechnungen, setAbrechnungen] = useState<ReisekostenabrechnungListResponse[]>([]);
-
+  const [error, setError] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   const toggleSelection = (id: number) => {
@@ -46,6 +47,8 @@ export const ReisekostenPdfDialog: React.FC<ReisekostenPdfDialogProps> = ({
       return;
     }
 
+    setError(null);
+
     const loadData = async () => {
       try {
         setLoading(true);
@@ -57,8 +60,9 @@ export const ReisekostenPdfDialog: React.FC<ReisekostenPdfDialogProps> = ({
         setAbrechnungen(data);
 
         setSelectedIds(data.filter((rk) => rk.druckbar).map((rk) => rk.id));
-      } catch (err) {
+      } catch (err: unknown) {
         console.error("Fehler beim Laden der Reisekosten", err);
+        setError(getApiErrorMessage(err));
       } finally {
         setLoading(false);
       }
@@ -87,43 +91,48 @@ export const ReisekostenPdfDialog: React.FC<ReisekostenPdfDialogProps> = ({
     }
   };
 
-  const downloadPdf = async (id: number) => {
-    const res = await apiClient.get(
-      `/veranstaltungen/${veranstaltungId}/reisekosten/${id}/pdf/download`,
-      {
-        responseType: "blob",
-      },
-    );
+ const downloadPdf = async (id: number) => {
+   try {
+     const res = await apiClient.get(
+       `/veranstaltungen/${veranstaltungId}/reisekosten/${id}/pdf/download`,
+       {
+         responseType: "blob",
+       },
+     );
 
-    const disposition = res.headers["content-disposition"];
+     const disposition = res.headers["content-disposition"];
 
-    let filename = "fahrkosten.pdf";
+     let filename = "fahrkosten.pdf";
 
-    const match = disposition?.match(/filename="?([^";]+)"?/);
+     const match = disposition?.match(/filename="?([^";]+)"?/);
 
-    if (match?.[1]) {
-      filename = match[1];
-    }
+     if (match?.[1]) {
+       filename = match[1];
+     }
 
-    const blob = new Blob([res.data], {
-      type: "application/pdf",
-    });
+     const blob = new Blob([res.data], {
+       type: "application/pdf",
+     });
 
-    const url = URL.createObjectURL(blob);
+     const url = URL.createObjectURL(blob);
 
-    const link = document.createElement("a");
+     const link = document.createElement("a");
 
-    link.href = url;
-    link.download = filename;
+     link.href = url;
+     link.download = filename;
 
-    document.body.appendChild(link);
+     document.body.appendChild(link);
 
-    link.click();
+     link.click();
 
-    link.remove();
+     link.remove();
 
-    URL.revokeObjectURL(url);
-  };
+     URL.revokeObjectURL(url);
+   } catch (err: unknown) {
+     console.error("Fahrkosten-PDF konnte nicht erstellt werden", err);
+     setError(getApiErrorMessage(err));
+   }
+ };
 
   /* =========================================================
      Render
@@ -172,7 +181,7 @@ export const ReisekostenPdfDialog: React.FC<ReisekostenPdfDialogProps> = ({
           </Stack>
         )}
       </DialogContent>
-
+      <ErrorDialog open={!!error} message={error ?? ""} onClose={() => setError(null)} />
       <DialogActions>
         <Button onClick={onClose}>Schließen</Button>
 

@@ -3,11 +3,14 @@ import { Box, Button, Typography, Paper } from "@mui/material";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import { getActiveVeranstaltung } from "@/api/services/veranstaltungApi";
 import apiClient from "@/api/client/apiClient";
+import { ErrorDialog } from "@/components/common/ErrorDialog";
+import { getApiErrorMessage } from "@/api/utils/apiError";
 
 import { VeranstaltungDetail } from "@/api/types/veranstaltung/VeranstaltungDetail";
 
 const Teilnehmerliste: React.FC = () => {
   const [veranstaltung, setVeranstaltung] = useState<VeranstaltungDetail | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   /* ================= Load aktive Veranstaltung ================= */
 
@@ -16,67 +19,81 @@ const Teilnehmerliste: React.FC = () => {
       try {
         const v = await getActiveVeranstaltung();
         setVeranstaltung(v);
-      } catch {
-        console.error("Keine aktive Veranstaltung");
+      } catch (err: unknown) {
+        console.error("Aktive Veranstaltung konnte nicht geladen werden", err);
+        setError(getApiErrorMessage(err));
       }
     })();
   }, []);
 
   /* ================= PDF Öffnen ================= */
+
   const handlePreview = async () => {
     if (!veranstaltung?.id) return;
 
-    const res = await apiClient.get(`/veranstaltungen/${veranstaltung.id}/teilnehmer/pdf/view`, {
-      responseType: "blob",
-    });
+    try {
+      const res = await apiClient.get(`/veranstaltungen/${veranstaltung.id}/teilnehmer/pdf/view`, {
+        responseType: "blob",
+      });
 
-    const blob = new Blob([res.data], {
-      type: "application/pdf",
-    });
+      const blob = new Blob([res.data], {
+        type: "application/pdf",
+      });
 
-    const url = window.URL.createObjectURL(blob);
+      const url = window.URL.createObjectURL(blob);
 
-    window.open(url, "_blank");
+      window.open(url, "_blank");
+    } catch (err: unknown) {
+      console.error("Teilnehmerliste konnte nicht als Vorschau geöffnet werden", err);
+      setError(getApiErrorMessage(err));
+    }
   };
+
+  /* ================= PDF Download ================= */
 
   const handleDownload = async () => {
     if (!veranstaltung?.id) return;
 
-    const res = await apiClient.get(
-      `/veranstaltungen/${veranstaltung.id}/teilnehmer/pdf/download`,
-      {
-        responseType: "blob",
-      },
-    );
+    try {
+      const res = await apiClient.get(
+        `/veranstaltungen/${veranstaltung.id}/teilnehmer/pdf/download`,
+        {
+          responseType: "blob",
+        },
+      );
 
-    const disposition = res.headers["content-disposition"];
+      const disposition = res.headers["content-disposition"];
 
-    let filename = "teilnehmerliste.pdf";
+      let filename = "teilnehmerliste.pdf";
 
-    const match = disposition?.match(/filename="?([^";]+)"?/);
+      const match = disposition?.match(/filename="?([^";]+)"?/);
 
-    if (match?.[1]) {
-      filename = match[1];
+      if (match?.[1]) {
+        filename = match[1];
+      }
+
+      const blob = new Blob([res.data], {
+        type: "application/pdf",
+      });
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = filename;
+
+      document.body.appendChild(link);
+
+      link.click();
+
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+    } catch (err: unknown) {
+      console.error("Teilnehmerliste konnte nicht heruntergeladen werden", err);
+      setError(getApiErrorMessage(err));
     }
-
-    const blob = new Blob([res.data], {
-      type: "application/pdf",
-    });
-
-    const url = window.URL.createObjectURL(blob);
-
-    const link = document.createElement("a");
-
-    link.href = url;
-    link.download = filename;
-
-    document.body.appendChild(link);
-
-    link.click();
-
-    link.remove();
-
-    window.URL.revokeObjectURL(url);
   };
 
   /* ================= UI ================= */
@@ -108,6 +125,8 @@ const Teilnehmerliste: React.FC = () => {
           <Typography color="text.secondary">Keine aktive Veranstaltung gefunden</Typography>
         )}
       </Paper>
+
+      <ErrorDialog open={!!error} message={error ?? ""} onClose={() => setError(null)} />
     </Box>
   );
 };

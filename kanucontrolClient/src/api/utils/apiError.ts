@@ -1,11 +1,20 @@
+//src/api/utils/apiError.ts
 import axios from "axios";
+import type { ApiError } from "@/api/types/ApiError";
+
 
 export function getApiErrorMessage(
   error: unknown,
   fallback = "Ein Fehler ist aufgetreten.",
 ): string {
   if (axios.isAxiosError(error)) {
-    return error.response?.data?.message ?? fallback;
+    const data = error.response?.data as ApiError | undefined;
+
+    if (data?.message) {
+      return data.message;
+    }
+
+    return fallback;
   }
 
   if (error instanceof Error) {

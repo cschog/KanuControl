@@ -5,6 +5,7 @@ import com.kcserver.entity.Person;
 import com.kcserver.entity.Teilnehmer;
 import com.kcserver.entity.Veranstaltung;
 import com.kcserver.enumtype.PdfDokumentTyp;
+import com.kcserver.exception.ErrorMessages;
 import com.kcserver.repository.TeilnehmerRepository;
 import com.kcserver.repository.VeranstaltungRepository;
 import com.kcserver.util.PdfFilenameUtil;
@@ -125,7 +126,7 @@ public class PDFTeilnehmerDatenkontrolleService {
                         .orElseThrow(() ->
                                 new ResponseStatusException(
                                         HttpStatus.NOT_FOUND,
-                                        "Veranstaltung nicht gefunden."
+                                        ErrorMessages.VERANSTALTUNG_NOT_FOUND
                                 )
                         );
 

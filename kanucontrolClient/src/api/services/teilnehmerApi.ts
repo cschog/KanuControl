@@ -1,11 +1,22 @@
 // api/services/teilnehmerApi.ts
 
 import apiClient from "@/api/client/apiClient";
-import axios from "axios";
+
 import { TeilnehmerList } from "@/api/types/TeilnehmerList";
+
 import { mapRoleFromBackend, mapRoleToBackend } from "../mappers/teilnehmerMapper";
 
-/* ================= AVAILABLE ================= */
+/* =========================================================
+   TYPES
+   ========================================================= */
+
+type TeilnehmerBackend = Omit<TeilnehmerList, "rolle"> & {
+  rolle: string | null;
+};
+
+/* =========================================================
+   AVAILABLE
+   ========================================================= */
 
 export async function getAvailablePersons(
   veranstaltungId: number,
@@ -33,11 +44,9 @@ export async function getAvailablePersons(
   return res.data;
 }
 
-/* ================= ASSIGNED ================= */
-
-type TeilnehmerBackend = Omit<TeilnehmerList, "rolle"> & {
-  rolle: string | null;
-};
+/* =========================================================
+   ASSIGNED
+   ========================================================= */
 
 export async function getTeilnehmer(
   veranstaltungId: number,
@@ -73,8 +82,9 @@ export async function getTeilnehmer(
   };
 }
 
-
-/* ================= ADD BULK ================= */
+/* =========================================================
+   ADD BULK
+   ========================================================= */
 
 export function addTeilnehmerBulk(veranstaltungId: number, personIds: number[]) {
   return apiClient.post(`/veranstaltungen/${veranstaltungId}/teilnehmer/bulk`, {
@@ -82,58 +92,62 @@ export function addTeilnehmerBulk(veranstaltungId: number, personIds: number[]) 
   });
 }
 
-/* ================= REMOVE BULK ================= */
+/* =========================================================
+   REMOVE BULK
+   ========================================================= */
 
-export async function removeTeilnehmerBulk(
-  veranstaltungId: number,
-
-  personIds: number[],
-) {
-  try {
-    await apiClient.delete(
-      `/veranstaltungen/${veranstaltungId}/teilnehmer/bulk`,
-
-      {
-        data: { personIds },
-      },
-    );
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      throw new Error(error.response?.data?.message ?? "Teilnehmer konnten nicht entfernt werden.");
-    }
-
-    throw error;
-  }
+export async function removeTeilnehmerBulk(veranstaltungId: number, personIds: number[]) {
+  await apiClient.delete(`/veranstaltungen/${veranstaltungId}/teilnehmer/bulk`, {
+    data: {
+      personIds,
+    },
+  });
 }
 
-// teilnehmerApi.ts
+/* =========================================================
+   UPDATE ROLE
+   ========================================================= */
+
 export async function updateTeilnehmerRolle(
   veranstaltungId: number,
   personId: number,
   rolle: "L" | "M" | null,
 ) {
-
   return apiClient.put(`/veranstaltungen/${veranstaltungId}/teilnehmer/${personId}/rolle`, {
     rolle: mapRoleToBackend(rolle),
   });
 }
 
+/* =========================================================
+   SEARCH WITHOUT FINANZGRUPPE
+   ========================================================= */
+
 export async function searchTeilnehmer(veranstaltungId: number, search: string) {
   const res = await apiClient.get(
     `/veranstaltungen/${veranstaltungId}/teilnehmer/search/ohne-finanzgruppe`,
     {
-      params: { search },
+      params: {
+        search,
+      },
     },
   );
 
   return res.data ?? [];
 }
 
+/* =========================================================
+   COUNT
+   ========================================================= */
+
 export async function getTeilnehmerCount(veranstaltungId: number): Promise<number> {
   const res = await apiClient.get(`/veranstaltungen/${veranstaltungId}/teilnehmer/count`);
 
   return res.data;
 }
+
+/* =========================================================
+   REMOVE FROM FINANZGRUPPE
+   ========================================================= */
 
 export async function removeTeilnehmerFromGruppe(
   veranstaltungId: number,
@@ -144,6 +158,10 @@ export async function removeTeilnehmerFromGruppe(
     `/veranstaltungen/${veranstaltungId}/finanzgruppen/${gruppeId}/teilnehmer/${personId}`,
   );
 }
+
+/* =========================================================
+   ADD SINGLE
+   ========================================================= */
 
 export async function addTeilnehmer(veranstaltungId: number, personId: number) {
   return apiClient.post(`/veranstaltungen/${veranstaltungId}/teilnehmer/${personId}`);

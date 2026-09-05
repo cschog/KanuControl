@@ -1,6 +1,7 @@
 package com.kcserver.service.beitrag;
 
 import com.kcserver.entity.Beitragsregel;
+import com.kcserver.exception.ErrorMessages;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -18,7 +19,7 @@ public class BeitragsregelValidator {
         if (regeln == null || regeln.isEmpty()) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Mindestens eine Beitragsregel erforderlich"
+                    ErrorMessages.MINDESTENS_EINE_BEITRAGSREGEL_REQUIRED
             );
         }
 
@@ -48,7 +49,7 @@ public class BeitragsregelValidator {
 
                     throw new ResponseStatusException(
                             HttpStatus.BAD_REQUEST,
-                            "sortierung darf nicht null sein"
+                            ErrorMessages.SORTIERUNG_REQUIRED
                     );
                 }
 
@@ -62,7 +63,7 @@ public class BeitragsregelValidator {
 
                     throw new ResponseStatusException(
                             HttpStatus.BAD_REQUEST,
-                            "alterBis darf nicht negativ sein"
+                           ErrorMessages.ALTER_BIS_MUST_NOT_BE_NEGATIVE
                     );
                 }
 
@@ -76,7 +77,7 @@ public class BeitragsregelValidator {
 
                         throw new ResponseStatusException(
                                 HttpStatus.BAD_REQUEST,
-                                "Nur eine offene Altersregel erlaubt"
+                                ErrorMessages.ONLY_ONE_OPEN_AGE_RULE
                         );
                     }
 
@@ -87,7 +88,7 @@ public class BeitragsregelValidator {
 
                         throw new ResponseStatusException(
                                 HttpStatus.BAD_REQUEST,
-                                "Offene Altersregel muss die letzte Regel sein"
+                               ErrorMessages.OPEN_AGE_RULE_MUST_BE_LAST
                         );
                     }
 
@@ -102,7 +103,7 @@ public class BeitragsregelValidator {
 
                     throw new ResponseStatusException(
                             HttpStatus.BAD_REQUEST,
-                            "alterBis muss aufsteigend sein"
+                           ErrorMessages.ALTER_BIS_MUST_BE_ASCENDING
                     );
                 }
 
@@ -117,7 +118,7 @@ public class BeitragsregelValidator {
 
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST,
-                        "Die letzte Beitragsregel muss offen sein"
+                       ErrorMessages.LAST_BEITRAGSREGEL_MUST_BE_OPEN
                 );
             }
         }

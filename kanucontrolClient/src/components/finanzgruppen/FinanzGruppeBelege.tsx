@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { Box, Typography } from "@mui/material";
 import { ColumnDef } from "@tanstack/react-table";
 
 import { fontSize } from "@/theme/ui";
 
+import { Box, Typography } from "@mui/material";
+import { ErrorDialog } from "@/components/common/ErrorDialog";
+import { getApiErrorMessage } from "@/api/utils/apiError";
 import { GenericTableTanstack } from "@/components/common/GenericTableTanstack";
 import { AbrechnungBeleg } from "@/api/types/abrechnung";
 import { getBelegeByFinanzGruppe } from "@/api/services/abrechnungApi";
@@ -11,11 +13,8 @@ import { belegColumns } from "@/components/finanzen/abrechnung/belegColumns";
 
 import Money from "@/components/common/Money";
 import { getZahlungenByFinanzGruppe } from "@/api/services/zahlungsnachweisApi";
-
 import { FinanzGruppeZahlungDTO } from "@/api/types/beitraege";
-
 import { getReisekostenByFinanzGruppe } from "@/api/services/reisekostenApi";
-
 import { ReisekostenabrechnungListResponse } from "@/api/types/Reisekostenabrechnung";
 
 interface Props {
@@ -55,6 +54,7 @@ export default function FinanzGruppeBelege({ veranstaltungId, finanzGruppeId }: 
   const [loadingBelege, setLoadingBelege] = useState(false);
   const [loadingZahlungen, setLoadingZahlungen] = useState(false);
   const [loadingReisekosten, setLoadingReisekosten] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   /* =========================================================
      ZAHLUNGEN
@@ -131,6 +131,8 @@ export default function FinanzGruppeBelege({ veranstaltungId, finanzGruppeId }: 
   useEffect(() => {
     let cancelled = false;
 
+    setError(null);
+
     async function loadBelege() {
       setLoadingBelege(true);
 
@@ -141,6 +143,13 @@ export default function FinanzGruppeBelege({ veranstaltungId, finanzGruppeId }: 
 
         if (!cancelled) {
           setBelege(sichtbareBelege);
+        }
+      } catch (err: unknown) {
+        console.error("Fehler beim Laden der Belege", err);
+
+        if (!cancelled) {
+          setError(`Belege: ${getApiErrorMessage(err)}`);
+          setBelege([]);
         }
       } finally {
         if (!cancelled) {
@@ -163,6 +172,13 @@ export default function FinanzGruppeBelege({ veranstaltungId, finanzGruppeId }: 
             })),
           );
         }
+      } catch (err: unknown) {
+        console.error("Fehler beim Laden der Zahlungen", err);
+
+        if (!cancelled) {
+          setError(`Zahlungen: ${getApiErrorMessage(err)}`);
+          setZahlungen([]);
+        }
       } finally {
         if (!cancelled) {
           setLoadingZahlungen(false);
@@ -179,10 +195,11 @@ export default function FinanzGruppeBelege({ veranstaltungId, finanzGruppeId }: 
         if (!cancelled) {
           setReisekosten(data);
         }
-      } catch (err) {
+      } catch (err: unknown) {
         console.error("Fehler beim Laden der Fahrkosten", err);
 
         if (!cancelled) {
+          setError(`Fahrkosten: ${getApiErrorMessage(err)}`);
           setReisekosten([]);
         }
       } finally {
@@ -240,6 +257,7 @@ export default function FinanzGruppeBelege({ veranstaltungId, finanzGruppeId }: 
           />
         </>
       )}
+      <ErrorDialog open={!!error} message={error ?? ""} onClose={() => setError(null)} />
     </Box>
   );
 }

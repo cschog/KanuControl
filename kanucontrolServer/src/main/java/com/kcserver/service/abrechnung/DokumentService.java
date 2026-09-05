@@ -4,6 +4,7 @@ import com.kcserver.dto.abrechnung.DokumentDTO;
 import com.kcserver.entity.AbrechnungBeleg;
 import com.kcserver.entity.Dokument;
 import com.kcserver.entity.Zahlungsnachweis;
+import com.kcserver.exception.ErrorMessages;
 import com.kcserver.mapper.DokumentMapper;
 import com.kcserver.repository.abrechnung.AbrechnungBelegRepository;
 import com.kcserver.repository.abrechnung.DokumentRepository;
@@ -87,7 +88,7 @@ public class DokumentService {
         if (referenzObjekt == null) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Referenzobjekt darf nicht leer sein."
+                    ErrorMessages.REFERENZOBJEKT_REQUIRED
             );
         }
 
@@ -114,7 +115,7 @@ public class DokumentService {
         if (referenzObjekt == null) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Referenzobjekt darf nicht leer sein."
+                   ErrorMessages.REFERENZOBJEKT_REQUIRED
             );
         }
 
@@ -217,7 +218,7 @@ public class DokumentService {
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
-                                "Dokument nicht gefunden."
+                                ErrorMessages.DOKUMENT_NOT_FOUND
                         )
                 );
     }
@@ -249,7 +250,7 @@ public class DokumentService {
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
-                                "Dokument nicht gefunden."
+                                ErrorMessages.DOKUMENT_NOT_FOUND
                         )
                 );
     }
@@ -337,7 +338,7 @@ public class DokumentService {
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
-                                "Beleg nicht gefunden."
+                                ErrorMessages.BELEG_NOT_FOUND
                         )
                 );
     }
@@ -355,7 +356,7 @@ public class DokumentService {
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
-                                "Zahlungsnachweis nicht gefunden."
+                                ErrorMessages.ZAHLUNGSNACHWEIS_NOT_FOUND
                         )
                 );
     }
@@ -427,7 +428,7 @@ public class DokumentService {
         } catch (IOException ex) {
             throw new ResponseStatusException(
                     HttpStatus.INTERNAL_SERVER_ERROR,
-                    "Datei konnte nicht gelesen werden.",
+                   ErrorMessages.PDF_NOT_READABLE,
                     ex
             );
         }
@@ -489,7 +490,7 @@ public class DokumentService {
 
                     throw new ResponseStatusException(
                             HttpStatus.BAD_REQUEST,
-                            "Die PDF-Datei enthält keine Seite."
+                            ErrorMessages.PDF_NO_PAGE
                     );
                 }
 
@@ -537,7 +538,7 @@ public class DokumentService {
 
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST,
-                        "PDF-Datei konnte nicht gelesen werden.",
+                       ErrorMessages.PDF_NOT_READABLE,
                         e
                 );
             }
@@ -549,7 +550,7 @@ public class DokumentService {
          */
         throw new ResponseStatusException(
                 HttpStatus.BAD_REQUEST,
-                "Nicht unterstützter Dokumenttyp."
+               ErrorMessages.UNSUPPORTED_DOCUMENT_TYPE
         );
     }
 
@@ -558,14 +559,14 @@ public class DokumentService {
         if (file == null || file.isEmpty()) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Keine Datei ausgewählt."
+                   ErrorMessages.NO_FILE_SELECTED
             );
         }
 
         if (file.getSize() > MAX_FILE_SIZE) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Datei ist größer als 10 MB."
+                    ErrorMessages.FILE_TOO_LARGE
             );
         }
 
@@ -582,7 +583,7 @@ public class DokumentService {
         if (!erlaubt) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Es dürfen nur Bilder oder PDF-Dateien hochgeladen werden."
+                   ErrorMessages.ONLY_IMAGE_OR_PDF_ALLOWED
             );
         }
     }
@@ -594,7 +595,7 @@ public class DokumentService {
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
-                                "Dokument nicht gefunden."
+                                ErrorMessages.DOKUMENT_NOT_FOUND
                         )
                 );
     }
@@ -630,7 +631,7 @@ public class DokumentService {
 
         throw new ResponseStatusException(
                 HttpStatus.CONFLICT,
-                "Dokument hat keinen Besitzer."
+               ErrorMessages.DOKUMENT_NO_OWNER
         );
     }
 }

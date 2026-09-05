@@ -3,6 +3,7 @@ package com.kcserver.service;
 import com.kcserver.entity.Teilnehmer;
 import com.kcserver.entity.Veranstaltung;
 import com.kcserver.exception.BusinessRuleViolationException;
+import com.kcserver.exception.ErrorMessages;
 import com.kcserver.repository.TeilnehmerRepository;
 import com.kcserver.repository.VeranstaltungRepository;
 import lombok.RequiredArgsConstructor;
@@ -58,7 +59,7 @@ public class VeranstaltungFoerderService {
                         );
         if (missingBirthdate) {
             throw new BusinessRuleViolationException(
-                    "Alle Teilnehmer benötigen ein Geburtsdatum für die Förderberechnung"
+                    ErrorMessages.TEILNEHMER_NOT_IN_VERANSTALTUNG
             );
         }
 

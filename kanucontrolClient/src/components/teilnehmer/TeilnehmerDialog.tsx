@@ -11,7 +11,8 @@ import {
 import { useEffect, useState } from "react";
 import type { FC } from "react";
 import apiClient from "@/api/client/apiClient";
-import axios from "axios";
+import { ErrorDialog } from "@/components/common/ErrorDialog";
+import { getApiErrorMessage } from "@/api/utils/apiError";
 
 /* =========================================================
    Backend Response Typen
@@ -52,43 +53,48 @@ const TeilnehmerDialog: FC<Props> = ({ open, veranstaltungId, gruppeId, onClose,
   const [options, setOptions] = useState<TeilnehmerOption[]>([]);
   const [selected, setSelected] = useState<TeilnehmerOption[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   /* =========================================================
      LOAD TEILNEHMER
   ========================================================= */
 
-  useEffect(() => {
-    if (!open) return;
+ useEffect(() => {
+   if (!open) return;
 
-    const load = async () => {
-      try {
-        setLoading(true);
+   setSelected([]);
+   setError(null);
 
-        const res = await apiClient.get<PageResponse<TeilnehmerDTO>>(
-          `/veranstaltungen/${veranstaltungId}/teilnehmer`,
-        );
+   const load = async () => {
+     try {
+       setLoading(true);
 
-        const data = res.data.content;
+       const res = await apiClient.get<PageResponse<TeilnehmerDTO>>(
+         `/veranstaltungen/${veranstaltungId}/teilnehmer`,
+       );
 
-        const mapped: TeilnehmerOption[] = data
-          .filter((t) => !t.kuerzel)
-          .map((t) => ({
-            id: t.id,
-            label: `${t.person.name}, ${t.person.vorname}`,
-          }));
+       const data = res.data.content;
 
-        setOptions(mapped);
-      } catch (error: unknown) {
-        if (axios.isAxiosError(error)) {
-          console.error(error.response?.data?.message);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
+       const mapped: TeilnehmerOption[] = data
+         .filter((t) => !t.kuerzel)
+         .map((t) => ({
+           id: t.id,
+           label: `${t.person.name}, ${t.person.vorname}`,
+         }));
 
-    load();
-  }, [open, veranstaltungId]);
+       setOptions(mapped);
+     } catch (err: unknown) {
+       console.error("Fehler beim Laden der Teilnehmer", err);
+
+       setError(getApiErrorMessage(err));
+       setOptions([]);
+     } finally {
+       setLoading(false);
+     }
+   };
+
+   load();
+ }, [open, veranstaltungId]);
 
   /* =========================================================
      SAVE BULK ASSIGN
@@ -96,6 +102,8 @@ const TeilnehmerDialog: FC<Props> = ({ open, veranstaltungId, gruppeId, onClose,
 
   const handleSave = async () => {
     try {
+      setError(null);
+
       await apiClient.put(
         `/veranstaltungen/${veranstaltungId}/finanzgruppen/${gruppeId}/teilnehmer`,
         selected.map((s) => s.id),
@@ -103,10 +111,9 @@ const TeilnehmerDialog: FC<Props> = ({ open, veranstaltungId, gruppeId, onClose,
 
       onSaved();
       onClose();
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        console.error(error.response?.data?.message);
-      }
+    } catch (err: unknown) {
+      console.error("Fehler beim Zuordnen der Teilnehmer", err);
+      setError(getApiErrorMessage(err));
     }
   };
 
@@ -115,42 +122,50 @@ const TeilnehmerDialog: FC<Props> = ({ open, veranstaltungId, gruppeId, onClose,
   ========================================================= */
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Teilnehmer hinzufügen</DialogTitle>
+    <>
+      <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+        <DialogTitle>Teilnehmer hinzufügen</DialogTitle>
 
-      <DialogContent>
-        <Autocomplete
-          multiple
-          options={options}
-          getOptionLabel={(o) => o.label}
-          value={selected}
-          onChange={(_, value) => setSelected(value)}
-          loading={loading}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Teilnehmer auswählen"
-              InputProps={{
-                ...params.InputProps,
-                endAdornment: (
-                  <>
-                    {loading && <CircularProgress size={18} />}
-                    {params.InputProps.endAdornment}
-                  </>
-                ),
-              }}
-            />
-          )}
-        />
-      </DialogContent>
+        <DialogContent>
+          <Autocomplete
+            multiple
+            options={options}
+            getOptionLabel={(o) => o.label}
+            value={selected}
+            onChange={(_, value) => setSelected(value)}
+            loading={loading}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Teilnehmer auswählen"
+                InputProps={{
+                  ...params.InputProps,
+                  endAdornment: (
+                    <>
+                      {loading && <CircularProgress size={18} />}
+                      {params.InputProps.endAdornment}
+                    </>
+                  ),
+                }}
+              />
+            )}
+          />
+        </DialogContent>
 
-      <DialogActions>
-        <Button onClick={onClose}>Abbrechen</Button>
-        <Button variant="contained" onClick={handleSave}>
-          Speichern
-        </Button>
-      </DialogActions>
-    </Dialog>
+        <DialogActions>
+          <Button onClick={onClose}>Abbrechen</Button>
+          <Button
+            variant="contained"
+            onClick={handleSave}
+            disabled={selected.length === 0 || loading}
+          >
+            Speichern
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <ErrorDialog open={!!error} message={error ?? ""} onClose={() => setError(null)} />
+    </>
   );
 };
 

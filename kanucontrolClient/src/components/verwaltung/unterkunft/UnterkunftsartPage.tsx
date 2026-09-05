@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Alert, Box, CircularProgress } from "@mui/material";
+import { getApiErrorMessage } from "@/api/utils/apiError";
 
 import CrudToolbar from "@/components/common/CrudToolbar";
 
@@ -11,163 +12,152 @@ import UnterkunftsartTable from "./UnterkunftsartTable";
 import { UnterkunftsartDTO } from "@/api/types/unterkunft/UnterkunftsartDTO";
 import { UnterkunftsartCreateUpdateDTO } from "@/api/types/unterkunft/UnterkunftsartCreateUpdateDTO";
 import {
-    getUnterkunftsarten,
-    createUnterkunftsart,
-    updateUnterkunftsart,
-    deleteUnterkunftsart,
+  getUnterkunftsarten,
+  createUnterkunftsart,
+  updateUnterkunftsart,
+  deleteUnterkunftsart,
 } from "@/api/services/unterkunftsartApi";
 import UnterkunftsartDialog from "@/components/verwaltung/unterkunft/UnterkunftsartDialog";
 
 const UnterkunftsartPage = () => {
-    const [data, setData] = useState<UnterkunftsartDTO[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<UnterkunftsartDTO[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-    const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
-    const [editing, setEditing] =
-        useState<UnterkunftsartDTO | null>(null);
+  const [editing, setEditing] = useState<UnterkunftsartDTO | null>(null);
 
-    const [selected, setSelected] =
-        useState<UnterkunftsartDTO | null>(null);
+  const [selected, setSelected] = useState<UnterkunftsartDTO | null>(null);
 
-    const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
-    /* =========================================================
+  /* =========================================================
        LOAD
        ========================================================= */
 
-    const load = async () => {
-        try {
-            setLoading(true);
+  const load = async () => {
+    try {
+      setLoading(true);
 
-            const result = await getUnterkunftsarten();
+      const result = await getUnterkunftsarten();
 
-            setData(result);
+      setData(result);
+      setError(null);
+    } catch (err: unknown) {
+      console.error("Fehler beim Laden der Unterkunftsarten", err);
+      setError(getApiErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
 
-            setError(null);
-        } catch (err) {
-            console.error(err);
+  const handleAdd = () => {
+    setEditing(null);
+    setDialogOpen(true);
+  };
 
-            setError("Unterkunftsarten konnten nicht geladen werden.");
-        } finally {
-            setLoading(false);
-        }
-    };
+  const confirmDelete = async () => {
+    if (!selected) {
+      return;
+    }
 
-    const handleAdd = () => {
-        setEditing(null);
-        setDialogOpen(true);
-    };
+    try {
+      await deleteUnterkunftsart(selected.id);
 
+      setDeleteOpen(false);
+      setSelected(null);
 
+      await load();
+    } catch (err: unknown) {
+      console.error("Fehler beim Löschen der Unterkunftsart", err);
+      setError(getApiErrorMessage(err));
+    }
+  };
 
-    const confirmDelete = async () => {
-        if (!selected) {
-            return;
-        }
+  const handleSave = async (dto: UnterkunftsartCreateUpdateDTO) => {
+    try {
+      if (editing) {
+        await updateUnterkunftsart(editing.id, dto);
+      } else {
+        await createUnterkunftsart(dto);
+      }
 
-        try {
-            await deleteUnterkunftsart(selected.id);
+      setDialogOpen(false);
+      setEditing(null);
 
-            setDeleteOpen(false);
-            setSelected(null);
+      await load();
+    } catch (err: unknown) {
+      console.error("Fehler beim Speichern der Unterkunftsart", err);
+      setError(getApiErrorMessage(err));
+    }
+  };
 
-            await load();
-        } catch (err) {
-            console.error(err);
-            setError("Unterkunftsart konnte nicht gelöscht werden.");
-        }
-    };
+  useEffect(() => {
+    load();
+  }, []);
 
-    const handleSave = async (
-        dto: UnterkunftsartCreateUpdateDTO,
-    ) => {
-        try {
-            if (editing) {
-                await updateUnterkunftsart(editing.id, dto);
-            } else {
-                await createUnterkunftsart(dto);
-            }
-
-            setDialogOpen(false);
-            setEditing(null);
-
-            await load();
-        } catch (err) {
-            console.error(err);
-            setError("Unterkunftsart konnte nicht gespeichert werden.");
-        }
-    };
-
-    useEffect(() => {
-        load();
-    }, []);
-
-
-
-    /* =========================================================
+  /* =========================================================
        RENDER
        ========================================================= */
 
-    if (loading) {
-        return (
-            <Box sx={{ p: 3 }}>
-                <CircularProgress />
-            </Box>
-        );
-    }
-
-    if (error) {
-        return <Alert severity="error">{error}</Alert>;
-    }
-
+  if (loading) {
     return (
-        <>
-            <CrudToolbar
-                title="Unterkunftsarten"
-                onAdd={handleAdd}
-            />
-
-            <UnterkunftsartTable
-                data={data}
-                loading={loading}
-                onEdit={(row) => {
-                    setEditing(row);
-                    setDialogOpen(true);
-                }}
-                onDelete={(row) => {
-                    setSelected(row);
-                    setDeleteOpen(true);
-                }}
-            />
-
-            <UnterkunftsartDialog
-                open={dialogOpen}
-                unterkunftsart={editing}
-                onClose={() => {
-                    setDialogOpen(false);
-                    setEditing(null);
-                }}
-                onSave={handleSave}
-            />
-            <ConfirmDeleteDialog
-                open={deleteOpen}
-                title="Unterkunftsart löschen"
-                description={
-                    <>
-                        Möchten Sie die Unterkunftsart{" "}
-                        <strong>"{selected?.bezeichnung}"</strong> wirklich löschen?
-                        <br />
-                        <br />
-                        Dieser Vorgang kann nicht rückgängig gemacht werden.
-                    </>
-                }
-                onClose={() => setDeleteOpen(false)}
-                onConfirm={confirmDelete}
-            />
-        </>
+      <Box sx={{ p: 3 }}>
+        <CircularProgress />
+      </Box>
     );
+  }
+
+  return (
+    <>
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+
+      <CrudToolbar title="Unterkunftsarten" onAdd={handleAdd} />
+
+      <UnterkunftsartTable
+        data={data}
+        loading={loading}
+        onEdit={(row) => {
+          setEditing(row);
+          setDialogOpen(true);
+        }}
+        onDelete={(row) => {
+          setSelected(row);
+          setDeleteOpen(true);
+        }}
+      />
+
+      <UnterkunftsartDialog
+        open={dialogOpen}
+        unterkunftsart={editing}
+        onClose={() => {
+          setDialogOpen(false);
+          setEditing(null);
+        }}
+        onSave={handleSave}
+      />
+      <ConfirmDeleteDialog
+        open={deleteOpen}
+        title="Unterkunftsart löschen"
+        description={
+          <>
+            Möchten Sie die Unterkunftsart <strong>"{selected?.bezeichnung}"</strong> wirklich
+            löschen?
+            <br />
+            <br />
+            Dieser Vorgang kann nicht rückgängig gemacht werden.
+          </>
+        }
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={confirmDelete}
+      />
+    </>
+  );
 };
 
 export default UnterkunftsartPage;

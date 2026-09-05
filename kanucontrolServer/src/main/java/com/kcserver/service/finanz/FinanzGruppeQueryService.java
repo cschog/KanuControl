@@ -3,6 +3,7 @@ package com.kcserver.service.finanz;
 import com.kcserver.dto.finanzen.FinanzGruppeDetailDTO;
 import com.kcserver.dto.finanzen.FinanzGruppeOverviewDTO;
 import com.kcserver.entity.FinanzGruppe;
+import com.kcserver.exception.ErrorMessages;
 import com.kcserver.mapper.FinanzGruppeDetailMapper;
 import com.kcserver.mapper.FinanzGruppeOverviewMapper;
 import com.kcserver.repository.abrechnung.AbrechnungBelegRepository;
@@ -175,7 +176,7 @@ public class FinanzGruppeQueryService {
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
-                                "Finanzgruppe nicht gefunden"));
+                                ErrorMessages.KUERZEL_NOT_FOUND));
 
         return detailMapper.toDetailDTO(gruppe);
     }

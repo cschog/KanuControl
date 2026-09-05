@@ -53,8 +53,7 @@ export default function TeilnehmerScreen() {
   const [selAvailable, setSelAvailable] = useState<PersonList[]>([]);
   const [selAssigned, setSelAssigned] = useState<TeilnehmerList[]>([]);
   const [mobileMode, setMobileMode] = useState<"available" | "assigned">("available");
-  const [errorOpen, setErrorOpen] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const [roleWarningOpen, setRoleWarningOpen] = useState(false);
   const [pendingRoleChange, setPendingRoleChange] = useState<{
     personId: number;
@@ -65,19 +64,19 @@ export default function TeilnehmerScreen() {
     ? assigned.find((t) => t.personId === pendingRoleChange.personId)
     : undefined;
 
- const geschlecht = pendingTeilnehmer?.person?.sex;
+  const geschlecht = pendingTeilnehmer?.person?.sex;
 
- const participantText =
-   geschlecht === "W"
-     ? "Diese Teilnehmerin"
-     : geschlecht === "M"
-       ? "Dieser Teilnehmer"
-       : "Diese Person";
+  const participantText =
+    geschlecht === "W"
+      ? "Diese Teilnehmerin"
+      : geschlecht === "M"
+        ? "Dieser Teilnehmer"
+        : "Diese Person";
 
- const employeeText =
-   geschlecht === "W" ? "Mitarbeiterin" : geschlecht === "M" ? "Mitarbeiter" : "Mitarbeitende";
+  const employeeText =
+    geschlecht === "W" ? "Mitarbeiterin" : geschlecht === "M" ? "Mitarbeiter" : "Mitarbeitende";
 
- const pronounText = geschlecht === "W" ? "sie" : geschlecht === "M" ? "ihn" : "die Person";
+  const pronounText = geschlecht === "W" ? "sie" : geschlecht === "M" ? "ihn" : "die Person";
 
   /* =========================================================
      SORTING
@@ -224,35 +223,40 @@ export default function TeilnehmerScreen() {
   const handleAdd = async () => {
     if (!active?.id || selAvailable.length === 0) return;
 
-    await addTeilnehmerBulk(
-      active.id,
-      selAvailable.map((p) => p.id),
-    );
-
-    setSelAvailable([]);
-    setResetLeftSelection((v) => v + 1);
-
-    await load();
-  };
-
-  const handleRemove = async () => {
-    if (!active?.id || selAssigned.length === 0) return;
-
     try {
-      await removeTeilnehmerBulk(
+      setError(null);
+      await addTeilnehmerBulk(
         active.id,
-        selAssigned.map((p) => p.personId),
+        selAvailable.map((p) => p.id),
       );
 
-      setSelAssigned([]);
-      setResetRightSelection((v) => v + 1);
+      setSelAvailable([]);
+      setResetLeftSelection((v) => v + 1);
 
       await load();
-    } catch (error) {
-      setErrorMessage(getApiErrorMessage(error));
-      setErrorOpen(true);
+    } catch (error: unknown) {
+      setError(getApiErrorMessage(error));
     }
   };
+
+ const handleRemove = async () => {
+   if (!active?.id || selAssigned.length === 0) return;
+
+   try {
+     setError(null);
+     await removeTeilnehmerBulk(
+       active.id,
+       selAssigned.map((p) => p.personId),
+     );
+
+     setSelAssigned([]);
+     setResetRightSelection((v) => v + 1);
+
+     await load();
+   } catch (error: unknown) {
+     setError(getApiErrorMessage(error));
+   }
+ };
 
   const handleMobileAction = async () => {
     if (mobileMode === "available") {
@@ -298,35 +302,39 @@ export default function TeilnehmerScreen() {
     await changeRole(personId, current, "M");
   };
 
-  const changeRole = async (personId: number, current: "L" | "M" | null, newRole: "M" | null) => {
-    if (!active?.id) return;
+ const changeRole = async (personId: number, current: "L" | "M" | null, newRole: "M" | null) => {
+   if (!active?.id) return;
 
-    setAssigned((prev) =>
-      prev.map((t) =>
-        t.personId === personId
-          ? {
-              ...t,
-              rolle: newRole,
-            }
-          : t,
-      ),
-    );
+   setAssigned((prev) =>
+     prev.map((t) =>
+       t.personId === personId
+         ? {
+             ...t,
+             rolle: newRole,
+           }
+         : t,
+     ),
+   );
 
-    try {
-      await updateTeilnehmerRolle(active.id, personId, newRole);
-    } catch {
-      setAssigned((prev) =>
-        prev.map((t) =>
-          t.personId === personId
-            ? {
-                ...t,
-                rolle: current,
-              }
-            : t,
-        ),
-      );
-    }
-  };
+   try {
+     setError(null);
+     await updateTeilnehmerRolle(active.id, personId, newRole);
+   } catch (error: unknown) {
+     // Optimistische Änderung zurücknehmen
+     setAssigned((prev) =>
+       prev.map((t) =>
+         t.personId === personId
+           ? {
+               ...t,
+               rolle: current,
+             }
+           : t,
+       ),
+     );
+
+     setError(getApiErrorMessage(error));
+   }
+ };
 
   const confirmRoleChange = async () => {
     if (!pendingRoleChange) return;
@@ -643,12 +651,7 @@ export default function TeilnehmerScreen() {
           ]}
         />
 
-        <ErrorDialog
-          open={errorOpen}
-          title="Teilnehmer kann nicht entfernt werden"
-          message={errorMessage}
-          onClose={() => setErrorOpen(false)}
-        />
+        <ErrorDialog open={!!error} message={error ?? ""} onClose={() => setError(null)} />
       </Box>
     );
   }
@@ -880,12 +883,7 @@ export default function TeilnehmerScreen() {
           },
         ]}
       />
-      <ErrorDialog
-        open={errorOpen}
-        title="Teilnehmer kann nicht entfernt werden"
-        message={errorMessage}
-        onClose={() => setErrorOpen(false)}
-      />
+      <ErrorDialog open={!!error} message={error ?? ""} onClose={() => setError(null)} />
 
       <Dialog open={roleWarningOpen} onClose={cancelRoleChange}>
         <DialogTitle>Mitarbeiterrolle ändern?</DialogTitle>

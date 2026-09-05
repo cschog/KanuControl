@@ -3,6 +3,7 @@ package com.kcserver.service.abrechnung;
 import com.kcserver.dto.zahlungsnachweis.*;
 import com.kcserver.entity.*;
 import com.kcserver.enumtype.Zahlungsweg;
+import com.kcserver.exception.ErrorMessages;
 import com.kcserver.mapper.ZahlungsnachweisMapper;
 import com.kcserver.repository.FinanzGruppeRepository;
 import com.kcserver.repository.TeilnehmerRepository;
@@ -61,7 +62,7 @@ public class ZahlungsnachweisService {
                         .orElseThrow(() ->
                                 new ResponseStatusException(
                                         HttpStatus.NOT_FOUND,
-                                        "Veranstaltung nicht gefunden"
+                                        ErrorMessages.VERANSTALTUNG_NOT_FOUND
                                 )
                         );
 
@@ -70,7 +71,7 @@ public class ZahlungsnachweisService {
 
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Der Zahlungsbetrag muss größer als 0 sein."
+                    ErrorMessages.ZAHLUNGSBETRAG_MUST_BE_POSITIVE
             );
         }
 
@@ -79,7 +80,7 @@ public class ZahlungsnachweisService {
 
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Mindestens ein Teilnehmer muss ausgewählt werden."
+                    ErrorMessages.AT_LEAST_ONE_TEILNEHMER_REQUIRED
             );
         }
 
@@ -140,7 +141,7 @@ public class ZahlungsnachweisService {
 
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Der Zahlungsbetrag muss größer als 0 sein."
+                    ErrorMessages.ZAHLUNGSBETRAG_MUST_BE_POSITIVE
             );
         }
 
@@ -151,7 +152,7 @@ public class ZahlungsnachweisService {
                         .orElseThrow(() ->
                                 new ResponseStatusException(
                                         HttpStatus.NOT_FOUND,
-                                        "Veranstaltung nicht gefunden"
+                                        ErrorMessages.VERANSTALTUNG_NOT_FOUND
                                 )
                         );
 
@@ -214,14 +215,14 @@ public class ZahlungsnachweisService {
                             .orElseThrow(() ->
                                     new ResponseStatusException(
                                             HttpStatus.NOT_FOUND,
-                                            "Teilnehmer nicht gefunden"
+                                           ErrorMessages.TEILNEHMER_NOT_FOUND
                                     )
                             );
 
             if (!t.getVeranstaltung().getId().equals(veranstaltungId)) {
                 throw new ResponseStatusException(
                         HttpStatus.CONFLICT,
-                        "Teilnehmer gehört nicht zur Veranstaltung"
+                       ErrorMessages.TEILNEHMER_NOT_IN_VERANSTALTUNG
                 );
             }
 
@@ -344,7 +345,7 @@ public class ZahlungsnachweisService {
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
-                                "Zahlungsnachweis nicht gefunden"
+                               ErrorMessages.ZAHLUNGSNACHWEIS_NOT_FOUND
                         )
                 );
     }
@@ -367,7 +368,7 @@ public class ZahlungsnachweisService {
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.BAD_REQUEST,
-                                "Finanzgruppe gehört nicht zur Veranstaltung"
+                                ErrorMessages.GRUPPE_NOT_IN_VERANSTALTUNG
                         )
                 );
     }
@@ -386,7 +387,7 @@ public class ZahlungsnachweisService {
                     .orElseThrow(() ->
                             new ResponseStatusException(
                                     HttpStatus.CONFLICT,
-                                    "Für die Veranstaltung ist keine VK eingerichtet."
+                                    ErrorMessages.VK_KONTO_NOT_CONFIGURED
                             )
                     );
         }

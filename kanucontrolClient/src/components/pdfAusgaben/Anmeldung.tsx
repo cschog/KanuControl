@@ -2,79 +2,102 @@ import { Button, Box, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import { getActiveVeranstaltung } from "@/api/services/veranstaltungApi";
 import apiClient from "@/api/client/apiClient";
+import { ErrorDialog } from "@/components/common/ErrorDialog";
+import { getApiErrorMessage } from "@/api/utils/apiError";
 
 const Anmeldung = () => {
   const [veranstaltungId, setVeranstaltungId] = useState<number | null>(null);
- const [veranstaltungName, setVeranstaltungName] = useState<string | null>(null);
+  const [veranstaltungName, setVeranstaltungName] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-useEffect(() => {
-  const load = async () => {
+  /* ================= Aktive Veranstaltung laden ================= */
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const v = await getActiveVeranstaltung();
+
+        if (!v) return;
+
+        setVeranstaltungId(v.id);
+        setVeranstaltungName(v.name);
+      } catch (err: unknown) {
+        console.error("Aktive Veranstaltung konnte nicht geladen werden", err);
+        setError(getApiErrorMessage(err));
+      }
+    };
+
+    load();
+  }, []);
+
+  /* ================= PDF öffnen ================= */
+
+  const handlePreview = async () => {
+    if (!veranstaltungId) return;
+
     try {
-      const v = await getActiveVeranstaltung();
+      const response = await apiClient.get(
+        `/veranstaltungen/${veranstaltungId}/fm-jem-report/view`,
+        {
+          responseType: "blob",
+        },
+      );
 
-      if (!v) return;
+      const url = window.URL.createObjectURL(response.data);
 
-      setVeranstaltungId(v.id);
-       setVeranstaltungName(v.name);
-    } catch (err) {
-      console.error("Aktive Veranstaltung konnte nicht geladen werden", err);
+      window.open(url, "_blank");
+    } catch (err: unknown) {
+      console.error("Anmeldung konnte nicht als Vorschau geöffnet werden", err);
+      setError(getApiErrorMessage(err));
     }
   };
 
-  load();
-}, []);
+  /* ================= PDF Download ================= */
 
- const handlePreview = async () => {
-   if (!veranstaltungId) return;
+  const handleDownload = async () => {
+    if (!veranstaltungId) return;
 
-   const response = await apiClient.get(`/veranstaltungen/${veranstaltungId}/fm-jem-report/view`, {
-     responseType: "blob",
-   });
+    try {
+      const response = await apiClient.get(
+        `/veranstaltungen/${veranstaltungId}/fm-jem-report/download`,
+        {
+          responseType: "blob",
+        },
+      );
 
-   const url = window.URL.createObjectURL(response.data);
+      const disposition = response.headers["content-disposition"];
 
-   window.open(url, "_blank");
- };
+      let filename = "fm-jem-antrag.pdf";
 
- const handleDownload = async () => {
-   if (!veranstaltungId) return;
+      const match = disposition?.match(/filename="?([^";]+)"?/);
 
-   const response = await apiClient.get(
-     `/veranstaltungen/${veranstaltungId}/fm-jem-report/download`,
-     {
-       responseType: "blob",
-     },
-   );
+      if (match?.[1]) {
+        filename = match[1];
+      }
 
-   const disposition = response.headers["content-disposition"];
+      const blob = new Blob([response.data], {
+        type: "application/pdf",
+      });
 
-   let filename = "fm-jem-antrag.pdf";
+      const url = window.URL.createObjectURL(blob);
 
-   const match = disposition?.match(/filename="?([^";]+)"?/);
+      const link = document.createElement("a");
 
-   if (match?.[1]) {
-     filename = match[1];
-   }
+      link.href = url;
+      link.download = filename;
 
-   const blob = new Blob([response.data], {
-     type: "application/pdf",
-   });
+      document.body.appendChild(link);
 
-   const url = window.URL.createObjectURL(blob);
+      link.click();
 
-   const link = document.createElement("a");
+      link.remove();
 
-   link.href = url;
-   link.download = filename;
-
-   document.body.appendChild(link);
-
-   link.click();
-
-   link.remove();
-
-   window.URL.revokeObjectURL(url);
- };
+      window.URL.revokeObjectURL(url);
+    } catch (err: unknown) {
+      console.error("Anmeldung konnte nicht heruntergeladen werden", err);
+      setError(getApiErrorMessage(err));
+    }
+  };
 
   return (
     <Box m="auto" maxWidth={600}>
@@ -97,10 +120,10 @@ useEffect(() => {
           Anmeldung (Download)
         </Button>
       </Box>
+
+      <ErrorDialog open={!!error} message={error ?? ""} onClose={() => setError(null)} />
     </Box>
   );
 };
 
 export default Anmeldung;
-
-

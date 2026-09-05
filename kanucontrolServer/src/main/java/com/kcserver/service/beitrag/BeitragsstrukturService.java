@@ -6,6 +6,7 @@ import com.kcserver.dto.beitrag.BeitragsstrukturUpdateDTO;
 import com.kcserver.entity.Beitragsregel;
 import com.kcserver.entity.Beitragsstruktur;
 import com.kcserver.enumtype.TeilnehmerRolle;
+import com.kcserver.exception.ErrorMessages;
 import com.kcserver.mapper.BeitragsstrukturMapper;
 import com.kcserver.repository.beitrag.BeitragsregelRepository;
 import com.kcserver.repository.beitrag.BeitragsstrukturRepository;
@@ -275,7 +276,7 @@ public class BeitragsstrukturService {
                         .orElseThrow(() ->
                                 new ResponseStatusException(
                                         HttpStatus.NOT_FOUND,
-                                        "Beitragsstruktur nicht gefunden"
+                                        BEITRAGSSTRUKTUR_NOT_FOUND
                                 )
                         );
 
@@ -341,7 +342,8 @@ public class BeitragsstrukturService {
                 repository.findById(id)
                         .orElseThrow(() ->
                                 new ResponseStatusException(
-                                        HttpStatus.NOT_FOUND
+                                        HttpStatus.NOT_FOUND,
+                                        ErrorMessages.BEITRAGSSTRUKTUR_NOT_FOUND
                                 )
                         );
 
@@ -360,7 +362,7 @@ public class BeitragsstrukturService {
                         .orElseThrow(() ->
                                 new ResponseStatusException(
                                         HttpStatus.NOT_FOUND,
-                                        "Beitragsstruktur nicht gefunden"
+                                       ErrorMessages.BEITRAGSSTRUKTUR_NOT_FOUND
                                 )
                         );
 

@@ -1,17 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 
-import {
-  Box,
-  Paper,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
-} from "@mui/material";
-
-import axios from "axios";
+import { Box, Paper } from "@mui/material";
 
 import { MenueHeader } from "@/components/layout/MenueHeader";
 import { VereinTable } from "@/components/verein/VereinTable";
@@ -21,7 +10,12 @@ import { VereinCsvImportDialog } from "@/components/verein/import/VereinCsvImpor
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { renderLoadingOrError } from "@/components/common/loadingOnErrorUtils";
 import { navigateToStartMenu } from "@/components/layout/navigateToStartMenue";
+
+import { ErrorDialog } from "@/components/common/ErrorDialog";
+import { getApiErrorMessage } from "@/api/utils/apiError";
+
 import { getAllVereine, deleteVerein, createVerein, updateVerein } from "@/api/services/vereinApi";
+
 import type Verein from "@/api/types/verein/VereinFormModel";
 import type { VereinSave } from "@/api/types/verein/VereinSave";
 
@@ -33,13 +27,13 @@ export default function VereinScreen() {
   const [data, setData] = useState<Verein[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
   const [selected, setSelected] = useState<Verein | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [editData, setEditData] = useState<Verein | null>(null);
+
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [csvImportOpen, setCsvImportOpen] = useState(false);
-  const [errorOpen, setErrorOpen] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
 
   /* ========================================================= */
   /* LOAD */
@@ -54,8 +48,10 @@ export default function VereinScreen() {
       setData(res);
 
       setError(null);
-    } catch {
-      setError("Fehler beim Laden der Vereine");
+    } catch (err: unknown) {
+      console.error("Fehler beim Laden der Vereine", err);
+
+      setError(getApiErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -95,18 +91,30 @@ export default function VereinScreen() {
     setEditData(null);
   };
 
+  /* ========================================================= */
+  /* SAVE */
+  /* ========================================================= */
+
   const handleSave = async (payload: VereinSave) => {
     if (!selected?.id) return;
 
-    const updated = await updateVerein(selected.id, payload);
+    try {
+      const updated = await updateVerein(selected.id, payload);
 
-    await load();
+      await load();
 
-    setSelected(updated);
+      setSelected(updated);
 
-    setEditMode(false);
+      setEditMode(false);
 
-    setEditData(null);
+      setEditData(null);
+
+      setError(null);
+    } catch (err: unknown) {
+      console.error("Fehler beim Speichern des Vereins", err);
+
+      setError(getApiErrorMessage(err));
+    }
   };
 
   /* ========================================================= */
@@ -122,16 +130,12 @@ export default function VereinScreen() {
       await load();
 
       setSelected(null);
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        setErrorMessage(
-          error.response?.data?.message ?? "Der Verein konnte nicht gelöscht werden.",
-        );
-      } else {
-        setErrorMessage("Unerwarteter Fehler.");
-      }
 
-      setErrorOpen(true);
+      setError(null);
+    } catch (err: unknown) {
+      console.error("Fehler beim Löschen des Vereins", err);
+
+      setError(getApiErrorMessage(err));
     }
   };
 
@@ -140,17 +144,25 @@ export default function VereinScreen() {
   /* ========================================================= */
 
   const handleCreate = async (payload: VereinSave) => {
-    const saved = await createVerein(payload);
+    try {
+      const saved = await createVerein(payload);
 
-    setData((prev) => [...prev, saved]);
+      setData((prev) => [...prev, saved]);
 
-    setSelected(saved);
+      setSelected(saved);
 
-    setEditMode(false);
+      setEditMode(false);
 
-    setEditData(null);
+      setEditData(null);
 
-    setCreateDialogOpen(false);
+      setCreateDialogOpen(false);
+
+      setError(null);
+    } catch (err: unknown) {
+      console.error("Fehler beim Anlegen des Vereins", err);
+
+      setError(getApiErrorMessage(err));
+    }
   };
 
   /* ========================================================= */
@@ -171,7 +183,7 @@ export default function VereinScreen() {
 
       {renderLoadingOrError({
         loading,
-        error,
+        error: null,
       })}
 
       {/* ===================================================== */}
@@ -183,10 +195,6 @@ export default function VereinScreen() {
           <VereinTable data={data} selectedVerein={selected} onSelectVerein={handleSelect} />
         </Paper>
       ) : (
-        /* =================================================== */
-        /* DETAIL VIEW */
-        /* =================================================== */
-
         <Paper sx={{ p: 2 }}>
           <VereinFormView
             verein={editMode ? editData : selected}
@@ -197,9 +205,7 @@ export default function VereinScreen() {
             onDelete={handleDelete}
             onBack={() => {
               setSelected(null);
-
               setEditMode(false);
-
               setEditData(null);
             }}
             onCsvImport={() => setCsvImportOpen(true)}
@@ -218,17 +224,12 @@ export default function VereinScreen() {
           left={[
             {
               label: "Neuer Verein",
-
               variant: "outlined",
-
               onClick: () => setCreateDialogOpen(true),
             },
-
             {
               label: "Zurück",
-
               variant: "outlined",
-
               onClick: navigateToStartMenu,
             },
           ]}
@@ -252,17 +253,8 @@ export default function VereinScreen() {
         onClose={() => setCreateDialogOpen(false)}
         onCreate={handleCreate}
       />
-      <Dialog open={errorOpen} onClose={() => setErrorOpen(false)}>
-        <DialogTitle>Löschen nicht möglich</DialogTitle>
 
-        <DialogContent>
-          <DialogContentText sx={{ whiteSpace: "pre-line" }}>{errorMessage}</DialogContentText>
-        </DialogContent>
-
-        <DialogActions>
-          <Button onClick={() => setErrorOpen(false)}>OK</Button>
-        </DialogActions>
-      </Dialog>
+      <ErrorDialog open={!!error} message={error ?? ""} onClose={() => setError(null)} />
     </Box>
   );
 }

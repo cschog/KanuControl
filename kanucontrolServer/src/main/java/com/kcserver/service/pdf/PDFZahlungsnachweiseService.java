@@ -4,6 +4,7 @@ import com.kcserver.entity.Dokument;
 import com.kcserver.entity.Veranstaltung;
 import com.kcserver.entity.Zahlungsnachweis;
 import com.kcserver.enumtype.PdfDokumentTyp;
+import com.kcserver.exception.ErrorMessages;
 import com.kcserver.repository.VeranstaltungRepository;
 import com.kcserver.repository.abrechnung.ZahlungsnachweisRepository;
 import com.kcserver.util.PdfFilenameUtil;
@@ -210,7 +211,7 @@ public class PDFZahlungsnachweiseService {
                         .orElseThrow(() ->
                                 new ResponseStatusException(
                                         HttpStatus.NOT_FOUND,
-                                        "Veranstaltung nicht gefunden."
+                                        ErrorMessages.VERANSTALTUNG_NOT_FOUND
                                 )
                         );
 

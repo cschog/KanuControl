@@ -1,10 +1,9 @@
 import { useEffect, useState, useCallback } from "react";
 import keycloak from "@/auth/keycloak";
 import { WarningDialog } from "@/components/common/WarningDialog";
-import axios from "axios";
-
+import { getApiErrorMessage } from "@/api/utils/apiError";
+import { ErrorDialog } from "@/components/common/ErrorDialog";
 import {
-  Alert,
   Box,
   Paper,
   Dialog,
@@ -21,7 +20,6 @@ import { getOnlineUsers } from "@/api/services/sessionApi";
 import apiClient from "@/api/client/apiClient";
 
 import { MenueHeader } from "@/components/layout/MenueHeader";
-import { renderLoadingOrError } from "@/components/common/loadingOnErrorUtils";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 
 import { VeranstaltungTable } from "./VeranstaltungTable";
@@ -73,7 +71,7 @@ export default function VeranstaltungenScreen() {
     null,
   );
   const [beitragsstrukturen, setBeitragsstrukturen] = useState<BeitragsstrukturDTO[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [copyOpen, setCopyOpen] = useState(false);
   const [copyData, setCopyData] = useState<Partial<VeranstaltungFormModel>>();
@@ -109,8 +107,9 @@ export default function VeranstaltungenScreen() {
       setTotal(res.length);
 
       setError(null);
-    } catch {
-      setError("Fehler beim Laden der Veranstaltungen");
+    } catch (err: unknown) {
+      console.error("Fehler beim Laden der Veranstaltungen", err);
+      setError(getApiErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -125,8 +124,9 @@ export default function VeranstaltungenScreen() {
       const res = await apiClient.get<BeitragsstrukturDTO[]>("/beitragsstrukturen");
 
       setBeitragsstrukturen(res.data);
-    } catch (err) {
-      console.error(err);
+    } catch (err: unknown) {
+      console.error("Fehler beim Laden der Beitragsstrukturen", err);
+      setError(getApiErrorMessage(err));
     }
   };
 
@@ -155,13 +155,19 @@ export default function VeranstaltungenScreen() {
       return;
     }
 
-    const detail = await getVeranstaltung(row.id);
+    try {
+      setError(null);
+      const detail = await getVeranstaltung(row.id);
 
-    setSelectedId(row.id);
-    setSelectedVeranstaltung(detail);
-    setEditMode(false);
-    setBtnEditDisabled(false);
-    setBtnDeleteDisabled(false);
+      setSelectedId(row.id);
+      setSelectedVeranstaltung(detail);
+      setEditMode(false);
+      setBtnEditDisabled(false);
+      setBtnDeleteDisabled(false);
+    } catch (err: unknown) {
+      console.error("Fehler beim Laden der Veranstaltung", err);
+      setError(getApiErrorMessage(err));
+    }
   };
 
   /* =========================================================
@@ -181,14 +187,18 @@ export default function VeranstaltungenScreen() {
       return;
     }
 
-    const detail = await getVeranstaltung(selectedId);
+    try {
+      setError(null);
+      const detail = await getVeranstaltung(selectedId);
 
-    setSelectedVeranstaltung(detail);
-
-    setEditMode(false);
-
-    setBtnEditDisabled(false);
-    setBtnDeleteDisabled(false);
+      setSelectedVeranstaltung(detail);
+      setEditMode(false);
+      setBtnEditDisabled(false);
+      setBtnDeleteDisabled(false);
+    } catch (err: unknown) {
+      console.error("Fehler beim Laden der Veranstaltung", err);
+      setError(getApiErrorMessage(err));
+    }
   };
 
   /* =========================================================
@@ -201,6 +211,7 @@ export default function VeranstaltungenScreen() {
     }
 
     try {
+      setError(null);
       const response = await updateVeranstaltung(selectedVeranstaltung.id, payload);
 
       await fetchData();
@@ -217,22 +228,10 @@ export default function VeranstaltungenScreen() {
       setEditMode(false);
       setBtnEditDisabled(false);
       setBtnDeleteDisabled(false);
-
-      setError(null);
     } catch (err: unknown) {
-      console.error(err);
+      console.error("Fehler beim Speichern der Veranstaltung", err);
 
-      setDialogTitle("Speichern nicht möglich");
-
-      if (axios.isAxiosError(err)) {
-        setWarnings([
-          err.response?.data?.message ?? "Veranstaltung konnte nicht gespeichert werden.",
-        ]);
-      } else {
-        setWarnings(["Veranstaltung konnte nicht gespeichert werden."]);
-      }
-
-      setWarningDialogOpen(true);
+      setError(getApiErrorMessage(err));
     }
   };
 
@@ -246,6 +245,7 @@ export default function VeranstaltungenScreen() {
     }
 
     try {
+      setError(null);
       await deleteVeranstaltung(selectedVeranstaltung.id);
 
       setSelectedId(null);
@@ -255,21 +255,10 @@ export default function VeranstaltungenScreen() {
 
       await fetchData();
       await reloadContext();
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error) && error.response?.status === 409) {
-        setDialogTitle("Veranstaltung kann nicht gelöscht werden");
-        setWarnings([
-          error.response.data?.message ??
-            "Die Veranstaltung kann nicht gelöscht werden, solange Teilnehmer eingetragen sind. Ausnahme: Es ist nur noch der Leiter vorhanden.",
-        ]);
-        setWarningDialogOpen(true);
-      } else {
-        setDialogTitle("Fehler beim Löschen");
+    } catch (err: unknown) {
+      console.error("Fehler beim Löschen der Veranstaltung", err);
 
-        setWarnings(["Beim Löschen der Veranstaltung ist ein Fehler aufgetreten."]);
-
-        setWarningDialogOpen(true);
-      }
+      setError(getApiErrorMessage(err));
     }
   };
 
@@ -283,6 +272,7 @@ export default function VeranstaltungenScreen() {
     }
 
     try {
+      setError(null);
       const users = await getOnlineUsers();
 
       const otherUsers = users.filter((user) => user !== keycloak.tokenParsed?.preferred_username);
@@ -294,9 +284,9 @@ export default function VeranstaltungenScreen() {
       }
 
       await doActivate();
-    } catch (err) {
-      console.error(err);
-      setError("Die Online-Benutzer konnten nicht ermittelt werden.");
+    } catch (err: unknown) {
+      console.error("Fehler beim Ermitteln der Online-Benutzer", err);
+      setError(getApiErrorMessage(err));
     }
   };
 
@@ -308,6 +298,7 @@ export default function VeranstaltungenScreen() {
     setActivating(true);
 
     try {
+      setError(null);
       await setActiveVeranstaltung(selectedId);
 
       await fetchData();
@@ -317,6 +308,9 @@ export default function VeranstaltungenScreen() {
       setSelectedVeranstaltung(updated);
 
       await reloadContext();
+    } catch (err: unknown) {
+      console.error("Fehler beim Aktivieren der Veranstaltung", err);
+      setError(getApiErrorMessage(err));
     } finally {
       setActivating(false);
     }
@@ -328,6 +322,7 @@ export default function VeranstaltungenScreen() {
 
   const handleCreate = async (payload: VeranstaltungSave) => {
     try {
+      setError(null);
       const response = await createVeranstaltung(payload);
 
       console.log("CREATE RESPONSE:", response);
@@ -347,15 +342,7 @@ export default function VeranstaltungenScreen() {
     } catch (err: unknown) {
       console.error("CREATE ERROR:", err);
 
-      setDialogTitle("Veranstaltung kann nicht erstellt werden");
-
-      if (axios.isAxiosError(err)) {
-        setWarnings([err.response?.data?.message ?? "Veranstaltung konnte nicht erstellt werden."]);
-      } else {
-        setWarnings(["Veranstaltung konnte nicht erstellt werden."]);
-      }
-
-      setWarningDialogOpen(true);
+      setError(getApiErrorMessage(err));
     }
   };
 
@@ -395,13 +382,6 @@ export default function VeranstaltungenScreen() {
   return (
     <Box>
       <MenueHeader headerText={`${total} Veranstaltungen`} />
-
-      {renderLoadingOrError({
-        loading,
-        error,
-      })}
-
-      {error && <Alert severity="error">{error}</Alert>}
 
       {/* ===================================================== */}
       {/* LIST VIEW */}
@@ -525,12 +505,15 @@ export default function VeranstaltungenScreen() {
           </Button>
         </DialogActions>
       </Dialog>
+
       <WarningDialog
         open={warningDialogOpen}
         title={dialogTitle}
         warnings={warnings}
         onClose={() => setWarningDialogOpen(false)}
       />
+
+      <ErrorDialog open={!!error} message={error ?? ""} onClose={() => setError(null)} />
     </Box>
   );
 }

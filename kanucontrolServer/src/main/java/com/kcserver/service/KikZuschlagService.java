@@ -3,6 +3,7 @@ package com.kcserver.service;
 import com.kcserver.dto.kik.KikZuschlagCreateUpdateDTO;
 import com.kcserver.dto.kik.KikZuschlagDTO;
 import com.kcserver.entity.KikZuschlag;
+import com.kcserver.exception.ErrorMessages;
 import com.kcserver.repository.KikZuschlagRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -31,7 +32,7 @@ public class KikZuschlagService {
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
-                                "Kein gültiger KiK-Zuschlag gefunden"
+                                ErrorMessages.NO_VALID_KIK_ZUSCHLAG
                         ));
     }
     @Transactional

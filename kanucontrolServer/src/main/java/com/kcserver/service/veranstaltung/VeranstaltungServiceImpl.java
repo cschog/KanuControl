@@ -7,6 +7,7 @@ import com.kcserver.dto.veranstaltung.*;
 import com.kcserver.entity.*;
 import com.kcserver.enumtype.TeilnehmerRolle;
 import com.kcserver.enumtype.VeranstaltungTyp;
+import com.kcserver.exception.ErrorMessages;
 import com.kcserver.mapper.BeitragsstrukturMapper;
 import com.kcserver.repository.VeranstaltungSpecs;
 
@@ -257,7 +258,10 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
                     .ifPresent(t -> {
 
                         if (t.getRolle() == TeilnehmerRolle.LEITER) {
-                            throw new ResponseStatusException(HttpStatus.CONFLICT);
+                            throw new ResponseStatusException(
+                                    HttpStatus.CONFLICT,
+                                    ErrorMessages.LEITER_KANN_NICHT_GELOESCHT_WERDEN
+                            );
                         }
 
                         teilnehmerRepository.delete(t);
@@ -285,7 +289,7 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
         if (hasTeilnehmer) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "Die Veranstaltung kann nicht gelöscht werden, solange weitere Teilnehmer vorhanden sind."
+                    ErrorMessages.VERANSTALTUNG_CANNOT_BE_DELETED_WITH_TEILNEHMER
             );
         }
 
@@ -394,7 +398,7 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
         if (veranstaltung.getBeitragsstruktur() != null) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "Veranstaltung hat bereits eine Beitragsstruktur"
+                    ErrorMessages.VERANSTALTUNG_ALREADY_HAS_BEITRAGSSTRUKTUR
             );
         }
 
@@ -424,7 +428,10 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
 
     private void checkVeranstaltungExists(Long id) {
         if (!veranstaltungRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    ErrorMessages.VERANSTALTUNG_NOT_FOUND
+            );
         }
     }
 
@@ -436,14 +443,14 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
         if (person.getGeburtsdatum() == null) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Für den Veranstaltungsleiter muss ein Geburtsdatum hinterlegt sein."
+                    ErrorMessages.VERANSTALTUNGSLEITER_GEBURTSDATUM_REQUIRED
             );
         }
 
         if (person.getGeburtsdatum().plusYears(18).isAfter(LocalDate.now())) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Der Veranstaltungsleiter muss mindestens 18 Jahre alt sein."
+                    ErrorMessages.VERANSTALTUNGSLEITER_MIND_ALTER
             );
         }
     }
@@ -454,7 +461,7 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
                 .map(veranstaltungMapper::toDetailDTO)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
-                        "No active Veranstaltung"
+                        ErrorMessages.NO_ACTIVE_VERANSTALTUNG
                 ));
     }
     @Override
@@ -608,7 +615,7 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
 
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST,
-                        "Für individuelle Gebühren muss eine Beitragsstruktur gewählt werden."
+                        ErrorMessages.INDIVIDUELLE_GEBUEHREN_REQUIRE_BEITRAGSSTRUKTUR
                 );
             }
 

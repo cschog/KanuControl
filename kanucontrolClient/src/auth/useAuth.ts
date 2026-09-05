@@ -9,6 +9,7 @@ export function useAuth() {
 
   useEffect(() => {
     if (initializedOnce) return;
+
     initializedOnce = true;
 
     keycloak
@@ -18,10 +19,13 @@ export function useAuth() {
       })
       .then((auth: boolean) => {
         setAuthenticated(auth);
-        setInitialized(true);
       })
       .catch((err: unknown) => {
         console.error("Keycloak init failed", err);
+
+        setAuthenticated(false);
+      })
+      .finally(() => {
         setInitialized(true);
       });
   }, []);

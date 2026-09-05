@@ -1,6 +1,7 @@
 package com.kcserver.service.pdf;
 
 import com.kcserver.entity.Veranstaltung;
+import com.kcserver.exception.ErrorMessages;
 import lombok.RequiredArgsConstructor;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -44,7 +45,7 @@ public class PDFAnmeldungFmJemService {
                         .findByVeranstaltungIdWithPositionen(veranstaltungId)
                         .orElseThrow(() -> new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
-                                "Für diese Veranstaltung existiert keine Planung."
+                                ErrorMessages.NO_PLANUNG_FOR_VERANSTALTUNG
                         ));
 
         Veranstaltung v = planung.getVeranstaltung();

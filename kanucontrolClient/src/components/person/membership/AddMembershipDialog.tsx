@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 
 import {
-  Alert,
   Button,
   Dialog,
   DialogActions,
@@ -11,11 +10,10 @@ import {
   TextField,
 } from "@mui/material";
 
-import axios from "axios";
-
 import apiClient from "@/api/client/apiClient";
-
 import { VereinRef } from "@/api/types/verein/VereinRef";
+import { getApiErrorMessage } from "@/api/utils/apiError";
+import { ErrorDialog } from "@/components/common/ErrorDialog";
 
 interface AddMembershipDialogProps {
   open: boolean;
@@ -57,50 +55,53 @@ export const AddMembershipDialog: React.FC<AddMembershipDialogProps> = ({
 
       await onAdded();
     } catch (err: unknown) {
-      if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.message ?? "Mitgliedschaft konnte nicht angelegt werden.");
-      } else {
-        setError("Unbekannter Fehler.");
-      }
+      setError(getApiErrorMessage(err, "Mitgliedschaft konnte nicht angelegt werden."));
     }
   };
 
   /* ========================================================= */
 
+  const handleClose = () => {
+    setError(null);
+    setSelectedVereinId("");
+
+    onClose();
+  };
+
+  /* ========================================================= */
+
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Verein zuordnen</DialogTitle>
+    <>
+      <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
+        <DialogTitle>Verein zuordnen</DialogTitle>
 
-      <DialogContent>
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
+        <DialogContent>
+          <TextField
+            select
+            fullWidth
+            label="Verein"
+            value={selectedVereinId}
+            onChange={(e) => setSelectedVereinId(Number(e.target.value))}
+            sx={{ mt: 1 }}
+          >
+            {availableVereine.map((v) => (
+              <MenuItem key={v.id} value={v.id}>
+                {v.name}
+              </MenuItem>
+            ))}
+          </TextField>
+        </DialogContent>
 
-        <TextField
-          select
-          fullWidth
-          label="Verein"
-          value={selectedVereinId}
-          onChange={(e) => setSelectedVereinId(Number(e.target.value))}
-          sx={{ mt: 1 }}
-        >
-          {availableVereine.map((v) => (
-            <MenuItem key={v.id} value={v.id}>
-              {v.name}
-            </MenuItem>
-          ))}
-        </TextField>
-      </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose}>Abbrechen</Button>
 
-      <DialogActions>
-        <Button onClick={onClose}>Abbrechen</Button>
+          <Button variant="contained" disabled={!selectedVereinId} onClick={handleAdd}>
+            Zuordnen
+          </Button>
+        </DialogActions>
+      </Dialog>
 
-        <Button variant="contained" disabled={!selectedVereinId} onClick={handleAdd}>
-          Zuordnen
-        </Button>
-      </DialogActions>
-    </Dialog>
+      <ErrorDialog open={!!error} message={error ?? ""} onClose={() => setError(null)} />
+    </>
   );
 };

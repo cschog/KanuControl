@@ -4,6 +4,7 @@ import com.kcserver.entity.AbrechnungBeleg;
 import com.kcserver.entity.AbrechnungBuchung;
 import com.kcserver.entity.Dokument;
 import com.kcserver.enumtype.PdfDokumentTyp;
+import com.kcserver.exception.ErrorMessages;
 import com.kcserver.repository.abrechnung.AbrechnungBelegRepository;
 import com.kcserver.util.PdfFilenameUtil;
 import com.kcserver.util.PdfPaperFormatUtil;
@@ -90,7 +91,7 @@ public class PDFBelegDokumenteService {
 
             throw new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
-                    "Für die Abrechnung sind keine Belege vorhanden."
+                    ErrorMessages.NO_BELEGE_FOR_ABRECHNUNG
             );
         }
 

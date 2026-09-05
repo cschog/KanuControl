@@ -1,10 +1,15 @@
 import { useEffect, useState } from "react";
+
 import { useSimulation } from "@/hooks/useSimulation";
 import { PlanungsSimulation } from "@/api/types/simulation/PlanungsSimulation";
+
 import SimulationForm from "./SimulationForm";
 import SimulationSummary from "./SimulationSummary";
 import PlanungspositionenTable from "./FinanzpositionenAccordion";
+
 import BackFooter from "@/components/common/BackFooter";
+import { ErrorDialog } from "@/components/common/ErrorDialog";
+
 import {
   Accordion,
   AccordionSummary,
@@ -16,7 +21,9 @@ import {
   useTheme,
   useMediaQuery,
 } from "@mui/material";
+
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+
 import { radius } from "@/theme/ui";
 
 interface SimulationPageProps {
@@ -24,21 +31,36 @@ interface SimulationPageProps {
 }
 
 export default function SimulationPage({ veranstaltungId }: SimulationPageProps) {
-  const { simulation, ergebnis, loading, simulationNotReady, recalculate, saveSimulation } =
-    useSimulation(veranstaltungId);
+  const {
+    simulation,
+    ergebnis,
+    loading,
+    error,
+    simulationNotReady,
+    recalculate,
+    saveSimulation,
+    clearError,
+  } = useSimulation(veranstaltungId);
 
   const [localSimulation, setLocalSimulation] = useState<PlanungsSimulation>();
 
   const [dirty, setDirty] = useState(false);
+
   const [beitragsvorschlagUebernommen, setBeitragsvorschlagUebernommen] = useState(false);
 
   const [simulationOpen, setSimulationOpen] = useState(true);
+
   const [positionenOpen, setPositionenOpen] = useState(false);
 
   const istEingereicht = simulation?.status === "EINGEREICHT";
 
   const theme = useTheme();
+
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  /* =========================================================
+     BEITRAGSVORSCHLAG
+     ========================================================= */
 
   const uebernehmeBeitragsvorschlag = () => {
     if (istEingereicht) {
@@ -62,16 +84,27 @@ export default function SimulationPage({ veranstaltungId }: SimulationPageProps)
     });
 
     setDirty(true);
+
     setBeitragsvorschlagUebernommen(true);
   };
+
+  /* =========================================================
+     INITIAL SIMULATION
+     ========================================================= */
 
   useEffect(() => {
     if (!localSimulation && simulation) {
       setLocalSimulation(simulation);
+
       setDirty(false);
+
       setBeitragsvorschlagUebernommen(false);
     }
   }, [simulation, localSimulation]);
+
+  /* =========================================================
+     AUTO RECALCULATE
+     ========================================================= */
 
   useEffect(() => {
     if (!localSimulation) {
@@ -85,9 +118,22 @@ export default function SimulationPage({ veranstaltungId }: SimulationPageProps)
     return () => clearTimeout(timer);
   }, [localSimulation, recalculate]);
 
+  /* =========================================================
+     LOADING
+     ========================================================= */
+
   if (loading) {
-    return <>Lade Simulation…</>;
+    return (
+      <>
+        Lade Simulation…
+        <ErrorDialog open={!!error} message={error ?? ""} onClose={clearError} />
+      </>
+    );
   }
+
+  /* =========================================================
+     SIMULATION NOT READY
+     ========================================================= */
 
   if (simulationNotReady) {
     const labels: Record<string, string> = {
@@ -118,13 +164,28 @@ export default function SimulationPage({ veranstaltungId }: SimulationPageProps)
           label="Zurück zu Vorbereitung"
           path={`/veranstaltungen/${veranstaltungId}/finanzen/vorbereitung`}
         />
+
+        <ErrorDialog open={!!error} message={error ?? ""} onClose={clearError} />
       </>
     );
   }
 
+  /* =========================================================
+     NO DATA
+     ========================================================= */
+
   if (!localSimulation || !ergebnis) {
-    return <>Keine Daten vorhanden.</>;
+    return (
+      <>
+        Keine Daten vorhanden.
+        <ErrorDialog open={!!error} message={error ?? ""} onClose={clearError} />
+      </>
+    );
   }
+
+  /* =========================================================
+     UI
+     ========================================================= */
 
   return (
     <>
@@ -134,14 +195,19 @@ export default function SimulationPage({ veranstaltungId }: SimulationPageProps)
             xs: "static",
             md: "sticky",
           },
+
           top: {
             md: 0,
           },
+
           zIndex: {
             md: 100,
           },
+
           bgcolor: "background.default",
+
           pb: 2,
+
           borderRadius: radius.dialog,
         }}
       >
@@ -150,6 +216,10 @@ export default function SimulationPage({ veranstaltungId }: SimulationPageProps)
           onBeitragsvorschlagUebernehmen={uebernehmeBeitragsvorschlag}
         />
       </Box>
+
+      {/* ===================================================== */}
+      {/* ACTIONS */}
+      {/* ===================================================== */}
 
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
         <Button
@@ -164,8 +234,11 @@ export default function SimulationPage({ veranstaltungId }: SimulationPageProps)
           variant="contained"
           disabled={istEingereicht || !dirty}
           onClick={async () => {
-            await saveSimulation(localSimulation);
-            setDirty(false);
+            const success = await saveSimulation(localSimulation);
+
+            if (success) {
+              setDirty(false);
+            }
           }}
         >
           {istEingereicht
@@ -175,6 +248,10 @@ export default function SimulationPage({ veranstaltungId }: SimulationPageProps)
               : "Simulation gespeichert"}
         </Button>
       </Box>
+
+      {/* ===================================================== */}
+      {/* SIMULATION */}
+      {/* ===================================================== */}
 
       <Accordion
         expanded={simulationOpen}
@@ -200,11 +277,16 @@ export default function SimulationPage({ veranstaltungId }: SimulationPageProps)
             simulation={localSimulation}
             onChange={(sim) => {
               setLocalSimulation(sim);
+
               setDirty(true);
             }}
           />
         </AccordionDetails>
       </Accordion>
+
+      {/* ===================================================== */}
+      {/* BERECHNUNGSPOSITIONEN */}
+      {/* ===================================================== */}
 
       <Accordion
         expanded={positionenOpen}
@@ -234,6 +316,12 @@ export default function SimulationPage({ veranstaltungId }: SimulationPageProps)
         label="Zurück zu Vorbereitung"
         path={`/veranstaltungen/${veranstaltungId}/finanzen/vorbereitung`}
       />
+
+      {/* ===================================================== */}
+      {/* ERROR */}
+      {/* ===================================================== */}
+
+      <ErrorDialog open={!!error} message={error ?? ""} onClose={clearError} />
     </>
   );
 }

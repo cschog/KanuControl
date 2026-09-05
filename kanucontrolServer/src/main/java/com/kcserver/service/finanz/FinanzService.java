@@ -3,6 +3,7 @@ package com.kcserver.service.finanz;
 import com.kcserver.dto.finanzen.FinanzSummaryDTO;
 import com.kcserver.enumtype.FinanzKategorie;
 import com.kcserver.enumtype.FinanzTyp;
+import com.kcserver.exception.ErrorMessages;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -35,7 +36,7 @@ public class FinanzService {
         if (saldo(list).compareTo(BigDecimal.ZERO) != 0) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Finanzierung nicht ausgeglichen"
+                    ErrorMessages.FINANZIERUNG_NOT_BALANCED
             );
         }
     }
@@ -47,10 +48,8 @@ public class FinanzService {
         if (eigenanteil.compareTo(MINDEST_EIGENANTEIL) > 0) {
 
             throw new ResponseStatusException(
-
                     HttpStatus.BAD_REQUEST,
-
-                    "Der Eigenanteil muss mindestens 250 € betragen."
+                   ErrorMessages.EIGENANTEIL_TOO_LOW
             );
         }
     }

@@ -1,4 +1,6 @@
+// src/hooks/useCrudPage.ts
 import { useState } from "react";
+import { getApiErrorMessage } from "../api/utils/apiError";
 
 interface CrudApi<T, C> {
   getAll: () => Promise<T[]>;
@@ -7,42 +9,15 @@ interface CrudApi<T, C> {
   delete: (id: number) => Promise<void>;
 }
 
-interface CrudPageOptions {
-  loadError?: string;
-  saveError?: string;
-  deleteError?: string;
-}
-
-export function useCrudPage<
-  T extends { id: number },
-  C
->(
-  api: CrudApi<T, C>,
-  options: CrudPageOptions = {},
-) {
-  const {
-    loadError = "Daten konnten nicht geladen werden.",
-    saveError = "Eintrag konnte nicht gespeichert werden.",
-    deleteError = "Eintrag konnte nicht gelöscht werden.",
-  } = options;
-
+export function useCrudPage<T extends { id: number }, C>(api: CrudApi<T, C>) {
   const [data, setData] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [error, setError] =
-    useState<string | null>(null);
-
-  const [selected, setSelected] =
-    useState<T | null>(null);
-
-  const [editing, setEditing] =
-    useState<T | null>(null);
-
-  const [dialogOpen, setDialogOpen] =
-    useState(false);
-
-  const [deleteOpen, setDeleteOpen] =
-    useState(false);
+  const [selected, setSelected] = useState<T | null>(null);
+  const [editing, setEditing] = useState<T | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   /* ========================================= */
 
@@ -53,10 +28,9 @@ export function useCrudPage<
       setData(await api.getAll());
 
       setError(null);
-    } catch (err) {
-      console.error(err);
-
-      setError(loadError);
+    } catch (err: unknown) {
+      console.error("Fehler beim Laden der Daten", err);
+      setError(getApiErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -66,7 +40,6 @@ export function useCrudPage<
 
   const handleAdd = () => {
     setEditing(null);
-
     setDialogOpen(true);
   };
 
@@ -78,7 +51,6 @@ export function useCrudPage<
     if (!entity) return;
 
     setEditing(entity);
-
     setDialogOpen(true);
   };
 
@@ -101,14 +73,12 @@ export function useCrudPage<
       await api.delete(selected.id);
 
       setDeleteOpen(false);
-
       setSelected(null);
 
       await load();
-    } catch (err) {
-      console.error(err);
-
-      setError(deleteError);
+    } catch (err: unknown) {
+      console.error("Fehler beim Löschen", err);
+      setError(getApiErrorMessage(err));
     }
   };
 
@@ -123,14 +93,12 @@ export function useCrudPage<
       }
 
       setDialogOpen(false);
-
       setEditing(null);
 
       await load();
-    } catch (err) {
-      console.error(err);
-
-      setError(saveError);
+    } catch (err: unknown) {
+      console.error("Fehler beim Speichern", err);
+      setError(getApiErrorMessage(err));
     }
   };
 

@@ -126,7 +126,7 @@ public class VereinService {
         if (dto.getKontoinhaberId() != null) {
             Person kontoinhaber = personRepository.findById(dto.getKontoinhaberId())
                     .orElseThrow(() -> new ResponseStatusException(
-                            HttpStatus.NOT_FOUND, "Kontoinhaber not found"
+                            HttpStatus.NOT_FOUND, ErrorMessages.KONTOINHABER_NOT_FOUND
                     ));
             verein.setKontoinhaber(kontoinhaber);
         }
@@ -142,7 +142,7 @@ public class VereinService {
                     if (!v.getId().equals(excludeId)) {
                         throw new ResponseStatusException(
                                 HttpStatus.CONFLICT,
-                                "Verein mit Abkürzung und Name existiert bereits"
+                                ErrorMessages.VEREIN_ALREADY_EXISTS
                         );
                     }
                 });
@@ -177,7 +177,7 @@ public class VereinService {
         ) {
             Person neuerInhaber = personRepository.findById(dto.getKontoinhaberId())
                     .orElseThrow(() -> new ResponseStatusException(
-                            HttpStatus.NOT_FOUND, "Kontoinhaber not found"
+                            HttpStatus.NOT_FOUND, ErrorMessages.KONTOINHABER_NOT_FOUND
                     ));
             verein.setKontoinhaber(neuerInhaber);
         }
@@ -198,25 +198,17 @@ public class VereinService {
         if (mitgliedRepository.existsByVereinId(id)) {
 
             throw new ResponseStatusException(
-
                     HttpStatus.CONFLICT,
-
-                    "Der Verein kann nicht gelöscht werden, da noch Mitglieder zugeordnet sind."
-
+                   ErrorMessages.VEREIN_KANN_NICHT_GELOESCHT_WERDEN_MITGLIEDER
             );
-
         }
 
         if (veranstaltungRepository.existsByVereinId(id)) {
 
             throw new ResponseStatusException(
-
                     HttpStatus.CONFLICT,
-
-                    "Der Verein kann nicht gelöscht werden, da er noch als Veranstalter verwendet wird."
-
+                    ErrorMessages.VEREIN_KANN_NICHT_GELOESCHT_WERDEN_VERANSTALTER
             );
-
         }
 
         vereinRepository.delete(verein);

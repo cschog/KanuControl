@@ -109,7 +109,7 @@ public class AbrechnungService {
         if (abrechnung.getStatus() == AbrechnungsStatus.ABGESCHLOSSEN) {
             throw new ResponseStatusException(
                     CONFLICT,
-                    "Abrechnung ist bereits abgeschlossen"
+                   ErrorMessages.ABRECHNUNG_ALREADY_COMPLETED
             );
         }
 
@@ -133,7 +133,7 @@ public class AbrechnungService {
         if (saldo.compareTo(BigDecimal.ZERO) != 0) {
             throw new ResponseStatusException(
                     CONFLICT,
-                    "Abrechnung ist nicht ausgeglichen"
+                    ErrorMessages.ABRECHNUNG_NOT_BALANCED
             );
         }
 
@@ -208,7 +208,7 @@ public class AbrechnungService {
                 .findByVeranstaltungId(veranstaltungId)
                 .orElseThrow(() -> new ResponseStatusException(
                         NOT_FOUND,
-                        "Abrechnung nicht gefunden"
+                        ErrorMessages.ABRECHNUNG_NOT_FOUND
                 ));
     }
 }
