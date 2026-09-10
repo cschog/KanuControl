@@ -1,9 +1,15 @@
 // src/api/services/zahlungsnachweisApi.ts
 
 import apiClient from "@/api/client/apiClient";
-import { FinanzGruppeZahlungDTO } from "@/api/types/beitraege";
+import {
+  FinanzGruppeZahlungDTO,
+  UeberzahlungTeilnehmerkontoPruefungDTO,
+} from "@/api/types/beitraege";
 import { DokumentDTO } from "@/api/types/dokument";
 import { ReferenzObjekt } from "@/api/enums/ReferenzObjekt";
+
+import { OffeneUeberzahlungDTO } from "@/api/types/beitraege";
+import { RueckzahlungTeilnehmerbeitragCreate } from "@/api/types/abrechnung";
 
 export async function findAll(
   veranstaltungId: number,
@@ -93,4 +99,36 @@ export async function updateReferenzObjekt(
   );
 
   return response.data;
+}
+
+export async function pruefeUeberzahlungTeilnehmerkonto(
+  veranstaltungId: number,
+  zahlungsnachweisId: number,
+): Promise<UeberzahlungTeilnehmerkontoPruefungDTO> {
+  const { data } = await apiClient.get<UeberzahlungTeilnehmerkontoPruefungDTO>(
+    `/veranstaltungen/${veranstaltungId}/zahlungsnachweise/${zahlungsnachweisId}/ueberzahlung-teilnehmerkonto-pruefung`,
+  );
+
+  return data;
+}
+
+
+export async function getOffeneUeberzahlungen(
+  veranstaltungId: number,
+): Promise<OffeneUeberzahlungDTO[]> {
+  const { data } = await apiClient.get<OffeneUeberzahlungDTO[]>(
+    `/veranstaltungen/${veranstaltungId}/zahlungsnachweise/offene-ueberzahlungen`,
+  );
+
+  return data;
+}
+
+export async function rueckzahlungTeilnehmerbeitrag(
+  veranstaltungId: number,
+  payload: RueckzahlungTeilnehmerbeitragCreate,
+): Promise<void> {
+  await apiClient.post(
+    `/veranstaltungen/${veranstaltungId}/zahlungsnachweise/rueckzahlung`,
+    payload,
+  );
 }

@@ -308,6 +308,7 @@ public class PDFZahlungsnachweiseService {
              *
              * Noch ohne Footer.
              */
+
             byte[] belegPdf =
                     composer.composeWithoutFooter(
                             documents,

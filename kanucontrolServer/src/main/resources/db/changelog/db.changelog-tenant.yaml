@@ -157,3 +157,7 @@ databaseChangeLog:
       file: db/changelog/changes/20260816-03-create-dokument.xml
   - include:
       file: db/changelog/changes/20260816-04-remove-old-dokument-tables.xml
+  - include:
+      file: db/changelog/changes/2026-09-07-add-urspruenglicher-zahlungsnachweis-to-abrechnung-buchung.xml
+  - include:
+      file: db/changelog/changes/20260909-01-add-ueberzahlungs-finanz-gruppe.xml

@@ -1,6 +1,7 @@
 package com.kcserver.repository.abrechnung;
 
 import com.kcserver.dto.zahlungsnachweis.FinanzGruppeZahlungDTO;
+import com.kcserver.dto.zahlungsnachweis.OffeneUeberzahlungDTO;
 import com.kcserver.dto.zahlungsnachweis.ZahlungsnachweisListDTO;
 import com.kcserver.entity.Zahlungsnachweis;
 import com.kcserver.enumtype.Zahlungsweg;
@@ -156,4 +157,100 @@ public interface ZahlungsnachweisRepository
     BigDecimal sumBetragByVeranstaltung(
             @Param("veranstaltungId") Long veranstaltungId
     );
+
+    @Query("""
+    select new com.kcserver.dto.zahlungsnachweis.OffeneUeberzahlungDTO(
+        z.id,
+        z.datum,
+        z.betrag,
+
+        coalesce(
+            (
+                select sum(p.betrag)
+                from ZahlungsPosition p
+                where p.zahlungsnachweis.id = z.id
+            ),
+            0
+        ),
+
+        coalesce(
+            (
+                select sum(-b.betrag)
+                from AbrechnungBuchung b
+                where b.urspruenglicherZahlungsnachweis.id = z.id
+                  and b.kategorie =
+                      com.kcserver.enumtype.FinanzKategorie.TEILNEHMERBEITRAG
+                  and b.betrag < 0
+            ),
+            0
+        ),
+
+        (
+            z.betrag
+            - coalesce(
+                (
+                    select sum(p.betrag)
+                    from ZahlungsPosition p
+                    where p.zahlungsnachweis.id = z.id
+                ),
+                0
+            )
+            - coalesce(
+                (
+                    select sum(-b.betrag)
+                    from AbrechnungBuchung b
+                    where b.urspruenglicherZahlungsnachweis.id = z.id
+                      and b.kategorie =
+                          com.kcserver.enumtype.FinanzKategorie.TEILNEHMERBEITRAG
+                      and b.betrag < 0
+                ),
+                0
+            )
+        ),
+
+        z.bemerkung,
+
+        ueberzahlungsFinanzGruppe.id,
+        ueberzahlungsFinanzGruppe.kuerzel
+    )
+    from Zahlungsnachweis z
+    left join z.ueberzahlungsFinanzGruppe ueberzahlungsFinanzGruppe
+    where z.veranstaltung.id = :veranstaltungId
+      and (
+            z.betrag
+            - coalesce(
+                (
+                    select sum(p.betrag)
+                    from ZahlungsPosition p
+                    where p.zahlungsnachweis.id = z.id
+                ),
+                0
+            )
+            - coalesce(
+                (
+                    select sum(-b.betrag)
+                    from AbrechnungBuchung b
+                    where b.urspruenglicherZahlungsnachweis.id = z.id
+                      and b.kategorie =
+                          com.kcserver.enumtype.FinanzKategorie.TEILNEHMERBEITRAG
+                      and b.betrag < 0
+                ),
+                0
+            )
+        ) > 0
+    order by z.datum desc, z.id desc
+""")
+    List<OffeneUeberzahlungDTO> findOffeneUeberzahlungen(
+            @Param("veranstaltungId") Long veranstaltungId
+    );
+
+    @Query("""
+        select coalesce(sum(p.betrag), 0)
+        from ZahlungsPosition p
+        where p.zahlungsnachweis.veranstaltung.id = :veranstaltungId
+        """)
+    BigDecimal sumZugeordneteTeilnehmerbeitraege(
+            @Param("veranstaltungId") Long veranstaltungId
+    );
+
 }

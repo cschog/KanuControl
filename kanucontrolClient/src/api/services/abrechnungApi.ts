@@ -10,6 +10,7 @@ import {
   AbrechnungBeleg,
 } from "@/api/types/abrechnung";
 
+
 export async function getAbrechnung(veranstaltungId: number): Promise<AbrechnungDetail> {
   const { data } = await apiClient.get<AbrechnungDetail>(
     `/veranstaltungen/${veranstaltungId}/abrechnung`,

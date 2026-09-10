@@ -1,3 +1,4 @@
+// src/api/types/beitraege.ts
 import { DokumentDTO } from "@/api/types/dokument";
 
 export type TeilnehmerRolle = "L" | "M" | null;
@@ -90,4 +91,31 @@ export interface FinanzGruppeZahlungDTO {
   zahlungsweg?: Zahlungsweg | null;
   bemerkung?: string | null;
   anzahlDokumente: number;
+}
+
+export interface OffeneUeberzahlungDTO {
+  zahlungsnachweisId: number;
+  datum: string;
+  urspruenglicherBetrag: number;
+  zugeordnet: number;
+  bereitsZurueckgezahlt: number;
+  offeneUeberzahlung: number;
+  bemerkung?: string;
+
+  finanzGruppeId: number | null;
+  finanzGruppeKuerzel?: string;
+}
+
+export interface TeilnehmerOhneKontoDTO {
+  teilnehmerId: number;
+  vorname: string;
+  name: string;
+}
+
+export interface UeberzahlungTeilnehmerkontoPruefungDTO {
+  ueberzahlung: boolean;
+  ueberzahlungsbetrag: number;
+  teilnehmerOhneKonto: TeilnehmerOhneKontoDTO[];
+  gemeinsameFinanzGruppe: boolean;
+  finanzGruppeKuerzel?: string | null;
 }

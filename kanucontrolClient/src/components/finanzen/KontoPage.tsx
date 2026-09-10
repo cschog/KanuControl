@@ -24,13 +24,13 @@ import {
   getFinanzgruppen,
   createFinanzgruppe,
   assignTeilnehmerBulk,
+  removeTeilnehmerFromFinanzgruppe,
   deleteFinanzGruppe,
   FinanzGruppe,
 } from "@/api/services/finanzgruppenApi";
 
 import {
   searchTeilnehmer,
-  removeTeilnehmerFromGruppe,
   getTeilnehmerCount,
 } from "@/api/services/teilnehmerApi";
 import BackFooter from "@/components/common/BackFooter";
@@ -190,7 +190,11 @@ export default function KontoPage({ veranstaltungId }: Props) {
   async function confirmRemove() {
     if (!removeTarget) return;
 
-    await removeTeilnehmerFromGruppe(veranstaltungId, removeTarget.gruppeId, removeTarget.personId);
+    await removeTeilnehmerFromFinanzgruppe(
+      veranstaltungId,
+      removeTarget.gruppeId,
+      removeTarget.personId,
+    );
 
     setConfirmOpen(false);
     setRemoveTarget(null);

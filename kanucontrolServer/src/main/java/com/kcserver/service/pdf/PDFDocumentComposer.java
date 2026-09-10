@@ -172,11 +172,11 @@ public class PDFDocumentComposer {
                 matrix =
                         new Matrix(
                                 0,
-                                scale,
                                 -scale,
+                                scale,
                                 0,
-                                x + outputWidth,
-                                y
+                                x,
+                                y + outputHeight
                         );
 
             } else {
@@ -238,11 +238,18 @@ public class PDFDocumentComposer {
          * =========================================================
          */
 
+        boolean rotate =
+                placement.rotation() == 90;
+
         float displayWidth =
-                placement.width();
+                rotate
+                        ? placement.height()
+                        : placement.width();
 
         float displayHeight =
-                placement.height();
+                rotate
+                        ? placement.width()
+                        : placement.height();
 
         int targetWidth =
                 Math.max(
@@ -282,7 +289,7 @@ public class PDFDocumentComposer {
         /*
          * Seitenverhältnis des Originalbildes erhalten.
          */
-        double scale =
+        double imageScale =
                 Math.min(
                         (double) targetWidth
                                 / original.getWidth(),
@@ -296,7 +303,7 @@ public class PDFDocumentComposer {
                         1,
                         (int) Math.round(
                                 original.getWidth()
-                                        * scale
+                                        * imageScale
                         )
                 );
 
@@ -305,7 +312,7 @@ public class PDFDocumentComposer {
                         1,
                         (int) Math.round(
                                 original.getHeight()
-                                        * scale
+                                        * imageScale
                         )
                 );
 
@@ -369,13 +376,48 @@ public class PDFDocumentComposer {
                 );
 
         /*
-         * Originalbild möglichst schnell freigeben.
+         * =========================================================
+         * Tatsächliche Ausgabegröße unter Beibehaltung
+         * des Seitenverhältnisses bestimmen.
+         * =========================================================
          */
-        if (image != original) {
-            image.flush();
-        }
 
-        original.flush();
+        float sourceWidth =
+                original.getWidth();
+
+        float sourceHeight =
+                original.getHeight();
+
+        float effectiveWidth =
+                rotate
+                        ? sourceHeight
+                        : sourceWidth;
+
+        float effectiveHeight =
+                rotate
+                        ? sourceWidth
+                        : sourceHeight;
+
+        float scale =
+                Math.min(
+                        placement.width() / effectiveWidth,
+                        placement.height() / effectiveHeight
+                );
+
+        float outputWidth =
+                effectiveWidth * scale;
+
+        float outputHeight =
+                effectiveHeight * scale;
+
+        float x =
+                placement.x()
+                        + (placement.width() - outputWidth) / 2f;
+
+        float y =
+                placement.y()
+                        + (placement.height() - outputHeight) / 2f;
+
 
         /*
          * =========================================================
@@ -396,29 +438,28 @@ public class PDFDocumentComposer {
 
             Matrix matrix;
 
-            if (placement.rotation() == 90) {
+            if (rotate) {
 
                 matrix =
                         new Matrix(
                                 0,
-                                -placement.height(),
-                                placement.width(),
+                                -scale,
+                                scale,
                                 0,
-                                placement.x(),
-                                placement.y()
-                                        + placement.height()
+                                x,
+                                y + outputHeight
                         );
 
             } else {
 
                 matrix =
                         new Matrix(
-                                placement.width(),
+                                scale,
                                 0,
                                 0,
-                                placement.height(),
-                                placement.x(),
-                                placement.y()
+                                scale,
+                                x,
+                                y
                         );
             }
 
@@ -428,10 +469,18 @@ public class PDFDocumentComposer {
                     pdfImage,
                     0,
                     0,
-                    1,
-                    1
+                    sourceWidth,
+                    sourceHeight
             );
         }
+        /*
+         * Originalbild möglichst schnell freigeben.
+         */
+        if (image != original) {
+            image.flush();
+        }
+
+        original.flush();
     }
 
     public byte[] composeWithoutFooter(

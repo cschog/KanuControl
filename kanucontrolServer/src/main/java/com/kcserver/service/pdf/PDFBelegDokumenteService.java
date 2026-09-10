@@ -3,6 +3,7 @@ package com.kcserver.service.pdf;
 import com.kcserver.entity.AbrechnungBeleg;
 import com.kcserver.entity.AbrechnungBuchung;
 import com.kcserver.entity.Dokument;
+import com.kcserver.enumtype.BuchungsHerkunft;
 import com.kcserver.enumtype.PdfDokumentTyp;
 import com.kcserver.exception.ErrorMessages;
 import com.kcserver.repository.abrechnung.AbrechnungBelegRepository;
@@ -85,6 +86,7 @@ public class PDFBelegDokumenteService {
                                 veranstaltungId
                         )
                         .stream()
+                        .filter(this::hasManualBooking)
                         .toList();
 
         if (belege.isEmpty()) {
@@ -240,6 +242,19 @@ public class PDFBelegDokumenteService {
                     e
             );
         }
+    }
+
+    private boolean hasManualBooking(
+            AbrechnungBeleg beleg
+    ) {
+
+        return beleg.getPositionen()
+                .stream()
+                .anyMatch(
+                        buchung ->
+                                buchung.getHerkunft()
+                                        == BuchungsHerkunft.MANUELL
+                );
     }
 
 

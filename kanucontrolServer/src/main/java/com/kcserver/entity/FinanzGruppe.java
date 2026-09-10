@@ -49,11 +49,25 @@ public class FinanzGruppe {
        TEILNEHMER
        ========================================================= */
 
-    @OneToMany(
-            mappedBy = "finanzGruppe",
-            cascade = CascadeType.ALL,
-            orphanRemoval = false
-    )
+    @OneToMany(mappedBy = "finanzGruppe")
     @Builder.Default
     private List<Teilnehmer> teilnehmer = new ArrayList<>();
+
+    public void addTeilnehmer(Teilnehmer teilnehmer) {
+
+        if (!this.teilnehmer.contains(teilnehmer)) {
+            this.teilnehmer.add(teilnehmer);
+        }
+
+        teilnehmer.setFinanzGruppe(this);
+    }
+
+    public void removeTeilnehmer(Teilnehmer teilnehmer) {
+
+        this.teilnehmer.remove(teilnehmer);
+
+        if (teilnehmer.getFinanzGruppe() == this) {
+            teilnehmer.setFinanzGruppe(null);
+        }
+    }
 }

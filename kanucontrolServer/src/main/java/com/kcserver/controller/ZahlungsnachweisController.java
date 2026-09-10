@@ -1,9 +1,11 @@
 package com.kcserver.controller;
 
 import com.kcserver.api.response.ApiResponse;
+import com.kcserver.dto.abrechnung.AbrechnungBuchungDTO;
 import com.kcserver.dto.zahlungsnachweis.*;
 import com.kcserver.enumtype.ReferenzObjekt;
-import com.kcserver.service.abrechnung.ZahlungsnachweisService;
+import com.kcserver.service.abrechnung.AbrechnungBelegService;
+import com.kcserver.service.zahlungsnachweis.ZahlungsnachweisService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -25,6 +27,7 @@ public class ZahlungsnachweisController {
 
     private final ZahlungsnachweisService zahlungsnachweisService;
     private final DokumentService dokumentService;
+    private final AbrechnungBelegService belegService;
 
     /* =========================================================
        ZAHLUNGSNACHWEISE
@@ -200,6 +203,41 @@ public class ZahlungsnachweisController {
                 zahlungsnachweisService.findByFinanzGruppe(
                         veranstaltungId,
                         finanzGruppeId
+                )
+        );
+    }
+
+ /* =========================================================
+   OFFENE ÜBERZAHLUNGEN
+   ========================================================= */
+
+    @GetMapping("/offene-ueberzahlungen")
+    public ApiResponse<List<OffeneUeberzahlungDTO>> getOffeneUeberzahlungen(
+            @PathVariable Long veranstaltungId
+    ) {
+        return ApiResponse.of(
+                zahlungsnachweisService.findOffeneUeberzahlungen(
+                        veranstaltungId
+                )
+        );
+    }
+
+/* =========================================================
+   RÜCKZAHLUNG ÜBERZAHLUNG
+   ========================================================= */
+
+    @PostMapping("/rueckzahlung")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApiResponse<AbrechnungBuchungDTO> rueckzahlung(
+            @PathVariable Long veranstaltungId,
+            @RequestBody @Valid RueckzahlungTeilnehmerbeitragDTO dto
+    ) {
+        return ApiResponse.of(
+                belegService.rueckzahlungTeilnehmerbeitrag(
+                        veranstaltungId,
+                        dto.getZahlungsnachweisId(),
+                        dto.getBetrag(),
+                        dto.getBeschreibung()
                 )
         );
     }

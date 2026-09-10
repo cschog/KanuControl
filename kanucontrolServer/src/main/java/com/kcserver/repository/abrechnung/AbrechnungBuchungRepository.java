@@ -5,9 +5,12 @@ import com.kcserver.entity.AbrechnungBuchung;
 import com.kcserver.enumtype.BuchungsHerkunft;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface AbrechnungBuchungRepository
         extends JpaRepository<AbrechnungBuchung, Long> {
@@ -94,4 +97,40 @@ and b.kategorie in (
     GROUP BY b.beleg.finanzGruppe.id
 """)
     List<Object[]> sumFinanzenByVeranstaltungGrouped(Long veranstaltungId);
+
+    @Query("""
+    select coalesce(sum(-b.betrag), 0)
+    from AbrechnungBuchung b
+    where b.urspruenglicherZahlungsnachweis.id = :zahlungsnachweisId
+      and b.kategorie =
+          com.kcserver.enumtype.FinanzKategorie.TEILNEHMERBEITRAG
+      and b.betrag < 0
+""")
+    BigDecimal sumZurueckgezahltByUrspruenglichemZahlungsnachweisId(
+            @Param("zahlungsnachweisId")
+            Long zahlungsnachweisId
+    );
+
+    @Query("""
+    SELECT
+        b.urspruenglicherZahlungsnachweis.id
+            AS zahlungsnachweisId,
+
+        COALESCE(SUM(-b.betrag), 0)
+            AS zurueckgezahlt
+
+    FROM AbrechnungBuchung b
+
+    WHERE b.beleg.abrechnung.veranstaltung.id = :veranstaltungId
+      AND b.urspruenglicherZahlungsnachweis IS NOT NULL
+      AND b.kategorie =
+          com.kcserver.enumtype.FinanzKategorie.TEILNEHMERBEITRAG
+      AND b.betrag < 0
+
+    GROUP BY b.urspruenglicherZahlungsnachweis.id
+""")
+    List<ZahlungsnachweisRueckzahlungSumme>
+    sumZurueckgezahltByVeranstaltungGrouped(
+            @Param("veranstaltungId") Long veranstaltungId
+    );
 }

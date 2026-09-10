@@ -17,6 +17,15 @@ import Money from "@/components/common/Money";
 import { ErrorDialog } from "@/components/common/ErrorDialog";
 import { getApiErrorMessage } from "@/api/utils/apiError";
 
+import RueckzahlungTeilnehmerbeitragDialog from "@/components/finanzen/beitraege/RueckzahlungTeilnehmerbeitragDialog";
+
+import {
+  getOffeneUeberzahlungen,
+  rueckzahlungTeilnehmerbeitrag,
+} from "@/api/services/zahlungsnachweisApi";
+
+import { OffeneUeberzahlungDTO } from "@/api/types/beitraege";
+
 import BackFooter from "@/components/common/BackFooter";
 
 import { zahlungsnachweiseColumns } from "@/components/finanzen/beitraege/zahlungsnachweiseColumns";
@@ -56,6 +65,14 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
     useState<ZahlungsnachweisDetailDTO | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteZahlungsnachweisId, setDeleteZahlungsnachweisId] = useState<number | null>(null);
+
+  const [offeneUeberzahlungen, setOffeneUeberzahlungen] = useState<OffeneUeberzahlungDTO[]>([]);
+
+  const [rueckzahlungDialogOpen, setRueckzahlungDialogOpen] = useState(false);
+
+  const [selectedUeberzahlung, setSelectedUeberzahlung] = useState<OffeneUeberzahlungDTO | null>(
+    null,
+  );
 
   /* =========================================================
      ZAHLUNGSSTATUS
@@ -125,25 +142,31 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
      LOAD
   ========================================================= */
 
-  const load = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
+const load = useCallback(async () => {
+  try {
+    setLoading(true);
+    setError(null);
 
-      const response = await apiClient.get<TeilnehmerBeitraegeResponseDTO>(
+    const [beitraegeResponse, ueberzahlungen] = await Promise.all([
+      apiClient.get<TeilnehmerBeitraegeResponseDTO>(
         `/veranstaltungen/${veranstaltungId}/beitraege`,
-      );
+      ),
 
-      setSummary(response.data.summary);
-      setZahlungsnachweise(response.data.zahlungsnachweise);
-      setData(response.data.teilnehmer);
-    } catch (err: unknown) {
-      console.error(err);
-      setError(getApiErrorMessage(err));
-    } finally {
-      setLoading(false);
-    }
-  }, [veranstaltungId]);
+      getOffeneUeberzahlungen(veranstaltungId),
+    ]);
+
+    setSummary(beitraegeResponse.data.summary);
+    setZahlungsnachweise(beitraegeResponse.data.zahlungsnachweise);
+    setData(beitraegeResponse.data.teilnehmer);
+
+    setOffeneUeberzahlungen(ueberzahlungen);
+  } catch (err: unknown) {
+    console.error(err);
+    setError(getApiErrorMessage(err));
+  } finally {
+    setLoading(false);
+  }
+}, [veranstaltungId]);
 
   useEffect(() => {
     load();
@@ -339,6 +362,88 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
       </Card>
 
       {/* =====================================================
+    OFFENE ÜBERZAHLUNGEN
+===================================================== */}
+
+      {offeneUeberzahlungen.length > 0 && (
+        <Card>
+          <CardContent>
+            <Stack spacing={2}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <Typography variant="h6">Offene Überzahlungen</Typography>
+
+                <Chip label={`${offeneUeberzahlungen.length}`} color="warning" />
+              </Box>
+
+              <Alert severity="warning">
+                Für diese Zahlungsnachweise wurden Beträge bezahlt, die noch keinem Teilnehmer
+                zugeordnet und noch nicht zurückgezahlt wurden.
+              </Alert>
+
+              <Stack spacing={1}>
+                {offeneUeberzahlungen.map((ueberzahlung) => (
+                  <Card key={ueberzahlung.zahlungsnachweisId} variant="outlined">
+                    <CardContent>
+                      <Stack
+                        direction={{ xs: "column", sm: "row" }}
+                        justifyContent="space-between"
+                        alignItems={{ xs: "stretch", sm: "center" }}
+                        spacing={2}
+                      >
+                        <Box>
+                          <Typography fontWeight={700}>Zahlung vom {ueberzahlung.datum}</Typography>
+
+                          {ueberzahlung.bemerkung && (
+                            <Typography variant="body2" color="text.secondary">
+                              {ueberzahlung.bemerkung}
+                            </Typography>
+                          )}
+
+                          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                            Ursprünglich: {ueberzahlung.urspruenglicherBetrag.toFixed(2)} €{" • "}
+                            Zugeordnet: {ueberzahlung.zugeordnet.toFixed(2)} €{" • "}
+                            Bereits zurückgezahlt: {ueberzahlung.bereitsZurueckgezahlt.toFixed(2)} €
+                          </Typography>
+                        </Box>
+
+                        <Stack
+                          direction={{ xs: "row", sm: "column" }}
+                          spacing={1}
+                          alignItems={{ xs: "center", sm: "flex-end" }}
+                        >
+                          <Typography fontWeight={700} color="warning.main">
+                            <Money value={ueberzahlung.offeneUeberzahlung} />
+                          </Typography>
+
+                          <Button
+                            variant="contained"
+                            color="warning"
+                            onClick={() => {
+                              setSelectedUeberzahlung(ueberzahlung);
+
+                              setRueckzahlungDialogOpen(true);
+                            }}
+                          >
+                            Rückzahlung
+                          </Button>
+                        </Stack>
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                ))}
+              </Stack>
+            </Stack>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* =====================================================
           TEILNEHMERBEITRÄGE
       ===================================================== */}
 
@@ -512,6 +617,29 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
             await load();
           } catch (err: unknown) {
             console.error(err);
+            setError(getApiErrorMessage(err));
+          }
+        }}
+      />
+
+      <RueckzahlungTeilnehmerbeitragDialog
+        open={rueckzahlungDialogOpen}
+        ueberzahlung={selectedUeberzahlung}
+        onClose={() => {
+          setRueckzahlungDialogOpen(false);
+          setSelectedUeberzahlung(null);
+        }}
+        onSave={async (data) => {
+          try {
+            await rueckzahlungTeilnehmerbeitrag(veranstaltungId, data);
+
+            setRueckzahlungDialogOpen(false);
+            setSelectedUeberzahlung(null);
+
+            await load();
+          } catch (err: unknown) {
+            console.error(err);
+
             setError(getApiErrorMessage(err));
           }
         }}

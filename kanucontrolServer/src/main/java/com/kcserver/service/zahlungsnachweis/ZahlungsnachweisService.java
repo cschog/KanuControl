@@ -1,4 +1,4 @@
-package com.kcserver.service.abrechnung;
+package com.kcserver.service.zahlungsnachweis;
 
 import com.kcserver.dto.zahlungsnachweis.*;
 import com.kcserver.entity.*;
@@ -10,6 +10,7 @@ import com.kcserver.repository.TeilnehmerRepository;
 import com.kcserver.repository.VeranstaltungRepository;
 import com.kcserver.repository.abrechnung.ZahlungsnachweisRepository;
 import com.kcserver.service.beitrag.TeilnehmerBeitragService;
+import com.kcserver.service.finanz.FinanzGruppeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -27,18 +28,19 @@ import java.util.List;
 @Transactional
 public class ZahlungsnachweisService {
 
-    private final ZahlungsnachweisRepository repository;
+    private final ZahlungsnachweisRepository zahlungsnachweisRepository;
     private final VeranstaltungRepository veranstaltungRepository;
     private final TeilnehmerRepository teilnehmerRepository;
     private final ZahlungsnachweisMapper mapper;
     private final TeilnehmerBeitragService teilnehmerBeitragService;
     private final FinanzGruppeRepository finanzGruppeRepository;
+    private final FinanzGruppeService finanzGruppeService;
 
     @Transactional(readOnly = true)
     public List<ZahlungsnachweisListDTO> findByVeranstaltung(
             Long veranstaltungId
     ) {
-        return repository.findListByVeranstaltungId(veranstaltungId);
+        return zahlungsnachweisRepository.findListByVeranstaltungId(veranstaltungId);
     }
 
     @Transactional(readOnly = true)
@@ -111,6 +113,29 @@ public class ZahlungsnachweisService {
                         dto.getPositionen()
                 );
 
+        BigDecimal gesamtOffen =
+                getGesamtOffenerBeitrag(
+                        veranstaltung,
+                        teilnehmer,
+                        null
+                );
+
+        BigDecimal ueberzahlung =
+                dto.getBetrag()
+                        .subtract(gesamtOffen)
+                        .max(BigDecimal.ZERO);
+
+        FinanzGruppe ueberzahlungsFinanzGruppe =
+                ermittleUeberzahlungsFinanzGruppe(
+                        veranstaltungId,
+                        teilnehmer,
+                        ueberzahlung
+                );
+
+        nachweis.setUeberzahlungsFinanzGruppe(
+                ueberzahlungsFinanzGruppe
+        );
+
         verteileBetrag(
                 nachweis,
                 veranstaltung,
@@ -118,9 +143,19 @@ public class ZahlungsnachweisService {
                 dto.getBetrag()
         );
 
-        nachweis = repository.save(nachweis);
+        nachweis = zahlungsnachweisRepository.save(nachweis);
 
         return mapper.toDetailDTO(nachweis);
+    }
+
+    @Transactional(readOnly = true)
+    public List<OffeneUeberzahlungDTO> findOffeneUeberzahlungen(
+            Long veranstaltungId
+    ) {
+        return zahlungsnachweisRepository
+                .findOffeneUeberzahlungen(
+                        veranstaltungId
+                );
     }
 
     @Transactional
@@ -144,6 +179,22 @@ public class ZahlungsnachweisService {
                     ErrorMessages.ZAHLUNGSBETRAG_MUST_BE_POSITIVE
             );
         }
+
+        System.out.println("=== UPDATE ZAHLUNGSNACHWEIS ===");
+
+        System.out.println(
+                "DTO Teilnehmer: " +
+                        dto.getPositionen().stream()
+                                .map(ZahlungsPositionDTO::getTeilnehmerId)
+                                .toList()
+        );
+
+        System.out.println(
+                "Vorher Positionen: " +
+                        nachweis.getPositionen().stream()
+                                .map(p -> p.getTeilnehmer().getId())
+                                .toList()
+        );
 
 
         Veranstaltung veranstaltung =
@@ -170,11 +221,47 @@ public class ZahlungsnachweisService {
 
         nachweis.clearPositionen();
 
+        /*
+         * Alte Zuordnungen wirklich entfernen,
+         * bevor die neuen Zahlungspositionen berechnet werden.
+         */
+        zahlungsnachweisRepository.saveAndFlush(nachweis);
+
+        System.out.println(
+                "Nach clearPositionen: " +
+                        nachweis.getPositionen().stream()
+                                .map(p -> p.getTeilnehmer().getId())
+                                .toList()
+        );
+
         List<Teilnehmer> teilnehmer =
                 ladeTeilnehmer(
                         veranstaltungId,
                         dto.getPositionen()
                 );
+
+        BigDecimal gesamtOffen =
+                getGesamtOffenerBeitrag(
+                        veranstaltung,
+                        teilnehmer,
+                        zahlungsnachweisId
+                );
+
+        BigDecimal ueberzahlung =
+                dto.getBetrag()
+                        .subtract(gesamtOffen)
+                        .max(BigDecimal.ZERO);
+
+        FinanzGruppe ueberzahlungsFinanzGruppe =
+                ermittleUeberzahlungsFinanzGruppe(
+                        veranstaltungId,
+                        teilnehmer,
+                        ueberzahlung
+                );
+
+        nachweis.setUeberzahlungsFinanzGruppe(
+                ueberzahlungsFinanzGruppe
+        );
 
         verteileBetrag(
                 nachweis,
@@ -183,7 +270,18 @@ public class ZahlungsnachweisService {
                 dto.getBetrag()
         );
 
-        nachweis = repository.save(nachweis);
+        System.out.println(
+                "Neue Positionen: " +
+                        nachweis.getPositionen().stream()
+                                .map(p ->
+                                        p.getTeilnehmer().getId()
+                                                + " = "
+                                                + p.getBetrag()
+                                )
+                                .toList()
+        );
+
+        nachweis = zahlungsnachweisRepository.save(nachweis);
 
         return mapper.toDetailDTO(nachweis);
     }
@@ -192,12 +290,123 @@ public class ZahlungsnachweisService {
             Long veranstaltungId,
             Long zahlungsnachweisId
     ) {
-        repository.delete(
+        zahlungsnachweisRepository.delete(
                 getEntity(
                         veranstaltungId,
                         zahlungsnachweisId
                 )
         );
+    }
+
+    @Transactional(readOnly = true)
+    public UeberzahlungTeilnehmerkontoPruefungDTO
+    pruefeUeberzahlungTeilnehmerkonto(
+            Long veranstaltungId,
+            Long zahlungsnachweisId
+    ) {
+
+        Zahlungsnachweis nachweis =
+                getEntity(
+                        veranstaltungId,
+                        zahlungsnachweisId
+                );
+
+        BigDecimal zugeordnet =
+                nachweis.getPositionen()
+                        .stream()
+                        .map(ZahlungsPosition::getBetrag)
+                        .reduce(
+                                BigDecimal.ZERO,
+                                BigDecimal::add
+                        );
+
+        BigDecimal ueberzahlung =
+                nachweis.getBetrag()
+                        .subtract(zugeordnet)
+                        .max(BigDecimal.ZERO);
+
+        if (ueberzahlung.compareTo(BigDecimal.ZERO) <= 0) {
+
+            return new UeberzahlungTeilnehmerkontoPruefungDTO(
+                    false,
+                    BigDecimal.ZERO,
+                    List.of(),
+                    false,
+                    null
+            );
+        }
+
+        List<Teilnehmer> betroffeneTeilnehmer =
+                nachweis.getPositionen()
+                        .stream()
+                        .map(ZahlungsPosition::getTeilnehmer)
+                        .distinct()
+                        .toList();
+
+        List<TeilnehmerOhneKontoDTO> teilnehmerOhneKonto =
+                betroffeneTeilnehmer
+                        .stream()
+                        .filter(t -> t.getFinanzGruppe() == null)
+                        .map(t ->
+                                new TeilnehmerOhneKontoDTO(
+                                        t.getId(),
+                                        t.getPerson().getVorname(),
+                                        t.getPerson().getName()
+                                )
+                        )
+                        .toList();
+
+        FinanzGruppe gemeinsameFinanzGruppe = null;
+
+        if (teilnehmerOhneKonto.isEmpty()
+                && !betroffeneTeilnehmer.isEmpty()) {
+
+            try {
+                gemeinsameFinanzGruppe =
+                        finanzGruppeService.requireGemeinsameFinanzGruppe(
+                                veranstaltungId,
+                                betroffeneTeilnehmer.stream()
+                                        .map(Teilnehmer::getId)
+                                        .toList()
+                        );
+            } catch (ResponseStatusException ignored) {
+                // Keine gemeinsame Finanzgruppe vorhanden
+            }
+        }
+
+        return new UeberzahlungTeilnehmerkontoPruefungDTO(
+                true,
+                ueberzahlung,
+                teilnehmerOhneKonto,
+                gemeinsameFinanzGruppe != null,
+                gemeinsameFinanzGruppe != null
+                        ? gemeinsameFinanzGruppe.getKuerzel()
+                        : null
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public FinanzGruppe requireUeberzahlungsFinanzGruppe(
+            Long veranstaltungId,
+            Long zahlungsnachweisId
+    ) {
+        Zahlungsnachweis nachweis =
+                getEntity(
+                        veranstaltungId,
+                        zahlungsnachweisId
+                );
+
+        FinanzGruppe finanzGruppe =
+                nachweis.getUeberzahlungsFinanzGruppe();
+
+        if (finanzGruppe == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    ErrorMessages.UEBERZAHLUNG_REQUIRES_FINANZGRUPPE
+            );
+        }
+
+        return finanzGruppe;
     }
 
     private List<Teilnehmer> ladeTeilnehmer(
@@ -258,7 +467,7 @@ public class ZahlungsnachweisService {
                                     );
 
                             BigDecimal bereitsBezahlt =
-                                    repository.sumBetragByTeilnehmerId(
+                                    zahlungsnachweisRepository.sumBetragByTeilnehmerId(
                                             t.getId(),
                                             ausgeschlossenId
                                     );
@@ -337,7 +546,7 @@ public class ZahlungsnachweisService {
             Long zahlungsnachweisId
     ) {
 
-        return repository
+        return zahlungsnachweisRepository
                 .findByIdAndVeranstaltungId(
                         zahlungsnachweisId,
                         veranstaltungId
@@ -403,9 +612,62 @@ public class ZahlungsnachweisService {
             Long veranstaltungId,
             Long finanzGruppeId
     ) {
-        return repository.findZahlungenByFinanzGruppe(
+        return zahlungsnachweisRepository.findZahlungenByFinanzGruppe(
                 veranstaltungId,
                 finanzGruppeId
+        );
+    }
+
+    private BigDecimal getGesamtOffenerBeitrag(
+            Veranstaltung veranstaltung,
+            List<Teilnehmer> teilnehmer,
+            Long ausgeschlossenZahlungsnachweisId
+    ) {
+
+        return teilnehmer.stream()
+                .map(t -> {
+
+                    BigDecimal soll =
+                            teilnehmerBeitragService.getSollBeitrag(
+                                    veranstaltung,
+                                    t
+                            );
+
+                    BigDecimal bereitsBezahlt =
+                            zahlungsnachweisRepository
+                                    .sumBetragByTeilnehmerId(
+                                            t.getId(),
+                                            ausgeschlossenZahlungsnachweisId
+                                    );
+
+                    return soll
+                            .subtract(bereitsBezahlt)
+                            .max(BigDecimal.ZERO);
+
+                })
+                .reduce(
+                        BigDecimal.ZERO,
+                        BigDecimal::add
+                );
+    }
+
+    private FinanzGruppe ermittleUeberzahlungsFinanzGruppe(
+            Long veranstaltungId,
+            List<Teilnehmer> teilnehmer,
+            BigDecimal ueberzahlung
+    ) {
+
+        if (ueberzahlung.compareTo(BigDecimal.ZERO) <= 0) {
+            return null;
+        }
+
+        List<Long> teilnehmerIds = teilnehmer.stream()
+                .map(Teilnehmer::getId)
+                .toList();
+
+        return finanzGruppeService.requireGemeinsameFinanzGruppe(
+                veranstaltungId,
+                teilnehmerIds
         );
     }
 }

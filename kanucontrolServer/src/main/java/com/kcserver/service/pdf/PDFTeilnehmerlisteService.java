@@ -4,7 +4,9 @@ import com.kcserver.dto.person.PersonRefDTO;
 import com.kcserver.dto.teilnehmer.TeilnehmerDetailDTO;
 import com.kcserver.dto.veranstaltung.VeranstaltungDetailDTO;
 import com.kcserver.enumtype.PdfDokumentTyp;
+import com.kcserver.service.AltersService;
 import com.kcserver.util.PdfFilenameUtil;
+import lombok.RequiredArgsConstructor;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -21,8 +23,11 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+@RequiredArgsConstructor
 @Service
 public class PDFTeilnehmerlisteService {
+
+    private final AltersService altersService;
 
     private static final int TN_PER_PAGE = 15;
 
@@ -167,8 +172,14 @@ public class PDFTeilnehmerlisteService {
         if (tn.getRolle() != null)
             set(form, "rolle_" + row, tn.getRolle().getCode());
 
-        set(form, "alter_" + row,
-                calcAgeAtDate(tn.getGeburtsdatum(), v.getBeginnDatum()));
+        set(
+                form,
+                "alter_" + row,
+                calcFoerderrelevantesAlter(
+                        tn.getGeburtsdatum(),
+                        v
+                )
+        );
 
         set(form, "plz_" + row, formatPlz(tn));
 
@@ -180,6 +191,30 @@ public class PDFTeilnehmerlisteService {
     /* =========================================================
        HELPER
        ========================================================= */
+
+    private String calcFoerderrelevantesAlter(
+            LocalDate geburtsdatum,
+            VeranstaltungDetailDTO v
+    ) {
+
+        if (geburtsdatum == null
+                || v == null
+                || v.getTyp() == null) {
+            return "";
+        }
+
+        Integer alter =
+                altersService.berechneMassgeblichesAlter(
+                        geburtsdatum,
+                        v.getBeginnDatum(),
+                        v.getEndeDatum(),
+                        v.getTyp()
+                );
+
+        return alter != null
+                ? String.valueOf(alter)
+                : "";
+    }
 
     private void set(PDAcroForm form,
                      String field,
@@ -208,15 +243,6 @@ public class PDFTeilnehmerlisteService {
     private String formatDate(LocalDate d) {
         if (d == null) return "";
         return d.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-    }
-
-    private String calcAgeAtDate(LocalDate birth,
-                                 LocalDate refDate) {
-
-        if (birth == null || refDate == null) return "";
-        return String.valueOf(
-                java.time.Period.between(birth, refDate).getYears()
-        );
     }
 
     private List<TeilnehmerDetailDTO> sortTeilnehmer(

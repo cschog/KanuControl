@@ -72,3 +72,9 @@ export interface BelegUpdate {
   externeBelegnummer?: string;
   beschreibung?: string;
 }
+
+export interface RueckzahlungTeilnehmerbeitragCreate {
+  zahlungsnachweisId: number;
+  betrag: number;
+  beschreibung?: string;
+}

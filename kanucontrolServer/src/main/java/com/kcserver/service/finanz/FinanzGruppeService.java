@@ -114,18 +114,24 @@ public class FinanzGruppeService {
 
         validateVeranstaltung(gruppe, veranstaltungId);
 
+        checkNotSystem(gruppe);
+
         if (newKuerzel == null || newKuerzel.isBlank()) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     ErrorMessages.KUERZEL_REQUIRED);
         }
 
-        if (repository.existsByVeranstaltungIdAndKuerzel(
-                veranstaltungId, newKuerzel)) {
+        if (!gruppe.getKuerzel().equals(newKuerzel)
+                && repository.existsByVeranstaltungIdAndKuerzel(
+                veranstaltungId,
+                newKuerzel
+        )) {
 
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                   ErrorMessages.KUERZEL_ALREADY_EXISTS);
+                    ErrorMessages.KUERZEL_ALREADY_EXISTS
+            );
         }
 
         // 🔒 NEUE ARCHITEKTUR:
@@ -162,6 +168,8 @@ public class FinanzGruppeService {
                                ErrorMessages.FINANZGRUPPE_NOT_FOUND
                         )
                 );
+
+        checkNotSystem(gruppe);
 
         if (!gruppe.getVeranstaltung().getId().equals(veranstaltungId)) {
             throw new ResponseStatusException(
@@ -252,14 +260,13 @@ public class FinanzGruppeService {
 
         FinanzGruppe gruppe = getGruppe(veranstaltungId, gruppeId);
 
-        // 🔹 1. Alle aktuellen entfernen
-        for (Teilnehmer t : gruppe.getTeilnehmer()) {
-            t.setFinanzGruppe(null);
+        List<Teilnehmer> bisherigeTeilnehmer =
+                teilnehmerRepository.findAllByFinanzGruppe_Id(gruppeId);
+
+        for (Teilnehmer t : bisherigeTeilnehmer) {
+            gruppe.removeTeilnehmer(t);
         }
 
-        gruppe.getTeilnehmer().clear();
-
-        // 🔹 2. Neue setzen
         List<Teilnehmer> neueTeilnehmer =
                 teilnehmerRepository.findAllById(neueIds);
 
@@ -271,7 +278,7 @@ public class FinanzGruppeService {
                 );
             }
 
-            t.setFinanzGruppe(gruppe);
+            gruppe.addTeilnehmer(t);
         }
     }
 
@@ -441,6 +448,54 @@ public class FinanzGruppeService {
 
         // 🔥 WICHTIG
         teilnehmer.setFinanzGruppe(null);
+    }
+
+    @Transactional(readOnly = true)
+    public FinanzGruppe requireGemeinsameFinanzGruppe(
+            Long veranstaltungId,
+            List<Long> teilnehmerIds
+    ) {
+        List<Teilnehmer> teilnehmer =
+                teilnehmerRepository.findAllById(teilnehmerIds);
+
+        if (teilnehmer.size() != teilnehmerIds.size()) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    TEILNEHMER_IN_VERANSTALTUNG_NOT_FOUND
+            );
+        }
+
+        FinanzGruppe gemeinsameGruppe = null;
+
+        for (Teilnehmer t : teilnehmer) {
+
+            if (!t.getVeranstaltung().getId().equals(veranstaltungId)) {
+                throw new BusinessRuleViolationException(
+                        TEILNEHMER_NOT_IN_VERANSTALTUNG
+                );
+            }
+
+            FinanzGruppe gruppe = t.getFinanzGruppe();
+
+            if (gruppe == null) {
+                throw new BusinessRuleViolationException(
+                        UEBERZAHLUNG_REQUIRES_FINANZGRUPPE
+                );
+            }
+
+            if (gemeinsameGruppe == null) {
+                gemeinsameGruppe = gruppe;
+                continue;
+            }
+
+            if (!gemeinsameGruppe.getId().equals(gruppe.getId())) {
+                throw new BusinessRuleViolationException(
+                        UEBERZAHLUNG_REQUIRES_COMMON_FINANZGRUPPE
+                );
+            }
+        }
+
+        return gemeinsameGruppe;
     }
 
     private FinanzGruppe getGruppe(Long veranstaltungId, Long gruppeId) {

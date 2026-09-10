@@ -4,7 +4,6 @@ import com.kcserver.entity.*;
 
 import com.kcserver.enumtype.BuchungsHerkunft;
 import com.kcserver.enumtype.FinanzKategorie;
-import com.kcserver.enumtype.Zahlungsweg;
 import com.kcserver.exception.ErrorMessages;
 import com.kcserver.repository.FinanzGruppeRepository;
 import com.kcserver.repository.abrechnung.AbrechnungRepository;
@@ -145,35 +144,26 @@ public class AbrechnungSynchronisationsService {
                 BuchungsHerkunft.TEILNEHMERBEITRAG
         );
 
-        BigDecimal ueberweisungen =
-                zahlungsnachweisRepository
-                        .sumBetragByVeranstaltungAndZahlungsweg(
-                                abrechnung.getVeranstaltung().getId(),
-                                Zahlungsweg.UEBERWEISUNG
-                        );
-
-        BigDecimal quittungen =
-                zahlungsnachweisRepository
-                        .sumBetragByVeranstaltungAndZahlungsweg(
-                                abrechnung.getVeranstaltung().getId(),
-                                Zahlungsweg.QUITTUNG
-                        );
-
+        /*
+         * Für die Abrechnung zählen alle tatsächlich eingegangenen
+         * Zahlungsnachweise.
+         *
+         * Die ZahlungsPositionen dienen ausschließlich der Zuordnung
+         * zu Teilnehmern und dürfen hier nicht als Grundlage verwendet
+         * werden.
+         */
         BigDecimal betrag =
-                (ueberweisungen == null
-                        ? BigDecimal.ZERO
-                        : ueberweisungen)
-                        .add(
-                                quittungen == null
-                                        ? BigDecimal.ZERO
-                                        : quittungen
+                zahlungsnachweisRepository
+                        .sumBetragByVeranstaltung(
+                                abrechnung.getVeranstaltung().getId()
                         );
 
         if (betrag.compareTo(BigDecimal.ZERO) <= 0) {
             return;
         }
 
-        AbrechnungBuchung buchung = new AbrechnungBuchung();
+        AbrechnungBuchung buchung =
+                new AbrechnungBuchung();
 
         buchung.setKategorie(
                 FinanzKategorie.TEILNEHMERBEITRAG

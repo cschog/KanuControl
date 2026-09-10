@@ -181,7 +181,6 @@ public class PDFErhebungsbogenService {
                     "DE".equalsIgnoreCase(v.getCountryCode().getCode());
 
             // PLZ Durchführungsort
-            // PLZ Durchführungsort
             if (deutschland) {
                 set(form, "plzDurchfuehrungsort",
                         v.getPlz() != null && !v.getPlz().isBlank()
@@ -235,9 +234,13 @@ public class PDFErhebungsbogenService {
             };
 
             Integer age =
-                    altersService.berechneAlterBeiBeginn(
+                    altersService.berechneMassgeblichesAlter(
                             p.getGeburtsdatum(),
-                            v.getBeginnDatum());
+                            v.getBeginnDatum(),
+                            v.getEndeDatum(),
+                            v.getTyp()
+                    );
+
             if (age == null) {
                 continue;
             }

@@ -1,6 +1,5 @@
 package com.kcserver.service.pdf;
 
-import com.kcserver.enumtype.PdfDocumentDensity;
 import com.kcserver.enumtype.ReferenzObjekt;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -37,6 +36,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class A4LayoutEngine {
 
+    private record PagePlan(
+            List<A4LayoutPlacement> placements,
+            int itemCount,
+            float minimumScale
+    ) {
+    }
+
     private final PDFLayoutService layoutService;
 
     /**
@@ -54,13 +60,6 @@ public class A4LayoutEngine {
      * Dokumente dürfen niemals vergrößert werden.
      */
     private static final float MAX_SCALE = 1.0f;
-
-    private float getMinimumScale(
-            A4LayoutItem item
-    ) {
-        return MIN_SCALE;
-    }
-
 
     /*
      * =========================================================
@@ -114,13 +113,8 @@ public class A4LayoutEngine {
             A4LayoutItem current =
                     items.get(index);
 
-
             /*
-             * =================================================
-             * A4
-             * =================================================
-             *
-             * A4 immer alleine.
+             * A4 bleibt immer alleine.
              */
             if (isA4(current)) {
 
@@ -144,523 +138,34 @@ public class A4LayoutEngine {
 
 
             /*
-             * =================================================
-             * 8 x A7
-             * =================================================
+             * =====================================================
+             * LOOKAHEAD
+             * =====================================================
              *
-             * A7-Dokumente werden auf einer A4-Seite im
-             * 2 x 4 Raster platziert. Die A7-Dokumente werden
-             * dabei technisch um 90° gedreht, sodass sie als
-             * Querformat in das Raster passen.
+             * Es werden maximal die nächsten acht Dokumente
+             * betrachtet.
              *
-             * Die Prüfung erfolgt vor A5/A6-Kombinationen, damit
-             * eine Folge von acht A7 nicht durch die allgemeine
-             * Paarlogik auf mehrere Seiten verteilt wird.
+             * Die Seite darf dabei niemals über ein A4-Dokument
+             * hinaus geplant werden.
              */
-            if (index + 7 < items.size()) {
+            List<A4LayoutItem> window =
+                    getPlanningWindow(
+                            items,
+                            index
+                    );
 
-                A4LayoutItem first = items.get(index);
-                A4LayoutItem second = items.get(index + 1);
-                A4LayoutItem third = items.get(index + 2);
-                A4LayoutItem fourth = items.get(index + 3);
-                A4LayoutItem fifth = items.get(index + 4);
-                A4LayoutItem sixth = items.get(index + 5);
-                A4LayoutItem seventh = items.get(index + 6);
-                A4LayoutItem eighth = items.get(index + 7);
 
-                if (isA7(first)
-                        && isA7(second)
-                        && isA7(third)
-                        && isA7(fourth)
-                        && isA7(fifth)
-                        && isA7(sixth)
-                        && isA7(seventh)
-                        && isA7(eighth)) {
+            PagePlan bestPlan =
+                    findBestPagePlan(
+                            window,
+                            pageNumber
+                    );
 
-                    List<A4LayoutPlacement> eightA7 =
-                            placeEightA7(
-                                    first,
-                                    second,
-                                    third,
-                                    fourth,
-                                    fifth,
-                                    sixth,
-                                    seventh,
-                                    eighth,
-                                    pageNumber
-                            );
 
-                    if (eightA7 != null) {
-
-                        result.addAll(eightA7);
-
-                        pageNumber++;
-                        index += 8;
-
-                        continue;
-                    }
-                }
-            }
-
-            /*
-             * =================================================
-             * A5 + 2 x A7
-             * =================================================
-             *
-             * Die Kombination wird unabhängig von der
-             * ursprünglichen Reihenfolge erkannt:
-             *
-             * A5 A7 A7
-             * A7 A5 A7
-             * A7 A7 A5
-             *
-             * Alle drei Dokumente werden auf einer A4-Seite
-             * platziert.
-             */
-            if (index + 2 < items.size()) {
-
-                A4LayoutItem first =
-                        items.get(index);
-
-                A4LayoutItem second =
-                        items.get(index + 1);
-
-                A4LayoutItem third =
-                        items.get(index + 2);
-
-                if (isA5A7A7(
-                        first,
-                        second,
-                        third
-                )) {
-
-                    List<A4LayoutPlacement> combination =
-                            placeA5PlusTwoA7(
-                                    first,
-                                    second,
-                                    third,
-                                    pageNumber
-                            );
-
-                    if (combination != null) {
-
-                        result.addAll(combination);
-
-                        pageNumber++;
-                        index += 3;
-
-                        continue;
-                    }
-                }
-            }
-
-            /*
-             * =================================================
-             * 1 x A6 + 2 x A7
-             * =================================================
-             *
-             * Reihenfolge egal:
-             *
-             * A6 A7 A7
-             * A7 A6 A7
-             * A7 A7 A6
-             */
-            if (index + 2 < items.size()) {
-
-                A4LayoutItem first =
-                        items.get(index);
-
-                A4LayoutItem second =
-                        items.get(index + 1);
-
-                A4LayoutItem third =
-                        items.get(index + 2);
-
-                if (isA6A7A7(
-                        first,
-                        second,
-                        third
-                )) {
-
-                    List<A4LayoutPlacement> combination =
-                            placeA6PlusTwoA7(
-                                    first,
-                                    second,
-                                    third,
-                                    pageNumber
-                            );
-
-                    if (combination != null) {
-
-                        result.addAll(combination);
-
-                        pageNumber++;
-                        index += 3;
-
-                        continue;
-                    }
-                }
-            }
-
-            /*
-             * =================================================
-             * A7-BLOCK
-             * =================================================
-             *
-             * Zusammenhängende A7 werden gemeinsam gepackt.
-             * Maximal 8 A7 werden auf einer Seite angeordnet.
-             *
-             * Bei 4 A7 wird zuerst geprüft, ob unmittelbar
-             * danach ein A5 oder 2 x A6 folgen. Diese Kombination
-             * wird gemeinsam auf einer Seite geplant.
-             */
-            if (isA7(current)) {
-
-                int a7Count = 0;
-
-                while (index + a7Count < items.size()
-                        && a7Count < 8
-                        && isA7(items.get(index + a7Count))) {
-                    a7Count++;
-                }
-
-                /*
-                 * 4 x A7 + A5
-                 */
-                if (a7Count == 4
-                        && index + 4 < items.size()
-                        && isA5(items.get(index + 4))) {
-
-                    List<A4LayoutPlacement> combination =
-                            placeFourA7PlusA5(
-                                    items.get(index),
-                                    items.get(index + 1),
-                                    items.get(index + 2),
-                                    items.get(index + 3),
-                                    items.get(index + 4),
-                                    pageNumber
-                            );
-
-                    if (combination != null) {
-                        result.addAll(combination);
-                        pageNumber++;
-                        index += 5;
-                        continue;
-                    }
-                }
-
-                /*
-                 * 4 x A7 + 2 x A6
-                 */
-                if (a7Count == 4
-                        && index + 5 < items.size()
-                        && isA6(items.get(index + 4))
-                        && isA6(items.get(index + 5))) {
-
-                    List<A4LayoutPlacement> combination =
-                            placeFourA7PlusTwoA6(
-                                    items.get(index),
-                                    items.get(index + 1),
-                                    items.get(index + 2),
-                                    items.get(index + 3),
-                                    items.get(index + 4),
-                                    items.get(index + 5),
-                                    pageNumber
-                            );
-
-                    if (combination != null) {
-                        result.addAll(combination);
-                        pageNumber++;
-                        index += 6;
-                        continue;
-                    }
-                }
-
-                /*
-                 * Alle übrigen zusammenhängenden A7.
-                 * Auch weniger als 8 werden so kompakt wie
-                 * möglich auf einer Seite angeordnet.
-                 */
-                int countForPage =
-                        Math.min(a7Count, 8);
-
-                List<A4LayoutPlacement> a7Block =
-                        placeA7Block(
-                                items.subList(
-                                        index,
-                                        index + countForPage
-                                ),
-                                pageNumber
-                        );
-
-                if (a7Block != null) {
-                    result.addAll(a7Block);
-                    pageNumber++;
-                    index += countForPage;
-                    continue;
-                }
-            }
-
-            /*
-             * =================================================
-             * A5 + 2 x A6
-             * =================================================
-             *
-             * Die ersten drei noch nicht verarbeiteten
-             * Dokumente werden betrachtet.
-             *
-             * Reihenfolge kann z. B. sein:
-             *
-             * A5 A6 A6
-             * A6 A5 A6
-             * A6 A6 A5
-             */
-            if (index + 2 < items.size()) {
-
-                A4LayoutItem first =
-                        items.get(index);
-
-                A4LayoutItem second =
-                        items.get(index + 1);
-
-                A4LayoutItem third =
-                        items.get(index + 2);
-
-                if (isA5A6A6(
-                        first,
-                        second,
-                        third
-                )) {
-
-                    List<A4LayoutPlacement> combination =
-                            placeA5PlusTwoA6(
-                                    first,
-                                    second,
-                                    third,
-                                    pageNumber
-                            );
-
-                    if (combination != null) {
-
-                        result.addAll(combination);
-
-                        pageNumber++;
-
-                        index += 3;
-
-                        continue;
-                    }
-                }
-            }
-
-            /*
-             * =================================================
-             * 2 x A6 + 4 x A7
-             * =================================================
-             *
-             * Zwei A6 hochkant und vier A7 quer.
-             *
-             * Variante 1:
-             *
-             *   A6 | A6
-             *   ---------
-             *   A7 | A7
-             *   A7 | A7
-             *
-             * Variante 2:
-             *
-             *   A7 | A7
-             *   A7 | A7
-             *   ---------
-             *   A6 | A6
-             *
-             * Es wird die Variante mit der besseren
-             * Mindestskalierung verwendet.
-             */
-            if (index + 5 < items.size()) {
-
-                A4LayoutItem first = items.get(index);
-                A4LayoutItem second = items.get(index + 1);
-                A4LayoutItem third = items.get(index + 2);
-                A4LayoutItem fourth = items.get(index + 3);
-                A4LayoutItem fifth = items.get(index + 4);
-                A4LayoutItem sixth = items.get(index + 5);
-
-                if (isA6(first)
-                        && isA6(second)
-                        && isA7(third)
-                        && isA7(fourth)
-                        && isA7(fifth)
-                        && isA7(sixth)) {
-
-                    List<A4LayoutPlacement> combination =
-                            placeTwoA6PlusFourA7(
-                                    first,
-                                    second,
-                                    third,
-                                    fourth,
-                                    fifth,
-                                    sixth,
-                                    pageNumber
-                            );
-
-                    if (combination != null) {
-
-                        result.addAll(combination);
-
-                        pageNumber++;
-                        index += 6;
-
-                        continue;
-                    }
-                }
-            }
-
-            /*
-             * =================================================
-             * 4 x A6
-             * =================================================
-             */
-            if (index + 3 < items.size()) {
-
-                A4LayoutItem first =
-                        items.get(index);
-
-                A4LayoutItem second =
-                        items.get(index + 1);
-
-                A4LayoutItem third =
-                        items.get(index + 2);
-
-                A4LayoutItem fourth =
-                        items.get(index + 3);
-
-                if (isA6(first)
-                        && isA6(second)
-                        && isA6(third)
-                        && isA6(fourth)) {
-
-                    List<A4LayoutPlacement> fourA6 =
-                            placeFourA6(
-                                    first,
-                                    second,
-                                    third,
-                                    fourth,
-                                    pageNumber
-                            );
-
-                    if (fourA6 != null) {
-
-                        result.addAll(fourA6);
-
-                        pageNumber++;
-
-                        index += 4;
-
-                        continue;
-                    }
-                }
-            }
-
-
-            /*
-             * =================================================
-             * A5 + A6
-             * =================================================
-             *
-             * Wenn keine A5 + 2 x A6 Kombination möglich ist,
-             * versuchen wir A5 + A6.
-             *
-             * Die Reihenfolge der beiden Dokumente spielt
-             * dabei keine Rolle.
-             */
-            if (index + 1 < items.size()) {
-
-                A4LayoutItem first =
-                        items.get(index);
-
-                A4LayoutItem second =
-                        items.get(index + 1);
-
-                if (isA5A6(
-                        first,
-                        second
-                )) {
-
-                    List<A4LayoutPlacement> combination =
-                            placeA5PlusA6(
-                                    first,
-                                    second,
-                                    pageNumber
-                            );
-
-                    if (combination != null) {
-
-                        result.addAll(combination);
-
-                        pageNumber++;
-
-                        index += 2;
-
-                        continue;
-                    }
-                }
-            }
-
-
-            /*
-             * =================================================
-             * 2 x A6
-             * =================================================
-             */
-            if (index + 1 < items.size()) {
-
-                A4LayoutItem first =
-                        items.get(index);
-
-                A4LayoutItem second =
-                        items.get(index + 1);
-
-                if (isA6(first)
-                        && isA6(second)) {
-
-                    List<A4LayoutPlacement> pair =
-                            placeTwoA6(
-                                    first,
-                                    second,
-                                    pageNumber
-                            );
-
-                    if (pair != null) {
-
-                        result.addAll(pair);
-
-                        pageNumber++;
-
-                        index += 2;
-
-                        continue;
-                    }
-                }
-            }
-
-
-            /*
-             * =================================================
-             * A5 alleine
-             * =================================================
-             *
-             * A5 wird quer bevorzugt.
-             *
-             * Hochformat ist nur hier erlaubt.
-             */
-            if (isA5(current)) {
+            if (bestPlan != null) {
 
                 result.addAll(
-                        placeSingleA5(
-                                current,
-                                pageNumber
-                        )
+                        bestPlan.placements()
                 );
 
                 pageNumber =
@@ -669,58 +174,19 @@ public class A4LayoutEngine {
                                 pageNumber
                         );
 
-                index++;
+                index +=
+                        bestPlan.itemCount();
 
                 continue;
             }
 
 
             /*
-             * =================================================
-             * Sonstige Dokumente
-             * =================================================
-             *
-             * Für unbekannte Formate bleibt die bisherige
-             * Paarlogik erhalten. A7 wird weiter oben explizit
-             * im 2 x 4 Raster verarbeitet.
+             * =====================================================
+             * FALLBACK
+             * =====================================================
              */
-            if (index + 1 < items.size()) {
 
-                A4LayoutItem next =
-                        items.get(index + 1);
-
-                if (!isA4(next)
-                        && next.density()
-                        != PdfDocumentDensity.HIGH
-                        && current.density()
-                        != PdfDocumentDensity.HIGH) {
-
-                    List<A4LayoutPlacement> pair =
-                            placePair(
-                                    current,
-                                    next,
-                                    pageNumber
-                            );
-
-                    if (pair != null) {
-
-                        result.addAll(pair);
-
-                        pageNumber++;
-
-                        index += 2;
-
-                        continue;
-                    }
-                }
-            }
-
-
-            /*
-             * =================================================
-             * Einzelnes Dokument
-             * =================================================
-             */
             result.addAll(
                     placeSingleDocument(
                             current,
@@ -740,41 +206,568 @@ public class A4LayoutEngine {
         return result;
     }
 
-    private boolean isA5A7A7(
-            A4LayoutItem first,
-            A4LayoutItem second,
-            A4LayoutItem third
+    private PagePlan findBestPagePlan(
+            List<A4LayoutItem> window,
+            int pageNumber
     ) {
 
-        int a5Count = 0;
-        int a7Count = 0;
-
-        if (isA5(first)) {
-            a5Count++;
+        if (window == null || window.isEmpty()) {
+            return null;
         }
 
-        if (isA5(second)) {
-            a5Count++;
+        PagePlan best = null;
+
+        /*
+         * Wir prüfen alle aufeinanderfolgenden Prefixe
+         * des Fensters.
+         *
+         * Bei acht Dokumenten also:
+         *
+         * 1
+         * 1-2
+         * 1-3
+         * ...
+         * 1-8
+         *
+         * Die Dokumentreihenfolge bleibt dadurch erhalten.
+         */
+        for (int count = 1;
+             count <= window.size();
+             count++) {
+
+            List<A4LayoutItem> items =
+                    window.subList(
+                            0,
+                            count
+                    );
+
+            best =
+                    selectBetterPlan(
+                            best,
+                            createPagePlan(
+                                    items,
+                                    pageNumber
+                            )
+                    );
         }
 
-        if (isA5(third)) {
-            a5Count++;
+        return best;
+    }
+
+    private PagePlan createPagePlan(
+            List<A4LayoutItem> items,
+            List<A4LayoutPlacement> placements
+    ) {
+
+        if (placements == null
+                || placements.isEmpty()) {
+
+            return null;
         }
 
-        if (isA7(first)) {
-            a7Count++;
+        float minimumScale =
+                MAX_SCALE;
+
+        for (A4LayoutPlacement placement :
+                placements) {
+
+            A4LayoutItem item =
+                    findItem(
+                            items,
+                            placement.itemId()
+                    );
+
+            if (item == null) {
+                return null;
+            }
+
+            minimumScale =
+                    Math.min(
+                            minimumScale,
+                            getPlacementScale(
+                                    item,
+                                    placement
+                            )
+                    );
         }
 
-        if (isA7(second)) {
-            a7Count++;
+        return new PagePlan(
+                placements,
+                items.size(),
+                minimumScale
+        );
+    }
+
+    private PagePlan createPagePlan(
+            List<A4LayoutItem> items,
+            int pageNumber
+    ) {
+
+        int count =
+                items.size();
+
+
+        /*
+         * =========================================================
+         * 8 x A7
+         * =========================================================
+         */
+        if (count == 8
+                && allA7(items)) {
+
+            List<A4LayoutPlacement> placements =
+                    placeEightA7(
+                            items.get(0),
+                            items.get(1),
+                            items.get(2),
+                            items.get(3),
+                            items.get(4),
+                            items.get(5),
+                            items.get(6),
+                            items.get(7),
+                            pageNumber
+                    );
+
+            return createPagePlan(
+                    items,
+                    placements
+            );
         }
 
-        if (isA7(third)) {
-            a7Count++;
+
+        /*
+         * =========================================================
+         * A7-BLOCK
+         *
+         * 1 bis 8 A7.
+         * =========================================================
+         */
+        if (count >= 1
+                && count <= 8
+                && allA7(items)) {
+
+            List<A4LayoutPlacement> placements =
+                    placeA7Block(
+                            items,
+                            pageNumber
+                    );
+
+            return createPagePlan(
+                    items,
+                    placements
+            );
         }
 
-        return a5Count == 1
-                && a7Count == 2;
+
+        /*
+         * =========================================================
+         * A5 + 4 x A7
+         * =========================================================
+         */
+        if (count == 5
+                && countFormat(
+                items,
+                ReferenzObjekt.DIN_A5
+        ) == 1
+                && countFormat(
+                items,
+                ReferenzObjekt.DIN_A7
+        ) == 4) {
+
+            return createFourA7PlusA5Plan(
+                    items,
+                    pageNumber
+            );
+        }
+
+        /*
+         * =========================================================
+         * 2 x A6 + 4 x A7
+         *
+         * Variante aus deiner bisherigen Engine:
+         * 4 A7 + 2 A6
+         * =========================================================
+         */
+        if (count == 6
+                && countFormat(
+                items,
+                ReferenzObjekt.DIN_A7
+        ) == 4
+                && countFormat(
+                items,
+                ReferenzObjekt.DIN_A6
+        ) == 2) {
+
+            return createTwoA6PlusFourA7Plan(
+                    items,
+                    pageNumber
+            );
+        }
+
+
+        /*
+         * =========================================================
+         * A5 + 2 x A7
+         * =========================================================
+         */
+        if (count == 3
+                && countFormat(
+                items,
+                ReferenzObjekt.DIN_A5
+        ) == 1
+                && countFormat(
+                items,
+                ReferenzObjekt.DIN_A7
+        ) == 2) {
+
+            List<A4LayoutPlacement> placements =
+                    placeA5PlusTwoA7(
+                            items.get(0),
+                            items.get(1),
+                            items.get(2),
+                            pageNumber
+                    );
+
+            return createPagePlan(
+                    items,
+                    placements
+            );
+        }
+
+
+        /*
+         * =========================================================
+         * A6 + 2 x A7
+         * =========================================================
+         */
+        if (count == 3
+                && countFormat(
+                items,
+                ReferenzObjekt.DIN_A6
+        ) == 1
+                && countFormat(
+                items,
+                ReferenzObjekt.DIN_A7
+        ) == 2) {
+
+            List<A4LayoutPlacement> placements =
+                    placeA6PlusTwoA7(
+                            items.get(0),
+                            items.get(1),
+                            items.get(2),
+                            pageNumber
+                    );
+
+            return createPagePlan(
+                    items,
+                    placements
+            );
+        }
+
+
+        /*
+         * =========================================================
+         * A5 + 2 x A6
+         * =========================================================
+         */
+        if (count == 3
+                && countFormat(
+                items,
+                ReferenzObjekt.DIN_A5
+        ) == 1
+                && countFormat(
+                items,
+                ReferenzObjekt.DIN_A6
+        ) == 2) {
+
+            List<A4LayoutPlacement> placements =
+                    placeA5PlusTwoA6(
+                            items.get(0),
+                            items.get(1),
+                            items.get(2),
+                            pageNumber
+                    );
+
+            return createPagePlan(
+                    items,
+                    placements
+            );
+        }
+
+
+        /*
+         * =========================================================
+         * 4 x A6
+         * =========================================================
+         */
+        if (count == 4
+                && allA6(items)) {
+
+            List<A4LayoutPlacement> placements =
+                    placeFourA6(
+                            items.get(0),
+                            items.get(1),
+                            items.get(2),
+                            items.get(3),
+                            pageNumber
+                    );
+
+            return createPagePlan(
+                    items,
+                    placements
+            );
+        }
+
+
+        /*
+         * =========================================================
+         * A5 + A6
+         * =========================================================
+         */
+        if (count == 2
+                && countFormat(
+                items,
+                ReferenzObjekt.DIN_A5
+        ) == 1
+                && countFormat(
+                items,
+                ReferenzObjekt.DIN_A6
+        ) == 1) {
+
+            List<A4LayoutPlacement> placements =
+                    placeA5PlusA6(
+                            items.get(0),
+                            items.get(1),
+                            pageNumber
+                    );
+
+            return createPagePlan(
+                    items,
+                    placements
+            );
+        }
+
+
+        /*
+         * =========================================================
+         * 2 x A6
+         * =========================================================
+         */
+        if (count == 2
+                && allA6(items)) {
+
+            List<A4LayoutPlacement> placements =
+                    placeTwoA6(
+                            items.get(0),
+                            items.get(1),
+                            pageNumber
+                    );
+
+            return createPagePlan(
+                    items,
+                    placements
+            );
+        }
+
+
+        /*
+         * =========================================================
+         * GENERISCHES PAAR
+         * =========================================================
+         */
+        if (count == 2
+                && canUseGenericPair(
+                items.get(0),
+                items.get(1)
+        )) {
+
+            List<A4LayoutPlacement> placements =
+                    placePair(
+                            items.get(0),
+                            items.get(1),
+                            pageNumber
+                    );
+
+            return createPagePlan(
+                    items,
+                    placements
+            );
+        }
+
+
+        /*
+         * =========================================================
+         * EINZELDOKUMENT
+         * =========================================================
+         */
+        if (count == 1) {
+
+            A4LayoutItem item =
+                    items.getFirst();
+
+            List<A4LayoutPlacement> placements;
+
+            if (isA5(item)) {
+
+                placements =
+                        placeSingleA5(
+                                item,
+                                pageNumber
+                        );
+
+            } else {
+
+                placements =
+                        placeSingleDocument(
+                                item,
+                                pageNumber
+                        );
+            }
+
+            return createPagePlan(
+                    items,
+                    placements
+            );
+        }
+
+
+        return null;
+    }
+
+    private A4LayoutItem findItem(
+            List<A4LayoutItem> items,
+            String itemId
+    ) {
+
+        for (A4LayoutItem item : items) {
+
+            if (item.id()
+                    .equals(itemId)) {
+
+                return item;
+            }
+        }
+
+        return null;
+    }
+
+    private PagePlan selectBetterPlan(
+            PagePlan current,
+            PagePlan candidate
+    ) {
+
+        if (candidate == null) {
+            return current;
+        }
+
+        if (current == null) {
+            return candidate;
+        }
+
+
+        /*
+         * =========================================================
+         * 1. Möglichst viele Dokumente auf einer Seite
+         * =========================================================
+         */
+        if (candidate.itemCount()
+                > current.itemCount()) {
+
+            return candidate;
+        }
+
+        if (candidate.itemCount()
+                < current.itemCount()) {
+
+            return current;
+        }
+
+
+        /*
+         * =========================================================
+         * 2. Bei gleicher Dokumentanzahl:
+         *    bessere Mindestskalierung gewinnt
+         * =========================================================
+         */
+        if (candidate.minimumScale()
+                > current.minimumScale()) {
+
+            return candidate;
+        }
+
+        return current;
+    }
+
+    private boolean allA6(
+            List<A4LayoutItem> items
+    ) {
+
+        return items.stream()
+                .allMatch(
+                        this::isA6
+                );
+    }
+
+    private boolean allA7(
+            List<A4LayoutItem> items
+    ) {
+
+        return items.stream()
+                .allMatch(
+                        this::isA7
+                );
+    }
+
+    private int countFormat(
+            List<A4LayoutItem> items,
+            ReferenzObjekt format
+    ) {
+
+        return (int) items.stream()
+                .filter(
+                        item -> item.referenzObjekt()
+                                == format
+                )
+                .count();
+    }
+
+    private boolean canUseGenericPair(
+            A4LayoutItem first,
+            A4LayoutItem second
+    ) {
+
+        return !isA4(first)
+                && !isA4(second);
+    }
+
+    private List<A4LayoutItem> getPlanningWindow(
+            List<A4LayoutItem> items,
+            int startIndex
+    ) {
+
+        List<A4LayoutItem> result =
+                new ArrayList<>();
+
+        for (int i = startIndex;
+             i < items.size() && result.size() < 8;
+             i++) {
+
+            A4LayoutItem item =
+                    items.get(i);
+
+            /*
+             * Ein A4 beendet das aktuelle Planungsfenster.
+             *
+             * Es wird auf einer eigenen Seite verarbeitet.
+             */
+            if (isA4(item)) {
+                break;
+            }
+
+            result.add(item);
+        }
+
+        return result;
     }
 
     private List<A4LayoutPlacement> placeA5PlusTwoA7(
@@ -967,54 +960,6 @@ public class A4LayoutEngine {
     ) {
         return item.referenzObjekt()
                 == ReferenzObjekt.DIN_A7;
-    }
-
-
-    private boolean isA5A6(
-            A4LayoutItem first,
-            A4LayoutItem second
-    ) {
-
-        return (isA5(first) && isA6(second))
-                || (isA6(first) && isA5(second));
-    }
-
-
-    private boolean isA5A6A6(
-            A4LayoutItem first,
-            A4LayoutItem second,
-            A4LayoutItem third
-    ) {
-
-        int a5Count = 0;
-        int a6Count = 0;
-
-        if (isA5(first)) {
-            a5Count++;
-        }
-
-        if (isA5(second)) {
-            a5Count++;
-        }
-
-        if (isA5(third)) {
-            a5Count++;
-        }
-
-        if (isA6(first)) {
-            a6Count++;
-        }
-
-        if (isA6(second)) {
-            a6Count++;
-        }
-
-        if (isA6(third)) {
-            a6Count++;
-        }
-
-        return a5Count == 1
-                && a6Count == 2;
     }
 
 
@@ -1458,12 +1403,12 @@ public class A4LayoutEngine {
                         contentHeight
                 );
 
-        if (a5Scale < getMinimumScale(a5)) {
+        if (a5Scale < MIN_SCALE) {
             return null;
         }
 
         float a5Height =
-                a5.height() * a5Scale;
+                a5.width() * a5Scale;
 
         float a7AreaHeight =
                 contentHeight
@@ -1491,7 +1436,7 @@ public class A4LayoutEngine {
         for (int i = 0; i < a7Items.size(); i++) {
 
             Candidate candidate =
-                    createCandidateInArea(
+                    createLandscapeCandidate(
                             a7Items.get(i),
                             pageNumber,
                             left + i
@@ -1500,8 +1445,7 @@ public class A4LayoutEngine {
                                     + a5Height
                                     + GAP,
                             a7CellWidth,
-                            a7AreaHeight,
-                            false
+                            a7AreaHeight
                     );
 
             if (candidate == null) {
@@ -1526,118 +1470,6 @@ public class A4LayoutEngine {
         }
 
         result.add(a5Candidate.placement());
-
-        return result;
-    }
-
-
-    /*
-     * =========================================================
-     * 4 x A7 + 2 x A6
-     * =========================================================
-     */
-    private List<A4LayoutPlacement> placeFourA7PlusTwoA6(
-            A4LayoutItem first,
-            A4LayoutItem second,
-            A4LayoutItem third,
-            A4LayoutItem fourth,
-            A4LayoutItem fifth,
-            A4LayoutItem sixth,
-            int pageNumber
-    ) {
-        float contentWidth =
-                layoutService.getContentWidth();
-
-        float contentHeight =
-                layoutService.getContentHeight();
-
-        float left =
-                layoutService.getMarginLeft();
-
-        float bottom =
-                layoutService.getMarginBottom();
-
-        /*
-         * Die A6 bekommen den unteren Bereich. Die A7 werden
-         * in den verbleibenden oberen Bereich eingepasst.
-         */
-        float a6AreaHeight =
-                contentHeight * 0.60f;
-
-        float a7AreaHeight =
-                contentHeight
-                        - GAP
-                        - a6AreaHeight;
-
-        float a7CellWidth =
-                (contentWidth - 3f * GAP) / 4f;
-
-        List<A4LayoutItem> a7Items =
-                List.of(
-                        first,
-                        second,
-                        third,
-                        fourth
-                );
-
-        List<A4LayoutPlacement> result =
-                new ArrayList<>();
-
-        for (int i = 0; i < a7Items.size(); i++) {
-
-            Candidate candidate =
-                    createCandidateInArea(
-                            a7Items.get(i),
-                            pageNumber,
-                            left + i
-                                    * (a7CellWidth + GAP),
-                            bottom
-                                    + a6AreaHeight
-                                    + GAP,
-                            a7CellWidth,
-                            a7AreaHeight,
-                            false
-                    );
-
-            if (candidate == null) {
-                return null;
-            }
-
-            result.add(candidate.placement());
-        }
-
-        float a6CellWidth =
-                (contentWidth - GAP) / 2f;
-
-        Candidate a6First =
-                createPortraitCandidate(
-                        fifth,
-                        pageNumber,
-                        left,
-                        bottom,
-                        a6CellWidth,
-                        a6AreaHeight
-                );
-
-        Candidate a6Second =
-                createPortraitCandidate(
-                        sixth,
-                        pageNumber,
-                        left
-                                + a6CellWidth
-                                + GAP,
-                        bottom,
-                        a6CellWidth,
-                        a6AreaHeight
-                );
-
-        if (a6First == null
-                || a6Second == null) {
-            return null;
-        }
-
-        result.add(a6First.placement());
-        result.add(a6Second.placement());
 
         return result;
     }
@@ -1799,7 +1631,7 @@ public class A4LayoutEngine {
                         a5Candidate.placement()
                 );
 
-            } else if (item == a6Items.get(0)) {
+            } else if (item == a6Items.getFirst()) {
 
                 placements.add(
                         a6First.placement()
@@ -2777,80 +2609,6 @@ public class A4LayoutEngine {
                 : current;
     }
 
-    private LayoutCandidate createFourA6Layout(
-            A4LayoutItem first,
-            A4LayoutItem second,
-            A4LayoutItem third,
-            A4LayoutItem fourth,
-            int pageNumber
-    ) {
-
-        float contentWidth =
-                layoutService.getContentWidth();
-
-        float contentHeight =
-                layoutService.getContentHeight();
-
-        float left =
-                layoutService.getMarginLeft();
-
-        float bottom =
-                layoutService.getMarginBottom();
-
-        float cellWidth =
-                (contentWidth - GAP) / 2f;
-
-        float cellHeight =
-                (contentHeight - GAP) / 2f;
-
-
-        List<LayoutSlot> slots =
-                List.of(
-                        new LayoutSlot(
-                                left,
-                                bottom + cellHeight + GAP,
-                                cellWidth,
-                                cellHeight,
-                                LayoutOrientation.PORTRAIT
-                        ),
-
-                        new LayoutSlot(
-                                left + cellWidth + GAP,
-                                bottom + cellHeight + GAP,
-                                cellWidth,
-                                cellHeight,
-                                LayoutOrientation.PORTRAIT
-                        ),
-
-                        new LayoutSlot(
-                                left,
-                                bottom,
-                                cellWidth,
-                                cellHeight,
-                                LayoutOrientation.PORTRAIT
-                        ),
-
-                        new LayoutSlot(
-                                left + cellWidth + GAP,
-                                bottom,
-                                cellWidth,
-                                cellHeight,
-                                LayoutOrientation.PORTRAIT
-                        )
-                );
-
-        return createLayoutCandidate(
-                List.of(
-                        first,
-                        second,
-                        third,
-                        fourth
-                ),
-                slots,
-                pageNumber
-        );
-    }
-
 
     private LayoutCandidate createEightA7Layout(
             List<A4LayoutItem> items,
@@ -2989,10 +2747,9 @@ public class A4LayoutEngine {
                 );
 
 
-        if (scale < getMinimumScale(item)) {
+        if (scale < MIN_SCALE) {
             return null;
         }
-
 
         float width =
                 sourceWidth * scale;
@@ -3207,43 +2964,6 @@ public class A4LayoutEngine {
     ) {
     }
 
-    private boolean isA6A7A7(
-            A4LayoutItem first,
-            A4LayoutItem second,
-            A4LayoutItem third
-    ) {
-
-        int a6Count = 0;
-        int a7Count = 0;
-
-        if (isA6(first)) {
-            a6Count++;
-        }
-
-        if (isA6(second)) {
-            a6Count++;
-        }
-
-        if (isA6(third)) {
-            a6Count++;
-        }
-
-        if (isA7(first)) {
-            a7Count++;
-        }
-
-        if (isA7(second)) {
-            a7Count++;
-        }
-
-        if (isA7(third)) {
-            a7Count++;
-        }
-
-        return a6Count == 1
-                && a7Count == 2;
-    }
-
     private List<A4LayoutPlacement> placeA6PlusTwoA7(
             A4LayoutItem first,
             A4LayoutItem second,
@@ -3376,7 +3096,7 @@ public class A4LayoutEngine {
                         a6Candidate.placement()
                 );
 
-            } else if (item == a7Items.get(0)) {
+            } else if (item == a7Items.getFirst()) {
 
                 placements.add(
                         a7First.placement()
@@ -3391,5 +3111,157 @@ public class A4LayoutEngine {
         }
 
         return placements;
+    }
+
+    private PagePlan createTwoA6PlusFourA7Plan(
+            List<A4LayoutItem> items,
+            int pageNumber
+    ) {
+
+        List<A4LayoutItem> a6Items =
+                items.stream()
+                        .filter(this::isA6)
+                        .toList();
+
+        List<A4LayoutItem> a7Items =
+                items.stream()
+                        .filter(this::isA7)
+                        .toList();
+
+        if (a6Items.size() != 2
+                || a7Items.size() != 4) {
+
+            return null;
+        }
+
+        List<A4LayoutPlacement> placements =
+                placeTwoA6PlusFourA7(
+                        a6Items.get(0),
+                        a6Items.get(1),
+                        a7Items.get(0),
+                        a7Items.get(1),
+                        a7Items.get(2),
+                        a7Items.get(3),
+                        pageNumber
+                );
+
+        if (placements == null) {
+            return null;
+        }
+
+        /*
+         * Die Platzierungsmethode erzeugt die Placements
+         * in Layout-Reihenfolge.
+         *
+         * Für die Engine stellen wir anschließend die
+         * ursprüngliche Dokumentreihenfolge wieder her.
+         */
+        placements =
+                restoreOriginalOrder(
+                        items,
+                        placements
+                );
+
+        return createPagePlan(
+                items,
+                placements
+        );
+    }
+
+    private PagePlan createFourA7PlusA5Plan(
+            List<A4LayoutItem> items,
+            int pageNumber
+    ) {
+
+        A4LayoutItem a5 =
+                items.stream()
+                        .filter(this::isA5)
+                        .findFirst()
+                        .orElse(null);
+
+        List<A4LayoutItem> a7Items =
+                items.stream()
+                        .filter(this::isA7)
+                        .toList();
+
+        if (a5 == null
+                || a7Items.size() != 4) {
+
+            return null;
+        }
+
+        List<A4LayoutPlacement> placements =
+                placeFourA7PlusA5(
+                        a7Items.get(0),
+                        a7Items.get(1),
+                        a7Items.get(2),
+                        a7Items.get(3),
+                        a5,
+                        pageNumber
+                );
+
+        if (placements == null) {
+            return null;
+        }
+
+        /*
+         * placeFourA7PlusA5 erzeugt die Placements zunächst
+         * als 4 × A7 und danach A5.
+         *
+         * Für die Engine muss aber die ursprüngliche
+         * Dokumentreihenfolge erhalten bleiben.
+         */
+        placements =
+                restoreOriginalOrder(
+                        items,
+                        placements
+                );
+
+        return createPagePlan(
+                items,
+                placements
+        );
+    }
+
+    private List<A4LayoutPlacement> restoreOriginalOrder(
+            List<A4LayoutItem> originalItems,
+            List<A4LayoutPlacement> placements
+    ) {
+
+        return originalItems.stream()
+                .map(
+                        item -> placements.stream()
+                                .filter(
+                                        placement ->
+                                                placement.itemId()
+                                                        .equals(
+                                                                item.id()
+                                                        )
+                                )
+                                .findFirst()
+                                .orElseThrow(
+                                        () ->
+                                                new IllegalStateException(
+                                                        "Kein Placement für Item "
+                                                                + item.id()
+                                                                + " gefunden."
+                                                )
+                                )
+                )
+                .toList();
+    }
+
+    private float getPlacementScale(
+            A4LayoutItem item,
+            A4LayoutPlacement placement
+    ) {
+
+        float sourceWidth =
+                placement.rotation() == 90
+                        ? item.height()
+                        : item.width();
+
+        return placement.width()
+                / sourceWidth;
     }
 }

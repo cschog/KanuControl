@@ -122,7 +122,7 @@ const FinanzgruppenTable: FC<Props> = ({ veranstaltungId, reloadKey }) => {
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell>Finanzgruppe</TableCell>
+              <TableCell>Konto</TableCell>
               <TableCell align="right">Teilnehmer</TableCell>
               <TableCell align="right">Belege</TableCell>
               <TableCell align="right">Aktionen</TableCell>

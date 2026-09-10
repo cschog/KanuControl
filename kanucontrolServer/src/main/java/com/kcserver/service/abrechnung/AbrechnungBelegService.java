@@ -7,18 +7,22 @@ import com.kcserver.dto.abrechnung.AbrechnungBelegDTO;
 import com.kcserver.entity.*;
 import com.kcserver.enumtype.AbrechnungsStatus;
 import com.kcserver.enumtype.BuchungsHerkunft;
+import com.kcserver.enumtype.FinanzKategorie;
 import com.kcserver.exception.ErrorMessages;
 import com.kcserver.mapper.AbrechnungMapper;
 import com.kcserver.repository.*;
 import com.kcserver.repository.abrechnung.AbrechnungBelegRepository;
 import com.kcserver.repository.abrechnung.AbrechnungBuchungRepository;
 import com.kcserver.repository.abrechnung.AbrechnungRepository;
+import com.kcserver.repository.abrechnung.ZahlungsnachweisRepository;
+import com.kcserver.service.zahlungsnachweis.ZahlungsnachweisSaldoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -32,6 +36,8 @@ public class AbrechnungBelegService {
     private final AbrechnungBuchungRepository buchungRepository;
     private final FinanzGruppeRepository finanzGruppeRepository;
     private final AbrechnungMapper mapper;
+    private final ZahlungsnachweisRepository zahlungsnachweisRepository;
+    private final ZahlungsnachweisSaldoService zahlungsnachweisSaldoService;
 
     /* =========================================================
        BELEG ANLEGEN
@@ -245,6 +251,200 @@ public class AbrechnungBelegService {
         beleg.getAbrechnung().removeBeleg(beleg);
         belegRepository.delete(beleg);
     }
+
+    /* =========================================================
+   TEILNEHMERBEITRAG RÜCKZAHLEN
+   ========================================================= */
+
+    @Transactional
+    public AbrechnungBuchungDTO rueckzahlungTeilnehmerbeitrag(
+            Long veranstaltungId,
+            Long zahlungsnachweisId,
+            BigDecimal betrag,
+            String beschreibung
+    ) {
+
+    /* =========================================================
+       VALIDIERUNG BETRAG
+       ========================================================= */
+
+        if (betrag == null
+                || betrag.compareTo(BigDecimal.ZERO) <= 0) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Der Rückzahlungsbetrag muss größer als 0 sein."
+            );
+        }
+
+    /* =========================================================
+       ZAHLUNGSNACHWEIS LADEN
+       ========================================================= */
+
+        Zahlungsnachweis zahlungsnachweis =
+                zahlungsnachweisRepository
+                        .findByIdAndVeranstaltungId(
+                                zahlungsnachweisId,
+                                veranstaltungId
+                        )
+                        .orElseThrow(() ->
+                                new ResponseStatusException(
+                                        HttpStatus.NOT_FOUND,
+                                        "Zahlungsnachweis nicht gefunden."
+                                )
+                        );
+
+    /* =========================================================
+       OFFENE ÜBERZAHLUNG PRÜFEN
+       ========================================================= */
+
+        BigDecimal nochZurueckzahlbar =
+                zahlungsnachweisSaldoService
+                        .getOffeneUeberzahlung(
+                                zahlungsnachweis
+                        );
+
+        if (nochZurueckzahlbar.compareTo(BigDecimal.ZERO) <= 0) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Für diesen Zahlungsnachweis besteht "
+                            + "keine rückzahlbare Überzahlung."
+            );
+        }
+
+        if (betrag.compareTo(nochZurueckzahlbar) > 0) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Der Rückzahlungsbetrag überschreitet "
+                            + "die noch verfügbare Überzahlung."
+            );
+        }
+
+    /* =========================================================
+       ABRECHNUNG LADEN
+       ========================================================= */
+
+        Abrechnung abrechnung =
+                getAbrechnung(veranstaltungId);
+
+        checkEditable(abrechnung);
+
+/* =========================================================
+   FINANZGRUPPE DER ÜBERZAHLUNG ERMITTELN
+   ========================================================= */
+
+        /*
+         * Die ursprüngliche Zahlung kann auf dem VK-Konto
+         * eingegangen sein. Die Überzahlung gehört jedoch
+         * zur gemeinsamen Finanzgruppe der betroffenen
+         * Teilnehmer und wurde beim Zahlungsnachweis in
+         * ueberzahlungsFinanzGruppe gespeichert.
+         */
+        FinanzGruppe finanzGruppe =
+                zahlungsnachweis.getUeberzahlungsFinanzGruppe();
+
+        if (finanzGruppe == null) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    ErrorMessages.UEBERZAHLUNG_REQUIRES_FINANZGRUPPE
+            );
+        }
+
+    /* =========================================================
+       NÄCHSTE BELEGNUMMER
+       ========================================================= */
+
+        Integer max =
+                belegRepository
+                        .findMaxLfdNrByAbrechnungId(
+                                abrechnung.getId()
+                        );
+
+        int next = max == null
+                ? 1
+                : max + 1;
+
+        String belegnummer =
+                finanzGruppe.getKuerzel()
+                        + "_"
+                        + String.format("%03d", next);
+
+    /* =========================================================
+       RÜCKZAHLUNGSBELEG ANLEGEN
+       ========================================================= */
+
+        AbrechnungBeleg beleg =
+                new AbrechnungBeleg();
+
+        beleg.setAbrechnung(abrechnung);
+        beleg.setFinanzGruppe(finanzGruppe);
+
+        beleg.setLfdNr(next);
+        beleg.setBelegnummer(belegnummer);
+
+        beleg.setDatum(LocalDate.now());
+
+        beleg.setBeschreibung(
+                beschreibung != null
+                        && !beschreibung.isBlank()
+                        ? beschreibung
+                        : "Rückzahlung Teilnehmerbeitrag"
+        );
+
+        /*
+         * Beziehung sauber über die Aggregate-Methode setzen,
+         * falls diese vorhanden ist.
+         */
+        abrechnung.addBeleg(beleg);
+
+    /* =========================================================
+       RÜCKZAHLUNGSBUCHUNG ANLEGEN
+       ========================================================= */
+
+        AbrechnungBuchung buchung =
+                new AbrechnungBuchung();
+
+        buchung.setKategorie(
+                FinanzKategorie.TEILNEHMERBEITRAG
+        );
+
+        /*
+         * Rückzahlung reduziert den Teilnehmerbeitrag.
+         */
+        buchung.setBetrag(
+                betrag.negate()
+        );
+
+        buchung.setBeschreibung(
+                beleg.getBeschreibung()
+        );
+
+        buchung.setHerkunft(
+                BuchungsHerkunft.MANUELL
+        );
+
+        /*
+         * Ganz wichtig für die Nachverfolgung und
+         * die Berechnung der noch offenen Überzahlung.
+         */
+        buchung.setUrspruenglicherZahlungsnachweis(
+                zahlungsnachweis
+        );
+
+        beleg.addPosition(buchung);
+
+    /* =========================================================
+       SPEICHERN
+       ========================================================= */
+
+        belegRepository.save(beleg);
+
+        return mapper.toDTO(buchung);
+    }
+
 
     public void changeKuerzel(
             Long veranstaltungId,

@@ -342,6 +342,9 @@ public final class ErrorMessages {
 
     public static final String AT_LEAST_ONE_TEILNEHMER_REQUIRED =
             "Mindestens ein Teilnehmer muss ausgewählt werden.";
+
+    public static final String UEBERZAHLUNG_TEILNEHMERKONTO_REQUIRED =
+            "Bei einer Überzahlung müssen alle ausgewählten Teilnehmer einem Konto zugeordnet sein.";
            
     public static final String TEILNEHMER_REQUIRED =
            "Keine Teilnehmer vorhanden.";
@@ -366,6 +369,12 @@ public final class ErrorMessages {
 
     public static final String DOKUMENT_NO_OWNER =
             "Dokument hat keinen Besitzer.";
+
+    public static final String UEBERZAHLUNG_REQUIRES_FINANZGRUPPE =
+            "Bei einer Überzahlung müssen alle ausgewählten Teilnehmer einem Konto zugeordnet sein.";
+
+    public static final String UEBERZAHLUNG_REQUIRES_COMMON_FINANZGRUPPE =
+            "Bei einer Überzahlung müssen alle ausgewählten Teilnehmer demselben Konto zugeordnet sein.";
 
     // =========================================================
     // CSV-Import

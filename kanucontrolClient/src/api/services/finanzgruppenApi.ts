@@ -43,11 +43,21 @@ export async function createFinanzgruppe(
 export async function assignTeilnehmerBulk(
   veranstaltungId: number,
   gruppeId: number,
-  teilnehmerIds: number[],
+  personIds: number[],
 ): Promise<void> {
   await apiClient.put(
     `/veranstaltungen/${veranstaltungId}/finanzgruppen/${gruppeId}/teilnehmer`,
-    teilnehmerIds,
+    personIds,
+  );
+}
+
+export async function removeTeilnehmerFromFinanzgruppe(
+  veranstaltungId: number,
+  gruppeId: number,
+  personId: number,
+): Promise<void> {
+  await apiClient.delete(
+    `/veranstaltungen/${veranstaltungId}/finanzgruppen/${gruppeId}/teilnehmer/${personId}`,
   );
 }
 

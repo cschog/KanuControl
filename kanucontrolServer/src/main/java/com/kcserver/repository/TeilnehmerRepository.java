@@ -315,4 +315,6 @@ delete from Teilnehmer t
 where t.veranstaltung.id = :veranstaltungId
 """)
     void deleteByVeranstaltungId(Long veranstaltungId);
+
+    List<Teilnehmer> findAllByFinanzGruppe_Id(Long finanzGruppeId);
 }

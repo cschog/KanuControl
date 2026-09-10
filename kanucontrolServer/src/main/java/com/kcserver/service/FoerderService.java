@@ -58,18 +58,59 @@ public class FoerderService {
                         ? teilnehmer.getPerson().getGeburtsdatum()
                         : null;
 
-        Integer alter =
-                altersService.berechneAlterBeiBeginn(
+        if (geburt == null) {
+            return false;
+        }
+
+        Integer alterBeiBeginn =
+                altersService.berechneAlter(
                         geburt,
                         veranstaltung.getBeginnDatum()
                 );
 
-        if (alter == null) {
+        if (alterBeiBeginn == null) {
             return false;
         }
 
-        return alter >= typ.getMindestalter()
-                && alter <= typ.getHoechstalter();
+        /*
+         * Höchstalter bleibt der Beginn der Veranstaltung.
+         *
+         * Wer zu Beginn noch im zulässigen Höchstalter ist,
+         * bleibt für die gesamte Maßnahme förderfähig.
+         */
+        if (alterBeiBeginn > typ.getHoechstalter()) {
+            return false;
+        }
+
+        /*
+         * Mindestalter:
+         *
+         * Ein Teilnehmer darf das Mindestalter auch während
+         * der Veranstaltung erreichen.
+         *
+         * Beispiel:
+         * Mindestalter = 6
+         * das Kind wird am letzten Veranstaltungstag 6 Jahre alt.
+         * → förderfähig
+         */
+        LocalDate endeDatum =
+                veranstaltung.getEndeDatum();
+
+        if (endeDatum == null) {
+            return alterBeiBeginn >= typ.getMindestalter();
+        }
+
+        Integer alterBeiEnde =
+                altersService.berechneAlter(
+                        geburt,
+                        veranstaltung.getEndeDatum()
+                );
+
+        if (alterBeiEnde == null) {
+            return false;
+        }
+
+        return alterBeiEnde >= typ.getMindestalter();
     }
 
     public long countFoerderfaehigeTeilnehmer(

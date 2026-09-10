@@ -85,6 +85,7 @@ const ZahlungsnachweisDialog = ({
   const [saving, setSaving] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
+  const [bereitsBezahlteAnzeigen, setBereitsBezahlteAnzeigen] = useState(false);
 
   const [referenzObjekt, setReferenzObjekt] = useState<ReferenzObjekt>(() => {
     const gespeichert = localStorage.getItem(REFERENZ_STORAGE_KEY);
@@ -111,6 +112,7 @@ const ZahlungsnachweisDialog = ({
       setBetrag(zahlungsnachweis.betrag);
       setZahlungsweg(zahlungsnachweis.zahlungsweg ?? null);
       setFinanzGruppeId(zahlungsnachweis.finanzGruppeId ?? null);
+      setBereitsBezahlteAnzeigen(false);
 
       setSelectedIds(
         zahlungsnachweis.positionen
@@ -163,37 +165,42 @@ const ZahlungsnachweisDialog = ({
    * =========================================================
    */
 
-  const bestehendeTeilnehmerIds = useMemo(() => {
-    return new Set(
-      zahlungsnachweis?.positionen
-        ?.map((p) => p.teilnehmerId)
-        .filter((id): id is number => id !== undefined) ?? [],
-    );
-  }, [zahlungsnachweis]);
+const gefilterteTeilnehmer = useMemo(() => {
+  const suchtext = suche.trim().toLowerCase();
 
-  const gefilterteTeilnehmer = useMemo(() => {
-    const suchtext = suche.trim().toLowerCase();
-
-    const verfuegbareTeilnehmer = teilnehmer.filter((t) => {
-      if (zahlungsnachweis && bestehendeTeilnehmerIds.has(t.id)) {
-        return true;
-      }
-
-      return t.zahlungsstatus !== "GRUEN";
-    });
-
-    if (!suchtext) {
-      return verfuegbareTeilnehmer;
+  const verfuegbareTeilnehmer = teilnehmer.filter((t) => {
+    // Bereits bezahlte Teilnehmer nur anzeigen,
+    // wenn der Schalter aktiviert ist.
+    if (bereitsBezahlteAnzeigen) {
+      return true;
     }
 
-    return verfuegbareTeilnehmer.filter((t) => {
-      const name = `${t.person?.name ?? ""} ${t.person?.vorname ?? ""}`.toLowerCase();
+    // Teilnehmer mit offenem Betrag immer anzeigen.
+    if (t.zahlungsstatus !== "GRUEN") {
+      return true;
+    }
 
-      const verein = t.person?.hauptvereinAbk?.toLowerCase() ?? "";
+    // Beim Bearbeiten müssen Teilnehmer, die bereits diesem
+    // Zahlungsnachweis zugeordnet sind, immer sichtbar bleiben.
+    if (zahlungsnachweis) {
+      return zahlungsnachweis.positionen.some((p) => p.teilnehmerId === t.id);
+    }
 
-      return name.includes(suchtext) || verein.includes(suchtext);
-    });
-  }, [teilnehmer, suche, zahlungsnachweis, bestehendeTeilnehmerIds]);
+    return false;
+  });
+
+  if (!suchtext) {
+    return verfuegbareTeilnehmer;
+  }
+
+  return verfuegbareTeilnehmer.filter((t) => {
+    const name = `${t.person?.name ?? ""} ${t.person?.vorname ?? ""}`.toLowerCase();
+
+    const verein = t.person?.hauptvereinAbk?.toLowerCase() ?? "";
+
+    return name.includes(suchtext) || verein.includes(suchtext);
+  });
+}, [teilnehmer, suche, zahlungsnachweis, bereitsBezahlteAnzeigen]);
 
   /*
    * =========================================================
@@ -206,12 +213,14 @@ const ZahlungsnachweisDialog = ({
     gefilterteTeilnehmer.every((t) => selectedIds.includes(t.id));
 
   const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.checked) {
-      setSelectedIds((prev) => [...new Set([...prev, ...gefilterteTeilnehmer.map((t) => t.id)])]);
-    } else {
-      const ids = new Set(gefilterteTeilnehmer.map((t) => t.id));
+    const ids = gefilterteTeilnehmer.map((t) => t.id);
 
-      setSelectedIds((prev) => prev.filter((id) => !ids.has(id)));
+    if (event.target.checked) {
+      setSelectedIds((prev) => [...new Set([...prev, ...ids])]);
+    } else {
+      const idsToRemove = new Set(ids);
+
+      setSelectedIds((prev) => prev.filter((id) => !idsToRemove.has(id)));
     }
   };
 
@@ -260,41 +269,104 @@ const ZahlungsnachweisDialog = ({
 
     setSaving(true);
 
-    try {
-      const ausgewaehlteTeilnehmer = selectedIds
-        .map((id) => teilnehmer.find((t) => t.id === id))
-        .filter(
-          (
-            t,
-          ): t is TeilnehmerListDTO & {
-            id: number;
-          } => t !== undefined && t.id !== undefined,
-        );
+   try {
+     const ausgewaehlteTeilnehmer = selectedIds
+       .map((id) => teilnehmer.find((t) => t.id === id))
+       .filter(
+         (
+           t,
+         ): t is TeilnehmerListDTO & {
+           id: number;
+         } => t !== undefined && t.id !== undefined,
+       );
 
-      const positionen: ZahlungsPositionDTO[] = ausgewaehlteTeilnehmer.map((t) => ({
-        id: -t.id,
-        teilnehmerId: t.id,
-        vorname: t.person.vorname,
-        nachname: t.person.name,
-        betrag: 0,
-      }));
+     const positionen: ZahlungsPositionDTO[] = [];
 
-      await onSave(
-        {
-          datum,
-          betrag,
-          zahlungsweg,
-          finanzGruppeId,
-          bemerkung,
-          positionen,
-        },
-        dokumente,
-        referenzObjekt,
-      );
-    } finally {
-      setSaving(false);
-    }
+     let restbetrag = betrag;
+
+     for (const t of ausgewaehlteTeilnehmer) {
+       if (restbetrag <= 0) {
+         break;
+       }
+
+       const bisherInDiesemNachweis =
+         zahlungsnachweis?.positionen.find((p) => p.teilnehmerId === t.id)?.betrag ?? 0;
+
+       const offen = Math.max(
+         0,
+         (t.sollBeitrag ?? 0) - (t.gezahlterBetrag ?? 0) + bisherInDiesemNachweis,
+       );
+
+       const zuordnung = Math.min(offen, restbetrag);
+
+       if (zuordnung > 0) {
+         positionen.push({
+           id: zahlungsnachweis?.positionen.find((p) => p.teilnehmerId === t.id)?.id ?? -t.id,
+
+           teilnehmerId: t.id,
+
+           vorname: t.person.vorname,
+
+           nachname: t.person.name,
+
+           betrag: zuordnung,
+         });
+
+         restbetrag -= zuordnung;
+       }
+     }
+
+     await onSave(
+       {
+         datum,
+         betrag,
+         zahlungsweg,
+         finanzGruppeId,
+         bemerkung,
+         positionen,
+       },
+       dokumente,
+       referenzObjekt,
+     );
+   } finally {
+     setSaving(false);
+   }
   };
+  
+  const gesamterTeilnehmerBeitrag = selectedIds.reduce((sum, id) => {
+    const t = teilnehmer.find((teilnehmer) => teilnehmer.id === id);
+
+    if (!t) {
+      return sum;
+    }
+
+    return sum + Number(t.sollBeitrag ?? 0);
+  }, 0);
+
+  const gesamterOffenerBetrag = selectedIds.reduce((sum, id) => {
+    const t = teilnehmer.find((teilnehmer) => teilnehmer.id === id);
+
+    if (!t) {
+      return sum;
+    }
+
+    const offen = Math.max(0, Number(t.sollBeitrag ?? 0) - Number(t.gezahlterBetrag ?? 0));
+
+    return sum + offen;
+  }, 0);
+
+  const bestehendZugeordneterBetrag = zahlungsnachweis
+    ? zahlungsnachweis.positionen.reduce((sum, position) => sum + Number(position.betrag ?? 0), 0)
+    : 0;
+
+  const automatischZugeordneterBetrag = zahlungsnachweis
+    ? bestehendZugeordneterBetrag
+    : betrag === null
+      ? 0
+      : Math.min(betrag, gesamterOffenerBetrag);
+
+  const ueberzahlung =
+    !zahlungsnachweis && betrag !== null ? Math.max(0, betrag - automatischZugeordneterBetrag) : 0;
 
   /*
    * =========================================================
@@ -588,6 +660,16 @@ const ZahlungsnachweisDialog = ({
                   {selectedIds.length} ausgewählt
                 </Typography>
               </Box>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    size="small"
+                    checked={bereitsBezahlteAnzeigen}
+                    onChange={(e) => setBereitsBezahlteAnzeigen(e.target.checked)}
+                  />
+                }
+                label="Bereits bezahlte Teilnehmer anzeigen"
+              />
 
               <TextField
                 size="small"
@@ -637,32 +719,9 @@ const ZahlungsnachweisDialog = ({
                     onChange={handleSelectAll}
                   />
 
-                  <Typography
-                    fontWeight={700}
-                    sx={{
-                      fontSize: {
-                        xs: "0.85rem",
-                        sm: "1rem",
-                      },
-                    }}
-                  >
-                    Teilnehmer
-                  </Typography>
+                  <Typography fontWeight={700}>Teilnehmer</Typography>
 
-                  <Typography
-                    fontWeight={700}
-                    textAlign="right"
-                    sx={{
-                      pr: {
-                        xs: 0.5,
-                        sm: 1,
-                      },
-                      fontSize: {
-                        xs: "0.8rem",
-                        sm: "1rem",
-                      },
-                    }}
-                  >
+                  <Typography fontWeight={700} textAlign="right">
                     Offen
                   </Typography>
                 </Box>
@@ -781,11 +840,49 @@ const ZahlungsnachweisDialog = ({
                   Bitte mindestens einen Teilnehmer auswählen.
                 </Alert>
               )}
+              {betrag !== null && selectedIds.length > 0 && (
+                <Alert severity={ueberzahlung > 0 ? "warning" : "success"} sx={{ mt: 1 }}>
+                  <Stack spacing={0.5}>
+                    {zahlungsnachweis ? (
+                      <>
+                        <Typography>
+                          Teilnehmerbeiträge:{" "}
+                          <strong>{gesamterTeilnehmerBeitrag.toFixed(2)} €</strong>
+                        </Typography>
 
-              {selectedIds.length > 0 && betrag !== null && (
-                <Alert severity="info" sx={{ mt: 1 }}>
-                  Der Gesamtbetrag von <strong>{betrag.toFixed(2)} €</strong> wird entsprechend der
-                  offenen Sollbeträge auf die ausgewählten Teilnehmer verteilt.
+                        <Typography>
+                          Diesem Zahlungsnachweis zugeordnet:{" "}
+                          <strong>{bestehendZugeordneterBetrag.toFixed(2)} €</strong>
+                        </Typography>
+
+                        <Typography>
+                          Noch offen: <strong>{gesamterOffenerBetrag.toFixed(2)} €</strong>
+                        </Typography>
+                      </>
+                    ) : (
+                      <>
+                        <Typography>
+                          Zahlungsbetrag: <strong>{betrag.toFixed(2)} €</strong>
+                        </Typography>
+
+                        <Typography>
+                          Offene Beiträge der ausgewählten Teilnehmer:{" "}
+                          <strong>{gesamterOffenerBetrag.toFixed(2)} €</strong>
+                        </Typography>
+
+                        <Typography>
+                          Automatisch zugeordnet:{" "}
+                          <strong>{automatischZugeordneterBetrag.toFixed(2)} €</strong>
+                        </Typography>
+
+                        {ueberzahlung > 0 && (
+                          <Typography>
+                            Überzahlung: <strong>{ueberzahlung.toFixed(2)} €</strong>
+                          </Typography>
+                        )}
+                      </>
+                    )}
+                  </Stack>
                 </Alert>
               )}
             </Box>
