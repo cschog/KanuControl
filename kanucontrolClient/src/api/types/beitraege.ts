@@ -1,4 +1,5 @@
 // src/api/types/beitraege.ts
+
 import { DokumentDTO } from "@/api/types/dokument";
 
 export type TeilnehmerRolle = "L" | "M" | null;
@@ -49,6 +50,7 @@ export interface ZahlungsnachweisListDTO {
   bemerkung?: string;
   anzahlTeilnehmer: number;
   anzahlDokumente: number;
+  rueckzahlung: boolean;
 }
 
 export interface ZahlungsnachweisUpdateDTO {

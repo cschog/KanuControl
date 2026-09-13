@@ -2,6 +2,7 @@ package com.kcserver.dto.abrechnung;
 
 import com.kcserver.enumtype.BuchungsHerkunft;
 import com.kcserver.enumtype.FinanzKategorie;
+import com.kcserver.enumtype.Zahlungsweg;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -14,6 +15,6 @@ public class AbrechnungBuchungDTO {
     private BuchungsHerkunft herkunft;
     private FinanzKategorie kategorie;
     private BigDecimal betrag;
-
     private String beschreibung;
+    private Zahlungsweg zahlungsweg;
 }

@@ -1,3 +1,5 @@
+// src/components/finanzen/beitraege/RueckzahlungTeilnehmerbeitragDialog.tsx
+
 import {
   Alert,
   Dialog,
@@ -8,12 +10,17 @@ import {
   Stack,
   TextField,
   Typography,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 
 import { useEffect, useState } from "react";
 
 import { OffeneUeberzahlungDTO } from "@/api/types/beitraege";
 import { RueckzahlungTeilnehmerbeitragCreate } from "@/api/types/abrechnung";
+import { Zahlungsweg } from "@/api/types/beitraege";
 
 interface Props {
   open: boolean;
@@ -34,6 +41,7 @@ export default function RueckzahlungTeilnehmerbeitragDialog({
   const [betrag, setBetrag] = useState("");
   const [beschreibung, setBeschreibung] = useState("");
   const [saving, setSaving] = useState(false);
+  const [zahlungsweg, setZahlungsweg] = useState<Zahlungsweg | "">("");
 
   /* =========================================================
      RESET
@@ -43,6 +51,7 @@ export default function RueckzahlungTeilnehmerbeitragDialog({
     if (open) {
       setBetrag("");
       setBeschreibung("");
+      setZahlungsweg("");
     }
   }, [open, ueberzahlung]);
 
@@ -57,7 +66,8 @@ export default function RueckzahlungTeilnehmerbeitragDialog({
     betrag.trim() !== "" &&
     Number.isFinite(rueckzahlungsbetrag) &&
     rueckzahlungsbetrag > 0 &&
-    rueckzahlungsbetrag <= ueberzahlung.offeneUeberzahlung;
+    rueckzahlungsbetrag <= ueberzahlung.offeneUeberzahlung &&
+    zahlungsweg !== "";
 
   /* =========================================================
      SAVE
@@ -75,6 +85,7 @@ export default function RueckzahlungTeilnehmerbeitragDialog({
         zahlungsnachweisId: ueberzahlung.zahlungsnachweisId,
         betrag: rueckzahlungsbetrag,
         beschreibung: beschreibung.trim() || undefined,
+        zahlungsweg,
       });
     } finally {
       setSaving(false);
@@ -91,16 +102,12 @@ export default function RueckzahlungTeilnehmerbeitragDialog({
 
   return (
     <Dialog open={open} onClose={saving ? undefined : onClose} fullWidth maxWidth="sm">
-      <DialogTitle>
-        <Typography variant="h6" fontWeight={700}>
-          Teilnehmerbeitrag zurückzahlen
-        </Typography>
-      </DialogTitle>
+      <DialogTitle sx={{ fontWeight: 700 }}>Teilnehmerbeitrag zurückzahlen</DialogTitle>
 
       <DialogContent>
         <Stack spacing={2} mt={1}>
           <Typography variant="body2" color="text.secondary">
-            Für die Rückzahlung wird ein neuer Abrechnungsbeleg erstellt und der ursprünglichen
+            Für die Rückzahlung wird eine neue Abrechnungsbuchung erstellt und der ursprünglichen
             Zahlung zugeordnet.
           </Typography>
 
@@ -165,6 +172,19 @@ export default function RueckzahlungTeilnehmerbeitragDialog({
                 : undefined
             }
           />
+
+          <FormControl fullWidth required disabled={saving} error={zahlungsweg === ""}>
+            <InputLabel>Zahlungsweg</InputLabel>
+
+            <Select
+              value={zahlungsweg}
+              label="Zahlungsweg"
+              onChange={(e) => setZahlungsweg(e.target.value as Zahlungsweg)}
+            >
+              <MenuItem value="QUITTUNG">Quittung</MenuItem>
+              <MenuItem value="UEBERWEISUNG">Überweisung</MenuItem>
+            </Select>
+          </FormControl>
 
           {/* ================= BESCHREIBUNG ================= */}
 

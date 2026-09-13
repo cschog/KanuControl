@@ -1,4 +1,7 @@
+// src/api/services/finanzgruppenApi.ts
+
 import apiClient from "@/api/client/apiClient";
+import { FinanzausgleichDTO } from "@/components/finanzen/finanzausgleich/finanzausgleichTypes";
 
 /* ================= TYPES ================= */
 
@@ -20,12 +23,30 @@ export interface FinanzGruppe {
   teilnehmer: TeilnehmerKurz[];
 }
 
+export type FinanzausgleichBeitragsstatus = "OK" | "ABWEICHUNG";
+
+export type FinanzausgleichGesamtstatus =
+  | "OK"
+  | "FINANZGRUPPEN_ABWEICHUNG"
+  | "BEITRAEGE_FEHLEN"
+  | "UEBERZAHLUNG";
+
+export interface FinanzausgleichPruefungDTO {
+  gesamtSoll: number;
+  gesamtUeberweisungen: number;
+  gesamtQuittungen: number;
+  gesamtIst: number;
+  status: FinanzausgleichGesamtstatus;
+  finanzgruppen: FinanzausgleichDTO[];
+}
+
 /* ================= API ================= */
 
 export async function getFinanzgruppen(veranstaltungId: number): Promise<FinanzGruppe[]> {
   const res = await apiClient.get<FinanzGruppe[]>(
     `/veranstaltungen/${veranstaltungId}/finanzgruppen`,
   );
+
   return res.data;
 }
 
@@ -37,6 +58,7 @@ export async function createFinanzgruppe(
     `/veranstaltungen/${veranstaltungId}/finanzgruppen`,
     { kuerzel },
   );
+
   return res.data;
 }
 
@@ -63,4 +85,25 @@ export async function removeTeilnehmerFromFinanzgruppe(
 
 export async function deleteFinanzGruppe(veranstaltungId: number, gruppeId: number): Promise<void> {
   await apiClient.delete(`/veranstaltungen/${veranstaltungId}/finanzgruppen/${gruppeId}`);
+}
+
+export async function getFinanzausgleich(
+  veranstaltungId: number,
+  gruppeId: number,
+): Promise<FinanzausgleichDTO> {
+  const response = await apiClient.get<FinanzausgleichDTO>(
+    `/veranstaltungen/${veranstaltungId}/finanzgruppen/${gruppeId}/finanzausgleich`,
+  );
+
+  return response.data;
+}
+
+export async function pruefeTeilnehmerBeitraege(
+  veranstaltungId: number,
+): Promise<FinanzausgleichPruefungDTO> {
+  const response = await apiClient.get<FinanzausgleichPruefungDTO>(
+    `/veranstaltungen/${veranstaltungId}/finanzgruppen/finanzausgleich/pruefung`,
+  );
+
+  return response.data;
 }

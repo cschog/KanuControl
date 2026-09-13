@@ -118,12 +118,17 @@ export async function updateTeilnehmerRolle(
   });
 }
 
+import { Teilnehmer } from "@/api/types/teilnehmer";
+
 /* =========================================================
    SEARCH WITHOUT FINANZGRUPPE
    ========================================================= */
 
-export async function searchTeilnehmer(veranstaltungId: number, search: string) {
-  const res = await apiClient.get(
+export async function searchTeilnehmer(
+  veranstaltungId: number,
+  search: string,
+): Promise<Teilnehmer[]> {
+  const res = await apiClient.get<Teilnehmer[]>(
     `/veranstaltungen/${veranstaltungId}/teilnehmer/search/ohne-finanzgruppe`,
     {
       params: {

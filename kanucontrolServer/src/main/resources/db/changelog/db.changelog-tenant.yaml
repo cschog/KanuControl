@@ -161,3 +161,7 @@ databaseChangeLog:
       file: db/changelog/changes/2026-09-07-add-urspruenglicher-zahlungsnachweis-to-abrechnung-buchung.xml
   - include:
       file: db/changelog/changes/20260909-01-add-ueberzahlungs-finanz-gruppe.xml
+  - include:
+      file: db/changelog/changes/2026-09-13_1.4.8-abrechnung-buchung-zahlungsweg.xml
+  - include:
+      file: db/changelog/changes/2026-09-13_02_rueckzahlung-zahlungsnachweis.xml

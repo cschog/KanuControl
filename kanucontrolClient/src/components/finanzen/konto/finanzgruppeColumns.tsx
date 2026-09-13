@@ -1,7 +1,8 @@
 // src/components/finanzen/finanzgruppeColumns.tsx
+
 import { ColumnDef } from "@tanstack/react-table";
-import Money from "@/components/common/Money";
 import { Button, Chip, Stack, Typography } from "@mui/material";
+
 import { FinanzGruppe } from "@/api/services/finanzgruppenApi";
 
 interface Props {
@@ -21,6 +22,7 @@ export const kuerzelColumns = ({
     accessorKey: "kuerzel",
     header: "Konto",
     size: 120,
+
     cell: ({ row }) => <Typography fontWeight={600}>{row.original.kuerzel}</Typography>,
   },
 
@@ -41,6 +43,7 @@ export const kuerzelColumns = ({
                 ? undefined
                 : (e) => {
                     e.stopPropagation();
+
                     onRemoveTeilnehmer(row.original.id, t.personId, `${t.vorname} ${t.nachname}`);
                   }
             }
@@ -48,33 +51,6 @@ export const kuerzelColumns = ({
         ))}
       </Stack>
     ),
-  },
-
-  {
-    accessorKey: "belegCount",
-    header: "Belege",
-    size: 90,
-  },
-
-  {
-    accessorKey: "einnahmen",
-    header: "Einnahmen",
-    size: 120,
-    cell: ({ row }) => <Money value={row.original.einnahmen} />,
-  },
-
-  {
-    accessorKey: "ausgaben",
-    header: "Ausgaben",
-    size: 120,
-    cell: ({ row }) => <Money value={row.original.ausgaben} />,
-  },
-
-  {
-    accessorKey: "saldo",
-    header: "Saldo",
-    size: 120,
-    cell: ({ row }) => <Money value={row.original.saldo} />,
   },
 
   {

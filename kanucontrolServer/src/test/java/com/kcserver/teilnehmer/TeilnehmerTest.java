@@ -63,14 +63,6 @@ class TeilnehmerTest extends AbstractTenantIntegrationTest {
         );
 
         ensureTenantSchema();
-
-        teilnehmerRepository.findAll().forEach(t ->
-                System.out.println(
-                        "V=" + t.getVeranstaltung().getId() +
-                                " P=" + t.getPerson().getId() +
-                                " R=" + t.getRolle()
-                )
-        );
     }
 
     /* =========================================================

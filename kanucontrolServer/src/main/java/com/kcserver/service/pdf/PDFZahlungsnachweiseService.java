@@ -6,7 +6,7 @@ import com.kcserver.entity.Zahlungsnachweis;
 import com.kcserver.enumtype.PdfDokumentTyp;
 import com.kcserver.exception.ErrorMessages;
 import com.kcserver.repository.VeranstaltungRepository;
-import com.kcserver.repository.abrechnung.ZahlungsnachweisRepository;
+import com.kcserver.repository.zahlungsnachweis.ZahlungsnachweisRepository;
 import com.kcserver.util.PdfFilenameUtil;
 import lombok.RequiredArgsConstructor;
 import org.apache.pdfbox.multipdf.LayerUtility;
@@ -85,7 +85,7 @@ public class PDFZahlungsnachweiseService {
                 "#%02d  Zahlungsnachweis %s  %s",
                 gruppe.nummer(),
                 formatDate(nachweis.getDatum()),
-                formatMoney(nachweis.getBetrag())
+                formatMoney(getPdfBetrag(nachweis))
         );
     }
 
@@ -379,6 +379,20 @@ public class PDFZahlungsnachweiseService {
         }
     }
 
+    private BigDecimal getPdfBetrag(
+            Zahlungsnachweis nachweis
+    ) {
+        if (nachweis == null || nachweis.getBetrag() == null) {
+            return BigDecimal.ZERO;
+        }
+
+        if (nachweis.getUrspruenglicherZahlungsnachweis() != null) {
+            return nachweis.getBetrag().negate();
+        }
+
+        return nachweis.getBetrag();
+    }
+
     private Map<String, String> createBelegNummern(
             List<PDFBelegGruppe> gruppen
     ) {
@@ -667,7 +681,7 @@ public class PDFZahlungsnachweiseService {
 
                 page.writeRight(
                         formatMoney(
-                                nachweis.getBetrag()
+                                getPdfBetrag(nachweis)
                         ),
                         tableX + tableWidth - 3,
                         y - 14,
@@ -682,13 +696,9 @@ public class PDFZahlungsnachweiseService {
                         y - ROW_HEIGHT
                 );
 
-                if (nachweis.getBetrag() != null) {
-
-                    gesamt =
-                            gesamt.add(
-                                    nachweis.getBetrag()
-                            );
-                }
+                gesamt = gesamt.add(
+                        getPdfBetrag(nachweis)
+                );
 
                 nummer++;
 

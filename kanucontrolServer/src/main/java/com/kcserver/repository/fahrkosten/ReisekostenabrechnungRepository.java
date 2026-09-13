@@ -66,15 +66,16 @@ and (
     );
 
     @Query("""
-    SELECT
+    select
         t.finanzGruppe.id,
-        COALESCE(SUM(r.gesamtBetrag), 0)
-    FROM Reisekostenabrechnung r
-    JOIN Teilnehmer t
-        ON t.person.id = r.fahrer.id
-       AND t.veranstaltung.id = r.veranstaltung.id
-    WHERE r.veranstaltung.id = :veranstaltungId
-    GROUP BY t.finanzGruppe.id
+        coalesce(sum(r.gesamtBetrag), 0)
+    from Reisekostenabrechnung r
+    join Teilnehmer t
+        on t.person.id = r.fahrer.id
+       and t.veranstaltung.id = r.veranstaltung.id
+    where r.veranstaltung.id = :veranstaltungId
+      and t.finanzGruppe is not null
+    group by t.finanzGruppe.id
 """)
     List<Object[]> sumGesamtBetragByFinanzGruppeGrouped(
             @Param("veranstaltungId") Long veranstaltungId

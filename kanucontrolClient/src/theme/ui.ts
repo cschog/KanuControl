@@ -48,6 +48,59 @@ export const fontSize = {
     sm: "1.3rem",
     md: "1.6rem",
   },
+
+  finanzausgleich: {
+    label: {
+      xs: "0.65rem",
+      sm: "0.75rem",
+      md: "1rem",
+    },
+
+    value: {
+      xs: "0.75rem",
+      sm: "0.9rem",
+      md: "1.2rem",
+    },
+
+    konto: {
+      xs: "0.85rem",
+      sm: "1rem",
+      md: "1.2rem",
+    },
+
+    highlight: {
+      xs: "0.9rem",
+      sm: "1.1rem",
+      md: "1.4rem",
+    },
+
+    detailTable: {
+      header: {
+        xs: "0.6rem",
+        sm: "0.75rem",
+        md: "0.9rem",
+      },
+
+      value: {
+        xs: "0.65rem",
+        sm: "0.8rem",
+        md: "1rem",
+      },
+
+      primary: {
+        xs: "0.65rem",
+        sm: "0.8rem",
+        md: "1.2rem",
+      },
+
+      secondary: {
+        xs: "0.55rem",
+        sm: "0.7rem",
+        md: "0.85rem",
+      },
+    },
+  },
+
   cardTitle: {
     xs: "0.75rem",
     sm: "0.9rem",

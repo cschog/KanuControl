@@ -452,7 +452,7 @@ Ein Konto dient der Zuordnung von Kosten und Einnahmen zu einer bestimmten Perso
 
 Jedem Konto können eine oder mehrere Personen zugeordnet werden.
 
-Das Konto SYS gehört dem System/KanuControl und wird für automatisch berechnete Beträge, wie KJFP-Zuschuss, Teilnehmer-Beiträge oder Fahrkosten verwendet.
+Das Konto VK (Vereinskonto) gehört dem System/KanuControl und wird für automatisch berechnete Beträge, wie KJFP-Zuschuss und Teilnehmer-Beiträge verwendet.
 
 ---
 
@@ -542,6 +542,53 @@ Zusätzlich können hier:
 werden.
 
 KanuControl berechnet automatisch die Summe der Teilnehmerbeiträge sowie die offenen und bereits bezahlten Beträge der Veranstaltung.
+
+### Zahlungswege: Überweisung und Quittung
+
+Bei der Erfassung eines Teilnehmerbeitrags ist der **Zahlungsweg** wichtig, weil **Überweisung** und **Quittung** in KanuControl unterschiedliche finanzielle Bedeutungen haben.
+
+#### Überweisung
+
+Bei einer **Überweisung** wird der Teilnehmerbeitrag dem **Vereinskonto (VK)** zugeführt. Der Betrag steht damit unmittelbar dem Verein zur Verfügung und erhöht nicht das Guthaben des Teilnehmerkontos.
+
+**Beispiel:** Ein Teilnehmer überweist 100 €. Diese 100 € gehen auf das VK-Konto.
+
+#### Quittung
+
+Bei einer **Quittung** wird der Teilnehmerbeitrag grundsätzlich als **Guthaben auf dem Teilnehmerkonto (TN-Konto)** erfasst.
+
+Von diesem Guthaben werden zunächst die für die Veranstaltung zu zahlenden **Teilnehmerbeiträge** abgezogen. Zusätzlich werden die Ausgaben berücksichtigt, die Mitglieder des TN-Kontos für die Veranstaltung bezahlt oder verauslagt haben, zum Beispiel:
+
+- Lebensmittel
+- Eintrittskarten
+- sonstige für die Veranstaltung verauslagte Kosten
+
+Der Saldo des TN-Kontos zeigt damit, ob die eingezahlten Teilnehmerbeiträge zusammen mit den bereits vorhandenen Mitteln ausreichen, um sowohl die geschuldeten Teilnehmerbeiträge als auch die von Mitgliedern des TN-Kontos verauslagten Kosten zu decken.
+
+**Beispiel:**
+
+- Quittungen / Guthaben (Teilnehmerbeiträge) auf dem TN-Konto: **800 €**
+- zu zahlende Teilnehmerbeiträge: **800 €**
+- Ausgaben eines Mitglieds des TN-Kontos, z. B. für Lebensmittel: **150 €**
+- **Saldo des TN-Kontos: -150 €**
+
+In diesem Beispiel gleichen die Quittungen zunächst genau die zu zahlenden Teilnehmerbeiträge aus. Das Mitglied des TN-Kontos hat darüber hinaus **150 € für die Veranstaltung ausgegeben**.
+
+Der negative Saldo von **-150 €** bedeutet daher, dass dem TN-Konto noch **150 € zustehen**. Dieser Betrag wird später im Rahmen des **Finanzausgleichs** vom **Vereinskonto (VK)** an das TN-Konto erstattet.
+
+**Hat das TN-Konto keine zusätzlichen Ausgaben, beträgt der Saldo bei einem vollständig ausgeglichenen Teilnehmerbeitrag 0 €.**
+
+> **Merksatz:** Quittungen dienen zunächst dazu, die geschuldeten Teilnehmerbeiträge auszugleichen. Erst zusätzliche Ausgaben, die Mitglieder des TN-Kontos für die Veranstaltung verauslagt haben, führen zu einem negativen Saldo und damit zu einem Erstattungsanspruch gegenüber dem Vereinskonto.
+
+#### Sonderfall: Quittung mit tatsächlicher Geldübergabe an die Leitung
+
+Entscheidend ist nicht allein, dass eine Quittung ausgestellt wurde, sondern **wer das Geld nach der Zahlung tatsächlich besitzt**.
+
+Übergibt ein Teilnehmer das Geld physisch an die Veranstaltungsleitung und erhält dafür eine Quittung, hat der Teilnehmer das Geld anschließend nicht mehr selbst zur Verfügung. In diesem Fall wird der Teilnehmerbeitrag finanziell **wie eine Überweisung** behandelt und dem **Vereinskonto (VK)** zugerechnet – nicht als Guthaben auf dem TN-Konto.
+
+> **Merksatz:** Eine Quittung führt nur dann zu Guthaben auf dem TN-Konto, wenn das Geld beim Teilnehmer bzw. bei dessen TN-Konto verbleibt. Wird das Geld an die Leitung übergeben, wird der Beitrag finanziell wie eine Überweisung behandelt.
+
+Diese Unterscheidung ist wichtig, damit der spätere **Finanzausgleich** korrekt berechnet wird und nur tatsächlich vom TN-Konto verauslagte Beträge vom VK erstattet werden.
 
 ---
 

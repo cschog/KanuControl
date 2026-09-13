@@ -2,7 +2,7 @@ package com.kcserver.service.zahlungsnachweis;
 
 import com.kcserver.enumtype.Zahlungsstatus;
 import com.kcserver.repository.abrechnung.TeilnehmerZahlungSumme;
-import com.kcserver.repository.abrechnung.ZahlungsnachweisRepository;
+import com.kcserver.repository.zahlungsnachweis.ZahlungsnachweisRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;

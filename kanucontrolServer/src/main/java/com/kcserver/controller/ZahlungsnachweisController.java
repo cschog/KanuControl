@@ -27,7 +27,6 @@ public class ZahlungsnachweisController {
 
     private final ZahlungsnachweisService zahlungsnachweisService;
     private final DokumentService dokumentService;
-    private final AbrechnungBelegService belegService;
 
     /* =========================================================
        ZAHLUNGSNACHWEISE
@@ -226,18 +225,23 @@ public class ZahlungsnachweisController {
    RÜCKZAHLUNG ÜBERZAHLUNG
    ========================================================= */
 
+  /* =========================================================
+   RÜCKZAHLUNG ÜBERZAHLUNG
+   ========================================================= */
+
     @PostMapping("/rueckzahlung")
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<AbrechnungBuchungDTO> rueckzahlung(
+    public ApiResponse<ZahlungsnachweisDetailDTO> rueckzahlung(
             @PathVariable Long veranstaltungId,
             @RequestBody @Valid RueckzahlungTeilnehmerbeitragDTO dto
     ) {
         return ApiResponse.of(
-                belegService.rueckzahlungTeilnehmerbeitrag(
+                zahlungsnachweisService.rueckzahlungTeilnehmerbeitrag(
                         veranstaltungId,
                         dto.getZahlungsnachweisId(),
                         dto.getBetrag(),
-                        dto.getBeschreibung()
+                        dto.getBeschreibung(),
+                        dto.getZahlungsweg()
                 )
         );
     }

@@ -12,7 +12,7 @@ import com.kcserver.enumtype.Zahlungsweg;
 import com.kcserver.repository.FinanzGruppeRepository;
 import com.kcserver.repository.TeilnehmerRepository;
 import com.kcserver.repository.abrechnung.AbrechnungRepository;
-import com.kcserver.repository.abrechnung.ZahlungsnachweisRepository;
+import com.kcserver.repository.zahlungsnachweis.ZahlungsnachweisRepository;
 import com.kcserver.service.FoerderService;
 import com.kcserver.service.abrechnung.AbrechnungBelegService;
 import com.kcserver.service.abrechnung.AbrechnungSynchronisationsService;

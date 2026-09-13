@@ -17,6 +17,7 @@ public class ZahlungsnachweisListDTO {
     private Long finanzGruppeId;
     private Long anzahlTeilnehmer;
     private Long anzahlDokumente;
+    private boolean rueckzahlung;
 
     public ZahlungsnachweisListDTO(
             Long id,
@@ -26,7 +27,8 @@ public class ZahlungsnachweisListDTO {
             Zahlungsweg zahlungsweg,
             Long finanzGruppeId,
             Long anzahlTeilnehmer,
-            Long anzahlDokumente
+            Long anzahlDokumente,
+            boolean rueckzahlung
     ) {
         this.id = id;
         this.datum = datum;
@@ -36,5 +38,6 @@ public class ZahlungsnachweisListDTO {
         this.finanzGruppeId = finanzGruppeId;
         this.anzahlTeilnehmer = anzahlTeilnehmer;
         this.anzahlDokumente = anzahlDokumente;
+        this.rueckzahlung = rueckzahlung;
     }
 }

@@ -49,10 +49,16 @@ public enum FinanzKategorie {
             70
     ),
 
+    TEILNEHMERBEITRAG_RUECKZAHLUNG(
+            "Rückzahlung Teilnehmerbeitrag",
+            FinanzTyp.KOSTEN,
+            80
+    ),
+
     SONSTIGE_KOSTEN(
             "Sonstige Kosten",
             FinanzTyp.KOSTEN,
-            80
+            90
     ),
 
     /* ================= EINNAHMEN ================= */
@@ -63,8 +69,8 @@ public enum FinanzKategorie {
             110
     ),
 
-    PFAND(
-            "Pfand",
+    EIGENANTEIL(
+            "Eigenanteil Verein",
             FinanzTyp.EINNAHME,
             120
     ),
@@ -75,16 +81,24 @@ public enum FinanzKategorie {
             130
     ),
 
-    EIGENANTEIL(
-            "Eigenanteil Verein",
+    PFAND(
+            "Pfand",
             FinanzTyp.EINNAHME,
-            150
+            140
     ),
 
     SONSTIGE_EINNAHMEN(
             "Sonstige Einnahmen",
             FinanzTyp.EINNAHME,
-            160
+            150
+    ),
+
+    /* ================= FINANZAUSGLEICH ================= */
+
+    FINANZAUSGLEICH(
+            "Finanzausgleich",
+            FinanzTyp.AUSGLEICH,
+            200
     );
 
     private final String bezeichnung;
@@ -112,5 +126,9 @@ public enum FinanzKategorie {
 
     public boolean isEinnahme() {
         return typ == FinanzTyp.EINNAHME;
+    }
+
+    public boolean isAusgleich() {
+        return typ == FinanzTyp.AUSGLEICH;
     }
 }

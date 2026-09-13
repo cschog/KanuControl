@@ -3,12 +3,14 @@ package com.kcserver.repository.abrechnung;
 import com.kcserver.entity.Abrechnung;
 import com.kcserver.entity.AbrechnungBeleg;
 import com.kcserver.entity.FinanzGruppe;
+import com.kcserver.enumtype.BuchungsHerkunft;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface AbrechnungBelegRepository
         extends JpaRepository<AbrechnungBeleg, Long> {
@@ -86,4 +88,26 @@ public interface AbrechnungBelegRepository
     WHERE b.abrechnung.veranstaltung.id = :veranstaltungId
 """)
     boolean existsByVeranstaltungId(Long veranstaltungId);
+
+    @Query("""
+        SELECT DISTINCT b
+        FROM AbrechnungBeleg b
+        JOIN b.positionen p
+        WHERE b.abrechnung.id = :abrechnungId
+          AND b.finanzGruppe.id = :finanzGruppeId
+          AND p.herkunft = :herkunft
+        """)
+    Optional<AbrechnungBeleg> findByAbrechnungIdAndFinanzGruppeIdAndHerkunft(
+            @Param("abrechnungId") Long abrechnungId,
+            @Param("finanzGruppeId") Long finanzGruppeId,
+            @Param("herkunft") BuchungsHerkunft herkunft
+    );
+
+    private String getFinanzausgleichBelegnummer(
+            FinanzGruppe finanzGruppe
+    ) {
+        return BuchungsHerkunft.FINANZAUSGLEICH.getBelegnummer()
+                + "-"
+                + finanzGruppe.getKuerzel();
+    }
 }

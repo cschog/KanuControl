@@ -23,7 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
-import com.kcserver.repository.abrechnung.ZahlungsnachweisRepository;
+import com.kcserver.repository.zahlungsnachweis.ZahlungsnachweisRepository;
 
 
 import java.time.LocalDate;

@@ -1,4 +1,4 @@
-package com.kcserver.repository.abrechnung;
+package com.kcserver.repository.zahlungsnachweis;
 
 import java.math.BigDecimal;
 

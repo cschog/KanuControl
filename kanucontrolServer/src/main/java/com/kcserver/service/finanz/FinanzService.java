@@ -49,7 +49,7 @@ public class FinanzService {
 
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                   ErrorMessages.EIGENANTEIL_TOO_LOW
+                    ErrorMessages.EIGENANTEIL_TOO_LOW
             );
         }
     }
@@ -73,8 +73,10 @@ public class FinanzService {
         return v == null ? BigDecimal.ZERO : v;
     }
 
-    public BigDecimal sumByTyp(List<? extends FinanzPosition> list,
-                               FinanzTyp typ) {
+    public BigDecimal sumByTyp(
+            List<? extends FinanzPosition> list,
+            FinanzTyp typ
+    ) {
 
         BigDecimal sum = list.stream()
                 .filter(p -> p.getKategorie().getTyp() == typ)
@@ -91,6 +93,7 @@ public class FinanzService {
         return buildSummary(
                 list,
                 teilnehmerAnzahl,
+                BigDecimal.ZERO,
                 BigDecimal.ZERO
         );
     }
@@ -100,15 +103,61 @@ public class FinanzService {
             long teilnehmerAnzahl,
             BigDecimal fahrtkosten
     ) {
+        return buildSummary(
+                list,
+                teilnehmerAnzahl,
+                fahrtkosten,
+                BigDecimal.ZERO
+        );
+    }
+
+    public FinanzSummaryDTO buildSummary(
+            List<? extends FinanzPosition> list,
+            long teilnehmerAnzahl,
+            BigDecimal fahrtkosten,
+            BigDecimal rueckzahlungen
+    ) {
 
         fahrtkosten = safe(fahrtkosten);
+        rueckzahlungen = safe(rueckzahlungen);
 
         BigDecimal kosten =
                 sumKosten(list)
                         .add(fahrtkosten)
                         .setScale(2, RoundingMode.HALF_UP);
 
-        BigDecimal einnahmen = sumEinnahmen(list);
+        /*
+         * Ursprüngliche Einnahmen aus der Abrechnung.
+         */
+        BigDecimal urspruenglicheEinnahmen =
+                sumEinnahmen(list);
+
+        /*
+         * Teilnehmerbeitrag netto nach Rückzahlungen.
+         */
+        BigDecimal teilnehmerbeitrag =
+                list.stream()
+                        .filter(p ->
+                                p.getKategorie()
+                                        == FinanzKategorie.TEILNEHMERBEITRAG
+                        )
+                        .map(FinanzPosition::getBetrag)
+                        .map(this::safe)
+                        .reduce(
+                                BigDecimal.ZERO,
+                                BigDecimal::add
+                        )
+                        .subtract(rueckzahlungen)
+                        .max(BigDecimal.ZERO)
+                        .setScale(2, RoundingMode.HALF_UP);
+
+        /*
+         * Gesamteinnahmen ebenfalls netto nach Rückzahlungen.
+         */
+        BigDecimal einnahmen =
+                urspruenglicheEinnahmen
+                        .subtract(rueckzahlungen)
+                        .setScale(2, RoundingMode.HALF_UP);
 
         BigDecimal saldo =
                 einnahmen.subtract(kosten);
@@ -169,9 +218,11 @@ public class FinanzService {
         );
         dto.setKjfpZuschuss(kjfpZuschuss);
         dto.setFahrtkosten(fahrtkosten);
+        dto.setTeilnehmerbeitrag(teilnehmerbeitrag);
 
         return dto;
     }
+
     public BigDecimal berechneNotwendigenTeilnehmerBeitrag(
             List<? extends FinanzPosition> positionen,
             long teilnehmerAnzahl,
@@ -227,5 +278,4 @@ public class FinanzService {
         GELB,
         ROT
     }
-
 }

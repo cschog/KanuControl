@@ -28,10 +28,6 @@ public class AbrechnungBuchung implements FinanzPosition {
     private Teilnehmer teilnehmer;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "urspruenglicher_zahlungsnachweis_id")
-    private Zahlungsnachweis urspruenglicherZahlungsnachweis;
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reisekostenabrechnung_id")
     private Reisekostenabrechnung reisekostenabrechnung;
 

@@ -10,6 +10,7 @@ export type FinanzKategorie =
   | "MIETE"
   | "SONSTIGE_KOSTEN"
   | "TEILNEHMERBEITRAG"
+  | "TEILNEHMERBEITRAG_RUECKZAHLUNG"
   | "PFAND"
   | "KJFP_ZUSCHUSS"
   | "SONSTIGE_EINNAHMEN";
@@ -26,6 +27,7 @@ export const kategorieZuTyp: Record<FinanzKategorie, FinanzTyp> = {
   VERBRAUCHSMATERIAL: "KOSTEN",
   KULTUR: "KOSTEN",
   MIETE: "KOSTEN",
+  TEILNEHMERBEITRAG_RUECKZAHLUNG: "KOSTEN",
   SONSTIGE_KOSTEN: "KOSTEN",
 
   TEILNEHMERBEITRAG: "EINNAHME",
@@ -42,6 +44,7 @@ export const finanzKategorieLabel: Record<FinanzKategorie, string> = {
   VERBRAUCHSMATERIAL: "Verbrauchsmaterial",
   KULTUR: "Kultur",
   MIETE: "Miete",
+  TEILNEHMERBEITRAG_RUECKZAHLUNG: "Rückzahlung Teilnehmerbeitrag",
   SONSTIGE_KOSTEN: "Sonstige Kosten",
 
   TEILNEHMERBEITRAG: "Teilnehmerbeitrag",

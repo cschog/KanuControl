@@ -3,6 +3,7 @@ import { WithId } from "@/components/common/GenericTableTanstack";
 import { AbrechnungsStatus } from "@/api/enums/AbrechnungsStatus";
 import { BuchungsHerkunft } from "@/api/types/BuchungsHerkunft";
 import { DokumentDTO } from "@/api/types/dokument";
+import { Zahlungsweg } from "@/api/types/beitraege";
 
 export interface AbrechnungBeleg {
   id: number;
@@ -51,6 +52,7 @@ export interface FinanzSummary {
   teilnehmerKostenProPerson: number;
   empfohlenerTeilnehmerBeitrag: number;
   fahrtkosten: number;
+  teilnehmerbeitrag: number;
 }
 
 export interface BelegCreate {
@@ -77,4 +79,5 @@ export interface RueckzahlungTeilnehmerbeitragCreate {
   zahlungsnachweisId: number;
   betrag: number;
   beschreibung?: string;
+  zahlungsweg: Zahlungsweg;
 }

@@ -108,74 +108,89 @@ export default function BuchungenPage({ veranstaltungId }: Props) {
     load();
   }, [load]);
 
-  const finanzpositionen = useMemo(() => {
-    if (!abrechnung) {
-      return [];
-    }
+ const finanzpositionen = useMemo(() => {
+   if (!abrechnung) {
+     return [];
+   }
 
-    const positionen: Array<{
-      kategorie: FinanzUebersichtsKategorie;
-      betrag: number;
-    }> = Object.values(
-      abrechnung.belege
-        .flatMap((beleg) => beleg.positionen.filter(istInBeleglisteSichtbar))
-        .reduce<
-          Record<
-            FinanzKategorie,
-            {
-              kategorie: FinanzKategorie;
-              betrag: number;
-            }
-          >
-        >(
-          (map, position) => {
-            const vorhanden = map[position.kategorie];
+   const positionen: Array<{
+     kategorie: FinanzUebersichtsKategorie;
+     betrag: number;
+   }> = Object.values(
+     abrechnung.belege
+       .flatMap((beleg) => beleg.positionen.filter(istInBeleglisteSichtbar))
+       .reduce<
+         Record<
+           FinanzKategorie,
+           {
+             kategorie: FinanzKategorie;
+             betrag: number;
+           }
+         >
+       >(
+         (map, position) => {
+           const vorhanden = map[position.kategorie];
 
-            if (vorhanden) {
-              vorhanden.betrag += position.betrag;
-            } else {
-              map[position.kategorie] = {
-                kategorie: position.kategorie,
-                betrag: position.betrag,
-              };
-            }
+           if (vorhanden) {
+             vorhanden.betrag += position.betrag;
+           } else {
+             map[position.kategorie] = {
+               kategorie: position.kategorie,
+               betrag: position.betrag,
+             };
+           }
 
-            return map;
-          },
-          {} as Record<
-            FinanzKategorie,
-            {
-              kategorie: FinanzKategorie;
-              betrag: number;
-            }
-          >,
-        ),
-    );
+           return map;
+         },
+         {} as Record<
+           FinanzKategorie,
+           {
+             kategorie: FinanzKategorie;
+             betrag: number;
+           }
+         >,
+       ),
+   );
 
-    // =========================================================
-    // FAHRKOSTEN
-    // =========================================================
+   // =========================================================
+   // TEILNEHMERBEITRAG
+   // =========================================================
 
-    if (abrechnung.finanz.fahrtkosten !== 0) {
-      positionen.push({
-        kategorie: "FAHRKOSTEN",
-        betrag: abrechnung.finanz.fahrtkosten,
-      });
-    }
+   const teilnehmerbeitragIndex = positionen.findIndex(
+     (position) => position.kategorie === "TEILNEHMERBEITRAG",
+   );
 
-    // =========================================================
-    // KJFP-ZUSCHUSS
-    // =========================================================
+   if (teilnehmerbeitragIndex >= 0) {
+     positionen[teilnehmerbeitragIndex] = {
+       ...positionen[teilnehmerbeitragIndex],
+       betrag: abrechnung.finanz.teilnehmerbeitrag,
+     };
+   }
 
-    if (abrechnung.finanz.kjfpZuschuss !== 0) {
-      positionen.push({
-        kategorie: "KJFP_ZUSCHUSS",
-        betrag: abrechnung.finanz.kjfpZuschuss,
-      });
-    }
+   // =========================================================
+   // FAHRKOSTEN
+   // =========================================================
 
-    return positionen;
-  }, [abrechnung]);
+   if (abrechnung.finanz.fahrtkosten !== 0) {
+     positionen.push({
+       kategorie: "FAHRKOSTEN",
+       betrag: abrechnung.finanz.fahrtkosten,
+     });
+   }
+
+   // =========================================================
+   // KJFP-ZUSCHUSS
+   // =========================================================
+
+   if (abrechnung.finanz.kjfpZuschuss !== 0) {
+     positionen.push({
+       kategorie: "KJFP_ZUSCHUSS",
+       betrag: abrechnung.finanz.kjfpZuschuss,
+     });
+   }
+
+   return positionen;
+ }, [abrechnung]);
 
   if (!abrechnung) {
     return <CircularProgress />;

@@ -6,8 +6,9 @@ import PlanungPage from "@/components/finanzen/planung/PlanungPage";
 import BuchungenPage from "@/components/finanzen/abrechnung/BuchungenPage";
 import BeitraegePage from "@/components/finanzen/beitraege/BeitraegePage";
 import ReisekostenPage from "@/components/finanzen/reisekosten/ReisekostenPage";
-import KontoPage from "@/components/finanzen/KontoPage";
+import KontoPage from "@/components/finanzen/konto/KontoPage";
 import FinanzenDashboard from "@/components/finanzen/FinanzenDashboard";
+import FinanzausgleichPage from "@/components/finanzen/finanzausgleich/FinanzausgleichPage";
 
 // später:
 // import FinanzausgleichPage from "...";
@@ -66,8 +67,8 @@ const FinanzRoute = ({ type }: Props) => {
       return <FinanzenDashboard />;
 
     case "finanzausgleich":
-      return <Alert severity="info">Finanzausgleich ist noch nicht implementiert.</Alert>;
-
+      return <FinanzausgleichPage veranstaltungId={id} />;
+    
     default:
       return null;
   }

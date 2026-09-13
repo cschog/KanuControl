@@ -20,6 +20,11 @@ public enum BuchungsHerkunft {
     KJFP(
             "AUTO-KJFP",
             "KJFP-Zuschuss"
+    ),
+
+    FINANZAUSGLEICH(
+            "AUTO-FA",
+            "Finanzausgleich"
     );
 
     private final String belegnummer;

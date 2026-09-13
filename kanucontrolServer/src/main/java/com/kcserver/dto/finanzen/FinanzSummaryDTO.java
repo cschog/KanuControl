@@ -19,4 +19,5 @@ public class FinanzSummaryDTO {
     private BigDecimal empfohlenerTeilnehmerBeitrag;
     private BigDecimal kjfpZuschuss;
     private BigDecimal fahrtkosten;
+    private BigDecimal teilnehmerbeitrag;
 }

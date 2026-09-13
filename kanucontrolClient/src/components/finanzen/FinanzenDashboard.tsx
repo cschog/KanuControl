@@ -516,7 +516,10 @@ const FinanzenDashboard = () => {
                   }}
                 >
                   <Typography>{k.name}</Typography>
-                  <Money value={-k.betrag} colorize />
+                  <Money
+                    value={k.name === "TEILNEHMERBEITRAG_RUECKZAHLUNG" ? k.betrag : -k.betrag}
+                    colorize
+                  />
                 </Box>
               ))}
 

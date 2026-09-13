@@ -8,6 +8,7 @@ import com.kcserver.enumtype.AbrechnungsStatus;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.exception.ErrorMessages;
 import com.kcserver.repository.abrechnung.AbrechnungRepository;
+import com.kcserver.repository.zahlungsnachweis.ZahlungsnachweisRepository;
 import com.kcserver.service.finanz.FinanzService;
 import com.kcserver.mapper.AbrechnungMapper;
 import com.kcserver.repository.*;
@@ -41,6 +42,7 @@ public class AbrechnungService {
     private final VeranstaltungValidator validator;
     private final AbrechnungSynchronisationsService synchronisationsService;
     private final ReisekostenabrechnungService reisekostenabrechnungService;
+    private final ZahlungsnachweisRepository zahlungsnachweisRepository;
 
 
     /* =========================================================
@@ -68,11 +70,16 @@ public class AbrechnungService {
         List<Teilnehmer> teilnehmer =
                 teilnehmerRepository.findAllWithPerson(veranstaltungId);
 
+        BigDecimal rueckzahlungen =
+                zahlungsnachweisRepository
+                        .sumRueckzahlungenByVeranstaltung(veranstaltungId);
+
         FinanzSummaryDTO summary =
                 finanzService.buildSummary(
                         getAllPositionen(abrechnung),
                         teilnehmer.size(),
-                        fahrtkosten
+                        fahrtkosten,
+                        rueckzahlungen
                 );
 
         dto.setFinanz(summary);

@@ -6,7 +6,6 @@ import com.kcserver.enumtype.BuchungsHerkunft;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.Query;
@@ -61,8 +60,32 @@ and b.kategorie in (
     );
 
     @Query("""
+    select
+        b.beleg.finanzGruppe.id,
+        coalesce(sum(b.betrag), 0)
+    from AbrechnungBuchung b
+    where b.beleg.abrechnung.veranstaltung.id = :veranstaltungId
+      and b.betrag > 0
+      and b.kategorie in (
+          com.kcserver.enumtype.FinanzKategorie.UNTERKUNFT,
+          com.kcserver.enumtype.FinanzKategorie.VERPFLEGUNG,
+          com.kcserver.enumtype.FinanzKategorie.HONORARE,
+          com.kcserver.enumtype.FinanzKategorie.FAHRTKOSTEN,
+          com.kcserver.enumtype.FinanzKategorie.VERBRAUCHSMATERIAL,
+          com.kcserver.enumtype.FinanzKategorie.KULTUR,
+          com.kcserver.enumtype.FinanzKategorie.MIETE,
+          com.kcserver.enumtype.FinanzKategorie.SONSTIGE_KOSTEN
+      )
+    group by b.beleg.finanzGruppe.id
+""")
+    List<Object[]> sumAusgabenByFinanzGruppeGrouped(
+            @Param("veranstaltungId") Long veranstaltungId
+    );
+
+    @Query("""
     SELECT
         b.beleg.finanzGruppe.id,
+
         COALESCE(SUM(
             CASE
                 WHEN b.betrag > 0
@@ -75,10 +98,48 @@ and b.kategorie in (
                 ELSE 0
             END
         ), 0),
-        COALESCE(SUM(
-            CASE
-                WHEN b.betrag > 0
-                AND b.kategorie IN (
+
+   COALESCE(SUM(
+       CASE
+           /* Normale Kosten */
+           WHEN b.betrag > 0
+           AND b.kategorie IN (
+               com.kcserver.enumtype.FinanzKategorie.UNTERKUNFT,
+               com.kcserver.enumtype.FinanzKategorie.VERPFLEGUNG,
+               com.kcserver.enumtype.FinanzKategorie.HONORARE,
+               com.kcserver.enumtype.FinanzKategorie.FAHRTKOSTEN,
+               com.kcserver.enumtype.FinanzKategorie.VERBRAUCHSMATERIAL,
+               com.kcserver.enumtype.FinanzKategorie.KULTUR,
+               com.kcserver.enumtype.FinanzKategorie.MIETE,
+               com.kcserver.enumtype.FinanzKategorie.SONSTIGE_KOSTEN
+           )
+           THEN b.betrag
+   
+           ELSE 0
+       END
+   ), 0)
+
+    FROM AbrechnungBuchung b
+
+    WHERE b.beleg.abrechnung.veranstaltung.id = :veranstaltungId
+
+    GROUP BY b.beleg.finanzGruppe.id
+""")
+    List<Object[]> sumFinanzenByVeranstaltungGrouped(
+            @Param("veranstaltungId") Long veranstaltungId
+    );
+
+
+    @Query("""
+    select
+        b.beleg.finanzGruppe.id,
+
+        coalesce(sum(
+            case
+
+                /* Normale Kosten */
+                when b.betrag > 0
+                and b.kategorie in (
                     com.kcserver.enumtype.FinanzKategorie.UNTERKUNFT,
                     com.kcserver.enumtype.FinanzKategorie.VERPFLEGUNG,
                     com.kcserver.enumtype.FinanzKategorie.HONORARE,
@@ -88,49 +149,29 @@ and b.kategorie in (
                     com.kcserver.enumtype.FinanzKategorie.MIETE,
                     com.kcserver.enumtype.FinanzKategorie.SONSTIGE_KOSTEN
                 )
-                THEN b.betrag
-                ELSE 0
-            END
+                then b.betrag
+
+                /* Einnahmen reduzieren den Finanzbedarf */
+                when b.betrag > 0
+                and b.kategorie in (
+                    com.kcserver.enumtype.FinanzKategorie.PFAND,
+                    com.kcserver.enumtype.FinanzKategorie.KJFP_ZUSCHUSS,
+                    com.kcserver.enumtype.FinanzKategorie.SONSTIGE_EINNAHMEN
+                )
+                then -b.betrag
+
+                else 0
+
+            end
         ), 0)
-    FROM AbrechnungBuchung b
-    WHERE b.beleg.abrechnung.veranstaltung.id = :veranstaltungId
-    GROUP BY b.beleg.finanzGruppe.id
-""")
-    List<Object[]> sumFinanzenByVeranstaltungGrouped(Long veranstaltungId);
 
-    @Query("""
-    select coalesce(sum(-b.betrag), 0)
     from AbrechnungBuchung b
-    where b.urspruenglicherZahlungsnachweis.id = :zahlungsnachweisId
-      and b.kategorie =
-          com.kcserver.enumtype.FinanzKategorie.TEILNEHMERBEITRAG
-      and b.betrag < 0
+
+    where b.beleg.abrechnung.veranstaltung.id = :veranstaltungId
+
+    group by b.beleg.finanzGruppe.id
 """)
-    BigDecimal sumZurueckgezahltByUrspruenglichemZahlungsnachweisId(
-            @Param("zahlungsnachweisId")
-            Long zahlungsnachweisId
-    );
-
-    @Query("""
-    SELECT
-        b.urspruenglicherZahlungsnachweis.id
-            AS zahlungsnachweisId,
-
-        COALESCE(SUM(-b.betrag), 0)
-            AS zurueckgezahlt
-
-    FROM AbrechnungBuchung b
-
-    WHERE b.beleg.abrechnung.veranstaltung.id = :veranstaltungId
-      AND b.urspruenglicherZahlungsnachweis IS NOT NULL
-      AND b.kategorie =
-          com.kcserver.enumtype.FinanzKategorie.TEILNEHMERBEITRAG
-      AND b.betrag < 0
-
-    GROUP BY b.urspruenglicherZahlungsnachweis.id
-""")
-    List<ZahlungsnachweisRueckzahlungSumme>
-    sumZurueckgezahltByVeranstaltungGrouped(
+    List<Object[]> sumAbrechnungSaldoByFinanzGruppeGrouped(
             @Param("veranstaltungId") Long veranstaltungId
     );
 }

@@ -288,6 +288,22 @@ public final class ErrorMessages {
             "Der Eigenanteil muss mindestens 250 € betragen.";
 
     // =========================================================
+    // Rückzahlung Teilnehmerbeitrag
+    // =========================================================
+
+    public static final String RUECKZAHLUNGSBETRAG_MUST_BE_POSITIVE =
+            "Der Rückzahlungsbetrag muss größer als 0 sein.";
+
+    public static final String RUECKZAHLUNG_ZAHLUNGSWEG_REQUIRED =
+            "Der Zahlungsweg der Rückzahlung ist erforderlich.";
+
+    public static final String RUECKZAHLUNG_NOT_POSSIBLE =
+            "Für diesen Zahlungsnachweis besteht keine rückzahlbare Überzahlung.";
+
+    public static final String RUECKZAHLUNG_EXCEEDS_OPEN_OVERPAYMENT =
+            "Der Rückzahlungsbetrag überschreitet die noch verfügbare Überzahlung.";
+
+    // =========================================================
     // Konto
     // =========================================================
 

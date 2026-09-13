@@ -2,8 +2,7 @@ package com.kcserver.service.zahlungsnachweis;
 
 import com.kcserver.entity.Zahlungsnachweis;
 import com.kcserver.entity.ZahlungsPosition;
-import com.kcserver.repository.abrechnung.AbrechnungBuchungRepository;
-import com.kcserver.repository.abrechnung.ZahlungsnachweisRueckzahlungSumme;
+import com.kcserver.repository.zahlungsnachweis.ZahlungsnachweisRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -16,8 +15,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ZahlungsnachweisSaldoService {
 
-    private final AbrechnungBuchungRepository
-            abrechnungBuchungRepository;
+    private final ZahlungsnachweisRepository zahlungsnachweisRepository;
 
 
     /**
@@ -73,13 +71,6 @@ public class ZahlungsnachweisSaldoService {
                                 )
                         );
 
-        /*
-         * Negative Überzahlungen sollen hier nicht entstehen.
-         *
-         * Falls aus irgendeinem Grund mehr zugeordnet
-         * wurde als tatsächlich eingegangen ist,
-         * handelt es sich nicht um eine Überzahlung.
-         */
         return ueberzahlung.max(
                 BigDecimal.ZERO
         );
@@ -89,6 +80,10 @@ public class ZahlungsnachweisSaldoService {
     /**
      * Betrag, der bereits aus der Überzahlung
      * zurückgezahlt wurde.
+     *
+     * Rückzahlungen sind selbst Zahlungsnachweise und
+     * referenzieren den ursprünglichen Zahlungsnachweis
+     * über urspruenglicherZahlungsnachweis.
      */
     public BigDecimal getBereitsZurueckgezahlt(
             Zahlungsnachweis zahlungsnachweis
@@ -101,8 +96,8 @@ public class ZahlungsnachweisSaldoService {
         }
 
         BigDecimal betrag =
-                abrechnungBuchungRepository
-                        .sumZurueckgezahltByUrspruenglichemZahlungsnachweisId(
+                zahlungsnachweisRepository
+                        .sumRueckzahlungenByUrspruenglichemZahlungsnachweisId(
                                 zahlungsnachweis.getId()
                         );
 
@@ -134,28 +129,32 @@ public class ZahlungsnachweisSaldoService {
                                 )
                         );
 
-        /*
-         * Sicherheitsnetz:
-         * Auch bei fehlerhaften Altdaten soll kein
-         * negativer offener Betrag zurückgegeben werden.
-         */
         return offen.max(
                 BigDecimal.ZERO
         );
     }
+
+
+    /**
+     * Bereits zurückgezahlte Beträge je ursprünglichem
+     * Zahlungsnachweis.
+     *
+     * Rückzahlungen werden über
+     * urspruenglicherZahlungsnachweis gruppiert.
+     */
     public Map<Long, BigDecimal> getZurueckgezahltByZahlungsnachweis(
             Long veranstaltungId
     ) {
 
-        return abrechnungBuchungRepository
-                .sumZurueckgezahltByVeranstaltungGrouped(
+        return zahlungsnachweisRepository
+                .sumRueckzahlungenByVeranstaltungGrouped(
                         veranstaltungId
                 )
                 .stream()
                 .collect(
                         Collectors.toMap(
-                                ZahlungsnachweisRueckzahlungSumme::getZahlungsnachweisId,
-                                ZahlungsnachweisRueckzahlungSumme::getZurueckgezahlt
+                                row -> row.getZahlungsnachweisId(),
+                                row -> row.getZurueckgezahlt()
                         )
                 );
     }

@@ -29,7 +29,9 @@ export const zahlungsnachweiseColumns = ({
     meta: {
       align: "right",
     },
-    cell: ({ row }) => <Money value={row.original.betrag} />,
+    cell: ({ row }) => (
+      <Money value={row.original.rueckzahlung ? -row.original.betrag : row.original.betrag} />
+    ),
   },
 
   {

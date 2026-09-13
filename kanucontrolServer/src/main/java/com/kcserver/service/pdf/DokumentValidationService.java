@@ -7,7 +7,7 @@ import com.kcserver.enumtype.PdfDokumentTyp;
 import com.kcserver.repository.*;
 import com.kcserver.repository.abrechnung.AbrechnungBelegRepository;
 import com.kcserver.repository.abrechnung.AbrechnungBuchungRepository;
-import com.kcserver.repository.abrechnung.ZahlungsnachweisRepository;
+import com.kcserver.repository.zahlungsnachweis.ZahlungsnachweisRepository;
 import com.kcserver.repository.fahrkosten.ReisekostenabrechnungRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

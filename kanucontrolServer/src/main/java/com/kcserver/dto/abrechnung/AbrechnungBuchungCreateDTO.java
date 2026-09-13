@@ -1,6 +1,7 @@
 package com.kcserver.dto.abrechnung;
 
 import com.kcserver.enumtype.FinanzKategorie;
+import com.kcserver.enumtype.Zahlungsweg;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -16,6 +17,7 @@ public class AbrechnungBuchungCreateDTO {
 
     @NotNull
     private BigDecimal betrag;
-
     private String beschreibung;
+
+    private Zahlungsweg zahlungsweg;
 }

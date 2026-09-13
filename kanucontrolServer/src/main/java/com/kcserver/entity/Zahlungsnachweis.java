@@ -35,6 +35,10 @@ public class Zahlungsnachweis extends Auditable {
 
     private String bemerkung;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "urspruenglicher_zahlungsnachweis_id")
+    private Zahlungsnachweis urspruenglicherZahlungsnachweis;
+
     @OneToMany(
             mappedBy = "zahlungsnachweis",
             cascade = CascadeType.ALL,

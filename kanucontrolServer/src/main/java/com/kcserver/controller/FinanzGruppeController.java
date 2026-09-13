@@ -1,10 +1,9 @@
 package com.kcserver.controller;
 
 import com.kcserver.api.response.ApiResponse;
-import com.kcserver.dto.finanzen.FinanzGruppeCreateDTO;
-import com.kcserver.dto.finanzen.FinanzGruppeDetailDTO;
-import com.kcserver.dto.finanzen.FinanzGruppeOverviewDTO;
+import com.kcserver.dto.finanzen.*;
 import com.kcserver.entity.FinanzGruppe;
+import com.kcserver.service.finanz.FinanzausgleichService;
 import com.kcserver.service.finanz.FinanzGruppeQueryService;
 import com.kcserver.service.finanz.FinanzGruppeService;
 import jakarta.validation.Valid;
@@ -21,6 +20,7 @@ public class FinanzGruppeController {
 
     private final FinanzGruppeService commandService;
     private final FinanzGruppeQueryService queryService;
+    private final FinanzausgleichService finanzausgleichService;
 
     /* =========================
        OVERVIEW (KürzelPage)
@@ -28,11 +28,10 @@ public class FinanzGruppeController {
 
     @GetMapping
     public ApiResponse<List<FinanzGruppeOverviewDTO>> findAll(
-            @PathVariable Long veranstaltungId) {
-
+            @PathVariable Long veranstaltungId
+    ) {
         return ApiResponse.of(
                 queryService.getOverview(veranstaltungId)
-
         );
     }
 
@@ -40,12 +39,44 @@ public class FinanzGruppeController {
        DETAIL
        ========================= */
 
-    @GetMapping("/{gruppeId}")
+    @GetMapping("/{gruppeId:\\d+}")
     public ApiResponse<FinanzGruppeDetailDTO> findOne(
-            @PathVariable Long gruppeId) {
-
+            @PathVariable Long gruppeId
+    ) {
         return ApiResponse.of(
                 queryService.getDetail(gruppeId)
+        );
+    }
+
+    /* =========================
+       FINANZAUSGLEICH
+       ========================= */
+
+    @GetMapping("/{gruppeId:\\d+}/finanzausgleich")
+    public ApiResponse<FinanzausgleichDTO> getFinanzausgleich(
+            @PathVariable Long veranstaltungId,
+            @PathVariable Long gruppeId
+    ) {
+        return ApiResponse.of(
+                finanzausgleichService.getFinanzausgleich(
+                        veranstaltungId,
+                        gruppeId
+                )
+        );
+    }
+
+    /* =========================
+   FINANZAUSGLEICH PRÜFUNG
+   ========================= */
+
+    @GetMapping("/finanzausgleich/pruefung")
+    public ApiResponse<FinanzausgleichPruefungDTO> pruefeTeilnehmerBeitraege(
+            @PathVariable Long veranstaltungId
+    ) {
+        return ApiResponse.of(
+                finanzausgleichService.pruefeTeilnehmerBeitraege(
+                        veranstaltungId
+                )
         );
     }
 
@@ -57,23 +88,28 @@ public class FinanzGruppeController {
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<FinanzGruppeDetailDTO> create(
             @PathVariable Long veranstaltungId,
-            @Valid @RequestBody FinanzGruppeCreateDTO dto) {
+            @Valid @RequestBody FinanzGruppeCreateDTO dto
+    ) {
+        FinanzGruppe g = commandService.create(
+                veranstaltungId,
+                dto.kuerzel()
+        );
 
-        FinanzGruppe g = commandService.create(veranstaltungId, dto.kuerzel());
-
-        return ApiResponse.of(queryService.getDetail(g.getId()));
+        return ApiResponse.of(
+                queryService.getDetail(g.getId())
+        );
     }
 
     /* =========================
        UPDATE
        ========================= */
 
-    @PutMapping("/{gruppeId}")
+    @PutMapping("/{gruppeId:\\d+}")
     public ApiResponse<FinanzGruppeDetailDTO> update(
             @PathVariable Long veranstaltungId,
             @PathVariable Long gruppeId,
-            @Valid @RequestBody FinanzGruppeCreateDTO dto) {
-
+            @Valid @RequestBody FinanzGruppeCreateDTO dto
+    ) {
         commandService.update(
                 veranstaltungId,
                 gruppeId,
@@ -89,16 +125,23 @@ public class FinanzGruppeController {
        DELETE
        ========================= */
 
-    @DeleteMapping("/{gruppeId}")
+    @DeleteMapping("/{gruppeId:\\d+}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(
             @PathVariable Long veranstaltungId,
-            @PathVariable Long gruppeId) {
-
-        commandService.delete(veranstaltungId, gruppeId);
+            @PathVariable Long gruppeId
+    ) {
+        commandService.delete(
+                veranstaltungId,
+                gruppeId
+        );
     }
 
-    @DeleteMapping("/{gruppeId}/teilnehmer/{personId}")
+    /* =========================
+       REMOVE TEILNEHMER
+       ========================= */
+
+    @DeleteMapping("/{gruppeId:\\d+}/teilnehmer/{personId:\\d+}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeTeilnehmer(
             @PathVariable Long veranstaltungId,
@@ -116,7 +159,7 @@ public class FinanzGruppeController {
        ASSIGN TEILNEHMER
        ========================= */
 
-    @PutMapping("/{gruppeId}/teilnehmer")
+    @PutMapping("/{gruppeId:\\d+}/teilnehmer")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void assignTeilnehmerBulk(
             @PathVariable Long veranstaltungId,

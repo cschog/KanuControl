@@ -1,5 +1,6 @@
 package com.kcserver.dto.zahlungsnachweis;
 
+import com.kcserver.enumtype.Zahlungsweg;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -20,6 +21,6 @@ public class RueckzahlungTeilnehmerbeitragDTO {
             message = "Der Rückzahlungsbetrag muss mindestens 0,01 betragen."
     )
     private BigDecimal betrag;
-
     private String beschreibung;
+    private Zahlungsweg zahlungsweg;
 }
