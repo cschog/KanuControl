@@ -87,6 +87,8 @@ const ZahlungsnachweisDialog = ({
   const [error, setError] = useState<string | null>(null);
   const [bereitsBezahlteAnzeigen, setBereitsBezahlteAnzeigen] = useState(false);
 
+  const istRueckzahlung = !!zahlungsnachweis && zahlungsnachweis.positionen.length === 0;
+
   const [referenzObjekt, setReferenzObjekt] = useState<ReferenzObjekt>(() => {
     const gespeichert = localStorage.getItem(REFERENZ_STORAGE_KEY);
 
@@ -255,17 +257,17 @@ const gefilterteTeilnehmer = useMemo(() => {
    */
 
   const handleSave = async () => {
-    if (
-      saving ||
-      !datum ||
-      betrag === null ||
-      betrag <= 0 ||
-      zahlungsweg === null ||
-      finanzGruppeFehlt ||
-      selectedIds.length === 0
-    ) {
-      return;
-    }
+   if (
+     saving ||
+     !datum ||
+     betrag === null ||
+     betrag <= 0 ||
+     zahlungsweg === null ||
+     finanzGruppeFehlt ||
+     (!istRueckzahlung && selectedIds.length === 0)
+   ) {
+     return;
+   }
 
     setSaving(true);
 
@@ -446,6 +448,7 @@ const gefilterteTeilnehmer = useMemo(() => {
               label="Betrag"
               value={betrag ?? ""}
               onChange={(value) => setBetrag(value === "" ? null : Number(value))}
+              disabled={istRueckzahlung}
             />
 
             {/* ZAHLUNGSWEG */}
@@ -459,6 +462,7 @@ const gefilterteTeilnehmer = useMemo(() => {
               }
               required
               fullWidth
+              disabled={istRueckzahlung}
             >
               <MenuItem value="UEBERWEISUNG">Überweisung</MenuItem>
 
@@ -641,251 +645,257 @@ const gefilterteTeilnehmer = useMemo(() => {
               </Box>
             )}
 
-            <Divider sx={{ my: 1 }} />
-
-            {/* TEILNEHMER */}
-
-            <Box>
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  mb: 1,
-                }}
-              >
-                <Typography variant="h6">Teilnehmer</Typography>
-
-                <Typography variant="body2" color="text.secondary">
-                  {selectedIds.length} ausgewählt
-                </Typography>
-              </Box>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    size="small"
-                    checked={bereitsBezahlteAnzeigen}
-                    onChange={(e) => setBereitsBezahlteAnzeigen(e.target.checked)}
-                  />
-                }
-                label="Bereits bezahlte Teilnehmer anzeigen"
-              />
-
-              <TextField
-                size="small"
-                fullWidth
-                label="Teilnehmer suchen"
-                placeholder="Name oder Verein"
-                value={suche}
-                onChange={(e) => setSuche(e.target.value)}
-                sx={{ mb: 1 }}
-              />
-
-              <Box
-                sx={{
-                  border: 1,
-                  borderColor: "divider",
-                  borderRadius: 1,
-                  overflow: "hidden",
-                }}
-              >
-                {/* KOPFZEILE */}
-
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: {
-                      xs: "42px minmax(0, 1fr) 88px",
-                      sm: "52px minmax(0, 1fr) 110px",
-                    },
-                    alignItems: "center",
-                    minHeight: {
-                      xs: 44,
-                      sm: 48,
-                    },
-                    px: {
-                      xs: 0.5,
-                      sm: 1,
-                    },
-                    bgcolor: "action.hover",
-                    borderBottom: 1,
-                    borderColor: "divider",
-                  }}
-                >
-                  <Checkbox
-                    size="small"
-                    checked={alleGefiltertenAusgewaehlt}
-                    indeterminate={selectedIds.length > 0 && !alleGefiltertenAusgewaehlt}
-                    onChange={handleSelectAll}
-                  />
-
-                  <Typography fontWeight={700}>Teilnehmer</Typography>
-
-                  <Typography fontWeight={700} textAlign="right">
-                    Offen
-                  </Typography>
-                </Box>
+            {!istRueckzahlung && (
+              <>
+                <Divider sx={{ my: 1 }} />
 
                 {/* TEILNEHMER */}
 
-                {gefilterteTeilnehmer.length === 0 ? (
-                  <Alert
-                    severity="info"
+                <Box>
+                  <Box
                     sx={{
-                      borderRadius: 0,
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      mb: 1,
                     }}
                   >
-                    Keine Teilnehmer gefunden.
-                  </Alert>
-                ) : (
-                  gefilterteTeilnehmer.map((t) => {
-                    const selected = selectedIds.includes(t.id);
+                    <Typography variant="h6">Teilnehmer</Typography>
 
-                    return (
-                      <Box
-                        key={t.id}
+                    <Typography variant="body2" color="text.secondary">
+                      {selectedIds.length} ausgewählt
+                    </Typography>
+                  </Box>
+
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        size="small"
+                        checked={bereitsBezahlteAnzeigen}
+                        onChange={(e) => setBereitsBezahlteAnzeigen(e.target.checked)}
+                      />
+                    }
+                    label="Bereits bezahlte Teilnehmer anzeigen"
+                  />
+
+                  <TextField
+                    size="small"
+                    fullWidth
+                    label="Teilnehmer suchen"
+                    placeholder="Name oder Verein"
+                    value={suche}
+                    onChange={(e) => setSuche(e.target.value)}
+                    sx={{ mb: 1 }}
+                  />
+
+                  <Box
+                    sx={{
+                      border: 1,
+                      borderColor: "divider",
+                      borderRadius: 1,
+                      overflow: "hidden",
+                    }}
+                  >
+                    {/* KOPFZEILE */}
+
+                    <Box
+                      sx={{
+                        display: "grid",
+                        gridTemplateColumns: {
+                          xs: "42px minmax(0, 1fr) 88px",
+                          sm: "52px minmax(0, 1fr) 110px",
+                        },
+                        alignItems: "center",
+                        minHeight: {
+                          xs: 44,
+                          sm: 48,
+                        },
+                        px: {
+                          xs: 0.5,
+                          sm: 1,
+                        },
+                        bgcolor: "action.hover",
+                        borderBottom: 1,
+                        borderColor: "divider",
+                      }}
+                    >
+                      <Checkbox
+                        size="small"
+                        checked={alleGefiltertenAusgewaehlt}
+                        indeterminate={selectedIds.length > 0 && !alleGefiltertenAusgewaehlt}
+                        onChange={handleSelectAll}
+                      />
+
+                      <Typography fontWeight={700}>Teilnehmer</Typography>
+
+                      <Typography fontWeight={700} textAlign="right">
+                        Offen
+                      </Typography>
+                    </Box>
+
+                    {/* TEILNEHMER */}
+
+                    {gefilterteTeilnehmer.length === 0 ? (
+                      <Alert
+                        severity="info"
                         sx={{
-                          display: "grid",
-                          gridTemplateColumns: {
-                            xs: "42px minmax(0, 1fr) 88px",
-                            sm: "52px minmax(0, 1fr) 110px",
-                          },
-                          alignItems: "center",
-                          minHeight: {
-                            xs: 44,
-                            sm: 52,
-                          },
-                          px: {
-                            xs: 0.5,
-                            sm: 1,
-                          },
-                          borderBottom: 1,
-                          borderColor: "divider",
-                          bgcolor: selected ? "action.selected" : "background.paper",
-                          "&:last-child": {
-                            borderBottom: 0,
-                          },
+                          borderRadius: 0,
                         }}
                       >
-                        <Checkbox
-                          size="small"
-                          checked={selected}
-                          onChange={(e) => handleSelect(t.id, e.target.checked)}
-                        />
-
-                        <Box
-                          sx={{
-                            minWidth: 0,
-                            cursor: "pointer",
-                            py: 0.25,
-                          }}
-                          onClick={() => handleSelect(t.id, !selected)}
-                        >
-                          <Typography
-                            fontWeight={selected ? 700 : 500}
-                            noWrap
-                            sx={{
-                              fontSize: {
-                                xs: "0.9rem",
-                                sm: "1rem",
-                              },
-                              lineHeight: 1.2,
-                            }}
-                          >
-                            {t.person.name}, {t.person.vorname}
-                          </Typography>
-
-                          <Typography
-                            color="text.secondary"
-                            noWrap
-                            sx={{
-                              fontSize: {
-                                xs: "0.7rem",
-                                sm: "0.75rem",
-                              },
-                              lineHeight: 1.1,
-                            }}
-                          >
-                            {t.person.hauptvereinAbk ?? "-"}
-                            {" • "}
-                            Alter: {t.alterBeiBeginn ?? "-"}
-                          </Typography>
-                        </Box>
-
-                        <Typography
-                          textAlign="right"
-                          fontWeight={600}
-                          sx={{
-                            pr: {
-                              xs: 0.5,
-                              sm: 1,
-                            },
-                            fontSize: {
-                              xs: "0.85rem",
-                              sm: "1rem",
-                            },
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {((t.sollBeitrag ?? 0) - (t.gezahlterBetrag ?? 0)).toFixed(2)} €
-                        </Typography>
-                      </Box>
-                    );
-                  })
-                )}
-              </Box>
-
-              {selectedIds.length === 0 && (
-                <Alert severity="info" sx={{ mt: 1 }}>
-                  Bitte mindestens einen Teilnehmer auswählen.
-                </Alert>
-              )}
-              {betrag !== null && selectedIds.length > 0 && (
-                <Alert severity={ueberzahlung > 0 ? "warning" : "success"} sx={{ mt: 1 }}>
-                  <Stack spacing={0.5}>
-                    {zahlungsnachweis ? (
-                      <>
-                        <Typography>
-                          Teilnehmerbeiträge:{" "}
-                          <strong>{gesamterTeilnehmerBeitrag.toFixed(2)} €</strong>
-                        </Typography>
-
-                        <Typography>
-                          Diesem Zahlungsnachweis zugeordnet:{" "}
-                          <strong>{bestehendZugeordneterBetrag.toFixed(2)} €</strong>
-                        </Typography>
-
-                        <Typography>
-                          Noch offen: <strong>{gesamterOffenerBetrag.toFixed(2)} €</strong>
-                        </Typography>
-                      </>
+                        Keine Teilnehmer gefunden.
+                      </Alert>
                     ) : (
-                      <>
-                        <Typography>
-                          Zahlungsbetrag: <strong>{betrag.toFixed(2)} €</strong>
-                        </Typography>
+                      gefilterteTeilnehmer.map((t) => {
+                        const selected = selectedIds.includes(t.id);
 
-                        <Typography>
-                          Offene Beiträge der ausgewählten Teilnehmer:{" "}
-                          <strong>{gesamterOffenerBetrag.toFixed(2)} €</strong>
-                        </Typography>
+                        return (
+                          <Box
+                            key={t.id}
+                            sx={{
+                              display: "grid",
+                              gridTemplateColumns: {
+                                xs: "42px minmax(0, 1fr) 88px",
+                                sm: "52px minmax(0, 1fr) 110px",
+                              },
+                              alignItems: "center",
+                              minHeight: {
+                                xs: 44,
+                                sm: 52,
+                              },
+                              px: {
+                                xs: 0.5,
+                                sm: 1,
+                              },
+                              borderBottom: 1,
+                              borderColor: "divider",
+                              bgcolor: selected ? "action.selected" : "background.paper",
+                              "&:last-child": {
+                                borderBottom: 0,
+                              },
+                            }}
+                          >
+                            <Checkbox
+                              size="small"
+                              checked={selected}
+                              onChange={(e) => handleSelect(t.id, e.target.checked)}
+                            />
 
-                        <Typography>
-                          Automatisch zugeordnet:{" "}
-                          <strong>{automatischZugeordneterBetrag.toFixed(2)} €</strong>
-                        </Typography>
+                            <Box
+                              sx={{
+                                minWidth: 0,
+                                cursor: "pointer",
+                                py: 0.25,
+                              }}
+                              onClick={() => handleSelect(t.id, !selected)}
+                            >
+                              <Typography
+                                fontWeight={selected ? 700 : 500}
+                                noWrap
+                                sx={{
+                                  fontSize: {
+                                    xs: "0.9rem",
+                                    sm: "1rem",
+                                  },
+                                  lineHeight: 1.2,
+                                }}
+                              >
+                                {t.person.name}, {t.person.vorname}
+                              </Typography>
 
-                        {ueberzahlung > 0 && (
-                          <Typography>
-                            Überzahlung: <strong>{ueberzahlung.toFixed(2)} €</strong>
-                          </Typography>
-                        )}
-                      </>
+                              <Typography
+                                color="text.secondary"
+                                noWrap
+                                sx={{
+                                  fontSize: {
+                                    xs: "0.7rem",
+                                    sm: "0.75rem",
+                                  },
+                                  lineHeight: 1.1,
+                                }}
+                              >
+                                {t.person.hauptvereinAbk ?? "-"}
+                                {" • "}
+                                Alter: {t.alterBeiBeginn ?? "-"}
+                              </Typography>
+                            </Box>
+
+                            <Typography
+                              textAlign="right"
+                              fontWeight={600}
+                              sx={{
+                                pr: {
+                                  xs: 0.5,
+                                  sm: 1,
+                                },
+                                fontSize: {
+                                  xs: "0.85rem",
+                                  sm: "1rem",
+                                },
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {((t.sollBeitrag ?? 0) - (t.gezahlterBetrag ?? 0)).toFixed(2)} €
+                            </Typography>
+                          </Box>
+                        );
+                      })
                     )}
-                  </Stack>
-                </Alert>
-              )}
-            </Box>
+                  </Box>
+
+                  {selectedIds.length === 0 && (
+                    <Alert severity="info" sx={{ mt: 1 }}>
+                      Bitte mindestens einen Teilnehmer auswählen.
+                    </Alert>
+                  )}
+
+                  {betrag !== null && selectedIds.length > 0 && (
+                    <Alert severity={ueberzahlung > 0 ? "warning" : "success"} sx={{ mt: 1 }}>
+                      <Stack spacing={0.5}>
+                        {zahlungsnachweis ? (
+                          <>
+                            <Typography>
+                              Teilnehmerbeiträge:{" "}
+                              <strong>{gesamterTeilnehmerBeitrag.toFixed(2)} €</strong>
+                            </Typography>
+
+                            <Typography>
+                              Diesem Zahlungsnachweis zugeordnet:{" "}
+                              <strong>{bestehendZugeordneterBetrag.toFixed(2)} €</strong>
+                            </Typography>
+
+                            <Typography>
+                              Noch offen: <strong>{gesamterOffenerBetrag.toFixed(2)} €</strong>
+                            </Typography>
+                          </>
+                        ) : (
+                          <>
+                            <Typography>
+                              Zahlungsbetrag: <strong>{betrag.toFixed(2)} €</strong>
+                            </Typography>
+
+                            <Typography>
+                              Offene Beiträge der ausgewählten Teilnehmer:{" "}
+                              <strong>{gesamterOffenerBetrag.toFixed(2)} €</strong>
+                            </Typography>
+
+                            <Typography>
+                              Automatisch zugeordnet:{" "}
+                              <strong>{automatischZugeordneterBetrag.toFixed(2)} €</strong>
+                            </Typography>
+
+                            {ueberzahlung > 0 && (
+                              <Typography>
+                                Überzahlung: <strong>{ueberzahlung.toFixed(2)} €</strong>
+                              </Typography>
+                            )}
+                          </>
+                        )}
+                      </Stack>
+                    </Alert>
+                  )}
+                </Box>
+              </>
+            )}
           </Stack>
         </DialogContent>
         <ErrorDialog open={!!error} message={error ?? ""} onClose={() => setError(null)} />
@@ -903,7 +913,7 @@ const gefilterteTeilnehmer = useMemo(() => {
               betrag <= 0 ||
               zahlungsweg === null ||
               finanzGruppeFehlt ||
-              selectedIds.length === 0
+              (!istRueckzahlung && selectedIds.length === 0)
             }
           >
             {saving ? "Speichern..." : "Speichern"}

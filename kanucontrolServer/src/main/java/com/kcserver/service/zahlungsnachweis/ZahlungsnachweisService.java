@@ -181,6 +181,32 @@ public class ZahlungsnachweisService {
             );
         }
 
+        /*
+         * Eine Rückzahlung besitzt bewusst keine ZahlungsPositionen.
+         *
+         * Beim Bearbeiten dürfen deshalb keine Teilnehmerzuordnungen
+         * neu berechnet oder gelöscht werden. Es werden ausschließlich
+         * die Kopfdaten des Rückzahlungsnachweises geändert.
+         */
+        boolean istRueckzahlung =
+                nachweis.getUrspruenglicherZahlungsnachweis() != null;
+
+        if (istRueckzahlung) {
+
+            /*
+             * Bei einer Rückzahlung sind Betrag, Zahlungsweg und
+             * Finanzgruppe unveränderlich.
+             *
+             * Änderbar sind ausschließlich Datum und Bemerkung.
+             */
+            nachweis.setDatum(dto.getDatum());
+            nachweis.setBemerkung(dto.getBemerkung());
+
+            nachweis =
+                    zahlungsnachweisRepository.save(nachweis);
+
+            return mapper.toDetailDTO(nachweis);
+        }
 
         Veranstaltung veranstaltung =
                 veranstaltungRepository
@@ -565,6 +591,41 @@ public class ZahlungsnachweisService {
                 veranstaltungId,
                 finanzGruppeId
         );
+    }
+
+    @Transactional(readOnly = true)
+    public List<FinanzGruppeZahlungDTO> findUeberweisungenByFinanzGruppe(
+            Long veranstaltungId,
+            Long finanzGruppeId
+    ) {
+        List<FinanzGruppeZahlungDTO> ueberweisungen =
+                new ArrayList<>(
+                        zahlungsnachweisRepository
+                                .findUrspruenglicheUeberweisungenByFinanzGruppe(
+                                        veranstaltungId,
+                                        finanzGruppeId
+                                )
+                );
+
+        ueberweisungen.addAll(
+                zahlungsnachweisRepository
+                        .findUeberweisungsRueckzahlungenByFinanzGruppe(
+                                veranstaltungId,
+                                finanzGruppeId
+                        )
+        );
+
+        ueberweisungen.sort(
+                java.util.Comparator
+                        .comparing(
+                                FinanzGruppeZahlungDTO::datum,
+                                java.util.Comparator.nullsLast(
+                                        java.util.Comparator.reverseOrder()
+                                )
+                        )
+        );
+
+        return ueberweisungen;
     }
 
     private BigDecimal getGesamtOffenerBeitrag(

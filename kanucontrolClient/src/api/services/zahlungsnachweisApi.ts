@@ -82,6 +82,16 @@ export async function getZahlungenByFinanzGruppe(
   return response.data;
 }
 
+export async function getUeberweisungenByFinanzGruppe(
+  veranstaltungId: number,
+  finanzGruppeId: number,
+): Promise<FinanzGruppeZahlungDTO[]> {
+  const response = await apiClient.get<FinanzGruppeZahlungDTO[]>(
+    `/veranstaltungen/${veranstaltungId}/zahlungsnachweise/finanzgruppe/${finanzGruppeId}/ueberweisungen`,
+  );
+  return response.data;
+}
+
 export async function updateReferenzObjekt(
   veranstaltungId: number,
   zahlungsnachweisId: number,

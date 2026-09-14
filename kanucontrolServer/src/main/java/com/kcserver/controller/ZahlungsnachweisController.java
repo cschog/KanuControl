@@ -1,10 +1,8 @@
 package com.kcserver.controller;
 
 import com.kcserver.api.response.ApiResponse;
-import com.kcserver.dto.abrechnung.AbrechnungBuchungDTO;
 import com.kcserver.dto.zahlungsnachweis.*;
 import com.kcserver.enumtype.ReferenzObjekt;
-import com.kcserver.service.abrechnung.AbrechnungBelegService;
 import com.kcserver.service.zahlungsnachweis.ZahlungsnachweisService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -206,6 +204,19 @@ public class ZahlungsnachweisController {
         );
     }
 
+    @GetMapping("/finanzgruppe/{finanzGruppeId}/ueberweisungen")
+    public ApiResponse<List<FinanzGruppeZahlungDTO>> getUeberweisungenByFinanzGruppe(
+            @PathVariable Long veranstaltungId,
+            @PathVariable Long finanzGruppeId
+    ) {
+        return ApiResponse.of(
+                zahlungsnachweisService.findUeberweisungenByFinanzGruppe(
+                        veranstaltungId,
+                        finanzGruppeId
+                )
+        );
+    }
+
  /* =========================================================
    OFFENE ÜBERZAHLUNGEN
    ========================================================= */
@@ -220,10 +231,6 @@ public class ZahlungsnachweisController {
                 )
         );
     }
-
-/* =========================================================
-   RÜCKZAHLUNG ÜBERZAHLUNG
-   ========================================================= */
 
   /* =========================================================
    RÜCKZAHLUNG ÜBERZAHLUNG

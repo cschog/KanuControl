@@ -133,10 +133,18 @@ public class FinanzausgleichService {
                                 )
                 );
 
+        Map<Long, BigDecimal> ueberzahlungsUeberweisungenMap =
+                toBigDecimalMap(
+                        zahlungsnachweisRepository
+                                .sumUeberzahlungsUeberweisungenByFinanzGruppeGrouped(
+                                        veranstaltungId
+                                )
+                );
+
         Map<Long, BigDecimal> rueckzahlungenUeberweisungMap =
                 toBigDecimalMap(
                         zahlungsnachweisRepository
-                                .sumRueckzahlungenByFinanzGruppeGrouped(
+                                .sumRueckzahlungenUeberweisungByFinanzGruppeGrouped(
                                         veranstaltungId
                                 )
                 );
@@ -203,10 +211,17 @@ public class FinanzausgleichService {
 
                     } else {
 
+
                         ueberweisungen =
                                 ueberweisungenMap.getOrDefault(
                                                 finanzGruppeId,
                                                 BigDecimal.ZERO
+                                        )
+                                        .add(
+                                                ueberzahlungsUeberweisungenMap.getOrDefault(
+                                                        finanzGruppeId,
+                                                        BigDecimal.ZERO
+                                                )
                                         )
                                         .subtract(
                                                 rueckzahlungenUeberweisungMap.getOrDefault(
@@ -424,6 +439,14 @@ public class FinanzausgleichService {
                                 )
                 );
 
+        Map<Long, BigDecimal> ueberzahlungsUeberweisungenMap =
+                toBigDecimalMap(
+                        zahlungsnachweisRepository
+                                .sumUeberzahlungsUeberweisungenByFinanzGruppeGrouped(
+                                        veranstaltungId
+                                )
+                );
+
         Map<Long, BigDecimal> quittungenMap =
                 toBigDecimalMap(
                         zahlungsnachweisRepository
@@ -443,7 +466,7 @@ public class FinanzausgleichService {
         Map<Long, BigDecimal> rueckzahlungenUeberweisungMap =
                 toBigDecimalMap(
                         zahlungsnachweisRepository
-                                .sumRueckzahlungenByFinanzGruppeGrouped(
+                                .sumRueckzahlungenUeberweisungByFinanzGruppeGrouped(
                                         veranstaltungId
                                 )
                 );
@@ -478,7 +501,12 @@ public class FinanzausgleichService {
                             BigDecimal ueberweisungen =
                                     ueberweisungenMap.getOrDefault(
                                             finanzGruppeId,
-                                            BigDecimal.ZERO);
+                                            BigDecimal.ZERO
+                                    ).add(
+                                            ueberzahlungsUeberweisungenMap.getOrDefault(
+                                                    finanzGruppeId,
+                                                    BigDecimal.ZERO
+                                            ));
 
                             BigDecimal quittungen =
                                     quittungenMap.getOrDefault(

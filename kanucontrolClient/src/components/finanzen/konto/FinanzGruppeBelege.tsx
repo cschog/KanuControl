@@ -11,7 +11,10 @@ import { AbrechnungBeleg } from "@/api/types/abrechnung";
 import { getBelegeByFinanzGruppe } from "@/api/services/abrechnungApi";
 
 import Money from "@/components/common/Money";
-import { getZahlungenByFinanzGruppe } from "@/api/services/zahlungsnachweisApi";
+import {
+  getZahlungenByFinanzGruppe,
+  getUeberweisungenByFinanzGruppe,
+} from "@/api/services/zahlungsnachweisApi";
 import { FinanzGruppeZahlungDTO } from "@/api/types/beitraege";
 import { getReisekostenByFinanzGruppe } from "@/api/services/reisekostenApi";
 import { ReisekostenabrechnungListResponse } from "@/api/types/Reisekostenabrechnung";
@@ -70,145 +73,147 @@ function isEinnahmeKategorie(kategorie: string): boolean {
 }
 
 export default function FinanzGruppeBelege({ veranstaltungId, finanzGruppeId }: Props) {
- const [belege, setBelege] = useState<AbrechnungBeleg[]>([]);
+  const [belege, setBelege] = useState<AbrechnungBeleg[]>([]);
 
- const [zahlungen, setZahlungen] = useState<(FinanzGruppeZahlungDTO & { id: number })[]>([]);
+  const [zahlungen, setZahlungen] = useState<(FinanzGruppeZahlungDTO & { id: number })[]>([]);
+  const [ueberweisungen, setUeberweisungen] = useState<(FinanzGruppeZahlungDTO & { id: number })[]>(
+    [],
+  );
 
- const [reisekosten, setReisekosten] = useState<ReisekostenabrechnungListResponse[]>([]);
+  const [reisekosten, setReisekosten] = useState<ReisekostenabrechnungListResponse[]>([]);
 
- const [loadingBelege, setLoadingBelege] = useState(false);
- const [loadingZahlungen, setLoadingZahlungen] = useState(false);
- const [loadingReisekosten, setLoadingReisekosten] = useState(false);
+  const [loadingBelege, setLoadingBelege] = useState(false);
+  const [loadingZahlungen, setLoadingZahlungen] = useState(false);
+  const [loadingUeberweisungen, setLoadingUeberweisungen] = useState(false);
+  const [loadingReisekosten, setLoadingReisekosten] = useState(false);
 
- const [error, setError] = useState<string | null>(null);
-  
+  const [error, setError] = useState<string | null>(null);
 
   /* =========================================================
      ZAHLUNGEN
      ========================================================= */
 
-
-const zahlungsColumns = useMemo<ColumnDef<FinanzGruppeZahlungDTO & { id: number }>[]>(
-  () => [
-    {
-      accessorKey: "datum",
-      header: "Datum",
-      size: 120,
-      cell: ({ row }) =>
-        row.original.datum ? new Date(row.original.datum).toLocaleDateString("de-DE") : "",
-    },
-    {
-      accessorKey: "zahlungsweg",
-      header: "Zahlungsweg",
-      size: 150,
-    },
-    {
-      accessorKey: "bemerkung",
-      header: "Bemerkung",
-      size: 300,
-    },
-    {
-      accessorKey: "betrag",
-      header: "Betrag",
-      size: 140,
-      meta: {
-        align: "right",
+  const zahlungsColumns = useMemo<ColumnDef<FinanzGruppeZahlungDTO & { id: number }>[]>(
+    () => [
+      {
+        accessorKey: "datum",
+        header: "Datum",
+        size: 120,
+        cell: ({ row }) =>
+          row.original.datum ? new Date(row.original.datum).toLocaleDateString("de-DE") : "",
       },
-      cell: ({ row }) => {
-        const betrag = Number(row.original.betrag);
-
-        return <SignedMoney value={betrag} positive={betrag >= 0} />;
+      {
+        accessorKey: "zahlungsweg",
+        header: "Zahlungsweg",
+        size: 150,
       },
-    },
-  ],
-  [],
-);
+      {
+        accessorKey: "bemerkung",
+        header: "Bemerkung",
+        size: 300,
+      },
+      {
+        accessorKey: "betrag",
+        header: "Betrag",
+        size: 140,
+        meta: {
+          align: "right",
+        },
+        cell: ({ row }) => {
+          const betrag = Number(row.original.betrag);
 
-const finanzgruppeBelegColumns = useMemo<ColumnDef<AbrechnungBeleg>[]>(
-  () => [
-    {
-      accessorKey: "datum",
-      header: "Datum",
-      size: 75,
-      cell: ({ row }) => (
-        <Typography fontSize={fontSize.finanzausgleich.detailTable.primary} whiteSpace="nowrap">
-          {row.original.datum ? new Date(row.original.datum).toLocaleDateString("de-DE") : ""}
-        </Typography>
-      ),
-    },
-    {
-      accessorKey: "belegnummer",
-      header: "Nr.",
-      size: 55,
-      cell: ({ row }) => (
-        <Typography fontSize={fontSize.finanzausgleich.detailTable.primary} whiteSpace="nowrap">
-          {row.original.belegnummer}
-        </Typography>
-      ),
-    },
-    {
-      id: "rechnung",
-      header: "Belege",
-      size: 120,
-      cell: ({ row }) => (
-        <Box sx={{ minWidth: 0 }}>
-          <Typography
-            fontWeight={600}
-            fontSize={fontSize.finanzausgleich.detailTable.primary}
-            noWrap
-          >
-            {row.original.aussteller || "–"}
+          return <SignedMoney value={betrag} positive={betrag >= 0} />;
+        },
+      },
+    ],
+    [],
+  );
+
+  const finanzgruppeBelegColumns = useMemo<ColumnDef<AbrechnungBeleg>[]>(
+    () => [
+      {
+        accessorKey: "datum",
+        header: "Datum",
+        size: 75,
+        cell: ({ row }) => (
+          <Typography fontSize={fontSize.finanzausgleich.detailTable.primary} whiteSpace="nowrap">
+            {row.original.datum ? new Date(row.original.datum).toLocaleDateString("de-DE") : ""}
           </Typography>
-
-          {row.original.beschreibung && (
+        ),
+      },
+      {
+        accessorKey: "belegnummer",
+        header: "Nr.",
+        size: 55,
+        cell: ({ row }) => (
+          <Typography fontSize={fontSize.finanzausgleich.detailTable.primary} whiteSpace="nowrap">
+            {row.original.belegnummer}
+          </Typography>
+        ),
+      },
+      {
+        id: "rechnung",
+        header: "Belege",
+        size: 120,
+        cell: ({ row }) => (
+          <Box sx={{ minWidth: 0 }}>
             <Typography
-              color="text.secondary"
+              fontWeight={600}
               fontSize={fontSize.finanzausgleich.detailTable.primary}
               noWrap
             >
-              {row.original.beschreibung}
+              {row.original.aussteller || "–"}
             </Typography>
-          )}
-        </Box>
-      ),
-    },
 
-    {
-      id: "betrag",
-      header: "Betrag",
-      size: 75,
-      meta: {
-        align: "right",
+            {row.original.beschreibung && (
+              <Typography
+                color="text.secondary"
+                fontSize={fontSize.finanzausgleich.detailTable.primary}
+                noWrap
+              >
+                {row.original.beschreibung}
+              </Typography>
+            )}
+          </Box>
+        ),
       },
-      cell: ({ row }) => {
-        const positionen = row.original.positionen;
 
-        const betrag = positionen.reduce((sum, position) => sum + Number(position.betrag), 0);
+      {
+        id: "betrag",
+        header: "Betrag",
+        size: 75,
+        meta: {
+          align: "right",
+        },
+        cell: ({ row }) => {
+          const positionen = row.original.positionen;
 
-        /*
-         * Ein Beleg kann theoretisch mehrere Positionen enthalten.
-         *
-         * Für die Darstellung bestimmen wir die Richtung
-         * anhand des resultierenden fachlichen Betrags.
-         */
-        const positive =
-          positionen.length > 0 &&
-          positionen.every((position) => isEinnahmeKategorie(position.kategorie));
+          const betrag = positionen.reduce((sum, position) => sum + Number(position.betrag), 0);
 
-        /*
-         * Negative gespeicherte Beträge sind ebenfalls
-         * Auszahlungen, z.B. Rückzahlungen.
-         */
-        const isRueckzahlung = positionen.some(
-          (position) => position.kategorie === "TEILNEHMERBEITRAG" && Number(position.betrag) < 0,
-        );
+          /*
+           * Ein Beleg kann theoretisch mehrere Positionen enthalten.
+           *
+           * Für die Darstellung bestimmen wir die Richtung
+           * anhand des resultierenden fachlichen Betrags.
+           */
+          const positive =
+            positionen.length > 0 &&
+            positionen.every((position) => isEinnahmeKategorie(position.kategorie));
 
-        return <SignedMoney value={betrag} positive={positive && !isRueckzahlung} />;
+          /*
+           * Negative gespeicherte Beträge sind ebenfalls
+           * Auszahlungen, z.B. Rückzahlungen.
+           */
+          const isRueckzahlung = positionen.some(
+            (position) => position.kategorie === "TEILNEHMERBEITRAG" && Number(position.betrag) < 0,
+          );
+
+          return <SignedMoney value={betrag} positive={positive && !isRueckzahlung} />;
+        },
       },
-    },
-  ],
-  [],
-);
+    ],
+    [],
+  );
 
   /* =========================================================
      FAHRKOSTEN
@@ -306,6 +311,34 @@ const finanzgruppeBelegColumns = useMemo<ColumnDef<AbrechnungBeleg>[]>(
       }
     }
 
+    async function loadUeberweisungen() {
+      setLoadingUeberweisungen(true);
+
+      try {
+        const data = await getUeberweisungenByFinanzGruppe(veranstaltungId, finanzGruppeId);
+
+        if (!cancelled) {
+          setUeberweisungen(
+            data.map((zahlung) => ({
+              ...zahlung,
+              id: zahlung.zahlungsnachweisId,
+            })),
+          );
+        }
+      } catch (err: unknown) {
+        console.error("Fehler beim Laden der Überweisungen", err);
+
+        if (!cancelled) {
+          setError(`Überweisungen: ${getApiErrorMessage(err)}`);
+          setUeberweisungen([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingUeberweisungen(false);
+        }
+      }
+    }
+
     async function loadReisekosten() {
       setLoadingReisekosten(true);
 
@@ -329,9 +362,10 @@ const finanzgruppeBelegColumns = useMemo<ColumnDef<AbrechnungBeleg>[]>(
       }
     }
 
-    loadBelege();
-    loadZahlungen();
-    loadReisekosten();
+   loadBelege();
+   loadZahlungen();
+   loadUeberweisungen();
+   loadReisekosten();
 
     return () => {
       cancelled = true;
@@ -342,43 +376,53 @@ const finanzgruppeBelegColumns = useMemo<ColumnDef<AbrechnungBeleg>[]>(
      UI
      ========================================================= */
 
- return (
-   <Box>
-     <SubsectionTitle>Einnahmen</SubsectionTitle>
+  return (
+    <Box>
+      <SubsectionTitle>Quittungen</SubsectionTitle>
 
-     <GenericTableTanstack
-       data={zahlungen}
-       columns={zahlungsColumns}
-       loading={loadingZahlungen}
-       height={200}
-       fixedColumnWidths={false}
-     />
+      <GenericTableTanstack
+        data={zahlungen}
+        columns={zahlungsColumns}
+        loading={loadingZahlungen}
+        height={200}
+        fixedColumnWidths={false}
+      />
 
-     <SubsectionTitle>Rechnungen</SubsectionTitle>
+      <SubsectionTitle>Überweisungen</SubsectionTitle>
 
-     <GenericTableTanstack
-       data={belege}
-       columns={finanzgruppeBelegColumns}
-       loading={loadingBelege}
-       height={250}
-       fixedColumnWidths={false}
-     />
+      <GenericTableTanstack
+        data={ueberweisungen}
+        columns={zahlungsColumns}
+        loading={loadingUeberweisungen}
+        height={200}
+        fixedColumnWidths={false}
+      />
 
-     {reisekosten.length > 0 && (
-       <>
-         <SubsectionTitle>Fahrkosten</SubsectionTitle>
+      <SubsectionTitle>Rechnungen</SubsectionTitle>
 
-         <GenericTableTanstack
-           data={reisekosten}
-           columns={reisekostenColumns}
-           loading={loadingReisekosten}
-           height={200}
-           fixedColumnWidths={false}
-         />
-       </>
-     )}
+      <GenericTableTanstack
+        data={belege}
+        columns={finanzgruppeBelegColumns}
+        loading={loadingBelege}
+        height={250}
+        fixedColumnWidths={false}
+      />
 
-     <ErrorDialog open={!!error} message={error ?? ""} onClose={() => setError(null)} />
-   </Box>
- );
+      {reisekosten.length > 0 && (
+        <>
+          <SubsectionTitle>Fahrkosten</SubsectionTitle>
+
+          <GenericTableTanstack
+            data={reisekosten}
+            columns={reisekostenColumns}
+            loading={loadingReisekosten}
+            height={200}
+            fixedColumnWidths={false}
+          />
+        </>
+      )}
+
+      <ErrorDialog open={!!error} message={error ?? ""} onClose={() => setError(null)} />
+    </Box>
+  );
 }

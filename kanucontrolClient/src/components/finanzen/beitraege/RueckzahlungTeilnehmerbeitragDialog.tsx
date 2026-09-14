@@ -107,8 +107,8 @@ export default function RueckzahlungTeilnehmerbeitragDialog({
       <DialogContent>
         <Stack spacing={2} mt={1}>
           <Typography variant="body2" color="text.secondary">
-            Für die Rückzahlung wird eine neue Abrechnungsbuchung erstellt und der ursprünglichen
-            Zahlung zugeordnet.
+            Für die Rückzahlung wird eine Buchung mit dem gewählten Zahlungsweg
+            erstellt und der ursprünglichen Zahlung zugeordnet.
           </Typography>
 
           {/* ================= ZAHLUNG ================= */}

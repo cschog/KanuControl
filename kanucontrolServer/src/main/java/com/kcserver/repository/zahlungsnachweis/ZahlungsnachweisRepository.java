@@ -144,6 +144,35 @@ public interface ZahlungsnachweisRepository
 
     @Query("""
     select
+        z.ueberzahlungsFinanzGruppe.id,
+        coalesce(
+            sum(
+                z.betrag
+                - coalesce(
+                    (
+                        select sum(p.betrag)
+                        from ZahlungsPosition p
+                        where p.zahlungsnachweis.id = z.id
+                    ),
+                    0
+                )
+            ),
+            0
+        )
+    from Zahlungsnachweis z
+    where z.veranstaltung.id = :veranstaltungId
+      and z.urspruenglicherZahlungsnachweis is null
+      and z.zahlungsweg =
+          com.kcserver.enumtype.Zahlungsweg.UEBERWEISUNG
+      and z.ueberzahlungsFinanzGruppe is not null
+    group by z.ueberzahlungsFinanzGruppe.id
+""")
+    List<Object[]> sumUeberzahlungsUeberweisungenByFinanzGruppeGrouped(
+            @Param("veranstaltungId") Long veranstaltungId
+    );
+
+    @Query("""
+    select
         p.teilnehmer.finanzGruppe.id,
         coalesce(sum(p.betrag), 0)
     from ZahlungsPosition p
@@ -212,9 +241,70 @@ public interface ZahlungsnachweisRepository
     from Zahlungsnachweis z
     where z.veranstaltung.id = :veranstaltungId
       and z.finanzGruppe.id = :finanzGruppeId
+      and z.zahlungsweg =
+          com.kcserver.enumtype.Zahlungsweg.QUITTUNG
     order by z.datum desc, z.id desc
 """)
     List<FinanzGruppeZahlungDTO> findZahlungenByFinanzGruppe(
+            @Param("veranstaltungId") Long veranstaltungId,
+            @Param("finanzGruppeId") Long finanzGruppeId
+    );
+
+    @Query("""
+    select distinct new com.kcserver.dto.zahlungsnachweis.FinanzGruppeZahlungDTO(
+        z.id,
+        z.datum,
+
+        z.betrag,
+
+        z.zahlungsweg,
+        z.bemerkung,
+
+        (select count(d)
+         from Dokument d
+         where d.zahlungsnachweis.id = z.id)
+    )
+    from Zahlungsnachweis z
+    left join z.positionen p
+    where z.veranstaltung.id = :veranstaltungId
+      and z.urspruenglicherZahlungsnachweis is null
+      and z.zahlungsweg =
+          com.kcserver.enumtype.Zahlungsweg.UEBERWEISUNG
+      and (
+          p.teilnehmer.finanzGruppe.id = :finanzGruppeId
+          or z.ueberzahlungsFinanzGruppe.id = :finanzGruppeId
+      )
+    order by z.datum desc, z.id desc
+""")
+    List<FinanzGruppeZahlungDTO> findUrspruenglicheUeberweisungenByFinanzGruppe(
+            @Param("veranstaltungId") Long veranstaltungId,
+            @Param("finanzGruppeId") Long finanzGruppeId
+    );
+
+
+    @Query("""
+    select new com.kcserver.dto.zahlungsnachweis.FinanzGruppeZahlungDTO(
+        z.id,
+        z.datum,
+
+        -z.betrag,
+
+        z.zahlungsweg,
+        z.bemerkung,
+
+        (select count(d)
+         from Dokument d
+         where d.zahlungsnachweis.id = z.id)
+    )
+    from Zahlungsnachweis z
+    where z.veranstaltung.id = :veranstaltungId
+      and z.urspruenglicherZahlungsnachweis is not null
+      and z.zahlungsweg =
+          com.kcserver.enumtype.Zahlungsweg.UEBERWEISUNG
+      and z.finanzGruppe.id = :finanzGruppeId
+    order by z.datum desc, z.id desc
+""")
+    List<FinanzGruppeZahlungDTO> findUeberweisungsRueckzahlungenByFinanzGruppe(
             @Param("veranstaltungId") Long veranstaltungId,
             @Param("finanzGruppeId") Long finanzGruppeId
     );
@@ -423,9 +513,27 @@ public interface ZahlungsnachweisRepository
     from Zahlungsnachweis z
     where z.veranstaltung.id = :veranstaltungId
       and z.urspruenglicherZahlungsnachweis is not null
+      and z.zahlungsweg =
+          com.kcserver.enumtype.Zahlungsweg.UEBERWEISUNG
+      and z.finanzGruppe is not null
+    group by z.finanzGruppe.id
+""")
+    List<Object[]> sumRueckzahlungenUeberweisungByFinanzGruppeGrouped(
+            @Param("veranstaltungId") Long veranstaltungId
+    );
+
+    @Query("""
+    select
+        z.finanzGruppe.id,
+        coalesce(sum(z.betrag), 0)
+    from Zahlungsnachweis z
+    where z.veranstaltung.id = :veranstaltungId
+      and z.urspruenglicherZahlungsnachweis is not null
     group by z.finanzGruppe.id
 """)
     List<Object[]> sumRueckzahlungenByFinanzGruppeGrouped(
             @Param("veranstaltungId") Long veranstaltungId
     );
+
+
 }
