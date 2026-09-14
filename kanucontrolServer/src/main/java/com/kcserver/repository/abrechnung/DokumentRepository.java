@@ -41,4 +41,12 @@ public interface DokumentRepository extends JpaRepository<Dokument, Long> {
     Dokument findTopByZahlungsnachweisIdOrderByReihenfolgeDesc(
             Long zahlungsnachweisId
     );
+
+    List<Dokument> findByFinanzausgleichZahlungIdOrderByReihenfolgeAsc(
+            Long zahlungId
+    );
+
+    Dokument findTopByFinanzausgleichZahlungIdOrderByReihenfolgeDesc(
+            Long zahlungId
+    );
 }

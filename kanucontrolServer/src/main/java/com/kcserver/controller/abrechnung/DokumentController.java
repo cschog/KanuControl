@@ -105,6 +105,102 @@ public class DokumentController {
 
     /*
      * =========================================================
+     * FINANZAUSGLEICHSZAHLUNG
+     * =========================================================
+     */
+
+    /**
+     * Alle Dokumente einer Finanzausgleichszahlung.
+     */
+    @GetMapping(
+            "/veranstaltungen/{veranstaltungId}/finanzgruppen/{finanzGruppeId}" +
+                    "/finanzausgleich-zahlungen/{zahlungId}/dokumente"
+    )
+    public List<DokumentDTO> findAllByFinanzausgleichZahlung(
+            @PathVariable Long veranstaltungId,
+            @PathVariable Long finanzGruppeId,
+            @PathVariable Long zahlungId
+    ) {
+        return dokumentService.findAllByFinanzausgleichZahlung(
+                veranstaltungId,
+                finanzGruppeId,
+                zahlungId
+        );
+    }
+
+    /**
+     * Dokument zu einer Finanzausgleichszahlung hochladen.
+     */
+    @PostMapping(
+            value = "/veranstaltungen/{veranstaltungId}/finanzgruppen/{finanzGruppeId}" +
+                    "/finanzausgleich-zahlungen/{zahlungId}/dokumente",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public DokumentDTO uploadForFinanzausgleichZahlung(
+            @PathVariable Long veranstaltungId,
+            @PathVariable Long finanzGruppeId,
+            @PathVariable Long zahlungId,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "referenzObjekt", required = false)
+            ReferenzObjekt referenzObjekt
+    ) {
+        return dokumentService.uploadForFinanzausgleichZahlung(
+                veranstaltungId,
+                finanzGruppeId,
+                zahlungId,
+                file,
+                referenzObjekt
+        );
+    }
+
+    /**
+     * Dokument einer Finanzausgleichszahlung anzeigen/herunterladen.
+     */
+    @GetMapping(
+            "/veranstaltungen/{veranstaltungId}/finanzgruppen/{finanzGruppeId}" +
+                    "/finanzausgleich-zahlungen/{zahlungId}/dokumente/{dokumentId}"
+    )
+    public ResponseEntity<ByteArrayResource> getForFinanzausgleichZahlung(
+            @PathVariable Long veranstaltungId,
+            @PathVariable Long finanzGruppeId,
+            @PathVariable Long zahlungId,
+            @PathVariable Long dokumentId
+    ) {
+
+        Dokument dokument =
+                dokumentService.getForFinanzausgleichZahlung(
+                        veranstaltungId,
+                        finanzGruppeId,
+                        zahlungId,
+                        dokumentId
+                );
+
+        return createResponse(dokument);
+    }
+
+    /**
+     * Dokument einer Finanzausgleichszahlung löschen.
+     */
+    @DeleteMapping(
+            "/veranstaltungen/{veranstaltungId}/finanzgruppen/{finanzGruppeId}" +
+                    "/finanzausgleich-zahlungen/{zahlungId}/dokumente/{dokumentId}"
+    )
+    public void deleteForFinanzausgleichZahlung(
+            @PathVariable Long veranstaltungId,
+            @PathVariable Long finanzGruppeId,
+            @PathVariable Long zahlungId,
+            @PathVariable Long dokumentId
+    ) {
+        dokumentService.deleteForFinanzausgleichZahlung(
+                veranstaltungId,
+                finanzGruppeId,
+                zahlungId,
+                dokumentId
+        );
+    }
+
+    /*
+     * =========================================================
      * RESPONSE
      * =========================================================
      */

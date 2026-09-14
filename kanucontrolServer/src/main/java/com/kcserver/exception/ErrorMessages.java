@@ -278,6 +278,9 @@ public final class ErrorMessages {
     public static final String VK_KONTO_NOT_CONFIGURED =
             "Für die Veranstaltung ist kein VK-Konto eingerichtet.";
 
+    public static final String VK_KONTO_NOT_ALLOWED =
+            "Für VK-Konto gibt es keine Finanzausgleichzahlung.";
+
     public static final String VK_NOT_CONFIGURED =
             "Für die Veranstaltung ist kein VK-Konto eingerichtet.";
 
@@ -286,6 +289,18 @@ public final class ErrorMessages {
 
     public static final String EIGENANTEIL_TOO_LOW =
             "Der Eigenanteil muss mindestens 250 € betragen.";
+
+    public static final String FINANZAUSGLEICH_ZAHLUNG_BETRAG_MUST_BE_POSITIVE =
+            "Der Betrag der Finanzausgleichszahlung muss größer als 0 sein.";
+
+    public static final String FINANZAUSGLEICH_BEREITS_VOLLSTAENDIG_GEZAHLT =
+            "Der Finanzausgleich wurde bereits vollständig ausgezahlt.";
+
+    public static final String FINANZAUSGLEICH_ZAHLUNG_EXCEEDS_OPEN_AMOUNT =
+            "Der Zahlungsbetrag überschreitet den noch offenen Finanzausgleich.";
+
+    public static final String FINANZAUSGLEICH_ZAHLUNG_NOT_FOUND =
+            "Die Finanzausgleichszahlung wurde nicht gefunden.";
 
     // =========================================================
     // Rückzahlung Teilnehmerbeitrag

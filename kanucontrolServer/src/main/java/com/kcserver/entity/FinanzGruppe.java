@@ -70,4 +70,36 @@ public class FinanzGruppe {
             teilnehmer.setFinanzGruppe(null);
         }
     }
+
+    /* =========================================================
+       FINANZAUSGLEICH-ZAHLUNGEN
+       ========================================================= */
+
+    @OneToMany(
+            mappedBy = "finanzGruppe"
+    )
+    @OrderBy("datum DESC")
+    @Builder.Default
+    private List<FinanzausgleichZahlung> finanzausgleichZahlungen =
+            new ArrayList<>();
+
+    public void addFinanzausgleichZahlung(
+            FinanzausgleichZahlung zahlung
+    ) {
+        if (!this.finanzausgleichZahlungen.contains(zahlung)) {
+            this.finanzausgleichZahlungen.add(zahlung);
+        }
+
+        zahlung.setFinanzGruppe(this);
+    }
+
+    public void removeFinanzausgleichZahlung(
+            FinanzausgleichZahlung zahlung
+    ) {
+        this.finanzausgleichZahlungen.remove(zahlung);
+
+        if (zahlung.getFinanzGruppe() == this) {
+            zahlung.setFinanzGruppe(null);
+        }
+    }
 }

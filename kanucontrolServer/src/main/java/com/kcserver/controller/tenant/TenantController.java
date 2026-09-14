@@ -1,4 +1,4 @@
-package com.kcserver.controller;
+package com.kcserver.controller.tenant;
 
 import com.kcserver.tenancy.TenantContext;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -1,4 +1,4 @@
-package com.kcserver.controller;
+package com.kcserver.controller.finanz;
 
 import com.kcserver.api.response.ApiResponse;
 import com.kcserver.dto.finanzen.FinanzenDashboardDTO;

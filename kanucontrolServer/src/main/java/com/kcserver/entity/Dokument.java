@@ -27,6 +27,10 @@ public class Dokument extends Auditable {
     @JoinColumn(name = "zahlungsnachweis_id")
     private Zahlungsnachweis zahlungsnachweis;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "finanzausgleich_zahlung_id")
+    private FinanzausgleichZahlung finanzausgleichZahlung;
+
     @Column(nullable = false)
     private Integer reihenfolge;
 

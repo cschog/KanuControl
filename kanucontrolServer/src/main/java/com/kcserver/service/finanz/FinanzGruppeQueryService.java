@@ -7,7 +7,7 @@ import com.kcserver.exception.ErrorMessages;
 import com.kcserver.mapper.FinanzGruppeDetailMapper;
 import com.kcserver.mapper.FinanzGruppeOverviewMapper;
 import com.kcserver.repository.abrechnung.AbrechnungBelegRepository;
-import com.kcserver.repository.FinanzGruppeRepository;
+import com.kcserver.repository.finanz.FinanzGruppeRepository;
 import com.kcserver.repository.abrechnung.AbrechnungBuchungRepository;
 import com.kcserver.repository.zahlungsnachweis.ZahlungsnachweisRepository;
 import com.kcserver.repository.fahrkosten.ReisekostenabrechnungRepository;

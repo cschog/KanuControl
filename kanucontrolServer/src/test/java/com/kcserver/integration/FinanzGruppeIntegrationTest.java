@@ -6,7 +6,7 @@ import com.kcserver.entity.*;
 import com.kcserver.enumtype.FinanzKategorie;
 import com.kcserver.service.finanz.FinanzGruppeService;
 import com.kcserver.repository.abrechnung.AbrechnungBelegRepository;
-import com.kcserver.repository.FinanzGruppeRepository;
+import com.kcserver.repository.finanz.FinanzGruppeRepository;
 import com.kcserver.repository.TeilnehmerRepository;
 import com.kcserver.repository.VeranstaltungRepository;
 import org.junit.jupiter.api.Test;

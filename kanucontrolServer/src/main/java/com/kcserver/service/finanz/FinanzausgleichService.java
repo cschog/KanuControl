@@ -4,7 +4,7 @@ import com.kcserver.dto.finanzen.FinanzausgleichDTO;
 import com.kcserver.entity.FinanzGruppe;
 import com.kcserver.entity.Teilnehmer;
 import com.kcserver.entity.Veranstaltung;
-import com.kcserver.repository.FinanzGruppeRepository;
+import com.kcserver.repository.finanz.FinanzGruppeRepository;
 import com.kcserver.repository.abrechnung.AbrechnungBuchungRepository;
 import com.kcserver.repository.zahlungsnachweis.ZahlungsnachweisRepository;
 import com.kcserver.repository.fahrkosten.ReisekostenabrechnungRepository;

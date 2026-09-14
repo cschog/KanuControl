@@ -165,3 +165,5 @@ databaseChangeLog:
       file: db/changelog/changes/2026-09-13_1.4.8-abrechnung-buchung-zahlungsweg.xml
   - include:
       file: db/changelog/changes/2026-09-13_02_rueckzahlung-zahlungsnachweis.xml
+  - include:
+      file: db/changelog/changes/20260914-01-create-finanzausgleich-zahlung.xml

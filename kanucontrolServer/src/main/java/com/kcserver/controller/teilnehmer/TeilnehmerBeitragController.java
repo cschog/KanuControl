@@ -1,4 +1,4 @@
-package com.kcserver.controller;
+package com.kcserver.controller.teilnehmer;
 
 import com.kcserver.api.response.ApiResponse;
 import com.kcserver.dto.teilnehmer.TeilnehmerBeitraegeResponseDTO;

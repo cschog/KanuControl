@@ -1,4 +1,4 @@
-package com.kcserver.controller;
+package com.kcserver.controller.fahrkosten;
 
 import com.kcserver.api.response.ApiResponse;
 import com.kcserver.dto.reisekosten.ReisekostenKonfigurationResponse;

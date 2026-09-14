@@ -5,7 +5,7 @@ import com.kcserver.entity.*;
 import com.kcserver.enumtype.Zahlungsweg;
 import com.kcserver.exception.ErrorMessages;
 import com.kcserver.mapper.ZahlungsnachweisMapper;
-import com.kcserver.repository.FinanzGruppeRepository;
+import com.kcserver.repository.finanz.FinanzGruppeRepository;
 import com.kcserver.repository.TeilnehmerRepository;
 import com.kcserver.repository.VeranstaltungRepository;
 import com.kcserver.repository.zahlungsnachweis.ZahlungsnachweisRepository;

@@ -1,4 +1,4 @@
-package com.kcserver.repository;
+package com.kcserver.repository.finanz;
 import com.kcserver.entity.FinanzGruppe;
 import org.springframework.data.jpa.repository.JpaRepository;
 

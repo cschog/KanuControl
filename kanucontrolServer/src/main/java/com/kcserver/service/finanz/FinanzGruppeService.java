@@ -6,7 +6,7 @@ import com.kcserver.entity.Veranstaltung;
 import com.kcserver.exception.BusinessRuleViolationException;
 import com.kcserver.exception.ErrorMessages;
 import com.kcserver.repository.abrechnung.AbrechnungBelegRepository;
-import com.kcserver.repository.FinanzGruppeRepository;
+import com.kcserver.repository.finanz.FinanzGruppeRepository;
 import com.kcserver.repository.TeilnehmerRepository;
 import com.kcserver.repository.VeranstaltungRepository;
 import lombok.RequiredArgsConstructor;

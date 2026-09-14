@@ -5,7 +5,7 @@ import com.kcserver.entity.*;
 import com.kcserver.enumtype.BuchungsHerkunft;
 import com.kcserver.enumtype.FinanzKategorie;
 import com.kcserver.exception.ErrorMessages;
-import com.kcserver.repository.FinanzGruppeRepository;
+import com.kcserver.repository.finanz.FinanzGruppeRepository;
 import com.kcserver.repository.abrechnung.AbrechnungRepository;
 import com.kcserver.repository.TeilnehmerRepository;
 import com.kcserver.repository.zahlungsnachweis.ZahlungsnachweisRepository;

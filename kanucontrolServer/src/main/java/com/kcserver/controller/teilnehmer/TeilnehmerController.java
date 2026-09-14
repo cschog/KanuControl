@@ -1,4 +1,4 @@
-package com.kcserver.controller;
+package com.kcserver.controller.teilnehmer;
 
 import com.kcserver.dto.person.PersonListDTO;
 import com.kcserver.dto.teilnehmer.*;

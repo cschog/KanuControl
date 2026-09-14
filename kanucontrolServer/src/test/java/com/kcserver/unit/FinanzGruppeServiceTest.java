@@ -9,7 +9,7 @@ import com.kcserver.enumtype.FinanzKategorie;
 import com.kcserver.service.abrechnung.AbrechnungBelegService;
 import com.kcserver.integration.AbstractFinanzIntegrationTest;
 import com.kcserver.service.finanz.FinanzGruppeService;
-import com.kcserver.repository.FinanzGruppeRepository;
+import com.kcserver.repository.finanz.FinanzGruppeRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
