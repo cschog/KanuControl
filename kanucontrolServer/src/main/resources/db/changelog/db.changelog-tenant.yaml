@@ -167,3 +167,9 @@ databaseChangeLog:
       file: db/changelog/changes/2026-09-13_02_rueckzahlung-zahlungsnachweis.xml
   - include:
       file: db/changelog/changes/20260914-01-create-finanzausgleich-zahlung.xml
+  - include:
+      file: db/changelog/changes/20260915-01-remove-finanzausgleich-zahlung.xml
+  - include:
+      file: db/changelog/changes/20260915-02-add-finanzgruppe-to-dokument.xml
+  - include:
+      file: db/changelog/changes/2026-09-15-03-update-dokument-besitzer.xml

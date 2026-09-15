@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet
+            id="2026-09-15-remove-finanzausgleich-zahlung"
+            author="kcserver">
+
+        <!-- FK und Spalte aus dokument entfernen -->
+        <dropForeignKeyConstraint
+                baseTableName="dokument"
+                constraintName="fk_dokument_finanzausgleich_zahlung"/>
+
+        <dropIndex
+                tableName="dokument"
+                indexName="idx_dokument_finanzausgleich_zahlung"/>
+
+        <dropColumn
+                tableName="dokument"
+                columnName="finanzausgleich_zahlung_id"/>
+
+        <!-- Tabelle der versehentlich eingeführten Zahlung entfernen -->
+        <dropTable
+                tableName="finanzausgleich_zahlung"
+                cascadeConstraints="true"/>
+
+    </changeSet>
+
+</databaseChangeLog>

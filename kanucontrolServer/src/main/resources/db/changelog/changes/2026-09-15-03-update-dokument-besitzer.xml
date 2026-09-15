@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet
+            id="2026-09-15-update-dokument-besitzer"
+            author="kcserver">
+
+        <sql>
+            ALTER TABLE dokument
+            DROP CONSTRAINT chk_dokument_besitzer;
+        </sql>
+
+        <sql>
+            ALTER TABLE dokument
+            ADD CONSTRAINT chk_dokument_besitzer
+            CHECK (
+            (beleg_id IS NOT NULL
+            AND zahlungsnachweis_id IS NULL
+            AND finanz_gruppe_id IS NULL)
+            OR
+            (beleg_id IS NULL
+            AND zahlungsnachweis_id IS NOT NULL
+            AND finanz_gruppe_id IS NULL)
+            OR
+            (beleg_id IS NULL
+            AND zahlungsnachweis_id IS NULL
+            AND finanz_gruppe_id IS NOT NULL)
+            );
+        </sql>
+
+    </changeSet>
+
+</databaseChangeLog>

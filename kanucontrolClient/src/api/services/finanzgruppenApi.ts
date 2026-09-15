@@ -1,7 +1,9 @@
 // src/api/services/finanzgruppenApi.ts
 
 import apiClient from "@/api/client/apiClient";
+import { DokumentDTO } from "@/api/types/dokument";
 import { FinanzausgleichDTO } from "@/components/finanzen/finanzausgleich/finanzausgleichTypes";
+import { ReferenzObjekt } from "@/api/enums/ReferenzObjekt";
 
 /* ================= TYPES ================= */
 
@@ -103,6 +105,99 @@ export async function pruefeTeilnehmerBeitraege(
 ): Promise<FinanzausgleichPruefungDTO> {
   const response = await apiClient.get<FinanzausgleichPruefungDTO>(
     `/veranstaltungen/${veranstaltungId}/finanzgruppen/finanzausgleich/pruefung`,
+  );
+
+  return response.data;
+}
+
+/* ================= FINANZAUSGLEICH DOKUMENTE ================= */
+
+/**
+ * Alle Nachweisdokumente des Finanzausgleichs
+ * einer FinanzGruppe.
+ */
+export async function findFinanzausgleichDokumente(
+  veranstaltungId: number,
+  gruppeId: number,
+): Promise<DokumentDTO[]> {
+  const response = await apiClient.get<DokumentDTO[]>(
+    `/veranstaltungen/${veranstaltungId}/finanzgruppen/${gruppeId}/finanzausgleich-dokumente`,
+  );
+
+  return response.data;
+}
+
+/**
+ * Nachweisdokument zum Finanzausgleich
+ * einer FinanzGruppe hochladen.
+ */
+export async function uploadFinanzausgleichDokument(
+  veranstaltungId: number,
+  gruppeId: number,
+  file: File,
+  referenzObjekt: ReferenzObjekt,
+): Promise<DokumentDTO> {
+  const formData = new FormData();
+
+  formData.append("file", file);
+  formData.append("referenzObjekt", referenzObjekt);
+
+  const response = await apiClient.post<DokumentDTO>(
+    `/veranstaltungen/${veranstaltungId}/finanzgruppen/${gruppeId}/finanzausgleich-dokumente`,
+    formData,
+  );
+
+  return response.data;
+}
+
+/**
+ * Nachweisdokument des Finanzausgleichs anzeigen.
+ */
+export async function downloadFinanzausgleichDokument(
+  veranstaltungId: number,
+  gruppeId: number,
+  dokumentId: number,
+): Promise<Blob> {
+  const response = await apiClient.get<Blob>(
+    `/veranstaltungen/${veranstaltungId}/finanzgruppen/${gruppeId}/finanzausgleich-dokumente/${dokumentId}`,
+    {
+      responseType: "blob",
+    },
+  );
+
+  return response.data;
+}
+
+/**
+ * Nachweisdokument des Finanzausgleichs löschen.
+ */
+export async function deleteFinanzausgleichDokument(
+  veranstaltungId: number,
+  gruppeId: number,
+  dokumentId: number,
+): Promise<void> {
+  await apiClient.delete(
+    `/veranstaltungen/${veranstaltungId}/finanzgruppen/${gruppeId}/finanzausgleich-dokumente/${dokumentId}`,
+  );
+}
+
+/**
+ * Referenzobjekt eines Finanzausgleich-Dokuments ändern.
+ */
+export async function updateFinanzausgleichDokumentReferenzObjekt(
+  veranstaltungId: number,
+  gruppeId: number,
+  dokumentId: number,
+  referenzObjekt: ReferenzObjekt,
+): Promise<DokumentDTO> {
+  const response = await apiClient.put<DokumentDTO>(
+    `/veranstaltungen/${veranstaltungId}/finanzgruppen/${gruppeId}/finanzausgleich-dokumente/${dokumentId}/referenz-objekt`,
+    null,
+    {
+      params: {
+        referenzObjekt,
+      },
+    },
   );
 
   return response.data;

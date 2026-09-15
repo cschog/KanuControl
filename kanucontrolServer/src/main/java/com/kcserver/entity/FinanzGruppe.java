@@ -71,35 +71,21 @@ public class FinanzGruppe {
         }
     }
 
+    public void removeFinanzausgleichDokument(Dokument dokument) {
+        this.finanzausgleichDokumente.remove(dokument);
+
+        if (dokument.getFinanzGruppe() == this) {
+            dokument.setFinanzGruppe(null);
+        }
+    }
+
     /* =========================================================
-       FINANZAUSGLEICH-ZAHLUNGEN
-       ========================================================= */
+   FINANZAUSGLEICH-DOKUMENTE
+   ========================================================= */
 
-    @OneToMany(
-            mappedBy = "finanzGruppe"
-    )
-    @OrderBy("datum DESC")
+    @OneToMany(mappedBy = "finanzGruppe")
+    @OrderBy("reihenfolge ASC")
     @Builder.Default
-    private List<FinanzausgleichZahlung> finanzausgleichZahlungen =
+    private List<Dokument> finanzausgleichDokumente =
             new ArrayList<>();
-
-    public void addFinanzausgleichZahlung(
-            FinanzausgleichZahlung zahlung
-    ) {
-        if (!this.finanzausgleichZahlungen.contains(zahlung)) {
-            this.finanzausgleichZahlungen.add(zahlung);
-        }
-
-        zahlung.setFinanzGruppe(this);
-    }
-
-    public void removeFinanzausgleichZahlung(
-            FinanzausgleichZahlung zahlung
-    ) {
-        this.finanzausgleichZahlungen.remove(zahlung);
-
-        if (zahlung.getFinanzGruppe() == this) {
-            zahlung.setFinanzGruppe(null);
-        }
-    }
 }

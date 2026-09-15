@@ -1,3 +1,5 @@
+// src/api/types/dokument.ts
+
 import { ReferenzObjekt } from "@/api/enums/ReferenzObjekt";
 
 export interface DokumentDTO {

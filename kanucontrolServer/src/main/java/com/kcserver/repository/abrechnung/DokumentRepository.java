@@ -22,6 +22,7 @@ public interface DokumentRepository extends JpaRepository<Dokument, Long> {
      */
     Dokument findTopByBelegIdOrderByReihenfolgeDesc(Long belegId);
 
+
     /**
      * Alle Dokumente eines Zahlungsnachweises
      * in der definierten Reihenfolge.
@@ -42,11 +43,20 @@ public interface DokumentRepository extends JpaRepository<Dokument, Long> {
             Long zahlungsnachweisId
     );
 
-    List<Dokument> findByFinanzausgleichZahlungIdOrderByReihenfolgeAsc(
-            Long zahlungId
+
+    /**
+     * Alle Finanzausgleich-Dokumente einer FinanzGruppe
+     * in der definierten Reihenfolge.
+     */
+    List<Dokument> findByFinanzGruppeIdOrderByReihenfolgeAsc(
+            Long finanzGruppeId
     );
 
-    Dokument findTopByFinanzausgleichZahlungIdOrderByReihenfolgeDesc(
-            Long zahlungId
+    /**
+     * Höchste Reihenfolge eines Finanzausgleich-Dokuments
+     * einer FinanzGruppe.
+     */
+    Dokument findTopByFinanzGruppeIdOrderByReihenfolgeDesc(
+            Long finanzGruppeId
     );
 }

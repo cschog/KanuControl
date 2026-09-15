@@ -28,8 +28,8 @@ public class Dokument extends Auditable {
     private Zahlungsnachweis zahlungsnachweis;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "finanzausgleich_zahlung_id")
-    private FinanzausgleichZahlung finanzausgleichZahlung;
+    @JoinColumn(name = "finanz_gruppe_id")
+    private FinanzGruppe finanzGruppe;
 
     @Column(nullable = false)
     private Integer reihenfolge;

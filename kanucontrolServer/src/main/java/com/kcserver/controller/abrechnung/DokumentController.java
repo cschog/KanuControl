@@ -105,73 +105,63 @@ public class DokumentController {
 
     /*
      * =========================================================
-     * FINANZAUSGLEICHSZAHLUNG
+     * FINANZAUSGLEICH
      * =========================================================
      */
 
     /**
-     * Alle Dokumente einer Finanzausgleichszahlung.
+     * Alle Finanzausgleich-Dokumente einer FinanzGruppe.
      */
     @GetMapping(
-            "/veranstaltungen/{veranstaltungId}/finanzgruppen/{finanzGruppeId}" +
-                    "/finanzausgleich-zahlungen/{zahlungId}/dokumente"
+            "/veranstaltungen/{veranstaltungId}/finanzgruppen/{finanzGruppeId}/finanzausgleich-dokumente"
     )
-    public List<DokumentDTO> findAllByFinanzausgleichZahlung(
+    public List<DokumentDTO> findAllByFinanzGruppe(
             @PathVariable Long veranstaltungId,
-            @PathVariable Long finanzGruppeId,
-            @PathVariable Long zahlungId
+            @PathVariable Long finanzGruppeId
     ) {
-        return dokumentService.findAllByFinanzausgleichZahlung(
+        return dokumentService.findAllByFinanzGruppe(
                 veranstaltungId,
-                finanzGruppeId,
-                zahlungId
+                finanzGruppeId
         );
     }
 
     /**
-     * Dokument zu einer Finanzausgleichszahlung hochladen.
+     * Dokument zum Finanzausgleich einer FinanzGruppe hochladen.
      */
     @PostMapping(
-            value = "/veranstaltungen/{veranstaltungId}/finanzgruppen/{finanzGruppeId}" +
-                    "/finanzausgleich-zahlungen/{zahlungId}/dokumente",
+            value = "/veranstaltungen/{veranstaltungId}/finanzgruppen/{finanzGruppeId}/finanzausgleich-dokumente",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
-    public DokumentDTO uploadForFinanzausgleichZahlung(
+    public DokumentDTO uploadForFinanzGruppe(
             @PathVariable Long veranstaltungId,
             @PathVariable Long finanzGruppeId,
-            @PathVariable Long zahlungId,
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "referenzObjekt", required = false)
             ReferenzObjekt referenzObjekt
     ) {
-        return dokumentService.uploadForFinanzausgleichZahlung(
+        return dokumentService.uploadForFinanzGruppe(
                 veranstaltungId,
                 finanzGruppeId,
-                zahlungId,
                 file,
                 referenzObjekt
         );
     }
 
     /**
-     * Dokument einer Finanzausgleichszahlung anzeigen/herunterladen.
+     * Dokument eines Finanzausgleichs anzeigen/herunterladen.
      */
     @GetMapping(
-            "/veranstaltungen/{veranstaltungId}/finanzgruppen/{finanzGruppeId}" +
-                    "/finanzausgleich-zahlungen/{zahlungId}/dokumente/{dokumentId}"
+            "/veranstaltungen/{veranstaltungId}/finanzgruppen/{finanzGruppeId}/finanzausgleich-dokumente/{dokumentId}"
     )
-    public ResponseEntity<ByteArrayResource> getForFinanzausgleichZahlung(
+    public ResponseEntity<ByteArrayResource> getForFinanzGruppe(
             @PathVariable Long veranstaltungId,
             @PathVariable Long finanzGruppeId,
-            @PathVariable Long zahlungId,
             @PathVariable Long dokumentId
     ) {
-
         Dokument dokument =
-                dokumentService.getForFinanzausgleichZahlung(
+                dokumentService.getForFinanzGruppe(
                         veranstaltungId,
                         finanzGruppeId,
-                        zahlungId,
                         dokumentId
                 );
 
@@ -179,22 +169,39 @@ public class DokumentController {
     }
 
     /**
-     * Dokument einer Finanzausgleichszahlung löschen.
+     * Referenzobjekt eines Finanzausgleich-Dokuments ändern.
      */
-    @DeleteMapping(
-            "/veranstaltungen/{veranstaltungId}/finanzgruppen/{finanzGruppeId}" +
-                    "/finanzausgleich-zahlungen/{zahlungId}/dokumente/{dokumentId}"
+    @PutMapping(
+            "/veranstaltungen/{veranstaltungId}/finanzgruppen/{finanzGruppeId}/finanzausgleich-dokumente/{dokumentId}/referenz-objekt"
     )
-    public void deleteForFinanzausgleichZahlung(
+    public DokumentDTO updateReferenzObjektForFinanzGruppe(
             @PathVariable Long veranstaltungId,
             @PathVariable Long finanzGruppeId,
-            @PathVariable Long zahlungId,
-            @PathVariable Long dokumentId
+            @PathVariable Long dokumentId,
+            @RequestParam ReferenzObjekt referenzObjekt
     ) {
-        dokumentService.deleteForFinanzausgleichZahlung(
+        return dokumentService.updateReferenzObjektForFinanzGruppe(
                 veranstaltungId,
                 finanzGruppeId,
-                zahlungId,
+                dokumentId,
+                referenzObjekt
+        );
+    }
+
+    /**
+     * Dokument eines Finanzausgleichs löschen.
+     */
+    @DeleteMapping(
+            "/veranstaltungen/{veranstaltungId}/finanzgruppen/{finanzGruppeId}/finanzausgleich-dokumente/{dokumentId}"
+    )
+    public void deleteForFinanzGruppe(
+            @PathVariable Long veranstaltungId,
+            @PathVariable Long finanzGruppeId,
+            @PathVariable Long dokumentId
+    ) {
+        dokumentService.deleteForFinanzGruppe(
+                veranstaltungId,
+                finanzGruppeId,
                 dokumentId
         );
     }

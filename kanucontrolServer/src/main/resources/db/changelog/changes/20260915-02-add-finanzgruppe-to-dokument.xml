@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet
+            id="2026-09-15-add-finanzgruppe-to-dokument"
+            author="kcserver">
+
+        <addColumn tableName="dokument">
+
+            <column
+                    name="finanz_gruppe_id"
+                    type="BIGINT">
+
+                <constraints
+                        nullable="true"
+                        foreignKeyName="fk_dokument_finanz_gruppe"
+                        referencedTableName="finanz_gruppe"
+                        referencedColumnNames="id"/>
+
+            </column>
+
+        </addColumn>
+
+        <createIndex
+                indexName="idx_dokument_finanz_gruppe"
+                tableName="dokument">
+
+            <column name="finanz_gruppe_id"/>
+
+        </createIndex>
+
+    </changeSet>
+
+</databaseChangeLog>

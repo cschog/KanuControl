@@ -7,6 +7,8 @@ import {
   Typography,
 } from "@mui/material";
 
+import FinanzausgleichDokumentPanel from "./FinanzausgleichDokumentPanel";
+
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 import { fontSize } from "@/theme/ui";
@@ -30,7 +32,7 @@ export default function FinanzausgleichAccordion({
   onChange,
 }: Props) {
 
-    const isVK = row.kuerzel === "VK";
+const isVK = row.kuerzel === "VK";
     
 const beitragsAbweichung = !isVK && row.beitragsstatus === "ABWEICHUNG";
 
@@ -117,8 +119,7 @@ const beitragsAbweichung = !isVK && row.beitragsstatus === "ABWEICHUNG";
                     mt: 0.25,
                     lineHeight: 1.2,
                   }}
-                >
-                </Typography>
+                ></Typography>
               )}
             </Box>
 
@@ -304,19 +305,31 @@ const beitragsAbweichung = !isVK && row.beitragsstatus === "ABWEICHUNG";
       {/* =====================================================
           DETAILS
          ===================================================== */}
-
       <AccordionDetails
         sx={{
           pt: 0,
           pb: 3,
-
           px: {
             xs: 2,
             md: 3,
           },
         }}
       >
-        <FinanzGruppeBelege veranstaltungId={veranstaltungId} finanzGruppeId={row.finanzGruppeId} />
+        <Stack spacing={3}>
+          {!isVK && (
+            <Box sx={{ pt: 2 }}>
+              <FinanzausgleichDokumentPanel
+                veranstaltungId={veranstaltungId}
+                finanzGruppeId={row.finanzGruppeId}
+              />
+            </Box>
+          )}
+
+          <FinanzGruppeBelege
+            veranstaltungId={veranstaltungId}
+            finanzGruppeId={row.finanzGruppeId}
+          />
+        </Stack>
       </AccordionDetails>
     </Accordion>
   );

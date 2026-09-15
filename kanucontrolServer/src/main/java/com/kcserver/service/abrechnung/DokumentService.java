@@ -3,13 +3,13 @@ package com.kcserver.service.abrechnung;
 import com.kcserver.dto.abrechnung.DokumentDTO;
 import com.kcserver.entity.AbrechnungBeleg;
 import com.kcserver.entity.Dokument;
-import com.kcserver.entity.FinanzausgleichZahlung;
+import com.kcserver.entity.FinanzGruppe;
 import com.kcserver.entity.Zahlungsnachweis;
 import com.kcserver.exception.ErrorMessages;
 import com.kcserver.mapper.DokumentMapper;
 import com.kcserver.repository.abrechnung.AbrechnungBelegRepository;
 import com.kcserver.repository.abrechnung.DokumentRepository;
-import com.kcserver.repository.finanz.FinanzausgleichZahlungRepository;
+import com.kcserver.repository.finanz.FinanzGruppeRepository;
 import com.kcserver.repository.zahlungsnachweis.ZahlungsnachweisRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -44,7 +44,7 @@ public class DokumentService {
     private final AbrechnungBelegRepository abrechnungBelegRepository;
     private final ZahlungsnachweisRepository zahlungsnachweisRepository;
     private final DokumentMapper dokumentMapper;
-    private final FinanzausgleichZahlungRepository finanzausgleichZahlungRepository;
+    private final FinanzGruppeRepository finanzGruppeRepository;
 
     /**
      * Alle Dokumente eines Belegs.
@@ -83,50 +83,46 @@ public class DokumentService {
     }
 
     /**
-     * Alle Dokumente einer Finanzausgleichszahlung.
+     * Alle Dokumente zum Finanzausgleich einer Finanzgruppe.
      */
     @Transactional(readOnly = true)
-    public List<DokumentDTO> findAllByFinanzausgleichZahlung(
+    public List<DokumentDTO> findAllByFinanzGruppe(
             Long veranstaltungId,
-            Long finanzGruppeId,
-            Long zahlungId
+            Long finanzGruppeId
     ) {
 
-        getFinanzausgleichZahlung(
+        getFinanzGruppe(
                 veranstaltungId,
-                finanzGruppeId,
-                zahlungId
+                finanzGruppeId
         );
 
         return dokumentMapper.toDto(
                 dokumentRepository
-                        .findByFinanzausgleichZahlungIdOrderByReihenfolgeAsc(
-                                zahlungId
+                        .findByFinanzGruppeIdOrderByReihenfolgeAsc(
+                                finanzGruppeId
                         )
         );
     }
 
     /**
-     * Dokument zu einer Finanzausgleichszahlung hochladen.
+     * Dokument zum Finanzausgleich einer Finanzgruppe hochladen.
      */
-    public DokumentDTO uploadForFinanzausgleichZahlung(
+    public DokumentDTO uploadForFinanzGruppe(
             Long veranstaltungId,
             Long finanzGruppeId,
-            Long zahlungId,
             MultipartFile file,
             ReferenzObjekt referenzObjekt
     ) {
 
-        FinanzausgleichZahlung zahlung =
-                getFinanzausgleichZahlung(
+        FinanzGruppe finanzGruppe =
+                getFinanzGruppe(
                         veranstaltungId,
-                        finanzGruppeId,
-                        zahlungId
+                        finanzGruppeId
                 );
 
         int reihenfolge =
-                getNextReihenfolgeForFinanzausgleichZahlung(
-                        zahlungId
+                getNextReihenfolgeForFinanzGruppe(
+                        finanzGruppeId
                 );
 
         Dokument dokument =
@@ -136,38 +132,36 @@ public class DokumentService {
                         referenzObjekt
                 );
 
-        zahlung.addDokument(dokument);
+        dokument.setFinanzGruppe(finanzGruppe);
 
-        finanzausgleichZahlungRepository.flush();
+        dokumentRepository.save(dokument);
 
         return dokumentMapper.toDto(dokument);
     }
 
     /**
-     * Dokument einer Finanzausgleichszahlung laden.
+     * Dokument eines Finanzausgleichs einer Finanzgruppe laden.
      */
     @Transactional(readOnly = true)
-    public Dokument getForFinanzausgleichZahlung(
+    public Dokument getForFinanzGruppe(
             Long veranstaltungId,
             Long finanzGruppeId,
-            Long zahlungId,
             Long dokumentId
     ) {
 
-        FinanzausgleichZahlung zahlung =
-                getFinanzausgleichZahlung(
+        FinanzGruppe finanzGruppe =
+                getFinanzGruppe(
                         veranstaltungId,
-                        finanzGruppeId,
-                        zahlungId
+                        finanzGruppeId
                 );
 
         return dokumentRepository
                 .findById(dokumentId)
                 .filter(dokument ->
-                        dokument.getFinanzausgleichZahlung() != null
-                                && dokument.getFinanzausgleichZahlung()
+                        dokument.getFinanzGruppe() != null
+                                && dokument.getFinanzGruppe()
                                 .getId()
-                                .equals(zahlung.getId())
+                                .equals(finanzGruppe.getId())
                 )
                 .orElseThrow(() ->
                         new ResponseStatusException(
@@ -177,44 +171,67 @@ public class DokumentService {
                 );
     }
 
-    /**
-     * Dokument einer Finanzausgleichszahlung löschen.
-     */
-    public void deleteForFinanzausgleichZahlung(
+    public DokumentDTO updateReferenzObjektForFinanzGruppe(
             Long veranstaltungId,
             Long finanzGruppeId,
-            Long zahlungId,
-            Long dokumentId
+            Long dokumentId,
+            ReferenzObjekt referenzObjekt
     ) {
 
-        FinanzausgleichZahlung zahlung =
-                getFinanzausgleichZahlung(
-                        veranstaltungId,
-                        finanzGruppeId,
-                        zahlungId
-                );
+        if (referenzObjekt == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    ErrorMessages.REFERENZOBJEKT_REQUIRED
+            );
+        }
 
         Dokument dokument =
-                getForFinanzausgleichZahlung(
+                getForFinanzGruppe(
                         veranstaltungId,
                         finanzGruppeId,
-                        zahlungId,
                         dokumentId
                 );
 
-        zahlung.removeDokument(dokument);
+        dokument.setReferenzObjekt(referenzObjekt);
 
-        finanzausgleichZahlungRepository.flush();
+        return dokumentMapper.toDto(dokument);
     }
 
-    private int getNextReihenfolgeForFinanzausgleichZahlung(
-            Long zahlungId
+    /**
+     * Dokument eines Finanzausgleichs löschen.
+     */
+    public void deleteForFinanzGruppe(
+            Long veranstaltungId,
+            Long finanzGruppeId,
+            Long dokumentId
+    ) {
+
+        FinanzGruppe finanzGruppe =
+                getFinanzGruppe(
+                        veranstaltungId,
+                        finanzGruppeId
+                );
+
+        Dokument dokument =
+                getForFinanzGruppe(
+                        veranstaltungId,
+                        finanzGruppeId,
+                        dokumentId
+                );
+
+        dokument.setFinanzGruppe(null);
+
+        dokumentRepository.flush();
+    }
+
+    private int getNextReihenfolgeForFinanzGruppe(
+            Long finanzGruppeId
     ) {
 
         Dokument letztes =
                 dokumentRepository
-                        .findTopByFinanzausgleichZahlungIdOrderByReihenfolgeDesc(
-                                zahlungId
+                        .findTopByFinanzGruppeIdOrderByReihenfolgeDesc(
+                                finanzGruppeId
                         );
 
         return letztes == null
@@ -222,22 +239,22 @@ public class DokumentService {
                 : letztes.getReihenfolge() + 1;
     }
 
-    private FinanzausgleichZahlung getFinanzausgleichZahlung(
+    private FinanzGruppe getFinanzGruppe(
             Long veranstaltungId,
-            Long finanzGruppeId,
-            Long zahlungId
+            Long finanzGruppeId
     ) {
 
-        return finanzausgleichZahlungRepository
-                .findByIdAndFinanzGruppeIdAndVeranstaltungId(
-                        zahlungId,
-                        finanzGruppeId,
-                        veranstaltungId
+        return finanzGruppeRepository
+                .findById(finanzGruppeId)
+                .filter(finanzGruppe ->
+                        finanzGruppe.getVeranstaltung()
+                                .getId()
+                                .equals(veranstaltungId)
                 )
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
-                                ErrorMessages.FINANZAUSGLEICH_ZAHLUNG_NOT_FOUND
+                                ErrorMessages.GRUPPE_NOT_IN_VERANSTALTUNG
                         )
                 );
     }
@@ -772,35 +789,23 @@ public class DokumentService {
 
             AbrechnungBeleg beleg =
                     dokument.getBeleg();
-
             beleg.removeDokument(dokument);
-
             abrechnungBelegRepository.flush();
-
             return;
         }
 
         if (dokument.getZahlungsnachweis() != null) {
-
             Zahlungsnachweis zahlungsnachweis =
                     dokument.getZahlungsnachweis();
-
             zahlungsnachweis.removeDokument(dokument);
-
             zahlungsnachweisRepository.flush();
-
             return;
         }
 
-        if (dokument.getFinanzausgleichZahlung() != null) {
-
-            FinanzausgleichZahlung zahlung =
-                    dokument.getFinanzausgleichZahlung();
-
-            zahlung.removeDokument(dokument);
-
-            finanzausgleichZahlungRepository.flush();
-
+        if (dokument.getFinanzGruppe() != null) {
+            FinanzGruppe finanzGruppe = dokument.getFinanzGruppe();
+            finanzGruppe.removeFinanzausgleichDokument(dokument);
+            finanzGruppeRepository.flush();
             return;
         }
 
