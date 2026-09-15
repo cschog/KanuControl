@@ -27,6 +27,7 @@ public class ReportController {
     private final VeranstaltungService veranstaltungService;
     private final PDFFahrkostenabrechnungService reisekostenPdfService;
     private final ReisekostenabrechnungService reisekostenabrechnungService;
+    private final PDFFinanzausgleichService finanzausgleichPdfService;
 
    /* =========================================================
    FM / JEM Antrag (Vorschau)
@@ -357,6 +358,70 @@ public class ReportController {
                 PdfFilenameUtil.build(
                         LocalDate.now(),
                         PdfDokumentTyp.ZAHLUNGSNACHWEISE,
+                        veranstaltung
+                );
+
+        return buildAttachmentResponse(
+                pdf,
+                filename
+        );
+    }
+
+    /* =========================================================
+   Finanzausgleich PDF (Vorschau)
+   ========================================================= */
+
+    @GetMapping("/finanzausgleich/pdf/view")
+    public ResponseEntity<byte[]> viewFinanzausgleich(
+            @PathVariable Long veranstaltungId
+    ) {
+
+        byte[] pdf =
+                finanzausgleichPdfService.generate(
+                        veranstaltungId
+                );
+
+        VeranstaltungDetailDTO veranstaltung =
+                veranstaltungService.getById(
+                        veranstaltungId
+                );
+
+        String filename =
+                PdfFilenameUtil.build(
+                        LocalDate.now(),
+                        PdfDokumentTyp.FINANZAUSGLEICH,
+                        veranstaltung
+                );
+
+        return buildInlineResponse(
+                pdf,
+                filename
+        );
+    }
+
+/* =========================================================
+   Finanzausgleich PDF (Download)
+   ========================================================= */
+
+    @GetMapping("/finanzausgleich/pdf/download")
+    public ResponseEntity<byte[]> downloadFinanzausgleich(
+            @PathVariable Long veranstaltungId
+    ) {
+
+        byte[] pdf =
+                finanzausgleichPdfService.generate(
+                        veranstaltungId
+                );
+
+        VeranstaltungDetailDTO veranstaltung =
+                veranstaltungService.getById(
+                        veranstaltungId
+                );
+
+        String filename =
+                PdfFilenameUtil.build(
+                        LocalDate.now(),
+                        PdfDokumentTyp.FINANZAUSGLEICH,
                         veranstaltung
                 );
 

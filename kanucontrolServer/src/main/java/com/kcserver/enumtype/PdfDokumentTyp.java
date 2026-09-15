@@ -14,6 +14,7 @@ public enum PdfDokumentTyp {
     REISEKOSTENABRECHNUNG("Fahrkostenabrechnung"),
 
     ZAHLUNGSNACHWEISE("Zahlungsnachweise"),
+    FINANZAUSGLEICH("Finanzausgleich"),
     BELEGE("Belege");
 
     private final String label;

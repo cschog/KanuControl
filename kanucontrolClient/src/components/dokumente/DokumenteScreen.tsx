@@ -288,7 +288,10 @@ const DokumenteScreen: React.FC = () => {
 
           <Stack spacing={3}>
             {/* FM / JEM */}
-            {renderValidationWarning("FM / JEM Antrag nicht möglich - bitte aufklappen", anmeldungValidation)}
+            {renderValidationWarning(
+              "FM / JEM Antrag nicht möglich - bitte aufklappen",
+              anmeldungValidation,
+            )}
             {renderSection(
               "FM / JEM Antrag",
               "fm-jem-report",
@@ -296,30 +299,32 @@ const DokumenteScreen: React.FC = () => {
               !anmeldungValidation?.valid,
             )}
             {/* Teilnehmerliste */}
-            {renderValidationWarning("Teilnehmerliste nicht möglich - bitte aufklappen", teilnehmerValidation)}
-
+            {renderValidationWarning(
+              "Teilnehmerliste nicht möglich - bitte aufklappen",
+              teilnehmerValidation,
+            )}
             {renderSection(
               "Teilnehmerliste",
               "teilnehmer/pdf",
               "teilnehmerliste.pdf",
               !teilnehmerValidation?.valid,
             )}
-
             {/* Teilnehmer-Datenkontrolle */}
             {renderValidationWarning(
               "Teilnehmer-Datenkontrolle nicht möglich - bitte aufklappen",
               teilnehmerDatenkontrolleValidation,
             )}
-
             {renderSection(
               "Teilnehmerdaten prüfen",
               "teilnehmer/datenkontrolle/pdf",
               "teilnehmer-datenkontrolle.pdf",
               !teilnehmerDatenkontrolleValidation?.valid,
             )}
-
             {/* Abrechnung */}
-            {renderValidationWarning("Abrechnung nicht möglich - bitte aufklappen", abrechnungValidation)}
+            {renderValidationWarning(
+              "Abrechnung nicht möglich - bitte aufklappen",
+              abrechnungValidation,
+            )}
             {renderSection(
               "Abrechnung",
               "abrechnung/pdf",
@@ -348,17 +353,18 @@ const DokumenteScreen: React.FC = () => {
               "zahlungsnachweise.pdf",
               !zahlungsnachweiseValidation?.valid,
             )}
+            /* Finanzausgleich */
+            {renderSection("Finanzausgleich", "finanzausgleich/pdf", "finanzausgleich.pdf")}
 
-            {/* Belege */}
+            /* Belege */
             {renderValidationWarning("Belege nicht möglich - bitte aufklappen", belegeValidation)}
             {renderSection("Belege", "belege/pdf", "belege.pdf", !belegeValidation?.valid)}
-
+            
             {/* Fahrkosten */}
             {renderValidationWarning(
               "Fahrkostenabrechnung nicht möglich - bitte aufklappen",
               fahrkostenValidation,
             )}
-
             <Paper
               elevation={3}
               sx={{
