@@ -68,6 +68,16 @@ public class PDFDocumentComposer {
      * Die Rotation wird ausschließlich durch die
      * A4LayoutPlacement vorgegeben.
      */
+    /**
+     * Platziert eine importierte PDF-Seite auf einer A4-Seite.
+     *
+     * Die Rotation wird grundsätzlich durch die
+     * A4LayoutPlacement vorgegeben.
+     *
+     * Zusätzlich werden Querformat-PDFs um 180° gedreht.
+     * Dadurch bleibt die bestehende 90°-Rotation der Layout-Engine
+     * erhalten und wird bei Querformat-PDFs entsprechend ergänzt.
+     */
     private void placeForm(
             PDDocument target,
             PDFormXObject form,
@@ -100,28 +110,47 @@ public class PDFDocumentComposer {
 
         /*
          * Die Layout-Engine hat bereits entschieden,
-         * ob das Dokument gedreht werden soll.
+         * ob das PDF um 90° gedreht werden soll.
+         *
+         * Für PDFs mit Layout-Rotation 90° wollen wir
+         * zusätzlich 180° drehen:
+         *
+         *   90° + 180° = 270°
          */
-        boolean rotate =
-                placement.rotation() == 90;
+
+        int rotation =
+                ((placement.rotation() % 360) + 360) % 360;
+
+        if (rotation == 90) {
+            rotation = 270;
+        }
 
         /*
-         * Nach der Rotation werden Breite und Höhe
-         * des Quelldokuments vertauscht.
+         * =========================================================
+         * Effektive Dokumentgröße
+         * =========================================================
+         *
+         * Bei 90° und 270° werden Breite und Höhe vertauscht.
+         * Bei 0° und 180° bleiben sie unverändert.
          */
+        boolean swapDimensions =
+                rotation == 90
+                        || rotation == 270;
+
         float effectiveWidth =
-                rotate
+                swapDimensions
                         ? sourceHeight
                         : sourceWidth;
 
         float effectiveHeight =
-                rotate
+                swapDimensions
                         ? sourceWidth
                         : sourceHeight;
 
         /*
-         * Einheitliche Skalierung innerhalb des von
-         * der Layout-Engine vorgegebenen Rechtecks.
+         * =========================================================
+         * Skalierung
+         * =========================================================
          */
         float scale =
                 Math.min(
@@ -167,29 +196,89 @@ public class PDFDocumentComposer {
 
             Matrix matrix;
 
-            if (rotate) {
+            switch (rotation) {
 
-                matrix =
-                        new Matrix(
-                                0,
-                                -scale,
-                                scale,
-                                0,
-                                x,
-                                y + outputHeight
-                        );
+                /*
+                 * Keine Rotation
+                 */
+                case 0:
 
-            } else {
+                    matrix =
+                            new Matrix(
+                                    scale,
+                                    0,
+                                    0,
+                                    scale,
+                                    x,
+                                    y
+                            );
 
-                matrix =
-                        new Matrix(
-                                scale,
-                                0,
-                                0,
-                                scale,
-                                x,
-                                y
-                        );
+                    break;
+
+                /*
+                 * 90° Rotation
+                 *
+                 * Entspricht deiner bisherigen Implementierung.
+                 */
+                case 90:
+
+                    matrix =
+                            new Matrix(
+                                    0,
+                                    -scale,
+                                    scale,
+                                    0,
+                                    x,
+                                    y + outputHeight
+                            );
+
+                    break;
+
+                /*
+                 * 180° Rotation
+                 *
+                 * Wichtig:
+                 * Breite/Höhe werden NICHT vertauscht.
+                 */
+                case 180:
+
+                    matrix =
+                            new Matrix(
+                                    -scale,
+                                    0,
+                                    0,
+                                    -scale,
+                                    x + outputWidth,
+                                    y + outputHeight
+                            );
+
+                    break;
+
+                /*
+                 * 270° Rotation
+                 *
+                 * Entspricht 90° in Gegenrichtung.
+                 */
+                case 270:
+
+                    matrix =
+                            new Matrix(
+                                    0,
+                                    scale,
+                                    -scale,
+                                    0,
+                                    x + outputWidth,
+                                    y
+                            );
+
+                    break;
+
+                default:
+
+                    throw new IllegalArgumentException(
+                            "Nicht unterstützte Rotation: "
+                                    + rotation
+                    );
             }
 
             content.transform(matrix);
@@ -592,6 +681,9 @@ public class PDFDocumentComposer {
                                             + placement.itemId()
                             );
                         }
+
+                        PDPage sourcePage =
+                                source.getPage(0);
 
                         form =
                                 layerUtility.importPageAsForm(

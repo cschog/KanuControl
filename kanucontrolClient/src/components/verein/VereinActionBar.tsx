@@ -98,7 +98,7 @@ export function VereinActionBar(props: Props) {
     <BottomActionBar
       left={[
         {
-          label: "Bearbeiten",
+          label: "Ändern",
           variant: "outlined",
           onClick: onEdit,
           disabled: disableEdit,

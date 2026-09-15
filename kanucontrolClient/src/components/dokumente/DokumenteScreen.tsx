@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import Grid from "@mui/material/Grid";
 
 import { Box, Typography, Paper, Button, Stack, CircularProgress } from "@mui/material";
 import { ErrorDialog } from "@/components/common/ErrorDialog";
@@ -286,106 +287,138 @@ const DokumenteScreen: React.FC = () => {
             Aktive Veranstaltung: <b>{veranstaltung.name}</b>
           </Typography>
 
-          <Stack spacing={3}>
+          <Grid container spacing={3}>
             {/* FM / JEM */}
-            {renderValidationWarning(
-              "FM / JEM Antrag nicht möglich - bitte aufklappen",
-              anmeldungValidation,
-            )}
-            {renderSection(
-              "FM / JEM Antrag",
-              "fm-jem-report",
-              "fm-jem.pdf",
-              !anmeldungValidation?.valid,
-            )}
+            <Grid size={{ xs: 12, md: 6 }}>
+              {renderValidationWarning(
+                "FM / JEM Antrag nicht möglich - bitte aufklappen",
+                anmeldungValidation,
+              )}
+
+              {renderSection(
+                "FM / JEM Antrag",
+                "fm-jem-report",
+                "fm-jem.pdf",
+                !anmeldungValidation?.valid,
+              )}
+            </Grid>
+
             {/* Teilnehmerliste */}
-            {renderValidationWarning(
-              "Teilnehmerliste nicht möglich - bitte aufklappen",
-              teilnehmerValidation,
-            )}
-            {renderSection(
-              "Teilnehmerliste",
-              "teilnehmer/pdf",
-              "teilnehmerliste.pdf",
-              !teilnehmerValidation?.valid,
-            )}
+            <Grid size={{ xs: 12, md: 6 }}>
+              {renderValidationWarning(
+                "Teilnehmerliste nicht möglich - bitte aufklappen",
+                teilnehmerValidation,
+              )}
+
+              {renderSection(
+                "Teilnehmerliste",
+                "teilnehmer/pdf",
+                "teilnehmerliste.pdf",
+                !teilnehmerValidation?.valid,
+              )}
+            </Grid>
+
             {/* Teilnehmer-Datenkontrolle */}
-            {renderValidationWarning(
-              "Teilnehmer-Datenkontrolle nicht möglich - bitte aufklappen",
-              teilnehmerDatenkontrolleValidation,
-            )}
-            {renderSection(
-              "Teilnehmerdaten prüfen",
-              "teilnehmer/datenkontrolle/pdf",
-              "teilnehmer-datenkontrolle.pdf",
-              !teilnehmerDatenkontrolleValidation?.valid,
-            )}
+            <Grid size={{ xs: 12, md: 6 }}>
+              {renderValidationWarning(
+                "Teilnehmer-Datenkontrolle nicht möglich - bitte aufklappen",
+                teilnehmerDatenkontrolleValidation,
+              )}
+
+              {renderSection(
+                "Teilnehmerdaten prüfen",
+                "teilnehmer/datenkontrolle/pdf",
+                "teilnehmer-datenkontrolle.pdf",
+                !teilnehmerDatenkontrolleValidation?.valid,
+              )}
+            </Grid>
+
             {/* Abrechnung */}
-            {renderValidationWarning(
-              "Abrechnung nicht möglich - bitte aufklappen",
-              abrechnungValidation,
-            )}
-            {renderSection(
-              "Abrechnung",
-              "abrechnung/pdf",
-              "abrechnung.pdf",
-              !abrechnungValidation?.valid,
-            )}
+            <Grid size={{ xs: 12, md: 6 }}>
+              {renderValidationWarning(
+                "Abrechnung nicht möglich - bitte aufklappen",
+                abrechnungValidation,
+              )}
+
+              {renderSection(
+                "Abrechnung",
+                "abrechnung/pdf",
+                "abrechnung.pdf",
+                !abrechnungValidation?.valid,
+              )}
+            </Grid>
+
             {/* Erhebungsbogen */}
-            {renderValidationWarning(
-              "Erhebungsbogen nicht möglich - bitte aufklappen",
-              erhebungsbogenValidation,
-            )}
-            {renderSection(
-              "Erhebungsbogen",
-              "erhebungsbogen/pdf",
-              "erhebungsbogen.pdf",
-              !erhebungsbogenValidation?.valid,
-            )}
+            <Grid size={{ xs: 12, md: 6 }}>
+              {renderValidationWarning(
+                "Erhebungsbogen nicht möglich - bitte aufklappen",
+                erhebungsbogenValidation,
+              )}
+
+              {renderSection(
+                "Erhebungsbogen",
+                "erhebungsbogen/pdf",
+                "erhebungsbogen.pdf",
+                !erhebungsbogenValidation?.valid,
+              )}
+            </Grid>
+
             {/* Zahlungsnachweise */}
-            {renderValidationWarning(
-              "Zahlungsnachweise nicht möglich - bitte aufklappen",
-              zahlungsnachweiseValidation,
-            )}
-            {renderSection(
-              "Zahlungsnachweise",
-              "zahlungsnachweise/pdf",
-              "zahlungsnachweise.pdf",
-              !zahlungsnachweiseValidation?.valid,
-            )}
-            /* Finanzausgleich */
-            {renderSection("Finanzausgleich", "finanzausgleich/pdf", "finanzausgleich.pdf")}
+            <Grid size={{ xs: 12, md: 6 }}>
+              {renderValidationWarning(
+                "Zahlungsnachweise nicht möglich - bitte aufklappen",
+                zahlungsnachweiseValidation,
+              )}
 
-            /* Belege */
-            {renderValidationWarning("Belege nicht möglich - bitte aufklappen", belegeValidation)}
-            {renderSection("Belege", "belege/pdf", "belege.pdf", !belegeValidation?.valid)}
-            
+              {renderSection(
+                "Zahlungsnachweise",
+                "zahlungsnachweise/pdf",
+                "zahlungsnachweise.pdf",
+                !zahlungsnachweiseValidation?.valid,
+              )}
+            </Grid>
+
+            {/* Belege */}
+            <Grid size={{ xs: 12, md: 6 }}>
+              {renderValidationWarning("Belege nicht möglich - bitte aufklappen", belegeValidation)}
+
+              {renderSection("Belege", "belege/pdf", "belege.pdf", !belegeValidation?.valid)}
+            </Grid>
+
             {/* Fahrkosten */}
-            {renderValidationWarning(
-              "Fahrkostenabrechnung nicht möglich - bitte aufklappen",
-              fahrkostenValidation,
-            )}
-            <Paper
-              elevation={3}
-              sx={{
-                p: 3,
-                borderRadius: radius.dialog,
-              }}
-            >
-              <Stack direction="row" alignItems="center" spacing={1} mb={2}>
-                <PictureAsPdfIcon />
-                <Typography variant="h6">Fahrkosten</Typography>
-              </Stack>
+            <Grid size={{ xs: 12, md: 6 }}>
+              {renderValidationWarning(
+                "Fahrkostenabrechnung nicht möglich - bitte aufklappen",
+                fahrkostenValidation,
+              )}
 
-              <Button
-                variant="contained"
-                onClick={() => setReisekostenOpen(true)}
-                disabled={!fahrkostenValidation?.valid}
+              <Paper
+                elevation={3}
+                sx={{
+                  p: 3,
+                  borderRadius: radius.dialog,
+                }}
               >
-                Fahrkosten auswählen
-              </Button>
-            </Paper>
-          </Stack>
+                <Stack direction="row" alignItems="center" spacing={1} mb={2}>
+                  <PictureAsPdfIcon />
+                  <Typography variant="h6">Fahrkosten</Typography>
+                </Stack>
+
+                <Button
+                  variant="contained"
+                  onClick={() => setReisekostenOpen(true)}
+                  disabled={!fahrkostenValidation?.valid}
+                >
+                  Fahrkosten auswählen
+                </Button>
+              </Paper>
+            </Grid>
+
+            {/* Finanzausgleich */}
+            <Grid size={{ xs: 12, md: 6 }}>
+              {renderSection("Finanzausgleich", "finanzausgleich/pdf", "finanzausgleich.pdf")}
+            </Grid>
+          </Grid>
           <ReisekostenPdfDialog
             open={reisekostenOpen}
             veranstaltungId={veranstaltung.id}
