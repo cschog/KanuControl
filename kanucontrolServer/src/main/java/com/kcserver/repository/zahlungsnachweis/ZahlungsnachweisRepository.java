@@ -336,10 +336,15 @@ public interface ZahlungsnachweisRepository
     boolean existsByVeranstaltungId(Long veranstaltungId);
 
     @Query("""
-    select coalesce(sum(z.betrag), 0)
-    from Zahlungsnachweis z
-    where z.veranstaltung.id = :veranstaltungId
-      and z.urspruenglicherZahlungsnachweis is null
+select coalesce(sum(
+    case
+        when z.urspruenglicherZahlungsnachweis is not null
+        then -z.betrag
+        else z.betrag
+    end
+), 0)
+from Zahlungsnachweis z
+where z.veranstaltung.id = :veranstaltungId
 """)
     BigDecimal sumBetragByVeranstaltung(
             @Param("veranstaltungId") Long veranstaltungId

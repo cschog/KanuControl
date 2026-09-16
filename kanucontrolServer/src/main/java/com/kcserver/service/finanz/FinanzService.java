@@ -147,7 +147,6 @@ public class FinanzService {
                                 BigDecimal.ZERO,
                                 BigDecimal::add
                         )
-                        .subtract(rueckzahlungen)
                         .max(BigDecimal.ZERO)
                         .setScale(2, RoundingMode.HALF_UP);
 
@@ -156,7 +155,6 @@ public class FinanzService {
          */
         BigDecimal einnahmen =
                 urspruenglicheEinnahmen
-                        .subtract(rueckzahlungen)
                         .setScale(2, RoundingMode.HALF_UP);
 
         BigDecimal saldo =
