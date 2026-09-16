@@ -61,7 +61,7 @@ public interface AbrechnungBelegRepository
     @Query("""
     SELECT DISTINCT b
     FROM AbrechnungBeleg b
-    JOIN b.positionen p
+    JOIN FETCH b.positionen p
     WHERE b.abrechnung.veranstaltung.id = :veranstaltungId
       AND b.finanzGruppe.id = :finanzGruppeId
     ORDER BY b.datum, b.lfdNr

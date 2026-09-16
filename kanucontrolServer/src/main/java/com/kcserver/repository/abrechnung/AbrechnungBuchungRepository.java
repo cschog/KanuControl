@@ -174,4 +174,6 @@ and b.kategorie in (
     List<Object[]> sumAbrechnungSaldoByFinanzGruppeGrouped(
             @Param("veranstaltungId") Long veranstaltungId
     );
+
+
 }

@@ -22,18 +22,22 @@ public interface ZahlungsnachweisMapper {
     @Mapping(
             target = "anzahlTeilnehmer",
             expression = """
-                java(entity.getPositionen() == null
-                    ? 0L
-                    : (long) entity.getPositionen().size())
-                """
+            java(entity.getPositionen() == null
+                ? 0L
+                : (long) entity.getPositionen().size())
+            """
     )
     @Mapping(
             target = "anzahlDokumente",
             expression = """
-                java(entity.getDokumente() == null
-                    ? 0L
-                    : (long) entity.getDokumente().size())
-                """
+            java(entity.getDokumente() == null
+                ? 0L
+                : (long) entity.getDokumente().size())
+            """
+    )
+    @Mapping(
+            target = "rueckzahlung",
+            expression = "java(entity.getUrspruenglicherZahlungsnachweis() != null)"
     )
     ZahlungsnachweisListDTO toListDTO(
             Zahlungsnachweis entity

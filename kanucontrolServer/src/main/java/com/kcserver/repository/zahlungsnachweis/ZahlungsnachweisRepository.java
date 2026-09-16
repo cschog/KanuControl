@@ -535,5 +535,23 @@ public interface ZahlungsnachweisRepository
             @Param("veranstaltungId") Long veranstaltungId
     );
 
+    @EntityGraph(attributePaths = {
+            "positionen",
+            "positionen.teilnehmer",
+            "positionen.teilnehmer.person",
+            "positionen.teilnehmer.finanzGruppe",
+            "finanzGruppe",
+            "ueberzahlungsFinanzGruppe",
+            "urspruenglicherZahlungsnachweis"
+    })
+    @Query("""
+    select distinct z
+    from Zahlungsnachweis z
+    where z.veranstaltung.id = :veranstaltungId
+    order by z.datum asc, z.id asc
+""")
+    List<Zahlungsnachweis> findDetailsByVeranstaltungId(
+            @Param("veranstaltungId") Long veranstaltungId
+    );
 
 }

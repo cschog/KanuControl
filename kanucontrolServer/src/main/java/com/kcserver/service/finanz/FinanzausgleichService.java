@@ -637,6 +637,45 @@ public class FinanzausgleichService {
     }
 
 
+    public Map<Long, BigDecimal> getSollBeitraegeByVeranstaltung(
+            Long veranstaltungId
+    ) {
+
+        List<FinanzGruppe> finanzGruppen =
+                finanzGruppeRepository
+                        .findWithTeilnehmerByVeranstaltungId(
+                                veranstaltungId
+                        );
+
+        if (finanzGruppen.isEmpty()) {
+            return Map.of();
+        }
+
+        Veranstaltung veranstaltung =
+                finanzGruppen.getFirst()
+                        .getVeranstaltung();
+
+        Map<Long, BigDecimal> result =
+                new HashMap<>();
+
+        for (FinanzGruppe finanzGruppe : finanzGruppen) {
+
+            for (Teilnehmer teilnehmer :
+                    finanzGruppe.getTeilnehmer()) {
+
+                result.put(
+                        teilnehmer.getId(),
+                        getSollBeitrag(
+                                veranstaltung,
+                                teilnehmer
+                        )
+                );
+            }
+        }
+
+        return result;
+    }
+
     // =========================================================
     // HELPER
     // =========================================================
