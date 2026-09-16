@@ -1,10 +1,13 @@
 package com.kcserver.dto.zahlungsnachweis;
 
+import com.kcserver.dto.teilnehmer.TeilnehmerKurzDTO;
 import com.kcserver.enumtype.Zahlungsweg;
 import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 public class ZahlungsnachweisListDTO {
@@ -18,6 +21,8 @@ public class ZahlungsnachweisListDTO {
     private Long anzahlTeilnehmer;
     private Long anzahlDokumente;
     private boolean rueckzahlung;
+
+    private List<TeilnehmerKurzDTO> teilnehmer;
 
     public ZahlungsnachweisListDTO(
             Long id,
@@ -39,5 +44,6 @@ public class ZahlungsnachweisListDTO {
         this.anzahlTeilnehmer = anzahlTeilnehmer;
         this.anzahlDokumente = anzahlDokumente;
         this.rueckzahlung = rueckzahlung;
+        this.teilnehmer = new ArrayList<>();
     }
 }

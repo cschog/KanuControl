@@ -7,13 +7,14 @@ import {
   IconButton,
   List,
   ListItem,
-  ListItemText,
   MenuItem,
   Radio,
   RadioGroup,
   Select,
   Stack,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 
 import { ReferenzObjekt } from "@/api/enums/ReferenzObjekt";
@@ -54,6 +55,9 @@ export default function ZahlungsnachweisDokumentPanel({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [referenzObjekt, setReferenzObjekt] = useState<ReferenzObjekt>(() => {
     const gespeichert = localStorage.getItem(REFERENZ_STORAGE_KEY);
@@ -210,167 +214,222 @@ export default function ZahlungsnachweisDokumentPanel({
      RENDER
   ========================================================= */
 
-  return (
-    <Box>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h6">Dokumente</Typography>
+return (
+  <Box>
+    <Stack
+      direction={{ xs: "column", sm: "row" }}
+      justifyContent="space-between"
+      alignItems={{ xs: "stretch", sm: "center" }}
+      spacing={{ xs: 1.5, sm: 2 }}
+      mb={2}
+    >
+      <Typography variant="h6">Dokumente</Typography>
 
-        {!readOnly && (
-          <Stack direction="row" spacing={2} alignItems="center">
-            <FormControl>
-              <RadioGroup
-                row
-                value={referenzObjekt}
-                onChange={(event) => {
-                  const value = event.target.value as ReferenzObjekt;
+      {!readOnly && (
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          spacing={{ xs: 1.5, sm: 2 }}
+          alignItems={{ xs: "stretch", sm: "center" }}
+        >
+          <FormControl>
+            <RadioGroup
+              row
+              value={referenzObjekt}
+              onChange={(event) => {
+                const value = event.target.value as ReferenzObjekt;
 
-                  setReferenzObjekt(value);
-
-                  localStorage.setItem(REFERENZ_STORAGE_KEY, value);
-                }}
-              >
-                <FormControlLabel
-                  value={ReferenzObjekt.DIN_A7}
-                  control={<Radio size="small" />}
-                  label="A7"
-                />
-
-                <FormControlLabel
-                  value={ReferenzObjekt.DIN_A6}
-                  control={<Radio size="small" />}
-                  label="A6"
-                />
-
-                <FormControlLabel
-                  value={ReferenzObjekt.DIN_A5}
-                  control={<Radio size="small" />}
-                  label="A5"
-                />
-
-                <FormControlLabel
-                  value={ReferenzObjekt.DIN_A4}
-                  control={<Radio size="small" />}
-                  label="A4"
-                />
-              </RadioGroup>
-            </FormControl>
-
-            <Button
-              variant="contained"
-              startIcon={<UploadFileIcon />}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              Hochladen
-            </Button>
-
-            <input
-              hidden
-              type="file"
-              accept=".pdf,image/*"
-              ref={fileInputRef}
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-
-                if (file) {
-                  void handleUpload(file);
-                }
-
-                e.target.value = "";
+                setReferenzObjekt(value);
+                localStorage.setItem(REFERENZ_STORAGE_KEY, value);
               }}
-            />
-          </Stack>
-        )}
-      </Stack>
-
-      <LoadingOverlay loading={loading} text="Dokumente werden geladen..." />
-
-      {!loading && dokumente.length === 0 && (
-        <Typography color="text.secondary">Noch keine Dokumente vorhanden.</Typography>
-      )}
-
-      {!loading && dokumente.length > 0 && (
-        <List disablePadding>
-          {dokumente.map((dokument) => (
-            <ListItem
-              key={dokument.id}
-              divider
-              secondaryAction={
-                <>
-                  <IconButton title="Anzeigen" onClick={() => void handlePreview(dokument)}>
-                    <VisibilityIcon />
-                  </IconButton>
-
-                  <IconButton title="Herunterladen" onClick={() => void handleDownload(dokument)}>
-                    <DownloadIcon />
-                  </IconButton>
-
-                  {!readOnly && (
-                    <IconButton
-                      color="error"
-                      title="Löschen"
-                      onClick={() => handleDelete(dokument.id)}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  )}
-                </>
-              }
+              sx={{
+                display: "grid",
+                gridTemplateColumns: {
+                  xs: "repeat(2, minmax(70px, 1fr))",
+                  sm: "repeat(4, auto)",
+                },
+                columnGap: { xs: 1, sm: 0.5 },
+              }}
             >
-              <ListItemText
-                primary={dokument.originalDateiname}
-                secondary={
-                  <Stack direction="row" spacing={2} alignItems="center" sx={{ mt: 0.5 }}>
+              <FormControlLabel
+                value={ReferenzObjekt.DIN_A7}
+                control={<Radio size="small" />}
+                label="A7"
+              />
+
+              <FormControlLabel
+                value={ReferenzObjekt.DIN_A6}
+                control={<Radio size="small" />}
+                label="A6"
+              />
+
+              <FormControlLabel
+                value={ReferenzObjekt.DIN_A5}
+                control={<Radio size="small" />}
+                label="A5"
+              />
+
+              <FormControlLabel
+                value={ReferenzObjekt.DIN_A4}
+                control={<Radio size="small" />}
+                label="A4"
+              />
+            </RadioGroup>
+          </FormControl>
+
+          <Button
+            fullWidth={isMobile}
+            variant="contained"
+            startIcon={<UploadFileIcon />}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            Hochladen
+          </Button>
+
+          <input
+            hidden
+            type="file"
+            accept=".pdf,image/*"
+            ref={fileInputRef}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+
+              if (file) {
+                void handleUpload(file);
+              }
+
+              e.target.value = "";
+            }}
+          />
+        </Stack>
+      )}
+    </Stack>
+
+    <LoadingOverlay loading={loading} text="Dokumente werden geladen..." />
+
+    {!loading && dokumente.length === 0 && (
+      <Typography color="text.secondary">Noch keine Dokumente vorhanden.</Typography>
+    )}
+
+    {!loading && dokumente.length > 0 && (
+      <List disablePadding>
+        {dokumente.map((dokument) => (
+          <ListItem
+            key={dokument.id}
+            divider
+            disableGutters
+            sx={{
+              py: 1.5,
+            }}
+          >
+            <Box sx={{ width: "100%", minWidth: 0 }}>
+              {/* Dateiname */}
+              <Typography
+                variant="body1"
+                sx={{
+                  fontWeight: 500,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  pr: 1,
+                }}
+                title={dokument.originalDateiname}
+              >
+                {dokument.originalDateiname}
+              </Typography>
+
+              {/* Informationen und Format */}
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                spacing={{ xs: 0.5, sm: 2 }}
+                alignItems={{ xs: "stretch", sm: "center" }}
+                sx={{ mt: 0.5 }}
+              >
+                <Typography variant="body2" color="text.secondary">
+                  {formatSize(dokument.dateigroesse)}
+                  {" • "}
+                  {dokument.mimeType}
+                </Typography>
+
+                {!readOnly && (
+                  <Stack direction="row" spacing={0.75} alignItems="center">
                     <Typography component="span" variant="body2" color="text.secondary">
-                      {formatSize(dokument.dateigroesse)}
-                      {" • "}
-                      {dokument.mimeType}
+                      Format:
                     </Typography>
 
-                    {!readOnly && (
-                      <Stack direction="row" spacing={0.75} alignItems="center">
-                        <Typography component="span" variant="body2" color="text.secondary">
-                          Format:
-                        </Typography>
+                    <FormControl
+                      size="small"
+                      sx={{
+                        minWidth: 75,
+                        width: { xs: 85, sm: "auto" },
+                      }}
+                    >
+                      <Select
+                        value={dokument.referenzObjekt ?? ReferenzObjekt.DIN_A6}
+                        onChange={(event) => {
+                          void handleReferenzObjektChange(
+                            dokument.id,
+                            event.target.value as ReferenzObjekt,
+                          );
+                        }}
+                        inputProps={{
+                          "aria-label": "Dokumentformat",
+                        }}
+                      >
+                        <MenuItem value={ReferenzObjekt.DIN_A7}>A7</MenuItem>
 
-                        <FormControl size="small" sx={{ minWidth: 75 }}>
-                          <Select
-                            value={dokument.referenzObjekt ?? ReferenzObjekt.DIN_A6}
-                            onChange={(event) => {
-                              void handleReferenzObjektChange(
-                                dokument.id,
-                                event.target.value as ReferenzObjekt,
-                              );
-                            }}
-                            inputProps={{
-                              "aria-label": "Dokumentformat",
-                            }}
-                          >
-                            <MenuItem value={ReferenzObjekt.DIN_A7}>A7</MenuItem>
+                        <MenuItem value={ReferenzObjekt.DIN_A6}>A6</MenuItem>
 
-                            <MenuItem value={ReferenzObjekt.DIN_A6}>A6</MenuItem>
+                        <MenuItem value={ReferenzObjekt.DIN_A5}>A5</MenuItem>
 
-                            <MenuItem value={ReferenzObjekt.DIN_A5}>A5</MenuItem>
-
-                            <MenuItem value={ReferenzObjekt.DIN_A4}>A4</MenuItem>
-                          </Select>
-                        </FormControl>
-                      </Stack>
-                    )}
+                        <MenuItem value={ReferenzObjekt.DIN_A4}>A4</MenuItem>
+                      </Select>
+                    </FormControl>
                   </Stack>
-                }
-              />
-            </ListItem>
-          ))}
-        </List>
-      )}
+                )}
+              </Stack>
 
-      <DeleteConfirmDialog
-        open={deleteId !== null}
-        title="Dokument löschen"
-        message="Soll dieses Dokument wirklich gelöscht werden?"
-        onClose={() => setDeleteId(null)}
-        onConfirm={() => void confirmDelete()}
-      />
-    </Box>
-  );
+              {/* Aktionen */}
+              <Stack direction="row" justifyContent="flex-end" spacing={0.5} sx={{ mt: 0.75 }}>
+                <IconButton
+                  size="small"
+                  title="Anzeigen"
+                  onClick={() => void handlePreview(dokument)}
+                >
+                  <VisibilityIcon />
+                </IconButton>
+
+                <IconButton
+                  size="small"
+                  title="Herunterladen"
+                  onClick={() => void handleDownload(dokument)}
+                >
+                  <DownloadIcon />
+                </IconButton>
+
+                {!readOnly && (
+                  <IconButton
+                    size="small"
+                    color="error"
+                    title="Löschen"
+                    onClick={() => handleDelete(dokument.id)}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                )}
+              </Stack>
+            </Box>
+          </ListItem>
+        ))}
+      </List>
+    )}
+
+    <DeleteConfirmDialog
+      open={deleteId !== null}
+      title="Dokument löschen"
+      message="Soll dieses Dokument wirklich gelöscht werden?"
+      onClose={() => setDeleteId(null)}
+      onConfirm={() => void confirmDelete()}
+    />
+  </Box>
+);
 }

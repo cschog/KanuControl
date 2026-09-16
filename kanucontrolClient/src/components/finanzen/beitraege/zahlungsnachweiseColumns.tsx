@@ -19,13 +19,13 @@ export const zahlungsnachweiseColumns = ({
   {
     accessorKey: "datum",
     header: "Datum",
-    size: 120,
+    size: 100,
   },
 
   {
     accessorKey: "betrag",
     header: "Betrag",
-    size: 120,
+    size: 80,
     meta: {
       align: "right",
     },
@@ -35,11 +35,22 @@ export const zahlungsnachweiseColumns = ({
   },
 
   {
-    accessorKey: "anzahlTeilnehmer",
-    header: "TN",
-    size: 70,
-    meta: {
-      align: "right",
+    id: "teilnehmer",
+    header: "Teilnehmer",
+    size: 250,
+    enableSorting: false,
+    cell: ({ row }) => {
+      if (row.original.rueckzahlung) {
+        return "Rückzahlung";
+      }
+
+      const teilnehmer = row.original.teilnehmer ?? [];
+
+      if (teilnehmer.length === 0) {
+        return null;
+      }
+
+      return teilnehmer.map((tn) => `${tn.nachname}, ${tn.vorname}`).join("; ");
     },
   },
 

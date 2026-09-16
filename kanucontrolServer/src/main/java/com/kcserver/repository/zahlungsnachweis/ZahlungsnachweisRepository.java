@@ -559,4 +559,29 @@ where z.veranstaltung.id = :veranstaltungId
             @Param("veranstaltungId") Long veranstaltungId
     );
 
+    @EntityGraph(attributePaths = {
+            "dokumente"
+    })
+    @Query("""
+select distinct z
+from Zahlungsnachweis z
+where z.veranstaltung.id = :veranstaltungId
+order by z.datum desc, z.id desc
+""")
+    List<Zahlungsnachweis> findForPdfByVeranstaltungId(
+            @Param("veranstaltungId") Long veranstaltungId
+    );
+
+    @Query("""
+select distinct z
+from Zahlungsnachweis z
+left join fetch z.positionen p
+left join fetch p.teilnehmer t
+left join fetch t.person
+where z.veranstaltung.id = :veranstaltungId
+order by z.datum desc, z.id desc
+""")
+    List<Zahlungsnachweis> findForPdfParticipantsByVeranstaltungId(
+            @Param("veranstaltungId") Long veranstaltungId
+    );
 }

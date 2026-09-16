@@ -1,5 +1,13 @@
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { Accordion, AccordionDetails, AccordionSummary, Stack, Typography } from "@mui/material";
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Stack,
+  Typography,
+  useMediaQuery,
+  useTheme,
+} from "@mui/material";
 
 import Money from "@/components/common/Money";
 import MultiBelegAccordion from "@/components/finanzen/abrechnung/MultiBelegAccordion";
@@ -31,6 +39,8 @@ export default function FinanzgruppenBelegeAccordion({
   onDeleteBeleg,
 }: Props) {
   const gruppen = new Map<string, AbrechnungBeleg[]>();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   [...belege]
     .sort((a, b) => {
@@ -66,16 +76,34 @@ export default function FinanzgruppenBelegeAccordion({
         const summe = gruppe.reduce((sum, beleg) => sum + berechneBelegsumme(beleg), 0);
 
         return (
-          <Accordion key={kuerzel} >
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Accordion key={kuerzel}>
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon />}
+              sx={{
+                "& .MuiAccordionSummary-content": {
+                  minWidth: 0,
+                  my: 1,
+                },
+              }}
+            >
               <Stack
-                direction="row"
+                direction={isMobile ? "column" : "row"}
                 justifyContent="space-between"
-                alignItems="center"
+                alignItems={isMobile ? "flex-start" : "center"}
+                spacing={isMobile ? 0.25 : 0}
                 width="100%"
-                pr={2}
+                pr={isMobile ? 0.5 : 2}
+                minWidth={0}
               >
-                <Typography fontWeight={700}>
+                <Typography
+                  fontWeight={700}
+                  sx={{
+                    minWidth: 0,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
                   {kuerzel} ({gruppe.length} {gruppe.length === 1 ? "Beleg" : "Belege"})
                 </Typography>
 
@@ -83,7 +111,12 @@ export default function FinanzgruppenBelegeAccordion({
               </Stack>
             </AccordionSummary>
 
-            <AccordionDetails>
+            <AccordionDetails
+              sx={{
+                px: { xs: 1, sm: 2 },
+                py: { xs: 1, sm: 2 },
+              }}
+            >
               {gruppe.map((beleg) => {
                 const Component =
                   beleg.positionen.length > 1 ? MultiBelegAccordion : SingleBelegRow;

@@ -1,5 +1,6 @@
 package com.kcserver.service.zahlungsnachweis;
 
+import com.kcserver.dto.teilnehmer.TeilnehmerKurzDTO;
 import com.kcserver.dto.zahlungsnachweis.*;
 import com.kcserver.entity.*;
 import com.kcserver.enumtype.Zahlungsweg;
@@ -22,6 +23,7 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -41,7 +43,56 @@ public class ZahlungsnachweisService {
     public List<ZahlungsnachweisListDTO> findByVeranstaltung(
             Long veranstaltungId
     ) {
-        return zahlungsnachweisRepository.findListByVeranstaltungId(veranstaltungId);
+
+        List<ZahlungsnachweisListDTO> result =
+                zahlungsnachweisRepository.findListByVeranstaltungId(
+                        veranstaltungId
+                );
+
+        List<Zahlungsnachweis> nachweise =
+                zahlungsnachweisRepository.findDetailsByVeranstaltungId(
+                        veranstaltungId
+                );
+
+        java.util.Map<Long, Zahlungsnachweis> nachweisMap =
+                nachweise.stream()
+                        .collect(
+                                java.util.stream.Collectors.toMap(
+                                        Zahlungsnachweis::getId,
+                                        z -> z
+                                )
+                        );
+
+        result.forEach(dto -> {
+
+            Zahlungsnachweis nachweis =
+                    nachweisMap.get(dto.getId());
+
+            if (nachweis != null) {
+                dto.setTeilnehmer(
+                        getTeilnehmerKurzDTOs(nachweis)
+                );
+            }
+        });
+
+        return result;
+    }
+
+    private List<TeilnehmerKurzDTO> getTeilnehmerKurzDTOs(
+            Zahlungsnachweis zahlungsnachweis
+    ) {
+        return zahlungsnachweis.getPositionen()
+                .stream()
+                .map(ZahlungsPosition::getTeilnehmer)
+                .filter(Objects::nonNull)
+                .filter(t -> t.getPerson() != null)
+                .map(teilnehmer -> new TeilnehmerKurzDTO(
+                        teilnehmer.getId(),
+                        teilnehmer.getPerson().getId(),
+                        teilnehmer.getPerson().getVorname(),
+                        teilnehmer.getPerson().getName()
+                ))
+                .toList();
     }
 
     @Transactional(readOnly = true)

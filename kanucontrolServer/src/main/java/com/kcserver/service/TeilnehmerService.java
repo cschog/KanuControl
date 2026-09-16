@@ -3,9 +3,7 @@ package com.kcserver.service;
 import com.kcserver.dto.person.PersonListDTO;
 import com.kcserver.dto.teilnehmer.*;
 import com.kcserver.dto.zahlungsnachweis.ZahlungsnachweisListDTO;
-import com.kcserver.entity.Person;
-import com.kcserver.entity.Teilnehmer;
-import com.kcserver.entity.Veranstaltung;
+import com.kcserver.entity.*;
 import com.kcserver.enumtype.TeilnehmerRolle;
 import com.kcserver.enumtype.Zahlungsstatus;
 import com.kcserver.exception.ErrorMessages;
@@ -29,6 +27,9 @@ import com.kcserver.repository.zahlungsnachweis.ZahlungsnachweisRepository;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static com.kcserver.exception.EntityFinder.getOr404;
 import static com.kcserver.exception.ErrorMessages.*;
@@ -475,6 +476,30 @@ public class TeilnehmerService {
                         veranstaltungId
                 );
 
+        List<Zahlungsnachweis> zahlungsnachweisDetails =
+                zahlungsnachweisRepository.findDetailsByVeranstaltungId(
+                        veranstaltungId
+                );
+
+        Map<Long, Zahlungsnachweis> nachweisMap =
+                zahlungsnachweisDetails.stream()
+                        .collect(Collectors.toMap(
+                                Zahlungsnachweis::getId,
+                                Function.identity()
+                        ));
+
+        for (ZahlungsnachweisListDTO dto : zahlungsnachweise) {
+
+            Zahlungsnachweis nachweis =
+                    nachweisMap.get(dto.getId());
+
+            if (nachweis != null) {
+                dto.setTeilnehmer(
+                        getTeilnehmerKurzDTOs(nachweis)
+                );
+            }
+        }
+
         response.setZahlungsnachweise(zahlungsnachweise);
 
         TeilnehmerBeitragSummaryDTO summary =
@@ -531,6 +556,23 @@ public class TeilnehmerService {
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, PERSON_NOT_FOUND
                 ));
+    }
+
+    private List<TeilnehmerKurzDTO> getTeilnehmerKurzDTOs(
+            Zahlungsnachweis zahlungsnachweis
+    ) {
+        return zahlungsnachweis.getPositionen()
+                .stream()
+                .map(ZahlungsPosition::getTeilnehmer)
+                .filter(Objects::nonNull)
+                .filter(t -> t.getPerson() != null)
+                .map(teilnehmer -> new TeilnehmerKurzDTO(
+                        teilnehmer.getId(),
+                        teilnehmer.getPerson().getId(),
+                        teilnehmer.getPerson().getVorname(),
+                        teilnehmer.getPerson().getName()
+                ))
+                .toList();
     }
 
     private void validateLeiterAge(Person person) {

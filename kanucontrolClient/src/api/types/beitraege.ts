@@ -14,6 +14,13 @@ export interface PersonRefDTO {
   hauptvereinAbk?: string;
 }
 
+export interface TeilnehmerKurzDTO {
+  id: number;
+  personId: number;
+  vorname: string;
+  nachname: string;
+}
+
 export interface TeilnehmerListDTO {
   id: number;
   personId: number;
@@ -51,6 +58,7 @@ export interface ZahlungsnachweisListDTO {
   anzahlTeilnehmer: number;
   anzahlDokumente: number;
   rueckzahlung: boolean;
+  teilnehmer: TeilnehmerKurzDTO[];
 }
 
 export interface ZahlungsnachweisUpdateDTO {

@@ -20,12 +20,16 @@ public interface ZahlungsnachweisMapper {
             source = "finanzGruppe.id"
     )
     @Mapping(
+            target = "teilnehmer",
+            ignore = true
+    )
+    @Mapping(
             target = "anzahlTeilnehmer",
             expression = """
-            java(entity.getPositionen() == null
-                ? 0L
-                : (long) entity.getPositionen().size())
-            """
+        java(entity.getPositionen() == null
+            ? 0L
+            : (long) entity.getPositionen().size())
+        """
     )
     @Mapping(
             target = "anzahlDokumente",

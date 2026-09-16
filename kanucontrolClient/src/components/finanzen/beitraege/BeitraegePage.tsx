@@ -322,17 +322,40 @@ const load = useCallback(async () => {
                     </Typography>
                   </Box>
 
-                  {/* TN + DOKUMENTE */}
+                  {/* TEILNEHMER */}
+
+                  {row.rueckzahlung ? (
+                    <Typography variant="body2" color="text.secondary">
+                      Rückzahlung
+                    </Typography>
+                  ) : (
+                    row.teilnehmer.length > 0 && (
+                      <Box sx={{ mt: 0.75 }}>
+                        <Typography variant="body2" color="text.secondary">
+                          Teilnehmer:
+                        </Typography>
+
+                        <Stack spacing={0.25} sx={{ mt: 0.25 }}>
+                          {row.teilnehmer.map((tn) => (
+                            <Typography key={tn.id} variant="body2">
+                              {tn.nachname}, {tn.vorname}
+                            </Typography>
+                          ))}
+                        </Stack>
+                      </Box>
+                    )
+                  )}
+
+                  {/* DOKUMENTE + AKTIONEN */}
 
                   <Stack
                     direction="row"
                     alignItems="center"
                     justifyContent="space-between"
-                    sx={{ mt: 0.5 }}
+                    sx={{ mt: 0.75 }}
                   >
                     <Typography variant="body2" color="text.secondary">
-                      TN: {row.anzahlTeilnehmer ?? 0}
-                      {" • Dokumente: "}
+                      {"Dokumente: "}
                       {row.anzahlDokumente ?? 0}
                     </Typography>
 

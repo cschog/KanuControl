@@ -1,8 +1,6 @@
 package com.kcserver.service.pdf;
 
-import com.kcserver.entity.Dokument;
-import com.kcserver.entity.Veranstaltung;
-import com.kcserver.entity.Zahlungsnachweis;
+import com.kcserver.entity.*;
 import com.kcserver.enumtype.PdfDokumentTyp;
 import com.kcserver.exception.ErrorMessages;
 import com.kcserver.repository.VeranstaltungRepository;
@@ -217,9 +215,36 @@ public class PDFZahlungsnachweiseService {
 
         List<Zahlungsnachweis> nachweise =
                 zahlungsnachweisRepository
-                        .findByVeranstaltungIdOrderByDatumDescIdDesc(
+                        .findForPdfByVeranstaltungId(
                                 veranstaltungId
                         );
+
+        List<Zahlungsnachweis> teilnehmerNachweise =
+                zahlungsnachweisRepository
+                        .findForPdfParticipantsByVeranstaltungId(
+                                veranstaltungId
+                        );
+
+        Map<Long, Zahlungsnachweis> teilnehmerMap =
+                teilnehmerNachweise.stream()
+                        .collect(
+                                java.util.stream.Collectors.toMap(
+                                        Zahlungsnachweis::getId,
+                                        java.util.function.Function.identity()
+                                )
+                        );
+
+        for (Zahlungsnachweis nachweis : nachweise) {
+
+            Zahlungsnachweis teilnehmerNachweis =
+                    teilnehmerMap.get(nachweis.getId());
+
+            if (teilnehmerNachweis != null) {
+                nachweis.setPositionen(
+                        teilnehmerNachweis.getPositionen()
+                );
+            }
+        }
 
         try (
                 PDDocument deckblatt =
@@ -553,12 +578,14 @@ public class PDFZahlungsnachweiseService {
             float colDatum = 70f;
             float colBetrag = 75f;
             float colDokumente = 55f;
+            float colTeilnehmer = 150f;
 
             float colBemerkung =
                     tableWidth
                             - colBeleg
                             - colDatum
                             - colDokumente
+                            - colTeilnehmer
                             - colBetrag;
 
             /*
@@ -573,6 +600,7 @@ public class PDFZahlungsnachweiseService {
                     colBeleg,
                     colDatum,
                     colDokumente,
+                    colTeilnehmer,
                     colBemerkung,
                     colBetrag
             );
@@ -613,6 +641,7 @@ public class PDFZahlungsnachweiseService {
                             colBeleg,
                             colDatum,
                             colDokumente,
+                            colTeilnehmer,
                             colBemerkung,
                             colBetrag
                     );
@@ -663,6 +692,18 @@ public class PDFZahlungsnachweiseService {
                 );
 
                 page.write(
+                        formatTeilnehmer(nachweis),
+                        tableX
+                                + colBeleg
+                                + colDatum
+                                + colDokumente
+                                + 3,
+                        y - 14,
+                        FONT,
+                        TEXT_SIZE
+                );
+
+                page.write(
                         truncate(
                                 safe(
                                         nachweis.getBemerkung()
@@ -673,6 +714,7 @@ public class PDFZahlungsnachweiseService {
                                 + colBeleg
                                 + colDatum
                                 + colDokumente
+                                + colTeilnehmer
                                 + 3,
                         y - 14,
                         FONT,
@@ -780,6 +822,7 @@ public class PDFZahlungsnachweiseService {
             float colBeleg,
             float colDatum,
             float colDokumente,
+            float colTeilnehmer,
             float colBemerkung,
             float colBetrag
     ) throws Exception {
@@ -815,11 +858,24 @@ public class PDFZahlungsnachweiseService {
         );
 
         page.write(
+                "Teilnehmer",
+                x
+                        + colBeleg
+                        + colDatum
+                        + colDokumente
+                        + 3,
+                y - 14,
+                FONT_BOLD,
+                TEXT_SIZE
+        );
+
+        page.write(
                 "Bemerkung",
                 x
                         + colBeleg
                         + colDatum
                         + colDokumente
+                        + colTeilnehmer
                         + 3,
                 y - 14,
                 FONT_BOLD,
@@ -832,6 +888,7 @@ public class PDFZahlungsnachweiseService {
                         + colBeleg
                         + colDatum
                         + colDokumente
+                        + colTeilnehmer
                         + colBemerkung
                         + colBetrag
                         - 3,
@@ -847,6 +904,7 @@ public class PDFZahlungsnachweiseService {
                         + colBeleg
                         + colDatum
                         + colDokumente
+                        + colTeilnehmer
                         + colBemerkung
                         + colBetrag,
                 y - ROW_HEIGHT
@@ -1130,5 +1188,34 @@ public class PDFZahlungsnachweiseService {
                 + " ("
                 + formate
                 + ")";
+    }
+
+    private String formatTeilnehmer(
+            Zahlungsnachweis nachweis
+    ) {
+
+        if (nachweis.getUrspruenglicherZahlungsnachweis() != null) {
+            return "Rückzahlung";
+        }
+
+        if (nachweis.getPositionen() == null
+                || nachweis.getPositionen().isEmpty()) {
+            return "";
+        }
+
+        return nachweis.getPositionen()
+                .stream()
+                .map(ZahlungsPosition::getTeilnehmer)
+                .filter(java.util.Objects::nonNull)
+                .map(Teilnehmer::getPerson)
+                .filter(java.util.Objects::nonNull)
+                .map(person ->
+                        person.getName()
+                                + ", "
+                                + person.getVorname()
+                )
+                .collect(
+                        java.util.stream.Collectors.joining("; ")
+                );
     }
 }
