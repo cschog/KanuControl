@@ -7,13 +7,14 @@ import {
   IconButton,
   List,
   ListItem,
-  ListItemText,
   MenuItem,
   Radio,
   RadioGroup,
   Select,
   Stack,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 
 import { ReferenzObjekt } from "@/api/enums/ReferenzObjekt";
@@ -52,6 +53,8 @@ export default function FinanzausgleichDokumentPanel({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [referenzObjekt, setReferenzObjekt] = useState<ReferenzObjekt>(() => {
     const gespeichert = localStorage.getItem(REFERENZ_STORAGE_KEY);
@@ -220,12 +223,27 @@ export default function FinanzausgleichDokumentPanel({
 
   return (
     <Box>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
+      <Stack
+        direction={{ xs: "column", sm: "row" }}
+        justifyContent="space-between"
+        alignItems={{ xs: "stretch", sm: "center" }}
+        spacing={{ xs: 1.5, sm: 2 }}
+        mb={2}
+      >
         <Typography variant="h6">Nachweis Finanzausgleich</Typography>
 
         {!readOnly && (
-          <Stack direction="row" spacing={2} alignItems="center">
-            <FormControl>
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={{ xs: 1.5, sm: 2 }}
+            alignItems={{ xs: "stretch", sm: "center" }}
+            sx={{ width: { xs: "100%", sm: "auto" } }}
+          >
+            <FormControl
+              sx={{
+                width: { xs: "100%", sm: "auto" },
+              }}
+            >
               <RadioGroup
                 row
                 value={referenzObjekt}
@@ -234,6 +252,15 @@ export default function FinanzausgleichDokumentPanel({
 
                   setReferenzObjekt(value);
                   localStorage.setItem(REFERENZ_STORAGE_KEY, value);
+                }}
+                sx={{
+                  width: "100%",
+                  display: "grid",
+                  gridTemplateColumns: {
+                    xs: "repeat(2, 1fr)",
+                    sm: "repeat(4, auto)",
+                  },
+                  columnGap: { xs: 1, sm: 0.5 },
                 }}
               >
                 <FormControlLabel
@@ -264,6 +291,7 @@ export default function FinanzausgleichDokumentPanel({
 
             <Button
               variant="contained"
+              fullWidth={isMobile}
               startIcon={<UploadFileIcon />}
               onClick={() => fileInputRef.current?.click()}
             >
@@ -301,18 +329,96 @@ export default function FinanzausgleichDokumentPanel({
             <ListItem
               key={dokument.id}
               divider
-              secondaryAction={
-                <>
-                  <IconButton title="Anzeigen" onClick={() => void handlePreview(dokument)}>
+              disableGutters
+              sx={{
+                py: 1.5,
+              }}
+            >
+              <Box sx={{ width: "100%", minWidth: 0 }}>
+                {/* Dateiname */}
+                <Typography
+                  variant="body1"
+                  sx={{
+                    fontWeight: 500,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    pr: 1,
+                  }}
+                  title={dokument.originalDateiname}
+                >
+                  {dokument.originalDateiname}
+                </Typography>
+
+                {/* Informationen und Format */}
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  spacing={{ xs: 0.5, sm: 2 }}
+                  alignItems={{ xs: "stretch", sm: "center" }}
+                  sx={{ mt: 0.5 }}
+                >
+                  <Typography variant="body2" color="text.secondary">
+                    {formatSize(dokument.dateigroesse)}
+                    {" • "}
+                    {dokument.mimeType}
+                  </Typography>
+
+                  {!readOnly && (
+                    <Stack direction="row" spacing={0.75} alignItems="center">
+                      <Typography component="span" variant="body2" color="text.secondary">
+                        Format:
+                      </Typography>
+
+                      <FormControl
+                        size="small"
+                        sx={{
+                          minWidth: 75,
+                          width: { xs: 85, sm: "auto" },
+                        }}
+                      >
+                        <Select
+                          value={dokument.referenzObjekt ?? ReferenzObjekt.DIN_A6}
+                          onChange={(event) => {
+                            void handleReferenzObjektChange(
+                              dokument.id,
+                              event.target.value as ReferenzObjekt,
+                            );
+                          }}
+                          inputProps={{
+                            "aria-label": "Dokumentformat",
+                          }}
+                        >
+                          <MenuItem value={ReferenzObjekt.DIN_A7}>A7</MenuItem>
+                          <MenuItem value={ReferenzObjekt.DIN_A6}>A6</MenuItem>
+                          <MenuItem value={ReferenzObjekt.DIN_A5}>A5</MenuItem>
+                          <MenuItem value={ReferenzObjekt.DIN_A4}>A4</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Stack>
+                  )}
+                </Stack>
+
+                {/* Aktionen */}
+                <Stack direction="row" justifyContent="flex-end" spacing={0.5} sx={{ mt: 0.75 }}>
+                  <IconButton
+                    size="small"
+                    title="Anzeigen"
+                    onClick={() => void handlePreview(dokument)}
+                  >
                     <VisibilityIcon />
                   </IconButton>
 
-                  <IconButton title="Herunterladen" onClick={() => void handleDownload(dokument)}>
+                  <IconButton
+                    size="small"
+                    title="Herunterladen"
+                    onClick={() => void handleDownload(dokument)}
+                  >
                     <DownloadIcon />
                   </IconButton>
 
                   {!readOnly && (
                     <IconButton
+                      size="small"
                       color="error"
                       title="Löschen"
                       onClick={() => handleDelete(dokument.id)}
@@ -320,52 +426,8 @@ export default function FinanzausgleichDokumentPanel({
                       <DeleteIcon />
                     </IconButton>
                   )}
-                </>
-              }
-            >
-              <ListItemText
-                primary={dokument.originalDateiname}
-                secondaryTypographyProps={{
-                  component: "div",
-                }}
-                secondary={
-                  <Stack direction="row" spacing={2} alignItems="center" sx={{ mt: 0.5 }}>
-                    <Typography component="span" variant="body2" color="text.secondary">
-                      {formatSize(dokument.dateigroesse)}
-                      {" • "}
-                      {dokument.mimeType}
-                    </Typography>
-
-                    {!readOnly && (
-                      <Stack direction="row" spacing={0.75} alignItems="center">
-                        <Typography component="span" variant="body2" color="text.secondary">
-                          Format:
-                        </Typography>
-
-                        <FormControl size="small" sx={{ minWidth: 75 }}>
-                          <Select
-                            value={dokument.referenzObjekt ?? ReferenzObjekt.DIN_A6}
-                            onChange={(event) => {
-                              void handleReferenzObjektChange(
-                                dokument.id,
-                                event.target.value as ReferenzObjekt,
-                              );
-                            }}
-                            inputProps={{
-                              "aria-label": "Dokumentformat",
-                            }}
-                          >
-                            <MenuItem value={ReferenzObjekt.DIN_A7}>A7</MenuItem>
-                            <MenuItem value={ReferenzObjekt.DIN_A6}>A6</MenuItem>
-                            <MenuItem value={ReferenzObjekt.DIN_A5}>A5</MenuItem>
-                            <MenuItem value={ReferenzObjekt.DIN_A4}>A4</MenuItem>
-                          </Select>
-                        </FormControl>
-                      </Stack>
-                    )}
-                  </Stack>
-                }
-              />
+                </Stack>
+              </Box>
             </ListItem>
           ))}
         </List>
