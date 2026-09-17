@@ -2,7 +2,6 @@
 
 import { Box, Card, CardContent, Grid, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { useAuditDashboard } from "@/hooks/audit/useAuditDashboard";
 
 export default function AuditPage() {
@@ -122,15 +121,6 @@ export default function AuditPage() {
         </Grid>
       </Grid>
 
-      <BottomActionBar
-        left={[
-          {
-            label: "Zurück",
-            onClick: () => navigate("/admin"),
-            variant: "outlined",
-          },
-        ]}
-      />
     </Box>
   );
 }

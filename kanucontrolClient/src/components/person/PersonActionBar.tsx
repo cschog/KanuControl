@@ -4,23 +4,14 @@ import { BottomActionBar } from "@/components/layout/BottomActionBar";
 
 interface PersonActionBarProps {
   editMode: boolean;
-
   onEdit: () => void;
-
   onCancelEdit: () => void;
-
   onSave: () => Promise<void>;
-
   onDelete: () => void;
-
   onBack: () => void;
-
   onCopy?: () => void;
-
   onAddVerein: () => void;
-
   disableEdit: boolean;
-
   disableDelete: boolean;
 }
 

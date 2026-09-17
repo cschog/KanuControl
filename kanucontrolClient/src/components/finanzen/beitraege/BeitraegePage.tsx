@@ -26,7 +26,6 @@ import {
 
 import { OffeneUeberzahlungDTO } from "@/api/types/beitraege";
 
-import BackFooter from "@/components/common/BackFooter";
 
 import { zahlungsnachweiseColumns } from "@/components/finanzen/beitraege/zahlungsnachweiseColumns";
 import ZahlungsnachweisDialog from "@/components/finanzen/beitraege/ZahlungsnachweisDialog";
@@ -677,10 +676,6 @@ const load = useCallback(async () => {
           setDeleteZahlungsnachweisId(null);
         }}
         onConfirm={handleConfirmDeleteZahlungsnachweis}
-      />
-      <BackFooter
-        label="Zurück zu Durchführung"
-        path={`/veranstaltungen/${veranstaltungId}/finanzen/durchfuehrung`}
       />
     </Stack>
   );

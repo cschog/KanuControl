@@ -9,7 +9,6 @@ import { VereinCreateDialog } from "@/components/verein/VereinCreateDialog";
 import { VereinCsvImportDialog } from "@/components/verein/import/VereinCsvImportDialog";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { renderLoadingOrError } from "@/components/common/loadingOnErrorUtils";
-import { navigateToStartMenu } from "@/components/layout/navigateToStartMenue";
 
 import { ErrorDialog } from "@/components/common/ErrorDialog";
 import { getApiErrorMessage } from "@/api/utils/apiError";
@@ -226,11 +225,6 @@ export default function VereinScreen() {
               label: "Neuer Verein",
               variant: "outlined",
               onClick: () => setCreateDialogOpen(true),
-            },
-            {
-              label: "Zurück",
-              variant: "outlined",
-              onClick: navigateToStartMenu,
             },
           ]}
         />

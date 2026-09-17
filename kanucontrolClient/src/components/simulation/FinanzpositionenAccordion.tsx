@@ -43,11 +43,32 @@ function getFinanzTyp(kategorie: FinanzUebersichtsKategorie): "KOSTEN" | "EINNAH
 }
 
 function getKategorieBezeichnung(kategorie: FinanzUebersichtsKategorie): string {
-  if (kategorie === "FAHRKOSTEN") {
-    return "Fahrkosten";
+  switch (kategorie) {
+    case "FAHRTKOSTEN":
+      return "Fahrkosten";
+    case "FAHRKOSTEN":
+      return "Fahrkosten";
+    case "SONSTIGE_KOSTEN":
+      return "Sonstige Kosten";
+    case "UNTERKUNFT":
+      return "Unterkunft";
+    case "HONORARE":
+      return "Honorare";
+    case "KULTUR":
+      return "Kultur";
+    case "VERBRAUCHSMATERIAL":
+      return "Verbrauchsmaterial";
+    case "VERPFLEGUNG":
+      return "Verpflegung";
+    case "KJFP_ZUSCHUSS":
+      return "KJFP-Zuschuss";
+    case "SONSTIGE_EINNAHMEN":
+      return "Sonstige Einnahmen";
+    case "TEILNEHMERBEITRAG":
+      return "Teilnehmerbeitrag";
+    default:
+      return kategorie;
   }
-
-  return kategorie;
 }
 
 export default function FinanzpositionenAccordion({ title, positionen }: Props) {

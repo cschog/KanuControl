@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 
 import {
   Box,
@@ -13,7 +12,6 @@ import {
   FormControlLabel,
 } from "@mui/material";
 
-import { BottomActionBar } from "@/components/layout/BottomActionBar";
 
 import {
   getPostalCodeStatus,
@@ -45,7 +43,6 @@ const COUNTRY_LABELS: Record<string, string> = {
 };
 
 export default function PostalCodeAdminPage() {
-  const navigate = useNavigate();
 
   const [statuses, setStatuses] = useState<Record<string, PostalCodeStatus>>({});
 
@@ -196,15 +193,7 @@ async function handleImport(countryCode: string) {
         })}
       </Grid>
 
-      <BottomActionBar
-        left={[
-          {
-            label: "Zurück",
-            onClick: () => navigate("/admin"),
-            variant: "outlined",
-          },
-        ]}
-      />
+     
     </Box>
   );
 }

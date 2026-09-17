@@ -11,7 +11,6 @@ import {
   DialogContent,
   DialogActions,
 } from "@mui/material";
-import BackFooter from "@/components/common/BackFooter";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import PlanungspositionenTable from "@/components/simulation/FinanzpositionenAccordion";
 import { useEffect, useState, useCallback } from "react";
@@ -167,10 +166,6 @@ export default function PlanungPage({ veranstaltungId, onOpenSimulation }: Props
           </Button>
         </DialogActions>
       </Dialog>
-      <BackFooter
-        label="Zurück zu Vorbereitung"
-        path={`/veranstaltungen/${veranstaltungId}/finanzen/vorbereitung`}
-      />
     </>
   );
 }

@@ -15,7 +15,6 @@ import { FinanzausgleichPruefungDTO } from "@/api/services/finanzgruppenApi";
 
 import FinanzausgleichAccordion from "./FinanzausgleichAccordion";
 
-import BackFooter from "@/components/common/BackFooter";
 import { FINANZAUSGLEICH_GRID_TEMPLATE } from "./finanzausgleichLayout";
 import { FinanzausgleichRow } from "./finanzausgleichTypes";
 
@@ -281,11 +280,6 @@ export default function FinanzausgleichPage({ veranstaltungId }: Props) {
       )}
 
       <ErrorDialog open={!!error} message={error ?? ""} onClose={() => setError(null)} />
-
-      <BackFooter
-        label="Zurück zur Auswertung"
-        path={`/veranstaltungen/${veranstaltungId}/finanzen/auswertung`}
-      />
     </Box>
   );
 }

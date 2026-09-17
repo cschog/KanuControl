@@ -19,11 +19,9 @@ import { useTheme } from "@mui/material/styles";
 import { useMediaQuery } from "@mui/material";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { useNavigate } from "react-router-dom";
 import { SortingState } from "@tanstack/react-table";
 import { useAppContext } from "@/context/AppContext";
 import { useDebounce } from "@/components/common/reference/hooks";
-import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { GenericTableTanstack } from "@/components/common/GenericTableTanstack";
 import { teilnehmerAvailableColumns } from "@/components/teilnehmer/teilnehmerAvailableColumns";
 import { teilnehmerAssignedColumns } from "@/components/teilnehmer/teilnehmerAssignedColumns";
@@ -40,7 +38,6 @@ import { radius } from "@/theme/ui";
 
 export default function TeilnehmerScreen() {
   const { active } = useAppContext();
-  const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
@@ -544,7 +541,7 @@ export default function TeilnehmerScreen() {
                             whiteSpace: "nowrap",
                           }}
                         >
-                          {row.alterBeiBeginn ?? "-"} J.
+                          {row.alterBeiBeginn ?? "-"} Jahre
                         </Typography>
 
                         <Chip
@@ -640,16 +637,6 @@ export default function TeilnehmerScreen() {
             </Button>
           </Box>
         </Box>
-
-        <BottomActionBar
-          left={[
-            {
-              label: "Zurück",
-              onClick: () => navigate("/startmenue"),
-              variant: "outlined",
-            },
-          ]}
-        />
 
         <ErrorDialog open={!!error} message={error ?? ""} onClose={() => setError(null)} />
       </Box>
@@ -874,15 +861,6 @@ export default function TeilnehmerScreen() {
         </Grid>
       </Grid>
 
-      <BottomActionBar
-        left={[
-          {
-            label: "Zurück",
-            onClick: () => navigate("/startmenue"),
-            variant: "outlined",
-          },
-        ]}
-      />
       <ErrorDialog open={!!error} message={error ?? ""} onClose={() => setError(null)} />
 
       <Dialog open={roleWarningOpen} onClose={cancelRoleChange}>

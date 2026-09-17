@@ -72,40 +72,42 @@ export const PersonMembershipsCard: React.FC<PersonMembershipsCardProps> = ({
               </Stack>
 
               {/* RIGHT */}
-
               <Stack direction="row" spacing={1} alignItems="center">
-                {/* FUNKTION */}
-                <Select
-                  size="small"
-                  value={m.funktion ?? ""}
-                  displayEmpty
-                  sx={{ minWidth: 180 }}
-                  onChange={(e) =>
-                    onChangeFunktion(m.id, (e.target.value || null) as MitgliedFunktion | null)
-                  }
-                >
-                  <MenuItem value="">— keine Funktion —</MenuItem>
+                {editMode && (
+                  <>
+                    {/* FUNKTION */}
+                    <Select
+                      size="small"
+                      value={m.funktion ?? ""}
+                      displayEmpty
+                      sx={{ minWidth: 180 }}
+                      onChange={(e) =>
+                        onChangeFunktion(m.id, (e.target.value || null) as MitgliedFunktion | null)
+                      }
+                    >
+                      <MenuItem value="">— keine Funktion —</MenuItem>
 
-                  {Object.entries(MitgliedFunktionLabel).map(([key, label]) => (
-                    <MenuItem key={key} value={key}>
-                      {label}
-                    </MenuItem>
-                  ))}
-                </Select>
+                      {Object.entries(MitgliedFunktionLabel).map(([key, label]) => (
+                        <MenuItem key={key} value={key}>
+                          {label}
+                        </MenuItem>
+                      ))}
+                    </Select>
 
-                {/* HAUPTVEREIN */}
-                {!m.hauptVerein && (
-                  <Button size="small" onClick={() => onSetHauptverein(m.id)}>
-                    Hauptverein
-                  </Button>
+                    {/* HAUPTVEREIN */}
+                    {!m.hauptVerein && (
+                      <Button size="small" onClick={() => onSetHauptverein(m.id)}>
+                        Hauptverein
+                      </Button>
+                    )}
+
+                    {/* ENTFERNEN */}
+                    <Button size="small" color="error" onClick={() => onDeleteMitglied(m.id)}>
+                      Entfernen
+                    </Button>
+                  </>
                 )}
-
-                {/* DELETE */}
-                <Button size="small" color="error" onClick={() => onDeleteMitglied(m.id)}>
-                  Entfernen
-                </Button>
               </Stack>
-
             </Box>
           ))}
         </Stack>

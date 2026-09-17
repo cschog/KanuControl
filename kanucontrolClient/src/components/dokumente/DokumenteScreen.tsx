@@ -9,8 +9,6 @@ import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import DownloadIcon from "@mui/icons-material/Download";
 import { Accordion, AccordionSummary, AccordionDetails } from "@mui/material";
-import { BottomActionBar } from "@/components/layout/BottomActionBar";
-import { useNavigate } from "react-router-dom";
 
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
@@ -26,7 +24,6 @@ import { ReisekostenPdfDialog } from "@/components/finanzen/reisekosten/Reisekos
 import { radius } from "@/theme/ui";
 
 const DokumenteScreen: React.FC = () => {
-  const navigate = useNavigate();
   const [veranstaltung, setVeranstaltung] = useState<VeranstaltungDetail | null>(null);
   const [anmeldungValidation, setAnmeldungValidation] = useState<ValidationResult | null>(null);
   const [teilnehmerValidation, setTeilnehmerValidation] = useState<ValidationResult | null>(null);
@@ -436,15 +433,6 @@ const DokumenteScreen: React.FC = () => {
         </Paper>
       )}
       <ErrorDialog open={!!error} message={error ?? ""} onClose={() => setError(null)} />
-      <BottomActionBar
-        left={[
-          {
-            label: "Zurück",
-            onClick: () => navigate("/startmenue"),
-            variant: "outlined",
-          },
-        ]}
-      />
     </Box>
   );
 };

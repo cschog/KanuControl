@@ -7,7 +7,6 @@ import { AxiosError } from "axios";
 import { GenericTableTanstack } from "@/components/common/GenericTableTanstack";
 import { kuerzelColumns } from "@/components/finanzen/konto/finanzgruppeColumns";
 
-import BackFooter from "@/components/common/BackFooter";
 
 import KontoCreateForm from "./KontoCreateForm";
 import TeilnehmerZuordnenDialog from "./TeilnehmerZuordnenDialog";
@@ -383,10 +382,7 @@ export default function KontoPage({ veranstaltungId }: Props) {
         onConfirm={confirmDelete}
       />
 
-      <BackFooter
-        label="Zurück zu Durchführung"
-        path={`/veranstaltungen/${veranstaltungId}/finanzen/durchfuehrung`}
-      />
+  
     </Box>
   );
 }

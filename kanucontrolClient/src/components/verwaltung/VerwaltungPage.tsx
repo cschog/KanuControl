@@ -1,7 +1,5 @@
 import { Box, Tab, Tabs } from "@mui/material";
 import { useState, Suspense, lazy } from "react";
-import { BottomActionBar } from "@/components/layout/BottomActionBar";
-import { useNavigate } from "react-router-dom";
 
 /* =========================================================
    LAZY IMPORTS
@@ -25,7 +23,6 @@ const Verpflegungsmodelle = lazy(
 const VerwaltungPage = () => {
   const [tab, setTab] = useState(() => Number(localStorage.getItem("verwaltungTab")) || 0);
 
-  const navigate = useNavigate();
 
   /* =========================================================
      TAB CHANGE
@@ -104,19 +101,6 @@ const VerwaltungPage = () => {
         </Box>
       </Suspense>
 
-      {/* =====================================================
-          ACTION BAR
-          ===================================================== */}
-
-      <BottomActionBar
-        left={[
-          {
-            label: "Zurück",
-            onClick: () => navigate("/startmenue"),
-            variant: "outlined",
-          },
-        ]}
-      />
     </Box>
   );
 };

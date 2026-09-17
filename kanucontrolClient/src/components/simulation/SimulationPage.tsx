@@ -7,7 +7,6 @@ import SimulationForm from "./SimulationForm";
 import SimulationSummary from "./SimulationSummary";
 import PlanungspositionenTable from "./FinanzpositionenAccordion";
 
-import BackFooter from "@/components/common/BackFooter";
 import { ErrorDialog } from "@/components/common/ErrorDialog";
 
 import {
@@ -160,11 +159,6 @@ export default function SimulationPage({ veranstaltungId }: SimulationPageProps)
           </Box>
         </Alert>
 
-        <BackFooter
-          label="Zurück zu Vorbereitung"
-          path={`/veranstaltungen/${veranstaltungId}/finanzen/vorbereitung`}
-        />
-
         <ErrorDialog open={!!error} message={error ?? ""} onClose={clearError} />
       </>
     );
@@ -311,11 +305,6 @@ export default function SimulationPage({ veranstaltungId }: SimulationPageProps)
           <PlanungspositionenTable positionen={ergebnis.positionen} />
         </AccordionDetails>
       </Accordion>
-
-      <BackFooter
-        label="Zurück zu Vorbereitung"
-        path={`/veranstaltungen/${veranstaltungId}/finanzen/vorbereitung`}
-      />
 
       {/* ===================================================== */}
       {/* ERROR */}

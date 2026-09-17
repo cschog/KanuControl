@@ -14,7 +14,6 @@ import {
   Button,
 } from "@mui/material";
 
-import { useNavigate } from "react-router-dom";
 import { getOnlineUsers } from "@/api/services/sessionApi";
 
 import apiClient from "@/api/client/apiClient";
@@ -56,7 +55,6 @@ interface BeitragsstrukturDTO {
    ========================================================= */
 
 export default function VeranstaltungenScreen() {
-  const navigate = useNavigate();
 
   const reloadContext = useReloadAppContext();
 
@@ -437,11 +435,6 @@ export default function VeranstaltungenScreen() {
               label: "Neue Veranstaltung",
               variant: "outlined",
               onClick: () => setCreateOpen(true),
-            },
-            {
-              label: "Zurück",
-              variant: "outlined",
-              onClick: () => navigate("/startmenue"),
             },
           ]}
         />

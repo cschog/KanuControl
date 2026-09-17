@@ -53,7 +53,6 @@ import { kategorieZuTyp } from "@/api/types/finanz";
 import { istInBeleglisteSichtbar } from "@/api/utils/belegUtils";
 import { fontSize, spacing } from "@/theme/ui";
 import FinanzpositionenAccordion from "@/components/simulation/FinanzpositionenAccordion";
-import BackFooter from "@/components/common/BackFooter";
 
 interface Props {
   veranstaltungId: number;
@@ -516,10 +515,6 @@ export default function BuchungenPage({ veranstaltungId }: Props) {
           </Stack>
         )}
       </DeleteConfirmDialog>
-      <BackFooter
-        label="Zurück zu Durchführung"
-        path={`/veranstaltungen/${veranstaltungId}/finanzen/durchfuehrung`}
-      />
     </>
   );
 }

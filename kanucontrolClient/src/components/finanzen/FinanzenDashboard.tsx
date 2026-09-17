@@ -14,21 +14,18 @@ import { useState } from "react";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 import Money from "@/components/common/Money";
-import { useNavigate } from "react-router-dom";
 import { useAppContext } from "@/context/AppContext";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 
 import { useFinanzenDashboard } from "@/hooks/finanzen/useFinanzenDashboard";
 
-import { BottomActionBar } from "@/components/layout/BottomActionBar";
 
 const FinanzenDashboard = () => {
   /* =========================================================
      FAKE DATEN
      ========================================================= */
 
-  const navigate = useNavigate();
 
   const { active } = useAppContext();
 
@@ -60,12 +57,12 @@ const FinanzenDashboard = () => {
   const fontSizeValue = isMobile ? "0.8rem" : "1.1rem";
 
   const labels = {
-    planKosten: isMobile ? "Plan K." : "Plan Kosten",
-    istKosten: isMobile ? "Ist K." : "Ist Kosten",
-    planEinnahmen: isMobile ? "Plan E." : "Plan Einnahmen",
-    istEinnahmen: isMobile ? "Ist E." : "Ist Einnahmen",
+    planKosten: isMobile ? "Plan Kost." : "Plan Kosten",
+    istKosten: isMobile ? "Ist Kost." : "Ist Kosten",
+    planEinnahmen: isMobile ? "Plan Ein." : "Plan Einnahmen",
+    istEinnahmen: isMobile ? "Ist Ein." : "Ist Einnahmen",
     diffKosten: isMobile ? "Δ Kosten" : "Abweichung Kosten",
-    diffEinnahmen: isMobile ? "Δ Ein." : "Abweichung Einnahmen",
+    diffEinnahmen: isMobile ? "Δ Einnahmen" : "Abweichung Einnahmen",
     planSaldo: isMobile ? "Δ Plan" : "Abweichung Plan Saldo",
     istSaldo: isMobile ? "Δ Ist" : "Abweichung Ist Saldo",
     diffSaldo: isMobile ? "Δ Saldo" : "Abweichung Saldo",
@@ -556,15 +553,7 @@ const FinanzenDashboard = () => {
         </Accordion>
       )}
 
-      <BottomActionBar
-        left={[
-          {
-            label: "Zurück",
-            onClick: () => navigate(-1),
-            variant: "outlined",
-          },
-        ]}
-      />
+  
     </Box>
   );
 };

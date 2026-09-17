@@ -2,7 +2,6 @@
 
 import { Box, Button, Grid } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { BottomActionBar } from "@/components/layout/BottomActionBar";
 
 export default function AdminPage() {
   const navigate = useNavigate();
@@ -64,16 +63,6 @@ export default function AdminPage() {
           </Button>
         </Grid>
       </Grid>
-
-      <BottomActionBar
-        left={[
-          {
-            label: "Zurück",
-            onClick: () => navigate("/startmenue"),
-            variant: "outlined",
-          },
-        ]}
-      />
     </Box>
   );
 }

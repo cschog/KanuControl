@@ -9,7 +9,6 @@ import {
   DialogContentText,
   DialogActions,
 } from "@mui/material";
-import BackFooter from "@/components/common/BackFooter";
 import ConfirmDeleteDialog from "@/components/common/ConfirmDeleteDialog";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
@@ -123,7 +122,6 @@ const ReisekostenTable = ({ veranstaltungId }: Props) => {
         veranstaltungId={veranstaltungId}
         onClose={() => setDialogOpen(false)}
         onSave={async (fahrerId, abrechnungsdatum, bemerkung) => {
-
           const id = await createReisekostenabrechnung({
             veranstaltungId,
             fahrerId,
@@ -197,9 +195,9 @@ const ReisekostenTable = ({ veranstaltungId }: Props) => {
 
           await deleteReisekostenabrechnung(deleteId);
 
-         await queryClient.invalidateQueries({
-           queryKey: ["reisekosten", "veranstaltung", veranstaltungId],
-         });
+          await queryClient.invalidateQueries({
+            queryKey: ["reisekosten", "veranstaltung", veranstaltungId],
+          });
 
           setDeleteId(null);
         }}
@@ -233,10 +231,7 @@ const ReisekostenTable = ({ veranstaltungId }: Props) => {
           </Button>
         </DialogActions>
       </Dialog>
-      <BackFooter
-        label="Zurück zu Durchführung"
-        path={`/veranstaltungen/${veranstaltungId}/finanzen/durchfuehrung`}
-      />
+     
     </Box>
   );
 };

@@ -11,7 +11,6 @@ import { deleteMitglied, setHauptverein } from "@/api/services/mitgliedApi";
 import { PersonCreateDialog } from "@/components/person/PersonCreateDialog";
 import { useAppContext } from "@/context/AppContext";
 import { addTeilnehmer } from "@/api/services/teilnehmerApi";
-import { useNavigate } from "react-router-dom";
 import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { GridFilterModel } from "@mui/x-data-grid";
 import { getApiErrorMessage } from "@/api/utils/apiError";
@@ -40,7 +39,6 @@ type Cursor = {
 export default function PersonenScreen() {
   /* ================= STATE ================= */
 
-  const navigate = useNavigate();
 
   const [rows, setRows] = useState<PersonList[]>([]);
   const [loading, setLoading] = useState(false);
@@ -442,11 +440,6 @@ export default function PersonenScreen() {
               label: "Neue Person",
               variant: "outlined",
               onClick: () => setCreateOpen(true),
-            },
-            {
-              label: "Zurück",
-              variant: "outlined",
-              onClick: () => navigate("/startmenue"),
             },
           ]}
         />
