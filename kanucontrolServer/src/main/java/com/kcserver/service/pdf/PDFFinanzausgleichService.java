@@ -8,6 +8,8 @@ import com.kcserver.enumtype.Zahlungsweg;
 import com.kcserver.exception.ErrorMessages;
 import com.kcserver.repository.VeranstaltungRepository;
 import com.kcserver.repository.abrechnung.AbrechnungBelegRepository;
+import com.kcserver.repository.abrechnung.AbrechnungBuchungRepository;
+import com.kcserver.repository.abrechnung.AbrechnungRepository;
 import com.kcserver.repository.abrechnung.DokumentRepository;
 import com.kcserver.repository.fahrkosten.ReisekostenabrechnungRepository;
 import com.kcserver.repository.finanz.FinanzGruppeRepository;
@@ -15,19 +17,20 @@ import com.kcserver.repository.zahlungsnachweis.ZahlungsnachweisRepository;
 import com.kcserver.service.finanz.FinanzausgleichService;
 import com.kcserver.util.PdfFilenameUtil;
 import lombok.RequiredArgsConstructor;
-import org.apache.pdfbox.multipdf.LayerUtility;
+import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -65,8 +68,10 @@ public class PDFFinanzausgleichService {
     private final FinanzGruppeRepository finanzGruppeRepository;
     private final DokumentRepository dokumentRepository;
 
-    private final FinanzausgleichService finanzausgleichService;
+    private final AbrechnungRepository abrechnungRepository;
+    private final AbrechnungBuchungRepository abrechnungBuchungRepository;
 
+    private final FinanzausgleichService finanzausgleichService;
     private final PDFDocumentSizeService documentSizeService;
     private final PDFLayoutService layoutService;
     private final A4LayoutEngine layoutEngine;
@@ -136,8 +141,60 @@ public class PDFFinanzausgleichService {
             List<ZahlungsDetail> ueberweisungen,
             List<ZahlungsDetail> quittungen,
             List<BuchungsDetail> buchungen,
-            List<Reisekostenabrechnung> fahrkosten
+            List<Reisekostenabrechnung> fahrkosten,
+            BigDecimal sonstigeEinnahmen
     ) {
+    }
+
+    record VKEigenanteilDaten(
+            BigDecimal ueberweisungen,
+            BigDecimal kjfp,
+            List<BuchungsDetail> einnahmen,
+            List<BuchungsDetail> ausgaben,
+            List<Reisekostenabrechnung> fahrkosten,
+            BigDecimal finanzausgleich
+    ) {
+
+        BigDecimal sonstigeEinnahmen() {
+            return einnahmen.stream()
+                    .map(b -> safeStatic(b.buchung().getBetrag()))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+        }
+
+        BigDecimal direkteAusgaben() {
+            return ausgaben.stream()
+                    .map(b -> safeStatic(b.buchung().getBetrag()))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+        }
+
+        BigDecimal fahrkostenSumme() {
+            return fahrkosten.stream()
+                    .map(r -> safeStatic(r.getGesamtBetrag()))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+        }
+
+        BigDecimal gesamtEinnahmen() {
+            return safeStatic(ueberweisungen)
+                    .add(safeStatic(kjfp))
+                    .add(sonstigeEinnahmen());
+        }
+
+        BigDecimal gesamtAusgaben() {
+            return direkteAusgaben()
+                    .add(fahrkostenSumme())
+                    .add(safeStatic(finanzausgleich));
+        }
+
+        BigDecimal eigenanteil() {
+            return gesamtAusgaben()
+                    .subtract(gesamtEinnahmen());
+        }
+
+        private static BigDecimal safeStatic(BigDecimal value) {
+            return value == null
+                    ? BigDecimal.ZERO
+                    : value;
+        }
     }
 
 
@@ -146,10 +203,8 @@ public class PDFFinanzausgleichService {
      * GENERATE
      * =========================================================
      */
-
-    public byte[] generate(
-            Long veranstaltungId
-    ) {
+    @Transactional(readOnly = true)
+    public byte[] generate(Long veranstaltungId) {
 
         Veranstaltung veranstaltung =
                 veranstaltungRepository
@@ -473,6 +528,12 @@ public class PDFFinanzausgleichService {
                         veranstaltung.getId()
                 );
 
+        /*
+         * ---------------------------------------------------------
+         * Detailseiten der Finanzgruppen
+         * ---------------------------------------------------------
+         */
+
         for (FinanzausgleichGruppe gruppe : gruppen) {
 
             FinanzausgleichDetailDaten daten =
@@ -490,6 +551,806 @@ public class PDFFinanzausgleichService {
                     daten
             );
         }
+
+        /*
+         * ---------------------------------------------------------
+         * VK-Detailseite
+         * ---------------------------------------------------------
+         */
+
+        FinanzausgleichDetailDaten vkDaten =
+                createVKDetailDaten(
+                        veranstaltung,
+                        zahlungen
+                );
+
+        VKEigenanteilDaten vkEigenanteil =
+                createVKEigenanteilDaten(
+                        veranstaltung,
+                        zahlungen,
+                        gruppen
+                );
+
+        createVKDetailseite(
+                document,
+                veranstaltung,
+                vkDaten,
+                vkEigenanteil
+        );
+    }
+
+    private FinanzausgleichDetailDaten createVKDetailDaten(
+            Veranstaltung veranstaltung,
+            List<Zahlungsnachweis> zahlungen
+    ) {
+
+        List<ZahlungsDetail> ueberweisungen =
+                new ArrayList<>();
+
+        List<ZahlungsDetail> quittungen =
+                new ArrayList<>();
+
+        for (Zahlungsnachweis z : zahlungen) {
+
+            if (z.getZahlungsweg() == null) {
+                continue;
+            }
+
+            /*
+             * Jeder Zahlungsnachweis ist ein Teilnehmerbeitrag
+             * und damit ein Geldfluss über das VK-Konto.
+             *
+             * Entscheidend ist für VK ausschließlich:
+             * - Zahlungsweg
+             * - Betrag des Zahlungsnachweises
+             * - ob es eine Rückzahlung ist
+             *
+             * Die Finanzgruppe und die ZahlungsPositionen dienen
+             * ausschließlich der Zuordnung zum Teilnehmerkonto /
+             * Finanzausgleich.
+             */
+
+            boolean rueckzahlung =
+                    z.getUrspruenglicherZahlungsnachweis() != null;
+
+            BigDecimal betrag =
+                    safe(z.getBetrag());
+
+            if (rueckzahlung) {
+                betrag = betrag.negate();
+            }
+
+            String teilnehmer =
+                    getZahlungsTeilnehmerText(z);
+
+            /*
+             * ---------------------------------------------------------
+             * ÜBERWEISUNG
+             * ---------------------------------------------------------
+             */
+
+            if (z.getZahlungsweg() == Zahlungsweg.UEBERWEISUNG) {
+
+                ueberweisungen.add(
+                        new ZahlungsDetail(
+                                z.getDatum(),
+                                teilnehmer,
+                                safe(z.getBemerkung()),
+                                betrag,
+                                rueckzahlung
+                        )
+                );
+            }
+
+            /*
+             * ---------------------------------------------------------
+             * QUITTUNG
+             * ---------------------------------------------------------
+             */
+
+            if (z.getZahlungsweg() == Zahlungsweg.QUITTUNG) {
+
+                quittungen.add(
+                        new ZahlungsDetail(
+                                z.getDatum(),
+                                teilnehmer,
+                                safe(z.getBemerkung()),
+                                betrag,
+                                rueckzahlung
+                        )
+                );
+            }
+        }
+
+        /*
+         * Chronologisch sortieren
+         */
+
+        ueberweisungen.sort(
+                Comparator.comparing(
+                        ZahlungsDetail::datum,
+                        Comparator.nullsLast(
+                                Comparator.naturalOrder()
+                        )
+                )
+        );
+
+        quittungen.sort(
+                Comparator.comparing(
+                        ZahlungsDetail::datum,
+                        Comparator.nullsLast(
+                                Comparator.naturalOrder()
+                        )
+                )
+        );
+
+        return new FinanzausgleichDetailDaten(
+                Collections.emptyList(),
+                ueberweisungen,
+                quittungen,
+                Collections.emptyList(),
+                Collections.emptyList(),
+                BigDecimal.ZERO
+        );
+    }
+
+    private VKEigenanteilDaten createVKEigenanteilDaten(
+            Veranstaltung veranstaltung,
+            List<Zahlungsnachweis> zahlungen,
+            List<FinanzausgleichGruppe> gruppen
+    ) {
+
+        List<FinanzGruppe> alleFinanzGruppen =
+                finanzGruppeRepository.findWithTeilnehmerByVeranstaltungId(
+                        veranstaltung.getId()
+                );
+
+        List<Teilnehmer> alleTeilnehmer =
+                alleFinanzGruppen.stream()
+                        .flatMap(fg -> fg.getTeilnehmer().stream())
+                        .toList();
+
+        var abrechnung = abrechnungRepository
+                .findByVeranstaltungId(veranstaltung.getId())
+                .orElse(null);
+
+        List<AbrechnungBuchung> buchungen =
+                abrechnung != null
+                        ? abrechnungBuchungRepository
+                        .findByBeleg_Abrechnung_Id(abrechnung.getId())
+                        : List.of();
+
+        BigDecimal kjfp = sum(
+                buchungen,
+                FinanzKategorie.KJFP_ZUSCHUSS
+        );
+
+
+        Long veranstaltungId =
+                veranstaltung.getId();
+
+        /*
+         * =====================================================
+         * 1. ÜBERWEISUNGEN
+         * =====================================================
+         *
+         * Alle ursprünglichen Überweisungen gehören zum
+         * Geldfluss des VK.
+         *
+         * Rückzahlungen werden abgezogen.
+         *
+         * Quittungen werden NICHT berücksichtigt, da sie bereits
+         * über den Finanzausgleich der Finanzgruppen abgebildet
+         * werden.
+         */
+
+        BigDecimal ueberweisungen =
+                BigDecimal.ZERO;
+
+        for (Zahlungsnachweis z : zahlungen) {
+
+            if (z.getZahlungsweg() != Zahlungsweg.UEBERWEISUNG) {
+                continue;
+            }
+
+            BigDecimal betrag =
+                    safe(z.getBetrag());
+
+            if (z.getUrspruenglicherZahlungsnachweis() != null) {
+                ueberweisungen =
+                        ueberweisungen.subtract(betrag);
+            } else {
+                ueberweisungen =
+                        ueberweisungen.add(betrag);
+            }
+        }
+
+        /*
+         * =====================================================
+         * 2. VK-FINANZGRUPPE
+         * =====================================================
+         */
+
+        FinanzGruppe vk =
+                finanzGruppeRepository
+                        .findWithTeilnehmerByVeranstaltungId(
+                                veranstaltungId
+                        )
+                        .stream()
+                        .filter(fg ->
+                                "VK".equals(
+                                        fg.getKuerzel()
+                                )
+                        )
+                        .findFirst()
+                        .orElse(null);
+
+        List<BuchungsDetail> einnahmen =
+                new ArrayList<>();
+
+        List<BuchungsDetail> ausgaben =
+                new ArrayList<>();
+
+        List<Reisekostenabrechnung> fahrkosten =
+                new ArrayList<>();
+
+        if (vk != null) {
+
+            Long vkId =
+                    vk.getId();
+
+            /*
+             * -----------------------------------------------------
+             * VK-BELEGE
+             * -----------------------------------------------------
+             */
+
+            List<AbrechnungBeleg> belege =
+                    belegRepository
+                            .findByAbrechnung_Veranstaltung_IdAndFinanzGruppe_IdOrderByDatumAscLfdNrAsc(
+                                    veranstaltungId,
+                                    vkId
+                            );
+
+            for (AbrechnungBeleg beleg : belege) {
+
+                for (AbrechnungBuchung buchung :
+                        beleg.getPositionen()) {
+
+                    if (buchung.getBetrag() == null
+                            || buchung.getBetrag().signum() <= 0) {
+                        continue;
+                    }
+
+                    FinanzKategorie kategorie =
+                            buchung.getKategorie();
+
+                    /*
+                     * Einnahmen
+                     */
+
+                    if (kategorie ==
+                            FinanzKategorie.SONSTIGE_EINNAHMEN) {
+
+                        einnahmen.add(
+                                new BuchungsDetail(
+                                        beleg,
+                                        buchung
+                                )
+                        );
+
+                        continue;
+                    }
+
+                    /*
+                     * Ausgaben
+                     */
+
+                    if (isKostenKategorie(kategorie)) {
+
+                        ausgaben.add(
+                                new BuchungsDetail(
+                                        beleg,
+                                        buchung
+                                )
+                        );
+                    }
+                }
+            }
+
+            /*
+             * -----------------------------------------------------
+             * VK-FAHRTKOSTEN
+             * -----------------------------------------------------
+             */
+
+            fahrkosten =
+                    reisekostenRepository.findByFinanzGruppe(
+                            veranstaltungId,
+                            vkId
+                    );
+        }
+
+        /*
+         * =====================================================
+         * 3. FINANZAUSGLEICH
+         * =====================================================
+         *
+         * Die Erstattungen an alle Finanzgruppen sind Ausgaben
+         * des VK.
+         */
+
+        BigDecimal finanzausgleich =
+                gruppen.stream()
+                        .map(gruppe ->
+                                safe(
+                                        gruppe.ausgleich()
+                                                .getErstattungVomVK()
+                                )
+                        )
+                        .reduce(
+                                BigDecimal.ZERO,
+                                BigDecimal::add
+                        );
+
+        return new VKEigenanteilDaten(
+                ueberweisungen,
+                kjfp,
+                einnahmen,
+                ausgaben,
+                fahrkosten,
+                finanzausgleich
+        );
+    }
+
+    private void createVKDetailseite(
+            PDDocument document,
+            Veranstaltung veranstaltung,
+            FinanzausgleichDetailDaten daten,
+            VKEigenanteilDaten eigenanteil
+    ) throws Exception {
+
+        try (
+                PDFPageWriter page =
+                        new PDFPageWriter(document)
+        ) {
+
+            page.write(
+                    "Finanzausgleich – VK",
+                    page.getLeft(),
+                    FONT_BOLD,
+                    TITLE_SIZE
+            );
+
+            page.moveY(-22f);
+
+            page.write(
+                    "Veranstaltung: "
+                            + safe(veranstaltung.getName()),
+                    page.getLeft(),
+                    FONT,
+                    TEXT_SIZE
+            );
+
+            page.moveY(-20f);
+
+            page.write(
+                    "Zeitraum: "
+                            + formatDate(
+                            veranstaltung.getBeginnDatum()
+                    )
+                            + " - "
+                            + formatDate(
+                            veranstaltung.getEndeDatum()
+                    ),
+                    page.getLeft(),
+                    FONT,
+                    TEXT_SIZE
+            );
+
+            page.moveY(-30f);
+
+            /*
+             * =====================================================
+             * ÜBERWEISUNGEN
+             * =====================================================
+             */
+
+            if (!daten.ueberweisungen().isEmpty()) {
+
+                writeSectionTitle(
+                        page,
+                        "Überweisungen auf VK"
+                );
+
+                page.moveY(-10f);
+
+                writeZahlungsTabelle(
+                        page,
+                        daten.ueberweisungen()
+                );
+            }
+
+            /*
+             * =====================================================
+             * QUITTUNGEN
+             * =====================================================
+             */
+
+            if (!daten.quittungen().isEmpty()) {
+
+                page.moveY(-30f);
+
+                ensureSectionSpace(
+                        page,
+                        80f
+                );
+
+                writeSectionTitle(
+                        page,
+                        "Quittungen auf VK"
+                );
+
+                page.moveY(-10f);
+
+                writeZahlungsTabelle(
+                        page,
+                        daten.quittungen()
+                );
+            }
+
+            /*
+             * =====================================================
+             * BERECHNUNG EIGENANTEIL
+             * =====================================================
+             */
+
+            page.moveY(-30f);
+
+            ensureSectionSpace(
+                    page,
+                    220f
+            );
+
+            writeVKEigenanteil(
+                    page,
+                    eigenanteil
+            );
+        }
+    }
+
+    private void writeVKEigenanteil(
+            PDFPageWriter page,
+            VKEigenanteilDaten daten
+    ) throws Exception {
+
+        float x =
+                page.getLeft();
+
+        float right =
+                x + page.getContentWidth();
+
+        /*
+         * =====================================================
+         * ÜBERSCHRIFT
+         * =====================================================
+         */
+
+        page.write(
+                "Berechnung Eigenanteil",
+                x,
+                page.getY(),
+                FONT_BOLD,
+                SECTION_SIZE
+        );
+
+        page.moveY(-20f);
+
+        /*
+         * =====================================================
+         * EINNAHMEN
+         * =====================================================
+         */
+
+        page.write(
+                "Einnahmen",
+                x,
+                page.getY(),
+                FONT_BOLD,
+                TEXT_SIZE
+        );
+
+        page.moveY(-18f);
+
+        /*
+         * Teilnehmerbeiträge / Überweisungen
+         */
+
+        page.write(
+                "Teilnehmerbeiträge / Überweisungen",
+                x + 10,
+                page.getY(),
+                FONT,
+                TEXT_SIZE
+        );
+
+        page.writeRight(
+                formatMoney(daten.ueberweisungen()),
+                right,
+                page.getY(),
+                FONT,
+                TEXT_SIZE
+        );
+
+        page.moveY(-18f);
+
+        page.write(
+                "KJFP",
+                x + 10,
+                page.getY(),
+                FONT,
+                TEXT_SIZE
+        );
+
+        page.writeRight(
+                formatMoney(daten.kjfp()),
+                right,
+                page.getY(),
+                FONT,
+                TEXT_SIZE
+        );
+
+        page.moveY(-18f);
+
+        /*
+         * Weitere VK-Einnahmen
+         */
+
+        for (BuchungsDetail detail :
+                daten.einnahmen()) {
+
+            AbrechnungBeleg beleg =
+                    detail.beleg();
+
+            AbrechnungBuchung buchung =
+                    detail.buchung();
+
+            String bezeichnung =
+                    safe(beleg.getBelegnummer());
+
+            if (!safe(buchung.getBeschreibung()).isBlank()) {
+                bezeichnung +=
+                        " – "
+                                + safe(
+                                buchung.getBeschreibung()
+                        );
+            }
+
+            page.write(
+                    bezeichnung,
+                    x + 10,
+                    page.getY(),
+                    FONT,
+                    TEXT_SIZE
+            );
+
+            page.writeRight(
+                    formatMoney(
+                            buchung.getBetrag()
+                    ),
+                    right,
+                    page.getY(),
+                    FONT,
+                    TEXT_SIZE
+            );
+
+            page.moveY(-18f);
+        }
+
+        /*
+         * =====================================================
+         * SUMME EINNAHMEN
+         * =====================================================
+         */
+
+        page.write(
+                "Summe Einnahmen",
+                x + 10,
+                page.getY(),
+                FONT_BOLD,
+                TEXT_SIZE
+        );
+
+        page.writeRight(
+                formatMoney(
+                        daten.gesamtEinnahmen()
+                ),
+                right,
+                page.getY(),
+                FONT_BOLD,
+                TEXT_SIZE
+        );
+
+        page.moveY(-24f);
+
+        /*
+         * =====================================================
+         * AUSGABEN
+         * =====================================================
+         */
+
+        page.write(
+                "Ausgaben",
+                x,
+                page.getY(),
+                FONT_BOLD,
+                TEXT_SIZE
+        );
+
+        page.moveY(-18f);
+
+        /*
+         * Direkte VK-Rechnungen
+         */
+
+        for (BuchungsDetail detail :
+                daten.ausgaben()) {
+
+            AbrechnungBeleg beleg =
+                    detail.beleg();
+
+            AbrechnungBuchung buchung =
+                    detail.buchung();
+
+            String bezeichnung =
+                    safe(beleg.getBelegnummer());
+
+            if (!safe(buchung.getBeschreibung()).isBlank()) {
+                bezeichnung +=
+                        " – "
+                                + safe(
+                                buchung.getBeschreibung()
+                        );
+            }
+
+            page.write(
+                    bezeichnung,
+                    x + 10,
+                    page.getY(),
+                    FONT,
+                    TEXT_SIZE
+            );
+
+            page.writeRight(
+                    formatMoney(
+                            buchung.getBetrag().negate()
+                    ),
+                    right,
+                    page.getY(),
+                    FONT,
+                    TEXT_SIZE
+            );
+
+            page.moveY(-18f);
+        }
+
+        /*
+         * Fahrtkosten
+         */
+
+        if (!daten.fahrkosten().isEmpty()) {
+
+            page.write(
+                    "Fahrtkosten VK",
+                    x + 10,
+                    page.getY(),
+                    FONT,
+                    TEXT_SIZE
+            );
+
+            page.writeRight(
+                    formatMoney(
+                            daten.fahrkostenSumme().negate()
+                    ),
+                    right,
+                    page.getY(),
+                    FONT,
+                    TEXT_SIZE
+            );
+
+            page.moveY(-18f);
+        }
+
+        /*
+         * Finanzausgleich
+         */
+
+        page.write(
+                "Finanzausgleich an Finanzgruppen",
+                x + 10,
+                page.getY(),
+                FONT,
+                TEXT_SIZE
+        );
+
+        page.writeRight(
+                formatMoney(
+                        daten.finanzausgleich().negate()
+                ),
+                right,
+                page.getY(),
+                FONT,
+                TEXT_SIZE
+        );
+
+        page.moveY(-10f);
+
+        /*
+         * =====================================================
+         * TRENNLINIE
+         * =====================================================
+         */
+
+        page.line(
+                x,
+                page.getY(),
+                right,
+                page.getY()
+        );
+
+        page.moveY(-20f);
+
+        /*
+         * =====================================================
+         * SUMME AUSGABEN
+         * =====================================================
+         */
+
+        page.write(
+                "Summe Ausgaben",
+                x + 10,
+                page.getY(),
+                FONT_BOLD,
+                TEXT_SIZE
+        );
+
+        page.writeRight(
+                formatMoney(
+                        daten.gesamtAusgaben().negate()
+                ),
+                right,
+                page.getY(),
+                FONT_BOLD,
+                TEXT_SIZE
+        );
+
+        page.moveY(-25f);
+
+        /*
+         * =====================================================
+         * EIGENANTEIL
+         * =====================================================
+         */
+
+        page.write(
+                "Eigenanteil",
+                x,
+                page.getY(),
+                FONT_BOLD,
+                SECTION_SIZE
+        );
+
+        page.writeRight(
+                formatMoney(
+                        daten.eigenanteil()
+                ),
+                right,
+                page.getY(),
+                FONT_BOLD,
+                SECTION_SIZE
+        );
+
+        page.moveY(-20f);
     }
 
     private FinanzausgleichDetailDaten createDetailDaten(
@@ -825,7 +1686,7 @@ public class PDFFinanzausgleichService {
 
         /*
          * =====================================================
-         * 3. Belege
+         * 3. Belege / Einnahmen
          * =====================================================
          */
 
@@ -839,6 +1700,9 @@ public class PDFFinanzausgleichService {
         List<BuchungsDetail> buchungen =
                 new ArrayList<>();
 
+        BigDecimal sonstigeEinnahmen =
+                BigDecimal.ZERO;
+
         for (AbrechnungBeleg beleg : belege) {
 
             for (AbrechnungBuchung buchung :
@@ -849,14 +1713,45 @@ public class PDFFinanzausgleichService {
                     continue;
                 }
 
+                FinanzKategorie kategorie =
+                        buchung.getKategorie();
+
                 /*
-                 * Nur tatsächliche Kosten.
-                 * Einnahmen gehören nicht in die Ausgabenliste.
+                 * =====================================================
+                 * SONSTIGE EINNAHMEN
+                 * =====================================================
+                 *
+                 * Diese werden:
+                 *
+                 * 1. für die Zusammenfassung gesammelt
+                 * 2. trotzdem als Buchung in der Detailtabelle
+                 *    aufgenommen
                  */
 
-                if (!isKostenKategorie(
-                        buchung.getKategorie()
-                )) {
+                if (kategorie == FinanzKategorie.SONSTIGE_EINNAHMEN) {
+
+                    sonstigeEinnahmen =
+                            sonstigeEinnahmen.add(
+                                    buchung.getBetrag()
+                            );
+
+                    buchungen.add(
+                            new BuchungsDetail(
+                                    beleg,
+                                    buchung
+                            )
+                    );
+
+                    continue;
+                }
+
+                /*
+                 * =====================================================
+                 * NORMALE AUSGABEN
+                 * =====================================================
+                 */
+
+                if (!isKostenKategorie(kategorie)) {
                     continue;
                 }
 
@@ -886,7 +1781,8 @@ public class PDFFinanzausgleichService {
                 ueberweisungen,
                 quittungen,
                 buchungen,
-                fahrkosten
+                fahrkosten,
+                sonstigeEinnahmen
         );
     }
 
@@ -908,7 +1804,7 @@ public class PDFFinanzausgleichService {
     ) {
 
         Set<String> namen =
-                new HashSet<>();
+                new LinkedHashSet<>();
 
         for (ZahlungsPosition position :
                 zahlungsnachweis.getPositionen()) {
@@ -1100,7 +1996,7 @@ public class PDFFinanzausgleichService {
 
                 writeSectionTitle(
                         page,
-                        "Ausgaben / Belege"
+                        "Belege / Buchungen"
                 );
 
                 page.moveY(-10f);
@@ -1144,7 +2040,8 @@ public class PDFFinanzausgleichService {
 
             writeFinanzausgleichZusammenfassung(
                     page,
-                    gruppe
+                    gruppe,
+                    daten
             );
         }
     }
@@ -1635,7 +2532,7 @@ public class PDFFinanzausgleichService {
         if (details.isEmpty()) {
 
             page.write(
-                    "Keine Ausgaben.",
+                    "Keine Buchungen.",
                     page.getLeft(),
                     FONT,
                     TEXT_SIZE
@@ -1761,10 +2658,17 @@ public class PDFFinanzausgleichService {
 
             currentX += colBeschreibung;
 
+            BigDecimal betrag =
+                    safe(buchung.getBetrag());
+
+            if (buchung.getKategorie()
+                    == FinanzKategorie.SONSTIGE_EINNAHMEN) {
+
+                betrag = betrag.negate();
+            }
+
             page.writeRight(
-                    formatMoney(
-                            buchung.getBetrag()
-                    ),
+                    formatMoney(betrag),
                     currentX + colBetrag - 3,
                     y - 13,
                     FONT,
@@ -1779,9 +2683,7 @@ public class PDFFinanzausgleichService {
             );
 
             summe =
-                    summe.add(
-                            safe(buchung.getBetrag())
-                    );
+                    summe.add(betrag);
 
             page.moveY(-rowHeight);
         }
@@ -1789,7 +2691,7 @@ public class PDFFinanzausgleichService {
         float y = page.getY();
 
         page.write(
-                "Summe Ausgaben",
+                "Summe Netto",
                 x + 3,
                 y - 13,
                 FONT_BOLD,
@@ -2153,7 +3055,8 @@ public class PDFFinanzausgleichService {
 
     private void writeFinanzausgleichZusammenfassung(
             PDFPageWriter page,
-            FinanzausgleichGruppe gruppe
+            FinanzausgleichGruppe gruppe,
+            FinanzausgleichDetailDaten daten
     ) throws Exception {
 
         FinanzausgleichDTO dto =
@@ -2172,6 +3075,12 @@ public class PDFFinanzausgleichService {
         float right =
                 x + page.getContentWidth();
 
+        /*
+         * -----------------------------------------------------
+         * Ausgaben
+         * -----------------------------------------------------
+         */
+
         page.write(
                 "Ausgaben",
                 x,
@@ -2187,6 +3096,45 @@ public class PDFFinanzausgleichService {
                 FONT,
                 TEXT_SIZE
         );
+
+        /*
+         * -----------------------------------------------------
+         * Sonstige Einnahmen
+         *
+         * dto.getAusgaben() ist bereits netto.
+         * Die Einnahmen werden hier deshalb nur transparent
+         * dargestellt und NICHT erneut verrechnet.
+         * -----------------------------------------------------
+         */
+
+        if (daten.sonstigeEinnahmen().signum() != 0) {
+
+            page.moveY(-18f);
+
+            page.write(
+                    "davon sonstige Einnahmen",
+                    x,
+                    page.getY(),
+                    FONT,
+                    TEXT_SIZE
+            );
+
+            page.writeRight(
+                    formatMoney(
+                            daten.sonstigeEinnahmen().negate()
+                    ),
+                    right,
+                    page.getY(),
+                    FONT,
+                    TEXT_SIZE
+            );
+        }
+
+        /*
+         * -----------------------------------------------------
+         * Fahrtkosten
+         * -----------------------------------------------------
+         */
 
         page.moveY(-18f);
 
@@ -2205,6 +3153,12 @@ public class PDFFinanzausgleichService {
                 FONT,
                 TEXT_SIZE
         );
+
+        /*
+         * -----------------------------------------------------
+         * Quittungen
+         * -----------------------------------------------------
+         */
 
         page.moveY(-18f);
 
@@ -2228,6 +3182,12 @@ public class PDFFinanzausgleichService {
                 TEXT_SIZE
         );
 
+        /*
+         * -----------------------------------------------------
+         * Trennlinie
+         * -----------------------------------------------------
+         */
+
         page.moveY(-8f);
 
         page.line(
@@ -2236,6 +3196,12 @@ public class PDFFinanzausgleichService {
                 right,
                 page.getY()
         );
+
+        /*
+         * -----------------------------------------------------
+         * Erstattung
+         * -----------------------------------------------------
+         */
 
         page.moveY(-20f);
 
@@ -2855,113 +3821,78 @@ public class PDFFinanzausgleichService {
      * =========================================================
      */
 
-    private byte[] mergeDocuments(
-            PDDocument deckblatt,
-            byte[] dokumentPdf
-    ) throws IOException {
+    private byte[] mergeDocuments(PDDocument deckblatt, byte[] dokumentPdf) throws IOException {
 
-        if (dokumentPdf == null
-                || dokumentPdf.length == 0) {
+        Path deckblattFile = Files.createTempFile("kc-deckblatt-", ".pdf");
+        Path dokumentFile = null;
+        Path outputFile = Files.createTempFile("kc-finanzausgleich-", ".pdf");
 
-            ByteArrayOutputStream out =
-                    new ByteArrayOutputStream();
+        try {
+            // Deckblatt als temporäre PDF-Datei speichern
+            deckblatt.save(deckblattFile.toFile());
 
-            deckblatt.save(out);
+            PDFMergerUtility merger = new PDFMergerUtility();
 
-            return out.toByteArray();
-        }
+            // Deckblatt
+            merger.addSource(deckblattFile.toFile());
 
-        try (
-                PDDocument dokumente =
-                        org.apache.pdfbox.Loader.loadPDF(
-                                dokumentPdf
-                        );
+            // Detail-/Dokument-PDF
+            if (dokumentPdf != null && dokumentPdf.length > 0) {
+                dokumentFile = Files.createTempFile("kc-dokumente-", ".pdf");
+                Files.write(dokumentFile, dokumentPdf);
 
-                PDDocument gesamt =
-                        new PDDocument();
-
-                ByteArrayOutputStream out =
-                        new ByteArrayOutputStream()
-        ) {
-
-            LayerUtility layerUtility =
-                    new LayerUtility(gesamt);
-
-            /*
-             * DECKBLATT
-             */
-
-            int deckblattIndex = 0;
-
-            for (PDPage ignored :
-                    deckblatt.getPages()) {
-
-                var form =
-                        layerUtility.importPageAsForm(
-                                deckblatt,
-                                deckblattIndex
-                        );
-
-                PDPage targetPage =
-                        new PDPage(
-                                PDFLayoutService.PAGE_SIZE
-                        );
-
-                gesamt.addPage(targetPage);
-
-                try (
-                        PDPageContentStream content =
-                                new PDPageContentStream(
-                                        gesamt,
-                                        targetPage
-                                )
-                ) {
-
-                    content.drawForm(form);
-                }
-
-                deckblattIndex++;
+                merger.addSource(dokumentFile.toFile());
             }
 
-            /*
-             * DOKUMENTE
-             */
+            // Zieldatei
+            merger.setDestinationFileName(outputFile.toString());
 
-            for (int i = 0;
-                 i < dokumente.getNumberOfPages();
-                 i++) {
+            // PDFBox 3.x
+            merger.mergeDocuments(null);
 
-                var form =
-                        layerUtility.importPageAsForm(
-                                dokumente,
-                                i
-                        );
+            return Files.readAllBytes(outputFile);
 
-                PDPage targetPage =
-                        new PDPage(
-                                PDFLayoutService.PAGE_SIZE
-                        );
+        } finally {
+            Files.deleteIfExists(deckblattFile);
 
-                gesamt.addPage(targetPage);
-
-                try (
-                        PDPageContentStream content =
-                                new PDPageContentStream(
-                                        gesamt,
-                                        targetPage
-                                )
-                ) {
-
-                    content.drawForm(form);
-                }
+            if (dokumentFile != null) {
+                Files.deleteIfExists(dokumentFile);
             }
 
-            gesamt.save(out);
-
-            return out.toByteArray();
+            Files.deleteIfExists(outputFile);
         }
     }
 
+
+    private BigDecimal sum(
+            List<AbrechnungBuchung> buchungen,
+            FinanzKategorie... kategorien
+    ) {
+
+        BigDecimal result = BigDecimal.ZERO;
+
+        for (AbrechnungBuchung b : buchungen) {
+
+            if (b.getBetrag() == null
+                    || b.getKategorie() == null) {
+                continue;
+            }
+
+            for (FinanzKategorie kategorie : kategorien) {
+
+                if (b.getKategorie() == kategorie) {
+
+                    result = result.add(
+                            b.getBetrag()
+                    );
+
+                    break;
+                }
+            }
+        }
+
+        return result;
+    }
 
     /*
      * =========================================================

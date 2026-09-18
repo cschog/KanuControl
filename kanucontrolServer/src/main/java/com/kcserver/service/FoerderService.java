@@ -210,7 +210,6 @@ public class FoerderService {
     }
 
     public BigDecimal berechneKjfpZuschuss(
-
             Veranstaltung veranstaltung,
             List<Teilnehmer> teilnehmer
     ) {
