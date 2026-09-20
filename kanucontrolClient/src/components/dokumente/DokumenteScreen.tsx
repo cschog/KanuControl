@@ -101,6 +101,16 @@ const DokumenteScreen: React.FC = () => {
   const handlePreview = async (endpoint: string) => {
     if (!veranstaltung?.id) return;
 
+    // Fenster direkt aus der Benutzeraktion heraus öffnen
+    const previewWindow = window.open("", "_blank");
+
+    if (!previewWindow) {
+      setError(
+        "Die PDF-Vorschau konnte nicht geöffnet werden. Bitte Popups für KanuControl erlauben.",
+      );
+      return;
+    }
+
     setLoadingReport(endpoint);
 
     try {
@@ -114,12 +124,16 @@ const DokumenteScreen: React.FC = () => {
 
       const url = window.URL.createObjectURL(blob);
 
-      window.open(url, "_blank");
+      // PDF in das bereits geöffnete Fenster laden
+      previewWindow.location.href = url;
 
+      // URL erst später freigeben
       setTimeout(() => {
         window.URL.revokeObjectURL(url);
       }, 60_000);
     } catch (error: unknown) {
+      previewWindow.close();
+
       console.error("PDF-Vorschau konnte nicht erstellt werden:", error);
       setError(getApiErrorMessage(error));
     } finally {
