@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.example</groupId>
 	<artifactId>kcserver</artifactId>
-	<version>1.6.3</version>
+	<version>1.6.3.a</version>
 	<name>KanuControlServer</name>
 	<description>Project KanuControlServer for Spring Boot</description>
 	<properties>

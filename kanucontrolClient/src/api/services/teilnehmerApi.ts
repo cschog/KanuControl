@@ -26,6 +26,7 @@ export async function getAvailablePersons(
   verein?: string,
   sortField?: string,
   sortDirection?: "asc" | "desc",
+  aktiv?: boolean,
 ) {
   const res = await apiClient.get(
     `/veranstaltungen/${veranstaltungId}/teilnehmer/available/paged`,
@@ -37,6 +38,7 @@ export async function getAvailablePersons(
         verein,
         sortField,
         sortDirection,
+        aktiv,
       },
     },
   );

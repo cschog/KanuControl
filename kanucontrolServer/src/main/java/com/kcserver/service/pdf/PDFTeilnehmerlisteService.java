@@ -41,7 +41,7 @@ public class PDFTeilnehmerlisteService {
         try {
 
             tnList = sortTeilnehmer(tnList, v.getLeiterId());
-a
+
             try (PDDocument masterDoc = new PDDocument()) {
 
                 PDFMergerUtility merger = new PDFMergerUtility();

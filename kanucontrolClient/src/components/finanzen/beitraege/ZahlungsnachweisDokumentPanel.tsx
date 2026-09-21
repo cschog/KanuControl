@@ -170,15 +170,29 @@ export default function ZahlungsnachweisDokumentPanel({
      PREVIEW
   ========================================================= */
 
-  async function handlePreview(dokument: DokumentDTO) {
-    const blob = await download(veranstaltungId, zahlungsnachweisId, dokument.id);
+ async function handlePreview(dokument: DokumentDTO) {
+   // Fenster synchron zum Klick öffnen – wichtig für Safari
+   const previewWindow = window.open("", "_blank");
 
-    const url = URL.createObjectURL(blob);
+   if (!previewWindow) {
+     return;
+   }
 
-    window.open(url, "_blank");
+   try {
+     const blob = await download(veranstaltungId, zahlungsnachweisId, dokument.id);
 
-    setTimeout(() => URL.revokeObjectURL(url), 60_000);
-  }
+     const url = URL.createObjectURL(blob);
+
+     previewWindow.location.href = url;
+
+     setTimeout(() => {
+       URL.revokeObjectURL(url);
+     }, 60_000);
+   } catch (error) {
+     previewWindow.close();
+     throw error;
+   }
+ }
 
   
 

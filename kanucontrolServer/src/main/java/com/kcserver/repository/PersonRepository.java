@@ -51,6 +51,10 @@ AND (
     :ort IS NULL OR :ort = '' OR
     LOWER(p.ort) LIKE LOWER(CONCAT('%', :ort, '%'))
 )
+AND (
+    :aktiv IS NULL OR
+    p.aktiv = :aktiv
+)
 ORDER BY p.name ASC, p.vorname ASC, p.id ASC
 """)
     Slice<Person> scroll(
@@ -59,6 +63,7 @@ ORDER BY p.name ASC, p.vorname ASC, p.id ASC
             @Param("cursorId") Long cursorId,
             @Param("search") String search,
             @Param("ort") String ort,
+            @Param("aktiv") Boolean aktiv,
             Pageable pageable
     );
 
@@ -79,6 +84,10 @@ AND (
     :ort IS NULL OR :ort = '' OR
     LOWER(p.ort) LIKE LOWER(CONCAT('%', :ort, '%'))
 )
+AND (
+    :aktiv IS NULL OR
+    p.aktiv = :aktiv
+)
 ORDER BY p.name DESC, p.vorname DESC, p.id DESC
 """)
     Slice<Person> scrollDesc(
@@ -87,6 +96,7 @@ ORDER BY p.name DESC, p.vorname DESC, p.id DESC
             @Param("cursorId") Long cursorId,
             @Param("search") String search,
             @Param("ort") String ort,
+            @Param("aktiv") Boolean aktiv,
             Pageable pageable
     );
 

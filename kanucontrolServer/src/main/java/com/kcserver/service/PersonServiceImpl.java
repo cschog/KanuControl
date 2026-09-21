@@ -91,6 +91,7 @@ public class PersonServiceImpl implements PersonService {
                     cursorId,
                     criteria.getSearch(),
                     criteria.getOrt(),
+                    criteria.getAktiv(),
                     PageRequest.of(0, size)
             );
 
@@ -102,6 +103,7 @@ public class PersonServiceImpl implements PersonService {
                     cursorId,
                     criteria.getSearch(),
                     criteria.getOrt(),
+                    criteria.getAktiv(),
                     PageRequest.of(0, size)
             );
         }

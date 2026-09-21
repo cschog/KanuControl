@@ -72,12 +72,12 @@ public class TeilnehmerController {
     }
 
     @GetMapping("/available/paged")
-
     public ApiResponse<Page<PersonListDTO>> findAvailablePaged(
             @PathVariable Long veranstaltungId,
 
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String verein,
+            @RequestParam(required = false) Boolean aktiv,
 
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "1000") int size,
@@ -132,6 +132,7 @@ public class TeilnehmerController {
                         veranstaltungId,
                         search,
                         verein,
+                        aktiv,
                         pageable
                 )
         );

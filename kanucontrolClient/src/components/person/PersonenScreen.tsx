@@ -1,9 +1,7 @@
+// src/components/person/PersonenScreen.tsx
+
 import { useEffect, useState, useRef } from "react";
-import {
-  Box,
-  Paper,
-  Typography,
-} from "@mui/material";
+import { Box, Paper, Typography, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import { GenericTableTanstack } from "@/components/common/GenericTableTanstack";
 import { PersonFormView } from "@/components/person/PersonFormView";
 import { personColumnsTanstack } from "@/components/person/personColumnsTanstack";
@@ -39,7 +37,6 @@ type Cursor = {
 export default function PersonenScreen() {
   /* ================= STATE ================= */
 
-
   const [rows, setRows] = useState<PersonList[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -66,6 +63,7 @@ export default function PersonenScreen() {
 
   const [search, setSearch] = useState("");
   const debounceSearch = useDebounce(search, 300);
+  const [aktivFilter, setAktivFilter] = useState<"aktiv" | "alle" | "inaktiv">("aktiv");
 
   const size = 500;
 
@@ -93,19 +91,21 @@ export default function PersonenScreen() {
     setLoading(true);
 
     try {
-      const res = await getPersonsScroll(
-        cursorRef.current?.name,
-        cursorRef.current?.vorname,
-        cursorRef.current?.id,
-        size,
-        {
-          search: debounceSearch || undefined,
-          ort: ortFilter || undefined,
+  const res = await getPersonsScroll(
+    cursorRef.current?.name,
+    cursorRef.current?.vorname,
+    cursorRef.current?.id,
+    size,
+    {
+      search: debounceSearch || undefined,
+      ort: ortFilter || undefined,
 
-          sortField: sorting[0]?.id,
-          sortDirection: sorting[0]?.desc ? "desc" : "asc",
-        },
-      );
+      aktiv: aktivFilter === "aktiv" ? true : aktivFilter === "inaktiv" ? false : undefined,
+
+      sortField: sorting[0]?.id,
+      sortDirection: sorting[0]?.desc ? "desc" : "asc",
+    },
+  );
 
       const newRows = res.content;
 
@@ -163,13 +163,13 @@ export default function PersonenScreen() {
   /* 🔄 INITIAL + SEARCH RESET */
   /* ========================================================= */
 
-  useEffect(() => {
-    cursorRef.current = null;
-    setRows([]);
-    hasMoreRef.current = true;
+ useEffect(() => {
+   cursorRef.current = null;
+   setRows([]);
+   hasMoreRef.current = true;
 
-    loadRef.current(); // ⭐ initial load
-  }, [debounceSearch, filterModel, sorting]);
+   loadRef.current();
+ }, [debounceSearch, filterModel, sorting, aktivFilter]);
 
   /* ========================================================= */
   /* 🔄 DETAIL */
@@ -244,27 +244,27 @@ export default function PersonenScreen() {
     loadRef.current();
   };
 
- const handleDelete = async () => {
-   if (!selectedId) return;
+  const handleDelete = async () => {
+    if (!selectedId) return;
 
-   try {
-     const deletedId = selectedId;
+    try {
+      const deletedId = selectedId;
 
-     await deletePerson(deletedId);
+      await deletePerson(deletedId);
 
-     setRows((prev) => prev.filter((p) => p.id !== deletedId));
-     setTotal((prev) => Math.max(0, prev - 1));
+      setRows((prev) => prev.filter((p) => p.id !== deletedId));
+      setTotal((prev) => Math.max(0, prev - 1));
 
-     setSelectedId(null);
-     setSelectedPerson(null);
-     setEditMode(false);
-     setEditData(null);
-   } catch (error: unknown) {
-     console.error("Fehler beim Löschen der Person", error);
+      setSelectedId(null);
+      setSelectedPerson(null);
+      setEditMode(false);
+      setEditData(null);
+    } catch (error: unknown) {
+      console.error("Fehler beim Löschen der Person", error);
 
-     setError(getApiErrorMessage(error, "Person konnte nicht gelöscht werden."));
-   }
- };
+      setError(getApiErrorMessage(error, "Person konnte nicht gelöscht werden."));
+    }
+  };
 
   useEffect(() => {
     setEditMode(false);
@@ -303,8 +303,43 @@ export default function PersonenScreen() {
           }}
         >
           <Paper sx={{ p: 2 }}>
-            <Box display="flex" gap={1} mb={2}>
-              <SearchField value={search} onChange={setSearch} />
+            <Box
+              display="flex"
+              gap={2}
+              mb={2}
+              alignItems="center"
+              sx={{
+                flexWrap: "nowrap",
+              }}
+            >
+              <Box
+                sx={{
+                  flex: 1,
+                  minWidth: 0,
+                }}
+              >
+                <SearchField value={search} onChange={setSearch} />
+              </Box>
+
+              <ToggleButtonGroup
+                value={aktivFilter}
+                exclusive
+                onChange={(_, value) => {
+                  if (value !== null) {
+                    setAktivFilter(value);
+                  }
+                }}
+                size="small"
+                sx={{
+                  flexShrink: 0,
+                }}
+              >
+                <ToggleButton value="aktiv">Aktiv</ToggleButton>
+
+                <ToggleButton value="alle">Alle</ToggleButton>
+
+                <ToggleButton value="inaktiv">Inaktiv</ToggleButton>
+              </ToggleButtonGroup>
             </Box>
 
             <GenericTableTanstack

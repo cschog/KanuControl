@@ -12,14 +12,6 @@ const apiClient = axios.create({
 ========================= */
 apiClient.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
-    // Wenn noch nicht authenticated → warten
-    if (!keycloak.authenticated) {
-      await keycloak.init({
-        onLoad: "login-required",
-        checkLoginIframe: false,
-      });
-    }
-
     // Token aktualisieren
     await keycloak.updateToken(30);
 
@@ -34,28 +26,22 @@ apiClient.interceptors.request.use(
 /* =========================
    RESPONSE INTERCEPTOR
 ========================= */
-
-
 apiClient.interceptors.response.use(
   (response) => {
     const body = response.data;
 
-    if (
-      body &&
-      typeof body === "object" &&
-      "data" in body &&
-      "warnings" in body
-    ) {
+    if (body && typeof body === "object" && "data" in body && "warnings" in body) {
       response.headers["x-api-warnings"] = JSON.stringify(body.warnings);
       response.data = body.data;
     }
+
     return response;
   },
   async (error) => {
     if (error.response?.status === 401) {
       try {
         await keycloak.updateToken(0);
-        return apiClient(error.config); // retry request
+        return apiClient(error.config);
       } catch {
         keycloak.login();
       }

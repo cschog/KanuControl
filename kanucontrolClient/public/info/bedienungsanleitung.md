@@ -1,401 +1,218 @@
+# KanuControl – Bedienungsanleitung V1.6.3
 
-# KanuControl – Bedienungsanleitung
+**Version:** 1.6.3  
+**Stand:** 21.09.2026
 
-## Einleitung
+## 1. Überblick
 
-KanuControl begleitet eine Veranstaltung über ihren gesamten Lebenszyklus – von der ersten Planung bis zur abschließenden Abrechnung. Alle Module bauen aufeinander auf, sodass Daten nur einmal erfasst werden müssen.
+KanuControl begleitet eine Veranstaltung über den gesamten Lebenszyklus – von der Erfassung der Stammdaten und der finanziellen Vorbereitung über Teilnehmer und laufende Abrechnung bis zur Auswertung und zum Finanzausgleich.
+
+Die Anwendung ist mandantenfähig. Im Startbereich wird der aktuell aktive Mandant angezeigt. Die allgemeinen Module und die Finanzmodule sind getrennt strukturiert.
+
+### Der grundsätzliche Ablauf
 
 ```text
-Verwaltung
+Verein / Personen
       │
       ▼
 Veranstaltung
       │
-      ▼
-Simulation
+      ├── Teilnehmer
       │
       ▼
-Planung
+Finanzen
+ ┌───────────────┐
+ │ Vorbereitung  │ → Simulation → Planung
+ ├───────────────┤
+ │ Durchführung  │ → Beiträge → Abrechnung → Fahrkosten → Konten
+ ├───────────────┤
+ │ Auswertung    │ → Dashboard → Finanzausgleich
+ └───────────────┘
       │
       ▼
-Förderanmeldung / PDF
-      │
-      ▼
-Teilnehmerverwaltung
-      │
-      ▼
-Beitragsverwaltung
-      │
-      ▼
-Finanzen & Buchungen
-      │
-      ▼
-Dokumente
-      │
-      ▼
-Abrechnung
+Dokumente / PDFs
 ```
 
-## Stammdaten
+## 2. Startmenü und Navigation
 
-Bevor Veranstaltungen angelegt werden, müssen die erforderlichen Stammdaten gepflegt werden. Diese bilden die Grundlage für alle weiteren Module.
+Nach der Anmeldung stehen im Startmenü die allgemeinen Module zur Verfügung:
 
-Dabei wird zwischen vereinsbezogenen und zentral verwalteten Stammdaten unterschieden.
+- **Vereine**
+- **Mitglieder** (nachdem es mind. einen Verein gibt)
+- **Veranstaltungen** (nachdem es mindestens eine Person gibt)
+- **Teilnehmer**
+- **Dokumente**
+- **Verwaltung**
 
-### Vereinsbezogene Stammdaten
+Zusätzlich stehen – sobald eine Veranstaltung vorhanden ist – die drei Finanzbereiche zur Verfügung:
 
-Diese Daten werden vom jeweiligen Verein gepflegt und stehen anschließend allen Veranstaltungen des Vereins zur Verfügung.
+- **Vorbereitung**
+- **Durchführung**
+- **Auswertung**
 
-Dazu gehören insbesondere:
+Die Finanzbereiche beziehen sich auf die aktuell ausgewählte Veranstaltung.
 
-- Beitragsstrukturen
-- Unterkunftsarten
-- Verpflegungsmodelle
-- Vereinsdaten
-- Personen (z. B. Veranstaltungsleitungen)
+Im Kopfbereich zeigt KanuControl außerdem den aktiven Mandanten sowie die Frontend- und Backend-Version an.
 
-> **Empfehlung:** Legen Sie vor der ersten Veranstaltung mindestens eine Beitragsstruktur, eine Unterkunftsart und ein Verpflegungsmodell an.
+## 3. Vereine
 
-### Zentral verwaltete Stammdaten
+### Verein anlegen
 
-Einige Stammdaten werden zentral gepflegt und stehen allen Vereinen automatisch zur Verfügung.
+Menü: **Vereine → Neuer Verein**
 
-Hierzu gehören beispielsweise:
-
-- Fördersätze (KJFP)
-- KiK-Zuschläge
-- Fahrtkostenpauschalen
-- Postleitzahlen
-
-Diese Daten werden in der Regel durch den Verband oder die Systemadministration gepflegt und müssen von den Vereinen nicht bearbeitet werden.
-
-## 1. Veranstaltung anlegen
-
-Am Anfang steht die Erfassung der Veranstaltung.
-
-Hier werden alle grundlegenden Informationen hinterlegt, beispielsweise:
-
-- Name der Veranstaltung
-- Veranstaltungsart
-- Beginn und Ende
-- Veranstaltungsort
-- Unterkunft
-- Verpflegungsmodell
-- Leitung
-- Beitragsstruktur
-
-Diese Daten bilden die Grundlage für alle weiteren Arbeitsschritte.
-
----
-
-## 2. Simulation
-
-Mit der Simulation wird die Veranstaltung finanziell geplant.
-
-Dabei können verschiedene Szenarien durchgespielt werden, beispielsweise:
-
-- unterschiedliche Teilnehmerzahlen
-- verschiedene Teilnehmerbeiträge
-- Unterkunfts- und Verpflegungskosten
-- Fahrtkosten
-- Honorare
-- Materialkosten
-- sonstige Kosten und Einnahmen
-
-Während der Eingabe berechnet KanuControl automatisch unter anderem:
-
-- Gesamtkosten
-- Gesamteinnahmen
-- KJFP-Förderung
-- KiK-Zuschlag
-- Eigenanteil
-
-Die Simulation kann beliebig oft verändert werden, ohne dass bereits gespeicherte Planungen überschrieben werden.
-
----
-
-## 3. Planung
-
-Die Planung dient der finanziellen Vorbereitung einer Veranstaltung.
-
-Während der Planung werden sämtliche erwarteten Einnahmen und Ausgaben erfasst und gegenübergestellt.
-
-### Kennzahlen
-
-Im oberen Bereich werden die wichtigsten Werte angezeigt.
-
-- Gesamtkosten
-- Gesamteinnahmen
-- Eigenanteil
-- KJFP-Zuschuss
-
-Diese Kennzahlen aktualisieren sich automatisch nach jeder Änderung.
-
-### Finanzübersicht
-
-Die Finanzübersicht fasst alle geplanten Einnahmen und Ausgaben nach Kategorien zusammen.
-
-Die Kosten werden beispielsweise unterteilt in:
-
-- Unterkunft
-- Verpflegung
-- Fahrtkosten
-- Verbrauchsmaterial
-- Honorare
-- Kultur
-- Miete
-- Sonstige Kosten
-
-Die Einnahmen umfassen unter anderem:
-
-- Teilnehmerbeiträge
-- KJFP-Zuschuss
-- Sonstige Einnahmen
-
-Die Übersicht ermöglicht eine schnelle Kontrolle der geplanten Finanzierung und hilft dabei, finanzielle Risiken frühzeitig zu erkennen.
-
-### Planung einreichen
-
-Nach Abschluss der Planung kann diese eingereicht werden.
-
-Vor dem Einreichen prüft KanuControl automatisch, ob alle erforderlichen Angaben vorhanden sind. Eventuelle Fehler oder fehlende Daten werden angezeigt und können vor dem Einreichen korrigiert werden.
-
-Beim erneuten Öffnen werden diese Daten wieder geladen und stehen für die weitere Bearbeitung zur Verfügung.
-
----
-
-## 4. Förderanmeldung und PDF-Erzeugung
-
-Die gespeicherte Planung dient als Grundlage für die automatische Erstellung der Förderunterlagen.
-
-Alle erforderlichen Werte werden direkt aus der Planung übernommen.
-
-Dadurch müssen die Daten nicht erneut eingegeben werden und die Unterlagen entsprechen immer dem aktuellen Planungsstand.
-
----
-
-## 5. Teilnehmerverwaltung
-
-Nach der Genehmigung bzw. während der Vorbereitung der Veranstaltung können die Teilnehmer verwaltet werden.
-
-Dabei werden unter anderem erfasst:
-
-- Teilnehmer
-- Mitarbeiter
-- Beiträge
-- Zahlungsstatus
-
-Die Teilnehmerverwaltung bildet gleichzeitig die Grundlage für die spätere finanzielle Abrechnung.
-
----
-
-## 6. Finanzen und Buchungen
-
-Alle Einnahmen und Ausgaben der Veranstaltung werden als Buchungen erfasst.
-
-Hierzu gehören beispielsweise:
-
-- Teilnehmerbeiträge
-- Fördermittel
-- Unterkunft
-- Verpflegung
-- Fahrtkosten
-- Honorare
-- Materialkosten
-- sonstige Einnahmen und Ausgaben
-
-Die Finanzübersicht zeigt jederzeit den aktuellen Stand der Veranstaltung.
-
-### Konten
-
-Konten dienen dazu, Teilnehmer zusammenzufassen.
-
-Typische Anwendungsfälle sind:
-- Familien
-- Geschwister
-- Vereinsgruppen
-- Sammelzahler
-
-Teilnehmer können einem Konto zugeordnet werden.
-
-Buchungen werden immer einem Konto zugewiesen.
-
-Die Konten bilden die technische Grundlage für zukünftige Erweiterungen der Finanzverwaltung.
-
-### Finanzkategorien
-
-Jede Buchung wird einer Finanzkategorie zugeordnet.
-
-Beispiele:
-- Unterkunft
-- Verpflegung
-- Fahrtkosten
-- Honorare
-- Verbrauchsmaterial
-- Kultur
-- Miete
-- Teilnehmerbeiträge
-- Sonstige Einnahmen
-- Sonstige Kosten
-
-Dadurch entstehen später aussagekräftige Auswertungen.
-
----
-
-## 7. Abrechnung
-
-Nach Abschluss der Veranstaltung erfolgt die endgültige Abrechnung.
-
-Dabei werden die tatsächlichen Einnahmen und Ausgaben den geplanten Werten gegenübergestellt.
-
-Die Abrechnung bildet die Grundlage für:
-
-- den Verwendungsnachweis,
-- die Dokumentation der Veranstaltung,
-- die Auswertung der Wirtschaftlichkeit.
-
-## Finanzübersicht
-
-Unterhalb der Belegverwaltung befindet sich die Finanzübersicht.
-
-Hier werden sämtliche Buchungen automatisch nach Finanzkategorien zusammengefasst.
-
-Die Übersicht ist in zwei Bereiche gegliedert:
-
-### Kosten
-
-- Unterkunft
-- Verpflegung
-- Fahrtkosten
-- Verbrauchsmaterial
-- Honorare
-- Miete
-- ...
-
-### Einnahmen
-
-- Teilnehmerbeiträge
-- Zuschüsse
-- Pfand
-- Sonstige Einnahmen
-
-Dadurch erhält der Veranstaltungsleiter jederzeit einen schnellen Überblick über die finanzielle Situation der Veranstaltung.
-
----
-
-# Vorteile des durchgängigen Workflows
-
-Der größte Vorteil von KanuControl besteht darin, dass Daten nur einmal erfasst werden müssen.
-
-Informationen werden automatisch zwischen den Modulen übernommen:
-
-- Veranstaltung → Simulation
-- Simulation → Planung
-- Planung → Förderanmeldung (PDF)
-- Planung → Teilnehmerverwaltung
-- Teilnehmerverwaltung → Finanzen
-- Finanzen → Abrechnung
-
-Dadurch werden Eingabefehler vermieden, der Verwaltungsaufwand reduziert und alle Module greifen jederzeit auf einen konsistenten Datenbestand zu.
-
----
-
-# Schnellstart
-
-## 1. Verein anlegen
-
-Bevor mit KanuControl gearbeitet werden kann, muss zunächst ein Verein angelegt werden.
-
-Menü:
-**Vereine → Neu**
-
-Erfassen Sie alle erforderlichen Stammdaten des Vereins, insbesondere:
+Hier werden die Stammdaten des Vereins erfasst, insbesondere:
 
 - Vereinsname
 - Anschrift
+- Kontaktdaten
 - Bankverbindung
-- Ansprechpartner
+- Kontoinhaber
 
-Nach dem Speichern steht der Verein für weitere Arbeitsschritte zur Verfügung.
+Ein Verein bildet die Grundlage für Personen, Veranstaltungen und die zugehörigen Stammdaten.
 
----
+### Verein bearbeiten
 
-## 2. Mitglieder erfassen
+Bestehende Vereine können geöffnet, geändert, kopiert und gelöscht werden. Über die Vereinsbearbeitung steht außerdem der **CSV-Import** zur Verfügung.
 
-Für Veranstaltungen müssen zunächst Personen bzw. Mitglieder angelegt werden.
+## 4. Personen und Mitglieder
 
-Hierfür gibt es zwei Möglichkeiten:
+Menü: **Mitglieder**
 
-### Direkte Erfassung
+Personen können einzeln angelegt und anschließend einem oder mehreren Vereinen zugeordnet werden.
 
-Menü:
-**Mitglieder**
+Typische Personendaten sind:
 
-Neue Personen können einzeln erfasst und gespeichert werden.
+- Name und Vorname
+- Geburtsdatum
+- Geschlecht
+- Anschrift
+- Postleitzahl und Ort
+- Kontaktdaten
+
+Für Veranstaltungen sind insbesondere Geburtsdatum und Anschrift wichtig, da diese Daten unter anderem für Teilnehmerlisten und Förderunterlagen benötigt werden.
 
 ### CSV-Import
 
-Menü:
+Über die Vereinsbearbeitung können größere Personenbestände per CSV importiert werden.
 
-**Vereine → Verein bearbeiten → CSV-Import**
+Der Import unterstützt eine Mapping-Datei. Damit können die Spalten einer vorhandenen CSV-Datei den von KanuControl erwarteten Feldern zugeordnet werden.
 
-Über den CSV-Import können größere Mitgliederbestände schnell übernommen werden. Dazu kann eine Beispiel CSV -Mapping Datei heruntergeladen werden, die auch angepasst werden kann.
+Empfohlener Ablauf:
 
-Nach dem Import stehen die Personen sofort für Veranstaltungen zur Verfügung.
+1. Verein öffnen.
+2. **CSV importieren** auswählen.
+3. CSV-Datei auswählen.
+4. Mapping-Datei auswählen bzw. die Zuordnung anpassen.
+5. Import starten.
+6. Importbericht und eventuelle Fehler prüfen.
 
----
+## 5. Veranstaltungen
 
-## 3. Veranstaltung anlegen
+Menü: **Veranstaltungen → Neue Veranstaltung**
 
-Menü:
-**Veranstaltungen**
+Eine Veranstaltung enthält die organisatorischen und finanziellen Rahmendaten einer Maßnahme.
 
-Für jede Maßnahme oder Fahrt wird eine Veranstaltung angelegt.
-
-Erfasst werden unter anderem:
+Dazu gehören unter anderem:
 
 - Veranstaltungsname
-- Zeitraum
+- Veranstaltungsart
+- Beginn und Ende
 - Veranstaltungsort
-- Veranstaltungsleitung
-- Verein
+- Leitung
+- Unterkunftsart
+- Verpflegungsmodell
+- Beitragsstruktur bzw. individuelle Gebühren
+- weitere veranstaltungsbezogene Angaben
 
-Anschließend können Teilnehmer hinzugefügt werden.
+### Veranstaltung kopieren
+
+Bestehende Veranstaltungen können als Vorlage kopiert werden. Das erleichtert die Anlage wiederkehrender Veranstaltungen.
+
+### Aktive Veranstaltung
+
+KanuControl ist immer eine Veranstaltung als aktiv gekennzeichnet. Alle Funktionen – insbesondere Teilnehmer und Dokumente – beziehen sich auf die aktuell aktive Veranstaltung.
+
+## 6. Teilnehmer
+
+Menü: **Teilnehmer** bzw. Teilnehmerverwaltung innerhalb einer Veranstaltung
+
+Personen werden einer Veranstaltung als Teilnehmer oder Mitarbeiter zugeordnet.
+
+Bei der Teilnehmerverwaltung können insbesondere Rollen und veranstaltungsbezogene Daten gepflegt werden.
+
+Die Teilnehmerdaten bilden die Grundlage für:
+
+- Teilnehmerlisten
+- Förderunterlagen
+- Teilnehmerbeiträge
+- Finanzgruppen/Konten
+- spätere Abrechnung und Auswertung
+
+Fehlende oder unvollständige Personendaten sollten möglichst früh ergänzt werden.
+
+## 7. Finanzen – neue Struktur
+
+Die Finanzverwaltung von KanuControl V1.6.3 ist in drei Bereiche gegliedert.
+
+### Vorbereitung
+
+- **Simulation**
+- **Planung**
+
+### Durchführung
+
+- **Beiträge**
+- **Abrechnung**
+- **Fahrkosten**
+- **Konten**
+
+### Auswertung
+
+- **Dashboard**
+- **Finanzausgleich**
+
+Die Planung wird im Menü nur angezeigt, wenn für die Veranstaltung bereits eine Planung vorhanden ist bzw. die entsprechende Funktion verfügbar ist.
 
 ---
 
-## 4. Teilnehmer verwalten
+# 8. Finanzen – Vorbereitung
 
-Teilnehmer werden einer Veranstaltung zugeordnet.
+## 8.1 Simulation
 
-Für die Erstellung von Teilnehmerlisten und Förderunterlagen sollten die Personendaten möglichst vollständig gepflegt sein.
+Die Simulation dient dazu, die Finanzierung einer Veranstaltung vor der verbindlichen Planung durchzuspielen.
 
-Insbesondere sind Geburtsdaten und Postleitzahlen erforderlich.
+Verändert werden können – abhängig von der Veranstaltung – beispielsweise:
 
----
+- Teilnehmer- und Mitarbeiterzahlen
+- Teilnehmerbeiträge
+- Unterkunft
+- Verpflegung
+- Fahrtkosten
+- Honorare
+- Verbrauchsmaterial
+- Kulturprogramm
+- Miete
+- Pfand
+- sonstige Kosten
+- sonstige Einnahmen
+- KJFP-Förderung
+- KiK-Zuschlag
 
-## 5. Planung
+Die Simulation berechnet die finanziellen Auswirkungen unmittelbar neu.
 
-### Planung einer Veranstaltung
+### KiK
 
-Die Planung dient dazu, die Ergebnisse einer Simulation dauerhaft für eine Veranstaltung zu übernehmen. Sie bildet die Grundlage für den späteren Förderantrag sowie für die Erstellung der Anmeldeunterlagen.
+Die Simulation berücksichtigt das KiK-Zertifikat des Vereins. Das Vorhandensein eines gültigen KiK-Zertifikats kann in der Simulation berücksichtigt bzw. simuliert werden.
 
-#### Ablauf
+Der KiK-Zuschlag wird anhand der in KanuControl hinterlegten gültigen Daten berechnet.
 
-1. Wählen Sie zunächst die gewünschte Veranstaltung aus.
-2. Führen Sie eine Simulation durch und passen Sie alle relevanten Werte an (Teilnehmerzahl, Beiträge, Unterkunft, Verpflegung, Fahrtkosten usw.).
-3. Übernehmen Sie die Simulation in die Planung.
-4. Speichern Sie die Planung.
+## 8.2 Planung
 
-Alle Planungsdaten werden dauerhaft zur Veranstaltung gespeichert.
+Die Planung übernimmt die Ergebnisse der Simulation in die dauerhaft gespeicherte Veranstaltungsplanung.
 
-> **Hinweis:** Bereits gespeicherte Planungen werden beim erneuten Öffnen wieder geladen. Die eingegebenen Werte bleiben somit erhalten und werden nicht durch Standardwerte ersetzt.
+Die Planung enthält unter anderem:
 
-### Gespeicherte Planungsdaten
-
-Die Planung speichert unter anderem:
-
-- Anzahl der Teilnehmer und Mitarbeiter
+- Teilnehmer- und Mitarbeiterzahlen
 - Teilnehmerbeiträge
 - Unterkunftskosten
 - Verpflegungskosten
@@ -405,222 +222,357 @@ Die Planung speichert unter anderem:
 - Kulturprogramm
 - Miete
 - Pfand
-- Sonstige Kosten
-- Sonstige Einnahmen
-- Fördermittel (KJFP)
-- KiK-Zuschlag (falls vorhanden)
+- sonstige Kosten und Einnahmen
+- KJFP-Förderung
+- KiK-Zuschlag, sofern vorhanden
 - Eigenanteil
 - Gesamtkosten und Gesamteinnahmen
 
-Damit entspricht die Planung dem zum Zeitpunkt der Antragstellung erwarteten Finanzierungsplan der Veranstaltung.
-
-### Zusammenhang zwischen Simulation und Planung
-
-Simulation und Planung erfüllen unterschiedliche Aufgaben:
+### Simulation und Planung
 
 | Simulation | Planung |
-|------------|----------|
-| Beliebig oft veränderbar | Dauerhaft gespeichert |
-| Dient zum Ausprobieren verschiedener Szenarien | Enthält die beschlossene Planung |
-| Änderungen wirken sich nicht auf gespeicherte Daten aus | Grundlage für die weitere Bearbeitung |
+|---|---|
+| Zum Ausprobieren verschiedener Szenarien | Verbindliche gespeicherte Planung |
+| Kann beliebig verändert werden | Wird dauerhaft zur Veranstaltung gespeichert |
+| Keine Änderung bereits gespeicherter Planung | Grundlage für die weitere Verarbeitung |
 
-Die Simulation dient somit als Planungswerkzeug, während die Planung die verbindlichen Daten der Veranstaltung enthält.
-
-### Verwendung der Planungsdaten
-
-Die gespeicherten Planungsdaten werden im weiteren Verlauf des Arbeitsablaufs mehrfach verwendet.
-
-Sie bilden unter anderem die Grundlage für:
-
-- die Erstellung der Förderanmeldung,
-- die automatische Erzeugung der Anmelde-PDFs,
-- die Berechnung der Fördermittel,
-- die spätere finanzielle Abrechnung der Veranstaltung.
-
-Dadurch müssen die Daten nur einmal erfasst werden und stehen während des gesamten Lebenszyklus einer Veranstaltung konsistent zur Verfügung.
-
-## 6. Konten für Kosten und Einnahmen anlegen
-
-Menü:
-**Finanzen**
-
-Alle Ist-Kosten und Ist-Einnahmen werden über Konten erfasst.
-
-Vor der Erfassung von Belegen muss daher mindestens Konto angelegt werden.
-
-Ein Konto dient der Zuordnung von Kosten und Einnahmen zu einer bestimmten Personengruppe oder Kostenstelle.
-
-Jedem Konto können eine oder mehrere Personen zugeordnet werden.
-
-Das Konto VK (Vereinskonto) gehört dem System/KanuControl und wird für automatisch berechnete Beträge, wie KJFP-Zuschuss und Teilnehmer-Beiträge verwendet.
+Die gespeicherte Planung wird im weiteren Ablauf unter anderem für Förderunterlagen und die finanzielle Weiterverarbeitung verwendet.
 
 ---
 
-## 7. Abrechnung
+# 9. Finanzen – Durchführung
 
-Über den Menüpunkt **Abrechnung** werden sämtliche Einnahmen und Ausgaben einer Veranstaltung verwaltet.
+## 9.1 Beiträge
 
-Die Abrechnung besteht aus mehreren Bereichen:
+Menü: **Finanzen → Durchführung → Beiträge**
 
-- Finanz-Dashboard mit den wichtigsten Kennzahlen
-- Verwaltung der Belege
-- Erfassung einzelner Buchungen
-- Übersicht nach Finanzkategorien
-- Auswertung der Gesamteinnahmen und Gesamtausgaben
+Hier werden die Teilnehmerbeiträge der Veranstaltung verwaltet.
 
-Dadurch kann jederzeit nachvollzogen werden, wie sich die Kosten einer Veranstaltung zusammensetzen.
+KanuControl kann Beiträge auf Basis eines festen Beitrags oder einer Beitragsstruktur berechnen.
 
----
+### Beitragsstrukturen
 
-## 8. Fahrkosten erfassen
+Eine Beitragsstruktur besteht aus Regeln. Eine Regel kann insbesondere festlegen:
 
-Menü:
-**Finanzen → Fahrkosten**
-
-Fahrtkosten können separat erfasst werden.
-
-Hierzu werden unter anderem gespeichert:
-
-- Fahrer
-- Mitfahrer
-- Strecke
-- Kilometer
-- Erstattungsbetrag
-
-Die berechneten Fahrkosten werden summiert im Finanz-Dashboard und bei den Buchungen berücksichtigt.
-
-Für jede Fahrkostenabrechnung kann später ein PDF erzeugt werden.
-
----
-
-## 9. Beitragsstrukturen verwalten
-
-Menü:  
-**Verwaltung → Beitragsstrukturen**
-
-Mit Beitragsstrukturen können individuelle Teilnehmerbeiträge für Veranstaltungen erstellt werden.
-
-Eine Beitragsstruktur besteht aus einer oder mehreren Regeln. Jede Regel definiert einen Beitrag für eine bestimmte Altersgruppe und optional für eine bestimmte Rolle (z. B. Teilnehmer oder Mitarbeiter).
-
-Für jede Regel werden folgende Angaben festgelegt:
-
-- Alter von
-- Alter bis
+- Altersbereich
 - Rolle
 - Beitrag
 
-Die Regeln werden bei der Berechnung der Teilnehmerbeiträge automatisch ausgewertet. KanuControl ordnet jedem Teilnehmer anhand seines Alters und seiner Rolle den passenden Beitrag zu.
+Damit können beispielsweise unterschiedliche Beiträge für Teilnehmer und Mitarbeiter oder für verschiedene Altersgruppen hinterlegt werden.
 
-Eine Beitragsstruktur kann beliebig viele Regeln enthalten und für mehrere Veranstaltungen verwendet werden.
+### Zahlungsnachweise
 
-Nach Änderungen einer Beitragsstruktur können die Teilnehmerbeiträge jederzeit neu berechnet werden.
+Zahlungseingänge werden über **Zahlungsnachweise** dokumentiert.
 
-Dadurch lassen sich Änderungen an Altersgruppen oder Beitragssätzen ohne manuellen Aufwand übernehmen.
+Bei einem Zahlungsnachweis werden unter anderem Zahlungsweg, Betrag und die zugehörigen Teilnehmer bzw. Zahlungspositionen erfasst. Zu einem Zahlungsnachweis können Dokumente hinterlegt werden.
 
-### Beitragsstruktur einer Veranstaltung zuordnen
+### Überweisung und Quittung
 
-Menü:  
-**Veranstaltungen → Veranstaltung bearbeiten**
+KanuControl unterscheidet zwischen zwei Zahlungswegen:
 
-Im Feld **Beitragsstruktur** kann eine zuvor angelegte Struktur ausgewählt werden, wenn die Option **Individuelle Gebühren** aktiviert worden ist.
+**Überweisung:** Der Beitrag wird dem Vereinskonto (VK) zugerechnet.
 
-Nach der Zuordnung berechnet KanuControl die Teilnehmerbeiträge automatisch für alle der Veranstaltung zugeordneten Personen.
+**Quittung:** Der Beitrag wird grundsätzlich als Guthaben dem Teilnehmerkonto/TN-Konto zugerechnet.
 
-### Teilnehmerbeiträge verwalten
+Bei einer Quittung werden zunächst die geschuldeten Teilnehmerbeiträge berücksichtigt. Weitere vom TN-Konto verauslagte Veranstaltungskosten können zu einem negativen Saldo und damit zu einem Erstattungsanspruch führen.
 
-Menü:  
-**Finanzen → Beiträge**
+**Wichtig:** Übergibt ein Teilnehmer seinen Beitrag gegen Quittung an die Veranstaltungsleitung, wird der Betrag finanziell als Quittung der Veranstaltungsleitung zugerechnet.
 
-Im Bereich **Beiträge** werden alle Teilnehmer mit ihrem festgelegten Beitrag angezeigt. Das sind entweder ein Beitrag, der für jeden Teilnehmer gilt oder die zugeordnete Beitragsstruktur.
+### Überzahlungen
 
-Zusätzlich können hier:
+KanuControl erkennt offene Überzahlungen. Diese können geprüft und – sofern erforderlich – über die Funktion **Rückzahlung** verarbeitet werden.
 
-- Zahlungseingänge erfasst
-- offene Beträge überwacht
-- Gesamtsummen kontrolliert
+### Rückzahlungen
 
-werden.
+Eine Rückzahlung eines Teilnehmerbeitrags wird mit dem ursprünglichen Zahlungsnachweis verknüpft. Dadurch bleibt nachvollziehbar, auf welchen Zahlungseingang sich die Rückzahlung bezieht.
 
-KanuControl berechnet automatisch die Summe der Teilnehmerbeiträge sowie die offenen und bereits bezahlten Beträge der Veranstaltung.
+Rückzahlungen werden bei der Finanzberechnung berücksichtigt und vermindern den ursprünglich eingegangenen Betrag entsprechend dem Zahlungsweg.
 
-### Zahlungswege: Überweisung und Quittung
+## 9.2 Abrechnung
 
-Bei der Erfassung eines Teilnehmerbeitrags ist der **Zahlungsweg** wichtig, weil **Überweisung** und **Quittung** in KanuControl unterschiedliche finanzielle Bedeutungen haben.
+Menü: **Finanzen → Durchführung → Abrechnung**
 
-#### Überweisung
+Die Abrechnung dient zur Erfassung der tatsächlichen Kosten und Einnahmen.
 
-Bei einer **Überweisung** wird der Teilnehmerbeitrag dem **Vereinskonto (VK)** zugeführt. Der Betrag steht damit unmittelbar dem Verein zur Verfügung und erhöht nicht das Guthaben des Teilnehmerkontos.
+### Belege
 
-**Beispiel:** Ein Teilnehmer überweist 100 €. Diese 100 € gehen auf das VK-Konto.
+Für einen Beleg können unter anderem erfasst werden:
 
-#### Quittung
+- Datum
+- Belegnummer
+- Aussteller
+- Beschreibung
+- Summe
+- Finanzgruppe/Konto
+- Positionen
+- Dokumente
 
-Bei einer **Quittung** wird der Teilnehmerbeitrag grundsätzlich als **Guthaben auf dem Teilnehmerkonto (TN-Konto)** erfasst.
+Dokumente können Fotos und PDF-Dateien sein. Ein Foto einer Rechnung muss **IMMER** im Querformat aufgenommen werden.
 
-Von diesem Guthaben werden zunächst die für die Veranstaltung zu zahlenden **Teilnehmerbeiträge** abgezogen. Zusätzlich werden die Ausgaben berücksichtigt, die Mitglieder des TN-Kontos für die Veranstaltung bezahlt oder verauslagt haben, zum Beispiel:
+### Buchungen
 
-- Lebensmittel
-- Eintrittskarten
-- sonstige für die Veranstaltung verauslagte Kosten
+Eine Buchung wird einer Finanzkategorie und einem Konto bzw. einer Finanzgruppe zugeordnet. Die Herkunft der Buchung wird gespeichert, sodass automatisch erzeugte und manuell erfasste Buchungen unterschieden werden können.
 
-Der Saldo des TN-Kontos zeigt damit, ob die eingezahlten Teilnehmerbeiträge zusammen mit den bereits vorhandenen Mitteln ausreichen, um sowohl die geschuldeten Teilnehmerbeiträge als auch die von Mitgliedern des TN-Kontos verauslagten Kosten zu decken.
+Die Finanzkategorien trennen **Kosten** und **Einnahmen**.
 
-**Beispiel:**
+Beispiele für Kosten:
 
-- Quittungen / Guthaben (Teilnehmerbeiträge) auf dem TN-Konto: **800 €**
-- zu zahlende Teilnehmerbeiträge: **800 €**
-- Ausgaben eines Mitglieds des TN-Kontos, z. B. für Lebensmittel: **150 €**
-- **Saldo des TN-Kontos: -150 €**
+- Unterkunft
+- Verpflegung
+- Fahrtkosten
+- Honorare
+- Verbrauchsmaterial
+- Kultur
+- Miete
+- sonstige Kosten
 
-In diesem Beispiel gleichen die Quittungen zunächst genau die zu zahlenden Teilnehmerbeiträge aus. Das Mitglied des TN-Kontos hat darüber hinaus **150 € für die Veranstaltung ausgegeben**.
+Beispiele für Einnahmen:
 
-Der negative Saldo von **-150 €** bedeutet daher, dass dem TN-Konto noch **150 € zustehen**. Dieser Betrag wird später im Rahmen des **Finanzausgleichs** vom **Vereinskonto (VK)** an das TN-Konto erstattet.
+- Teilnehmerbeiträge
+- Zuschüsse
+- Pfand
+- sonstige Einnahmen
 
-**Hat das TN-Konto keine zusätzlichen Ausgaben, beträgt der Saldo bei einem vollständig ausgeglichenen Teilnehmerbeitrag 0 €.**
+## 9.3 Fahrkosten
 
-> **Merksatz:** Quittungen dienen zunächst dazu, die geschuldeten Teilnehmerbeiträge auszugleichen. Erst zusätzliche Ausgaben, die Mitglieder des TN-Kontos für die Veranstaltung verauslagt haben, führen zu einem negativen Saldo und damit zu einem Erstattungsanspruch gegenüber dem Vereinskonto.
+Menü: **Finanzen → Durchführung → Fahrkosten**
 
-#### Sonderfall: Quittung mit tatsächlicher Geldübergabe an die Leitung
+Fahrkosten werden separat erfasst und können anschließend in die finanzielle Auswertung einfließen.
 
-Entscheidend ist nicht allein, dass eine Quittung ausgestellt wurde, sondern **wer das Geld nach der Zahlung tatsächlich besitzt**.
+Eine Reisekostenabrechnung kann insbesondere enthalten:
 
-Übergibt ein Teilnehmer das Geld physisch an die Veranstaltungsleitung und erhält dafür eine Quittung, hat der Teilnehmer das Geld anschließend nicht mehr selbst zur Verfügung. In diesem Fall wird der Teilnehmerbeitrag finanziell **wie eine Überweisung** behandelt und dem **Vereinskonto (VK)** zugerechnet – nicht als Guthaben auf dem TN-Konto.
+- Fahrer
+- Mitfahrer
+- Fahrtabschnitte
+- Strecke
+- Kilometer
+- wurde ein Vereins-Hänger gezogen
+- Erstattungsbetrag
 
-> **Merksatz:** Eine Quittung führt nur dann zu Guthaben auf dem TN-Konto, wenn das Geld beim Teilnehmer bzw. bei dessen TN-Konto verbleibt. Wird das Geld an die Leitung übergeben, wird der Beitrag finanziell wie eine Überweisung behandelt.
+Für Reisekostenabrechnungen können PDFs erzeugt werden.
 
-Diese Unterscheidung ist wichtig, damit der spätere **Finanzausgleich** korrekt berechnet wird und nur tatsächlich vom TN-Konto verauslagte Beträge vom VK erstattet werden.
+## 9.4 Konten / Finanzgruppen
+
+Menü: **Finanzen → Durchführung → Konten**
+
+Konten werden in KanuControl als **Finanzgruppen** geführt.
+
+Eine Finanzgruppe fasst Teilnehmer zusammen, deren Zahlungen und Ausgaben gemeinsam betrachtet werden sollen, beispielsweise:
+
+- Familien
+- Geschwister
+- Sammelzahler
+- sonstige Teilnehmergruppen
+
+Teilnehmer können einer Finanzgruppe zugeordnet werden. Buchungen, Zahlungsnachweise und weitere Finanzdaten können einer Finanzgruppe zugeordnet sein.
+
+Für den späteren Finanzausgleich ist eine korrekte Zuordnung besonders wichtig.
+
+Das Systemkonto **VK** steht für das Vereinskonto. Es wird für vereinsbezogene bzw. systemisch zugeordnete Finanzbewegungen verwendet.
 
 ---
 
-## 10. PDF-Dokumente erzeugen
+# 10. Finanzen – Auswertung
 
-Menü:
-**Dokumente**
+## 10.1 Dashboard
 
-KanuControl kann verschiedene PDF-Dokumente erzeugen.
+Menü: **Finanzen → Auswertung → Dashboard**
 
-Verfügbare Dokumente:
+Das Finanz-Dashboard stellt Planung und Ist-Zahlen gegenüber.
 
-- Anmeldung (FM/JEM)
-- Abrechnung (FM/JEM)
+Es zeigt unter anderem:
+
+- geplante Kosten
+- tatsächliche Kosten
+- Differenz Kosten
+- geplante Einnahmen
+- tatsächliche Einnahmen
+- Differenz Einnahmen
+- geplanter Saldo
+- tatsächlicher Saldo
+- Differenz Saldo
+
+Zusätzlich werden Kosten und Einnahmen nach Finanzkategorien aufgeschlüsselt.
+
+Damit lässt sich schnell erkennen, wo die tatsächlichen Werte von der Planung abweichen.
+
+## 10.2 Finanzausgleich
+
+Menü: **Finanzen → Auswertung → Finanzausgleich**
+
+Der Finanzausgleich stellt die finanzielle Situation der einzelnen Finanzgruppen dem Vereinskonto gegenüber.
+
+Für eine Finanzgruppe werden unter anderem angezeigt:
+
+- Soll-Beiträge
+- Überweisungen
+- Quittungen
+- Ausgaben
+- Fahrtkosten
+- Ausgleich/Erstattung
+
+Das VK-Konto wird gesondert betrachtet.
+
+### Prüfung vor dem Ausgleich
+
+KanuControl prüft insbesondere:
+
+- ob Finanzgruppen konsistent sind
+- ob Teilnehmer korrekt Finanzgruppen zugeordnet sind
+- ob Beiträge fehlen
+- ob Überzahlungen vorhanden sind
+
+Mögliche Gesamtstatus sind:
+
+- **OK**
+- **FINANZGRUPPEN_ABWEICHUNG**
+- **BEITRAEGE_FEHLEN**
+- **UEBERZAHLUNG**
+
+Bei einer Abweichung sollte zunächst die Ursache korrigiert werden, bevor der Finanzausgleich als abgeschlossen betrachtet wird.
+
+### Fachliche Zuordnung der Zahlungen
+
+Bei **Quittungen** ist die Finanzgruppe des Zahlungsnachweises maßgeblich.
+
+Bei **Überweisungen** wird die Finanzgruppe des zugehörigen Teilnehmers berücksichtigt.
+
+Rückzahlungen werden beim jeweiligen Zahlungsweg berücksichtigt.
+
+### Nachweis
+
+Für den Finanzausgleich kann ein Nachweis erzeugt und zugehörige Dokumentation verwaltet werden.
+
+---
+
+# 11. Dokumente und PDF-Erzeugung
+
+Menü: **Dokumente**
+
+KanuControl stellt abhängig von der Veranstaltung und den vorhandenen Daten verschiedene Dokumente bereit.
+
+Dazu gehören unter anderem:
+
+- Anmeldung FM/JEM
+- Abrechnung FM/JEM
 - Teilnehmerliste
 - Erhebungsbogen
-- Reisekostenabrechnung(en)
+- Reisekostenabrechnungen
+- Zahlungsnachweise
+- Nachweis zum Finanzausgleich
 
-Vor der Erstellung prüft KanuControl, ob alle erforderlichen Daten vorhanden sind.
+Vor der PDF-Erzeugung werden die erforderlichen Daten geprüft. Fehlende Angaben werden angezeigt und müssen vor der Erstellung ergänzt werden.
 
-Fehlende Angaben werden angezeigt und müssen zunächst ergänzt werden bevor das entsprechende PDF erzeugt werden kann.
+## Digitale Belege
+
+Belegdokumente können als Foto oder PDF gespeichert werden. Dokumente können angezeigt, heruntergeladen und gelöscht werden.
+
+## Zahlungsnachweis-Dokumente
+
+Auch Zahlungsnachweise können mit Dokumenten versehen werden. Dadurch lassen sich beispielsweise Überweisungsbelege oder Quittungen direkt beim Zahlungsvorgang dokumentieren.
 
 ---
 
-## Empfohlene Reihenfolge
+# 12. Verwaltung
 
-1. Verein anlegen
-2. Mitglieder erfassen oder importieren
-3. Veranstaltung anlegen
-4. Teilnehmer zuordnen
-5. Finanzplanung erfassen
-6. Kürzel anlegen
-7. Ist-Kosten und Ist-Einnahmen erfassen
-8. Reisekosten erfassen
-9. PDF-Dokumente erzeugen
+Menü: **Verwaltung**
+
+Hier werden vereinsbezogene bzw. allgemeine Stammdaten gepflegt.
+
+Dazu gehören insbesondere:
+
+- Beitragsstrukturen
+- Unterkunftsarten
+- Verpflegungsmodelle
+
+Zentrale Verwaltungsdaten wie Förder- und KiK-Daten sowie Postleitzahlen werden über die Administration gepflegt.
+
+## 12.1 Administration
+
+Administratoren haben zusätzliche Bereiche zur Verfügung, unter anderem:
+
+- Postleitzahlen
+- Fördersätze
+- KiK-Zuschläge
+- Reisekosten-Konfiguration
+- Audit / Sitzungen
+- Audit-Historie
+
+Diese Funktionen sind nicht für die normale Veranstaltungsbearbeitung erforderlich.
+
+---
+
+# 13. Empfohlene Reihenfolge
+
+Für eine neue Veranstaltung empfiehlt sich folgende Reihenfolge:
+
+1. Verein anlegen bzw. prüfen.
+2. Personen/Mitglieder erfassen oder per CSV importieren.
+3. Stammdaten wie Beitragsstrukturen, Unterkunft und Verpflegung prüfen.
+4. Veranstaltung anlegen.
+5. Teilnehmer und Mitarbeiter zuordnen.
+6. Finanzielle **Simulation** durchführen.
+7. Simulation in die **Planung** übernehmen und speichern.
+8. Teilnehmerbeiträge prüfen.
+9. Für die Durchführung die **Konten/Finanzgruppen** anlegen und Teilnehmer zuordnen.
+10. Zahlungsnachweise erfassen.
+11. Belege und tatsächliche Buchungen erfassen.
+12. Fahrkosten erfassen.
+13. Finanz-Dashboard kontrollieren.
+14. Vor dem Finanzausgleich die Finanzgruppen und Beiträge prüfen.
+15. **Finanzausgleich** durchführen bzw. kontrollieren.
+16. Benötigte PDFs und Nachweise erzeugen.
+
+---
+
+# 14. Wichtige Grundregeln
+
+### Planung und Ist-Abrechnung trennen
+
+Die Planung beschreibt die erwartete Finanzierung. Die Abrechnung und das Dashboard zeigen die tatsächlichen Werte.
+
+### Finanzgruppen frühzeitig zuordnen
+
+Teilnehmer sollten vor der finanziellen Auswertung einer passenden Finanzgruppe zugeordnet sein.
+
+### Zahlungsweg korrekt erfassen
+
+Die Unterscheidung zwischen Überweisung und Quittung beeinflusst die Zuordnung zum VK bzw. TN-Konto und damit den späteren Finanzausgleich.
+
+### Belege digital hinterlegen
+
+Wenn möglich sollten Belege direkt beim Erfassen als PDF oder Bild hinterlegt werden. Dadurch bleiben Buchung und Nachweis zusammen.
+
+### Überzahlungen prüfen
+
+Offene Überzahlungen sollten vor dem Abschluss der Veranstaltung kontrolliert und gegebenenfalls über Rückzahlungen verarbeitet werden.
+
+---
+
+# 15. Kurzfassung des Workflows
+
+```text
+Stammdaten
+   ↓
+Veranstaltung
+   ↓
+Teilnehmer
+   ↓
+Simulation
+   ↓
+Planung
+   ↓
+Beiträge / Zahlungsnachweise
+   ↓
+Konten / Finanzgruppen
+   ↓
+Belege / Buchungen / Fahrkosten
+   ↓
+Dashboard
+   ↓
+Finanzausgleich
+   ↓
+PDFs und Nachweise
+```
+
+KanuControl V1.6.3 verbindet damit die Planung, Durchführung und finanzielle Auswertung einer Veranstaltung in einem durchgängigen Ablauf.

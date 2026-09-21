@@ -92,6 +92,10 @@ WHERE
     (:verein IS NULL OR :verein = ''
         OR LOWER(v.abk) LIKE LOWER(CONCAT('%', :verein, '%'))
     )
+AND (
+    :aktiv IS NULL
+    OR p.aktiv = :aktiv
+)
 AND NOT EXISTS (
     SELECT 1 FROM Teilnehmer t
     WHERE t.person = p
@@ -111,6 +115,7 @@ AND (
             @Param("veranstaltungId") Long veranstaltungId,
             @Param("search") String search,
             @Param("verein") String verein,
+            @Param("aktiv") Boolean aktiv,
             Pageable pageable
     );
 

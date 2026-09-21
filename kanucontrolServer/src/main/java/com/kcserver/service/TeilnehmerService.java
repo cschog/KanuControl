@@ -335,11 +335,18 @@ public class TeilnehmerService {
             Long veranstaltungId,
             String search,
             String verein,
+            Boolean aktiv,
             Pageable pageable
     ) {
 
         return teilnehmerRepository
-                .findAvailable(veranstaltungId, search, verein, pageable)
+                .findAvailable(
+                        veranstaltungId,
+                        search,
+                        verein,
+                        aktiv,
+                        pageable
+                )
                 .map(personMapper::toListDTO);
     }
 

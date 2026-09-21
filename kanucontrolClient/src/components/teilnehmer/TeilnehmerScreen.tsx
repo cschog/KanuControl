@@ -149,15 +149,16 @@ export default function TeilnehmerScreen() {
   const load = useCallback(async () => {
     if (!active?.id) return;
 
-    const a = await getAvailablePersons(
-      active.id,
-      0,
-      1000,
-      debounceSearchL || undefined,
-      debounceVereinL || undefined,
-      mapSortField(sortingL[0]?.id ?? "fullname"),
-      sortingL[0]?.desc ? "desc" : "asc",
-    );
+   const a = await getAvailablePersons(
+     active.id,
+     0,
+     1000,
+     debounceSearchL || undefined,
+     debounceVereinL || undefined,
+     mapSortField(sortingL[0]?.id ?? "fullname"),
+     sortingL[0]?.desc ? "desc" : "asc",
+     true, // nur aktive Personen
+   );
 
     setAvailable(a?.content ?? []);
 

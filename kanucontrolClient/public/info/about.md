@@ -55,9 +55,9 @@ Anregungen, Fehlerberichte und Verbesserungsvorschläge sind jederzeit willkomme
 
 ## Version
 
-Frontend: V1.4.8
-Backend: V1.4.8
-Datenbankschema: Version 94
+Frontend: V1.6.3
+Backend: V1.6.3
+Datenbankschema: Version 100
 
 ## Kontakt
 

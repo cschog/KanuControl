@@ -54,13 +54,24 @@ export async function deleteBelegDokument(belegId: number, dokumentId: number): 
 }
 
 export async function preview(belegId: number, dokumentId: number): Promise<void> {
-  const blob = await download(belegId, dokumentId);
+  const previewWindow = window.open("", "_blank");
 
-  const url = URL.createObjectURL(blob);
+  if (!previewWindow) {
+    return;
+  }
 
-  window.open(url, "_blank", "noopener,noreferrer");
+  try {
+    const blob = await download(belegId, dokumentId);
 
-  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    const url = URL.createObjectURL(blob);
+
+    previewWindow.location.href = url;
+
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  } catch (error) {
+    previewWindow.close();
+    throw error;
+  }
 }
 
 export async function updateReferenzObjekt(
