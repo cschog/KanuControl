@@ -13,6 +13,8 @@ import { BottomActionBar } from "@/components/layout/BottomActionBar";
 import { GridFilterModel } from "@mui/x-data-grid";
 import { getApiErrorMessage } from "@/api/utils/apiError";
 import { ErrorDialog } from "@/components/common/ErrorDialog";
+import { VereinAutocomplete } from "@/components/verein/VereinAutocomplete";
+import { VereinRef } from "@/api/types/verein/VereinRef";
 
 import {
   getPersonById,
@@ -64,6 +66,7 @@ export default function PersonenScreen() {
   const [search, setSearch] = useState("");
   const debounceSearch = useDebounce(search, 300);
   const [aktivFilter, setAktivFilter] = useState<"aktiv" | "alle" | "inaktiv">("aktiv");
+ const [vereinFilter, setVereinFilter] = useState<VereinRef | undefined>(undefined);
 
   const size = 500;
 
@@ -91,21 +94,20 @@ export default function PersonenScreen() {
     setLoading(true);
 
     try {
-  const res = await getPersonsScroll(
-    cursorRef.current?.name,
-    cursorRef.current?.vorname,
-    cursorRef.current?.id,
-    size,
-    {
-      search: debounceSearch || undefined,
-      ort: ortFilter || undefined,
-
-      aktiv: aktivFilter === "aktiv" ? true : aktivFilter === "inaktiv" ? false : undefined,
-
-      sortField: sorting[0]?.id,
-      sortDirection: sorting[0]?.desc ? "desc" : "asc",
-    },
-  );
+     const res = await getPersonsScroll(
+       cursorRef.current?.name,
+       cursorRef.current?.vorname,
+       cursorRef.current?.id,
+       size,
+       {
+         search: debounceSearch || undefined,
+         ort: ortFilter || undefined,
+         vereinId: vereinFilter?.id,
+         aktiv: aktivFilter === "aktiv" ? true : aktivFilter === "inaktiv" ? false : undefined,
+         sortField: sorting[0]?.id,
+         sortDirection: sorting[0]?.desc ? "desc" : "asc",
+       },
+     );
 
       const newRows = res.content;
 
@@ -163,13 +165,12 @@ export default function PersonenScreen() {
   /* 🔄 INITIAL + SEARCH RESET */
   /* ========================================================= */
 
- useEffect(() => {
-   cursorRef.current = null;
-   setRows([]);
-   hasMoreRef.current = true;
-
-   loadRef.current();
- }, [debounceSearch, filterModel, sorting, aktivFilter]);
+useEffect(() => {
+  cursorRef.current = null;
+  setRows([]);
+  hasMoreRef.current = true;
+  loadRef.current();
+}, [debounceSearch, vereinFilter, filterModel, sorting, aktivFilter]);
 
   /* ========================================================= */
   /* 🔄 DETAIL */
@@ -303,15 +304,7 @@ export default function PersonenScreen() {
           }}
         >
           <Paper sx={{ p: 2 }}>
-            <Box
-              display="flex"
-              gap={2}
-              mb={2}
-              alignItems="center"
-              sx={{
-                flexWrap: "nowrap",
-              }}
-            >
+            <Box display="flex" gap={2} mb={2} alignItems="stretch" sx={{ flexWrap: "nowrap" }}>
               <Box
                 sx={{
                   flex: 1,
@@ -319,6 +312,15 @@ export default function PersonenScreen() {
                 }}
               >
                 <SearchField value={search} onChange={setSearch} />
+              </Box>
+
+              <Box
+                sx={{
+                  width: 220,
+                  flexShrink: 0,
+                }}
+              >
+                <VereinAutocomplete value={vereinFilter} onChange={setVereinFilter} />
               </Box>
 
               <ToggleButtonGroup
@@ -335,9 +337,7 @@ export default function PersonenScreen() {
                 }}
               >
                 <ToggleButton value="aktiv">Aktiv</ToggleButton>
-
                 <ToggleButton value="alle">Alle</ToggleButton>
-
                 <ToggleButton value="inaktiv">Inaktiv</ToggleButton>
               </ToggleButtonGroup>
             </Box>

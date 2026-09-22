@@ -35,6 +35,11 @@ const SearchField = ({
       autoFocus={autoFocus}
       fullWidth={fullWidth}
       onChange={(e) => onChange(e.target.value)}
+      sx={{
+        "& .MuiOutlinedInput-root": {
+          height: "55px",
+        },
+      }}
       slotProps={{
         input: {
           startAdornment: (
@@ -42,14 +47,10 @@ const SearchField = ({
               <SearchIcon fontSize="small" />
             </InputAdornment>
           ),
-
           endAdornment:
             value.length > 0 ? (
               <InputAdornment position="end">
-                <IconButton
-                  size="small"
-                  onClick={() => onChange("")}
-                >
+                <IconButton size="small" onClick={() => onChange("")}>
                   <ClearIcon fontSize="small" />
                 </IconButton>
               </InputAdornment>

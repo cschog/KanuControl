@@ -35,7 +35,10 @@ public interface PersonRepository
        ========================= */
 
     @Query("""
-SELECT p FROM Person p
+SELECT DISTINCT p
+FROM Person p
+LEFT JOIN p.mitgliedschaften m
+LEFT JOIN m.verein v
 WHERE (
     :cursorName IS NULL OR
     (p.name > :cursorName) OR
@@ -52,6 +55,10 @@ AND (
     LOWER(p.ort) LIKE LOWER(CONCAT('%', :ort, '%'))
 )
 AND (
+    :vereinId IS NULL
+    OR v.id = :vereinId
+)
+AND (
     :aktiv IS NULL OR
     p.aktiv = :aktiv
 )
@@ -63,12 +70,16 @@ ORDER BY p.name ASC, p.vorname ASC, p.id ASC
             @Param("cursorId") Long cursorId,
             @Param("search") String search,
             @Param("ort") String ort,
+            @Param("vereinId") Long vereinId,
             @Param("aktiv") Boolean aktiv,
             Pageable pageable
     );
 
     @Query("""
-SELECT p FROM Person p
+SELECT DISTINCT p
+FROM Person p
+LEFT JOIN p.mitgliedschaften m
+LEFT JOIN m.verein v
 WHERE (
     :cursorName IS NULL OR
     (p.name < :cursorName) OR
@@ -85,6 +96,10 @@ AND (
     LOWER(p.ort) LIKE LOWER(CONCAT('%', :ort, '%'))
 )
 AND (
+    :vereinId IS NULL
+    OR v.id = :vereinId
+)
+AND (
     :aktiv IS NULL OR
     p.aktiv = :aktiv
 )
@@ -96,6 +111,7 @@ ORDER BY p.name DESC, p.vorname DESC, p.id DESC
             @Param("cursorId") Long cursorId,
             @Param("search") String search,
             @Param("ort") String ort,
+            @Param("vereinId") Long vereinId,
             @Param("aktiv") Boolean aktiv,
             Pageable pageable
     );

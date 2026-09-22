@@ -9,6 +9,8 @@ interface Props<T extends RefBase> {
   value?: T;
   disabled?: boolean;
 
+  size?: "small" | "medium";
+
   fetch: FetchPageFn<T>;
   getLabel: (item: T) => string;
 
@@ -22,6 +24,7 @@ export function EntityAutocomplete<T extends RefBase>({
   fetch,
   getLabel,
   onChange,
+  size
 }: Props<T>) {
   const [options, setOptions] = useState<T[]>([]);
   const [input, setInput] = useState("");
@@ -79,6 +82,7 @@ export function EntityAutocomplete<T extends RefBase>({
 
  return (
    <Autocomplete
+     size="small"
      options={options}
      value={value ?? null}
      inputValue={input}
@@ -98,6 +102,7 @@ export function EntityAutocomplete<T extends RefBase>({
        <TextField
          {...params}
          label={label}
+         size={size}
          InputProps={{
            ...params.InputProps,
            endAdornment: (
