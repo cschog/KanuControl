@@ -408,8 +408,8 @@ public final class ErrorMessages {
             "Bei einer Überzahlung müssen alle ausgewählten Teilnehmer demselben Konto zugeordnet sein.";
 
     // =========================================================
-    // CSV-Import
-    // =========================================================
+// CSV
+// =========================================================
 
     public static final String CSV_EMPTY =
             "Die CSV-Datei ist leer.";
@@ -427,6 +427,15 @@ public final class ErrorMessages {
 
     public static final String CSV_NOT_READABLE =
             "Die CSV-Datei konnte nicht gelesen werden.";
+
+    public static final String CSV_NO_PERSON_SELECTED =
+            "Es wurden keine Personen zum Export ausgewählt.";
+
+    public static final String CSV_PERSON_NOT_FOUND =
+            "Eine oder mehrere ausgewählte Personen wurden nicht gefunden.";
+
+    public static final String CSV_EXPORT_FAILED =
+            "Der CSV-Export konnte nicht erstellt werden.";
 
     // =========================================================
     // Datei / PDF

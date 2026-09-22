@@ -16,49 +16,45 @@ public final class CsvPersonImporter {
     ) {
         PersonSaveDTO dto = new PersonSaveDTO();
 
+        // Pflichtfelder
         dto.setVorname((String) row.get(cfg.get("vorname")));
         dto.setName((String) row.get(cfg.get("name")));
-        dto.setOrt((String) row.get(cfg.get("ort")));
-        dto.setPlz((String) row.get(cfg.get("plz")));
-        dto.setStrasse((String) row.get(cfg.get("strasse")));
-
         dto.setSex((Sex) row.get(cfg.get("sex")));
-        dto.setGeburtsdatum((LocalDate) row.get(cfg.get("geburtsdatum")));
 
-        CsvFieldMapping emailMapping = cfg.getOptional("email");
-        if (emailMapping != null) {
-            dto.setEmail((String) row.get(emailMapping));
-        }
+        // Optionale Felder
+        set(row, cfg, "geburtsdatum", v -> dto.setGeburtsdatum((LocalDate) v));
+        set(row, cfg, "plz", v -> dto.setPlz((String) v));
+        set(row, cfg, "ort", v -> dto.setOrt((String) v));
+        set(row, cfg, "strasse", v -> dto.setStrasse((String) v));
+        set(row, cfg, "countryCode", v -> dto.setCountryCode((String) v));
+        set(row, cfg, "telefonFestnetz", v -> dto.setTelefonFestnetz((String) v));
+        set(row, cfg, "telefon", v -> dto.setTelefon((String) v));
+        set(row, cfg, "email", v -> dto.setEmail((String) v));
+        set(row, cfg, "bankName", v -> dto.setBankName((String) v));
+        set(row, cfg, "iban", v -> dto.setIban((String) v));
+        set(row, cfg, "bic", v -> dto.setBic((String) v));
+        set(row, cfg, "efz", v -> dto.setEfz((LocalDate) v));
+        set(row, cfg, "aktiv", v -> dto.setAktiv((Boolean) v));
 
-        CsvFieldMapping telefonMapping = cfg.getOptional("telefon");
-        if (telefonMapping != null) {
-            dto.setTelefon((String) row.get(telefonMapping));
-        }
-
-        CsvFieldMapping telefonFestnetzMapping = cfg.getOptional("telefonFestnetz");
-        if (telefonFestnetzMapping != null) {
-            dto.setTelefonFestnetz((String) row.get(telefonFestnetzMapping));
-        }
-
-        // IBAN optional
-        CsvFieldMapping ibanMapping = cfg.getOptional("iban");
-        if (ibanMapping != null) {
-            dto.setIban((String) row.get(ibanMapping));
-        }
-
-        // BIC optional
-        CsvFieldMapping bicMapping = cfg.getOptional("bic");
-        if (bicMapping != null) {
-            dto.setBic((String) row.get(bicMapping));
-        }
-
-        // eFZ optional (Date!)
-        CsvFieldMapping efzMapping = cfg.getOptional("efz");
-        if (efzMapping != null) {
-            dto.setEfz((LocalDate) row.get(efzMapping));
-        }
-
-        dto.setAktiv(true);
         return dto;
+    }
+
+    private static void set(
+            CsvPersonRow row,
+            CsvMappingConfig cfg,
+            String targetField,
+            java.util.function.Consumer<Object> setter
+    ) {
+        CsvFieldMapping mapping = cfg.getOptional(targetField);
+
+        if (mapping == null) {
+            return;
+        }
+
+        Object value = row.get(mapping);
+
+        if (value != null) {
+            setter.accept(value);
+        }
     }
 }

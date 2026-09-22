@@ -23,18 +23,21 @@ public class CsvMappingConfig {
         cfg.put("sex", "Geschlecht", "sex_de");
         cfg.put("geburtsdatum", "Geburtsdatum", "date_de");
 
-        cfg.put("telefon", "Telefon Mobil", null);
-        cfg.put("telefonFestnetz", "Telefon Privat", null);
-        cfg.put("email", "E-Mail", null);
-
-        cfg.put("strasse", "Adresse", null);
         cfg.put("plz", "PLZ", null);
         cfg.put("ort", "Ort", null);
+        cfg.put("strasse", "Strasse", null);
+        cfg.put("countryCode", "Land", null);
 
-        // ⭐ NEU
+        cfg.put("telefonFestnetz", "Telefon Festnetz", null);
+        cfg.put("telefon", "Telefon", null);
+        cfg.put("email", "Email", null);
+
+        cfg.put("bankName", "Bankname", null);
         cfg.put("iban", "IBAN", "iban");
         cfg.put("bic", "BIC", "bic");
         cfg.put("efz", "eFZ", "date_de");
+
+        cfg.put("aktiv", "Aktiv", null);
 
         return cfg;
     }

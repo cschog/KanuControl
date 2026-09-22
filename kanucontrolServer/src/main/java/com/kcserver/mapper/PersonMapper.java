@@ -54,6 +54,7 @@ public interface PersonMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "mitgliedschaften", ignore = true)
     @Mapping(target = "countryCode", expression = "java(mapCountryCode(dto.getCountryCode()))")
+    @Mapping(target = "aktiv", expression = "java(dto.getAktiv() == null ? true : dto.getAktiv())")
     @Mapping(target = "bic", source = "bic")
     Person toNewEntity(PersonSaveDTO dto);
 

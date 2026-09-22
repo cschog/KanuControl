@@ -2,6 +2,9 @@
 
 import { useEffect, useState, useRef } from "react";
 import { Box, Paper, Typography, ToggleButton, ToggleButtonGroup } from "@mui/material";
+
+import { useTheme } from "@mui/material/styles";
+import { useMediaQuery } from "@mui/material";
 import { GenericTableTanstack } from "@/components/common/GenericTableTanstack";
 import { PersonFormView } from "@/components/person/PersonFormView";
 import { personColumnsTanstack } from "@/components/person/personColumnsTanstack";
@@ -42,6 +45,9 @@ export default function PersonenScreen() {
   const [rows, setRows] = useState<PersonList[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
   const cursorRef = useRef<Cursor>(null);
   const loadingRef = useRef(false);
   const hasMoreRef = useRef(true);
@@ -66,7 +72,7 @@ export default function PersonenScreen() {
   const [search, setSearch] = useState("");
   const debounceSearch = useDebounce(search, 300);
   const [aktivFilter, setAktivFilter] = useState<"aktiv" | "alle" | "inaktiv">("aktiv");
- const [vereinFilter, setVereinFilter] = useState<VereinRef | undefined>(undefined);
+  const [vereinFilter, setVereinFilter] = useState<VereinRef | undefined>(undefined);
 
   const size = 500;
 
@@ -94,20 +100,20 @@ export default function PersonenScreen() {
     setLoading(true);
 
     try {
-     const res = await getPersonsScroll(
-       cursorRef.current?.name,
-       cursorRef.current?.vorname,
-       cursorRef.current?.id,
-       size,
-       {
-         search: debounceSearch || undefined,
-         ort: ortFilter || undefined,
-         vereinId: vereinFilter?.id,
-         aktiv: aktivFilter === "aktiv" ? true : aktivFilter === "inaktiv" ? false : undefined,
-         sortField: sorting[0]?.id,
-         sortDirection: sorting[0]?.desc ? "desc" : "asc",
-       },
-     );
+      const res = await getPersonsScroll(
+        cursorRef.current?.name,
+        cursorRef.current?.vorname,
+        cursorRef.current?.id,
+        size,
+        {
+          search: debounceSearch || undefined,
+          ort: ortFilter || undefined,
+          vereinId: vereinFilter?.id,
+          aktiv: aktivFilter === "aktiv" ? true : aktivFilter === "inaktiv" ? false : undefined,
+          sortField: sorting[0]?.id,
+          sortDirection: sorting[0]?.desc ? "desc" : "asc",
+        },
+      );
 
       const newRows = res.content;
 
@@ -165,12 +171,12 @@ export default function PersonenScreen() {
   /* 🔄 INITIAL + SEARCH RESET */
   /* ========================================================= */
 
-useEffect(() => {
-  cursorRef.current = null;
-  setRows([]);
-  hasMoreRef.current = true;
-  loadRef.current();
-}, [debounceSearch, vereinFilter, filterModel, sorting, aktivFilter]);
+  useEffect(() => {
+    cursorRef.current = null;
+    setRows([]);
+    hasMoreRef.current = true;
+    loadRef.current();
+  }, [debounceSearch, vereinFilter, filterModel, sorting, aktivFilter]);
 
   /* ========================================================= */
   /* 🔄 DETAIL */
@@ -304,24 +310,39 @@ useEffect(() => {
           }}
         >
           <Paper sx={{ p: 2 }}>
-            <Box display="flex" gap={2} mb={2} alignItems="stretch" sx={{ flexWrap: "nowrap" }}>
+            <Box
+              sx={{
+                display: "flex",
+                gap: isMobile ? 1 : 2,
+                mb: 2,
+                alignItems: "stretch",
+                flexDirection: isMobile ? "column" : "row",
+              }}
+            >
+              {/* SUCHE */}
+
               <Box
                 sx={{
                   flex: 1,
                   minWidth: 0,
+                  width: isMobile ? "100%" : undefined,
                 }}
               >
                 <SearchField value={search} onChange={setSearch} />
               </Box>
 
+              {/* VEREIN */}
+
               <Box
                 sx={{
-                  width: 220,
+                  width: isMobile ? "100%" : 220,
                   flexShrink: 0,
                 }}
               >
                 <VereinAutocomplete value={vereinFilter} onChange={setVereinFilter} />
               </Box>
+
+              {/* STATUS */}
 
               <ToggleButtonGroup
                 value={aktivFilter}
@@ -334,6 +355,11 @@ useEffect(() => {
                 size="small"
                 sx={{
                   flexShrink: 0,
+                  width: isMobile ? "100%" : undefined,
+
+                  "& .MuiToggleButton-root": {
+                    flex: isMobile ? 1 : undefined,
+                  },
                 }}
               >
                 <ToggleButton value="aktiv">Aktiv</ToggleButton>

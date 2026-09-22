@@ -88,6 +88,7 @@ public class CsvImportService {
     }
 
     private void validateHeaders(List<CSVRecord> records) {
+
         if (records.isEmpty()) {
             throw new IllegalArgumentException(
                     "Die CSV-Datei enthält keine Mitgliedsdaten."
@@ -95,9 +96,21 @@ public class CsvImportService {
         }
 
         Set<String> headers = records.getFirst().toMap().keySet();
-        if (!headers.contains("Vorname")) {
+
+        List<String> required = List.of(
+                "Vorname",
+                "Nachname",
+                "Geschlecht"
+        );
+
+        List<String> missing = required.stream()
+                .filter(header -> !headers.contains(header))
+                .toList();
+
+        if (!missing.isEmpty()) {
             throw new IllegalArgumentException(
-                    "CSV-Header ungültig – Spalte 'Vorname' fehlt"
+                    "CSV-Header ungültig – Pflichtspalten fehlen: "
+                            + String.join(", ", missing)
             );
         }
     }
