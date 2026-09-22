@@ -2,9 +2,9 @@
 
 > **Die moderne Vereinsverwaltung für Kanuvereine und Kanuverbände**
 
-KanuControl ist eine vollständig webbasierte Vereinsverwaltung zur Planung, Durchführung und Abrechnung von Kanuveranstaltungen. Der Schwerpunkt liegt auf der Verwaltung von Ferienfreizeiten und Jugendmaßnahmen nach den Förderrichtlinien des KJFP (Kinder- und Jugendförderplan).
+KanuControl ist eine vollständig webbasierte Vereinsverwaltung zur Planung, Durchführung und Abrechnung von Kanuveranstaltungen. Der Schwerpunkt liegt auf der Verwaltung von Ferienfreizeiten und Jugendmaßnahmen nach den Förderrichtlinien KJFP (Kinder- und Jugendförderplan) des Landessportbundes NRW.
 
-**Version:** 1.0  
+**Version:** 1.6.4  
 **Status:** ✅ Funktional abgeschlossen
 
 ---
@@ -59,6 +59,10 @@ Unterstützung des kompletten KJFP-Prozesses
 - Belege
 - Buchungen
 - Finanzgruppen
+- Teilnehmerkonten und Vereinskonto
+- Zahlungsnachweise
+- Rückzahlungen
+- Finanzausgleich
 - Einnahmen
 - Ausgaben
 - Automatische Berechnungen
@@ -89,7 +93,7 @@ Verwaltung aller zentralen Stammdaten
 
 ## Backend
 
-- Java 17
+- Java 21
 - Spring Boot
 - Spring Security
 - Hibernate / JPA
@@ -261,7 +265,7 @@ Archiv
 
 ## Voraussetzungen
 
-- Java 17
+- Java 21
 - Node.js
 - PostgreSQL
 - Docker (optional)
@@ -308,20 +312,29 @@ React
 
 ---
 
-# Roadmap
+# Aktueller Entwicklungsstand
 
-## Version 1.1
+KanuControl befindet sich aktuell in Version **1.6.4**.
 
-- Erweiterte Statistiken
-- Weitere PDF-Ausgaben
-- Verbesserte Dashboards
-- Performanceoptimierungen
+Die aktuellen Entwicklungsschwerpunkte liegen insbesondere auf der
+Finanzverwaltung, der Zahlungsnachweisverwaltung und dem Finanzausgleich.
 
-## Version 1.2
+### Aktuelle Finanzfunktionen
 
-- Mobile Optimierungen
-- Erweiterte Auswertungen
-- API-Erweiterungen
+- Finanz-Dashboard
+- Finanzgruppen
+- Teilnehmerkonten und Vereinskonto
+- Teilnehmerbeiträge
+- Zahlungsnachweise
+- Überzahlungen und Vorauszahlungen
+- Rückzahlungen
+- Belegverwaltung mit Dokumenten
+- Fahrkosten
+- Buchungen und Finanzkategorien
+- Finanzausgleich
+- PDF-Auswertungen
+
+Weitere Funktionen und Verbesserungen werden fortlaufend ergänzt.
 
 ---
 
@@ -336,22 +349,20 @@ Dieses Projekt wurde für die Verwaltung von Kanuvereinen und Kanuverbänden ent
 | Bereich | Status |
 |----------|--------|
 | Vereinsverwaltung | ✅ |
+| Personen & Mitglieder | ✅ |
 | Veranstaltungen | ✅ |
-| Teilnehmer | ✅ |
+| Teilnehmerverwaltung | ✅ |
 | Simulation | ✅ |
 | Planung | ✅ |
-| KJFP | ✅ |
-| Förderung | ✅ |
+| KJFP / Förderung | ✅ |
 | Finanzen | ✅ |
-| Abrechnung | ✅ |
+| Zahlungsnachweise | ✅ |
+| Rückzahlungen | ✅ |
+| Finanzausgleich | ✅ |
+| Belegverwaltung | ✅ |
+| Fahrkosten | ✅ |
 | PDF-Ausgaben | ✅ |
 | Mehrmandantenfähigkeit | ✅ |
 | Keycloak | ✅ |
 
 ---
-
-# KanuControl 1.0
-
-**KanuControl 1.0 markiert den ersten funktional vollständigen Meilenstein des Projekts.**
-
-Die Anwendung unterstützt den kompletten Lebenszyklus einer Veranstaltung – von der Planung über die Förderung bis hin zur vollständigen finanziellen Abrechnung.
