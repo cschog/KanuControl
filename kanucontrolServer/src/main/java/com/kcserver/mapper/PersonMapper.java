@@ -36,14 +36,17 @@ public interface PersonMapper {
             target = "hauptvereinAbk",
             expression = "java(resolveHauptvereinAbk(person))"
     )
+    @Mapping(target = "dataStatus", ignore = true)
     PersonListDTO toListDTO(Person person);
 
     /* DETAIL */
+    @Mapping(target = "dataStatus", ignore = true)
     @Mapping(target = "mitgliedschaften", source = "mitgliedschaften")
     PersonDetailDTO toDetailDTO(Person person);
 
     /* DETAIL OHNE MITGLIEDSCHAFTEN */
     @Named("toDetailDTOWithoutMitgliedschaften")
+    @Mapping(target = "dataStatus", ignore = true)
     @Mapping(target = "mitgliedschaften", ignore = true)
     PersonDetailDTO toDetailDTOWithoutMitgliedschaften(Person person);
 

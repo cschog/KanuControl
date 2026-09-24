@@ -17,7 +17,7 @@ export interface PlanungsSimulation {
   unterkunftPreisProPersonUndNacht?: number;
   verpflegungPreisProPersonUndTag?: number;
   honorare?: number;
-  fahrtkosten?: number;
+  fahrkosten?: number;
   verbrauchsmaterialProTag?: number;
   sonstigeKostenProTag?: number;
   kultur?: number;

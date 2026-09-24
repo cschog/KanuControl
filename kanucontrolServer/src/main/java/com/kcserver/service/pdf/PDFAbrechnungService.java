@@ -12,8 +12,8 @@ import com.kcserver.repository.zahlungsnachweis.ZahlungsnachweisRepository;
 import com.kcserver.repository.fahrkosten.ReisekostenabrechnungRepository;
 import com.kcserver.service.FoerderService;
 import com.kcserver.service.abrechnung.AbrechnungSynchronisationsService;
-import com.kcserver.service.veranstaltung.VeranstaltungValidator;
 import com.kcserver.util.PdfFilenameUtil;
+import com.kcserver.validation.VeranstaltungValidator;
 import lombok.RequiredArgsConstructor;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -36,6 +36,7 @@ import com.kcserver.enumtype.FinanzKategorie;
 import java.math.BigDecimal;
 
 import com.kcserver.util.CurrencyUtil;
+import com.kcserver.validation.VeranstaltungValidator;
 
 @Service
 @RequiredArgsConstructor
@@ -303,11 +304,19 @@ public class PDFAbrechnungService {
                         FinanzKategorie.HONORARE
                 );
 
-        BigDecimal fahrtkosten =
+        BigDecimal automatischeFahrkosten =
                 reisekostenabrechnungRepository
-                        .sumGesamtBetragByVeranstaltung(
-                                v.getId()
-                        );
+                        .sumGesamtBetragByVeranstaltung(v.getId());
+
+        BigDecimal manuelleFahrkosten =
+                sum(
+                        buchungen,
+                        FinanzKategorie.FAHRKOSTEN
+                );
+
+        BigDecimal fahrkosten =
+                automatischeFahrkosten
+                        .add(manuelleFahrkosten);
 
         BigDecimal material =
                 sum(
@@ -347,7 +356,7 @@ public class PDFAbrechnungService {
         BigDecimal gesamtKosten =
                 unterkunftVerpflegung
                         .add(honorare)
-                        .add(fahrtkosten)
+                        .add(fahrkosten)
                         .add(material)
                         .add(mieteSonstige);
 
@@ -382,7 +391,7 @@ public class PDFAbrechnungService {
 
         set(form,
                 "kosten_fahrkosten",
-                CurrencyUtil.decimal(fahrtkosten));
+                CurrencyUtil.decimal(fahrkosten));
 
         set(form,
                 "kosten_material",

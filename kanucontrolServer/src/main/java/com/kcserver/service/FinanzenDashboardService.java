@@ -128,16 +128,16 @@ public class FinanzenDashboardService {
                                 BigDecimal::add
                         );
 
-        BigDecimal fahrtkosten =
+        BigDecimal fahrkosten =
                 reisekostenabrechnungService
                         .getReisekostenSumme(veranstaltungId);
 
-        if (fahrtkosten == null) {
-            fahrtkosten = BigDecimal.ZERO;
+        if (fahrkosten == null) {
+            fahrkosten = BigDecimal.ZERO;
         }
 
         BigDecimal istKosten =
-                istKostenBuchungen.add(fahrtkosten);
+                istKostenBuchungen.add(fahrkosten);
 
         BigDecimal istEinnahmen =
                 buchungen.stream()
@@ -285,10 +285,10 @@ public class FinanzenDashboardService {
                                 )
                         );
 
-        if (fahrtkosten.compareTo(BigDecimal.ZERO) != 0) {
+        if (fahrkosten.compareTo(BigDecimal.ZERO) != 0) {
             kostenNachKategorie.merge(
-                    FinanzKategorie.FAHRTKOSTEN,
-                    fahrtkosten,
+                    FinanzKategorie.FAHRKOSTEN,
+                    fahrkosten,
                     BigDecimal::add
             );
         }

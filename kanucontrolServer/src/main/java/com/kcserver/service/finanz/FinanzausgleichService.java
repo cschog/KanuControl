@@ -76,7 +76,7 @@ public class FinanzausgleichService {
 
 
         // =====================================================
-        // 2. Fahrtkosten je Finanzgruppe
+        // 2. Fahrkosten je Finanzgruppe
         // =====================================================
 
         Map<Long, BigDecimal> fahrkostenMap =
@@ -265,7 +265,7 @@ public class FinanzausgleichService {
 
 
                     // -----------------------------------------
-                    // Fahrtkosten
+                    // Fahrkosten
                     // -----------------------------------------
 
                     BigDecimal fahrkosten =

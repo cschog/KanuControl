@@ -2,20 +2,41 @@ import React from "react";
 import { TextField, MenuItem, Checkbox, FormControlLabel } from "@mui/material";
 import FormFeld from "@/components/common/FormFeld";
 import { FormFeldDate } from "@/components/common/FormFeldDate";
-import { PersonSave } from "@/api/types/person/Person";
 import { Sex } from "@/api/enums/Sex";
 import { COUNTRIES } from "@/api/enums/CountryCode";
 import PostalCodeAutocomplete from "@/components/common/PostalCodeAutocomplete";
+
+import { PersonSave, DataFieldStatus } from "@/api/types/person/Person";
 
 interface Props {
   form: PersonSave;
   editMode: boolean;
   mode: "create" | "edit";
   onChange: <K extends keyof PersonSave>(key: K, value: PersonSave[K]) => void;
-}
 
-export const PersonBaseForm: React.FC<Props> = ({ form, editMode, mode, onChange }) => {
+  fieldStatus?: Record<string, DataFieldStatus>;
+}
+export const PersonBaseForm: React.FC<Props> = ({
+  form,
+  editMode,
+  mode,
+  onChange,
+  fieldStatus = {},
+}) => {
   const showExtended = mode === "edit";
+
+  const getStatus = (field: string) => {
+    const status = fieldStatus[field];
+
+    if (!status || status.status === "OK") {
+      return {};
+    }
+
+    return {
+      dataStatus: status.status,
+      dataStatusMessage: status.message,
+    };
+  };
 
   return (
     <>
@@ -54,6 +75,7 @@ export const PersonBaseForm: React.FC<Props> = ({ form, editMode, mode, onChange
         value={form.geburtsdatum ?? ""}
         onChange={(v) => onChange("geburtsdatum", v || undefined)}
         disabled={!editMode}
+        {...getStatus("geburtsdatum")}
       />
 
       <FormFeld
@@ -61,6 +83,7 @@ export const PersonBaseForm: React.FC<Props> = ({ form, editMode, mode, onChange
         value={form.strasse}
         onChange={(v) => onChange("strasse", v || undefined)}
         disabled={!editMode}
+        {...getStatus("strasse")}
       />
 
       <PostalCodeAutocomplete
@@ -79,6 +102,7 @@ export const PersonBaseForm: React.FC<Props> = ({ form, editMode, mode, onChange
         value={form.ort}
         onChange={(v) => onChange("ort", v || undefined)}
         disabled={!editMode}
+        {...getStatus("ort")}
       />
 
       {/* ================= NUR EDIT ================= */}
@@ -89,6 +113,7 @@ export const PersonBaseForm: React.FC<Props> = ({ form, editMode, mode, onChange
             value={form.email}
             onChange={(v) => onChange("email", v || undefined)}
             disabled={!editMode}
+            {...getStatus("email")}
           />
 
           <FormFeldDate
@@ -103,6 +128,7 @@ export const PersonBaseForm: React.FC<Props> = ({ form, editMode, mode, onChange
             value={form.telefon}
             onChange={(v) => onChange("telefon", v || undefined)}
             disabled={!editMode}
+            {...getStatus("telefon")}
           />
 
           <FormFeld
@@ -136,6 +162,7 @@ export const PersonBaseForm: React.FC<Props> = ({ form, editMode, mode, onChange
             value={form.bankName}
             onChange={(v) => onChange("bankName", v || undefined)}
             disabled={!editMode}
+            {...getStatus("bankName")}
           />
 
           <FormFeld
@@ -143,6 +170,7 @@ export const PersonBaseForm: React.FC<Props> = ({ form, editMode, mode, onChange
             value={form.iban}
             onChange={(v) => onChange("iban", v || undefined)}
             disabled={!editMode}
+            {...getStatus("iban")}
           />
 
           <FormFeld
@@ -150,6 +178,7 @@ export const PersonBaseForm: React.FC<Props> = ({ form, editMode, mode, onChange
             value={form.bic}
             onChange={(v) => onChange("bic", v || undefined)}
             disabled={!editMode}
+            {...getStatus("bic")}
           />
 
           <FormControlLabel

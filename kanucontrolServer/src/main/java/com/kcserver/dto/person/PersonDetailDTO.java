@@ -38,5 +38,5 @@ public class PersonDetailDTO
 
     private List<MitgliedDetailDTO> mitgliedschaften;
 
-    // getters / setters
+    private PersonDataStatusDTO dataStatus;
 }

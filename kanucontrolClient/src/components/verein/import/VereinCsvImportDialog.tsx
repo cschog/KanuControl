@@ -136,13 +136,34 @@ export function VereinCsvImportDialog({ open, vereinId, onClose }: Props) {
     }
   };
 
+  const handleClose = () => {
+    if (loading) return;
+
+    setCsvFile(null);
+    setMappingFile(null);
+    setReport(null);
+    setError(null);
+    setDryRun(true);
+
+    // Damit dieselbe Datei direkt erneut ausgewählt werden kann
+    if (csvInputRef.current) {
+      csvInputRef.current.value = "";
+    }
+
+    if (mappingInputRef.current) {
+      mappingInputRef.current.value = "";
+    }
+
+    onClose();
+  };
+
   /* ========================================================= */
   /* UI */
   /* ========================================================= */
 
   return (
     <>
-      <Dialog open={open} onClose={loading ? undefined : onClose} maxWidth="md" fullWidth>
+      <Dialog open={open} onClose={loading ? undefined : handleClose} maxWidth="md" fullWidth>
         <DialogTitle>CSV-Import Mitglieder</DialogTitle>
 
         <DialogContent>
@@ -287,7 +308,7 @@ export function VereinCsvImportDialog({ open, vereinId, onClose }: Props) {
         {/* ===================================================== */}
 
         <DialogActions>
-          <Button onClick={onClose} disabled={loading}>
+          <Button onClick={handleClose} disabled={loading}>
             Schließen
           </Button>
 

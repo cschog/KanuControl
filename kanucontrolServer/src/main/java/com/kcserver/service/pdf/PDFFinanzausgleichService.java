@@ -860,7 +860,7 @@ public class PDFFinanzausgleichService {
 
             /*
              * -----------------------------------------------------
-             * VK-FAHRTKOSTEN
+             * VK-FAHRKOSTEN
              * -----------------------------------------------------
              */
 
@@ -1235,13 +1235,13 @@ public class PDFFinanzausgleichService {
         }
 
         /*
-         * Fahrtkosten
+         * Fahrkosten
          */
 
         if (!daten.fahrkosten().isEmpty()) {
 
             page.write(
-                    "Fahrtkosten VK",
+                    "Fahrkosten VK",
                     x + 10,
                     page.getY(),
                     FONT,
@@ -1766,7 +1766,7 @@ public class PDFFinanzausgleichService {
 
         /*
          * =====================================================
-         * 4. Fahrtkosten
+         * 4. Fahrkosten
          * =====================================================
          */
 
@@ -1851,7 +1851,7 @@ public class PDFFinanzausgleichService {
             case UNTERKUNFT,
                  VERPFLEGUNG,
                  HONORARE,
-                 FAHRTKOSTEN,
+                 FAHRKOSTEN,
                  VERBRAUCHSMATERIAL,
                  KULTUR,
                  MIETE,
@@ -2008,7 +2008,7 @@ public class PDFFinanzausgleichService {
             }
             /*
              * =====================================================
-             * FAHRTKOSTEN
+             * FAHRKOSTEN
              * =====================================================
              */
             if (!daten.fahrkosten().isEmpty()) {
@@ -2018,7 +2018,7 @@ public class PDFFinanzausgleichService {
 
                 writeSectionTitle(
                         page,
-                        "Fahrtkosten"
+                        "Fahrkosten"
                 );
 
                 page.moveY(-10f);
@@ -2798,7 +2798,7 @@ public class PDFFinanzausgleichService {
         if (details.isEmpty()) {
 
             page.write(
-                    "Keine Fahrtkosten.",
+                    "Keine Fahrkosten.",
                     page.getLeft(),
                     FONT,
                     TEXT_SIZE
@@ -3035,7 +3035,7 @@ public class PDFFinanzausgleichService {
         y = page.getY();
 
         page.write(
-                "Summe Fahrtkosten",
+                "Summe Fahrkosten",
                 x + 3,
                 y - 13,
                 FONT_BOLD,
@@ -3132,14 +3132,14 @@ public class PDFFinanzausgleichService {
 
         /*
          * -----------------------------------------------------
-         * Fahrtkosten
+         * Fahrkosten
          * -----------------------------------------------------
          */
 
         page.moveY(-18f);
 
         page.write(
-                "Fahrtkosten",
+                "Fahrkosten",
                 x,
                 page.getY(),
                 FONT,
@@ -3696,12 +3696,12 @@ public class PDFFinanzausgleichService {
 
         /*
          * -----------------------------------------------------
-         * Fahrtkosten
+         * Fahrkosten
          * -----------------------------------------------------
          */
 
         page.writeRight(
-                "Fahrtkosten",
+                "Fahrkosten",
                 currentX + colFahrkosten - 3,
                 y - 14,
                 FONT_BOLD,

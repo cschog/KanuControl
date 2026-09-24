@@ -39,21 +39,18 @@ interface GenericTableTanstackProps<T extends WithId> {
   loading?: boolean;
   mobileRenderRow?: (row: T) => React.ReactNode;
   selectedRowId?: number | null;
+  selectedRowIds?: number[];
   onSelectRow?: (row: T) => void;
   onRowSelectionChange?: (rows: T[]) => void;
   height?: number | string;
   enableCheckboxSelection?: boolean;
+  selectionOnly?: boolean;
   resetSelectionTrigger?: number;
   fixedColumnWidths?: boolean;
   emptyState?: React.ReactNode;
   detailPanel?: (row: T) => React.ReactNode;
-
-  // ⭐ SERVER SORTING
   sorting?: SortingState;
-
   onSortingChange?: (sorting: SortingState) => void;
-
-  // ⭐ INFINITE SCROLL
   onLoadMore?: () => void;
   hasMore?: boolean;
 }
@@ -63,6 +60,7 @@ export function GenericTableTanstack<T extends WithId>({
   columns,
   loading = false,
   selectedRowId,
+  selectedRowIds,
   onSelectRow,
   onRowSelectionChange,
   height,
@@ -74,6 +72,7 @@ export function GenericTableTanstack<T extends WithId>({
   resetSelectionTrigger,
   fixedColumnWidths = true,
   enableCheckboxSelection = false,
+  selectionOnly = false,
   emptyState,
   detailPanel,
 }: GenericTableTanstackProps<T>) {
@@ -82,6 +81,11 @@ export function GenericTableTanstack<T extends WithId>({
   const loadMoreRef = React.useRef<HTMLDivElement | null>(null);
 
   const handleRowClick = (row: Row<T>) => {
+    if (selectionOnly && enableCheckboxSelection) {
+      row.toggleSelected();
+      return;
+    }
+
     onSelectRow?.(row.original);
 
     if (enableCheckboxSelection) {
@@ -168,6 +172,8 @@ export function GenericTableTanstack<T extends WithId>({
 
     enableRowSelection: true,
 
+    getRowId: (row) => String(row.id),
+
     onRowSelectionChange: setRowSelection,
 
     manualSorting: true,
@@ -181,17 +187,46 @@ export function GenericTableTanstack<T extends WithId>({
     getCoreRowModel: getCoreRowModel(),
   });
 
+React.useEffect(() => {
+  // Ohne selectedRowIds arbeitet die Tabelle
+  // vollständig intern/uncontrolled.
+  if (!enableCheckboxSelection || selectedRowIds === undefined) {
+    return;
+  }
+
+  setRowSelection((current) => {
+    const next: RowSelectionState = {};
+
+    for (const id of selectedRowIds) {
+      if (data.some((row) => row.id === id)) {
+        next[String(id)] = true;
+      }
+    }
+
+    const currentKeys = Object.keys(current);
+    const nextKeys = Object.keys(next);
+
+    if (currentKeys.length === nextKeys.length && currentKeys.every((key) => next[key])) {
+      return current;
+    }
+
+    return next;
+  });
+}, [selectedRowIds, data, enableCheckboxSelection]);
+
   /* =========================================================
    ROW SELECTION EFFECT
    ========================================================= */
 
-  React.useEffect(() => {
-    if (!onRowSelectionChange) return;
+React.useEffect(() => {
+  if (!enableCheckboxSelection || !onRowSelectionChange) {
+    return;
+  }
 
-    const selectedRows = table.getSelectedRowModel().rows.map((r) => r.original);
+  const selectedRows = data.filter((row) => rowSelection[String(row.id)]);
 
-    onRowSelectionChange(selectedRows);
-  }, [rowSelection, table, onRowSelectionChange]);
+  onRowSelectionChange(selectedRows);
+}, [rowSelection, data, onRowSelectionChange, enableCheckboxSelection]);
 
   const [expandedRows, setExpandedRows] = React.useState<Set<number>>(new Set());
 
@@ -213,7 +248,7 @@ export function GenericTableTanstack<T extends WithId>({
      HEIGHT
      ========================================================= */
 
-const tableHeight = height ?? (isMobile ? undefined : 650);
+  const tableHeight = height ?? (isMobile ? undefined : 650);
 
   /* =========================================================
      INFINITE SCROLL

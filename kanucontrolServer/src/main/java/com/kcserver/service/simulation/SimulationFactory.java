@@ -19,7 +19,7 @@ public class SimulationFactory {
     private static final int STANDARD_TEILNEHMER = 10;
     private static final int TEILNEHMER_PRO_MITARBEITER = 5;
     private static final BigDecimal STANDARD_HONORARE = BigDecimal.ZERO;
-    private static final BigDecimal STANDARD_FAHRTKOSTEN = BigDecimal.ZERO;
+    private static final BigDecimal STANDARD_FAHRKOSTEN = BigDecimal.ZERO;
     private static final BigDecimal STANDARD_VERBRAUCHSMATERIAL_PRO_TAG = BigDecimal.valueOf(30);
     private static final BigDecimal STANDARD_KULTUR = BigDecimal.ZERO;
     private static final BigDecimal STANDARD_MIETE = BigDecimal.ZERO;
@@ -59,7 +59,7 @@ public class SimulationFactory {
                                 : v.getVerpflegungsmodell().getPreisProPersonUndTag()
                 )
                 .honorare(STANDARD_HONORARE)
-                .fahrtkosten(STANDARD_FAHRTKOSTEN)
+                .fahrkosten(STANDARD_FAHRKOSTEN)
                 .verbrauchsmaterialProTag(STANDARD_VERBRAUCHSMATERIAL_PRO_TAG)
                 .kultur(STANDARD_KULTUR)
                 .miete(STANDARD_MIETE)

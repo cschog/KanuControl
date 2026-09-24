@@ -181,9 +181,9 @@ public class PDFAnmeldungFmJemService {
                         FinanzKategorie.HONORARE
                 );
 
-                BigDecimal fahrtkosten = sum(
+                BigDecimal fahrkosten = sum(
                         planung,
-                        FinanzKategorie.FAHRTKOSTEN
+                        FinanzKategorie.FAHRKOSTEN
                 );
 
                 BigDecimal verbrauchsmaterial = sum(
@@ -227,7 +227,7 @@ public class PDFAnmeldungFmJemService {
 
                 set(form, "honorare", CurrencyUtil.decimal(honorare));
 
-                set(form, "fahrtkosten", CurrencyUtil.decimal(fahrtkosten));
+                set(form, "fahrkosten", CurrencyUtil.decimal(fahrkosten));
 
                 set(form, "verbrauchsmaterial",
                         CurrencyUtil.decimal(verbrauchsmaterial));
@@ -284,7 +284,7 @@ public class PDFAnmeldungFmJemService {
                 BigDecimal summeAusgaben =
                         unterkunftVerpflegung
                                 .add(honorare)
-                                .add(fahrtkosten)
+                                .add(fahrkosten)
                                 .add(verbrauchsmaterial)
                                 .add(mietkosten)
                                 .add(sonstigeKosten);

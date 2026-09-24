@@ -132,23 +132,41 @@ Anmelde- und sicherheitsrelevante Vorgänge werden protokolliert.
 
 Zum Schutz vor Datenverlust werden tägliche Datensicherungen erstellt.
 
-Die Backups werden auf einem separaten Server gespeichert, der unabhängig vom Produktivsystem betrieben wird.
+Die Backups werden auf einer separaten externen Festplatte gespeichert, die unabhängig vom Produktivsystem betrieben wird.
 
-Der Backup-Server befindet sich ebenfalls unter Kontrolle des Auftragsverarbeiters.
+Die externe Festplatte befindet sich unter Kontrolle des Auftragsverarbeiters.
 
 Backups werden regelmäßig auf erfolgreiche Erstellung überwacht.
 
 Zusätzlich erfolgt eine Überwachung der Infrastruktur durch Monitoring-Systeme, um Störungen frühzeitig zu erkennen.
 
----
+### Zusätzliche Ausfallsicherung
+
+Für den Fall eines Ausfalls des primären Systemdatenträgers steht ein vorbereiteter Clone des Systemdatenträgers zur Verfügung.
+
+Der primäre Systemdatenträger kann im Fehlerfall innerhalb kurzer Zeit durch den vorbereiteten Clone ersetzt werden. Anschließend können die seit Erstellung des Clones vorgenommenen Änderungen über die vorhandenen VM-Datensicherungen wiederhergestellt werden.
+
+### Zusätzliche Offline-Datensicherung
+
+Einmal monatlich werden Kopien der virtuellen Maschinen auf einen separaten externen Datenträger erstellt.
+
+Der Datenträger wird ausschließlich für die Durchführung der Datensicherung temporär mit dem Stromnetz verbunden. Nach Abschluss der Sicherung wird die Stromversorgung wieder abgeschaltet.
+
+Außerhalb des Sicherungszeitraums ist der externe Datenträger nicht dauerhaft mit der Produktivinfrastruktur verbunden.
+
+Diese zusätzliche Sicherung stellt eine weitere Wiederherstellungsmöglichkeit außerhalb des laufenden Produktiv- und Backupbetriebs bereit.
+
 
 ## 12. Wiederherstellbarkeit
 
 Im Falle eines technischen Ausfalls können Daten aus den vorhandenen Sicherungen wiederhergestellt werden.
 
+Bei einem Ausfall des primären Systemdatenträgers kann zunächst der vorbereitete System-Clone eingesetzt werden. Anschließend werden erforderliche Änderungen über die vorhandenen VM-Datensicherungen wiederhergestellt.
+
 Die Wiederherstellung erfolgt ausschließlich durch den Auftragsverarbeiter.
 
----
+Die Wiederherstellbarkeit der Systeme wird im Rahmen der betrieblichen Wartungs- und Sicherungsmaßnahmen überprüft.
+
 
 ## 13. Authentifizierung
 

@@ -25,7 +25,7 @@ const kategorien: Record<"KOSTEN" | "EINNAHME", FinanzKategorie[]> = {
     "UNTERKUNFT",
     "VERPFLEGUNG",
     "HONORARE",
-    "FAHRTKOSTEN",
+    "FAHRKOSTEN",
     "VERBRAUCHSMATERIAL",
     "KULTUR",
     "MIETE",

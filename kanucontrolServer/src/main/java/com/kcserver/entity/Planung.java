@@ -82,7 +82,7 @@ public class Planung extends Auditable{
     private BigDecimal honorare;
 
     @Column(precision = 10, scale = 2)
-    private BigDecimal fahrtkosten;
+    private BigDecimal fahrkosten;
 
     @Column(precision = 10, scale = 2, name = "verbrauchsmaterial_pro_tag")
     private BigDecimal verbrauchsmaterialProTag;

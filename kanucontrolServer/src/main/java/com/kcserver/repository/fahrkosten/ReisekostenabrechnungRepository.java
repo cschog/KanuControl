@@ -6,7 +6,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.math.BigDecimal;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 public interface ReisekostenabrechnungRepository
         extends JpaRepository<Reisekostenabrechnung, Long> {
@@ -97,4 +99,12 @@ and (
     );
 
     boolean existsByVeranstaltungId(Long veranstaltungId);
+
+    @Query("""
+    select r.fahrer.id
+    from Reisekostenabrechnung r
+    where r.fahrer.id in :personIds
+    group by r.fahrer.id
+""")
+    Set<Long> findFahrerPersonIds(@Param("personIds") Collection<Long> personIds);
 }

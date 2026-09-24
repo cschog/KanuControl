@@ -44,8 +44,6 @@ function getFinanzTyp(kategorie: FinanzUebersichtsKategorie): "KOSTEN" | "EINNAH
 
 function getKategorieBezeichnung(kategorie: FinanzUebersichtsKategorie): string {
   switch (kategorie) {
-    case "FAHRTKOSTEN":
-      return "Fahrkosten";
     case "FAHRKOSTEN":
       return "Fahrkosten";
     case "SONSTIGE_KOSTEN":

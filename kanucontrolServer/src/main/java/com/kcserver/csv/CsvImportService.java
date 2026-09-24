@@ -2,7 +2,7 @@ package com.kcserver.csv;
 
 import com.kcserver.dto.person.PersonSaveDTO;
 import com.kcserver.service.MitgliedService;
-import com.kcserver.service.PersonService;
+import com.kcserver.service.person.PersonService;
 import com.kcserver.validation.OnCreate;
 import jakarta.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
@@ -58,11 +58,12 @@ public class CsvImportService {
 
             int rowNumber = (int) record.getRecordNumber();
 
+            PersonSaveDTO dto = null;
+
             try {
                 CsvPersonRow row = new CsvPersonRow(record.toMap());
 
-                PersonSaveDTO dto =
-                        CsvPersonImporter.toPersonSaveDTO(row, config);
+                dto = CsvPersonImporter.toPersonSaveDTO(row, config);
 
                 if (!validatePerson(dto, report, rowNumber)) {
                     continue;
@@ -71,7 +72,7 @@ public class CsvImportService {
                 importPerson(dto, vereinId, dryRun, report);
 
             } catch (Exception ex) {
-                addImportError(report, rowNumber, ex);
+                addImportError(report, rowNumber, ex, dto);
             }
         }
 
@@ -95,7 +96,9 @@ public class CsvImportService {
             );
         }
 
-        Set<String> headers = records.getFirst().toMap().keySet();
+        Set<String> headers = records.getFirst()
+                .toMap()
+                .keySet();
 
         List<String> required = List.of(
                 "Vorname",
@@ -114,6 +117,7 @@ public class CsvImportService {
             );
         }
     }
+
 
     private boolean validatePerson(
             PersonSaveDTO dto,
@@ -157,14 +161,26 @@ public class CsvImportService {
     private void addImportError(
             CsvImportReport report,
             int rowNumber,
-            Exception ex
+            Exception ex,
+            PersonSaveDTO dto
     ) {
         String field = null;
         String value = null;
 
         if (ex instanceof CsvFieldException cfe) {
+
             field = cfe.getField();
             value = cfe.getValue();
+
+        } else if (dto != null) {
+
+            field = "Person";
+            value = dto.getVorname()
+                    + " "
+                    + dto.getName()
+                    + (dto.getGeburtsdatum() != null
+                    ? " (" + dto.getGeburtsdatum() + ")"
+                    : "");
         }
 
         report.addError(

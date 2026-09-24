@@ -101,12 +101,12 @@ public class FinanzService {
     public FinanzSummaryDTO buildSummary(
             List<? extends FinanzPosition> list,
             long teilnehmerAnzahl,
-            BigDecimal fahrtkosten
+            BigDecimal fahrkosten
     ) {
         return buildSummary(
                 list,
                 teilnehmerAnzahl,
-                fahrtkosten,
+                fahrkosten,
                 BigDecimal.ZERO
         );
     }
@@ -114,16 +114,16 @@ public class FinanzService {
     public FinanzSummaryDTO buildSummary(
             List<? extends FinanzPosition> list,
             long teilnehmerAnzahl,
-            BigDecimal fahrtkosten,
+            BigDecimal fahrkosten,
             BigDecimal rueckzahlungen
     ) {
 
-        fahrtkosten = safe(fahrtkosten);
+        fahrkosten = safe(fahrkosten);
         rueckzahlungen = safe(rueckzahlungen);
 
         BigDecimal kosten =
                 sumKosten(list)
-                        .add(fahrtkosten)
+                        .add(fahrkosten)
                         .setScale(2, RoundingMode.HALF_UP);
 
         /*
@@ -201,7 +201,7 @@ public class FinanzService {
                 berechneNotwendigenTeilnehmerBeitrag(
                         list,
                         teilnehmerAnzahl,
-                        fahrtkosten
+                        fahrkosten
                 );
 
         FinanzSummaryDTO dto = new FinanzSummaryDTO();
@@ -215,7 +215,7 @@ public class FinanzService {
                 notwendigerBeitrag
         );
         dto.setKjfpZuschuss(kjfpZuschuss);
-        dto.setFahrtkosten(fahrtkosten);
+        dto.setFahrkosten(fahrkosten);
         dto.setTeilnehmerbeitrag(teilnehmerbeitrag);
 
         return dto;
@@ -224,7 +224,7 @@ public class FinanzService {
     public BigDecimal berechneNotwendigenTeilnehmerBeitrag(
             List<? extends FinanzPosition> positionen,
             long teilnehmerAnzahl,
-            BigDecimal fahrtkosten
+            BigDecimal fahrkosten
     ) {
 
         if (teilnehmerAnzahl == 0) {
@@ -233,7 +233,7 @@ public class FinanzService {
 
         BigDecimal kosten =
                 sumKosten(positionen)
-                        .add(safe(fahrtkosten));
+                        .add(safe(fahrkosten));
 
         BigDecimal andereEinnahmen = positionen.stream()
                 .filter(p ->

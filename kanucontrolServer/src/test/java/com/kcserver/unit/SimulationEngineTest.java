@@ -106,7 +106,7 @@ class SimulationEngineTest {
                         FinanzKategorie.UNTERKUNFT,
                         FinanzKategorie.VERPFLEGUNG,
                         FinanzKategorie.HONORARE,
-                        FinanzKategorie.FAHRTKOSTEN,
+                        FinanzKategorie.FAHRKOSTEN,
                         FinanzKategorie.VERBRAUCHSMATERIAL,
                         FinanzKategorie.KULTUR,
                         FinanzKategorie.MIETE,

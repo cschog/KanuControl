@@ -51,7 +51,7 @@ export interface FinanzSummary {
   deckung: number;
   teilnehmerKostenProPerson: number;
   empfohlenerTeilnehmerBeitrag: number;
-  fahrtkosten: number;
+  fahrkosten: number;
   teilnehmerbeitrag: number;
 }
 

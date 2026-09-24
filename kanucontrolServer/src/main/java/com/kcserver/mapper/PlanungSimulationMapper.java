@@ -54,8 +54,8 @@ public class PlanungSimulationMapper {
                 simulation.getHonorare()
         );
 
-        planung.setFahrtkosten(
-                simulation.getFahrtkosten()
+        planung.setFahrkosten(
+                simulation.getFahrkosten()
         );
 
         planung.setVerbrauchsmaterialProTag(
@@ -112,7 +112,7 @@ public class PlanungSimulationMapper {
                 .unterkunftPreisProPersonUndNacht(planung.getUnterkunftPreisProPersonUndNacht())
                 .verpflegungPreisProPersonUndTag(planung.getVerpflegungPreisProPersonUndTag())
                 .honorare(planung.getHonorare())
-                .fahrtkosten(planung.getFahrtkosten())
+                .fahrkosten(planung.getFahrkosten())
                 .verbrauchsmaterialProTag(planung.getVerbrauchsmaterialProTag())
                 .kultur(planung.getKultur())
                 .miete(planung.getMiete())

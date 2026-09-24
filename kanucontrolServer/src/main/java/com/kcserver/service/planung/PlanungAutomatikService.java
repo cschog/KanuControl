@@ -49,8 +49,8 @@ public class PlanungAutomatikService {
 
         aktualisiere(
                 planung,
-                FinanzKategorie.FAHRTKOSTEN,
-                berechnung.berechneFahrtkosten(planung)
+                FinanzKategorie.FAHRKOSTEN,
+                berechnung.berechneFahrkosten(planung)
         );
 
         aktualisiere(

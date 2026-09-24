@@ -38,7 +38,7 @@ public class PlanungsSimulation {
     /* Kosten */
 
     private BigDecimal honorare;
-    private BigDecimal fahrtkosten;
+    private BigDecimal fahrkosten;
     private BigDecimal verbrauchsmaterialProTag;
     private BigDecimal kultur;
     private BigDecimal miete;

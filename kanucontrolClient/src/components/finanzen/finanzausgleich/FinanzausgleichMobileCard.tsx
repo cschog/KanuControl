@@ -48,7 +48,7 @@ export default function FinanzausgleichMobileCard({ row }: Props) {
         </Stack>
 
         <Stack direction="row" justifyContent="space-between">
-          <Typography color="text.secondary">Fahrtkosten</Typography>
+          <Typography color="text.secondary">Fahrkosten</Typography>
 
           <Money value={row.fahrkosten} />
         </Stack>

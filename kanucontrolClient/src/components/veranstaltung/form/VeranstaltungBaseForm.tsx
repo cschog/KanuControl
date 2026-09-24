@@ -96,7 +96,6 @@ const unterkunftsarten = useLoad<UnterkunftsartRef[]>(
       >
         <MenuItem value={VeranstaltungTyp.JEM}>JEM</MenuItem>
         <MenuItem value={VeranstaltungTyp.FM}>FM</MenuItem>
-  
       </TextField>
 
       {/* ================= LEITUNG ================= */}
@@ -105,6 +104,8 @@ const unterkunftsarten = useLoad<UnterkunftsartRef[]>(
         label="Leitung"
         value={form.leiter}
         disabled={!editMode}
+        nurLeiter
+        stichtag={form.beginnDatum}
         onChange={(v) => onChange("leiter", v)}
       />
 
@@ -169,7 +170,6 @@ const unterkunftsarten = useLoad<UnterkunftsartRef[]>(
 
       {detailMode && (
         <>
-
           {/* ================= LAND ================= */}
 
           <TextField
@@ -235,7 +235,7 @@ const unterkunftsarten = useLoad<UnterkunftsartRef[]>(
             ))}
           </TextField>
 
-           {/* ================= UNTERKUNFT ================= */}
+          {/* ================= UNTERKUNFT ================= */}
 
           <RefAutocomplete
             label="Unterkunftsart"
@@ -243,9 +243,7 @@ const unterkunftsarten = useLoad<UnterkunftsartRef[]>(
             loading={unterkunftsarten.loading}
             value={form.unterkunftsart}
             disabled={!editMode}
-            onChange={(value) =>
-              onChange("unterkunftsart", value ?? undefined)
-            }
+            onChange={(value) => onChange("unterkunftsart", value ?? undefined)}
           />
 
           {/* ================= VERPFLEGUNG ================= */}
@@ -258,7 +256,6 @@ const unterkunftsarten = useLoad<UnterkunftsartRef[]>(
             disabled={!editMode}
             onChange={(value) => onChange("verpflegungsmodell", value ?? undefined)}
           />
-
         </>
       )}
     </>

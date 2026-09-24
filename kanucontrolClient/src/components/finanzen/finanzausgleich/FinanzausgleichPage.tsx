@@ -244,7 +244,7 @@ export default function FinanzausgleichPage({ veranstaltungId }: Props) {
               </Typography>
 
               <Typography fontWeight={700} textAlign="right">
-                Fahrtkosten
+                Fahrkosten
               </Typography>
 
               {/* Abstand */}

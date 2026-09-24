@@ -39,7 +39,7 @@ Für die einzelnen Finanzgruppen werden unter anderem gegenübergestellt:
 - Überweisungen
 - Quittungen
 - Ausgaben
-- Fahrtkosten
+- Fahrkosten
 - Ausgleich bzw. Erstattung
 
 KanuControl prüft dabei auch, ob Finanzgruppen und Beiträge konsistent sind.

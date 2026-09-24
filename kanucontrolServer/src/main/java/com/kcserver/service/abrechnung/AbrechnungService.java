@@ -14,7 +14,7 @@ import com.kcserver.mapper.AbrechnungMapper;
 import com.kcserver.repository.*;
 import com.kcserver.service.FoerdersatzService;
 import com.kcserver.service.reisekosten.ReisekostenabrechnungService;
-import com.kcserver.service.veranstaltung.VeranstaltungValidator;
+import com.kcserver.validation.VeranstaltungValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -45,27 +45,26 @@ public class AbrechnungService {
     private final ZahlungsnachweisRepository zahlungsnachweisRepository;
 
 
+
     /* =========================================================
        GET OR CREATE
        ========================================================= */
 
     public AbrechnungDetailDTO getOrCreate(Long veranstaltungId) {
 
-        Abrechnung abrechnung = abrechnungRepository
+        abrechnungRepository
                 .findByVeranstaltungId(veranstaltungId)
                 .orElseGet(() -> createAbrechnung(veranstaltungId));
 
         synchronisationsService.synchronisieren(veranstaltungId);
 
-        BigDecimal fahrtkosten =
+        BigDecimal fahrkosten =
                 reisekostenabrechnungService
                         .getReisekostenSumme(veranstaltungId);
 
-        abrechnung = getEntity(veranstaltungId);
+        Abrechnung abrechnung = getEntity(veranstaltungId);
 
         AbrechnungDetailDTO dto = mapper.toDTO(abrechnung);
-
-        Veranstaltung veranstaltung = abrechnung.getVeranstaltung();
 
         List<Teilnehmer> teilnehmer =
                 teilnehmerRepository.findAllWithPerson(veranstaltungId);
@@ -78,7 +77,7 @@ public class AbrechnungService {
                 finanzService.buildSummary(
                         getAllPositionen(abrechnung),
                         teilnehmer.size(),
-                        fahrtkosten,
+                        fahrkosten,
                         rueckzahlungen
                 );
 

@@ -2,9 +2,12 @@ package com.kcserver.repository;
 
 import com.kcserver.entity.Veranstaltung;
 import org.springframework.data.jpa.repository.*;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface VeranstaltungRepository extends
@@ -50,4 +53,11 @@ where v.id = :id
     findTopByIdNotOrderByBeginnDatumDescBeginnZeitDesc(Long id);
 
     boolean existsByVereinId(Long vereinId);
+
+    @Query("""
+    select v.leiter.id
+    from Veranstaltung v
+    where v.leiter.id in :personIds
+""")
+    Set<Long> findLeiterPersonIds(@Param("personIds") Collection<Long> personIds);
 }

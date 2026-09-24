@@ -25,8 +25,8 @@ public enum FinanzKategorie {
             30
     ),
 
-    FAHRTKOSTEN(
-            "Fahrtkosten",
+    FAHRKOSTEN(
+            "Fahrkosten",
             FinanzTyp.KOSTEN,
             40
     ),

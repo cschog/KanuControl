@@ -1,7 +1,6 @@
 // src/components/person/PersonenScreen.tsx
 
-import { useEffect, useState, useRef } from "react";
-import { Box, Paper, Typography, ToggleButton, ToggleButtonGroup } from "@mui/material";
+import { useCallback, useEffect, useState, useRef } from "react"
 
 import { useTheme } from "@mui/material/styles";
 import { useMediaQuery } from "@mui/material";
@@ -22,14 +21,30 @@ import { VereinRef } from "@/api/types/verein/VereinRef";
 import {
   getPersonById,
   deletePerson,
+  deletePersons,
   updatePerson,
   getPersonsScroll,
   createPerson,
+  exportPersonsCsv,
 } from "@/api/services/personApi";
 
 import { PersonList, PersonDetail, PersonSave } from "@/api/types/person/Person";
 import { useDebounce } from "@/components/common/reference/hooks";
 import SearchField from "@/components/common/SearchField";
+
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Paper,
+  Typography,
+  ToggleButton,
+  ToggleButtonGroup,
+  Tooltip,
+} from "@mui/material";
 
 /* ========================================================= */
 
@@ -57,6 +72,9 @@ export default function PersonenScreen() {
   const [editData, setEditData] = useState<PersonDetail | null>(null);
 
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+
   const [selectedPerson, setSelectedPerson] = useState<PersonDetail | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
 
@@ -66,6 +84,8 @@ export default function PersonenScreen() {
 
   const { active } = useAppContext();
   const [error, setError] = useState<string | null>(null);
+
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   /* ================= FILTER ================= */
 
@@ -163,6 +183,18 @@ export default function PersonenScreen() {
 
   const loadRef = useRef(load);
 
+  const handleRowSelectionChange = useCallback((persons: PersonList[]) => {
+    const nextIds = new Set(persons.map((person) => person.id));
+
+    setSelectedIds((current) => {
+      if (current.size === nextIds.size && [...current].every((id) => nextIds.has(id))) {
+        return current;
+      }
+
+      return nextIds;
+    });
+  }, []);
+
   useEffect(() => {
     loadRef.current = load;
   });
@@ -177,6 +209,10 @@ export default function PersonenScreen() {
     hasMoreRef.current = true;
     loadRef.current();
   }, [debounceSearch, vereinFilter, filterModel, sorting, aktivFilter]);
+
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [debounceSearch, vereinFilter, aktivFilter, filterModel, sorting]);
 
   /* ========================================================= */
   /* 🔄 DETAIL */
@@ -270,6 +306,68 @@ export default function PersonenScreen() {
       console.error("Fehler beim Löschen der Person", error);
 
       setError(getApiErrorMessage(error, "Person konnte nicht gelöscht werden."));
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedIds.size === 0) return;
+
+    setDeleteConfirmOpen(true);
+  };
+
+  const executeDeleteSelected = async () => {
+    setDeleteConfirmOpen(false);
+
+    try {
+      const result = await deletePersons([...selectedIds]);
+
+      if (result.deletedIds.length > 0) {
+        setRows((prev) => prev.filter((person) => !result.deletedIds.includes(person.id)));
+
+        setTotal((prev) => Math.max(0, prev - result.deletedIds.length));
+      }
+
+      setSelectedIds(new Set(result.errors.map((item) => item.id)));
+
+      if (result.errors.length === 0) {
+        setSelectionMode(false);
+        setSelectedIds(new Set());
+      } else {
+        const message = result.errors
+          .map((item) => `Person ${item.id}:\n${item.message}`)
+          .join("\n\n");
+
+        setError(message);
+      }
+    } catch (error: unknown) {
+      console.error("Fehler beim Löschen der Personen", error);
+
+      setError(
+        getApiErrorMessage(error, "Die ausgewählten Personen konnten nicht gelöscht werden."),
+      );
+    }
+  };
+
+
+
+  const handleCsvExport = async () => {
+    if (selectedIds.size === 0) return;
+
+    try {
+      const blob = await exportPersonsCsv([...selectedIds]);
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = "personen-export.csv";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("CSV-Export fehlgeschlagen", error);
     }
   };
 
@@ -369,27 +467,92 @@ export default function PersonenScreen() {
             </Box>
 
             <GenericTableTanstack
-              mobileRenderRow={(row) => (
-                <Box>
-                  <Typography fontWeight={600}>
-                    {row.name}, {row.vorname}
-                  </Typography>
+              mobileRenderRow={(row) => {
+                const marker =
+                  row.dataStatus === "ERROR"
+                    ? {
+                        color: "error.main",
+                        message: "Fehlende Pflichtangaben",
+                      }
+                    : row.dataStatus === "WARNING"
+                      ? {
+                          color: "#F2C94C",
+                          message: "Empfohlene Angaben fehlen",
+                        }
+                      : null;
 
-                  <Typography variant="body2" color="text.secondary">
-                    {row.alter ?? "-"} Jahre
-                    {" • "}
-                    {row.hauptvereinAbk ?? ""}
-                    {" • "}
-                    {row.ort ?? ""}
-                  </Typography>
-                </Box>
-              )}
+                return (
+                  <Box>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                      }}
+                    >
+                      {marker && (
+                        <Tooltip
+                          title={marker.message}
+                          arrow
+                          placement="top"
+                          slotProps={{
+                            tooltip: {
+                              sx: {
+                                fontSize: "0.95rem",
+                                lineHeight: 1.4,
+                                maxWidth: 360,
+                                padding: "10px 14px",
+                              },
+                            },
+                            arrow: {
+                              sx: {
+                                fontSize: "1rem",
+                              },
+                            },
+                          }}
+                        >
+                          <Box
+                            component="span"
+                            sx={{
+                              width: 10,
+                              height: 10,
+                              minWidth: 10,
+                              borderRadius: "50%",
+                              bgcolor: marker.color,
+                              flexShrink: 0,
+                              cursor: "help",
+                            }}
+                          />
+                        </Tooltip>
+                      )}
+
+                      <Typography fontWeight={600}>
+                        {row.name}, {row.vorname}
+                      </Typography>
+                    </Box>
+
+                    <Typography variant="body2" color="text.secondary">
+                      {row.alter ?? "-"} Jahre
+                      {" • "}
+                      {row.hauptvereinAbk ?? ""}
+                      {" • "}
+                      {row.ort ?? ""}
+                    </Typography>
+                  </Box>
+                );
+              }}
               data={rows}
               columns={personColumnsTanstack}
               loading={loading}
               selectedRowId={selectedId}
+              selectedRowIds={[...selectedIds]}
+              enableCheckboxSelection={selectionMode}
+              selectionOnly={selectionMode}
+              onRowSelectionChange={handleRowSelectionChange}
               onSelectRow={(row) => {
-                setSelectedId(row.id);
+                if (!selectionMode) {
+                  setSelectedId(row.id);
+                }
               }}
               hasMore={hasMoreRef.current}
               onLoadMore={() => loadRef.current()}
@@ -496,13 +659,60 @@ export default function PersonenScreen() {
 
       {!selectedPerson && (
         <BottomActionBar
-          left={[
-            {
-              label: "Neue Person",
-              variant: "outlined",
-              onClick: () => setCreateOpen(true),
-            },
-          ]}
+          left={
+            selectionMode
+              ? [
+                  {
+                    label: "Auswahl beenden",
+                    variant: "outlined",
+                    onClick: () => {
+                      setSelectionMode(false);
+                      setSelectedIds(new Set());
+                    },
+                  },
+                  {
+                    label: `Alle auswählen (${rows.length})`,
+                    variant: "outlined",
+                    onClick: () => {
+                      setSelectedIds(new Set(rows.map((row) => row.id)));
+                    },
+                  },
+                  {
+                    label: `Auswahl löschen (${selectedIds.size})`,
+                    variant: "outlined",
+                    onClick: () => {
+                      setSelectedIds(new Set());
+                    },
+                  },
+                  {
+                    label: `CSV exportieren (${selectedIds.size})`,
+                    variant: "contained",
+                    disabled: selectedIds.size === 0,
+                    onClick: handleCsvExport,
+                  },
+                  {
+                    label: `Löschen (${selectedIds.size})`,
+                    variant: "outlined",
+                    disabled: selectedIds.size === 0,
+                    onClick: handleDeleteSelected,
+                  },
+                ]
+              : [
+                  {
+                    label: "Auswahl",
+                    variant: "outlined",
+                    onClick: () => {
+                      setSelectionMode(true);
+                      setSelectedIds(new Set());
+                    },
+                  },
+                  {
+                    label: "Neue Person",
+                    variant: "outlined",
+                    onClick: () => setCreateOpen(true),
+                  },
+                ]
+          }
         />
       )}
       <PersonCreateDialog
@@ -557,6 +767,43 @@ export default function PersonenScreen() {
           setCreateOpen(false);
         }}
       />
+
+      <Dialog
+        open={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle
+          sx={{
+            fontWeight: 600,
+            pb: 1,
+          }}
+        >
+          Personen löschen
+        </DialogTitle>
+
+        <DialogContent>
+          <Typography>
+            Möchtest du wirklich <strong>{selectedIds.size} Personen</strong> löschen?
+          </Typography>
+
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
+            Personen, die noch in Veranstaltungen oder Fahrkostenabrechnungen verwendet werden,
+            können nicht gelöscht werden.
+          </Typography>
+        </DialogContent>
+
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setDeleteConfirmOpen(false)} variant="outlined">
+            Abbrechen
+          </Button>
+
+          <Button onClick={executeDeleteSelected} variant="contained" color="error" autoFocus>
+            Löschen
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <ErrorDialog
         open={error !== null}

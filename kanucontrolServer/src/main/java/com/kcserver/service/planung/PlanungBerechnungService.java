@@ -215,12 +215,12 @@ public class PlanungBerechnungService {
                 : planung.getHonorare();
     }
 
-    public BigDecimal berechneFahrtkosten(
+    public BigDecimal berechneFahrkosten(
             Planung planung
     ) {
-        return planung == null || planung.getFahrtkosten() == null
+        return planung == null || planung.getFahrkosten() == null
                 ? BigDecimal.ZERO
-                : planung.getFahrtkosten();
+                : planung.getFahrkosten();
     }
 
     public BigDecimal berechneVerbrauchsmaterial(
@@ -277,12 +277,12 @@ public class PlanungBerechnungService {
                 : simulation.getHonorare();
     }
 
-    public BigDecimal berechneFahrtkosten(
+    public BigDecimal berechneFahrkosten(
             PlanungsSimulation simulation
     ) {
-        return simulation == null || simulation.getFahrtkosten() == null
+        return simulation == null || simulation.getFahrkosten() == null
                 ? BigDecimal.ZERO
-                : simulation.getFahrtkosten();
+                : simulation.getFahrkosten();
     }
 
 

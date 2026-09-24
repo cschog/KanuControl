@@ -27,7 +27,7 @@ public final class CsvReader {
         final String csvContent;
 
         try {
-            csvContent = readAll(reader);
+            csvContent = removeBom(readAll(reader));
         } catch (IOException e) {
             throw new CsvReadException(
                     ErrorMessages.CSV_NOT_READABLE,
@@ -74,6 +74,15 @@ public final class CsvReader {
                     e
             );
         }
+    }
+
+    private static String removeBom(String content) {
+
+        if (content != null && content.startsWith("\uFEFF")) {
+            return content.substring(1);
+        }
+
+        return content;
     }
 
     private static char detectDelimiter(String csvContent) {

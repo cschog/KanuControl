@@ -50,7 +50,7 @@ class PlanungsSimulationServiceTest {
                         FinanzKategorie.UNTERKUNFT,
                         FinanzKategorie.VERPFLEGUNG,
                         FinanzKategorie.HONORARE,
-                        FinanzKategorie.FAHRTKOSTEN,
+                        FinanzKategorie.FAHRKOSTEN,
                         FinanzKategorie.VERBRAUCHSMATERIAL,
                         FinanzKategorie.KULTUR,
                         FinanzKategorie.MIETE,
@@ -80,7 +80,7 @@ class PlanungsSimulationServiceTest {
                 "0.00");
 
         assertPosition(planung,
-                FinanzKategorie.FAHRTKOSTEN,
+                FinanzKategorie.FAHRKOSTEN,
                 "0.00");
 
         assertPosition(planung,

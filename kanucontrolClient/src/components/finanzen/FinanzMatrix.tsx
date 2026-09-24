@@ -21,7 +21,7 @@ const kategorien = [
   "UNTERKUNFT",
   "VERPFLEGUNG",
   "HONORARE",
-  "FAHRTKOSTEN",
+  "FAHRKOSTEN",
   "PFAND",
   "TEILNEHMERBEITRAG",
 ];

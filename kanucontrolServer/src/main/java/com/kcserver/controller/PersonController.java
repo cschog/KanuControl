@@ -1,7 +1,7 @@
 package com.kcserver.controller;
 
 import com.kcserver.dto.person.*;
-import com.kcserver.service.PersonService;
+import com.kcserver.service.person.PersonService;
 import com.kcserver.validation.OnCreate;
 import com.kcserver.validation.OnUpdate;
 import org.springframework.data.domain.Page;
@@ -13,6 +13,7 @@ import com.kcserver.api.response.ApiResponse;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import com.kcserver.dto.common.ScrollResponse;
@@ -218,11 +219,28 @@ public class PersonController {
 
     @GetMapping("/search/ref")
     public ApiResponse<List<PersonRefDTO>> searchRef(
-            @RequestParam(required = false) String search
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "false") boolean nurLeiter,
+            @RequestParam(required = false) LocalDate stichtag
     ) {
 
         return ApiResponse.of(
-                personService.searchRefList(search)
+                personService.searchRefList(search, nurLeiter, stichtag)
         );
     }
+
+    /* =========================
+   BULK DELETE
+   ========================= */
+
+    @PostMapping("/bulk-delete")
+    public ApiResponse<BulkDeleteResultDTO> deletePersons(
+            @RequestBody List<Long> ids
+    ) {
+
+        return ApiResponse.of(
+                personService.deletePersons(ids)
+        );
+    }
+
 }

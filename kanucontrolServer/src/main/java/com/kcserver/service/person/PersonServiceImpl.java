@@ -1,4 +1,4 @@
-package com.kcserver.service;
+package com.kcserver.service.person;
 
 import com.kcserver.dto.mitglied.MitgliedSaveDTO;
 import com.kcserver.dto.person.*;
@@ -13,6 +13,7 @@ import com.kcserver.persistence.specification.PersonSpecification;
 import com.kcserver.repository.*;
 import com.kcserver.repository.fahrkosten.FahrtabschnittMitfahrerRepository;
 import com.kcserver.repository.fahrkosten.ReisekostenabrechnungRepository;
+import com.kcserver.service.BankLookupService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -41,6 +42,8 @@ public class PersonServiceImpl implements PersonService {
     private final ReisekostenabrechnungRepository reisekostenabrechnungRepository;
     private final FahrtabschnittMitfahrerRepository fahrtabschnittMitfahrerRepository;
     private final BankLookupService bankLookupService;
+    private final PersonDataStatusService personDataStatusService;
+    private final VeranstaltungRepository veranstaltungRepository;
 
     public PersonServiceImpl(
             PersonRepository personRepository,
@@ -50,8 +53,9 @@ public class PersonServiceImpl implements PersonService {
             TeilnehmerRepository teilnehmerRepository,
             ReisekostenabrechnungRepository reisekostenabrechnungRepository,
             FahrtabschnittMitfahrerRepository fahrtabschnittMitfahrerRepository,
-            BankLookupService bankLookupService
-
+            BankLookupService bankLookupService,
+            PersonDataStatusService personDataStatusService,
+            VeranstaltungRepository veranstaltungRepository
     ) {
         this.personRepository = personRepository;
         this.personMapper = personMapper;
@@ -61,6 +65,8 @@ public class PersonServiceImpl implements PersonService {
         this.reisekostenabrechnungRepository = reisekostenabrechnungRepository;
         this.fahrtabschnittMitfahrerRepository = fahrtabschnittMitfahrerRepository;
         this.bankLookupService = bankLookupService;
+        this.personDataStatusService = personDataStatusService;
+        this.veranstaltungRepository = veranstaltungRepository;
     }
 
     /* =========================================================
@@ -114,11 +120,16 @@ public class PersonServiceImpl implements PersonService {
                 PersonSpecification.byCriteria(criteria)
         );
 
+        List<Person> persons = slice.getContent();
+
+        List<PersonListDTO> dtos = persons.stream()
+                .map(personMapper::toListDTO)
+                .toList();
+
+        enrichListStatus(persons, dtos);
+
         return new ScrollResponse<>(
-                slice.getContent()
-                        .stream()
-                        .map(personMapper::toListDTO)
-                        .toList(),
+                dtos,
                 total,
                 slice.hasNext()
         );
@@ -133,40 +144,39 @@ public class PersonServiceImpl implements PersonService {
                         HttpStatus.NOT_FOUND, ErrorMessages.PERSON_NOT_FOUND
                 ));
 
-        return personMapper.toDetailDTO(person);
+        PersonDetailDTO dto = personMapper.toDetailDTO(person);
+        dto.setDataStatus(determinePersonStatus(person));
+
+        return dto;
+    }
+
+    private PersonDataStatusDTO determinePersonStatus(Person person) {
+
+        boolean isLeiter =
+                veranstaltungRepository
+                        .findLeiterPersonIds(List.of(person.getId()))
+                        .contains(person.getId());
+
+        boolean isFahrer =
+                reisekostenabrechnungRepository
+                        .findFahrerPersonIds(List.of(person.getId()))
+                        .contains(person.getId());
+
+        return personDataStatusService.determineStatus(
+                person,
+                isLeiter,
+                isFahrer
+        );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<PersonListDTO> getAll(Pageable pageable) {
-        return personRepository
-                .findAll(pageable)
-                .map(p -> {
-                    PersonListDTO dto = personMapper.toListDTO(p);
-                    dto.setMitgliedschaftenCount(
-                            p.getMitgliedschaften() == null
-                                    ? 0
-                                    : p.getMitgliedschaften().size()
-                    );
-                    return dto;
-                });
-    }
+        Page<Person> page = personRepository.findAll(pageable);
 
-    @Transactional(readOnly = true)
-    public List<PersonRefDTO> searchRefList(String search) {
-        return personRepository.searchRefList(search)
-                .stream()
-                .map(personMapper::toPersonRefDTO)
-                .toList();
-    }
+        List<Person> persons = page.getContent();
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<PersonListDTO> getAll(Sort sort, PersonSearchCriteria criteria) {
-
-        return personRepository
-                .findAll(PersonSpecification.byCriteria(criteria), sort)
-                .stream()
+        List<PersonListDTO> dtos = persons.stream()
                 .map(p -> {
                     PersonListDTO dto = personMapper.toListDTO(p);
                     dto.setMitgliedschaftenCount(
@@ -177,6 +187,67 @@ public class PersonServiceImpl implements PersonService {
                     return dto;
                 })
                 .toList();
+
+        enrichListStatus(persons, dtos);
+
+        return new org.springframework.data.domain.PageImpl<>(
+                dtos,
+                pageable,
+                page.getTotalElements()
+        );
+    }
+
+    @Override
+    public List<PersonRefDTO> searchRefList(
+            String search,
+            boolean nurLeiter,
+            LocalDate stichtag
+    ) {
+        List<Person> persons;
+
+        if (nurLeiter) {
+
+            LocalDate referenzDatum =
+                    stichtag != null
+                            ? stichtag
+                            : LocalDate.now();
+
+            persons = personRepository.searchLeiterRefList(
+                    search,
+                    referenzDatum.minusYears(18)
+            );
+
+        } else {
+            persons = personRepository.searchRefList(search);
+        }
+
+        return persons.stream()
+                .map(personMapper::toPersonRefDTO)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PersonListDTO> getAll(Sort sort, PersonSearchCriteria criteria) {
+
+        List<Person> persons = personRepository
+                .findAll(PersonSpecification.byCriteria(criteria), sort);
+
+        List<PersonListDTO> dtos = persons.stream()
+                .map(p -> {
+                    PersonListDTO dto = personMapper.toListDTO(p);
+                    dto.setMitgliedschaftenCount(
+                            p.getMitgliedschaften() == null
+                                    ? 0
+                                    : p.getMitgliedschaften().size()
+                    );
+                    return dto;
+                })
+                .toList();
+
+        enrichListStatus(persons, dtos);
+
+        return dtos;
     }
 
 
@@ -244,7 +315,10 @@ public class PersonServiceImpl implements PersonService {
                 personRepository.findDetailById(saved.getId())
                         .orElseThrow();
 
-        return personMapper.toDetailDTO(reloaded);
+        PersonDetailDTO result = personMapper.toDetailDTO(reloaded);
+        result.setDataStatus(determinePersonStatus(reloaded));
+
+        return result;
     }
 
     /* =========================================================
@@ -280,7 +354,10 @@ public class PersonServiceImpl implements PersonService {
             existing.setCountryCode(CountryCode.DE);
         }
 
-        return personMapper.toDetailDTO(existing);
+        PersonDetailDTO result = personMapper.toDetailDTO(existing);
+        result.setDataStatus(determinePersonStatus(existing));
+
+        return result;
     }
 
     /* =========================================================
@@ -332,6 +409,42 @@ public class PersonServiceImpl implements PersonService {
         personRepository.deleteById(id);
     }
 
+    @Override
+    public BulkDeleteResultDTO deletePersons(List<Long> ids) {
+
+        if (ids == null || ids.isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    ErrorMessages.PERSON_NO_SELECTION
+            );
+        }
+
+        List<Long> deletedIds = new java.util.ArrayList<>();
+        List<BulkDeleteErrorDTO> errors = new java.util.ArrayList<>();
+
+        for (Long id : ids) {
+            try {
+                deletePerson(id);
+                deletedIds.add(id);
+
+            } catch (ResponseStatusException e) {
+
+                String message = e.getReason() != null
+                        ? e.getReason()
+                        : ErrorMessages.PERSON_CANNOT_BE_DELETED;
+
+                errors.add(
+                        new BulkDeleteErrorDTO(id, message)
+                );
+            }
+        }
+
+        return new BulkDeleteResultDTO(
+                deletedIds,
+                errors
+        );
+    }
+
     /* =========================================================
        SEARCH
        ========================================================= */
@@ -342,16 +455,67 @@ public class PersonServiceImpl implements PersonService {
             PersonSearchCriteria criteria,
             Pageable pageable
     ) {
-        return personRepository
-                .findAll(PersonSpecification.byCriteria(criteria), pageable)
+        Page<Person> page = personRepository
+                .findAll(
+                        PersonSpecification.byCriteria(criteria),
+                        pageable
+                );
+
+        List<Person> persons = page.getContent();
+
+        List<PersonListDTO> dtos = persons.stream()
                 .map(p -> {
                     PersonListDTO dto = personMapper.toListDTO(p);
                     dto.setMitgliedschaftenCount(
-                            p.getMitgliedschaften() == null ? 0 : p.getMitgliedschaften().size()
+                            p.getMitgliedschaften() == null
+                                    ? 0
+                                    : p.getMitgliedschaften().size()
                     );
                     return dto;
-                });
+                })
+                .toList();
+
+        enrichListStatus(persons, dtos);
+
+        return new org.springframework.data.domain.PageImpl<>(
+                dtos,
+                pageable,
+                page.getTotalElements()
+        );
     }
+
+    private void enrichListStatus(
+            List<Person> persons,
+            List<PersonListDTO> dtos
+    ) {
+        if (persons.isEmpty()) {
+            return;
+        }
+
+        List<Long> personIds = persons.stream()
+                .map(Person::getId)
+                .toList();
+
+        var leiterIds =
+                veranstaltungRepository.findLeiterPersonIds(personIds);
+
+        var fahrerIds =
+                reisekostenabrechnungRepository.findFahrerPersonIds(personIds);
+
+        for (int i = 0; i < persons.size(); i++) {
+            Person person = persons.get(i);
+            PersonListDTO dto = dtos.get(i);
+
+            var status = personDataStatusService.determineStatus(
+                    person,
+                    leiterIds.contains(person.getId()),
+                    fahrerIds.contains(person.getId())
+            );
+
+            dto.setDataStatus(status.getStatus());
+        }
+    }
+
     /* =========================================================
        Mitgliedschaften synchronisieren
        ========================================================= */

@@ -4,7 +4,7 @@ export type FinanzKategorie =
   | "UNTERKUNFT"
   | "VERPFLEGUNG"
   | "HONORARE"
-  | "FAHRTKOSTEN"
+  | "FAHRKOSTEN"
   | "VERBRAUCHSMATERIAL"
   | "KULTUR"
   | "MIETE"
@@ -23,7 +23,7 @@ export const kategorieZuTyp: Record<FinanzKategorie, FinanzTyp> = {
   UNTERKUNFT: "KOSTEN",
   VERPFLEGUNG: "KOSTEN",
   HONORARE: "KOSTEN",
-  FAHRTKOSTEN: "KOSTEN",
+  FAHRKOSTEN: "KOSTEN",
   VERBRAUCHSMATERIAL: "KOSTEN",
   KULTUR: "KOSTEN",
   MIETE: "KOSTEN",
@@ -40,7 +40,7 @@ export const finanzKategorieLabel: Record<FinanzKategorie, string> = {
   UNTERKUNFT: "Unterkunft",
   VERPFLEGUNG: "Verpflegung",
   HONORARE: "Honorare",
-  FAHRTKOSTEN: "Fahrtkosten",
+  FAHRKOSTEN: "Fahrkosten",
   VERBRAUCHSMATERIAL: "Verbrauchsmaterial",
   KULTUR: "Kultur",
   MIETE: "Miete",

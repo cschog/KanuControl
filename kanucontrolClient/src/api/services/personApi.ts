@@ -65,14 +65,20 @@ export async function getPersonsPaged(
    SEARCH (Autocomplete)
    ========================================================= */
 
-export async function searchPersons(params: { search?: string }): Promise<PersonRef[]> {
-  const res = await apiClient.get<PersonRef[]>("/person/search", {
+export async function searchPersons(params: {
+  search?: string;
+  nurLeiter?: boolean;
+  stichtag?: string;
+}): Promise<PersonRef[]> {
+  const res = await apiClient.get<PersonRef[]>("/person/search/ref", {
     params: {
       search: params.search,
+      nurLeiter: params.nurLeiter,
+      stichtag: params.stichtag,
     },
   });
 
-  return res.data ?? []; // ✅ wichtig!
+  return res.data ?? [];
 }
 
 /* =========================================================
@@ -108,4 +114,41 @@ export async function updatePerson(id: number, payload: PersonSave): Promise<Per
 
 export async function deletePerson(id: number): Promise<void> {
   await apiClient.delete(`/person/${id}`);
+}
+
+/* =========================================================
+   CSV EXPORT
+========================================================= */
+
+export async function exportPersonsCsv(personIds: number[]): Promise<Blob> {
+  const res = await apiClient.post("/csv-export/personen", personIds, {
+    responseType: "blob",
+  });
+
+  return res.data;
+}
+
+/* =========================================================
+   BULK DELETE
+========================================================= */
+
+export interface BulkDeleteError {
+  id: number;
+  message: string;
+}
+
+export interface BulkDeleteResult {
+  deletedIds: number[];
+  errors: BulkDeleteError[];
+}
+
+export async function deletePersons(
+  personIds: number[],
+): Promise<BulkDeleteResult> {
+  const res = await apiClient.post<BulkDeleteResult>(
+    "/person/bulk-delete",
+    personIds,
+  );
+
+  return res.data;
 }

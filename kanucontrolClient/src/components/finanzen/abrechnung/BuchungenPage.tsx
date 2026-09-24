@@ -166,16 +166,29 @@ export default function BuchungenPage({ veranstaltungId }: Props) {
      };
    }
 
-   // =========================================================
-   // FAHRKOSTEN
-   // =========================================================
+// =========================================================
+// FAHRKOSTEN
+// =========================================================
 
-   if (abrechnung.finanz.fahrtkosten !== 0) {
-     positionen.push({
-       kategorie: "FAHRKOSTEN",
-       betrag: abrechnung.finanz.fahrtkosten,
-     });
-   }
+if (abrechnung.finanz.fahrkosten !== 0) {
+  const fahrkostenIndex = positionen.findIndex(
+    (position) => position.kategorie === "FAHRKOSTEN",
+  );
+
+  if (fahrkostenIndex >= 0) {
+    positionen[fahrkostenIndex] = {
+      ...positionen[fahrkostenIndex],
+      betrag:
+        positionen[fahrkostenIndex].betrag +
+        abrechnung.finanz.fahrkosten,
+    };
+  } else {
+    positionen.push({
+      kategorie: "FAHRKOSTEN",
+      betrag: abrechnung.finanz.fahrkosten,
+    });
+  }
+}
 
    // =========================================================
    // KJFP-ZUSCHUSS

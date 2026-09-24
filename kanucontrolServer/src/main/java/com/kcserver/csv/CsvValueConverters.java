@@ -1,5 +1,6 @@
 package com.kcserver.csv;
 
+import com.kcserver.enumtype.CountryCode;
 import com.kcserver.enumtype.Sex;
 
 import java.time.LocalDate;
@@ -23,6 +24,8 @@ public final class CsvValueConverters {
             case "date_de" -> parseDateDe(raw);
 
             case "sex_de" -> parseSexDe(raw);
+
+            case "country_de" -> parseCountryDe(raw);
 
             case "bool_ja_nein" -> parseBooleanJaNein(raw);
 
@@ -69,6 +72,33 @@ public final class CsvValueConverters {
                     "Unbekanntes Geschlecht: " + raw
             );
         };
+    }
+
+    private static String parseCountryDe(String raw) {
+
+        String value = raw.trim();
+
+        // ISO-Code, z. B. DE, AT, CH
+        try {
+            return CountryCode.valueOf(
+                    value.toUpperCase(Locale.ROOT)
+            ).name();
+        } catch (IllegalArgumentException ignored) {
+            // Kein ISO-Code → Länderbezeichnung versuchen
+        }
+
+        // Deutscher Ländername
+        return java.util.Arrays.stream(CountryCode.values())
+                .filter(country ->
+                        country.getLabel().equalsIgnoreCase(value)
+                )
+                .map(CountryCode::name)
+                .findFirst()
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Unbekanntes Land: " + raw
+                        )
+                );
     }
 
     private static Boolean parseBooleanJaNein(String raw) {

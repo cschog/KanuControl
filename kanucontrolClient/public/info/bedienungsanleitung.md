@@ -187,7 +187,7 @@ Verändert werden können – abhängig von der Veranstaltung – beispielsweise
 - Teilnehmerbeiträge
 - Unterkunft
 - Verpflegung
-- Fahrtkosten
+- Fahrkosten
 - Honorare
 - Verbrauchsmaterial
 - Kulturprogramm
@@ -216,7 +216,7 @@ Die Planung enthält unter anderem:
 - Teilnehmerbeiträge
 - Unterkunftskosten
 - Verpflegungskosten
-- Fahrtkosten
+- Fahrkosten
 - Honorare
 - Verbrauchsmaterial
 - Kulturprogramm
@@ -319,7 +319,7 @@ Beispiele für Kosten:
 
 - Unterkunft
 - Verpflegung
-- Fahrtkosten
+- Fahrkosten
 - Honorare
 - Verbrauchsmaterial
 - Kultur
@@ -408,7 +408,7 @@ Für eine Finanzgruppe werden unter anderem angezeigt:
 - Überweisungen
 - Quittungen
 - Ausgaben
-- Fahrtkosten
+- Fahrkosten
 - Ausgleich/Erstattung
 
 Das VK-Konto wird gesondert betrachtet.

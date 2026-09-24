@@ -1,5 +1,6 @@
 package com.kcserver.dto.person;
 
+import com.kcserver.dto.validation.DataStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -15,6 +16,8 @@ public class PersonListDTO {
     private Integer alter;
 
     private String hauptvereinAbk;
+
+    private DataStatus dataStatus;
 
     private int mitgliedschaftenCount;
 }

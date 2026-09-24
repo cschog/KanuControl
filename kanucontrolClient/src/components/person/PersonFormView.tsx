@@ -8,7 +8,7 @@ import { AddMembershipDialog } from "@/components/person/membership/AddMembershi
 import { usePersonForm } from "@/components/person/hooks/usePersonForm";
 import { updateMitgliedFunktion } from "@/api/services/mitgliedApi";
 
-import { PersonDetail, PersonSave } from "@/api/types/person/Person";
+import { PersonDetail, PersonSave} from "@/api/types/person/Person";
 import apiClient from "@/api/client/apiClient";
 import { VereinRef } from "@/api/types/verein/VereinRef";
 import EmptyState from "@/components/common/EmptyState";
@@ -96,7 +96,13 @@ export const PersonFormView: React.FC<PersonFormViewProps> = ({
         gap={2}
         sx={{ mt: 2 }}
       >
-        <PersonBaseForm form={form} editMode={editMode} mode="edit" onChange={update} />
+        <PersonBaseForm
+          form={form}
+          editMode={editMode}
+          mode="edit"
+          onChange={update}
+          fieldStatus={personDetail.dataStatus?.fields}
+        />
       </Box>
 
       {/* MEMBERSHIPS */}

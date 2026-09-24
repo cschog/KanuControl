@@ -69,7 +69,7 @@ public final class ErrorMessages {
             "Eine Person mit gleichem Namen und Geburtsdatum existiert bereits";
 
     public static final String PERSON_CANNOT_BE_DELETED =
-            "Die Person kann nicht gelöscht werden.";
+            "Person kann nicht gelöscht werden.";
 
     public static final String PERSON_USED_AS_FAHRER =
             "Person kann nicht gelöscht werden. Sie wird als Fahrer in einer Fahrkostenabrechnung verwendet.";
@@ -436,6 +436,9 @@ public final class ErrorMessages {
 
     public static final String CSV_EXPORT_FAILED =
             "Der CSV-Export konnte nicht erstellt werden.";
+
+    public static final String PERSON_NO_SELECTION =
+            "Es wurden keine Personen ausgewählt.";
 
     // =========================================================
     // Datei / PDF

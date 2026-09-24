@@ -92,7 +92,7 @@ const loadOnlineUsers = async () => {
   }, []);
 
  const onlineUsersBadge =
-   onlineUsers.length > 0 ? (
+   onlineUsers.length > 1 ? (
      <>
        <IconButton color="inherit" size="small" onClick={handleOnlineClick} sx={{ mt: 1 }}>
          <Badge badgeContent={onlineUsers.length} color="secondary">

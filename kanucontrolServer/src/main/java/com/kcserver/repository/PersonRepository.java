@@ -159,4 +159,24 @@ WHERE (
 ORDER BY p.name, p.vorname
 """)
     List<Person> searchRefList(@Param("search") String search);
+
+    @Query("""
+SELECT DISTINCT p
+FROM Person p
+LEFT JOIN FETCH p.mitgliedschaften m
+LEFT JOIN FETCH m.verein
+WHERE p.geburtsdatum IS NOT NULL
+AND p.geburtsdatum <= :stichtag
+AND (
+    :search IS NULL
+    OR :search = ''
+    OR LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%'))
+    OR LOWER(p.vorname) LIKE LOWER(CONCAT('%', :search, '%'))
+)
+ORDER BY p.name, p.vorname
+""")
+    List<Person> searchLeiterRefList(
+            @Param("search") String search,
+            @Param("stichtag") LocalDate stichtag
+    );
 }

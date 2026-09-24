@@ -7,15 +7,30 @@ interface Props {
   disabled?: boolean;
   label?: string;
   onChange: (value?: PersonRef) => void;
+  nurLeiter?: boolean;
+  stichtag?: string;
 }
 
-export function PersonAutocomplete({ value, disabled, label = "Person", onChange }: Props) {
+export function PersonAutocomplete({
+  value,
+  disabled,
+  label = "Person",
+  onChange,
+  nurLeiter = false,
+  stichtag,
+}: Props) {
   return (
     <EntityAutocomplete<PersonRef>
       label={label}
       value={value}
       disabled={disabled}
-      fetch={searchPersons}
+      fetch={(params) =>
+        searchPersons({
+          ...params,
+          nurLeiter,
+          stichtag,
+        })
+      }
       getLabel={(p) => `${p.name}, ${p.vorname}${p.hauptvereinAbk ? ` (${p.hauptvereinAbk})` : ""}`}
       onChange={onChange}
     />

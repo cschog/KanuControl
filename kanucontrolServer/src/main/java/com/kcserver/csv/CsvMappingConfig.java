@@ -26,7 +26,7 @@ public class CsvMappingConfig {
         cfg.put("plz", "PLZ", null);
         cfg.put("ort", "Ort", null);
         cfg.put("strasse", "Strasse", null);
-        cfg.put("countryCode", "Land", null);
+        cfg.put("countryCode", "Land", "country_de");
 
         cfg.put("telefonFestnetz", "Telefon Festnetz", null);
         cfg.put("telefon", "Telefon", null);
@@ -37,7 +37,7 @@ public class CsvMappingConfig {
         cfg.put("bic", "BIC", "bic");
         cfg.put("efz", "eFZ", "date_de");
 
-        cfg.put("aktiv", "Aktiv", null);
+        cfg.put("aktiv", "Aktiv", "bool_ja_nein");
 
         return cfg;
     }

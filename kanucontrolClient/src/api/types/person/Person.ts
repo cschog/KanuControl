@@ -6,6 +6,8 @@ import { MitgliedDetail, MitgliedSaveInPerson } from "@/api/types/Mitglied";
 /* ============================
  * LIST
  * ============================ */
+export type DataStatus = "OK" | "WARNING" | "ERROR";
+
 export interface PersonList {
   id: number;
   vorname: string;
@@ -15,11 +17,24 @@ export interface PersonList {
   hauptvereinAbk?: string;
   mitgliedschaftenCount: number;
   sex?: "M" | "W" | "D";
+
+  // neu
+  dataStatus?: DataStatus;
 }
 
 /* ============================
  * DETAIL
  * ============================ */
+export interface DataFieldStatus {
+  status: DataStatus;
+  message: string;
+}
+
+export interface PersonDataStatus {
+  status: DataStatus;
+  fields: Record<string, DataFieldStatus>;
+}
+
 export interface PersonDetail {
   id: number;
   vorname: string;
@@ -44,6 +59,10 @@ export interface PersonDetail {
   efz?: string;
 
   mitgliedschaften: MitgliedDetail[];
+
+  // Kontextbezogener Datenstatus
+
+  dataStatus?: PersonDataStatus;
 }
 
 /* ============================

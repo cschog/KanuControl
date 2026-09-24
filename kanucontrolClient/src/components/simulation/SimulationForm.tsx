@@ -189,13 +189,13 @@ export default function SimulationForm({
           <SimulationSection title="Kosten" icon={<PaidIcon color="primary" fontSize="small" />}>
             <Grid size={fieldSize}>
               <SliderNumberField
-                label="Fahrtkosten"
-                value={simulation.fahrtkosten ?? 0}
+                label="Fahrkosten"
+                value={simulation.fahrkosten ?? 0}
                 min={0}
                 max={8000}
                 step={25}
                 suffix="€"
-                onChange={(value) => update("fahrtkosten", value)}
+                onChange={(value) => update("fahrkosten", value)}
               />
             </Grid>
 

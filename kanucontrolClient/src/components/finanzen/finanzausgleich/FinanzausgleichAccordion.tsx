@@ -159,7 +159,7 @@ const beitragsAbweichung = !isVK && row.beitragsstatus === "ABWEICHUNG";
               </Typography>
             </Box>
 
-            {/* FAHRTKOSTEN */}
+            {/* FAHRKOSTEN */}
 
             <Box textAlign="right">
               {!isVK && (
@@ -280,7 +280,7 @@ const beitragsAbweichung = !isVK && row.beitragsstatus === "ABWEICHUNG";
 
               <FinanzausgleichPosition label="Ausgaben" value={row.ausgaben} />
 
-              {!isVK && <FinanzausgleichPosition label="Fahrtkosten" value={row.fahrkosten} />}
+              {!isVK && <FinanzausgleichPosition label="Fahrkosten" value={row.fahrkosten} />}
             </Stack>
 
             {/* ERSTATTUNG */}

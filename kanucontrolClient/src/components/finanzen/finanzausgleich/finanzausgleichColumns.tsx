@@ -61,7 +61,7 @@ export const finanzausgleichColumns: ColumnDef<FinanzausgleichRow>[] = [
 
   {
     accessorKey: "fahrkosten",
-    header: "Fahrtkosten",
+    header: "Fahrkosten",
     size: 180,
     meta: {
       align: "right",

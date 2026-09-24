@@ -101,8 +101,8 @@ public class SimulationEngine {
         ));
 
         positionen.add(position(
-                FinanzKategorie.FAHRTKOSTEN,
-                berechnung.berechneFahrtkosten(simulation)
+                FinanzKategorie.FAHRKOSTEN,
+                berechnung.berechneFahrkosten(simulation)
         ));
 
         positionen.add(position(
@@ -167,7 +167,7 @@ public class SimulationEngine {
             case UNTERKUNFT,
                  VERPFLEGUNG,
                  HONORARE,
-                 FAHRTKOSTEN,
+                 FAHRKOSTEN,
                  VERBRAUCHSMATERIAL,
                  KULTUR,
                  MIETE,
