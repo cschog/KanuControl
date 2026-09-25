@@ -1,6 +1,5 @@
 package com.kcserver.tenancy;
 
-import jakarta.annotation.PostConstruct;
 import liquibase.Contexts;
 import liquibase.LabelExpression;
 import liquibase.Liquibase;
@@ -22,7 +21,6 @@ public class GlobalLiquibaseMigrator {
 
     private final DataSource dataSource;
 
-    @PostConstruct
     public void migrateGlobal() {
 
         try (Connection connection = dataSource.getConnection()) {

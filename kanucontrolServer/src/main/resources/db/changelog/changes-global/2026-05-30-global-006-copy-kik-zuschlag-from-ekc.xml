@@ -7,6 +7,8 @@
           http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
 
     <changeSet id="global-006-copy-kik-zuschlag-from-ekc" author="chris">
+        <validCheckSum>9:c1a0791466051986535cde78cdda3d61</validCheckSum>
+
         <sql>
 
             INSERT INTO public.kik_zuschlag (
@@ -22,7 +24,7 @@
             gueltig_bis,
             kik_zuschlag,
             beschluss
-            FROM ekc_eschweilerkanuclub.kik_zuschlag;
+            FROM kanu.kik_zuschlag;
 
         </sql>
     </changeSet>

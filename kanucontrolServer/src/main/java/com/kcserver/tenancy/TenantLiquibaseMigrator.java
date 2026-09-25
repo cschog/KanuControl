@@ -1,6 +1,5 @@
 package com.kcserver.tenancy;
 
-import jakarta.annotation.PostConstruct;
 import liquibase.Liquibase;
 import liquibase.database.Database;
 import liquibase.database.DatabaseFactory;
@@ -34,7 +33,6 @@ public class TenantLiquibaseMigrator {
             "public"
     );
 
-    @PostConstruct
     public void migrateAllSchemas() {
 
         List<String> schemas = jdbcTemplate.queryForList(

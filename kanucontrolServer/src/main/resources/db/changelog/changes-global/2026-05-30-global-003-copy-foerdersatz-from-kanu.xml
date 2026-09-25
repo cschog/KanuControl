@@ -8,6 +8,8 @@
 
     <changeSet id="global-003-copy-foerdersatz-from-kanu" author="chris">
 
+        <validCheckSum>9:33dd7a8448383d6f3fc612b24c7ee8e8</validCheckSum>
+
         <sql>
 
             INSERT INTO public.foerdersatz (
@@ -25,7 +27,7 @@
             foerdersatz,
             beschluss,
             typ
-            FROM ekc_eschweilerkanuclub.foerdersatz;
+            FROM kanu.foerdersatz;
 
         </sql>
 
