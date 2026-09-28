@@ -80,4 +80,15 @@ public class KikZuschlagService {
                 .or(() -> repository.findFirstByGueltigVonLessThanEqualOrderByGueltigVonDesc(datum))
                 .orElse(null);
     }
+
+    public KikZuschlag findOptionalAktuellOderLetzten(LocalDate datum) {
+        if (datum == null) {
+            return null;
+        }
+
+        return repository.findGueltigAm(datum)
+                .or(() -> repository
+                        .findFirstByGueltigVonLessThanEqualOrderByGueltigVonDesc(datum))
+                .orElse(null);
+    }
 }

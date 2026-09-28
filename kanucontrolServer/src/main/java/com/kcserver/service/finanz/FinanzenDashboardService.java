@@ -1,4 +1,4 @@
-package com.kcserver.service;
+package com.kcserver.service.finanz;
 
 import com.kcserver.dto.finanzen.BetragPositionDTO;
 import com.kcserver.dto.finanzen.FinanzenDashboardDTO;
@@ -8,9 +8,11 @@ import com.kcserver.enumtype.FinanzKategorie;
 import com.kcserver.repository.*;
 import com.kcserver.repository.abrechnung.AbrechnungBuchungRepository;
 import com.kcserver.repository.abrechnung.AbrechnungRepository;
+import com.kcserver.service.FoerderService;
 import com.kcserver.service.abrechnung.AbrechnungSynchronisationsService;
 import com.kcserver.service.reisekosten.ReisekostenabrechnungService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -34,6 +37,7 @@ public class FinanzenDashboardService {
     private final PlanungRepository planungRepository;
     private final AbrechnungSynchronisationsService synchronisationsService;
     private final ReisekostenabrechnungService reisekostenabrechnungService;
+
 
     public FinanzenDashboardDTO getDashboard(
             Long veranstaltungId

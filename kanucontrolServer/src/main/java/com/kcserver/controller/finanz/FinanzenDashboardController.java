@@ -2,10 +2,13 @@ package com.kcserver.controller.finanz;
 
 import com.kcserver.api.response.ApiResponse;
 import com.kcserver.dto.finanzen.FinanzenDashboardDTO;
-import com.kcserver.service.FinanzenDashboardService;
+import com.kcserver.service.finanz.FinanzenDashboardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/veranstaltungen/{veranstaltungId}/finanzen")

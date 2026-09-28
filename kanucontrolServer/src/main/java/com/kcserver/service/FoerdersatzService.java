@@ -2,7 +2,6 @@ package com.kcserver.service;
 
 import com.kcserver.dto.foerder.FoerdersatzCreateUpdateDTO;
 import com.kcserver.dto.foerder.FoerdersatzDTO;
-import com.kcserver.dto.foerder.FoerdersatzLookupResult;
 import com.kcserver.entity.Foerdersatz;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.exception.ErrorMessages;
@@ -16,7 +15,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -172,47 +170,5 @@ public class FoerdersatzService {
         return repository
                 .findGueltigFuerTypAm(typ, datum)
                 .orElse(null);
-    }
-    public Foerdersatz getGueltigOderLetzten(
-            VeranstaltungTyp typ,
-            LocalDate datum
-    ) {
-        return getGueltigOderLetztenMitInfo(
-                typ,
-                datum
-        ).foerdersatz();
-    }
-
-    public FoerdersatzLookupResult getGueltigOderLetztenMitInfo(
-            VeranstaltungTyp typ,
-            LocalDate datum
-    ) {
-
-        Optional<Foerdersatz> gueltig =
-                repository.findGueltigFuerTypAm(
-                        typ,
-                        datum
-                );
-
-        if (gueltig.isPresent()) {
-            return new FoerdersatzLookupResult(
-                    gueltig.get(),
-                    false
-            );
-        }
-
-        Foerdersatz letzter =
-                repository.findFirstByTypOrderByGueltigVonDesc(
-                        typ
-                ).orElseThrow(() ->
-                        new IllegalStateException(
-                                "Kein Fördersatz vorhanden"
-                        )
-                );
-
-        return new FoerdersatzLookupResult(
-                letzter,
-                true
-        );
     }
 }

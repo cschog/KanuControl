@@ -30,6 +30,8 @@ import apiClient from "@/api/client/apiClient";
 import { InfoPage } from "@/api/enums/InfoPage";
 import { radius } from "@/theme/ui";
 
+const appEnv = import.meta.env.VITE_APP_ENV;
+
 const Navigation = () => {
   const navigate = useNavigate();
   const theme = useTheme();
@@ -190,7 +192,7 @@ const loadOnlineUsers = async () => {
                   }}
                 >
                   <Typography variant={isMobile ? "h6" : "h5"} fontWeight={500} noWrap>
-                    KanuControl
+                    KanuControl{appEnv !== "prod" && ` - ${appEnv}`}
                   </Typography>
 
                   {!isMobile && (

@@ -1,10 +1,10 @@
 package com.kcserver.service;
 
 import com.kcserver.config.FoerderConfig;
-import com.kcserver.dto.foerder.FoerdersatzLookupResult;
 import com.kcserver.entity.*;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.dto.simulation.PlanungsSimulation;
+import com.kcserver.exception.ErrorMessages;
 import com.kcserver.service.veranstaltung.VeranstaltungBerechnungsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +26,9 @@ public class FoerderService {
     private final VeranstaltungBerechnungsService veranstaltungBerechnungsService;
 
     private static final int MAX_FOERDERTAGE_FM_JEM = 21;
+
+    private static final BigDecimal PLANUNG_FOERDERSATZ =
+            BigDecimal.TEN;
 
     private boolean isFmJem(VeranstaltungTyp typ) {
 
@@ -173,8 +176,8 @@ public class FoerderService {
     public int berechneFoerdertage(
             PlanungsSimulation simulation
     ) {
-
-        if (simulation == null) {
+        if (simulation == null
+                || simulation.getVeranstaltung() == null) {
             return 0;
         }
 
@@ -241,68 +244,174 @@ public class FoerderService {
                 .multiply(BigDecimal.valueOf(tage));
     }
 
+
+    /**
+     * Tatsächlicher Fördersatz einer Veranstaltung.
+     *
+     * Für die tatsächliche Förderung muss ein gültiger offizieller
+     * Fördersatz für den Veranstaltungstag vorhanden sein.
+     *
+     * Kein Fallback auf 10 €!
+     */
     public BigDecimal berechneAngewandtenFoerdersatz(
             Veranstaltung veranstaltung
     ) {
-
         if (veranstaltung == null) {
             return BigDecimal.ZERO;
         }
 
-        return ermittleTagessatz(
-                veranstaltung.getTyp(),
-                veranstaltung.getBeginnDatum(),
-                veranstaltung.getVerein() != null
-                        && veranstaltung.getVerein()
-                        .isKikZertifiziertAm(
-                                veranstaltung.getBeginnDatum()
-                        )
-        );
-    }
+        VeranstaltungTyp typ = veranstaltung.getTyp();
+        LocalDate datum = veranstaltung.getBeginnDatum();
 
-    public BigDecimal berechneAngewandtenFoerdersatz(
-            Planung planung
-    ) {
-
-        if (planung == null || planung.getVeranstaltung() == null) {
+        if (typ == null || datum == null || !typ.isFoerderfaehig()) {
             return BigDecimal.ZERO;
         }
 
-        return ermittleTagessatz(
-                planung.getVeranstaltung().getTyp(),
+        Foerdersatz foerdersatz =
+                foerdersatzService.findOptionalGueltigFuerTypAm(
+                        typ,
+                        datum
+                );
+
+        if (foerdersatz == null
+                || foerdersatz.getFoerdersatz() == null) {
+
+            throw new IllegalStateException(
+                    ErrorMessages.NO_VALID_FOERDERSATZ
+            );
+        }
+
+        BigDecimal tagessatz =
+                foerdersatz.getFoerdersatz();
+
+        boolean kikZertifiziert =
+                veranstaltung.getVerein() != null
+                        && veranstaltung.getVerein()
+                        .isKikZertifiziertAm(datum);
+
+        if (kikZertifiziert) {
+
+            KikZuschlag kik =
+                    kikZuschlagService.findOptionalGueltigAm(datum);
+
+            if (kik != null
+                    && kik.getKikZuschlag() != null) {
+
+                tagessatz =
+                        tagessatz.add(kik.getKikZuschlag());
+            }
+        }
+
+        return tagessatz.min(
+                FoerderConfig.FOERDERDECKEL
+        );
+    }
+
+
+    /**
+     * Fördersatz für die Planung.
+     *
+     * Planung arbeitet immer mit 10 € Basis
+     * und berücksichtigt bei aktiviertem KiK den aktuell
+     * gültigen bzw. letzten verfügbaren KiK-Zuschlag.
+     */
+    public BigDecimal berechneAngewandtenFoerdersatz(
+            Planung planung
+    ) {
+        if (planung == null
+                || planung.getVeranstaltung() == null) {
+            return BigDecimal.ZERO;
+        }
+
+        return berechnePlanungsFoerdersatz(
                 planung.getVeranstaltung().getBeginnDatum(),
                 planung.isKikZertifiziert()
         );
     }
 
+
+    /**
+     * Fördersatz für die Simulation.
+     *
+     * Basis immer 10 €.
+     *
+     * KiK wird berücksichtigt, wenn:
+     * - der Simulationsschalter aktiviert ist
+     *   ODER
+     * - bereits ein gültiges KiK-Zertifikat für den Veranstaltungstag besteht.
+     */
     public BigDecimal berechneAngewandtenFoerdersatz(
             PlanungsSimulation simulation
     ) {
-
-        if (simulation == null) {
+        if (simulation == null
+                || simulation.getVeranstaltung() == null) {
             return BigDecimal.ZERO;
         }
 
-        return ermittleTagessatz(
-                simulation.getVeranstaltung().getTyp(),
-                simulation.getVeranstaltung().getBeginnDatum(),
+        // WICHTIG:
+        // simulation.getVeranstaltung() ist VeranstaltungsInfo,
+        // nicht die Entity Veranstaltung.
+        boolean kikAktiv =
                 simulation.isKikZertifiziert()
+                        || simulation.getVeranstaltung()
+                        .isVereinKikZertifiziert();
+
+        return berechnePlanungsFoerdersatz(
+                simulation.getVeranstaltung().getBeginnDatum(),
+                kikAktiv
         );
     }
 
+
+    /**
+     * Planung / Simulation:
+     * Basis 10 € plus ggf. KiK.
+     */
+    private BigDecimal berechnePlanungsFoerdersatz(
+            LocalDate datum,
+            boolean kikZertifiziert
+    ) {
+        BigDecimal tagessatz =
+                PLANUNG_FOERDERSATZ;
+
+        if (kikZertifiziert) {
+
+            KikZuschlag kik =
+                    kikZuschlagService
+                            .findOptionalOderLetztenGueltigen(datum);
+
+            if (kik != null
+                    && kik.getKikZuschlag() != null) {
+
+                tagessatz =
+                        tagessatz.add(
+                                kik.getKikZuschlag()
+                        );
+            }
+        }
+
+        return tagessatz.min(
+                FoerderConfig.FOERDERDECKEL
+        );
+    }
+
+
+    /**
+     * Geplante Förderung der Simulation.
+     */
     public BigDecimal berechneGeplanteFoerderung(
             PlanungsSimulation simulation
     ) {
-
         if (simulation == null) {
             return BigDecimal.ZERO;
         }
 
-        BigDecimal tagessatz =
-                berechneAngewandtenFoerdersatz(simulation);
-
-        return tagessatz
-                .multiply(BigDecimal.valueOf(simulation.getTeilnehmer()))
+        return berechneAngewandtenFoerdersatz(simulation)
+                .multiply(
+                        BigDecimal.valueOf(
+                                simulation.getTeilnehmer()
+                        )
+                )
                 .multiply(
                         BigDecimal.valueOf(
                                 berechneFoerdertage(simulation)
@@ -310,77 +419,27 @@ public class FoerderService {
                 );
     }
 
+
+    /**
+     * Geplante Förderung einer Planung.
+     */
     public BigDecimal berechneGeplanteFoerderung(
             Planung planung
     ) {
-
         if (planung == null) {
             return BigDecimal.ZERO;
         }
 
-        BigDecimal tagessatz =
-                berechneAngewandtenFoerdersatz(planung);
-
-        return tagessatz
-                .multiply(BigDecimal.valueOf(planung.getTeilnehmer()))
+        return berechneAngewandtenFoerdersatz(planung)
+                .multiply(
+                        BigDecimal.valueOf(
+                                planung.getTeilnehmer()
+                        )
+                )
                 .multiply(
                         BigDecimal.valueOf(
                                 berechneFoerdertage(planung)
                         )
                 );
-    }
-
-    private BigDecimal ermittleTagessatz(
-            VeranstaltungTyp typ,
-            LocalDate datum,
-            boolean kikZertifiziert
-    ) {
-
-        if (typ == null
-                || datum == null
-                || !typ.isFoerderfaehig()) {
-            return BigDecimal.ZERO;
-        }
-
-        FoerdersatzLookupResult result =
-                foerdersatzService.getGueltigOderLetztenMitInfo(
-                        typ,
-                        datum
-                );
-
-        if (result == null
-                || result.foerdersatz() == null
-                || result.foerdersatz().getFoerdersatz() == null) {
-            return BigDecimal.ZERO;
-        }
-
-        return result.foerdersatz()
-                .getFoerdersatz()
-                .add(
-                        ermittleKikZuschlag(
-                                datum,
-                                kikZertifiziert
-                        )
-                )
-                .min(FoerderConfig.FOERDERDECKEL);
-    }
-
-    private BigDecimal ermittleKikZuschlag(
-            LocalDate datum,
-            boolean kikZertifiziert
-    ) {
-
-        if (!kikZertifiziert) {
-            return BigDecimal.ZERO;
-        }
-
-        KikZuschlag kik =
-                kikZuschlagService.findOptionalOderLetztenGueltigen(datum);
-
-        if (kik == null || kik.getKikZuschlag() == null) {
-            return BigDecimal.ZERO;
-        }
-
-        return kik.getKikZuschlag();
     }
 }
