@@ -4,11 +4,13 @@ import com.kcserver.entity.Planung;
 import com.kcserver.entity.Teilnehmer;
 import com.kcserver.entity.Veranstaltung;
 import com.kcserver.enumtype.PdfDokumentTyp;
+import com.kcserver.validation.ValidationResult;
 import com.kcserver.repository.*;
 import com.kcserver.repository.abrechnung.AbrechnungBelegRepository;
 import com.kcserver.repository.abrechnung.AbrechnungBuchungRepository;
 import com.kcserver.repository.zahlungsnachweis.ZahlungsnachweisRepository;
 import com.kcserver.repository.fahrkosten.ReisekostenabrechnungRepository;
+import com.kcserver.service.VereinDataStatusService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +19,9 @@ import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import com.kcserver.dto.validation.DataStatus;
+import com.kcserver.dto.validation.VereinDataStatusDTO;
+
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +34,8 @@ public class DokumentValidationService {
     private final AbrechnungBelegRepository abrechnungBelegRepository;
     private final ZahlungsnachweisRepository zahlungsnachweisRepository;
     private final ReisekostenabrechnungRepository reisekostenabrechnungRepository;
+    private final VereinDataStatusService vereinDataStatusService;
+
 
     public ValidationResult validate(
             Long veranstaltungId,
@@ -112,18 +119,67 @@ public class DokumentValidationService {
         return buildResult(fehler);
     }
 
-    private ValidationResult validateAnmeldung(
-            Veranstaltung veranstaltung
+    private ValidationResult validateAnmeldung(Veranstaltung veranstaltung) {
 
+        ValidationResult result = new ValidationResult();
+
+        validateLeiter(veranstaltung, result);
+        validatePlanung(veranstaltung, result);
+
+        if (veranstaltung.getVerein() == null) {
+            result.addError(
+                    "Kein Verein hinterlegt.",
+                    "verein"
+            );
+            return result;
+        }
+
+        VereinDataStatusDTO dataStatus =
+                vereinDataStatusService.determineStatus(
+                        veranstaltung.getVerein(),
+                        true
+                );
+
+        dataStatus.getFields().forEach((field, status) -> {
+
+            if (status.getStatus() == DataStatus.ERROR) {
+                result.addError(
+                        status.getMessage(),
+                        field
+                );
+            }
+
+            if (status.getStatus() == DataStatus.WARNING) {
+                result.addWarning(
+                        status.getMessage(),
+                        field
+                );
+            }
+        });
+
+        return result;
+    }
+
+    private void validateVereinDataStatus(
+            Veranstaltung veranstaltung,
+            List<String> fehler
     ) {
 
-        List<String> fehler = new ArrayList<>();
+        if (veranstaltung.getVerein() == null) {
+            return;
+        }
 
-        validateLeiter(veranstaltung, fehler);
-        validateVerein(veranstaltung, fehler);
-        validatePlanung(veranstaltung, fehler);
+        VereinDataStatusDTO dataStatus =
+                vereinDataStatusService.determineStatus(
+                        veranstaltung.getVerein(),
+                        true
+                );
 
-        return buildResult(fehler);
+        if (dataStatus.getStatus() == DataStatus.ERROR) {
+            fehler.add(
+                    "Die Daten des Veranstaltervereins sind noch nicht vollständig."
+            );
+        }
     }
 
     private ValidationResult validateAbrechnung(
@@ -210,6 +266,34 @@ public class DokumentValidationService {
         }
     }
 
+    private void validateLeiter(
+            Veranstaltung veranstaltung,
+            ValidationResult result
+    ) {
+
+        if (veranstaltung.getLeiter() == null) {
+            result.addError(
+                    "Kein Leiter hinterlegt.",
+                    "leiter"
+            );
+            return;
+        }
+
+        if (isBlank(veranstaltung.getLeiter().getStrasse())) {
+            result.addError(
+                    "Beim Leiter fehlt die Anschrift.",
+                    "leiterStrasse"
+            );
+        }
+
+        if (isBlank(veranstaltung.getLeiter().getTelefon())) {
+            result.addError(
+                    "Beim Leiter fehlt die Telefonnummer.",
+                    "leiterTelefon"
+            );
+        }
+    }
+
     private void validateVerein(
             Veranstaltung veranstaltung,
             List<String> fehler
@@ -267,9 +351,10 @@ public class DokumentValidationService {
                         )
                 );
     }
+
     private void validatePlanung(
             Veranstaltung veranstaltung,
-            List<String> fehler
+            ValidationResult result
     ) {
 
         Planung planung =
@@ -280,7 +365,10 @@ public class DokumentValidationService {
                         .orElse(null);
 
         if (planung == null) {
-            fehler.add("Es wurde noch keine Planung erfasst.");
+            result.addError(
+                    "Es wurde noch keine Planung erfasst.",
+                    "planung"
+            );
             return;
         }
 
@@ -301,17 +389,20 @@ public class DokumentValidationService {
                         );
 
         if (!hatKosten) {
-            fehler.add(
-                    "Es wurden keine geplanten Kosten erfasst."
+            result.addError(
+                    "Es wurden keine geplanten Kosten erfasst.",
+                    "planungKosten"
             );
         }
 
         if (!hatEinnahmen) {
-            fehler.add(
-                    "Es wurden keine geplanten Einnahmen erfasst."
+            result.addError(
+                    "Es wurden keine geplanten Einnahmen erfasst.",
+                    "planungEinnahmen"
             );
         }
     }
+
     private void validateIstFinanzen(
             Veranstaltung veranstaltung,
             List<String> fehler

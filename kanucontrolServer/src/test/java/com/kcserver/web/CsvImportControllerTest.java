@@ -19,7 +19,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("test")
+@ActiveProfiles("junit")
 class CsvImportControllerTest extends AbstractTenantIntegrationTest {
 
     @Autowired

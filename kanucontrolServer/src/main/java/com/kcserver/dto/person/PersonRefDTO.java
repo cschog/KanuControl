@@ -1,5 +1,6 @@
 package com.kcserver.dto.person;
 
+import com.kcserver.dto.validation.DataStatus;
 import com.kcserver.enumtype.Sex;
 import lombok.Data;
 
@@ -15,4 +16,6 @@ public class PersonRefDTO {
     private Sex sex;
 
     private boolean verwendetInFahrtabschnitten;
+
+    private DataStatus dataStatus;
 }

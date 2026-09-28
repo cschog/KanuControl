@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
  * Provisioning is currently handled explicitly in tests only.
  */
 @Service
-@Profile("!test")
+@Profile("!junit")
 public class TenantSchemaServiceImpl implements TenantSchemaService {
 
     private final TenantSchemaProvisioner provisioner;

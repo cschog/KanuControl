@@ -6,16 +6,36 @@ import Verein from "@/api/types/verein/VereinFormModel";
 import { COUNTRIES, CountryCode } from "@/api/enums/CountryCode";
 import { PersonAutocomplete } from "@/components/person/PersonAutocomplete";
 import PostalCodeAutocomplete from "@/components/common/PostalCodeAutocomplete";
+import type { DataFieldStatus } from "@/api/types/common/DataStatus";
 
 interface Props {
   form: Verein;
   editMode: boolean;
   mode: "create" | "edit";
   onChange: <K extends keyof Verein>(key: K, value: Verein[K]) => void;
+  fieldStatus?: Record<string, DataFieldStatus>;
 }
 
-export const VereinBaseForm: React.FC<Props> = ({ form, editMode, mode, onChange }) => {
+export const VereinBaseForm: React.FC<Props> = ({
+  form,
+  editMode,
+  mode,
+  onChange,
+  fieldStatus,
+}) => {
   const showExtended = mode === "edit";
+const getStatus = (field: string) => {
+  const status = fieldStatus?.[field];
+
+  if (!status || status.status === "OK") {
+    return {};
+  }
+
+  return {
+    dataStatus: status.status,
+    dataStatusMessage: status.message,
+  };
+};
 
   return (
     <>
@@ -37,8 +57,8 @@ export const VereinBaseForm: React.FC<Props> = ({ form, editMode, mode, onChange
       <PostalCodeAutocomplete
         countryCode={form.countryCode ?? "DE"}
         postalCode={form.plz}
-        city={form.ort}
         disabled={!editMode}
+        {...getStatus("plz")}
         onSelect={(item) => {
           onChange("plz", item.postalCode);
           onChange("ort", item.city);
@@ -50,6 +70,7 @@ export const VereinBaseForm: React.FC<Props> = ({ form, editMode, mode, onChange
         value={form.ort ?? ""}
         onChange={(v) => onChange("ort", v)}
         disabled={!editMode}
+        {...getStatus("ort")}
       />
 
       <FormControl fullWidth size="small">
@@ -78,6 +99,8 @@ export const VereinBaseForm: React.FC<Props> = ({ form, editMode, mode, onChange
             value={form.strasse ?? ""}
             onChange={(v) => onChange("strasse", v)}
             disabled={!editMode}
+            {...getStatus("strasse")}
+            dataStatusMessage={fieldStatus?.["strasse"]?.message}
           />
 
           <FormFeld
@@ -85,6 +108,7 @@ export const VereinBaseForm: React.FC<Props> = ({ form, editMode, mode, onChange
             value={form.telefon ?? ""}
             onChange={(v) => onChange("telefon", v)}
             disabled={!editMode}
+            {...getStatus("telefon")}
           />
 
           <FormFeld
@@ -92,6 +116,8 @@ export const VereinBaseForm: React.FC<Props> = ({ form, editMode, mode, onChange
             value={form.bankName ?? ""}
             onChange={(v) => onChange("bankName", v)}
             disabled={!editMode}
+            {...getStatus("bankName")}
+            dataStatusMessage={fieldStatus?.["bankName"]?.message}
           />
 
           <FormFeld
@@ -99,6 +125,8 @@ export const VereinBaseForm: React.FC<Props> = ({ form, editMode, mode, onChange
             value={form.iban ?? ""}
             onChange={(v) => onChange("iban", v)}
             disabled={!editMode}
+            {...getStatus("iban")}
+            dataStatusMessage={fieldStatus?.["iban"]?.message}
           />
 
           <FormFeld
@@ -106,12 +134,15 @@ export const VereinBaseForm: React.FC<Props> = ({ form, editMode, mode, onChange
             value={form.bic ?? ""}
             onChange={(v) => onChange("bic", v)}
             disabled={!editMode}
+            {...getStatus("bic")}
+            dataStatusMessage={fieldStatus?.["bic"]?.message}
           />
 
           <PersonAutocomplete
             label="Kontoinhaber"
             value={form.kontoinhaber}
             disabled={!editMode}
+            {...getStatus("kontoinhaber")}
             onChange={(person) => onChange("kontoinhaber", person)}
           />
 

@@ -17,7 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Tag("verein-crud")
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("test")
+@ActiveProfiles("junit")
 class VereinCreateTest extends AbstractTenantIntegrationTest {
 
     @Autowired

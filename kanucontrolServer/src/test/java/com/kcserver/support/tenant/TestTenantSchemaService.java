@@ -6,7 +6,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
-@Profile("test")
+@Profile("junit")
 public class TestTenantSchemaService implements TenantSchemaService {
 
     private final JdbcTemplate jdbcTemplate;

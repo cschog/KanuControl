@@ -20,7 +20,7 @@ import java.util.List;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@Profile("!test")
+@Profile("!junit")
 public class TenantLiquibaseMigrator {
 
     private final DataSource dataSource;

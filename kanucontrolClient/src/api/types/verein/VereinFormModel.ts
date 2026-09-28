@@ -2,6 +2,7 @@
 
 import { PersonRef } from "@/api/types/person/PersonRef";
 import { CountryCode } from "@/api/enums/CountryCode";
+import type { DataStatus, DataFieldStatus } from "@/api/types/common/DataStatus";
 
 export default interface VereinFormModel {
   /** ID – nur bei READ / EDIT */
@@ -34,4 +35,9 @@ export default interface VereinFormModel {
   kontoinhaber?: PersonRef;
 
   mitgliederCount?: number;
+
+  dataStatus?: {
+    status: DataStatus;
+    fields: Record<string, DataFieldStatus>;
+  };
 }

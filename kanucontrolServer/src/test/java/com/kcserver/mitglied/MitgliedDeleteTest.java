@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("test")
+@ActiveProfiles("junit")
 @Tag("mitglied-crud")
 class MitgliedDeleteTest extends AbstractTenantIntegrationTest {
 

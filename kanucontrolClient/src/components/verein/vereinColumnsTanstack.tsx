@@ -1,5 +1,6 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { COUNTRIES } from "@/api/enums/CountryCode";
+import { Box, Tooltip } from "@mui/material";
 
 import Verein from "@/api/types/verein/VereinFormModel";
 
@@ -8,6 +9,74 @@ export interface VereinWithId extends Verein {
 }
 
 export const vereinColumnsTanstack: ColumnDef<VereinWithId>[] = [
+  {
+    id: "dataStatus",
+    header: "",
+    enableSorting: false,
+    size: 32,
+
+    cell: ({ row }) => {
+      const status = row.original.dataStatus;
+
+      if (!status || status.status === "OK") {
+        return null;
+      }
+
+      const isError = status.status === "ERROR";
+
+      const messages = Object.values(status.fields ?? {})
+        .filter((field) => field.status === status.status)
+        .map((field) => field.message);
+
+      if (messages.length === 0) {
+        return null;
+      }
+
+      return (
+        <Tooltip
+          title={
+            <Box>
+              {messages.map((message, index) => (
+                <div key={index}>{message}</div>
+              ))}
+            </Box>
+          }
+          arrow
+          placement="top"
+          slotProps={{
+            tooltip: {
+              sx: {
+                fontSize: "0.95rem",
+                lineHeight: 1.4,
+                maxWidth: 360,
+                padding: "10px 14px",
+              },
+            },
+            arrow: {
+              sx: {
+                fontSize: "1rem",
+              },
+            },
+          }}
+        >
+          <Box
+            sx={{
+              width: 10,
+              height: 10,
+              borderRadius: "50%",
+              backgroundColor: isError ? "error.main" : "#febf02",
+              mx: "auto",
+            }}
+          />
+        </Tooltip>
+      );
+    },
+
+    meta: {
+      align: "center",
+    },
+  },
+
   {
     accessorKey: "abk",
     header: "Abk.",
@@ -52,6 +121,7 @@ export const vereinColumnsTanstack: ColumnDef<VereinWithId>[] = [
     header: "Ort",
     enableSorting: true,
   },
+
   {
     accessorKey: "countryCode",
     header: "Land",

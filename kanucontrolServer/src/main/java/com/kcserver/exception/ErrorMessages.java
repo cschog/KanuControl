@@ -19,6 +19,24 @@ public final class ErrorMessages {
     // Veranstaltung
     // =========================================================
 
+    public static final String VERANSTALTUNG_NAME_REQUIRED =
+            "Name der Veranstaltung ist erforderlich.";
+
+    public static final String VERANSTALTUNG_PLZ_REQUIRED =
+            "PLZ des Veranstaltungsortes ist erforderlich.";
+
+    public static final String VERANSTALTUNG_ORT_REQUIRED =
+            "Ort des Veranstaltungsortes ist erforderlich.";
+
+    public static final String VERANSTALTUNG_LAND_REQUIRED =
+            "Land des Veranstaltungsortes ist erforderlich.";
+
+    public static final String VERANSTALTUNG_BEGINN_ZEIT_REQUIRED =
+            "Beginnzeit ist erforderlich.";
+
+    public static final String VERANSTALTUNG_ENDE_ZEIT_REQUIRED =
+            "Endzeit ist erforderlich.";
+
     public static final String VERANSTALTUNG_NOT_FOUND =
             "Veranstaltung nicht gefunden";
 
@@ -62,6 +80,18 @@ public final class ErrorMessages {
     // Person
     // =========================================================
 
+    public static final String PERSON_REQUIRED =
+            "Person ist nicht vorhanden.";
+
+    public static final String PERSON_NAME_REQUIRED =
+            "Nachname ist erforderlich.";
+
+    public static final String PERSON_VORNAME_REQUIRED =
+            "Vorname ist erforderlich.";
+
+    public static final String PERSON_SEX_REQUIRED =
+            "Geschlecht ist erforderlich.";
+
     public static final String PERSON_NOT_FOUND =
             "Person nicht gefunden";
 
@@ -84,6 +114,30 @@ public final class ErrorMessages {
     // Verein
     // =========================================================
 
+    public static final String VEREIN_REQUIRED =
+            "Verein ist nicht vorhanden.";
+
+    public static final String VEREIN_DATA_INCOMPLETE =
+            "Die Daten des Veranstaltervereins sind noch nicht vollständig.";
+
+    public static final String VEREIN_NAME_REQUIRED =
+            "Vereinsname ist erforderlich.";
+
+    public static final String VEREIN_ABK_REQUIRED =
+            "Vereinsabkürzung ist erforderlich.";
+
+    public static final String VEREIN_STRASSE_REQUIRED =
+            "Straße ist erforderlich.";
+
+    public static final String VEREIN_PLZ_REQUIRED =
+            "PLZ ist erforderlich.";
+
+    public static final String VEREIN_ORT_REQUIRED =
+            "Ort ist erforderlich.";
+
+    public static final String VEREIN_LAND_REQUIRED =
+            "Land ist erforderlich.";
+
     public static final String VEREIN_NOT_FOUND =
             "Verein nicht gefunden";
 
@@ -98,6 +152,46 @@ public final class ErrorMessages {
 
     public static final String KONTOINHABER_NOT_FOUND =
             "Kontoinhaber nicht gefunden";
+
+    // =========================================================
+// Kontoinhaber / Veranstalter
+// =========================================================
+
+    public static final String KONTOINHABER_REQUIRED =
+            "Für einen veranstaltenden Verein muss ein Kontoinhaber hinterlegt sein.";
+
+    public static final String KONTOINHABER_GEBURTSDATUM_REQUIRED =
+            "Für den Kontoinhaber muss ein Geburtsdatum hinterlegt sein.";
+
+    public static final String KONTOINHABER_MIND_ALTER =
+            "Der Kontoinhaber muss mindestens 18 Jahre alt sein.";
+
+    public static final String KONTOINHABER_STRASSE_REQUIRED =
+            "Für den Kontoinhaber muss eine Straße hinterlegt sein.";
+
+    public static final String KONTOINHABER_PLZ_REQUIRED =
+            "Für den Kontoinhaber muss eine PLZ hinterlegt sein.";
+
+    public static final String KONTOINHABER_ORT_REQUIRED =
+            "Für den Kontoinhaber muss ein Ort hinterlegt sein.";
+
+    public static final String VERANSTALTER_BANKNAME_RECOMMENDED =
+            "Bankname wird für den Veranstalter empfohlen.";
+
+    public static final String VERANSTALTER_IBAN_RECOMMENDED =
+            "IBAN wird für den Veranstalter empfohlen.";
+
+    public static final String VERANSTALTER_BIC_RECOMMENDED =
+            "BIC wird für den Veranstalter empfohlen.";
+
+    public static final String KONTOINHABER_BANKNAME_RECOMMENDED =
+            "Bankname des Kontoinhabers wird empfohlen.";
+
+    public static final String KONTOINHABER_IBAN_RECOMMENDED =
+            "IBAN des Kontoinhabers wird empfohlen.";
+
+    public static final String KONTOINHABER_BIC_RECOMMENDED =
+            "BIC des Kontoinhabers wird empfohlen.";
 
     // =========================================================
     // Mitglied

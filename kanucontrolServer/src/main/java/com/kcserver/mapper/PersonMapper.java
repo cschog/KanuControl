@@ -112,5 +112,9 @@ public interface PersonMapper {
             target = "verwendetInFahrtabschnitten",
             ignore = true
     )
+    @Mapping(
+            target = "dataStatus",
+            ignore = true
+    )
     PersonRefDTO toPersonRefDTO(Person person);
 }

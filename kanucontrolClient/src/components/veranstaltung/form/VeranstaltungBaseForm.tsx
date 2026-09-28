@@ -56,21 +56,13 @@ export const VeranstaltungBaseForm: React.FC<Props> = ({
   beitragsstrukturen,
   onChange,
 }) => {
-
-
-const unterkunftsarten = useLoad<UnterkunftsartRef[]>(
-  getUnterkunftsartRefs,
-  {
+  const unterkunftsarten = useLoad<UnterkunftsartRef[]>(getUnterkunftsartRefs, {
     initialData: [],
-  },
-);
+  });
 
- const verpflegungsmodelle = useLoad<VerpflegungsmodellRef[]>(
-  getVerpflegungsmodellRefs,
-  {
+  const verpflegungsmodelle = useLoad<VerpflegungsmodellRef[]>(getVerpflegungsmodellRefs, {
     initialData: [],
-  },
-);
+  });
 
   return (
     <>
@@ -197,7 +189,6 @@ const unterkunftsarten = useLoad<UnterkunftsartRef[]>(
           <PostalCodeAutocomplete
             countryCode={form.countryCode ?? "DE"}
             postalCode={form.plz}
-            city={form.ort}
             disabled={!editMode}
             onSelect={(item) => {
               onChange("plz", item.postalCode);

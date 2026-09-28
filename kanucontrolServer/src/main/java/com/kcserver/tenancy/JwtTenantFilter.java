@@ -16,7 +16,7 @@ import java.io.IOException;
 import java.util.List;
 
 @Component
-@Profile("!test") // ✅ nur außerhalb von Tests
+@Profile("!junit") // ✅ nur außerhalb von Tests
 public class JwtTenantFilter
         extends OncePerRequestFilter
         implements TenantFilter {

@@ -1,6 +1,6 @@
 import { TextField, Tooltip, Box } from "@mui/material";
 import { normalizeGermanDate } from "@/utils/dateUtils";
-import { DataFieldStatus } from "./FormFeld";
+import type { FieldStatus } from "./FormFeld";
 
 interface FormFeldDateProps {
   label: string;
@@ -8,7 +8,7 @@ interface FormFeldDateProps {
   onChange: (value: string) => void;
   disabled?: boolean;
 
-  dataStatus?: DataFieldStatus;
+  dataStatus?: FieldStatus;
   dataStatusMessage?: string;
 }
 

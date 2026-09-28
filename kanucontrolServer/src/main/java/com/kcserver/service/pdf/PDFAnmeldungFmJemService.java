@@ -1,7 +1,10 @@
 package com.kcserver.service.pdf;
 
+import com.kcserver.dto.validation.DataStatus;
+import com.kcserver.dto.validation.VereinDataStatusDTO;
 import com.kcserver.entity.Veranstaltung;
 import com.kcserver.exception.ErrorMessages;
+import com.kcserver.service.VereinDataStatusService;
 import lombok.RequiredArgsConstructor;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -36,6 +39,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class PDFAnmeldungFmJemService {
 
     private final PlanungRepository planungRepository;
+    private final VereinDataStatusService vereinDataStatusService;
 
     @Transactional(readOnly = true)
     public byte[] generate(Long veranstaltungId) {
@@ -49,6 +53,19 @@ public class PDFAnmeldungFmJemService {
                         ));
 
         Veranstaltung v = planung.getVeranstaltung();
+
+        VereinDataStatusDTO dataStatus =
+                vereinDataStatusService.determineStatus(
+                        v.getVerein(),
+                        true
+                );
+
+        if (dataStatus.getStatus() == DataStatus.ERROR) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    ErrorMessages.VEREIN_DATA_INCOMPLETE
+            );
+        }
 
         try (
                 PDDocument doc = Loader.loadPDF(

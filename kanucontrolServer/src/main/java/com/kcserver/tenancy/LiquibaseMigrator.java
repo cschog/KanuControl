@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@Profile("!test")
+@Profile("!junit")
 public class LiquibaseMigrator {
 
     private final TenantLiquibaseMigrator tenantLiquibaseMigrator;

@@ -19,6 +19,7 @@ public interface VereinMapper {
     @Mapping(source = "kontoinhaber", target = "kontoinhaber")
     @Mapping(source = "countryCode", target = "countryCode")
     @Mapping(expression = "java(verein.getMitglieder() != null ? verein.getMitglieder().size() : 0)", target = "mitgliederCount")
+    @Mapping(target = "dataStatus", ignore = true)
     VereinDTO toDTO(Verein verein);
 
     @Named("toDTOWithoutMitgliederCount")

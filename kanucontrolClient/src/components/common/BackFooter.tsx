@@ -1,6 +1,7 @@
 import { Box, Button } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useRef } from "react";
 
 interface Action {
   label: string;
@@ -14,10 +15,20 @@ interface Props {
   onClick?: () => void;
   actions?: Action[];
   floating?: boolean;
+  onHeightChange?: (height: number) => void;
 }
 
-export default function BackFooter({ label, path, onClick, actions, floating = false }: Props) {
+export default function BackFooter({
+  label,
+  path,
+  onClick,
+  actions,
+  floating = false,
+  onHeightChange,
+}: Props) {
   const navigate = useNavigate();
+
+  const footerRef = useRef<HTMLDivElement>(null);
 
   const allActions: Action[] =
     actions ??
@@ -39,8 +50,30 @@ export default function BackFooter({ label, path, onClick, actions, floating = f
     }
   };
 
+  useEffect(() => {
+    if (!floating || !footerRef.current || !onHeightChange) {
+      return;
+    }
+
+    const element = footerRef.current;
+
+    const updateHeight = () => {
+      onHeightChange(element.getBoundingClientRect().height);
+    };
+
+    updateHeight();
+
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(element);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [floating, onHeightChange]);
+
   return (
     <Box
+      ref={footerRef}
       sx={{
         display: "flex",
         justifyContent: "center",
@@ -53,6 +86,11 @@ export default function BackFooter({ label, path, onClick, actions, floating = f
           left: "50%",
           transform: "translateX(-50%)",
           zIndex: 1100,
+
+          width: {
+            xs: "calc(100% - 32px)",
+            md: "auto",
+          },
         }),
       }}
     >
@@ -66,6 +104,11 @@ export default function BackFooter({ label, path, onClick, actions, floating = f
           bgcolor: "background.paper",
           borderRadius: 2,
           boxShadow: 3,
+
+          width: {
+            xs: "100%",
+            md: "auto",
+          },
         }}
       >
         {allActions.map((action) => (
@@ -75,7 +118,10 @@ export default function BackFooter({ label, path, onClick, actions, floating = f
             startIcon={<ArrowBackIcon />}
             onClick={() => handleAction(action)}
             sx={{
-              width: 180,
+              width: {
+                xs: "100%",
+                md: 180,
+              },
               minHeight: 36,
             }}
           >

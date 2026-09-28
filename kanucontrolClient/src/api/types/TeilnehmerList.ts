@@ -1,3 +1,5 @@
+import type { DataStatus } from "@/api/types/common/DataStatus";
+
 export interface TeilnehmerList {
   id: number;
 
@@ -13,5 +15,6 @@ export interface TeilnehmerList {
     name: string;
     hauptvereinAbk?: string;
     sex?: "M" | "W" | "D";
+    dataStatus?: DataStatus;
   };
 }

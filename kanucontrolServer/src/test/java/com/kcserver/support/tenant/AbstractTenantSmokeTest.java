@@ -8,7 +8,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
-@ActiveProfiles("test")
+@ActiveProfiles("junit")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractTenantSmokeTest {
 

@@ -16,7 +16,7 @@ import java.io.IOException;
  * → Tenant wird bereits im AbstractTenantIntegrationTest gesetzt
  */
 @Component
-@Profile("test")
+@Profile("junit")
 public class TestTenantFilter extends OncePerRequestFilter
         implements TenantFilter {
 

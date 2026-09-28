@@ -107,4 +107,9 @@ and (
     group by r.fahrer.id
 """)
     Set<Long> findFahrerPersonIds(@Param("personIds") Collection<Long> personIds);
+
+    boolean existsByVeranstaltungIdAndFahrerId(
+            Long veranstaltungId,
+            Long fahrerId
+    );
 }

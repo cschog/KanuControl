@@ -6,7 +6,8 @@ import { Sex } from "@/api/enums/Sex";
 import { COUNTRIES } from "@/api/enums/CountryCode";
 import PostalCodeAutocomplete from "@/components/common/PostalCodeAutocomplete";
 
-import { PersonSave, DataFieldStatus } from "@/api/types/person/Person";
+import { PersonSave } from "@/api/types/person/Person";
+import type { DataFieldStatus } from "@/api/types/common/DataStatus";
 
 interface Props {
   form: PersonSave;
@@ -89,8 +90,8 @@ export const PersonBaseForm: React.FC<Props> = ({
       <PostalCodeAutocomplete
         countryCode={form.countryCode ?? "DE"}
         postalCode={form.plz}
-        city={form.ort}
         disabled={!editMode}
+        {...getStatus("plz")}
         onSelect={(item) => {
           onChange("plz", item.postalCode);
           onChange("ort", item.city);

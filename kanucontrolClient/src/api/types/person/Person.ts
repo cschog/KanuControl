@@ -2,11 +2,12 @@
 import { Sex } from "@/api/enums/Sex";
 import { CountryCode } from "@/api/enums/CountryCode";
 import { MitgliedDetail, MitgliedSaveInPerson } from "@/api/types/Mitglied";
+import type { DataStatus, DataFieldStatus } from "@/api/types/common/DataStatus";
+
 
 /* ============================
  * LIST
  * ============================ */
-export type DataStatus = "OK" | "WARNING" | "ERROR";
 
 export interface PersonList {
   id: number;
@@ -25,10 +26,6 @@ export interface PersonList {
 /* ============================
  * DETAIL
  * ============================ */
-export interface DataFieldStatus {
-  status: DataStatus;
-  message: string;
-}
 
 export interface PersonDataStatus {
   status: DataStatus;

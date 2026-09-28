@@ -3,7 +3,7 @@ import { TextField, TextFieldProps, Tooltip, Box } from "@mui/material";
 
 type FormValue = string | number | boolean | null | undefined;
 
-export type DataFieldStatus = "ERROR" | "WARNING";
+export type FieldStatus = "ERROR" | "WARNING";
 
 interface FormFeldProps extends Omit<TextFieldProps, "value" | "onChange"> {
   value: FormValue;
@@ -13,7 +13,7 @@ interface FormFeldProps extends Omit<TextFieldProps, "value" | "onChange"> {
   /**
    * Kontextbezogener Datenstatus.
    */
-  dataStatus?: DataFieldStatus;
+  dataStatus?: FieldStatus;
 
   /**
    * Erklärung zum Datenstatus.

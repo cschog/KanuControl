@@ -22,7 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Tag("person-crud")
 @SpringBootTest
-@ActiveProfiles("test")
+@ActiveProfiles("junit")
 @AutoConfigureMockMvc
 class PersonUpdateTest extends AbstractTenantIntegrationTest {
 

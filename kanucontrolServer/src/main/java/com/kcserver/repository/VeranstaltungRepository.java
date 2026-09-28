@@ -55,9 +55,23 @@ where v.id = :id
     boolean existsByVereinId(Long vereinId);
 
     @Query("""
+    select distinct v.verein.id
+    from Veranstaltung v
+    where v.verein.id in :vereinIds
+""")
+    Set<Long> findVeranstalterVereinIds(
+            @Param("vereinIds") Collection<Long> vereinIds
+    );
+
+    @Query("""
     select v.leiter.id
     from Veranstaltung v
     where v.leiter.id in :personIds
 """)
     Set<Long> findLeiterPersonIds(@Param("personIds") Collection<Long> personIds);
+
+    boolean existsByIdAndLeiterId(
+            Long veranstaltungId,
+            Long personId
+    );
 }

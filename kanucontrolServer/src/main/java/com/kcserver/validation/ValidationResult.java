@@ -35,4 +35,18 @@ public class ValidationResult {
     public List<ValidationMessage> getWarnings() {
         return List.copyOf(warnings);
     }
+
+    public static ValidationResult valid() {
+        return new ValidationResult();
+    }
+
+    public static ValidationResult invalid(List<String> messages) {
+        ValidationResult result = new ValidationResult();
+
+        messages.forEach(message ->
+                result.addError(message, null)
+        );
+
+        return result;
+    }
 }

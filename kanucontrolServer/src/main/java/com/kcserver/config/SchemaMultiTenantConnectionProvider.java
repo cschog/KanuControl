@@ -8,7 +8,7 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-@Profile("!test")
+@Profile("!junit")
 @Component
 public class SchemaMultiTenantConnectionProvider
         implements MultiTenantConnectionProvider {

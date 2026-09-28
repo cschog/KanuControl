@@ -16,7 +16,7 @@ import java.sql.Connection;
 
 @Component
 @RequiredArgsConstructor
-@Profile("!test")
+@Profile("!junit")
 public class GlobalLiquibaseMigrator {
 
     private final DataSource dataSource;

@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
-@Profile("!test")
+@Profile("!junit")
 public class JpaMultiTenantConfig {
 
     @Bean

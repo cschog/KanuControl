@@ -1,5 +1,7 @@
-package com.kcserver.service.impl;
+package com.kcserver.csv;
 
+import com.kcserver.entity.Person;
+import com.kcserver.entity.Verein;
 import com.kcserver.service.BankLookupService;
 import jakarta.annotation.PostConstruct;
 import org.springframework.core.io.ClassPathResource;
@@ -50,6 +52,46 @@ public class CsvBankLookupService implements BankLookupService {
                     "Konnte bic-bank.csv nicht laden",
                     e
             );
+        }
+    }
+
+    @Override
+    public void fillBankNameIfMissing(Person person) {
+
+        if (person.getBankName() != null
+                && !person.getBankName().isBlank()) {
+            return;
+        }
+
+        if (person.getBic() == null
+                || person.getBic().isBlank()) {
+            return;
+        }
+
+        String bankName = findBankName(person.getBic());
+
+        if (bankName != null) {
+            person.setBankName(bankName);
+        }
+    }
+
+    @Override
+    public void fillBankNameIfMissing(Verein verein) {
+
+        if (verein.getBankName() != null
+                && !verein.getBankName().isBlank()) {
+            return;
+        }
+
+        if (verein.getBic() == null
+                || verein.getBic().isBlank()) {
+            return;
+        }
+
+        String bankName = findBankName(verein.getBic());
+
+        if (bankName != null) {
+            verein.setBankName(bankName);
         }
     }
 

@@ -29,7 +29,7 @@ import java.time.LocalDate;
 import static org.assertj.core.api.Assertions.*;
 
 @SpringBootTest
-@ActiveProfiles("test")
+@ActiveProfiles("junit")
 @Transactional
 class FoerdersatzIntegrationTest extends AbstractFinanzIntegrationTest {
 

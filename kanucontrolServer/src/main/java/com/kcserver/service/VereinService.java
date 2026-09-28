@@ -19,6 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -29,19 +31,26 @@ public class VereinService {
     private final VereinMapper vereinMapper;
     private final MitgliedRepository mitgliedRepository;
     private final VeranstaltungRepository veranstaltungRepository;
+    private final VereinDataStatusService vereinDataStatusService;
+    private final BankLookupService bankLookupService;
 
     public VereinService(
             VereinRepository vereinRepository,
             PersonRepository personRepository,
             VereinMapper vereinMapper,
             MitgliedRepository mitgliedRepository,
-            VeranstaltungRepository veranstaltungRepository
+            VeranstaltungRepository veranstaltungRepository,
+            VereinDataStatusService vereinDataStatusService,
+            BankLookupService bankLookupService
+
     ) {
         this.vereinRepository = vereinRepository;
         this.personRepository = personRepository;
         this.vereinMapper = vereinMapper;
         this.veranstaltungRepository = veranstaltungRepository;
         this.mitgliedRepository = mitgliedRepository;
+        this.vereinDataStatusService = vereinDataStatusService;
+        this.bankLookupService = bankLookupService;
     }
 
     /* =========================================================
@@ -50,9 +59,36 @@ public class VereinService {
 
     @Transactional(readOnly = true)
     public List<VereinDTO> getAll() {
-        return vereinRepository.findAll()
-                .stream()
-                .map(vereinMapper::toDTO)
+
+        List<Verein> vereine = vereinRepository.findAll();
+
+        if (vereine.isEmpty()) {
+            return List.of();
+        }
+
+        Set<Long> vereinIds = vereine.stream()
+                .map(Verein::getId)
+                .collect(Collectors.toSet());
+
+        Set<Long> veranstalterIds =
+                veranstaltungRepository.findVeranstalterVereinIds(vereinIds);
+
+        return vereine.stream()
+                .map(verein -> {
+                    VereinDTO dto = vereinMapper.toDTO(verein);
+
+                    boolean isVeranstalter =
+                            veranstalterIds.contains(verein.getId());
+
+                    dto.setDataStatus(
+                            vereinDataStatusService.determineStatus(
+                                    verein,
+                                    isVeranstalter
+                            )
+                    );
+
+                    return dto;
+                })
                 .toList();
     }
 
@@ -62,7 +98,19 @@ public class VereinService {
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, ErrorMessages.VEREIN_NOT_FOUND
                 ));
-        return vereinMapper.toDTO(verein);
+        VereinDTO dto = vereinMapper.toDTO(verein);
+
+        boolean isVeranstalter =
+                veranstaltungRepository.existsByVereinId(verein.getId());
+
+        dto.setDataStatus(
+                vereinDataStatusService.determineStatus(
+                        verein,
+                        isVeranstalter
+                )
+        );
+
+        return dto;
     }
 
     @Transactional(readOnly = true)
@@ -131,9 +179,18 @@ public class VereinService {
             verein.setKontoinhaber(kontoinhaber);
         }
 
-        return vereinMapper.toDTO(
-                vereinRepository.save(verein)
+        Verein saved = vereinRepository.save(verein);
+
+        VereinDTO result = vereinMapper.toDTO(saved);
+
+        result.setDataStatus(
+                vereinDataStatusService.determineStatus(
+                        saved,
+                        false
+                )
         );
+
+        return result;
     }
 
     private void ensureUniqueVerein(String abk, String name, Long excludeId) {
@@ -166,6 +223,8 @@ public class VereinService {
 
         vereinMapper.updateFromDTO(dto, verein);
 
+        bankLookupService.fillBankNameIfMissing(verein);
+
         // Kontoinhaber entfernen
         if (dto.getKontoinhaberId() == null) {
             verein.setKontoinhaber(null);
@@ -182,7 +241,19 @@ public class VereinService {
             verein.setKontoinhaber(neuerInhaber);
         }
 
-        return vereinMapper.toDTO(verein);
+        VereinDTO result = vereinMapper.toDTO(verein);
+
+        boolean isVeranstalter =
+                veranstaltungRepository.existsByVereinId(verein.getId());
+
+        result.setDataStatus(
+                vereinDataStatusService.determineStatus(
+                        verein,
+                        isVeranstalter
+                )
+        );
+
+        return result;
     }
 
     /* =========================================================

@@ -5,6 +5,8 @@ import com.kcserver.dto.veranstaltung.VeranstaltungDetailDTO;
 import com.kcserver.enumtype.PdfDokumentTyp;
 import com.kcserver.service.TeilnehmerService;
 import com.kcserver.service.veranstaltung.VeranstaltungService;
+import com.kcserver.validation.ValidationMessage;
+import com.kcserver.validation.ValidationResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,7 @@ public class PDFDokumentService {
     private final PDFTeilnehmerDatenkontrolleService teilnehmerDatenkontrolleService;
     private final PDFZahlungsnachweiseService zahlungsnachweiseService;
     private final PDFBelegDokumenteService belegDokumenteService;
+
 
     private final VeranstaltungService veranstaltungService;
     private final TeilnehmerService teilnehmerService;
@@ -143,10 +146,12 @@ public class PDFDokumentService {
 
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    String.join(
-                            System.lineSeparator(),
-                            result.getMessages()
-                    )
+                    result.getErrors().stream()
+                            .map(ValidationMessage::message)
+                            .reduce(
+                                    (a, b) -> a + System.lineSeparator() + b
+                            )
+                            .orElse("Validierung fehlgeschlagen.")
             );
         }
     }

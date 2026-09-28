@@ -1,5 +1,6 @@
 package com.kcserver.service;
 
+import com.kcserver.dto.person.PersonDataStatusDTO;
 import com.kcserver.dto.person.PersonListDTO;
 import com.kcserver.dto.teilnehmer.*;
 import com.kcserver.dto.zahlungsnachweis.ZahlungsnachweisListDTO;
@@ -12,8 +13,10 @@ import com.kcserver.mapper.TeilnehmerMapper;
 import com.kcserver.persistence.specification.TeilnehmerSpecification;
 import com.kcserver.repository.*;
 import com.kcserver.repository.fahrkosten.ReisekostenabrechnungRepository;
+import com.kcserver.service.person.PersonDataStatusService;
 import com.kcserver.service.zahlungsnachweis.ZahlungsstatusService;
 import com.kcserver.service.beitrag.TeilnehmerBeitragService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
@@ -36,6 +39,7 @@ import static com.kcserver.exception.ErrorMessages.*;
 import org.springframework.data.domain.Pageable;
 
 @Service
+@RequiredArgsConstructor
 @Transactional
 public class TeilnehmerService {
 
@@ -49,31 +53,8 @@ public class TeilnehmerService {
     private final ReisekostenabrechnungRepository reisekostenabrechnungRepository;
     private final ZahlungsnachweisRepository zahlungsnachweisRepository;
     private final ZahlungsstatusService zahlungsstatusService;
+    private final PersonDataStatusService personDataStatusService;
 
-
-    public TeilnehmerService(
-            TeilnehmerRepository teilnehmerRepository,
-            VeranstaltungRepository veranstaltungRepository,
-            PersonRepository personRepository,
-            MitgliedRepository mitgliedRepository,
-            TeilnehmerMapper teilnehmerMapper,
-            PersonMapper personMapper,
-            TeilnehmerBeitragService teilnehmerBeitragService,
-            ReisekostenabrechnungRepository reisekostenabrechnungRepository,
-            ZahlungsnachweisRepository zahlungsnachweisRepository,
-            ZahlungsstatusService zahlungsstatusService
-    ) {
-        this.teilnehmerRepository = teilnehmerRepository;
-        this.veranstaltungRepository = veranstaltungRepository;
-        this.personRepository = personRepository;
-        this.mitgliedRepository = mitgliedRepository;
-        this.teilnehmerMapper = teilnehmerMapper;
-        this.personMapper = personMapper;
-        this.teilnehmerBeitragService = teilnehmerBeitragService;
-        this.reisekostenabrechnungRepository = reisekostenabrechnungRepository;
-        this.zahlungsnachweisRepository = zahlungsnachweisRepository;
-        this.zahlungsstatusService = zahlungsstatusService;
-    }
 
     /* =========================================================
        ADD SINGLE
@@ -322,11 +303,28 @@ public class TeilnehmerService {
        AVAILABLE
        ========================================================= */
     @Transactional(readOnly = true)
-    public List<PersonListDTO> findAvailable(Long veranstaltungId, String search) {
+    public List<PersonListDTO> findAvailable(
+            Long veranstaltungId,
+            String search
+    ) {
 
         return teilnehmerRepository.findAvailable(veranstaltungId, search)
                 .stream()
-                .map(personMapper::toListDTO)
+                .map(person -> {
+
+                    PersonListDTO dto =
+                            personMapper.toListDTO(person);
+
+                    PersonDataStatusDTO status =
+                            determinePersonStatus(
+                                    veranstaltungId,
+                                    person
+                            );
+
+                    dto.setDataStatus(status.getStatus());
+
+                    return dto;
+                })
                 .toList();
     }
 
@@ -347,7 +345,21 @@ public class TeilnehmerService {
                         aktiv,
                         pageable
                 )
-                .map(personMapper::toListDTO);
+                .map(person -> {
+
+                    PersonListDTO dto =
+                            personMapper.toListDTO(person);
+
+                    PersonDataStatusDTO status =
+                            determinePersonStatus(
+                                    veranstaltungId,
+                                    person
+                            );
+
+                    dto.setDataStatus(status.getStatus());
+
+                    return dto;
+                });
     }
 
     /* =========================================================
@@ -355,9 +367,26 @@ public class TeilnehmerService {
        ========================================================= */
     @Transactional(readOnly = true)
     public List<PersonListDTO> getAssigned(Long veranstaltungId) {
+
         return teilnehmerRepository.findAllWithPerson(veranstaltungId)
                 .stream()
-                .map(t -> personMapper.toListDTO(t.getPerson()))
+                .map(t -> {
+
+                    Person person = t.getPerson();
+
+                    PersonListDTO dto =
+                            personMapper.toListDTO(person);
+
+                    PersonDataStatusDTO status =
+                            determinePersonStatus(
+                                    veranstaltungId,
+                                    person
+                            );
+
+                    dto.setDataStatus(status.getStatus());
+
+                    return dto;
+                })
                 .toList();
     }
 
@@ -378,7 +407,25 @@ public class TeilnehmerService {
 
         return teilnehmerRepository
                 .findAll(spec, pageable)
-                .map(teilnehmerMapper::toListDTO);
+                .map(teilnehmer -> {
+
+                    TeilnehmerListDTO dto =
+                            teilnehmerMapper.toListDTO(teilnehmer);
+
+                    Person person = teilnehmer.getPerson();
+
+                    PersonDataStatusDTO status =
+                            determinePersonStatus(
+                                    veranstaltungId,
+                                    person
+                            );
+
+                    if (dto.getPerson() != null) {
+                        dto.getPerson().setDataStatus(status.getStatus());
+                    }
+
+                    return dto;
+                });
     }
     /* =========================================================
        SET LEITER
@@ -557,6 +604,30 @@ public class TeilnehmerService {
     /* =========================================================
        HELPER
        ========================================================= */
+
+    private PersonDataStatusDTO determinePersonStatus(
+            Long veranstaltungId,
+            Person person
+    ) {
+        boolean isLeiter =
+                veranstaltungRepository.existsByIdAndLeiterId(
+                        veranstaltungId,
+                        person.getId()
+                );
+
+        boolean isFahrer =
+                reisekostenabrechnungRepository
+                        .existsByVeranstaltungIdAndFahrerId(
+                                veranstaltungId,
+                                person.getId()
+                        );
+
+        return personDataStatusService.determineStatus(
+                person,
+                isLeiter,
+                isFahrer
+        );
+    }
 
     private Person getPerson(Long id) {
         return personRepository.findById(id)

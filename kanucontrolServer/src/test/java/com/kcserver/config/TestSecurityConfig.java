@@ -12,7 +12,7 @@ import org.springframework.security.oauth2.server.resource.web.authentication.Be
 import org.springframework.security.web.SecurityFilterChain;
 
 @TestConfiguration
-@Profile("test")
+@Profile("junit")
 public class TestSecurityConfig {
 
     @Bean

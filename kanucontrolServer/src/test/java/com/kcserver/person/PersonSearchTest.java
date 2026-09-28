@@ -26,7 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Tag("person-crud")
 @SpringBootTest
-@ActiveProfiles("test")
+@ActiveProfiles("junit")
 @AutoConfigureMockMvc
 @TestPropertySource(properties = {
         "kcserver.test-tenant=tenant_test_2"

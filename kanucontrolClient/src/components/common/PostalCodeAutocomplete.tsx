@@ -1,19 +1,22 @@
 import { useEffect, useState } from "react";
 
-import { Autocomplete, CircularProgress, TextField } from "@mui/material";
+import { Autocomplete, CircularProgress, TextField, Tooltip, Box } from "@mui/material";
 
 import { suggestPostalCodes } from "@/api/services/postalCodeApi";
 import { PostalCodeLookupResponse } from "@/api/types/PostalCodeLookup";
 
+import type { FieldStatus } from "@/components/common/FormFeld";
+
 type Props = {
   countryCode: string;
-
   postalCode?: string;
-  city?: string;
 
   onSelect: (item: PostalCodeLookupResponse) => void;
 
   disabled?: boolean;
+
+  dataStatus?: FieldStatus;
+  dataStatusMessage?: string;
 };
 
 export default function PostalCodeAutocomplete({
@@ -21,19 +24,20 @@ export default function PostalCodeAutocomplete({
   postalCode,
   onSelect,
   disabled,
+  dataStatus,
+  dataStatusMessage,
 }: Props) {
   const [inputValue, setInputValue] = useState("");
   const [options, setOptions] = useState<PostalCodeLookupResponse[]>([]);
   const [loading, setLoading] = useState(false);
 
-
   /* =========================================================
      EXTERNEN STATE SYNCHRONISIEREN
      ========================================================= */
 
-useEffect(() => {
-  setInputValue(postalCode ?? "");
-}, [postalCode]);
+  useEffect(() => {
+    setInputValue(postalCode ?? "");
+  }, [postalCode]);
 
   /* =========================================================
      SEARCH
@@ -54,6 +58,7 @@ useEffect(() => {
         setOptions(result);
       } catch (err) {
         console.error(err);
+        setOptions([]);
       } finally {
         setLoading(false);
       }
@@ -62,14 +67,11 @@ useEffect(() => {
     return () => clearTimeout(timeout);
   }, [countryCode, inputValue]);
 
-
-  
-
   /* =========================================================
      RENDER
      ========================================================= */
 
-  return (
+  const field = (
     <Autocomplete
       fullWidth
       disabled={disabled}
@@ -100,6 +102,7 @@ useEffect(() => {
           {...params}
           label="PLZ oder Ort"
           size="small"
+          error={dataStatus === "ERROR"}
           InputProps={{
             ...params.InputProps,
             endAdornment: (
@@ -113,5 +116,62 @@ useEffect(() => {
         />
       )}
     />
+  );
+
+  /* =========================================================
+     STATUS TOOLTIP
+     ========================================================= */
+
+  if (!dataStatus || !dataStatusMessage) {
+    return field;
+  }
+
+  return (
+    <Tooltip
+      title={dataStatusMessage}
+      arrow
+      placement="top"
+      slotProps={{
+        tooltip: {
+          sx: {
+            fontSize: "0.95rem",
+            lineHeight: 1.4,
+            maxWidth: 360,
+            padding: "10px 14px",
+          },
+        },
+        arrow: {
+          sx: {
+            fontSize: "1rem",
+          },
+        },
+      }}
+    >
+      <Box
+        sx={{
+          width: "100%",
+
+          ...(dataStatus === "ERROR" && {
+            "& .MuiOutlinedInput-root": {
+              backgroundColor: "rgba(209, 3, 3, 0.18)",
+            },
+            "& .MuiInputLabel-root": {
+              color: "error.main",
+            },
+          }),
+
+          ...(dataStatus === "WARNING" && {
+            "& .MuiOutlinedInput-root": {
+              backgroundColor: "rgba(244, 200, 4, 0.3)",
+            },
+            "& .MuiInputLabel-root": {
+              color: "warning.main",
+            },
+          }),
+        }}
+      >
+        {field}
+      </Box>
+    </Tooltip>
   );
 }

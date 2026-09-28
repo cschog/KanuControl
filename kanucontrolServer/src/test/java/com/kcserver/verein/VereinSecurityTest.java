@@ -18,7 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @Disabled("Security wird später getestet")
 @AutoConfigureMockMvc
-@ActiveProfiles("test")
+@ActiveProfiles("junit")
 @Tag("verein-security")
 class VereinSecurityTest extends AbstractTenantIntegrationTest {
 

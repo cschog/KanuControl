@@ -4,6 +4,7 @@ import com.kcserver.dto.validation.ValidationResultDTO;
 import com.kcserver.entity.Teilnehmer;
 import com.kcserver.entity.Veranstaltung;
 import com.kcserver.exception.BusinessRuleViolationException;
+import com.kcserver.exception.ErrorMessages;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -17,78 +18,79 @@ public class VeranstaltungValidator {
         ValidationResult result = new ValidationResult();
 
         if (veranstaltung == null) {
-            result.addError("Veranstaltung ist nicht vorhanden.", null);
+            result.addError(
+                    ErrorMessages.VERANSTALTUNG_REQUIRED,
+                    null
+            );
             return result;
         }
 
         if (isBlank(veranstaltung.getName())) {
             result.addError(
-                    "Name der Veranstaltung ist erforderlich.",
+                    ErrorMessages.VERANSTALTUNG_NAME_REQUIRED,
                     "name"
             );
         }
 
-        if (veranstaltung.getPlz() == null ||
-                veranstaltung.getPlz().isBlank()) {
+        if (isBlank(veranstaltung.getPlz())) {
             result.addError(
-                    "PLZ des Veranstaltungsortes ist erforderlich.",
+                    ErrorMessages.VERANSTALTUNG_PLZ_REQUIRED,
                     "plz"
             );
         }
 
-        if (veranstaltung.getOrt() == null ||
-                veranstaltung.getOrt().isBlank()) {
+        if (isBlank(veranstaltung.getOrt())) {
             result.addError(
-                    "Ort des Veranstaltungsortes ist erforderlich.",
+                    ErrorMessages.VERANSTALTUNG_ORT_REQUIRED,
                     "ort"
             );
         }
 
         if (veranstaltung.getCountryCode() == null) {
             result.addError(
-                    "Land des Veranstaltungsortes ist erforderlich.",
+                    ErrorMessages.VERANSTALTUNG_LAND_REQUIRED,
                     "countryCode"
             );
         }
 
         if (veranstaltung.getBeginnDatum() == null) {
             result.addError(
-                    "Beginndatum ist erforderlich.",
+                    ErrorMessages.VERANSTALTUNG_BEGINN_REQUIRED,
                     "beginnDatum"
             );
         }
 
         if (veranstaltung.getBeginnZeit() == null) {
             result.addError(
-                    "Beginnzeit ist erforderlich.",
+                    ErrorMessages.VERANSTALTUNG_BEGINN_ZEIT_REQUIRED,
                     "beginnZeit"
             );
         }
 
         if (veranstaltung.getEndeDatum() == null) {
             result.addError(
-                    "Enddatum ist erforderlich.",
+                    ErrorMessages.VERANSTALTUNG_ENDE_REQUIRED,
                     "endeDatum"
             );
         }
 
         if (veranstaltung.getEndeZeit() == null) {
             result.addError(
-                    "Endzeit ist erforderlich.",
+                    ErrorMessages.VERANSTALTUNG_ENDE_ZEIT_REQUIRED,
                     "endeZeit"
             );
         }
 
         if (veranstaltung.getVerein() == null) {
             result.addError(
-                    "Ausrichter/Verein ist erforderlich.",
+                    ErrorMessages.VERANSTALTUNG_VEREIN_REQUIRED,
                     "verein"
             );
         }
 
         if (veranstaltung.getLeiter() == null) {
             result.addError(
-                    "Leiter ist erforderlich.",
+                    ErrorMessages.VERANSTALTUNGSLEITER_REQUIRED,
                     "leiter"
             );
         }
@@ -105,7 +107,12 @@ public class VeranstaltungValidator {
 
         return new ValidationResultDTO(
                 fehler.isEmpty(),
-                fehler
+                fehler.stream()
+                        .map(message ->
+                                ValidationMessage.error(message, null)
+                        )
+                        .toList(),
+                List.of()
         );
     }
 
@@ -130,24 +137,24 @@ public class VeranstaltungValidator {
         List<String> fehler = new ArrayList<>();
 
         if (veranstaltung == null) {
-            fehler.add("Keine Veranstaltung vorhanden.");
+            fehler.add(ErrorMessages.VERANSTALTUNG_REQUIRED);
             return fehler;
         }
 
         if (veranstaltung.getLeiter() == null) {
-            fehler.add("Leiter fehlt.");
+            fehler.add(ErrorMessages.VERANSTALTUNGSLEITER_REQUIRED);
         }
 
         if (veranstaltung.getBeginnDatum() == null) {
-            fehler.add("Beginn-Datum fehlt.");
+            fehler.add(ErrorMessages.VERANSTALTUNG_BEGINN_REQUIRED);
         }
 
         if (veranstaltung.getEndeDatum() == null) {
-            fehler.add("Ende-Datum fehlt.");
+            fehler.add(ErrorMessages.VERANSTALTUNG_ENDE_REQUIRED);
         }
 
         if (veranstaltung.getTyp() == null) {
-            fehler.add("Veranstaltungstyp fehlt.");
+            fehler.add(ErrorMessages.VERANSTALTUNGSTYP_REQUIRED);
         }
 
         fehler.addAll(validateTeilnehmerdaten(teilnehmer));
@@ -161,19 +168,19 @@ public class VeranstaltungValidator {
         List<String> fehler = new ArrayList<>();
 
         if (teilnehmer == null || teilnehmer.isEmpty()) {
-            fehler.add("Keine Teilnehmer vorhanden.");
+            fehler.add(ErrorMessages.TEILNEHMER_REQUIRED);
             return fehler;
         }
 
         teilnehmer.forEach(t -> {
 
             if (t == null) {
-                fehler.add("Teilnehmer ist leer.");
+                fehler.add(ErrorMessages.TEILNEHMER_EMPTY);
                 return;
             }
 
             if (t.getPerson() == null) {
-                fehler.add("Teilnehmer ohne Person.");
+                fehler.add(ErrorMessages.TEILNEHMER_OHNE_PERSON);
                 return;
             }
 
@@ -188,7 +195,8 @@ public class VeranstaltungValidator {
 
             if (t.getPerson().getGeburtsdatum() == null) {
                 fehler.add(
-                        "Geburtsdatum fehlt bei: "
+                        ErrorMessages.TEILNEHMER_GEBURTSDATUM_REQUIRED
+                                + " "
                                 + name.trim()
                 );
             }

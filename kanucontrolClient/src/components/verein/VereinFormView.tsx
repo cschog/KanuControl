@@ -5,7 +5,6 @@ import { VereinBaseForm } from "./form/VereinBaseForm";
 import { VereinActionBar } from "./VereinActionBar";
 import { useVereinForm } from "./hooks/useVereinForm";
 import  ConfirmDeleteDialog  from "@/components/common/ConfirmDeleteDialog";
-import { PersonAutocomplete } from "@/components/person/PersonAutocomplete";
 import { VereinSave } from "@/api/types/verein/VereinSave";
 
 
@@ -63,16 +62,14 @@ export const VereinFormView: React.FC<VereinFormViewProps> = ({
         gap={2}
         sx={{ mt: 2 }}
       >
-        <VereinBaseForm form={form} editMode={editMode} mode="edit" onChange={update} />
+        <VereinBaseForm
+          form={form}
+          editMode={editMode}
+          mode="edit"
+          onChange={update}
+          fieldStatus={verein.dataStatus?.fields}
+        />
       </Box>
-
-      {/* ================= KONTOINHABER ================= */}
-      <PersonAutocomplete
-        label="Kontoinhaber"
-        value={form.kontoinhaber}
-        disabled={!editMode}
-        onChange={(person) => update("kontoinhaber", person)}
-      />
 
       {/* ================= ACTION BAR ================= */}
       <VereinActionBar
@@ -86,7 +83,6 @@ export const VereinFormView: React.FC<VereinFormViewProps> = ({
         onDelete={() => setConfirmOpen(true)}
         onBack={onBack}
         onCsvImport={onCsvImport}
-
         disableEdit={disableEdit}
         disableDelete={disableDelete}
       />

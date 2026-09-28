@@ -1,5 +1,6 @@
 package com.kcserver.dto.validation;
 
+import com.kcserver.validation.ValidationMessage;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,6 +13,6 @@ import java.util.List;
 public class ValidationResultDTO {
 
     private boolean valid;
-
-    private List<String> messages;
+    private List<ValidationMessage> errors;
+    private List<ValidationMessage> warnings;
 }

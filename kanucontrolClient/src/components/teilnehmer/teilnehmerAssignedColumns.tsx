@@ -1,5 +1,5 @@
+import { Box, Chip, Tooltip } from "@mui/material";
 import { ColumnDef } from "@tanstack/react-table";
-import { Chip } from "@mui/material";
 
 import { TeilnehmerList } from "@/api/types/TeilnehmerList";
 
@@ -15,6 +15,50 @@ export function teilnehmerAssignedColumns({ onRoleClick }: Props): ColumnDef<Tei
       accessorFn: (row) => `${row.person?.name ?? ""}, ${row.person?.vorname ?? ""}`,
       sortingFn: "text",
       size: 260,
+
+      cell: ({ row }) => {
+        const person = row.original.person;
+
+        const marker =
+          person?.dataStatus === "ERROR"
+            ? {
+                color: "error.main",
+                message: "Fehlende Pflichtangaben",
+              }
+            : person?.dataStatus === "WARNING"
+              ? {
+                  color: "#febf02",
+                  message: "Empfohlene Angaben fehlen",
+                }
+              : null;
+
+        return (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+            }}
+          >
+            {marker && (
+              <Tooltip title={marker.message} arrow placement="top">
+                <Box
+                  component="span"
+                  sx={{
+                    width: 9,
+                    height: 9,
+                    borderRadius: "50%",
+                    bgcolor: marker.color,
+                    flexShrink: 0,
+                  }}
+                />
+              </Tooltip>
+            )}
+
+            <Box>{`${person?.name ?? ""}, ${person?.vorname ?? ""}`}</Box>
+          </Box>
+        );
+      },
     },
 
     {
@@ -29,10 +73,6 @@ export function teilnehmerAssignedColumns({ onRoleClick }: Props): ColumnDef<Tei
       id: "verein",
       header: "Verein",
     },
-
-    /* ======================================== */
-    /* ROLLE */
-    /* ======================================== */
 
     {
       accessorKey: "rolle",

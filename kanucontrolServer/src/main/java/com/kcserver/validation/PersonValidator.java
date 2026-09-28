@@ -1,6 +1,7 @@
 package com.kcserver.validation;
 
 import com.kcserver.entity.Person;
+import com.kcserver.exception.ErrorMessages;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -11,20 +12,32 @@ public class PersonValidator {
         ValidationResult result = new ValidationResult();
 
         if (person == null) {
-            result.addError("Person ist nicht vorhanden.", null);
+            result.addError(
+                    ErrorMessages.PERSON_REQUIRED,
+                    null
+            );
             return result;
         }
 
         if (isBlank(person.getName())) {
-            result.addError("Nachname ist erforderlich.", "name");
+            result.addError(
+                    ErrorMessages.PERSON_NAME_REQUIRED,
+                    "name"
+            );
         }
 
         if (isBlank(person.getVorname())) {
-            result.addError("Vorname ist erforderlich.", "vorname");
+            result.addError(
+                    ErrorMessages.PERSON_VORNAME_REQUIRED,
+                    "vorname"
+            );
         }
 
         if (person.getSex() == null) {
-            result.addError("Geschlecht ist erforderlich.", "sex");
+            result.addError(
+                    ErrorMessages.PERSON_SEX_REQUIRED,
+                    "sex"
+            );
         }
 
         return result;

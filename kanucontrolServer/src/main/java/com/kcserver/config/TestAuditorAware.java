@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import java.util.Optional;
 
 @Component
-@Profile("test")
+@Profile("junit")
 public class TestAuditorAware implements AuditorAware<String> {
 
     @Override

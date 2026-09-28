@@ -4,7 +4,7 @@ set -euo pipefail
 ssh-add --apple-load-keychain >/dev/null 2>&1
 
 echo "🛠️ Frontend wird gebaut..."
-yarn build
+yarn build --mode test
 
 echo "📁 Test-Zielordner vorbereiten..."
 ssh chris@edge-prod "mkdir -p /var/www/kc_client-test/dist"

@@ -16,7 +16,7 @@ import com.kcserver.support.config.TestSecurityConfig;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("test")
+@ActiveProfiles("junit")
 @Import(TestSecurityConfig.class)   // 🔥 HIER
 public abstract class AbstractTenantIntegrationTest {
 

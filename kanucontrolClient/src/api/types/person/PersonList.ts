@@ -1,3 +1,5 @@
+import type { DataStatus } from "@/api/types/common/DataStatus";
+
 export interface PersonList {
   id: number;
   vorname: string;
@@ -6,4 +8,5 @@ export interface PersonList {
   sex?: string | null;
   ort?: string | null;
   hauptvereinAbk?: string | null;
+  dataStatus?: DataStatus;
 }

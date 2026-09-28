@@ -13,7 +13,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
-@Profile("!test")
+@Profile("!junit")
 public class SecurityConfig {
 
     @Bean

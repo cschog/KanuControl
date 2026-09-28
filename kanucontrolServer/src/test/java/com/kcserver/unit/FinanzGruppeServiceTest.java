@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.math.BigDecimal;
 
 @SpringBootTest
-@ActiveProfiles("test")
+@ActiveProfiles("junit")
 @Transactional
 class FinanzGruppeServiceTest extends AbstractFinanzIntegrationTest {
 

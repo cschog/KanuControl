@@ -1,6 +1,7 @@
 package com.kcserver.dto.verein;
 
 import com.kcserver.dto.person.PersonRefDTO;
+import com.kcserver.dto.validation.VereinDataStatusDTO;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -51,4 +52,6 @@ public class VereinDTO {
     private PersonRefDTO kontoinhaber;
 
     private long mitgliederCount;
+
+    private VereinDataStatusDTO dataStatus;
 }

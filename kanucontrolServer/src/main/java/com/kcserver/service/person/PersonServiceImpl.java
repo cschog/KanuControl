@@ -275,7 +275,7 @@ public class PersonServiceImpl implements PersonService {
         if (entity.getCountryCode() == null) {
             entity.setCountryCode(CountryCode.DE);
         }
-        fillBankIfMissing(entity);
+        bankLookupService.fillBankNameIfMissing(entity);
 
         Person saved = personRepository.save(entity);
 
@@ -345,7 +345,7 @@ public class PersonServiceImpl implements PersonService {
         // 4. APPLY
         personMapper.updateFromDTO(dto, existing);
 
-        fillBankIfMissing(existing);
+        bankLookupService.fillBankNameIfMissing(existing);
 
         // 5. EXTRA LOGIK
         syncMitgliedschaften(existing, dto.getMitgliedschaften());
@@ -601,26 +601,5 @@ public class PersonServiceImpl implements PersonService {
                             ErrorMessages.PERSON_ALREADY_EXISTS
                     );
                 });
-    }
-    private void fillBankIfMissing(Person person) {
-
-        if (person.getBankName() != null
-                && !person.getBankName().isBlank()) {
-            return;
-        }
-
-        if (person.getBic() == null
-                || person.getBic().isBlank()) {
-            return;
-        }
-
-        String bank =
-                bankLookupService.findBankName(
-                        person.getBic()
-                );
-
-        if (bank != null) {
-            person.setBankName(bank);
-        }
     }
 }

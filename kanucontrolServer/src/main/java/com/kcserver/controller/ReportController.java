@@ -1,6 +1,7 @@
 package com.kcserver.controller;
 
 import com.kcserver.dto.reisekosten.ReisekostenabrechnungListResponse;
+import com.kcserver.validation.ValidationResult;
 import com.kcserver.dto.veranstaltung.VeranstaltungDetailDTO;
 import com.kcserver.service.veranstaltung.VeranstaltungService;
 import com.kcserver.service.pdf.*;

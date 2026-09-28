@@ -195,29 +195,51 @@ const DokumenteScreen: React.FC = () => {
      Reusable Report Section
      ========================================================= */
   const renderValidationWarning = (title: string, validation: ValidationResult | null) => {
-    if (!validation || validation.valid) {
+    if (!validation) {
       return null;
     }
+
+    const messages = [...validation.errors, ...validation.warnings];
+
+    if (messages.length === 0) {
+      return null;
+    }
+
+    const hasErrors = validation.errors.length > 0;
 
     return (
       <Accordion
         sx={{
-          bgcolor: "#fff3cd",
-          border: "1px solid #ffe69c",
+          bgcolor: hasErrors ? "#f8d7da" : "#fff3cd",
+          border: hasErrors ? "1px solid #f5c2c7" : "1px solid #ffe69c",
           borderRadius: radius.dialog,
           boxShadow: "none",
+          mb: 2,
         }}
       >
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography fontWeight={700}>⚠️ {title}</Typography>
+          <Typography fontWeight={700}>
+            {hasErrors ? "❌" : "⚠️"}{" "}
+            {hasErrors
+              ? `${title} nicht möglich – bitte aufklappen`
+              : `Hinweise zum ${title} – bitte aufklappen`}
+          </Typography>
         </AccordionSummary>
 
         <AccordionDetails>
           <Box component="ul" sx={{ mb: 0 }}>
-            {validation.messages.map((m: string, i: number) => (
-              <li key={i}>{m}</li>
+            {messages.map((item, i) => (
+              <li key={i}>
+                <Typography component="span">{item.message}</Typography>
+              </li>
             ))}
           </Box>
+
+          {!hasErrors && validation.warnings.length > 0 && (
+            <Typography variant="body2" sx={{ mt: 2, fontWeight: 600 }}>
+              Die fehlenden Angaben müssen im PDF manuell ergänzt werden.
+            </Typography>
+          )}
         </AccordionDetails>
       </Accordion>
     );
@@ -227,9 +249,11 @@ const DokumenteScreen: React.FC = () => {
     title: string,
     endpoint: string,
     fallbackFilename: string,
-    disabled: boolean = false,
+    validation?: ValidationResult | null,
   ) => {
     const loading = loadingReport === endpoint;
+
+    const blocked = validation != null && validation.errors.length > 0;
 
     return (
       <Paper
@@ -245,33 +269,35 @@ const DokumenteScreen: React.FC = () => {
           <Typography variant="h6">{title}</Typography>
         </Stack>
 
-        <Stack
-          direction={{
-            xs: "column",
-            sm: "row",
-          }}
-          spacing={2}
-        >
-          <Button
-            variant="contained"
-            startIcon={
-              loading ? <CircularProgress size={18} color="inherit" /> : <VisibilityIcon />
-            }
-            onClick={() => void handlePreview(endpoint)}
-            disabled={disabled || loading}
+        {!blocked && (
+          <Stack
+            direction={{
+              xs: "column",
+              sm: "row",
+            }}
+            spacing={2}
           >
-            {loading ? "PDF wird erstellt ..." : "Vorschau"}
-          </Button>
+            <Button
+              variant="contained"
+              startIcon={
+                loading ? <CircularProgress size={18} color="inherit" /> : <VisibilityIcon />
+              }
+              onClick={() => void handlePreview(endpoint)}
+              disabled={loading}
+            >
+              {loading ? "PDF wird erstellt ..." : "Vorschau"}
+            </Button>
 
-          <Button
-            variant="outlined"
-            startIcon={loading ? <CircularProgress size={18} /> : <DownloadIcon />}
-            onClick={() => void handleDownload(endpoint, fallbackFilename)}
-            disabled={disabled || loading}
-          >
-            {loading ? "Bitte warten ..." : "Download"}
-          </Button>
-        </Stack>
+            <Button
+              variant="outlined"
+              startIcon={loading ? <CircularProgress size={18} /> : <DownloadIcon />}
+              onClick={() => void handleDownload(endpoint, fallbackFilename)}
+              disabled={loading}
+            >
+              {loading ? "Bitte warten ..." : "Download"}
+            </Button>
+          </Stack>
+        )}
 
         {loading && (
           <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
@@ -302,22 +328,17 @@ const DokumenteScreen: React.FC = () => {
             {/* FM / JEM */}
             <Grid size={{ xs: 12, md: 6 }}>
               {renderValidationWarning(
-                "FM / JEM Antrag nicht möglich - bitte aufklappen",
+                "FM / JEM Antrag",
                 anmeldungValidation,
               )}
 
-              {renderSection(
-                "FM / JEM Antrag",
-                "fm-jem-report",
-                "fm-jem.pdf",
-                !anmeldungValidation?.valid,
-              )}
+              {renderSection("FM / JEM Antrag", "fm-jem-report", "fm-jem.pdf", anmeldungValidation)}
             </Grid>
 
             {/* Teilnehmerliste */}
             <Grid size={{ xs: 12, md: 6 }}>
               {renderValidationWarning(
-                "Teilnehmerliste nicht möglich - bitte aufklappen",
+                "Teilnehmerliste",
                 teilnehmerValidation,
               )}
 
@@ -325,14 +346,14 @@ const DokumenteScreen: React.FC = () => {
                 "Teilnehmerliste",
                 "teilnehmer/pdf",
                 "teilnehmerliste.pdf",
-                !teilnehmerValidation?.valid,
+                teilnehmerValidation,
               )}
             </Grid>
 
             {/* Teilnehmer-Datenkontrolle */}
             <Grid size={{ xs: 12, md: 6 }}>
               {renderValidationWarning(
-                "Teilnehmer-Datenkontrolle nicht möglich - bitte aufklappen",
+                "Teilnehmer-Datenkontrolle",
                 teilnehmerDatenkontrolleValidation,
               )}
 
@@ -340,14 +361,14 @@ const DokumenteScreen: React.FC = () => {
                 "Teilnehmerdaten prüfen",
                 "teilnehmer/datenkontrolle/pdf",
                 "teilnehmer-datenkontrolle.pdf",
-                !teilnehmerDatenkontrolleValidation?.valid,
+                teilnehmerDatenkontrolleValidation,
               )}
             </Grid>
 
             {/* Abrechnung */}
             <Grid size={{ xs: 12, md: 6 }}>
               {renderValidationWarning(
-                "Abrechnung nicht möglich - bitte aufklappen",
+                "Abrechnung",
                 abrechnungValidation,
               )}
 
@@ -355,14 +376,14 @@ const DokumenteScreen: React.FC = () => {
                 "Abrechnung",
                 "abrechnung/pdf",
                 "abrechnung.pdf",
-                !abrechnungValidation?.valid,
+                abrechnungValidation,
               )}
             </Grid>
 
             {/* Erhebungsbogen */}
             <Grid size={{ xs: 12, md: 6 }}>
               {renderValidationWarning(
-                "Erhebungsbogen nicht möglich - bitte aufklappen",
+                "Erhebungsbogen",
                 erhebungsbogenValidation,
               )}
 
@@ -370,14 +391,14 @@ const DokumenteScreen: React.FC = () => {
                 "Erhebungsbogen",
                 "erhebungsbogen/pdf",
                 "erhebungsbogen.pdf",
-                !erhebungsbogenValidation?.valid,
+                erhebungsbogenValidation,
               )}
             </Grid>
 
             {/* Zahlungsnachweise */}
             <Grid size={{ xs: 12, md: 6 }}>
               {renderValidationWarning(
-                "Zahlungsnachweise nicht möglich - bitte aufklappen",
+                "Zahlungsnachweise",
                 zahlungsnachweiseValidation,
               )}
 
@@ -385,21 +406,21 @@ const DokumenteScreen: React.FC = () => {
                 "Zahlungsnachweise",
                 "zahlungsnachweise/pdf",
                 "zahlungsnachweise.pdf",
-                !zahlungsnachweiseValidation?.valid,
+                zahlungsnachweiseValidation,
               )}
             </Grid>
 
             {/* Belege */}
             <Grid size={{ xs: 12, md: 6 }}>
-              {renderValidationWarning("Belege nicht möglich - bitte aufklappen", belegeValidation)}
+              {renderValidationWarning("Belege", belegeValidation)}
 
-              {renderSection("Belege", "belege/pdf", "belege.pdf", !belegeValidation?.valid)}
+              {renderSection("Belege", "belege/pdf", "belege.pdf", belegeValidation)}
             </Grid>
 
             {/* Fahrkosten */}
             <Grid size={{ xs: 12, md: 6 }}>
               {renderValidationWarning(
-                "Fahrkostenabrechnung nicht möglich - bitte aufklappen",
+                "Fahrkostenabrechnung",
                 fahrkostenValidation,
               )}
 
@@ -418,7 +439,7 @@ const DokumenteScreen: React.FC = () => {
                 <Button
                   variant="contained"
                   onClick={() => setReisekostenOpen(true)}
-                  disabled={!fahrkostenValidation?.valid}
+                  disabled={!fahrkostenValidation || fahrkostenValidation.errors.length > 0}
                 >
                   Fahrkosten auswählen
                 </Button>
