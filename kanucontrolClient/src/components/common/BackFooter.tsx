@@ -1,7 +1,7 @@
 import { Box, Button } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface Action {
   label: string;
@@ -30,6 +30,8 @@ export default function BackFooter({
 
   const footerRef = useRef<HTMLDivElement>(null);
 
+  const [bottomOffset, setBottomOffset] = useState(8);
+
   const allActions: Action[] =
     actions ??
     (label
@@ -50,6 +52,9 @@ export default function BackFooter({
     }
   };
 
+  /*
+   * Höhe des Footers an AppLayout melden
+   */
   useEffect(() => {
     if (!floating || !footerRef.current || !onHeightChange) {
       return;
@@ -71,6 +76,68 @@ export default function BackFooter({
     };
   }, [floating, onHeightChange]);
 
+  /*
+   * Prüfen, ob unten ein BottomActionBar sichtbar ist.
+   *
+   * Wenn ja, wird der BackFooter automatisch darüber positioniert.
+   */
+  useEffect(() => {
+    if (!floating) {
+      setBottomOffset(8);
+      return;
+    }
+
+    const updateBottomOffset = () => {
+      const actionBar = document.querySelector<HTMLElement>("[data-bottom-action-bar]");
+
+      if (!actionBar) {
+        setBottomOffset(8);
+        return;
+      }
+
+      const rect = actionBar.getBoundingClientRect();
+
+      const viewportHeight = window.innerHeight;
+
+      /*
+       * Wie weit reicht der BottomActionBar in den unteren
+       * Bereich des Viewports hinein?
+       */
+      const visibleHeight = Math.max(0, viewportHeight - rect.top);
+
+      /*
+       * Nur wenn der BottomActionBar tatsächlich unten
+       * sichtbar ist, gehen wir darüber.
+       */
+      if (rect.top < viewportHeight && visibleHeight > 0) {
+        setBottomOffset(visibleHeight + 8);
+      } else {
+        setBottomOffset(8);
+      }
+    };
+
+    updateBottomOffset();
+
+    window.addEventListener("resize", updateBottomOffset);
+    window.addEventListener("scroll", updateBottomOffset, {
+      passive: true,
+    });
+
+    const observer = new ResizeObserver(updateBottomOffset);
+
+    const actionBar = document.querySelector<HTMLElement>("[data-bottom-action-bar]");
+
+    if (actionBar) {
+      observer.observe(actionBar);
+    }
+
+    return () => {
+      window.removeEventListener("resize", updateBottomOffset);
+      window.removeEventListener("scroll", updateBottomOffset);
+      observer.disconnect();
+    };
+  }, [floating]);
+
   return (
     <Box
       ref={footerRef}
@@ -82,7 +149,7 @@ export default function BackFooter({
 
         ...(floating && {
           position: "fixed",
-          bottom: 8,
+          bottom: `${bottomOffset}px`,
           left: "50%",
           transform: "translateX(-50%)",
           zIndex: 1100,

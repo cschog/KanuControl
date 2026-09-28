@@ -21,6 +21,7 @@ export function BottomActionBar({ left = [], right = [] }: BottomActionBarProps)
   
   return (
     <Paper
+      data-bottom-action-bar
       elevation={3}
       sx={{
         position: "sticky",

@@ -35,6 +35,7 @@ import {
 import { PersonList } from "@/api/types/person/PersonList";
 import { TeilnehmerList } from "@/api/types/TeilnehmerList";
 import { radius } from "@/theme/ui";
+import type { DataStatus } from "@/api/types/common/DataStatus";
 
 export default function TeilnehmerScreen() {
   const { active } = useAppContext();
@@ -149,16 +150,16 @@ export default function TeilnehmerScreen() {
   const load = useCallback(async () => {
     if (!active?.id) return;
 
-   const a = await getAvailablePersons(
-     active.id,
-     0,
-     1000,
-     debounceSearchL || undefined,
-     debounceVereinL || undefined,
-     mapSortField(sortingL[0]?.id ?? "fullname"),
-     sortingL[0]?.desc ? "desc" : "asc",
-     true, // nur aktive Personen
-   );
+    const a = await getAvailablePersons(
+      active.id,
+      0,
+      1000,
+      debounceSearchL || undefined,
+      debounceVereinL || undefined,
+      mapSortField(sortingL[0]?.id ?? "fullname"),
+      sortingL[0]?.desc ? "desc" : "asc",
+      true, // nur aktive Personen
+    );
 
     setAvailable(a?.content ?? []);
 
@@ -237,24 +238,24 @@ export default function TeilnehmerScreen() {
     }
   };
 
- const handleRemove = async () => {
-   if (!active?.id || selAssigned.length === 0) return;
+  const handleRemove = async () => {
+    if (!active?.id || selAssigned.length === 0) return;
 
-   try {
-     setError(null);
-     await removeTeilnehmerBulk(
-       active.id,
-       selAssigned.map((p) => p.personId),
-     );
+    try {
+      setError(null);
+      await removeTeilnehmerBulk(
+        active.id,
+        selAssigned.map((p) => p.personId),
+      );
 
-     setSelAssigned([]);
-     setResetRightSelection((v) => v + 1);
+      setSelAssigned([]);
+      setResetRightSelection((v) => v + 1);
 
-     await load();
-   } catch (error: unknown) {
-     setError(getApiErrorMessage(error));
-   }
- };
+      await load();
+    } catch (error: unknown) {
+      setError(getApiErrorMessage(error));
+    }
+  };
 
   const handleMobileAction = async () => {
     if (mobileMode === "available") {
@@ -300,39 +301,39 @@ export default function TeilnehmerScreen() {
     await changeRole(personId, current, "M");
   };
 
- const changeRole = async (personId: number, current: "L" | "M" | null, newRole: "M" | null) => {
-   if (!active?.id) return;
+  const changeRole = async (personId: number, current: "L" | "M" | null, newRole: "M" | null) => {
+    if (!active?.id) return;
 
-   setAssigned((prev) =>
-     prev.map((t) =>
-       t.personId === personId
-         ? {
-             ...t,
-             rolle: newRole,
-           }
-         : t,
-     ),
-   );
+    setAssigned((prev) =>
+      prev.map((t) =>
+        t.personId === personId
+          ? {
+              ...t,
+              rolle: newRole,
+            }
+          : t,
+      ),
+    );
 
-   try {
-     setError(null);
-     await updateTeilnehmerRolle(active.id, personId, newRole);
-   } catch (error: unknown) {
-     // Optimistische Änderung zurücknehmen
-     setAssigned((prev) =>
-       prev.map((t) =>
-         t.personId === personId
-           ? {
-               ...t,
-               rolle: current,
-             }
-           : t,
-       ),
-     );
+    try {
+      setError(null);
+      await updateTeilnehmerRolle(active.id, personId, newRole);
+    } catch (error: unknown) {
+      // Optimistische Änderung zurücknehmen
+      setAssigned((prev) =>
+        prev.map((t) =>
+          t.personId === personId
+            ? {
+                ...t,
+                rolle: current,
+              }
+            : t,
+        ),
+      );
 
-     setError(getApiErrorMessage(error));
-   }
- };
+      setError(getApiErrorMessage(error));
+    }
+  };
 
   const confirmRoleChange = async () => {
     if (!pendingRoleChange) return;
@@ -353,6 +354,24 @@ export default function TeilnehmerScreen() {
   const assignedColumns = teilnehmerAssignedColumns({
     onRoleClick: handleRoleChange,
   });
+
+  const getStatusMarker = (status?: DataStatus) => {
+    if (status === "ERROR") {
+      return {
+        color: "error.main",
+        message: "Fehlende Pflichtangaben",
+      };
+    }
+
+    if (status === "WARNING") {
+      return {
+        color: "#febf02",
+        message: "Empfohlene Angaben fehlen",
+      };
+    }
+
+    return null;
+  };
 
   /* =========================================================
      RESET
@@ -492,19 +511,45 @@ export default function TeilnehmerScreen() {
                   resetSelectionTrigger={resetLeftSelection}
                   loading={false}
                   height={window.innerHeight - 390}
-                  mobileRenderRow={(row) => (
-                    <Box>
-                      <Typography fontWeight={600}>
-                        {row.name}, {row.vorname}
-                      </Typography>
+                  mobileRenderRow={(row) => {
+                    const marker = getStatusMarker(row.dataStatus);
 
-                      <Typography variant="body2" color="text.secondary">
-                        {row.hauptvereinAbk ?? "-"}
-                        {" • "}
-                        {row.alter ?? "-"} Jahre
-                      </Typography>
-                    </Box>
-                  )}
+                    return (
+                      <Box>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                          }}
+                        >
+                          {marker && (
+                            <Box
+                              component="span"
+                              title={marker.message}
+                              sx={{
+                                width: 9,
+                                height: 9,
+                                borderRadius: "50%",
+                                bgcolor: marker.color,
+                                flexShrink: 0,
+                              }}
+                            />
+                          )}
+
+                          <Typography fontWeight={600}>
+                            {row.name}, {row.vorname}
+                          </Typography>
+                        </Box>
+
+                        <Typography variant="body2" color="text.secondary">
+                          {row.hauptvereinAbk ?? "-"}
+                          {" • "}
+                          {row.alter ?? "-"} Jahre
+                        </Typography>
+                      </Box>
+                    );
+                  }}
                   onRowSelectionChange={setSelAvailable}
                 />
               ) : (
@@ -516,54 +561,78 @@ export default function TeilnehmerScreen() {
                   resetSelectionTrigger={resetRightSelection}
                   loading={false}
                   height={window.innerHeight - 390}
-                  mobileRenderRow={(row) => (
-                    <Box>
-                      <Typography fontWeight={600}>
-                        {row.person?.name}, {row.person?.vorname}
-                      </Typography>
+                  mobileRenderRow={(row) => {
+                    const marker = getStatusMarker(row.person?.dataStatus);
 
-                      <Box
-                        sx={{
-                          mt: 0.3,
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 1,
-                          flexWrap: "wrap",
-                        }}
-                      >
-                        <Typography variant="body2" color="text.secondary">
-                          {row.person?.hauptvereinAbk ?? "-"}
-                        </Typography>
-
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
+                    return (
+                      <Box>
+                        <Box
                           sx={{
-                            whiteSpace: "nowrap",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
                           }}
                         >
-                          {row.alterBeiBeginn ?? "-"} Jahre
-                        </Typography>
+                          {marker && (
+                            <Box
+                              component="span"
+                              title={marker.message}
+                              sx={{
+                                width: 9,
+                                height: 9,
+                                borderRadius: "50%",
+                                bgcolor: marker.color,
+                                flexShrink: 0,
+                              }}
+                            />
+                          )}
 
-                        <Chip
-                          size="small"
-                          label={row.rolle === "L" ? "L" : row.rolle === "M" ? "M" : "+"}
-                          color={row.rolle === "L" ? "secondary" : "default"}
-                          variant={row.rolle === "L" ? "filled" : "outlined"}
-                          onClick={() => handleRoleChange(row.rolle ?? null, row.personId)}
+                          <Typography fontWeight={600}>
+                            {row.person?.name}, {row.person?.vorname}
+                          </Typography>
+                        </Box>
+
+                        <Box
                           sx={{
-                            fontWeight: 700,
-
-                            minWidth: 34,
-                            height: 24,
-                            cursor: row.rolle === "L" ? "default" : "pointer",
-
-                            opacity: row.rolle === "L" ? 0.9 : 1,
+                            mt: 0.3,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                            flexWrap: "wrap",
                           }}
-                        />
+                        >
+                          <Typography variant="body2" color="text.secondary">
+                            {row.person?.hauptvereinAbk ?? "-"}
+                          </Typography>
+
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {row.alterBeiBeginn ?? "-"} Jahre
+                          </Typography>
+
+                          <Chip
+                            size="small"
+                            label={row.rolle === "L" ? "L" : row.rolle === "M" ? "M" : "+"}
+                            color={row.rolle === "L" ? "secondary" : "default"}
+                            variant={row.rolle === "L" ? "filled" : "outlined"}
+                            onClick={() => handleRoleChange(row.rolle ?? null, row.personId)}
+                            sx={{
+                              fontWeight: 700,
+                              minWidth: 34,
+                              height: 24,
+                              cursor: row.rolle === "L" ? "default" : "pointer",
+                              opacity: row.rolle === "L" ? 0.9 : 1,
+                            }}
+                          />
+                        </Box>
                       </Box>
-                    </Box>
-                  )}
+                    );
+                  }}
                   onRowSelectionChange={setSelAssigned}
                 />
               )}

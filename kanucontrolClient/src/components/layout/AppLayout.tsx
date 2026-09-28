@@ -10,6 +10,7 @@ export default function AppLayout() {
 
   const contentRef = useRef<HTMLDivElement>(null);
   const [floatingFooter, setFloatingFooter] = useState(false);
+  const [footerHeight, setFooterHeight] = useState(0);
 
   const isStartMenu = location.pathname === "/" || location.pathname === "/startmenue";
   const hideBackButtonOn =
@@ -64,7 +65,11 @@ export default function AppLayout() {
       <Box
         ref={contentRef}
         sx={{
-          p: { xs: 2, md: 4 },
+          pt: { xs: 2, md: 4 },
+          px: { xs: 2, md: 4 },
+          pb: floatingFooter
+            ? `calc(${footerHeight}px + 16px + env(safe-area-inset-bottom))`
+            : { xs: 2, md: 4 },
         }}
       >
         <Outlet />
@@ -73,6 +78,7 @@ export default function AppLayout() {
       {!isStartMenu && (
         <BackFooter
           floating={floatingFooter}
+          onHeightChange={setFooterHeight}
           actions={[
             ...(!hideBackButton
               ? [
