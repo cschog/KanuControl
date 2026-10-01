@@ -5,23 +5,43 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
-public class CustomJwtAuthenticationConverter implements Converter<Jwt, Collection<GrantedAuthority>> {
+public class CustomJwtAuthenticationConverter
+        implements Converter<Jwt, Collection<GrantedAuthority>> {
 
     @Override
     public Collection<GrantedAuthority> convert(Jwt jwt) {
-        // Extract roles or groups from JWT claims
-        List<String> groups = jwt.getClaimAsStringList("groups"); // Replace "groups" with your claim name
 
-        if (groups == null) {
-            return List.of();
+        List<GrantedAuthority> authorities = new ArrayList<>();
+
+        // Keycloak Realm Roles
+        Map<String, Object> realmAccess = jwt.getClaim("realm_access");
+
+        if (realmAccess != null) {
+            Object rolesObject = realmAccess.get("roles");
+
+            if (rolesObject instanceof List<?> roles) {
+                roles.stream()
+                        .filter(String.class::isInstance)
+                        .map(String.class::cast)
+                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                        .forEach(authorities::add);
+            }
         }
 
-        return groups.stream()
-                .map(SimpleGrantedAuthority::new) // Map groups/roles to GrantedAuthority
-                .collect(Collectors.toList());
+        // Keycloak Groups
+        List<String> groups = jwt.getClaimAsStringList("groups");
+
+        if (groups != null) {
+            groups.stream()
+                    .map(SimpleGrantedAuthority::new)
+                    .forEach(authorities::add);
+        }
+
+        return authorities;
     }
 }

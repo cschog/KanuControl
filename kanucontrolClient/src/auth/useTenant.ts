@@ -14,6 +14,9 @@ type BaseToken = {
   preferred_username?: string;
   groups?: string[];
   tenant?: string;
+  realm_access?: {
+    roles?: string[];
+  };
 };
 
 export function useTenant(): TenantInfo | null {
@@ -52,5 +55,26 @@ export function getUsername(): string | undefined {
 }
 
 export function isAdmin(): boolean {
-  return getUsername() === "cschog";
+  if (!keycloak.authenticated || !keycloak.tokenParsed) {
+    return false;
+  }
+
+  const token = keycloak.tokenParsed as BaseToken;
+
+  return token.realm_access?.roles?.includes("ADMIN") ?? false;
+}
+
+export function isEkcService(): boolean {
+  if (!keycloak.authenticated || !keycloak.tokenParsed) {
+    return false;
+  }
+
+  const token = keycloak.tokenParsed as BaseToken;
+
+  const hasRole = token.realm_access?.roles?.includes("EKC-SERVICE") ?? false;
+
+  const isInEkcGroup =
+    token.groups?.some((group) => group === "EKC-Service" || group === "/EKC-Service") ?? false;
+
+  return hasRole || isInEkcGroup;
 }

@@ -14,16 +14,16 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
-
 
 import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/admin/audit")
+@PreAuthorize("hasRole('ADMIN')")
 public class AuditController {
 
     private final AuditQueryService auditQueryService;
@@ -45,6 +45,7 @@ public class AuditController {
     ) {
         return auditQueryService.getHistory(pageable);
     }
+
     @GetMapping("/dashboard")
     public AuditDashboardDTO getDashboard() {
         return auditQueryService.getDashboard();
@@ -54,9 +55,7 @@ public class AuditController {
     public ResponseEntity<Void> logout(
             @AuthenticationPrincipal Jwt jwt
     ) {
-
-        String sessionId =
-                jwt.getClaimAsString("sid");
+        String sessionId = jwt.getClaimAsString("sid");
 
         if (sessionId != null) {
             auditSessionService.registerLogout(sessionId);

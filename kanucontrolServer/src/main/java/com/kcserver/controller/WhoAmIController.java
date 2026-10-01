@@ -17,7 +17,9 @@ public class WhoAmIController {
         return Map.of(
                 "username", authentication.getToken().getClaimAsString("preferred_username"),
                 "groups", authentication.getToken().getClaimAsStringList("groups"),
+                "realm_access", authentication.getToken().getClaim("realm_access"),
                 "issuer", authentication.getToken().getIssuer().toString()
         );
     }
+
 }

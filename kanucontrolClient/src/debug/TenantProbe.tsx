@@ -6,20 +6,20 @@ export default function TenantProbe() {
   useEffect(() => {
     const load = async () => {
       try {
-        const { data } = await apiClient.get("/tenant");
-        console.log("✅ Aktiver Tenant:", data);
+        const { data } = await apiClient.get("/admin-test");
+
+        console.log("✅ ADMIN-TEST erfolgreich:", data);
       } catch (err: unknown) {
         if (axios.isAxiosError(err)) {
           console.error(
-            "❌ Tenant-Check fehlgeschlagen",
+            "❌ ADMIN-TEST fehlgeschlagen",
+            "Status:",
             err.response?.status,
-            err.response?.data
+            "Antwort:",
+            err.response?.data,
           );
         } else {
-          console.error(
-            "❌ Tenant-Check fehlgeschlagen (kein AxiosError)",
-            err
-          );
+          console.error("❌ ADMIN-TEST fehlgeschlagen (kein AxiosError)", err);
         }
       }
     };
@@ -29,8 +29,8 @@ export default function TenantProbe() {
 
   return (
     <div>
-      <h1>Tenant Probe</h1>
-      <p>Siehe Browser-Konsole</p>
+      <h1>Admin Security Probe</h1>
+      <p>Ergebnis in der Browser-Konsole.</p>
     </div>
   );
 }

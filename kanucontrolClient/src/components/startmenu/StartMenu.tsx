@@ -110,6 +110,7 @@ const allgemeineButtons = [
       ]
     : [];
 
+
   return (
     <Box>
       <MenueHeader contextText={contextText} />
@@ -166,6 +167,8 @@ const allgemeineButtons = [
           </Grid>
         </Grid>
       )}
+
+      
 
       <FeedbackFab />
       <ErrorDialog open={!!error} message={error ?? ""} onClose={() => setError(null)} />

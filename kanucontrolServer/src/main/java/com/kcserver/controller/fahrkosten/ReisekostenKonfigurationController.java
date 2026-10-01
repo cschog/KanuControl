@@ -10,9 +10,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/admin/reisekosten-konfiguration")
+@PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
 public class ReisekostenKonfigurationController {
 

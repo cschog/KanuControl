@@ -11,8 +11,11 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 
 @Configuration
+@EnableMethodSecurity
 @Profile("!junit")
 public class SecurityConfig {
 
@@ -22,6 +25,13 @@ public class SecurityConfig {
             CorsConfigurationSource corsConfigurationSource,
             TenantFilter tenantFilter
     ) throws Exception {
+
+        JwtAuthenticationConverter jwtAuthenticationConverter =
+                new JwtAuthenticationConverter();
+
+        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(
+                new CustomJwtAuthenticationConverter()
+        );
 
         http
                 .csrf(AbstractHttpConfigurer::disable)
@@ -48,7 +58,11 @@ public class SecurityConfig {
                         // 🔒 alles andere geschützt
                         .anyRequest().authenticated()
                 )
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwt -> jwt
+                                .jwtAuthenticationConverter(jwtAuthenticationConverter)
+                        )
+                )
 
                 .addFilterAfter(
                         tenantFilter,
