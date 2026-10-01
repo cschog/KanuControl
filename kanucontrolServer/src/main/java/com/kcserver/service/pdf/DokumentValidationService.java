@@ -4,6 +4,7 @@ import com.kcserver.entity.Planung;
 import com.kcserver.entity.Teilnehmer;
 import com.kcserver.entity.Veranstaltung;
 import com.kcserver.enumtype.PdfDokumentTyp;
+import com.kcserver.service.FoerderService;
 import com.kcserver.validation.ValidationResult;
 import com.kcserver.repository.*;
 import com.kcserver.repository.abrechnung.AbrechnungBelegRepository;
@@ -35,6 +36,7 @@ public class DokumentValidationService {
     private final ZahlungsnachweisRepository zahlungsnachweisRepository;
     private final ReisekostenabrechnungRepository reisekostenabrechnungRepository;
     private final VereinDataStatusService vereinDataStatusService;
+    private final FoerderService foerderService;
 
 
     public ValidationResult validate(
@@ -198,6 +200,7 @@ public class DokumentValidationService {
                 teilnehmer,
                 fehler
         );
+        validateFoerdersatz(veranstaltung, fehler);
 
         return buildResult(fehler);
     }
@@ -222,6 +225,23 @@ public class DokumentValidationService {
         );
 
         return buildResult(fehler);
+    }
+
+    private void validateFoerdersatz(
+            Veranstaltung veranstaltung,
+            List<String> fehler
+    ) {
+
+        if (!foerderService.hatGueltigenFoerdersatz(veranstaltung)) {
+            fehler.add(
+                    "Für die Veranstaltung ist noch kein gültiger "
+                            + "Fördersatz hinterlegt. "
+                            + "Der KJFP-Zuschuss wurde deshalb vorübergehend "
+                            + "mit dem Planungssatz von 10,00 € berechnet. "
+                            + "Die PDF-Ausgabe der Abrechnung ist erst möglich, "
+                            + "wenn der gültige Fördersatz hinterlegt wurde."
+            );
+        }
     }
 
     private ValidationResult validateTeilnehmerDatenkontrolle(
@@ -341,15 +361,24 @@ public class DokumentValidationService {
 
         teilnehmer.stream()
                 .map(Teilnehmer::getPerson)
-                .filter(p -> isBlank(p.getPlz()))
-                .forEach(p ->
+                .filter(Objects::nonNull)
+                .forEach(p -> {
+
+                    String name =
+                            p.getVorname() + " " + p.getName();
+
+                    if (isBlank(p.getPlz())) {
                         fehler.add(
-                                "PLZ fehlt bei "
-                                        + p.getVorname()
-                                        + " "
-                                        + p.getName()
-                        )
-                );
+                                "PLZ fehlt bei " + name
+                        );
+                    }
+
+                    if (isBlank(p.getOrt())) {
+                        fehler.add(
+                                "Ort fehlt bei " + name
+                        );
+                    }
+                });
     }
 
     private void validatePlanung(

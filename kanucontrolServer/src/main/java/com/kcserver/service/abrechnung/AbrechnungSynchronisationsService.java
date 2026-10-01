@@ -81,7 +81,8 @@ public class AbrechnungSynchronisationsService {
         BigDecimal zuschuss =
                 foerderService.berechneKjfpZuschuss(
                         abrechnung.getVeranstaltung(),
-                        teilnehmer
+                        teilnehmer,
+                        true
                 );
 
         if (zuschuss == null

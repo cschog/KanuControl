@@ -17,7 +17,8 @@ public class PersonDataStatusService {
     public PersonDataStatusDTO determineStatus(
             Person person,
             boolean isLeiter,
-            boolean isFahrer
+            boolean isFahrer,
+            boolean isTeilnehmer
     ) {
         Map<String, DataFieldStatusDTO> fields = new HashMap<>();
 
@@ -49,6 +50,38 @@ public class PersonDataStatusService {
         }
 
         /*
+         * Teilnehmer:
+         *
+         * Sobald eine Person Teilnehmer einer Veranstaltung ist,
+         * sind Geburtsdatum, PLZ und Ort Pflichtangaben.
+         *
+         * Fehlende Angaben werden als ERROR markiert und im Frontend
+         * entsprechend rot dargestellt.
+         */
+        if (isTeilnehmer) {
+            addRequired(
+                    fields,
+                    "geburtsdatum",
+                    person.getGeburtsdatum(),
+                    "Für einen Teilnehmer ist das Geburtsdatum erforderlich."
+            );
+
+            addRequired(
+                    fields,
+                    "plz",
+                    person.getPlz(),
+                    "Für einen Teilnehmer ist die PLZ erforderlich."
+            );
+
+            addRequired(
+                    fields,
+                    "ort",
+                    person.getOrt(),
+                    "Für einen Teilnehmer ist der Ort erforderlich."
+            );
+        }
+
+        /*
          * Reisekostenfahrer:
          *
          * Bankdaten sind nicht zwingend.
@@ -75,10 +108,10 @@ public class PersonDataStatusService {
     private void addRequired(
             Map<String, DataFieldStatusDTO> fields,
             String field,
-            String value,
+            Object value,
             String message
     ) {
-        if (value == null || value.isBlank()) {
+        if (value == null || (value instanceof String s && s.isBlank())) {
             fields.put(
                     field,
                     new DataFieldStatusDTO(DataStatus.ERROR, message)

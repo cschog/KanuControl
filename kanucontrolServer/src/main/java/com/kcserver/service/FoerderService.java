@@ -193,10 +193,33 @@ public class FoerderService {
 
     /**
      * Förderung PRO TAG für einen Teilnehmer.
+     *
+     * Ohne Fallback: Für die tatsächliche Förderung muss
+     * ein gültiger offizieller Fördersatz vorhanden sein.
      */
     public BigDecimal berechneFoerderungProTagUndTeilnehmer(
             Veranstaltung veranstaltung,
             Teilnehmer teilnehmer
+    ) {
+        return berechneFoerderungProTagUndTeilnehmer(
+                veranstaltung,
+                teilnehmer,
+                false
+        );
+    }
+
+
+    /**
+     * Förderung PRO TAG für einen Teilnehmer.
+     *
+     * fallbackAufPlanungssatz = true wird ausschließlich bei
+     * der Abrechnung verwendet, wenn kein gültiger offizieller
+     * Fördersatz vorhanden ist.
+     */
+    public BigDecimal berechneFoerderungProTagUndTeilnehmer(
+            Veranstaltung veranstaltung,
+            Teilnehmer teilnehmer,
+            boolean fallbackAufPlanungssatz
     ) {
 
         if (veranstaltung == null) {
@@ -208,7 +231,8 @@ public class FoerderService {
         }
 
         return berechneAngewandtenFoerdersatz(
-                veranstaltung
+                veranstaltung,
+                fallbackAufPlanungssatz
         );
     }
 
@@ -216,30 +240,39 @@ public class FoerderService {
             Veranstaltung veranstaltung,
             List<Teilnehmer> teilnehmer
     ) {
+        return berechneKjfpZuschuss(
+                veranstaltung,
+                teilnehmer,
+                false
+        );
+    }
+
+    public BigDecimal berechneKjfpZuschuss(
+            Veranstaltung veranstaltung,
+            List<Teilnehmer> teilnehmer,
+            boolean fallbackAufPlanungssatz
+    ) {
 
         if (veranstaltung == null || teilnehmer == null) {
             return BigDecimal.ZERO;
         }
 
-        int tage =
-                berechneFoerdertage(veranstaltung);
+        int tage = berechneFoerdertage(veranstaltung);
 
         return teilnehmer.stream()
-
                 .filter(t ->
                         istFoerderfaehig(
                                 veranstaltung,
                                 t
                         )
                 )
-
                 .map(t ->
                         berechneFoerderungProTagUndTeilnehmer(
                                 veranstaltung,
-                                t
+                                t,
+                                fallbackAufPlanungssatz
                         )
                 )
-
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .multiply(BigDecimal.valueOf(tage));
     }
@@ -307,6 +340,99 @@ public class FoerderService {
         );
     }
 
+    public boolean hatGueltigenFoerdersatz(Veranstaltung veranstaltung) {
+        if (veranstaltung == null
+                || veranstaltung.getTyp() == null
+                || veranstaltung.getBeginnDatum() == null
+                || !veranstaltung.getTyp().isFoerderfaehig()) {
+            return true;
+        }
+
+        Foerdersatz foerdersatz =
+                foerdersatzService.findOptionalGueltigFuerTypAm(
+                        veranstaltung.getTyp(),
+                        veranstaltung.getBeginnDatum()
+                );
+
+        return foerdersatz != null
+                && foerdersatz.getFoerdersatz() != null;
+    }
+
+
+    public BigDecimal berechneAngewandtenFoerdersatz(
+            Veranstaltung veranstaltung,
+            boolean fallbackAufPlanungssatz
+    ) {
+        if (veranstaltung == null) {
+            return BigDecimal.ZERO;
+        }
+
+        VeranstaltungTyp typ = veranstaltung.getTyp();
+        LocalDate datum = veranstaltung.getBeginnDatum();
+
+        if (typ == null || datum == null || !typ.isFoerderfaehig()) {
+            return BigDecimal.ZERO;
+        }
+
+        Foerdersatz foerdersatz =
+                foerdersatzService.findOptionalGueltigFuerTypAm(
+                        typ,
+                        datum
+                );
+
+        if (foerdersatz == null
+                || foerdersatz.getFoerdersatz() == null) {
+
+            if (fallbackAufPlanungssatz) {
+
+                boolean kikZertifiziert =
+                        veranstaltung.getVerein() != null
+                                && veranstaltung.getVerein()
+                                .isKikZertifiziertAm(datum);
+
+                log.warn(
+                        "Kein gültiger Fördersatz für {} am {}. "
+                                + "Verwende Planungssatz für die Abrechnung.",
+                        typ,
+                        datum
+                );
+
+                return berechnePlanungsFoerdersatz(
+                        datum,
+                        kikZertifiziert
+                );
+            }
+
+            throw new IllegalStateException(
+                    ErrorMessages.NO_VALID_FOERDERSATZ
+            );
+        }
+
+        BigDecimal tagessatz =
+                foerdersatz.getFoerdersatz();
+
+        boolean kikZertifiziert =
+                veranstaltung.getVerein() != null
+                        && veranstaltung.getVerein()
+                        .isKikZertifiziertAm(datum);
+
+        if (kikZertifiziert) {
+
+            KikZuschlag kik =
+                    kikZuschlagService.findOptionalGueltigAm(datum);
+
+            if (kik != null
+                    && kik.getKikZuschlag() != null) {
+
+                tagessatz =
+                        tagessatz.add(kik.getKikZuschlag());
+            }
+        }
+
+        return tagessatz.min(
+                FoerderConfig.FOERDERDECKEL
+        );
+    }
 
     /**
      * Fördersatz für die Planung.

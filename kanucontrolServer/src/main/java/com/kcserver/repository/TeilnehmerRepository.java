@@ -314,6 +314,15 @@ order by v.beginnDatum, v.name
 
     List<Teilnehmer> findByPersonId(Long personId);
 
+    @Query("""
+    select distinct t.person.id
+    from Teilnehmer t
+    where t.person.id in :personIds
+""")
+    List<Long> findPersonIdsByPersonIds(
+            @Param("personIds") List<Long> personIds
+    );
+
     @Modifying
     @Query("""
 delete from Teilnehmer t

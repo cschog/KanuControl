@@ -162,10 +162,16 @@ public class PersonServiceImpl implements PersonService {
                         .findFahrerPersonIds(List.of(person.getId()))
                         .contains(person.getId());
 
+        boolean isTeilnehmer =
+                !teilnehmerRepository
+                        .findByPersonId(person.getId())
+                        .isEmpty();
+
         return personDataStatusService.determineStatus(
                 person,
                 isLeiter,
-                isFahrer
+                isFahrer,
+                isTeilnehmer
         );
     }
 
@@ -502,14 +508,19 @@ public class PersonServiceImpl implements PersonService {
         var fahrerIds =
                 reisekostenabrechnungRepository.findFahrerPersonIds(personIds);
 
+        var teilnehmerIds =
+                teilnehmerRepository.findPersonIdsByPersonIds(personIds);
+
         for (int i = 0; i < persons.size(); i++) {
+
             Person person = persons.get(i);
             PersonListDTO dto = dtos.get(i);
 
             var status = personDataStatusService.determineStatus(
                     person,
                     leiterIds.contains(person.getId()),
-                    fahrerIds.contains(person.getId())
+                    fahrerIds.contains(person.getId()),
+                    teilnehmerIds.contains(person.getId())
             );
 
             dto.setDataStatus(status.getStatus());

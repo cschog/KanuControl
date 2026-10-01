@@ -318,7 +318,8 @@ public class TeilnehmerService {
                     PersonDataStatusDTO status =
                             determinePersonStatus(
                                     veranstaltungId,
-                                    person
+                                    person,
+                                    true
                             );
 
                     dto.setDataStatus(status.getStatus());
@@ -353,7 +354,8 @@ public class TeilnehmerService {
                     PersonDataStatusDTO status =
                             determinePersonStatus(
                                     veranstaltungId,
-                                    person
+                                    person,
+                                    false
                             );
 
                     dto.setDataStatus(status.getStatus());
@@ -380,7 +382,8 @@ public class TeilnehmerService {
                     PersonDataStatusDTO status =
                             determinePersonStatus(
                                     veranstaltungId,
-                                    person
+                                    person,
+                                    true
                             );
 
                     dto.setDataStatus(status.getStatus());
@@ -388,6 +391,32 @@ public class TeilnehmerService {
                     return dto;
                 })
                 .toList();
+    }
+
+    private PersonDataStatusDTO determinePersonStatus(
+            Long veranstaltungId,
+            Person person,
+            boolean isTeilnehmer
+    ) {
+        boolean isLeiter =
+                veranstaltungRepository.existsByIdAndLeiterId(
+                        veranstaltungId,
+                        person.getId()
+                );
+
+        boolean isFahrer =
+                reisekostenabrechnungRepository
+                        .existsByVeranstaltungIdAndFahrerId(
+                                veranstaltungId,
+                                person.getId()
+                        );
+
+        return personDataStatusService.determineStatus(
+                person,
+                isLeiter,
+                isFahrer,
+                isTeilnehmer
+        );
     }
 
     @Transactional(readOnly = true)
@@ -417,7 +446,8 @@ public class TeilnehmerService {
                     PersonDataStatusDTO status =
                             determinePersonStatus(
                                     veranstaltungId,
-                                    person
+                                    person,
+                                    true
                             );
 
                     if (dto.getPerson() != null) {
@@ -604,30 +634,6 @@ public class TeilnehmerService {
     /* =========================================================
        HELPER
        ========================================================= */
-
-    private PersonDataStatusDTO determinePersonStatus(
-            Long veranstaltungId,
-            Person person
-    ) {
-        boolean isLeiter =
-                veranstaltungRepository.existsByIdAndLeiterId(
-                        veranstaltungId,
-                        person.getId()
-                );
-
-        boolean isFahrer =
-                reisekostenabrechnungRepository
-                        .existsByVeranstaltungIdAndFahrerId(
-                                veranstaltungId,
-                                person.getId()
-                        );
-
-        return personDataStatusService.determineStatus(
-                person,
-                isLeiter,
-                isFahrer
-        );
-    }
 
     private Person getPerson(Long id) {
         return personRepository.findById(id)

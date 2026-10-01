@@ -1,6 +1,7 @@
 package com.kcserver.controller;
 
 import com.kcserver.dto.reisekosten.ReisekostenabrechnungListResponse;
+import com.kcserver.validation.ValidationMessage;
 import com.kcserver.validation.ValidationResult;
 import com.kcserver.dto.veranstaltung.VeranstaltungDetailDTO;
 import com.kcserver.service.veranstaltung.VeranstaltungService;
@@ -8,6 +9,7 @@ import com.kcserver.service.pdf.*;
 import com.kcserver.service.reisekosten.ReisekostenabrechnungService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +19,7 @@ import java.time.LocalDate;
 import java.util.List;
 import com.kcserver.enumtype.PdfDokumentTyp;
 import com.kcserver.util.PdfFilenameUtil;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/veranstaltungen/{veranstaltungId}")
@@ -90,6 +93,11 @@ public class ReportController {
             @PathVariable Long veranstaltungId
     ) {
 
+        validateDokumentOrThrow(
+                veranstaltungId,
+                PdfDokumentTyp.TEILNEHMERLISTE
+        );
+
         byte[] pdf =
                 dokumentService.generateTeilnehmerliste(
                         veranstaltungId
@@ -117,6 +125,11 @@ public class ReportController {
     public ResponseEntity<byte[]> downloadTeilnehmerPdf(
             @PathVariable Long veranstaltungId
     ) {
+
+        validateDokumentOrThrow(
+                veranstaltungId,
+                PdfDokumentTyp.TEILNEHMERLISTE
+        );
 
         byte[] pdf =
                 dokumentService.generateTeilnehmerliste(
@@ -210,6 +223,11 @@ public class ReportController {
             @PathVariable Long veranstaltungId
     ) {
 
+        validateDokumentOrThrow(
+                veranstaltungId,
+                PdfDokumentTyp.ERHEBUNGSBOGEN
+        );
+
         byte[] pdf =
                 dokumentService.generateErhebungsbogen(
                         veranstaltungId
@@ -236,6 +254,11 @@ public class ReportController {
             @PathVariable Long veranstaltungId
     ) {
 
+        validateDokumentOrThrow(
+                veranstaltungId,
+                PdfDokumentTyp.ERHEBUNGSBOGEN
+        );
+
         byte[] pdf =
                 dokumentService.generateErhebungsbogen(
                         veranstaltungId
@@ -261,6 +284,11 @@ public class ReportController {
     public ResponseEntity<byte[]> viewAbrechnung(
             @PathVariable Long veranstaltungId
     ) {
+        validateDokumentOrThrow(
+                veranstaltungId,
+                PdfDokumentTyp.ABRECHNUNG
+        );
+
         byte[] pdf =
                 dokumentService.generateAbrechnung(
                         veranstaltungId
@@ -286,6 +314,11 @@ public class ReportController {
     public ResponseEntity<byte[]> downloadAbrechnung(
             @PathVariable Long veranstaltungId
     ) {
+
+        validateDokumentOrThrow(
+                veranstaltungId,
+                PdfDokumentTyp.ABRECHNUNG
+        );
 
         byte[] pdf =
                 dokumentService.generateAbrechnung(
@@ -586,5 +619,31 @@ public class ReportController {
                 veranstaltungId,
                 typ
         );
+    }
+
+    private void validateDokumentOrThrow(
+            Long veranstaltungId,
+            PdfDokumentTyp dokumentTyp
+    ) {
+        ValidationResult result =
+                dokumentValidationService.validate(
+                        veranstaltungId,
+                        dokumentTyp
+                );
+
+        if (!result.isValid()) {
+            String message =
+                    result.getErrors().stream()
+                            .map(ValidationMessage::message)
+                            .reduce(
+                                    (a, b) -> a + "\n" + b
+                            )
+                            .orElse("Dokument kann nicht erstellt werden.");
+
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    message
+            );
+        }
     }
 }
