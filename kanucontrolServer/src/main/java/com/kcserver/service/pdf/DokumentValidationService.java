@@ -53,12 +53,10 @@ public class DokumentValidationService {
                 teilnehmerRepository
                         .findAllWithPerson(veranstaltungId);
 
-        return switch (dokumentTyp) {
+        ValidationResult result = switch (dokumentTyp) {
 
             case ANMELDUNG ->
-                    validateAnmeldung(
-                            veranstaltung
-                    );
+                    validateAnmeldung(veranstaltung);
 
             case ERHEBUNGSBOGEN ->
                     validateErhebungsbogen(
@@ -77,6 +75,7 @@ public class DokumentValidationService {
                             veranstaltung,
                             teilnehmer
                     );
+
             case REISEKOSTENABRECHNUNG ->
                     validateReisekostenabrechnung(
                             veranstaltung
@@ -100,6 +99,39 @@ public class DokumentValidationService {
             default ->
                     ValidationResult.valid();
         };
+
+        // Globale Warnungen für alle PDF-Dokumente
+        validateVeranstalterWarnings(veranstaltung, result);
+
+        return result;
+    }
+
+    private void validateVeranstalterWarnings(
+            Veranstaltung veranstaltung,
+            ValidationResult result
+    ) {
+
+        if (veranstaltung.getVerein() == null) {
+            return;
+        }
+
+        VereinDataStatusDTO dataStatus =
+                vereinDataStatusService.determineStatus(
+                        veranstaltung.getVerein(),
+                        true
+                );
+
+        dataStatus.getFields().forEach((field, status) -> {
+
+            if ("schutzkonzept".equals(field)
+                    && status.getStatus() == DataStatus.WARNING) {
+
+                result.addWarning(
+                        status.getMessage(),
+                        field
+                );
+            }
+        });
     }
 
     private ValidationResult validateErhebungsbogen(

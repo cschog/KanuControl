@@ -1,6 +1,6 @@
 // src/components/person/PersonenScreen.tsx
 
-import { useCallback, useEffect, useState, useRef } from "react"
+import { useCallback, useEffect, useState, useRef } from "react";
 
 import { useTheme } from "@mui/material/styles";
 import { useMediaQuery } from "@mui/material";
@@ -92,6 +92,8 @@ export default function PersonenScreen() {
   const [search, setSearch] = useState("");
   const debounceSearch = useDebounce(search, 300);
   const [aktivFilter, setAktivFilter] = useState<"aktiv" | "alle" | "inaktiv">("aktiv");
+  const [statusFilter, setStatusFilter] = useState<"alle" | "problem">("alle");
+
   const [vereinFilter, setVereinFilter] = useState<VereinRef | undefined>(undefined);
 
   const size = 500;
@@ -130,6 +132,7 @@ export default function PersonenScreen() {
           ort: ortFilter || undefined,
           vereinId: vereinFilter?.id,
           aktiv: aktivFilter === "aktiv" ? true : aktivFilter === "inaktiv" ? false : undefined,
+          status: statusFilter === "problem" ? "problem" : undefined,
           sortField: sorting[0]?.id,
           sortDirection: sorting[0]?.desc ? "desc" : "asc",
         },
@@ -208,11 +211,11 @@ export default function PersonenScreen() {
     setRows([]);
     hasMoreRef.current = true;
     loadRef.current();
-  }, [debounceSearch, vereinFilter, filterModel, sorting, aktivFilter]);
+  }, [debounceSearch, vereinFilter, filterModel, sorting, aktivFilter, statusFilter]);
 
   useEffect(() => {
     setSelectedIds(new Set());
-  }, [debounceSearch, vereinFilter, aktivFilter, filterModel, sorting]);
+  }, [debounceSearch, vereinFilter, aktivFilter, statusFilter, filterModel, sorting]);
 
   /* ========================================================= */
   /* 🔄 DETAIL */
@@ -348,8 +351,6 @@ export default function PersonenScreen() {
     }
   };
 
-
-
   const handleCsvExport = async () => {
     if (selectedIds.size === 0) return;
 
@@ -457,12 +458,48 @@ export default function PersonenScreen() {
 
                   "& .MuiToggleButton-root": {
                     flex: isMobile ? 1 : undefined,
+                    px: 1.2,
+                    py: 0.35,
+                    mb: 2,
+                    minHeight: 22,
+                    fontSize: "0.8rem",
+                    lineHeight: 1.2,
+                    whiteSpace: "nowrap",
                   },
                 }}
               >
                 <ToggleButton value="aktiv">Aktiv</ToggleButton>
                 <ToggleButton value="alle">Alle</ToggleButton>
                 <ToggleButton value="inaktiv">Inaktiv</ToggleButton>
+              </ToggleButtonGroup>
+              <ToggleButtonGroup
+                value={statusFilter}
+                exclusive
+                onChange={(_, value) => {
+                  if (value !== null) {
+                    setStatusFilter(value);
+                  }
+                }}
+                size="small"
+                sx={{
+                  flexShrink: 0,
+                  width: isMobile ? "100%" : undefined,
+
+                  "& .MuiToggleButton-root": {
+                    flex: isMobile ? 1 : undefined,
+                    px: 1.2,
+                    py: 0.35,
+                    mb: 2,
+                    minHeight: 22,
+                    fontSize: "0.8rem",
+                    lineHeight: 1.2,
+                    whiteSpace: "nowrap",
+                  },
+                }}
+              >
+                <ToggleButton value="alle">Alle</ToggleButton>
+
+                <ToggleButton value="problem">Fehler / Warnungen</ToggleButton>
               </ToggleButtonGroup>
             </Box>
 

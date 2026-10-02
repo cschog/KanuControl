@@ -54,6 +54,7 @@ public class TeilnehmerService {
     private final ZahlungsnachweisRepository zahlungsnachweisRepository;
     private final ZahlungsstatusService zahlungsstatusService;
     private final PersonDataStatusService personDataStatusService;
+    private final AltersService altersService;
 
 
     /* =========================================================
@@ -370,6 +371,14 @@ public class TeilnehmerService {
     @Transactional(readOnly = true)
     public List<PersonListDTO> getAssigned(Long veranstaltungId) {
 
+        Veranstaltung veranstaltung =
+                veranstaltungRepository
+                        .findById(veranstaltungId)
+                        .orElseThrow(() -> new ResponseStatusException(
+                                HttpStatus.NOT_FOUND,
+                                VERANSTALTUNG_NOT_FOUND
+                        ));
+
         return teilnehmerRepository.findAllWithPerson(veranstaltungId)
                 .stream()
                 .map(t -> {
@@ -379,11 +388,24 @@ public class TeilnehmerService {
                     PersonListDTO dto =
                             personMapper.toListDTO(person);
 
+                    boolean isLeiter =
+                            t.getRolle() == TeilnehmerRolle.LEITER;
+
+                    boolean isFahrer =
+                            reisekostenabrechnungRepository
+                                    .existsByVeranstaltungIdAndFahrerId(
+                                            veranstaltungId,
+                                            person.getId()
+                                    );
+
                     PersonDataStatusDTO status =
-                            determinePersonStatus(
-                                    veranstaltungId,
+                            personDataStatusService.determineStatus(
                                     person,
-                                    true
+                                    isLeiter,
+                                    isFahrer,
+                                    true,
+                                    t.getRolle(),
+                                    veranstaltung.getBeginnDatum()
                             );
 
                     dto.setDataStatus(status.getStatus());
@@ -410,6 +432,36 @@ public class TeilnehmerService {
                                 veranstaltungId,
                                 person.getId()
                         );
+
+        if (isTeilnehmer) {
+
+            Teilnehmer teilnehmer =
+                    teilnehmerRepository
+                            .findByVeranstaltungIdAndPersonId(
+                                    veranstaltungId,
+                                    person.getId()
+                            )
+                            .orElse(null);
+
+            Veranstaltung veranstaltung =
+                    veranstaltungRepository
+                            .findById(veranstaltungId)
+                            .orElse(null);
+
+            if (teilnehmer != null
+                    && veranstaltung != null
+                    && veranstaltung.getBeginnDatum() != null) {
+
+                return personDataStatusService.determineStatus(
+                        person,
+                        isLeiter,
+                        isFahrer,
+                        true,
+                        teilnehmer.getRolle(),
+                        veranstaltung.getBeginnDatum()
+                );
+            }
+        }
 
         return personDataStatusService.determineStatus(
                 person,
@@ -469,33 +521,77 @@ public class TeilnehmerService {
                         VERANSTALTUNG_NOT_FOUND
                 );
 
-        Person person = getPerson(personId);
+        Person neuerLeiter = getPerson(personId);
 
-        validateLeiterAge(person);
+        validateLeiterAge(neuerLeiter, veranstaltung);
 
-        // alten Leiter zurücksetzen
-        teilnehmerRepository
-                .findByVeranstaltungAndRolle(veranstaltung, TeilnehmerRolle.LEITER)
-                .ifPresent(existing -> {
-                    existing.setRolle(null);
-                    teilnehmerRepository.save(existing);
-                });
+        // Alle bisherigen Leiterrollen entfernen
+        List<Teilnehmer> teilnehmer =
+                teilnehmerRepository.findAllWithPerson(veranstaltungId);
 
-        Teilnehmer teilnehmer = teilnehmerRepository
-                .findByVeranstaltungAndPerson(veranstaltung, person)
-                .orElseGet(() -> {
-                    Teilnehmer t = new Teilnehmer();
-                    t.setVeranstaltung(veranstaltung);
-                    t.setPerson(person);
-                    t.setRolle(null);
-                    return t;
-                });
+        for (Teilnehmer t : teilnehmer) {
+            if (t.getRolle() == TeilnehmerRolle.LEITER
+                    && !t.getPerson().getId().equals(personId)) {
 
-        teilnehmer.setRolle(TeilnehmerRolle.LEITER);
+                t.setRolle(null);
+                teilnehmerRepository.saveAndFlush(t);
+            }
+        }
 
-        return teilnehmerMapper.toDetailDTO(
-                teilnehmerRepository.save(teilnehmer)
-        );
+        // Neuen Leiter als Teilnehmer suchen
+        Teilnehmer neuerTeilnehmer =
+                teilnehmerRepository
+                        .findByVeranstaltungIdAndPersonId(
+                                veranstaltungId,
+                                personId
+                        )
+                        .orElseGet(() -> {
+
+                            Teilnehmer t = new Teilnehmer();
+                            t.setVeranstaltung(veranstaltung);
+                            t.setPerson(neuerLeiter);
+
+                            return t;
+                        });
+
+        // Neuer Leiter bekommt LEITER
+        neuerTeilnehmer.setRolle(TeilnehmerRolle.LEITER);
+
+        // Speichern
+        Teilnehmer gespeichert =
+                teilnehmerRepository.saveAndFlush(neuerTeilnehmer);
+
+        // Veranstaltung ebenfalls aktualisieren
+        veranstaltung.setLeiter(neuerLeiter);
+        veranstaltungRepository.saveAndFlush(veranstaltung);
+
+        return teilnehmerMapper.toDetailDTO(gespeichert);
+    }
+
+    private void validateLeiterAge(
+            Person person,
+            Veranstaltung veranstaltung
+    ) {
+
+        if (person.getGeburtsdatum() == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    ErrorMessages.GEBURTSDATUM_REQUIRED_FOR_LEITER
+            );
+        }
+
+        Integer alter =
+                altersService.berechneAlterBeiBeginn(
+                        person.getGeburtsdatum(),
+                        veranstaltung.getBeginnDatum()
+                );
+
+        if (alter == null || alter < 18) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    ErrorMessages.LEITER_MIND_ALTER
+            );
+        }
     }
 
     public TeilnehmerBeitraegeResponseDTO findAllByVeranstaltungForBeitraege(
@@ -657,26 +753,6 @@ public class TeilnehmerService {
                         teilnehmer.getPerson().getName()
                 ))
                 .toList();
-    }
-
-    private void validateLeiterAge(Person person) {
-
-        if (person.getGeburtsdatum() == null) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    ErrorMessages.GEBURTSDATUM_REQUIRED_FOR_LEITER
-            );
-        }
-
-        if (person.getGeburtsdatum()
-                .plusYears(18)
-                .isAfter(LocalDate.now())) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    ErrorMessages.LEITER_MIND_ALTER
-            );
-        }
     }
 
     @Transactional(readOnly = true)

@@ -165,7 +165,8 @@ SELECT DISTINCT p
 FROM Person p
 LEFT JOIN FETCH p.mitgliedschaften m
 LEFT JOIN FETCH m.verein
-WHERE p.geburtsdatum IS NOT NULL
+WHERE p.aktiv = true
+AND p.geburtsdatum IS NOT NULL
 AND p.geburtsdatum <= :stichtag
 AND (
     :search IS NULL

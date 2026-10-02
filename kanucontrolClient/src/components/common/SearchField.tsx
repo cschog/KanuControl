@@ -10,11 +10,8 @@ interface SearchFieldProps {
   onChange: (value: string) => void;
 
   label?: string;
-
   placeholder?: string;
-
   autoFocus?: boolean;
-
   fullWidth?: boolean;
 }
 
@@ -37,7 +34,7 @@ const SearchField = ({
       onChange={(e) => onChange(e.target.value)}
       sx={{
         "& .MuiOutlinedInput-root": {
-          height: "55px",
+          height: "35px",
         },
       }}
       slotProps={{

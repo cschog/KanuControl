@@ -207,6 +207,8 @@ const DokumenteScreen: React.FC = () => {
 
     const hasErrors = validation.errors.length > 0;
 
+    const hasPdfEditableWarnings = validation.warnings.some((item) => item.editableInPdf);
+
     return (
       <Accordion
         sx={{
@@ -235,7 +237,7 @@ const DokumenteScreen: React.FC = () => {
             ))}
           </Box>
 
-          {!hasErrors && validation.warnings.length > 0 && (
+          {!hasErrors && hasPdfEditableWarnings && (
             <Typography variant="body2" sx={{ mt: 2, fontWeight: 600 }}>
               Die fehlenden Angaben müssen im PDF manuell ergänzt werden.
             </Typography>

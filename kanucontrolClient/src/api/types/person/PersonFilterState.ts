@@ -7,4 +7,5 @@ export interface PersonFilterState {
 
   sortField?: string;
   sortDirection?: "asc" | "desc";
+  status?: "problem";
 }

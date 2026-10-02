@@ -49,15 +49,21 @@ export function FormFeldDate({
       sx={{
         ...(dataStatus === "ERROR" &&
           !invalid && {
-            "& .MuiOutlinedInput-notchedOutline": {
-              borderColor: "error.main",
+            "& .MuiOutlinedInput-root": {
+              backgroundColor: "rgba(209, 3, 3, 0.18)",
+            },
+            "& .MuiInputLabel-root": {
+              color: "error.main",
             },
           }),
 
         ...(dataStatus === "WARNING" &&
           !invalid && {
-            "& .MuiOutlinedInput-notchedOutline": {
-              borderColor: "warning.main",
+            "& .MuiOutlinedInput-root": {
+              backgroundColor: "rgba(244, 200, 4, 0.3)",
+            },
+            "& .MuiInputLabel-root": {
+              color: "warning.main",
             },
           }),
       }}
@@ -69,7 +75,26 @@ export function FormFeldDate({
   }
 
   return (
-    <Tooltip title={dataStatusMessage} arrow placement="top">
+    <Tooltip
+      title={dataStatusMessage}
+      arrow
+      placement="top"
+      slotProps={{
+        tooltip: {
+          sx: {
+            fontSize: "0.95rem",
+            lineHeight: 1.4,
+            maxWidth: 360,
+            padding: "10px 14px",
+          },
+        },
+        arrow: {
+          sx: {
+            fontSize: "1rem",
+          },
+        },
+      }}
+    >
       <Box sx={{ width: "100%" }}>{field}</Box>
     </Tooltip>
   );

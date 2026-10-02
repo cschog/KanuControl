@@ -88,6 +88,15 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
                         PERSON_NOT_FOUND
                 ));
 
+        if (!leiter.isAktiv()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    ErrorMessages.VERANSTALTUNGSLEITER_INAKTIV
+            );
+        }
+
+        validateLeiterAge(leiter);
+
         validateLeiterAge(leiter);
 
         // =========================================================
@@ -547,19 +556,57 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
             v.setVerein(verein);
         }
 
-    /* =========================
-       LEITER (inkl. Validierung)
-       ========================= */
+/* =========================
+   LEITER (inkl. Validierung)
+   ========================= */
 
         if (dto.getLeiterId() != null) {
 
             Person leiter = personRepository.findById(dto.getLeiterId())
                     .orElseThrow(() -> new ResponseStatusException(
-                            HttpStatus.NOT_FOUND, PERSON_NOT_FOUND
+                            HttpStatus.NOT_FOUND,
+                            PERSON_NOT_FOUND
                     ));
+
+            if (!leiter.isAktiv()) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        ErrorMessages.VERANSTALTUNGSLEITER_INAKTIV
+                );
+            }
 
             validateLeiterAge(leiter);
 
+            validateLeiterAge(leiter);
+
+            // Alten Leiter entfernen
+            teilnehmerRepository
+                    .findByVeranstaltungAndRolle(v, TeilnehmerRolle.LEITER)
+                    .ifPresent(alterLeiter -> {
+
+                        if (!alterLeiter.getPerson().getId().equals(leiter.getId())) {
+                            alterLeiter.setRolle(null);
+                            teilnehmerRepository.save(alterLeiter);
+                        }
+                    });
+
+            // Neuen Leiter als Teilnehmer suchen oder anlegen
+            Teilnehmer neuerLeiter =
+                    teilnehmerRepository
+                            .findByVeranstaltungAndPerson(v, leiter)
+                            .orElseGet(() -> {
+
+                                Teilnehmer t = new Teilnehmer();
+                                t.setVeranstaltung(v);
+                                t.setPerson(leiter);
+                                return t;
+                            });
+
+            neuerLeiter.setRolle(TeilnehmerRolle.LEITER);
+
+            teilnehmerRepository.save(neuerLeiter);
+
+            // Veranstaltung ebenfalls aktualisieren
             v.setLeiter(leiter);
         }
 

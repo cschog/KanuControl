@@ -75,6 +75,17 @@ public class VereinDataStatusService {
             );
 
             // =====================================================
+            // Schutzkonzept
+            // =====================================================
+
+            addRecommended(
+                    fields,
+                    "schutzkonzept",
+                    verein.getSchutzkonzept(),
+                    ErrorMessages.VERANSTALTER_SCHUTZKONZEPT_RECOMMENDED
+            );
+
+            // =====================================================
             // Kontoinhaber
             // =====================================================
 

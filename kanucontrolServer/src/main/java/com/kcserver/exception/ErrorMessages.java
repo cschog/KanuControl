@@ -76,6 +76,8 @@ public final class ErrorMessages {
     public static final String VERANSTALTUNG_VEREIN_REQUIRED =
             "Verein fehlt.";
 
+    public static final String VERANSTALTUNGSLEITER_INAKTIV =
+            "Eine inaktive Person kann nicht als Veranstaltungsleiter eingesetzt werden.";
     // =========================================================
     // Person
     // =========================================================
@@ -152,6 +154,9 @@ public final class ErrorMessages {
 
     public static final String KONTOINHABER_NOT_FOUND =
             "Kontoinhaber nicht gefunden";
+
+    public static final String VERANSTALTER_SCHUTZKONZEPT_RECOMMENDED =
+            "Für den Verein ist kein Schutzkonzept hinterlegt.";
 
     // =========================================================
 // Kontoinhaber / Veranstalter

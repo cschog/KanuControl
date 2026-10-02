@@ -37,6 +37,8 @@ const getStatus = (field: string) => {
   };
 };
 
+  console.log("schutzkonzept form:", form.schutzkonzept);
+  
   return (
     <>
       {/* CREATE */}
@@ -151,6 +153,7 @@ const getStatus = (field: string) => {
             value={form.schutzkonzept ?? ""}
             onChange={(v) => onChange("schutzkonzept", v || undefined)}
             disabled={!editMode}
+            {...getStatus("schutzkonzept")}
           />
 
           <FormFeldDate

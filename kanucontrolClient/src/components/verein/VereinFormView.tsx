@@ -4,9 +4,8 @@ import Verein from "@/api/types/verein/VereinFormModel";
 import { VereinBaseForm } from "./form/VereinBaseForm";
 import { VereinActionBar } from "./VereinActionBar";
 import { useVereinForm } from "./hooks/useVereinForm";
-import  ConfirmDeleteDialog  from "@/components/common/ConfirmDeleteDialog";
+import ConfirmDeleteDialog from "@/components/common/ConfirmDeleteDialog";
 import { VereinSave } from "@/api/types/verein/VereinSave";
-
 
 interface VereinFormViewProps {
   verein: Verein | null;
@@ -39,7 +38,6 @@ export const VereinFormView: React.FC<VereinFormViewProps> = ({
   const { form, update, buildSavePayload } = useVereinForm(verein);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
-
   if (!verein || !form) {
     return (
       <Typography align="center" sx={{ mt: 4 }} color="text.secondary">
@@ -47,7 +45,6 @@ export const VereinFormView: React.FC<VereinFormViewProps> = ({
       </Typography>
     );
   }
-
 
   return (
     <>

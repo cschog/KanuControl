@@ -2,11 +2,10 @@ package com.kcserver.service.person;
 
 import com.kcserver.dto.mitglied.MitgliedSaveDTO;
 import com.kcserver.dto.person.*;
-import com.kcserver.entity.Mitglied;
-import com.kcserver.entity.Person;
-import com.kcserver.entity.Teilnehmer;
-import com.kcserver.entity.Verein;
+import com.kcserver.dto.validation.DataStatus;
+import com.kcserver.entity.*;
 import com.kcserver.enumtype.CountryCode;
+import com.kcserver.enumtype.TeilnehmerRolle;
 import com.kcserver.exception.ErrorMessages;
 import com.kcserver.mapper.PersonMapper;
 import com.kcserver.persistence.specification.PersonSpecification;
@@ -23,7 +22,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.kcserver.dto.common.ScrollResponse;
@@ -82,10 +83,13 @@ public class PersonServiceImpl implements PersonService {
             PersonSearchCriteria criteria
     ) {
 
+        // Sonderfall: Nur Personen mit ERROR/WARNING
+        if ("problem".equalsIgnoreCase(criteria.getStatus())) {
+            return scrollProblemPersons(criteria);
+        }
+
         boolean desc =
-                "desc".equalsIgnoreCase(
-                        criteria.getSortDirection()
-                );
+                "desc".equalsIgnoreCase(criteria.getSortDirection());
 
         Slice<Person> slice;
 
@@ -135,6 +139,61 @@ public class PersonServiceImpl implements PersonService {
         );
     }
 
+    private ScrollResponse<PersonListDTO> scrollProblemPersons(
+            PersonSearchCriteria criteria
+    ) {
+        Sort.Direction direction =
+                "desc".equalsIgnoreCase(criteria.getSortDirection())
+                        ? Sort.Direction.DESC
+                        : Sort.Direction.ASC;
+
+        String sortField = switch (criteria.getSortField()) {
+            case "vorname" -> "vorname";
+            case "ort" -> "ort";
+            case "alter" -> "geburtsdatum";
+            default -> "name";
+        };
+
+        Pageable pageable = PageRequest.of(
+                0,
+                1000,
+                Sort.by(direction, sortField)
+                        .and(Sort.by(
+                                direction,
+                                "vorname",
+                                "id"
+                        ))
+        );
+
+        List<Person> persons = personRepository
+                .findAll(
+                        PersonSpecification.byCriteria(criteria),
+                        pageable
+                )
+                .getContent();
+
+        List<PersonListDTO> dtos = persons.stream()
+                .map(personMapper::toListDTO)
+                .toList();
+
+        enrichListStatus(persons, dtos);
+
+        List<PersonListDTO> problemDtos = new ArrayList<>();
+
+        for (PersonListDTO dto : dtos) {
+            if (dto.getDataStatus() == DataStatus.ERROR
+                    || dto.getDataStatus() == DataStatus.WARNING) {
+                problemDtos.add(dto);
+            }
+        }
+
+        return new ScrollResponse<>(
+                problemDtos,
+                problemDtos.size(),
+                false
+        );
+    }
+
     @Override
     @Transactional(readOnly = true)
     public PersonDetailDTO getPersonDetail(long id) {
@@ -152,26 +211,53 @@ public class PersonServiceImpl implements PersonService {
 
     private PersonDataStatusDTO determinePersonStatus(Person person) {
 
+        Optional<Veranstaltung> aktiveVeranstaltungOpt =
+                veranstaltungRepository.findByAktivTrue();
+
+        if (aktiveVeranstaltungOpt.isEmpty()) {
+            return personDataStatusService.determineStatus(
+                    person,
+                    false,
+                    false,
+                    false,
+                    null,
+                    null
+            );
+        }
+
+        Veranstaltung veranstaltung = aktiveVeranstaltungOpt.get();
+
+        Teilnehmer teilnehmer =
+                teilnehmerRepository
+                        .findByVeranstaltungAndPerson(veranstaltung, person)
+                        .orElse(null);
+
+        boolean isTeilnehmer = teilnehmer != null;
+
+        TeilnehmerRolle rolle =
+                teilnehmer != null
+                        ? teilnehmer.getRolle()
+                        : null;
+
         boolean isLeiter =
-                veranstaltungRepository
-                        .findLeiterPersonIds(List.of(person.getId()))
-                        .contains(person.getId());
+                veranstaltung.getLeiter() != null
+                        && veranstaltung.getLeiter().getId().equals(person.getId());
 
         boolean isFahrer =
                 reisekostenabrechnungRepository
-                        .findFahrerPersonIds(List.of(person.getId()))
+                        .findFahrerPersonIdsByVeranstaltung(
+                                veranstaltung.getId(),
+                                List.of(person.getId())
+                        )
                         .contains(person.getId());
-
-        boolean isTeilnehmer =
-                !teilnehmerRepository
-                        .findByPersonId(person.getId())
-                        .isEmpty();
 
         return personDataStatusService.determineStatus(
                 person,
                 isLeiter,
                 isFahrer,
-                isTeilnehmer
+                isTeilnehmer,
+                rolle,
+                veranstaltung.getBeginnDatum()
         );
     }
 
@@ -498,29 +584,68 @@ public class PersonServiceImpl implements PersonService {
             return;
         }
 
+        Optional<Veranstaltung> aktiveVeranstaltungOpt =
+                veranstaltungRepository.findByAktivTrue();
+
+        if (aktiveVeranstaltungOpt.isEmpty()) {
+            for (int i = 0; i < persons.size(); i++) {
+                var status = personDataStatusService.determineStatus(
+                        persons.get(i),
+                        false,
+                        false,
+                        false,
+                        null,
+                        null
+                );
+
+                dtos.get(i).setDataStatus(status.getStatus());
+            }
+            return;
+        }
+
+        Veranstaltung veranstaltung = aktiveVeranstaltungOpt.get();
+
         List<Long> personIds = persons.stream()
                 .map(Person::getId)
                 .toList();
 
-        var leiterIds =
-                veranstaltungRepository.findLeiterPersonIds(personIds);
-
         var fahrerIds =
-                reisekostenabrechnungRepository.findFahrerPersonIds(personIds);
-
-        var teilnehmerIds =
-                teilnehmerRepository.findPersonIdsByPersonIds(personIds);
+                reisekostenabrechnungRepository.findFahrerPersonIdsByVeranstaltung(
+                        veranstaltung.getId(),
+                        personIds
+                );
 
         for (int i = 0; i < persons.size(); i++) {
 
             Person person = persons.get(i);
             PersonListDTO dto = dtos.get(i);
 
+            Teilnehmer teilnehmer =
+                    teilnehmerRepository
+                            .findByVeranstaltungAndPerson(veranstaltung, person)
+                            .orElse(null);
+
+            boolean isTeilnehmer = teilnehmer != null;
+
+            TeilnehmerRolle rolle =
+                    teilnehmer != null
+                            ? teilnehmer.getRolle()
+                            : null;
+
+            boolean isLeiter =
+                    veranstaltung.getLeiter() != null
+                            && veranstaltung.getLeiter().getId().equals(person.getId());
+
+            boolean isFahrer =
+                    fahrerIds.contains(person.getId());
+
             var status = personDataStatusService.determineStatus(
                     person,
-                    leiterIds.contains(person.getId()),
-                    fahrerIds.contains(person.getId()),
-                    teilnehmerIds.contains(person.getId())
+                    isLeiter,
+                    isFahrer,
+                    isTeilnehmer,
+                    rolle,
+                    veranstaltung.getBeginnDatum()
             );
 
             dto.setDataStatus(status.getStatus());

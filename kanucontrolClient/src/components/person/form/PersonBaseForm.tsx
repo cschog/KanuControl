@@ -122,6 +122,7 @@ export const PersonBaseForm: React.FC<Props> = ({
             value={form.efz ?? ""}
             onChange={(v) => onChange("efz", v || undefined)}
             disabled={!editMode}
+            {...getStatus("efz")}
           />
 
           <FormFeld

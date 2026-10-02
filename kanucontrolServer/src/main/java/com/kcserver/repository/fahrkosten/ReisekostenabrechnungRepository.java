@@ -112,4 +112,15 @@ and (
             Long veranstaltungId,
             Long fahrerId
     );
+
+    @Query("""
+    select distinct r.fahrer.id
+    from Reisekostenabrechnung r
+    where r.veranstaltung.id = :veranstaltungId
+      and r.fahrer.id in :personIds
+""")
+    Set<Long> findFahrerPersonIdsByVeranstaltung(
+            @Param("veranstaltungId") Long veranstaltungId,
+            @Param("personIds") Collection<Long> personIds
+    );
 }

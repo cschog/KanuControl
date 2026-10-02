@@ -26,4 +26,6 @@ public class PersonSearchCriteria {
 
     private String sortField;
     private String sortDirection;
+
+    private String status;
 }
