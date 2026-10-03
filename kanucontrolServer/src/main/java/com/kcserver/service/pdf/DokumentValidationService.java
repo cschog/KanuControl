@@ -5,6 +5,7 @@ import com.kcserver.entity.Teilnehmer;
 import com.kcserver.entity.Veranstaltung;
 import com.kcserver.enumtype.PdfDokumentTyp;
 import com.kcserver.service.FoerderService;
+import com.kcserver.service.VeranstaltungDataStatusService;
 import com.kcserver.validation.ValidationResult;
 import com.kcserver.repository.*;
 import com.kcserver.repository.abrechnung.AbrechnungBelegRepository;
@@ -37,6 +38,7 @@ public class DokumentValidationService {
     private final ReisekostenabrechnungRepository reisekostenabrechnungRepository;
     private final VereinDataStatusService vereinDataStatusService;
     private final FoerderService foerderService;
+    private final VeranstaltungDataStatusService veranstaltungDataStatusService;
 
 
     public ValidationResult validate(
@@ -102,8 +104,36 @@ public class DokumentValidationService {
 
         // Globale Warnungen für alle PDF-Dokumente
         validateVeranstalterWarnings(veranstaltung, result);
+        validateTeilnehmerWarnings(veranstaltung, result);
 
         return result;
+    }
+
+    private void validateTeilnehmerWarnings(
+            Veranstaltung veranstaltung,
+            ValidationResult result
+    ) {
+
+        List<String> personen =
+                veranstaltungDataStatusService
+                        .getPersonenOhneGueltigesEfz(veranstaltung);
+
+        if (personen.isEmpty()) {
+            return;
+        }
+
+        String message = personen.size() == 1
+                ? "Diese Person hat kein gültiges eFZ"
+                : "Diese Personen haben kein gültiges eFZ";
+
+        result.addWarning(message, "efz");
+
+        for (String name : personen) {
+            result.addWarning(
+                    "• " + name,
+                    "efz"
+            );
+        }
     }
 
     private void validateVeranstalterWarnings(

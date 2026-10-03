@@ -18,7 +18,6 @@ public class PersonListDTO {
     private String hauptvereinAbk;
 
     private DataStatus dataStatus;
-    private String dataStatusMessage;
 
     private int mitgliedschaftenCount;
 }
