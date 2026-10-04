@@ -54,27 +54,16 @@ export function getUsername(): string | undefined {
   return token.preferred_username;
 }
 
-export function isAdmin(): boolean {
+export function hasRole(role: string): boolean {
   if (!keycloak.authenticated || !keycloak.tokenParsed) {
     return false;
   }
 
   const token = keycloak.tokenParsed as BaseToken;
 
-  return token.realm_access?.roles?.includes("ADMIN") ?? false;
+  return token.realm_access?.roles?.includes(role) ?? false;
 }
 
-export function isEkcService(): boolean {
-  if (!keycloak.authenticated || !keycloak.tokenParsed) {
-    return false;
-  }
-
-  const token = keycloak.tokenParsed as BaseToken;
-
-  const hasRole = token.realm_access?.roles?.includes("EKC-SERVICE") ?? false;
-
-  const isInEkcGroup =
-    token.groups?.some((group) => group === "EKC-Service" || group === "/EKC-Service") ?? false;
-
-  return hasRole || isInEkcGroup;
+export function isAdmin(): boolean {
+  return hasRole("ADMIN");
 }

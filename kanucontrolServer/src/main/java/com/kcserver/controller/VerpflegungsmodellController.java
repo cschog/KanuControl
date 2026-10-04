@@ -7,12 +7,14 @@ import com.kcserver.dto.verpflegung.VerpflegungsmodellRefDTO;
 import com.kcserver.service.VerpflegungsmodellService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/verpflegungsmodelle")
+@PreAuthorize("hasAnyRole('ADMIN', 'KJFP')")
 @RequiredArgsConstructor
 public class VerpflegungsmodellController {
 

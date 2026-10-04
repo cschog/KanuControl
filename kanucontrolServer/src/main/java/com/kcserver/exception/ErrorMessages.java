@@ -16,6 +16,13 @@ public final class ErrorMessages {
             "Bitte überprüfen Sie Ihre Eingaben.";
 
     // =========================================================
+// Sicherheit / Berechtigungen
+// =========================================================
+
+    public static final String ACCESS_DENIED =
+            "Sie haben keine Berechtigung für diese Funktion.";
+
+    // =========================================================
     // Veranstaltung
     // =========================================================
 

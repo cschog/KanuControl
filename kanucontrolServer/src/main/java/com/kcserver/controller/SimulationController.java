@@ -6,11 +6,13 @@ import com.kcserver.dto.simulation.SimulationErgebnis;
 import com.kcserver.service.simulation.SimulationFacade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/simulation")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('ADMIN', 'KJFP')")
 public class SimulationController {
 
     private final SimulationFacade facade;

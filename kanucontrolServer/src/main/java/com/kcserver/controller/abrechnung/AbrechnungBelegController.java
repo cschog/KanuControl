@@ -6,11 +6,13 @@ import com.kcserver.service.abrechnung.AbrechnungBelegService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/veranstaltungen/{veranstaltungId}/abrechnung/belege")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('ADMIN', 'KJFP')")
 public class AbrechnungBelegController {
 
     private final AbrechnungBelegService service;

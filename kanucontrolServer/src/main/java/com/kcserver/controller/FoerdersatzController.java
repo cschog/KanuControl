@@ -10,6 +10,7 @@ import com.kcserver.service.FoerdersatzService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -18,6 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/foerdersaetze")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('ADMIN', 'KJFP')")
 public class FoerdersatzController {
 
     private final FoerdersatzService service;

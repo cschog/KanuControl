@@ -5,11 +5,13 @@ import com.kcserver.dto.planung.PlanungDetailDTO;
 import com.kcserver.service.planung.PlanungService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/veranstaltungen/{veranstaltungId}/planung")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('ADMIN', 'KJFP')")
 public class PlanungController {
 
     private final PlanungService planungService;

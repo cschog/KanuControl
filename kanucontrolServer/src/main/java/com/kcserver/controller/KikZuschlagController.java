@@ -7,6 +7,7 @@ import com.kcserver.service.KikZuschlagService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,6 +15,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/kikZuschlag")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('ADMIN', 'KJFP')")
 public class KikZuschlagController {
 
     private final KikZuschlagService service;

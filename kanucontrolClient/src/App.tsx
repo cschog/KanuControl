@@ -1,6 +1,8 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 
+import ModuleStart from "@/components/module/ModuleStart";
+
 import StartMenue from "@/components/startmenu/StartMenu";
 import Vereine from "./components/verein/VereineScreen";
 import Personen from "./components/person/PersonenScreen";
@@ -35,6 +37,7 @@ const App: React.FC = () => {
               START / ALLGEMEINE MODULE
              ===================================================== */}
 
+          <Route path="/" element={<ModuleStart />} />
           <Route path="/" element={<StartMenue />} />
           <Route path="/startmenue" element={<StartMenue />} />
 

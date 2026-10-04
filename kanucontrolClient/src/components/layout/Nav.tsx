@@ -22,7 +22,7 @@ import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import LogoutIcon from "@mui/icons-material/Logout";
 
 import keycloak from "@/auth/keycloak";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAppContext } from "@/context/AppContext";
 
 import { getBackendVersion } from "@/api/services/systemApi";
@@ -34,6 +34,17 @@ const appEnv = import.meta.env.VITE_APP_ENV;
 
 const Navigation = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isKjfpContext =
+    location.pathname === "/startmenue" ||
+    location.pathname.startsWith("/vereine") ||
+    location.pathname.startsWith("/personen") ||
+    location.pathname.startsWith("/veranstaltungen") ||
+    location.pathname.startsWith("/teilnehmer") ||
+    location.pathname.startsWith("/dokumente") ||
+    location.pathname.startsWith("/verwaltung") ||
+    location.pathname.startsWith("/admin") ||
+    location.pathname.startsWith("/ausgabeReisekosten");
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const { schema, active, loading } = useAppContext();
@@ -215,58 +226,60 @@ const loadOnlineUsers = async () => {
 
           {/* ================= CONTEXT ================= */}
 
-          <Box
-            sx={{
-              mt: isMobile ? 0.5 : 0,
-              ml: isMobile ? 0 : "74px",
-            }}
-          >
-            {loading ? (
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 1,
-                }}
-              >
-                <CircularProgress size={14} color="inherit" />
+          {isKjfpContext && (
+            <Box
+              sx={{
+                mt: isMobile ? 0.5 : 0,
+                ml: isMobile ? 0 : "74px",
+              }}
+            >
+              {loading ? (
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                  }}
+                >
+                  <CircularProgress size={14} color="inherit" />
 
-                <Typography
-                  variant="body2"
-                  sx={{
-                    opacity: 0.8,
-                  }}
-                >
-                  Lade Kontext…
-                </Typography>
-              </Box>
-            ) : (
-              <Box>
-                <Typography
-                  variant="subtitle1"
-                  fontWeight={400}
-                  sx={{
-                    opacity: 0.98,
-                    fontSize: isMobile ? "0.9rem" : "1.2rem",
-                    letterSpacing: 0.2,
-                    lineHeight: 1.3,
-                  }}
-                >
-                  {active
-                    ? isMobile
-                      ? `${active.name}${
-                          active.leiter ? ` · ${active.leiter.vorname} ${active.leiter.name}` : ""
-                        }`
-                      : `${schema} · ${active.name} · ${
-                          active.leiter
-                            ? `${active.leiter.vorname} ${active.leiter.name}`
-                            : "kein Leiter"
-                        }`
-                    : schema}
-                </Typography>
-              </Box>
-            )}
-          </Box>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      opacity: 0.8,
+                    }}
+                  >
+                    Lade Kontext…
+                  </Typography>
+                </Box>
+              ) : (
+                <Box>
+                  <Typography
+                    variant="subtitle1"
+                    fontWeight={400}
+                    sx={{
+                      opacity: 0.98,
+                      fontSize: isMobile ? "0.9rem" : "1.2rem",
+                      letterSpacing: 0.2,
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    {active
+                      ? isMobile
+                        ? `${active.name}${
+                            active.leiter ? ` · ${active.leiter.vorname} ${active.leiter.name}` : ""
+                          }`
+                        : `${schema} · ${active.name} · ${
+                            active.leiter
+                              ? `${active.leiter.vorname} ${active.leiter.name}`
+                              : "kein Leiter"
+                          }`
+                      : schema}
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+          )}
         </Box>
 
         {/* ================= ACTIONS ================= */}

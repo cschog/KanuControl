@@ -19,6 +19,7 @@ import com.kcserver.dto.teilnehmer.TeilnehmerKurzDTO;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import com.kcserver.service.finanz.FinanzGruppeService;
 import org.springframework.web.server.ResponseStatusException;
@@ -31,6 +32,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/veranstaltungen")
+@PreAuthorize("hasAnyRole('ADMIN', 'KJFP')")
 public class VeranstaltungController {
 
     private final VeranstaltungService veranstaltungService;

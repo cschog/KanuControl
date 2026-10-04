@@ -8,12 +8,14 @@ import com.kcserver.service.abrechnung.AbrechnungSynchronisationsService;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 
 @RestController
 @RequestMapping("/api/veranstaltungen/{veranstaltungId}/abrechnung")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('ADMIN', 'KJFP')")
 public class AbrechnungController {
 
     private final AbrechnungService service;

@@ -9,6 +9,7 @@ import com.kcserver.service.finanz.FinanzGruppeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/veranstaltungen/{veranstaltungId}/finanzgruppen")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('ADMIN', 'KJFP')")
 public class FinanzGruppeController {
 
     private final FinanzGruppeService commandService;

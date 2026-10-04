@@ -13,6 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 
 @Slf4j
 @RestControllerAdvice
@@ -133,6 +134,19 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiError> handleAccessDenied(
+            AccessDeniedException ex
+    ) {
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                ApiError.simple(
+                        HttpStatus.FORBIDDEN.value(),
+                        "FORBIDDEN",
+                        ErrorMessages.ACCESS_DENIED
+                )
+        );
+    }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleGeneric(Exception ex) {

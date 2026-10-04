@@ -5,6 +5,7 @@ import com.kcserver.dto.teilnehmer.*;
 import com.kcserver.service.TeilnehmerService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import com.kcserver.api.response.ApiResponse;
 
@@ -17,6 +18,7 @@ import java.util.Set;
 
 @RestController
 @RequestMapping("/api/veranstaltungen/{veranstaltungId}/teilnehmer")
+@PreAuthorize("hasAnyRole('ADMIN', 'KJFP')")
 public class TeilnehmerController {
 
     private final TeilnehmerService teilnehmerService;

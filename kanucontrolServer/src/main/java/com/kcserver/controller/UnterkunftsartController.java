@@ -7,12 +7,14 @@ import com.kcserver.dto.unterkunft.UnterkunftsartRefDTO;
 import com.kcserver.service.UnterkunftsartService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/unterkunftsarten")
+@PreAuthorize("hasAnyRole('ADMIN', 'KJFP')")
 @RequiredArgsConstructor
 public class UnterkunftsartController {
 

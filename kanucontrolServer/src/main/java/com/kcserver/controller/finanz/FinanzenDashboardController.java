@@ -4,6 +4,7 @@ import com.kcserver.api.response.ApiResponse;
 import com.kcserver.dto.finanzen.FinanzenDashboardDTO;
 import com.kcserver.service.finanz.FinanzenDashboardService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/veranstaltungen/{veranstaltungId}/finanzen")
+@PreAuthorize("hasAnyRole('ADMIN', 'KJFP')")
 public class FinanzenDashboardController {
 
     private final FinanzenDashboardService service;

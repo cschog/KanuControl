@@ -23,17 +23,18 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/admin/audit")
-@PreAuthorize("hasRole('ADMIN')")
 public class AuditController {
 
     private final AuditQueryService auditQueryService;
     private final AuditSessionService auditSessionService;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/active-sessions")
     public List<AuditSessionDTO> getActiveSessions() {
         return auditQueryService.getActiveSessions();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/history")
     public Page<AuditSessionDTO> getHistory(
             @PageableDefault(
@@ -46,6 +47,7 @@ public class AuditController {
         return auditQueryService.getHistory(pageable);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/dashboard")
     public AuditDashboardDTO getDashboard() {
         return auditQueryService.getDashboard();
