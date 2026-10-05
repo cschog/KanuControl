@@ -1,0 +1,84 @@
+package com.kcserver.kjfp.mapper;
+
+import com.kcserver.kjfp.dto.planung.PlanungDetailDTO;
+import com.kcserver.kjfp.dto.planung.PlanungPositionDTO;
+import com.kcserver.kjfp.entity.planung.Planung;
+import com.kcserver.kjfp.entity.planung.PlanungPosition;
+import org.springframework.stereotype.Component;
+
+@Component
+public class PlanungMapper {
+
+    /* =========================================================
+       ENTITY → DTO
+       ========================================================= */
+
+    public PlanungDetailDTO toDTO(
+            Planung planung
+    ) {
+
+        if (planung == null) {
+            return null;
+        }
+
+        PlanungDetailDTO dto = new PlanungDetailDTO();
+
+        dto.setVeranstaltungId(
+                planung.getVeranstaltung() != null
+                        ? planung.getVeranstaltung().getId()
+                        : null
+        );
+
+        dto.setStatus(
+                planung.getStatus()
+        );
+
+        dto.setPositionen(
+                planung.getPositionen()
+                        .stream()
+                        .map(this::toPositionDTO)
+                        .toList()
+        );
+
+        return dto;
+    }
+
+    /* =========================================================
+       POSITION → DTO
+       ========================================================= */
+
+    public PlanungPositionDTO toPositionDTO(
+            PlanungPosition position
+    ) {
+
+        if (position == null) {
+            return null;
+        }
+
+        PlanungPositionDTO dto = new PlanungPositionDTO();
+
+        dto.setId(position.getId());
+
+        dto.setKategorie(position.getKategorie());
+
+        dto.setMenge(position.getMenge());
+        dto.setEinheit(position.getEinheit());
+        dto.setEinzelpreis(position.getEinzelpreis());
+
+        dto.setBetrag(position.getBetrag());
+
+        dto.setAutomatischBerechnet(
+                position.isAutomatischBerechnet()
+        );
+
+        dto.setEditierbar(
+                position.isEditierbar()
+        );
+
+        dto.setKommentar(
+                position.getKommentar()
+        );
+
+        return dto;
+    }
+}

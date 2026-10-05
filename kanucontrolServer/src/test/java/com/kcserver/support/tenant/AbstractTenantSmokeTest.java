@@ -1,6 +1,6 @@
 package com.kcserver.support.tenant;
 
-import com.kcserver.tenancy.TenantSchemaProvisioner;
+import com.kcserver.core.tenancy.TenantSchemaProvisioner;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;

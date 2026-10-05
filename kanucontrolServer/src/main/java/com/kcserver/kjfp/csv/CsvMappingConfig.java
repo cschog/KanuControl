@@ -1,0 +1,105 @@
+package com.kcserver.kjfp.csv;
+
+import org.apache.commons.csv.*;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+
+public class CsvMappingConfig {
+
+    private final Map<String, CsvFieldMapping> byTargetField = new HashMap<>();
+
+    /* =====================================================
+       DEFAULT MAPPING
+       ===================================================== */
+
+    public static CsvMappingConfig defaultMapping() {
+
+        CsvMappingConfig cfg = new CsvMappingConfig();
+
+        cfg.put("vorname", "Vorname", null);
+        cfg.put("name", "Nachname", null);
+        cfg.put("sex", "Geschlecht", "sex_de");
+        cfg.put("geburtsdatum", "Geburtsdatum", "date_de");
+
+        cfg.put("plz", "PLZ", null);
+        cfg.put("ort", "Ort", null);
+        cfg.put("strasse", "Strasse", null);
+        cfg.put("countryCode", "Land", "country_de");
+
+        cfg.put("telefonFestnetz", "Telefon Festnetz", null);
+        cfg.put("telefon", "Telefon", null);
+        cfg.put("email", "Email", null);
+
+        cfg.put("bankName", "Bankname", null);
+        cfg.put("iban", "IBAN", "iban");
+        cfg.put("bic", "BIC", "bic");
+        cfg.put("efz", "eFZ", "date_de");
+
+        cfg.put("aktiv", "Aktiv", "bool_ja_nein");
+
+        return cfg;
+    }
+
+    private void put(String targetField, String csvColumn, String converter) {
+        byTargetField.put(
+                targetField.trim(),
+                new CsvFieldMapping(csvColumn.trim(), targetField.trim(), converter)
+        );
+    }
+
+    /* =====================================================
+       EXISTIERENDER CODE (unverändert)
+       ===================================================== */
+    public static CsvMappingConfig load(InputStream mappingCsv) {
+
+        CsvMappingConfig cfg = new CsvMappingConfig();
+
+        try (Reader r = new InputStreamReader(mappingCsv, StandardCharsets.UTF_8)) {
+
+            CSVParser parser = CSVFormat.Builder.create()
+                    .setDelimiter(';')
+                    .setHeader()
+                    .setSkipHeaderRecord(true)
+                    .setTrim(true)
+                    .build()
+                    .parse(r);
+
+            for (CSVRecord rec : parser) {
+
+                String converter =
+                        rec.isMapped("converter")
+                                ? rec.get("converter").trim()
+                                : null;
+
+                cfg.byTargetField.put(
+                        rec.get("target_field").trim(),
+                        new CsvFieldMapping(
+                                rec.get("csv_column").trim(),
+                                rec.get("target_field").trim(),
+                                converter == null || converter.isBlank() ? null : converter
+                        )
+                );
+            }
+
+        } catch (IOException e) {
+            throw new IllegalStateException("Invalid mapping CSV", e);
+        }
+
+        return cfg;
+    }
+
+    public CsvFieldMapping getOptional(String targetField) {
+        return byTargetField.get(targetField); // darf null sein
+    }
+
+    public CsvFieldMapping get(String targetField) {
+        return Optional.ofNullable(byTargetField.get(targetField))
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Kein Mapping für Zielfeld: " + targetField
+                        )
+                );
+    }
+}

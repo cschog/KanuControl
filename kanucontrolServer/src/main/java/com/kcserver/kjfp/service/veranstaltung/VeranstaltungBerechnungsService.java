@@ -1,0 +1,103 @@
+package com.kcserver.kjfp.service.veranstaltung;
+
+import com.kcserver.kjfp.entity.Veranstaltung;
+import org.springframework.stereotype.Service;
+
+import java.time.temporal.ChronoUnit;
+
+@Service
+public class VeranstaltungBerechnungsService {
+
+    private static final long MAX_BERECHNUNGSTAGE = 21;
+
+
+
+    /* =========================================================
+       DAUER
+       ========================================================= */
+
+    /**
+     * Ermittelt die Anzahl der Übernachtungen.
+     */
+    public long ermittleNaechte(
+            Veranstaltung veranstaltung
+    ) {
+
+        if (veranstaltung == null
+                || veranstaltung.getBeginnDatum() == null
+                || veranstaltung.getEndeDatum() == null) {
+
+            return 0;
+        }
+
+        long naechte = ChronoUnit.DAYS.between(
+                veranstaltung.getBeginnDatum(),
+                veranstaltung.getEndeDatum()
+        );
+
+        return Math.max(0, naechte);
+    }
+
+    /**
+     * Ermittelt die Anzahl der Veranstaltungstage.
+     */
+    public long ermittleTage(
+            Veranstaltung veranstaltung
+    ) {
+
+        if (veranstaltung == null
+                || veranstaltung.getBeginnDatum() == null
+                || veranstaltung.getEndeDatum() == null) {
+
+            return 0;
+        }
+
+        return ermittleNaechte(veranstaltung) + 1;
+    }
+
+    /* =========================================================
+       STATUS
+       ========================================================= */
+
+    public boolean hatUnterkunft(
+            Veranstaltung veranstaltung
+    ) {
+
+        return veranstaltung != null
+                && veranstaltung.getUnterkunftsart() != null;
+    }
+
+    public boolean hatVerpflegung(
+            Veranstaltung veranstaltung
+    ) {
+
+        return veranstaltung != null
+                && veranstaltung.getVerpflegungsmodell() != null;
+    }
+
+    public long ermittleBerechnungstage(
+            Veranstaltung veranstaltung
+    ) {
+        return Math.min(
+                ermittleTage(veranstaltung),
+                MAX_BERECHNUNGSTAGE
+        );
+    }
+
+    public long ermittleBerechnungsnaechte(
+            Veranstaltung veranstaltung
+    ) {
+        return Math.max(
+                0,
+                ermittleBerechnungstage(veranstaltung) - 1
+        );
+    }
+
+    /* =========================================================
+       HELFER
+       ========================================================= */
+
+    private int n(Integer value) {
+        return value == null ? 0 : value;
+    }
+}

@@ -1,0 +1,113 @@
+package com.kcserver.kjfp.repository.abrechnung;
+
+import com.kcserver.kjfp.entity.abrechnung.Abrechnung;
+import com.kcserver.kjfp.entity.abrechnung.AbrechnungBeleg;
+import com.kcserver.kjfp.entity.FinanzGruppe;
+import com.kcserver.kjfp.enumtype.BuchungsHerkunft;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+public interface AbrechnungBelegRepository
+        extends JpaRepository<AbrechnungBeleg, Long> {
+
+    boolean existsByFinanzGruppe_Id(Long gruppeId);
+
+    long countByFinanzGruppe_Id(Long gruppeId);
+
+    List<AbrechnungBeleg> findByAbrechnungId(Long abrechnungId);
+
+    @Query("""
+    SELECT b.finanzGruppe.id, COUNT(DISTINCT b)
+    FROM AbrechnungBeleg b
+    JOIN b.positionen p
+    WHERE b.finanzGruppe.veranstaltung.id = :veranstaltungId
+    GROUP BY b.finanzGruppe.id
+""")
+    List<Object[]> countByVeranstaltungGrouped(Long veranstaltungId);
+
+    @Query("""
+    SELECT COUNT(DISTINCT b)
+    FROM AbrechnungBeleg b
+    JOIN b.positionen p
+    WHERE b.abrechnung.veranstaltung.id = :veranstaltungId
+      AND b.finanzGruppe.id = :gruppeId
+""")
+    long countByVeranstaltungAndGruppe(Long veranstaltungId, Long gruppeId);
+
+    @Query("""
+    SELECT COALESCE(MAX(b.lfdNr), 0)
+    FROM AbrechnungBeleg b
+    WHERE b.abrechnung.id = :abrechnungId
+""")
+    Integer findMaxLfdNrByAbrechnungId(Long abrechnungId);
+
+    Optional<AbrechnungBeleg> findByAbrechnungAndBelegnummer(
+            Abrechnung abrechnung,
+            String belegnummer
+    );
+
+    Optional<AbrechnungBeleg> findByAbrechnungAndBelegnummerAndFinanzGruppe(
+            Abrechnung abrechnung,
+            String belegnummer,
+            FinanzGruppe finanzGruppe
+    );
+
+
+    @Query("""
+    SELECT DISTINCT b
+    FROM AbrechnungBeleg b
+    JOIN FETCH b.positionen p
+    WHERE b.abrechnung.veranstaltung.id = :veranstaltungId
+      AND b.finanzGruppe.id = :finanzGruppeId
+    ORDER BY b.datum, b.lfdNr
+""")
+    List<AbrechnungBeleg> findByAbrechnung_Veranstaltung_IdAndFinanzGruppe_IdOrderByDatumAscLfdNrAsc(
+            Long veranstaltungId,
+            Long finanzGruppeId
+    );
+
+    @Query("""
+    SELECT DISTINCT b
+    FROM AbrechnungBeleg b
+    LEFT JOIN FETCH b.dokumente
+    WHERE b.abrechnung.veranstaltung.id = :veranstaltungId
+    ORDER BY b.datum, b.lfdNr
+""")
+    List<AbrechnungBeleg> findByVeranstaltungIdWithDokumente(
+            Long veranstaltungId
+    );
+
+    @Query("""
+    SELECT COUNT(b) > 0
+    FROM AbrechnungBeleg b
+    WHERE b.abrechnung.veranstaltung.id = :veranstaltungId
+""")
+    boolean existsByVeranstaltungId(Long veranstaltungId);
+
+    @Query("""
+        SELECT DISTINCT b
+        FROM AbrechnungBeleg b
+        JOIN b.positionen p
+        WHERE b.abrechnung.id = :abrechnungId
+          AND b.finanzGruppe.id = :finanzGruppeId
+          AND p.herkunft = :herkunft
+        """)
+    Optional<AbrechnungBeleg> findByAbrechnungIdAndFinanzGruppeIdAndHerkunft(
+            @Param("abrechnungId") Long abrechnungId,
+            @Param("finanzGruppeId") Long finanzGruppeId,
+            @Param("herkunft") BuchungsHerkunft herkunft
+    );
+
+    private String getFinanzausgleichBelegnummer(
+            FinanzGruppe finanzGruppe
+    ) {
+        return BuchungsHerkunft.FINANZAUSGLEICH.getBelegnummer()
+                + "-"
+                + finanzGruppe.getKuerzel();
+    }
+}

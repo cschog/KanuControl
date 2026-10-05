@@ -1,0 +1,103 @@
+package com.kcserver.kjfp.entity.beitraege;
+
+import com.kcserver.kjfp.entity.Dokument;
+import com.kcserver.kjfp.entity.FinanzGruppe;
+import com.kcserver.kjfp.entity.Veranstaltung;
+import com.kcserver.kjfp.enumtype.Zahlungsweg;
+import jakarta.persistence.*;
+import com.kcserver.core.audit.Auditable;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.math.BigDecimal;
+
+@Getter
+@Setter
+@Entity
+@Table(name = "zahlungsnachweis")
+public class Zahlungsnachweis extends Auditable {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "veranstaltung_id", nullable = false)
+    private Veranstaltung veranstaltung;
+
+    private LocalDate datum;
+
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal betrag;
+
+    @Enumerated(EnumType.STRING)
+    private Zahlungsweg zahlungsweg;
+
+    private String bemerkung;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "urspruenglicher_zahlungsnachweis_id")
+    private Zahlungsnachweis urspruenglicherZahlungsnachweis;
+
+    @OneToMany(
+            mappedBy = "zahlungsnachweis",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    @OrderBy("id ASC")
+    private List<ZahlungsPosition> positionen = new ArrayList<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "finanz_gruppe_id")
+    private FinanzGruppe finanzGruppe;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ueberzahlungs_finanz_gruppe_id")
+    private FinanzGruppe ueberzahlungsFinanzGruppe;
+
+    @OneToMany(
+            mappedBy = "zahlungsnachweis",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    @OrderBy("reihenfolge ASC")
+    private List<Dokument> dokumente = new ArrayList<>();
+
+    public void addPosition(ZahlungsPosition position) {
+        positionen.add(position);
+        position.setZahlungsnachweis(this);
+    }
+
+    public void removePosition(ZahlungsPosition position) {
+        positionen.remove(position);
+        position.setZahlungsnachweis(null);
+    }
+
+    public void clearPositionen() {
+        for (ZahlungsPosition position : new ArrayList<>(positionen)) {
+            removePosition(position);
+        }
+    }
+
+    public void addDokument(Dokument dokument) {
+        dokumente.add(dokument);
+        dokument.setZahlungsnachweis(this);
+    }
+
+    public void removeDokument(Dokument dokument) {
+        dokumente.remove(dokument);
+        dokument.setZahlungsnachweis(null);
+    }
+
+    public void clearDokumente() {
+        for (Dokument dokument : new ArrayList<>(dokumente)) {
+            removeDokument(dokument);
+        }
+    }
+
+}
+
+

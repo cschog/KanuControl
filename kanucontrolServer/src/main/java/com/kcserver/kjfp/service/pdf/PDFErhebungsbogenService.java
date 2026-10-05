@@ -1,0 +1,322 @@
+package com.kcserver.kjfp.service.pdf;
+
+import com.kcserver.kjfp.entity.Person;
+import com.kcserver.kjfp.entity.Teilnehmer;
+import com.kcserver.kjfp.entity.Veranstaltung;
+import com.kcserver.kjfp.enumtype.PdfDokumentTyp;
+import com.kcserver.kjfp.repository.TeilnehmerRepository;
+import com.kcserver.kjfp.repository.VeranstaltungRepository;
+import com.kcserver.kjfp.service.AltersService;
+import com.kcserver.kjfp.service.veranstaltung.VeranstaltungBerechnungsService;
+import com.kcserver.core.util.PdfFilenameUtil;
+import lombok.RequiredArgsConstructor;
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.apache.pdfbox.pdmodel.interactive.form.PDField;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StreamUtils;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.List;
+
+import static com.kcserver.core.util.StringUtils.formatDate;
+import static com.kcserver.core.util.StringUtils.join;
+
+
+@Service
+@RequiredArgsConstructor
+public class PDFErhebungsbogenService {
+
+    private final VeranstaltungRepository veranstaltungRepository;
+    private final TeilnehmerRepository teilnehmerRepository;
+    private final VeranstaltungBerechnungsService veranstaltungBerechnungsService;
+    private final AltersService altersService;
+
+    /* =========================================================
+       PUBLIC ENTRY
+       ========================================================= */
+
+    public byte[] generate(Long veranstaltungId) {
+
+
+        Veranstaltung v = veranstaltungRepository
+                .findByIdWithRelations(veranstaltungId)
+                .orElseThrow();
+
+        List<Teilnehmer> teilnehmer =
+                teilnehmerRepository.findAllWithPerson(veranstaltungId);
+
+        try {
+            return generatePdf(v, teilnehmer);
+        } catch (Exception e) {
+            throw new RuntimeException("Erhebungsbogen PDF Fehler", e);
+        }
+    }
+
+    /* =========================================================
+       STATISTIK BERECHNEN
+       ========================================================= */
+
+
+
+    /* =========================================================
+       PDF GENERATION
+       ========================================================= */
+
+    private byte[] generatePdf(
+            Veranstaltung v,
+            List<Teilnehmer> teilnehmer
+    ) throws IOException {
+
+        try (PDDocument doc = Loader.loadPDF(
+                StreamUtils.copyToByteArray(
+                        new ClassPathResource("pdf/erhebungsbogen_template.pdf")
+                                .getInputStream()
+                )
+        )) {
+
+            PDAcroForm form = doc.getDocumentCatalog().getAcroForm();
+            form.setNeedAppearances(true);
+
+            fillVeranstaltung(form, v);
+            fillStatistik(form, v, teilnehmer);
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+            String filename = PdfFilenameUtil.build(
+                    java.time.LocalDate.now(),
+                    PdfDokumentTyp.ERHEBUNGSBOGEN,
+                    v
+            );
+
+            doc.getDocumentInformation().setTitle(filename);
+            doc.getDocumentInformation().setAuthor("KanuControl");
+            doc.getDocumentInformation().setCreator("KanuControl");
+
+            doc.save(out);
+
+            return out.toByteArray();
+        }
+    }
+
+    /* =========================================================
+       PDF FELDER FÜLLEN
+       ========================================================= */
+
+    private void fillVeranstaltung(PDAcroForm form,
+                                   Veranstaltung v) throws IOException {
+
+        set(form, "veranstaltungsjahr",
+                String.valueOf(v.getBeginnDatum().getYear()));
+
+        set(form, "veranstaltung_name", v.getName());
+
+        /* ================= Leitung ================= */
+
+        if (v.getLeiter() != null) {
+
+            var l = v.getLeiter();
+
+            String name = join(" ", l.getVorname(), l.getName());
+            set(form, "leitung_name", name);
+
+            set(form, "leitung_anschrift", l.getStrasse());
+
+            String plzOrt = join(" ", l.getPlz(), l.getOrt());
+            set(form, "leitung_plz_ort", plzOrt);
+
+            set(form, "leitung_telefon", l.getTelefon());
+        }
+
+        /* ================= Träger ================= */
+
+        if (v.getVerein() != null) {
+
+            var verein = v.getVerein();
+
+            set(form, "traeger", verein.getName());
+            set(form, "traeger_abk", verein.getAbk());
+            set(form, "plz_traeger", verein.getPlz());
+        }
+
+        /* ================= Datum ================= */
+
+        set(form, "beginnDatum", formatDate(v.getBeginnDatum()));
+        set(form, "endeDatum", formatDate(v.getEndeDatum()));
+
+        /* ================= Land / Typ ================= */
+
+        if (v.getCountryCode() != null) {
+            set(form, "land", v.getCountryCode().name());
+            set(form, "veranstaltung_land", v.getCountryCode().getLabel());
+        }
+
+        if (v.getTyp() != null)
+            set(form, "typ", v.getTyp().name());
+
+        /* ================= Dauer + Übernachtungen ================= */
+
+        if (v.getBeginnDatum() != null && v.getEndeDatum() != null) {
+
+            long tage =
+                    veranstaltungBerechnungsService
+                            .ermittleTage(v);
+
+            long naechte =
+                    veranstaltungBerechnungsService
+                            .ermittleNaechte(v);
+
+            set(form, "veranstaltung_tage", String.valueOf(tage));
+            set(form, "veranstaltung_anz_uebernachtungen", String.valueOf(naechte));
+        }
+
+        /* ================= Durchführungsort ================= */
+
+        if (v.getCountryCode() != null) {
+
+            boolean deutschland =
+                    "DE".equalsIgnoreCase(v.getCountryCode().getCode());
+
+            // PLZ Durchführungsort
+            if (deutschland) {
+                set(form, "plzDurchfuehrungsort",
+                        v.getPlz() != null && !v.getPlz().isBlank()
+                                ? v.getPlz()
+                                : "");
+            } else {
+                set(form, "plzDurchfuehrungsort", "11111");
+            }
+
+            // Radiobutton
+            PDField field = form.getField("Durchfuehrungsort");
+
+            if (field != null && v.getCountryCode() != null) {
+
+                deutschland =
+                        "DE".equalsIgnoreCase(v.getCountryCode().getCode());
+
+                String value = deutschland ? "EinOrt" : "ausland";
+
+                try {
+                    field.setValue(value);
+                    //  System.out.println("Radiobutton gesetzt auf: " + value);
+                } catch (Exception ex) {
+                    // System.out.println("Radiobutton Fehler: " + ex.getMessage());
+                }
+            }
+        }
+    }
+
+
+
+    private void fillStatistik(
+            PDAcroForm form,
+            Veranstaltung v,
+            List<Teilnehmer> list
+    ) throws IOException {
+
+        int[][] stats = new int[3][5];
+        int[][] ehrenamt = new int[3][5];
+
+        for (Teilnehmer t : list) {
+
+            Person p = t.getPerson();
+            if (p == null || p.getGeburtsdatum() == null || p.getSex() == null)
+                continue;
+
+            int sexIndex = switch (p.getSex()) {
+                case WEIBLICH -> 0;
+                case MAENNLICH -> 1;
+                case DIVERS -> 2;
+            };
+
+            Integer age =
+                    altersService.berechneMassgeblichesAlter(
+                            p.getGeburtsdatum(),
+                            v.getBeginnDatum(),
+                            v.getEndeDatum(),
+                            v.getTyp()
+                    );
+
+            if (age == null) {
+                continue;
+            }
+
+            int ageGroup;
+            if (age < 10) ageGroup = 0;
+            else if (age < 14) ageGroup = 1;
+            else if (age < 18) ageGroup = 2;
+            else if (age < 27) ageGroup = 3;
+            else ageGroup = 4;
+
+            stats[sexIndex][ageGroup]++;
+
+            // Ehrenamt nur bei Rolle gesetzt
+            if (t.getRolle() != null) {
+
+                int ageGroupEA;
+                if (age < 16) ageGroupEA = 0;
+                else if (age < 18) ageGroupEA = 1;
+                else if (age < 27) ageGroupEA = 2;
+                else if (age < 45) ageGroupEA = 3;
+                else ageGroupEA = 4;
+
+                ehrenamt[sexIndex][ageGroupEA]++;
+            }
+        }
+
+        /* ================= WEIBLICH ================= */
+        set(form, "unter_10_Jahre_weiblich", String.valueOf(stats[0][0]));
+        set(form, "10_bis_unter_14_Jahre_weiblich", String.valueOf(stats[0][1]));
+        set(form, "14_bis_unter_18_Jahre_weiblich", String.valueOf(stats[0][2]));
+        set(form, "18_bis_unter_27_Jahre_weiblich", String.valueOf(stats[0][3]));
+        set(form, "27_Jahre_und_aelter_weiblich", String.valueOf(stats[0][4]));
+
+        /* ================= MAENNLICH ================= */
+        set(form, "unter_10_Jahre_maennlich", String.valueOf(stats[1][0]));
+        set(form, "10_bis_unter_14_Jahre_maennlich", String.valueOf(stats[1][1]));
+        set(form, "14_bis_unter_18_Jahre_maennlich", String.valueOf(stats[1][2]));
+        set(form, "18_bis_unter_27_Jahre_maennlich", String.valueOf(stats[1][3]));
+        set(form, "27_Jahre_und_aelter_maennlich", String.valueOf(stats[1][4]));
+
+        /* ================= DIVERS ================= */
+        set(form, "unter_10_Jahre_divers", String.valueOf(stats[2][0]));
+        set(form, "10_bis_unter_14_Jahre_divers", String.valueOf(stats[2][1]));
+        set(form, "14_bis_unter_18_Jahre_divers", String.valueOf(stats[2][2]));
+        set(form, "18_bis_unter_27_Jahre_divers", String.valueOf(stats[2][3]));
+        set(form, "27_Jahre_und_aelter_divers", String.valueOf(stats[2][4]));
+
+        /* ================= EHRENAMT ================= */
+        set(form, "unter_16_Jahre_ehrenamt_weiblich", String.valueOf(ehrenamt[0][0]));
+        set(form, "unter_16_Jahre_ehrenamt_maennlich", String.valueOf(ehrenamt[1][0]));
+        set(form, "unter_16_Jahre_ehrenamt_divers", String.valueOf(ehrenamt[2][0]));
+
+        set(form, "16_bis_unter_18_Jahre_ehrenamt_weiblich", String.valueOf(ehrenamt[0][1]));
+        set(form, "16_bis_unter_18_Jahre_ehrenamt_maennlich", String.valueOf(ehrenamt[1][1]));
+        set(form, "16_bis_unter_18_Jahre_ehrenamt_divers", String.valueOf(ehrenamt[2][1]));
+
+        set(form, "18_bis_unter_27_Jahre_ehrenamt_weiblich", String.valueOf(ehrenamt[0][2]));
+        set(form, "18_bis_unter_27_Jahre_ehrenamt_maennlich", String.valueOf(ehrenamt[1][2]));
+        set(form, "18_bis_unter_27_Jahre_ehrenamt_divers", String.valueOf(ehrenamt[2][2]));
+
+        set(form, "27_bis_unter_45_Jahre_ehrenamt_weiblich", String.valueOf(ehrenamt[0][3]));
+        set(form, "27_bis_unter_45_Jahre_ehrenamt_maennlich", String.valueOf(ehrenamt[1][3]));
+        set(form, "27_bis_unter_45_Jahre_ehrenamt_divers", String.valueOf(ehrenamt[2][3]));
+
+        set(form, "45_Jahre_und_aelter_ehrenamt_weiblich", String.valueOf(ehrenamt[0][4]));
+        set(form, "45_Jahre_und_aelter_ehrenamt_maennlich", String.valueOf(ehrenamt[1][4]));
+        set(form, "45_Jahre_und_aelter_ehrenamt_divers", String.valueOf(ehrenamt[2][4]));
+    }
+
+    private void set(PDAcroForm form,
+                     String field,
+                     String value) throws IOException {
+
+        PDField f = form.getField(field);
+        if (f != null) f.setValue(value);
+    }
+
+}

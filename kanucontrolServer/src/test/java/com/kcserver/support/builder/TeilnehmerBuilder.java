@@ -1,9 +1,9 @@
 package com.kcserver.support.builder;
 
-import com.kcserver.entity.Teilnehmer;
-import com.kcserver.entity.Person;
-import com.kcserver.entity.Veranstaltung;
-import com.kcserver.enumtype.TeilnehmerRolle;
+import com.kcserver.kjfp.entity.Teilnehmer;
+import com.kcserver.kjfp.entity.Person;
+import com.kcserver.kjfp.entity.Veranstaltung;
+import com.kcserver.kjfp.enumtype.TeilnehmerRolle;
 
 public class TeilnehmerBuilder {
 

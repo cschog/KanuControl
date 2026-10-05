@@ -1,0 +1,179 @@
+package com.kcserver.kjfp.repository.abrechnung;
+
+import com.kcserver.kjfp.entity.abrechnung.AbrechnungBeleg;
+import com.kcserver.kjfp.entity.abrechnung.AbrechnungBuchung;
+import com.kcserver.kjfp.enumtype.BuchungsHerkunft;
+import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+public interface AbrechnungBuchungRepository
+        extends JpaRepository<AbrechnungBuchung, Long> {
+
+    @EntityGraph(attributePaths = {
+            "beleg",
+            "beleg.finanzGruppe"
+    })
+    List<AbrechnungBuchung> findByBeleg_Abrechnung_Id(Long abrechnungId);
+
+    @Query("""
+select count(b) > 0
+from AbrechnungBuchung b
+where b.beleg.abrechnung.veranstaltung.id = :veranstaltungId
+and b.betrag > 0
+and b.kategorie in (
+    com.kcserver.kjfp.enumtype.FinanzKategorie.UNTERKUNFT,
+    com.kcserver.kjfp.enumtype.FinanzKategorie.VERPFLEGUNG,
+    com.kcserver.kjfp.enumtype.FinanzKategorie.HONORARE,
+    com.kcserver.kjfp.enumtype.FinanzKategorie.FAHRKOSTEN,
+    com.kcserver.kjfp.enumtype.FinanzKategorie.VERBRAUCHSMATERIAL,
+    com.kcserver.kjfp.enumtype.FinanzKategorie.KULTUR,
+    com.kcserver.kjfp.enumtype.FinanzKategorie.MIETE,
+    com.kcserver.kjfp.enumtype.FinanzKategorie.SONSTIGE_KOSTEN
+)
+""")
+    boolean existsKosten(Long veranstaltungId);
+
+    @Query("""
+select count(b) > 0
+from AbrechnungBuchung b
+where b.beleg.abrechnung.veranstaltung.id = :veranstaltungId
+and b.betrag > 0
+and b.kategorie in (
+    com.kcserver.kjfp.enumtype.FinanzKategorie.TEILNEHMERBEITRAG,
+    com.kcserver.kjfp.enumtype.FinanzKategorie.PFAND,
+    com.kcserver.kjfp.enumtype.FinanzKategorie.KJFP_ZUSCHUSS,
+    com.kcserver.kjfp.enumtype.FinanzKategorie.SONSTIGE_EINNAHMEN
+)
+""")
+    boolean existsEinnahmen(Long veranstaltungId);
+
+    boolean existsByBeleg_Abrechnung_Veranstaltung_Id(Long veranstaltungId);
+
+    void deleteByBelegAndHerkunft(
+            AbrechnungBeleg beleg,
+            BuchungsHerkunft herkunft
+    );
+
+    @Query("""
+    select
+        b.beleg.finanzGruppe.id,
+        coalesce(sum(b.betrag), 0)
+    from AbrechnungBuchung b
+    where b.beleg.abrechnung.veranstaltung.id = :veranstaltungId
+      and b.betrag > 0
+      and b.kategorie in (
+          com.kcserver.kjfp.enumtype.FinanzKategorie.UNTERKUNFT,
+          com.kcserver.kjfp.enumtype.FinanzKategorie.VERPFLEGUNG,
+          com.kcserver.kjfp.enumtype.FinanzKategorie.HONORARE,
+          com.kcserver.kjfp.enumtype.FinanzKategorie.FAHRKOSTEN,
+          com.kcserver.kjfp.enumtype.FinanzKategorie.VERBRAUCHSMATERIAL,
+          com.kcserver.kjfp.enumtype.FinanzKategorie.KULTUR,
+          com.kcserver.kjfp.enumtype.FinanzKategorie.MIETE,
+          com.kcserver.kjfp.enumtype.FinanzKategorie.SONSTIGE_KOSTEN
+      )
+    group by b.beleg.finanzGruppe.id
+""")
+    List<Object[]> sumAusgabenByFinanzGruppeGrouped(
+            @Param("veranstaltungId") Long veranstaltungId
+    );
+
+    @Query("""
+    SELECT
+        b.beleg.finanzGruppe.id,
+
+        COALESCE(SUM(
+            CASE
+                WHEN b.betrag > 0
+                AND b.kategorie IN (
+                    com.kcserver.kjfp.enumtype.FinanzKategorie.PFAND,
+                    com.kcserver.kjfp.enumtype.FinanzKategorie.KJFP_ZUSCHUSS,
+                    com.kcserver.kjfp.enumtype.FinanzKategorie.SONSTIGE_EINNAHMEN
+                )
+                THEN b.betrag
+                ELSE 0
+            END
+        ), 0),
+
+   COALESCE(SUM(
+       CASE
+           /* Normale Kosten */
+           WHEN b.betrag > 0
+           AND b.kategorie IN (
+               com.kcserver.kjfp.enumtype.FinanzKategorie.UNTERKUNFT,
+               com.kcserver.kjfp.enumtype.FinanzKategorie.VERPFLEGUNG,
+               com.kcserver.kjfp.enumtype.FinanzKategorie.HONORARE,
+               com.kcserver.kjfp.enumtype.FinanzKategorie.FAHRKOSTEN,
+               com.kcserver.kjfp.enumtype.FinanzKategorie.VERBRAUCHSMATERIAL,
+               com.kcserver.kjfp.enumtype.FinanzKategorie.KULTUR,
+               com.kcserver.kjfp.enumtype.FinanzKategorie.MIETE,
+               com.kcserver.kjfp.enumtype.FinanzKategorie.SONSTIGE_KOSTEN
+           )
+           THEN b.betrag
+   
+           ELSE 0
+       END
+   ), 0)
+
+    FROM AbrechnungBuchung b
+
+    WHERE b.beleg.abrechnung.veranstaltung.id = :veranstaltungId
+
+    GROUP BY b.beleg.finanzGruppe.id
+""")
+    List<Object[]> sumFinanzenByVeranstaltungGrouped(
+            @Param("veranstaltungId") Long veranstaltungId
+    );
+
+
+    @Query("""
+    select
+        b.beleg.finanzGruppe.id,
+
+        coalesce(sum(
+            case
+
+                /* Normale Kosten */
+                when b.betrag > 0
+                and b.kategorie in (
+                    com.kcserver.kjfp.enumtype.FinanzKategorie.UNTERKUNFT,
+                    com.kcserver.kjfp.enumtype.FinanzKategorie.VERPFLEGUNG,
+                    com.kcserver.kjfp.enumtype.FinanzKategorie.HONORARE,
+                    com.kcserver.kjfp.enumtype.FinanzKategorie.FAHRKOSTEN,
+                    com.kcserver.kjfp.enumtype.FinanzKategorie.VERBRAUCHSMATERIAL,
+                    com.kcserver.kjfp.enumtype.FinanzKategorie.KULTUR,
+                    com.kcserver.kjfp.enumtype.FinanzKategorie.MIETE,
+                    com.kcserver.kjfp.enumtype.FinanzKategorie.SONSTIGE_KOSTEN
+                )
+                then b.betrag
+
+                /* Einnahmen reduzieren den Finanzbedarf */
+                when b.betrag > 0
+                and b.kategorie in (
+                    com.kcserver.kjfp.enumtype.FinanzKategorie.PFAND,
+                    com.kcserver.kjfp.enumtype.FinanzKategorie.KJFP_ZUSCHUSS,
+                    com.kcserver.kjfp.enumtype.FinanzKategorie.SONSTIGE_EINNAHMEN
+                )
+                then -b.betrag
+
+                else 0
+
+            end
+        ), 0)
+
+    from AbrechnungBuchung b
+
+    where b.beleg.abrechnung.veranstaltung.id = :veranstaltungId
+
+    group by b.beleg.finanzGruppe.id
+""")
+    List<Object[]> sumAbrechnungSaldoByFinanzGruppeGrouped(
+            @Param("veranstaltungId") Long veranstaltungId
+    );
+
+
+}

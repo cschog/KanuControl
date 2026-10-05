@@ -1,7 +1,7 @@
 package com.kcserver.support.builder;
 
-import com.kcserver.entity.Person;
-import com.kcserver.enumtype.Sex;
+import com.kcserver.kjfp.entity.Person;
+import com.kcserver.kjfp.enumtype.Sex;
 
 import java.time.LocalDate;
 

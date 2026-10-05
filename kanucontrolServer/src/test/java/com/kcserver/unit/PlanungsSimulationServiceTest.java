@@ -1,11 +1,11 @@
 package com.kcserver.unit;
 
-import com.kcserver.entity.planung.Planung;
-import com.kcserver.entity.planung.PlanungPosition;
-import com.kcserver.entity.Veranstaltung;
-import com.kcserver.enumtype.FinanzKategorie;
-import com.kcserver.service.planung.PlanungBerechnungService;
-import com.kcserver.service.planung.PlanungAutomatikService;
+import com.kcserver.kjfp.entity.planung.Planung;
+import com.kcserver.kjfp.entity.planung.PlanungPosition;
+import com.kcserver.kjfp.entity.Veranstaltung;
+import com.kcserver.kjfp.enumtype.FinanzKategorie;
+import com.kcserver.kjfp.service.planung.PlanungBerechnungService;
+import com.kcserver.kjfp.service.planung.PlanungAutomatikService;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;

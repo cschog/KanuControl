@@ -1,9 +1,9 @@
 package com.kcserver.support.builder;
 
-import com.kcserver.entity.Veranstaltung;
-import com.kcserver.entity.Verein;
-import com.kcserver.entity.Person;
-import com.kcserver.enumtype.VeranstaltungTyp;
+import com.kcserver.kjfp.entity.Veranstaltung;
+import com.kcserver.kjfp.entity.Verein;
+import com.kcserver.kjfp.entity.Person;
+import com.kcserver.kjfp.enumtype.VeranstaltungTyp;
 
 import java.time.LocalDate;
 import java.time.LocalTime;

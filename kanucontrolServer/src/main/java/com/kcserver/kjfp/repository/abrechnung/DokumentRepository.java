@@ -1,0 +1,62 @@
+package com.kcserver.kjfp.repository.abrechnung;
+
+import com.kcserver.kjfp.entity.Dokument;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+
+public interface DokumentRepository extends JpaRepository<Dokument, Long> {
+
+    /**
+     * Alle Dokumente eines Belegs in der definierten Reihenfolge.
+     */
+    List<Dokument> findByBelegIdOrderByReihenfolgeAsc(Long belegId);
+
+    /**
+     * Anzahl der Dokumente eines Belegs.
+     */
+    long countByBelegId(Long belegId);
+
+    /**
+     * Höchste Reihenfolge eines Belegs.
+     */
+    Dokument findTopByBelegIdOrderByReihenfolgeDesc(Long belegId);
+
+
+    /**
+     * Alle Dokumente eines Zahlungsnachweises
+     * in der definierten Reihenfolge.
+     */
+    List<Dokument> findByZahlungsnachweisIdOrderByReihenfolgeAsc(
+            Long zahlungsnachweisId
+    );
+
+    /**
+     * Anzahl der Dokumente eines Zahlungsnachweises.
+     */
+    long countByZahlungsnachweisId(Long zahlungsnachweisId);
+
+    /**
+     * Höchste Reihenfolge eines Zahlungsnachweises.
+     */
+    Dokument findTopByZahlungsnachweisIdOrderByReihenfolgeDesc(
+            Long zahlungsnachweisId
+    );
+
+
+    /**
+     * Alle Finanzausgleich-Dokumente einer FinanzGruppe
+     * in der definierten Reihenfolge.
+     */
+    List<Dokument> findByFinanzGruppeIdOrderByReihenfolgeAsc(
+            Long finanzGruppeId
+    );
+
+    /**
+     * Höchste Reihenfolge eines Finanzausgleich-Dokuments
+     * einer FinanzGruppe.
+     */
+    Dokument findTopByFinanzGruppeIdOrderByReihenfolgeDesc(
+            Long finanzGruppeId
+    );
+}

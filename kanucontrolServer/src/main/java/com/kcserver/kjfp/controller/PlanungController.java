@@ -1,0 +1,55 @@
+package com.kcserver.kjfp.controller;
+
+import com.kcserver.api.response.ApiResponse;
+import com.kcserver.kjfp.dto.planung.PlanungDetailDTO;
+import com.kcserver.kjfp.service.planung.PlanungService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/veranstaltungen/{veranstaltungId}/planung")
+@RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('ADMIN', 'KJFP')")
+public class PlanungController {
+
+    private final PlanungService planungService;
+
+    /* =========================================================
+       GET PLANUNG
+       ========================================================= */
+
+    @GetMapping
+    public ApiResponse<PlanungDetailDTO> get(
+            @PathVariable Long veranstaltungId
+    ) {
+        return ApiResponse.of(
+                planungService.get(veranstaltungId)
+        );
+    }
+
+    /* =========================================================
+       EINREICHEN
+       ========================================================= */
+
+    @PostMapping("/einreichen")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void einreichen(
+            @PathVariable Long veranstaltungId
+    ) {
+        planungService.einreichen(veranstaltungId);
+    }
+
+    /* =========================================================
+       WIEDER ÖFFNEN
+       ========================================================= */
+
+    @PostMapping("/wieder-oeffnen")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void wiederOeffnen(
+            @PathVariable Long veranstaltungId
+    ) {
+        planungService.wiederOeffnen(veranstaltungId);
+    }
+}

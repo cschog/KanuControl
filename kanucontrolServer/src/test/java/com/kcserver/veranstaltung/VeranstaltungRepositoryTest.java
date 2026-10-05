@@ -1,5 +1,7 @@
 package com.kcserver.veranstaltung;
 
+import com.kcserver.kjfp.entity.Veranstaltung;
+import com.kcserver.kjfp.repository.VeranstaltungRepository;
 import com.kcserver.support.api.PersonTestFactory;
 import com.kcserver.support.api.VereinTestFactory;
 import com.kcserver.support.api.VeranstaltungTestFactory;
@@ -24,7 +26,7 @@ class VeranstaltungRepositoryTest extends AbstractTenantIntegrationTest {
     Long leiterId;
 
     @Autowired
-    private com.kcserver.repository.VeranstaltungRepository veranstaltungRepository;
+    private VeranstaltungRepository veranstaltungRepository;
 
     @Autowired
     ObjectMapper objectMapper;
@@ -55,7 +57,7 @@ class VeranstaltungRepositoryTest extends AbstractTenantIntegrationTest {
         veranstaltungFactory.create(vereinId, leiterId, "Wanderung");
 
         // WHEN
-        List<com.kcserver.entity.Veranstaltung> result =
+        List<Veranstaltung> result =
                 veranstaltungRepository.findAll((root, query, cb) ->
                         cb.like(cb.lower(root.get("name")), "%kanu%")
                 );

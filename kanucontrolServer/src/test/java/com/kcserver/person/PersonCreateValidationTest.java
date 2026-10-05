@@ -1,10 +1,10 @@
 package com.kcserver.person;
 
-import com.kcserver.dto.mitglied.MitgliedSaveDTO;
-import com.kcserver.dto.person.PersonSaveDTO;
-import com.kcserver.enumtype.MitgliedFunktion;
-import com.kcserver.enumtype.Sex;
-import com.kcserver.validation.OnCreate;
+import com.kcserver.core.dto.mitglied.MitgliedSaveDTO;
+import com.kcserver.core.dto.person.PersonSaveDTO;
+import com.kcserver.kjfp.enumtype.MitgliedFunktion;
+import com.kcserver.kjfp.enumtype.Sex;
+import com.kcserver.core.validation.OnCreate;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;

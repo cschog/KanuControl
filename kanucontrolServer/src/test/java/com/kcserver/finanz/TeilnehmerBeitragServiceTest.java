@@ -1,11 +1,13 @@
 package com.kcserver.finanz;
 
-import com.kcserver.entity.*;
-import com.kcserver.entity.beitraege.Beitragsregel;
-import com.kcserver.entity.beitraege.Beitragsstruktur;
-import com.kcserver.service.AltersService;
-import com.kcserver.service.beitrag.BeitragsregelService;
-import com.kcserver.service.beitrag.TeilnehmerBeitragService;
+import com.kcserver.kjfp.entity.Person;
+import com.kcserver.kjfp.entity.Teilnehmer;
+import com.kcserver.kjfp.entity.Veranstaltung;
+import com.kcserver.kjfp.entity.beitraege.Beitragsregel;
+import com.kcserver.kjfp.entity.beitraege.Beitragsstruktur;
+import com.kcserver.kjfp.service.AltersService;
+import com.kcserver.kjfp.service.beitrag.BeitragsregelService;
+import com.kcserver.kjfp.service.beitrag.TeilnehmerBeitragService;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;

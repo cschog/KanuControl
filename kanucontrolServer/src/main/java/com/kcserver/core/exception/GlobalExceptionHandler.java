@@ -1,0 +1,193 @@
+package com.kcserver.core.exception;
+
+import com.kcserver.kjfp.exception.CsvReadException;
+import com.kcserver.kjfp.exception.SimulationVoraussetzungenException;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.HashMap;
+import java.util.Map;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
+
+@Slf4j
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiError> handleValidationErrors(
+            MethodArgumentNotValidException ex,
+            HttpServletRequest request
+    ) {
+
+        Map<String, String> fieldErrors = new HashMap<>();
+
+        for (FieldError error : ex.getBindingResult().getFieldErrors()) {
+            fieldErrors.putIfAbsent(error.getField(), error.getDefaultMessage());
+        }
+
+        return ResponseEntity.badRequest().body(
+                new ApiError(
+                        HttpStatus.BAD_REQUEST.value(),
+                        "VALIDATION_ERROR",
+                        ErrorMessages.VALIDATION_FAILED,
+                        fieldErrors,
+                        null
+                )
+        );
+    }
+
+    @ExceptionHandler(jakarta.validation.ConstraintViolationException.class)
+    public ResponseEntity<ApiError> handleConstraintViolation(
+            jakarta.validation.ConstraintViolationException ex
+    ) {
+        Map<String, String> fieldErrors = new HashMap<>();
+
+        ex.getConstraintViolations().forEach(v ->
+                fieldErrors.put(
+                        v.getPropertyPath().toString(),
+                        v.getMessage()
+                )
+        );
+
+        return ResponseEntity.badRequest().body(
+                new ApiError(
+                        400,
+                        "VALIDATION_ERROR",
+                        "Validation failed",
+                        fieldErrors,null
+                )
+        );
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ApiError> handleResponseStatus(ResponseStatusException ex) {
+
+        return ResponseEntity.status(ex.getStatusCode()).body(
+                ApiError.simple(
+                        ex.getStatusCode().value(),
+                        ex.getStatusCode().toString(),
+                        ex.getReason()
+                )
+        );
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiError> handleIllegalArgument(IllegalArgumentException ex) {
+
+        return ResponseEntity.badRequest().body(
+                ApiError.simple(
+                        HttpStatus.BAD_REQUEST.value(),
+                        "BAD_REQUEST",
+                        ex.getMessage()
+                )
+        );
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiError> handleInvalidJson(
+            HttpMessageNotReadableException ex
+    ) {
+
+        log.error("JSON konnte nicht gelesen werden", ex);
+
+        String message = "Ungültige Anfrage";
+
+        Throwable cause = ex.getCause();
+
+        if (cause instanceof com.fasterxml.jackson.databind.exc.InvalidFormatException ife) {
+
+            String field = ife.getPath().stream()
+                    .map(ref -> ref.getFieldName())
+                    .reduce((a, b) -> b)
+                    .orElse("unknown");
+
+            message = "Ungültiges Format '" + ife.getValue() + "' für Feld '" + field + "'";
+        }
+
+        return ResponseEntity.badRequest().body(
+                ApiError.simple(
+                        HttpStatus.BAD_REQUEST.value(),
+                        "INVALID_REQUEST",
+                        message
+                )
+        );
+    }
+    @ExceptionHandler(CsvReadException.class)
+    public ResponseEntity<ApiError> handleCsvReadException(
+            CsvReadException ex
+    ) {
+
+        log.warn("CSV konnte nicht gelesen werden: {}", ex.getMessage());
+
+        return ResponseEntity.badRequest().body(
+                ApiError.simple(
+                        HttpStatus.BAD_REQUEST.value(),
+                        "CSV_INVALID_FORMAT",
+                        ex.getMessage()
+                )
+        );
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiError> handleAccessDenied(
+            AccessDeniedException ex
+    ) {
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                ApiError.simple(
+                        HttpStatus.FORBIDDEN.value(),
+                        "FORBIDDEN",
+                        ErrorMessages.ACCESS_DENIED
+                )
+        );
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiError> handleGeneric(Exception ex) {
+
+        log.error("Unhandled exception", ex);
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                ApiError.simple(
+                        HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                        "INTERNAL_SERVER_ERROR",
+                        ErrorMessages.UNEXPECTED_ERROR
+                )
+        );
+    }
+
+    @ExceptionHandler(BusinessRuleViolationException.class)
+    public ResponseEntity<ApiError> handleBusinessRuleViolation(
+            BusinessRuleViolationException ex
+    ) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                ApiError.simple(
+                        HttpStatus.CONFLICT.value(),
+                        "BUSINESS_RULE_VIOLATION",
+                        ex.getMessage()
+                )
+        );
+    }
+    @ExceptionHandler(SimulationVoraussetzungenException.class)
+    public ResponseEntity<ApiError> handleSimulationVoraussetzungen(
+            SimulationVoraussetzungenException ex
+    ) {
+
+        return ResponseEntity.badRequest().body(
+                ApiError.withMissing(
+                        HttpStatus.BAD_REQUEST.value(),
+                        "SIMULATION_NOT_READY",
+                        ex.getMessage(),
+                        ex.getFehlendeVoraussetzungen()
+                )
+        );
+    }
+}

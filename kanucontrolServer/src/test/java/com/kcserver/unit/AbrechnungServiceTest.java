@@ -1,15 +1,15 @@
 package com.kcserver.unit;
 
-import com.kcserver.dto.abrechnung.AbrechnungBelegCreateDTO;
-import com.kcserver.dto.abrechnung.AbrechnungBelegDTO;
-import com.kcserver.dto.abrechnung.AbrechnungBuchungCreateDTO;
-import com.kcserver.entity.abrechnung.Abrechnung;
-import com.kcserver.enumtype.AbrechnungsStatus;
-import com.kcserver.enumtype.FinanzKategorie;
-import com.kcserver.service.abrechnung.AbrechnungBelegService;
-import com.kcserver.service.abrechnung.AbrechnungService;
-import com.kcserver.service.finanz.FinanzGruppeService;
-import com.kcserver.repository.abrechnung.AbrechnungRepository;
+import com.kcserver.kjfp.dto.abrechnung.AbrechnungBelegCreateDTO;
+import com.kcserver.kjfp.dto.abrechnung.AbrechnungBelegDTO;
+import com.kcserver.kjfp.dto.abrechnung.AbrechnungBuchungCreateDTO;
+import com.kcserver.kjfp.entity.abrechnung.Abrechnung;
+import com.kcserver.kjfp.enumtype.AbrechnungsStatus;
+import com.kcserver.kjfp.enumtype.FinanzKategorie;
+import com.kcserver.kjfp.service.abrechnung.AbrechnungBelegService;
+import com.kcserver.kjfp.service.abrechnung.AbrechnungService;
+import com.kcserver.kjfp.service.finanz.FinanzGruppeService;
+import com.kcserver.kjfp.repository.abrechnung.AbrechnungRepository;
 import com.kcserver.support.api.PersonTestFactory;
 import com.kcserver.support.api.VereinTestFactory;
 import com.kcserver.support.api.VeranstaltungTestFactory;

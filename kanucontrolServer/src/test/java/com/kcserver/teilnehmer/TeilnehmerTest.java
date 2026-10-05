@@ -1,11 +1,11 @@
 package com.kcserver.teilnehmer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kcserver.dto.teilnehmer.TeilnehmerBulkDeleteDTO;
-import com.kcserver.dto.teilnehmer.TeilnehmerUpdateDTO;
-import com.kcserver.enumtype.TeilnehmerRolle;
+import com.kcserver.kjfp.dto.teilnehmer.TeilnehmerBulkDeleteDTO;
+import com.kcserver.kjfp.dto.teilnehmer.TeilnehmerUpdateDTO;
+import com.kcserver.kjfp.enumtype.TeilnehmerRolle;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
-import com.kcserver.repository.TeilnehmerRepository;
+import com.kcserver.kjfp.repository.TeilnehmerRepository;
 import com.kcserver.support.api.PersonTestFactory;
 import com.kcserver.support.api.VeranstaltungTestFactory;
 import com.kcserver.support.api.VereinTestFactory;

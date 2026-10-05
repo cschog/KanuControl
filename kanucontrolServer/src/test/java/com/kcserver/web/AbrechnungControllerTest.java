@@ -1,6 +1,6 @@
 package com.kcserver.web;
 
-import com.kcserver.service.abrechnung.AbrechnungService;
+import com.kcserver.kjfp.service.abrechnung.AbrechnungService;
 import com.kcserver.support.api.PersonTestFactory;
 import com.kcserver.support.api.VereinTestFactory;
 import com.kcserver.support.api.VeranstaltungTestFactory;

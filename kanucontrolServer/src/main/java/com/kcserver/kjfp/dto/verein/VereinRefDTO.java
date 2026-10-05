@@ -1,0 +1,20 @@
+package com.kcserver.kjfp.dto.verein;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class VereinRefDTO {
+
+    private Long id;
+    private String name;
+    private String abk;
+
+    private String ort;
+    private String countryCode;
+
+    // getters / setters
+}

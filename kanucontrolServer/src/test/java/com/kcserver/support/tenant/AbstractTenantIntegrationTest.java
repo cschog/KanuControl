@@ -1,8 +1,7 @@
 package com.kcserver.support.tenant;
 
-import com.kcserver.support.config.MockMvcTestConfig;
-import com.kcserver.tenancy.TenantContext;
-import com.kcserver.tenancy.TenantSchemaProvisioner;
+import com.kcserver.core.tenancy.TenantContext;
+import com.kcserver.core.tenancy.TenantSchemaProvisioner;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;

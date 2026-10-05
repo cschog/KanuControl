@@ -1,14 +1,14 @@
 package com.kcserver.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kcserver.dto.teilnehmer.TeilnehmerUpdateDTO;
+import com.kcserver.kjfp.dto.teilnehmer.TeilnehmerUpdateDTO;
 
-import com.kcserver.enumtype.TeilnehmerRolle;
+import com.kcserver.kjfp.enumtype.TeilnehmerRolle;
 import com.kcserver.support.api.PersonTestFactory;
 import com.kcserver.support.api.VereinTestFactory;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
 
-import com.kcserver.repository.TeilnehmerRepository;
+import com.kcserver.kjfp.repository.TeilnehmerRepository;
 import com.kcserver.support.api.TeilnehmerTestFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

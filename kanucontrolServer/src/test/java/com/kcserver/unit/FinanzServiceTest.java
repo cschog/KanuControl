@@ -1,9 +1,9 @@
 package com.kcserver.unit;
 
-import com.kcserver.dto.finanzen.FinanzSummaryDTO;
-import com.kcserver.enumtype.FinanzKategorie;
-import com.kcserver.service.finanz.FinanzPosition;
-import com.kcserver.service.finanz.FinanzService;
+import com.kcserver.kjfp.dto.finanzen.FinanzSummaryDTO;
+import com.kcserver.kjfp.enumtype.FinanzKategorie;
+import com.kcserver.kjfp.service.finanz.FinanzPosition;
+import com.kcserver.kjfp.service.finanz.FinanzService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

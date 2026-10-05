@@ -1,6 +1,6 @@
 package com.kcserver.support.config;
 
-import com.kcserver.tenancy.TenantContext;
+import com.kcserver.core.tenancy.TenantContext;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.boot.test.autoconfigure.web.servlet.MockMvcBuilderCustomizer;

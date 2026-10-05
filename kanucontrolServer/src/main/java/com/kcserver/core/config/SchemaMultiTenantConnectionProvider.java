@@ -1,0 +1,71 @@
+package com.kcserver.core.config;
+
+import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Component;
+
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
+
+@Profile("!junit")
+@Component
+public class SchemaMultiTenantConnectionProvider
+        implements MultiTenantConnectionProvider {
+
+    private transient final DataSource dataSource;
+
+    public SchemaMultiTenantConnectionProvider(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
+
+    @Override
+    public Connection getAnyConnection() throws SQLException {
+        return dataSource.getConnection();
+    }
+
+    @Override
+    public void releaseAnyConnection(Connection connection)
+            throws SQLException {
+        connection.close();
+    }
+
+    @Override
+    public Connection getConnection(Object tenantIdentifier) throws SQLException {
+        String schema = tenantIdentifier.toString();
+
+        Connection connection = getAnyConnection();
+
+        try (var stmt = connection.createStatement()) {
+            stmt.execute("set search_path to " + schema);
+        }
+
+        return connection;
+    }
+
+    @Override
+    public void releaseConnection(Object tenantIdentifier, Connection connection)
+            throws SQLException {
+
+        try (var stmt = connection.createStatement()) {
+            stmt.execute("set search_path to kanu");
+        }
+
+        connection.close();
+    }
+
+    @Override
+    public boolean supportsAggressiveRelease() {
+        return false;
+    }
+
+    @Override
+    public boolean isUnwrappableAs(Class<?> unwrapType) {
+        return false;
+    }
+
+    @Override
+    public <T> T unwrap(Class<T> unwrapType) {
+        throw new UnsupportedOperationException();
+    }
+}

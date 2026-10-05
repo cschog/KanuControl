@@ -1,10 +1,10 @@
 package com.kcserver.unit;
 
-import com.kcserver.entity.beitraege.Beitragsregel;
-import com.kcserver.entity.beitraege.Beitragsstruktur;
-import com.kcserver.enumtype.TeilnehmerRolle;
-import com.kcserver.service.beitrag.BeitragsregelService;
-import com.kcserver.service.beitrag.BeitragsstrukturService;
+import com.kcserver.kjfp.entity.beitraege.Beitragsregel;
+import com.kcserver.kjfp.entity.beitraege.Beitragsstruktur;
+import com.kcserver.kjfp.enumtype.TeilnehmerRolle;
+import com.kcserver.kjfp.service.beitrag.BeitragsregelService;
+import com.kcserver.kjfp.service.beitrag.BeitragsstrukturService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;

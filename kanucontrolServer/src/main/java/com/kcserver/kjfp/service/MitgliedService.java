@@ -1,0 +1,262 @@
+package com.kcserver.kjfp.service;
+
+import com.kcserver.core.dto.mitglied.MitgliedDTO;
+import com.kcserver.kjfp.entity.Mitglied;
+import com.kcserver.kjfp.entity.Person;
+import com.kcserver.kjfp.entity.Verein;
+import com.kcserver.core.exception.BusinessRuleViolationException;
+import com.kcserver.core.exception.ErrorMessages;
+import com.kcserver.core.mapper.MitgliedMapper;
+import com.kcserver.kjfp.repository.MitgliedRepository;
+import com.kcserver.kjfp.repository.PersonRepository;
+import com.kcserver.kjfp.repository.VereinRepository;
+import jakarta.persistence.EntityNotFoundException;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
+
+@Service
+public class MitgliedService {
+
+    private final MitgliedRepository mitgliedRepository;
+    private final PersonRepository personRepository;
+    private final VereinRepository vereinRepository;
+    private final MitgliedMapper mitgliedMapper;
+
+    public MitgliedService(
+            MitgliedRepository mitgliedRepository,
+            PersonRepository personRepository,
+            VereinRepository vereinRepository,
+            MitgliedMapper mitgliedMapper
+    ) {
+        this.mitgliedRepository = mitgliedRepository;
+        this.personRepository = personRepository;
+        this.vereinRepository = vereinRepository;
+        this.mitgliedMapper = mitgliedMapper;
+    }
+
+    /* =========================================================
+       CREATE
+       ========================================================= */
+
+    @Transactional
+    public MitgliedDTO createMitglied(MitgliedDTO dto) {
+        return mitgliedMapper.toDTO(createMitgliedInternal(dto));
+    }
+
+    @Transactional
+    public Mitglied createMitgliedEntity(MitgliedDTO dto) {
+        Mitglied saved = createMitgliedInternal(dto);
+        return mitgliedRepository.findByIdWithVerein(saved.getId())
+                .orElseThrow();
+    }
+
+    private Mitglied createMitgliedInternal(MitgliedDTO dto) {
+
+        Person person = personRepository.findById(dto.getPersonId())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, ErrorMessages.PERSON_NOT_FOUND
+                ));
+
+        Verein verein = vereinRepository.findById(dto.getVereinId())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, ErrorMessages.VEREIN_NOT_FOUND
+                ));
+
+        if (mitgliedRepository.existsByPerson_IdAndVerein_Id(
+                dto.getPersonId(), dto.getVereinId())) {
+            throw new BusinessRuleViolationException(
+                    ErrorMessages.PERSON_ALREADY_MEMBER
+            );
+        }
+
+        Mitglied mitglied = new Mitglied();
+        mitglied.setPerson(person);
+        mitglied.setVerein(verein);
+        mitglied.setFunktion(dto.getFunktion());
+
+        // ⭐ genau ein Hauptverein pro Person
+        mitgliedRepository.unsetHauptvereinByPerson(person.getId());
+        mitglied.setHauptVerein(true);
+
+        return mitgliedRepository.save(mitglied);
+    }
+
+    /* =========================================================
+       READ
+       ========================================================= */
+
+    @Transactional(readOnly = true)
+    public MitgliedDTO getById(Long id) {
+        Mitglied mitglied = mitgliedRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, ErrorMessages.MITGLIED_NOT_FOUND
+                ));
+        return mitgliedMapper.toDTO(mitglied);
+    }
+
+    @Transactional(readOnly = true)
+    public Mitglied getEntityByIdWithVerein(Long id) {
+        return mitgliedRepository.findByIdWithVerein(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, ErrorMessages.MITGLIED_NOT_FOUND
+                ));
+    }
+
+    @Transactional(readOnly = true)
+    public List<MitgliedDTO> getByPerson(Long personId, Pageable pageable) {
+        return mitgliedRepository
+                .findByPerson_Id(personId, pageable)
+                .map(mitgliedMapper::toDTO)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<MitgliedDTO> getByVerein(Long vereinId) {
+        return mitgliedRepository.findByVerein_Id(vereinId)
+                .stream()
+                .map(mitgliedMapper::toDTO)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public MitgliedDTO getHauptvereinByPerson(Long personId) {
+
+        Mitglied mitglied = mitgliedRepository
+                .findByPerson_IdAndHauptVereinTrue(personId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        ErrorMessages.NO_HAUPTVEREIN_FOUND
+                ));
+
+        return mitgliedMapper.toDTO(mitglied);
+    }
+
+     /* =========================================================
+       DELETE
+       ========================================================= */
+
+    @Transactional
+    public void delete(Long id) {
+
+        Mitglied mitglied = mitgliedRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, ErrorMessages.MITGLIED_NOT_FOUND
+                ));
+
+        Long personId = mitglied.getPerson().getId();
+        boolean wasHauptverein = Boolean.TRUE.equals(mitglied.getHauptVerein());
+
+        mitgliedRepository.delete(mitglied);
+
+        if (wasHauptverein) {
+            mitgliedRepository
+                    .findFirstByPerson_IdOrderByIdAsc(personId)
+                    .ifPresent(m -> m.setHauptVerein(true));
+        }
+    }
+
+    /* =========================================================
+       UPDATE
+       ========================================================= */
+
+    @Transactional
+    public MitgliedDTO updateMitglied(Long id, MitgliedDTO dto) {
+        return mitgliedMapper.toDTO(updateMitgliedInternal(id, dto));
+    }
+    @Transactional
+    public void setHauptverein(Long mitgliedId) {
+
+        Mitglied neu = mitgliedRepository.findById(mitgliedId)
+                .orElseThrow(() -> new EntityNotFoundException("Mitglied nicht gefunden"));
+
+        Long personId = neu.getPerson().getId();
+
+        // 1️⃣ ALLE Hauptvereine zurücksetzen (DB)
+        mitgliedRepository.unsetHauptvereinByPerson(personId);
+
+        // 2️⃣ Entity explizit neu laden (WICHTIG!)
+        Mitglied refreshed = mitgliedRepository.findById(mitgliedId)
+                .orElseThrow();
+
+        // 3️⃣ neuen Hauptverein setzen
+        refreshed.setHauptVerein(true);
+    }
+
+    @Transactional
+    public void ensureMitglied(Long personId, Long vereinId) {
+
+        if (mitgliedRepository.existsByPerson_IdAndVerein_Id(personId, vereinId)) {
+            return;
+        }
+
+        Mitglied mitglied = new Mitglied();
+        mitglied.setPerson(
+                personRepository.findById(personId)
+                        .orElseThrow()
+        );
+        mitglied.setVerein(
+                vereinRepository.findById(vereinId)
+                        .orElseThrow()
+        );
+
+        // neuer Verein wird automatisch Hauptverein
+        mitgliedRepository.unsetHauptvereinByPerson(personId);
+        mitglied.setHauptVerein(true);
+
+        mitgliedRepository.save(mitglied);
+    }
+
+    @Transactional
+    public Mitglied updateMitgliedEntity(Long id, MitgliedDTO dto) {
+        Mitglied updated = updateMitgliedInternal(id, dto);
+        mitgliedRepository.save(updated);
+
+        return mitgliedRepository.findByIdWithVerein(updated.getId())
+                .orElseThrow();
+    }
+
+    private Mitglied updateMitgliedInternal(Long id, MitgliedDTO dto) {
+
+        Mitglied mitglied = mitgliedRepository.findByIdWithVerein(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, ErrorMessages.MITGLIED_NOT_FOUND
+                ));
+
+        // 🔒 Identität darf nicht geändert werden
+        if (dto.getPersonId() != null &&
+                !mitglied.getPerson().getId().equals(dto.getPersonId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    ErrorMessages.MITGLIED_PERSON_CHANGE_NOT_ALLOWED
+            );
+        }
+
+        if (dto.getVereinId() != null &&
+                !mitglied.getVerein().getId().equals(dto.getVereinId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    ErrorMessages.MITGLIED_VEREIN_CHANGE_NOT_ALLOWED
+            );
+        }
+
+
+        mitglied.setFunktion(dto.getFunktion());
+
+
+        if (Boolean.TRUE.equals(dto.getHauptVerein())
+                && !mitglied.getHauptVerein()) {
+
+            mitgliedRepository.unsetHauptvereinByPerson(
+                    mitglied.getPerson().getId()
+            );
+            mitglied.setHauptVerein(true);
+        }
+
+        return mitglied;
+    }
+}

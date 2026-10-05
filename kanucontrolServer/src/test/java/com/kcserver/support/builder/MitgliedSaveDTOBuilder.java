@@ -1,7 +1,7 @@
 package com.kcserver.support.builder;
 
-import com.kcserver.dto.mitglied.MitgliedSaveDTO;
-import com.kcserver.enumtype.MitgliedFunktion;
+import com.kcserver.core.dto.mitglied.MitgliedSaveDTO;
+import com.kcserver.kjfp.enumtype.MitgliedFunktion;
 
 public class MitgliedSaveDTOBuilder {
 

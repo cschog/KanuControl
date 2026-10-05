@@ -1,0 +1,279 @@
+package com.kcserver.kjfp.service.finanz;
+
+import com.kcserver.kjfp.dto.finanzen.FinanzSummaryDTO;
+import com.kcserver.kjfp.enumtype.FinanzKategorie;
+import com.kcserver.kjfp.enumtype.FinanzTyp;
+import com.kcserver.core.exception.ErrorMessages;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.List;
+
+@Service
+public class FinanzService {
+
+    public BigDecimal sumKosten(List<? extends FinanzPosition> list) {
+        return sumByTyp(list, FinanzTyp.KOSTEN);
+    }
+
+    public BigDecimal sumEinnahmen(List<? extends FinanzPosition> list) {
+        return sumByTyp(list, FinanzTyp.EINNAHME);
+    }
+
+    public BigDecimal saldo(List<? extends FinanzPosition> list) {
+
+        BigDecimal einnahmen = sumEinnahmen(list);
+        BigDecimal kosten = sumKosten(list);
+
+        return einnahmen.subtract(kosten);
+    }
+
+    public void validateAusgeglichen(List<? extends FinanzPosition> list) {
+
+        if (saldo(list).compareTo(BigDecimal.ZERO) != 0) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    ErrorMessages.FINANZIERUNG_NOT_BALANCED
+            );
+        }
+    }
+
+    public void validatePlanung(List<? extends FinanzPosition> list) {
+
+        BigDecimal eigenanteil = saldo(list);
+
+        if (eigenanteil.compareTo(MINDEST_EIGENANTEIL) > 0) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    ErrorMessages.EIGENANTEIL_TOO_LOW
+            );
+        }
+    }
+
+    public FinanzAmpel ermittleAmpel(List<? extends FinanzPosition> list) {
+
+        BigDecimal eigenanteil = saldo(list);
+
+        if (eigenanteil.compareTo(EMPFOHLENER_EIGENANTEIL) <= 0) {
+            return FinanzAmpel.GRUEN;
+        }
+
+        if (eigenanteil.compareTo(MINDEST_EIGENANTEIL) <= 0) {
+            return FinanzAmpel.GELB;
+        }
+
+        return FinanzAmpel.ROT;
+    }
+
+    private BigDecimal safe(BigDecimal v) {
+        return v == null ? BigDecimal.ZERO : v;
+    }
+
+    public BigDecimal sumByTyp(
+            List<? extends FinanzPosition> list,
+            FinanzTyp typ
+    ) {
+
+        BigDecimal sum = list.stream()
+                .filter(p -> p.getKategorie().getTyp() == typ)
+                .map(p -> safe(p.getBetrag()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return sum.setScale(2, RoundingMode.HALF_UP);
+    }
+
+    public FinanzSummaryDTO buildSummary(
+            List<? extends FinanzPosition> list,
+            long teilnehmerAnzahl
+    ) {
+        return buildSummary(
+                list,
+                teilnehmerAnzahl,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO
+        );
+    }
+
+    public FinanzSummaryDTO buildSummary(
+            List<? extends FinanzPosition> list,
+            long teilnehmerAnzahl,
+            BigDecimal fahrkosten
+    ) {
+        return buildSummary(
+                list,
+                teilnehmerAnzahl,
+                fahrkosten,
+                BigDecimal.ZERO
+        );
+    }
+
+    public FinanzSummaryDTO buildSummary(
+            List<? extends FinanzPosition> list,
+            long teilnehmerAnzahl,
+            BigDecimal fahrkosten,
+            BigDecimal rueckzahlungen
+    ) {
+
+        fahrkosten = safe(fahrkosten);
+        rueckzahlungen = safe(rueckzahlungen);
+
+        BigDecimal kosten =
+                sumKosten(list)
+                        .add(fahrkosten)
+                        .setScale(2, RoundingMode.HALF_UP);
+
+        /*
+         * Ursprüngliche Einnahmen aus der Abrechnung.
+         */
+        BigDecimal urspruenglicheEinnahmen =
+                sumEinnahmen(list);
+
+        /*
+         * Teilnehmerbeitrag netto nach Rückzahlungen.
+         */
+        BigDecimal teilnehmerbeitrag =
+                list.stream()
+                        .filter(p ->
+                                p.getKategorie()
+                                        == FinanzKategorie.TEILNEHMERBEITRAG
+                        )
+                        .map(FinanzPosition::getBetrag)
+                        .map(this::safe)
+                        .reduce(
+                                BigDecimal.ZERO,
+                                BigDecimal::add
+                        )
+                        .max(BigDecimal.ZERO)
+                        .setScale(2, RoundingMode.HALF_UP);
+
+        /*
+         * Gesamteinnahmen ebenfalls netto nach Rückzahlungen.
+         */
+        BigDecimal einnahmen =
+                urspruenglicheEinnahmen
+                        .setScale(2, RoundingMode.HALF_UP);
+
+        BigDecimal saldo =
+                einnahmen.subtract(kosten);
+
+        BigDecimal deckung =
+                kosten.compareTo(BigDecimal.ZERO) == 0
+                        ? BigDecimal.valueOf(100)
+                        : einnahmen
+                        .divide(
+                                kosten,
+                                4,
+                                RoundingMode.HALF_UP
+                        )
+                        .multiply(BigDecimal.valueOf(100))
+                        .setScale(
+                                0,
+                                RoundingMode.HALF_UP
+                        );
+
+        BigDecimal proPerson =
+                teilnehmerAnzahl == 0
+                        ? BigDecimal.ZERO
+                        : kosten.divide(
+                        BigDecimal.valueOf(teilnehmerAnzahl),
+                        2,
+                        RoundingMode.HALF_UP
+                );
+
+        BigDecimal kjfpZuschuss =
+                list.stream()
+                        .filter(p ->
+                                p.getKategorie()
+                                        == FinanzKategorie.KJFP_ZUSCHUSS
+                        )
+                        .map(FinanzPosition::getBetrag)
+                        .map(this::safe)
+                        .reduce(
+                                BigDecimal.ZERO,
+                                BigDecimal::add
+                        );
+
+        BigDecimal notwendigerBeitrag =
+                berechneNotwendigenTeilnehmerBeitrag(
+                        list,
+                        teilnehmerAnzahl,
+                        fahrkosten
+                );
+
+        FinanzSummaryDTO dto = new FinanzSummaryDTO();
+
+        dto.setKosten(kosten);
+        dto.setEinnahmen(einnahmen);
+        dto.setSaldo(saldo);
+        dto.setDeckung(deckung);
+        dto.setTeilnehmerKostenProPerson(proPerson);
+        dto.setEmpfohlenerTeilnehmerBeitrag(
+                notwendigerBeitrag
+        );
+        dto.setKjfpZuschuss(kjfpZuschuss);
+        dto.setFahrkosten(fahrkosten);
+        dto.setTeilnehmerbeitrag(teilnehmerbeitrag);
+
+        return dto;
+    }
+
+    public BigDecimal berechneNotwendigenTeilnehmerBeitrag(
+            List<? extends FinanzPosition> positionen,
+            long teilnehmerAnzahl,
+            BigDecimal fahrkosten
+    ) {
+
+        if (teilnehmerAnzahl == 0) {
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal kosten =
+                sumKosten(positionen)
+                        .add(safe(fahrkosten));
+
+        BigDecimal andereEinnahmen = positionen.stream()
+                .filter(p ->
+                        p.getKategorie().getTyp()
+                                == FinanzTyp.EINNAHME
+                )
+                .filter(p ->
+                        p.getKategorie()
+                                != FinanzKategorie.TEILNEHMERBEITRAG
+                )
+                .map(FinanzPosition::getBetrag)
+                .map(this::safe)
+                .reduce(
+                        BigDecimal.ZERO,
+                        BigDecimal::add
+                );
+
+        BigDecimal rest =
+                kosten.subtract(andereEinnahmen);
+
+        if (rest.compareTo(BigDecimal.ZERO) <= 0) {
+            return BigDecimal.ZERO;
+        }
+
+        return rest.divide(
+                BigDecimal.valueOf(teilnehmerAnzahl),
+                2,
+                RoundingMode.HALF_UP
+        );
+    }
+
+    private static final BigDecimal EMPFOHLENER_EIGENANTEIL =
+            BigDecimal.valueOf(-500);
+
+    private static final BigDecimal MINDEST_EIGENANTEIL =
+            BigDecimal.valueOf(-250);
+
+    public enum FinanzAmpel {
+        GRUEN,
+        GELB,
+        ROT
+    }
+}

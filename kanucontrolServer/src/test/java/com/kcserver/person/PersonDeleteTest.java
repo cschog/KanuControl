@@ -1,12 +1,9 @@
 package com.kcserver.person;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kcserver.dto.person.PersonSaveDTO;
-import com.kcserver.enumtype.Sex;
+import com.kcserver.core.dto.person.PersonSaveDTO;
+import com.kcserver.kjfp.enumtype.Sex;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
-import com.kcserver.tenancy.TenantContext;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,7 +1,7 @@
 package com.kcserver.support.builder;
 
-import com.kcserver.dto.veranstaltung.VeranstaltungCreateDTO;
-import com.kcserver.enumtype.VeranstaltungTyp;
+import com.kcserver.kjfp.dto.veranstaltung.VeranstaltungCreateDTO;
+import com.kcserver.kjfp.enumtype.VeranstaltungTyp;
 
 import java.time.LocalDate;
 import java.time.LocalTime;

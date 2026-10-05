@@ -1,0 +1,258 @@
+package com.kcserver.kjfp.controller;
+
+import com.kcserver.api.response.ApiResponse;
+import com.kcserver.kjfp.dto.abrechnung.AbrechnungBelegDTO;
+import com.kcserver.kjfp.dto.teilnehmer.TeilnehmerBulkDeleteDTO;
+import com.kcserver.kjfp.enumtype.VeranstaltungTyp;
+import com.kcserver.kjfp.dto.veranstaltung.*;
+import com.kcserver.kjfp.service.abrechnung.AbrechnungBelegService;
+import com.kcserver.kjfp.service.TeilnehmerService;
+import com.kcserver.kjfp.service.veranstaltung.VeranstaltungService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
+import com.kcserver.kjfp.dto.teilnehmer.TeilnehmerKurzDTO;
+
+import java.time.LocalDate;
+import java.util.List;
+
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import com.kcserver.kjfp.service.finanz.FinanzGruppeService;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+
+import java.util.Set;
+
+@RequiredArgsConstructor
+@RestController
+@RequestMapping("/api/veranstaltungen")
+@PreAuthorize("hasAnyRole('ADMIN', 'KJFP')")
+public class VeranstaltungController {
+
+    private final VeranstaltungService veranstaltungService;
+    private final TeilnehmerService teilnehmerService;
+    private final FinanzGruppeService finanzGruppeService;
+    private final AbrechnungBelegService belegService;
+
+    /* =========================================================
+       CREATE
+       ========================================================= */
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApiResponse<VeranstaltungDetailDTO> create(
+            @Valid @RequestBody VeranstaltungCreateDTO dto) {
+
+        return veranstaltungService.create(dto);
+    }
+
+    /* =========================================================
+       LIST mit paging
+       ========================================================= */
+
+    @GetMapping
+    public ApiResponse<Page<VeranstaltungListDTO>> search(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) Boolean aktiv,
+            @RequestParam(required = false) Long vereinId,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate beginnDatum,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate endeDatum,
+            @RequestParam(required = false) VeranstaltungTyp typ,
+            @PageableDefault(
+                    size = 1000,
+                    sort = "beginnDatum",
+                    direction = Sort.Direction.DESC
+            )Pageable pageable
+    ) {
+
+        VeranstaltungFilterDTO filter = new VeranstaltungFilterDTO();
+        filter.setName(name);
+        filter.setAktiv(aktiv);
+        filter.setVereinId(vereinId);
+        filter.setBeginnDatum(beginnDatum);
+        filter.setEndeDatum(endeDatum);
+        filter.setTyp(typ);
+
+        Pageable safePageable = sanitizePageable(
+                pageable,
+                Set.of(
+                        "beginnDatum",
+                        "endeDatum",
+                        "name",
+                        "typ",
+                        "aktiv"
+                )
+        );
+
+        return new ApiResponse<>(
+                veranstaltungService.search(filter, safePageable),
+                List.of()
+        );
+    }
+
+    // ohne paging
+
+    @GetMapping("/all")
+    public ApiResponse<List<VeranstaltungListDTO>> searchAll(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) Boolean aktiv,
+            @RequestParam(required = false) Long vereinId,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate beginnDatum,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate endeDatum,
+            @RequestParam(required = false) VeranstaltungTyp typ
+    ) {
+
+        VeranstaltungFilterDTO filter = new VeranstaltungFilterDTO();
+        filter.setName(name);
+        filter.setAktiv(aktiv);
+        filter.setVereinId(vereinId);
+        filter.setBeginnDatum(beginnDatum);
+        filter.setEndeDatum(endeDatum);
+        filter.setTyp(typ);
+
+        return ApiResponse.of(veranstaltungService.searchAll(filter));
+    }
+
+    /* =========================================================
+       DETAIL
+       ========================================================= */
+
+    @GetMapping("/aktiv")
+    public ApiResponse<VeranstaltungDetailDTO> getActive() {
+
+        VeranstaltungDetailDTO dto =
+                veranstaltungService.getActiveOptional()
+                        .orElseThrow(() ->
+                                new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        return new ApiResponse<>(dto, List.of());
+    }
+
+    @GetMapping("/{id:\\d+}")
+    public ApiResponse<VeranstaltungDetailDTO> getById(
+            @PathVariable Long id) {
+
+        return ApiResponse.of(veranstaltungService.getById(id));
+    }
+
+    /* =========================================================
+       UPDATE
+       ========================================================= */
+
+    @PutMapping("/{id}")
+    public ApiResponse<VeranstaltungDetailDTO> update(
+            @PathVariable Long id,
+            @Valid @RequestBody VeranstaltungUpdateDTO dto) {
+        return veranstaltungService.update(id, dto);
+    }
+
+    @PutMapping("/{id}/aktiv")
+    public VeranstaltungDetailDTO setActive(@PathVariable Long id) {
+        return veranstaltungService.setActive(id);
+    }
+
+    /* =========================================================
+       DELETE
+       ========================================================= */
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id) {
+        veranstaltungService.delete(id);
+    }
+
+    /* =========================================================
+       TEILNEHMER BULK DELETE
+       ========================================================= */
+
+    @DeleteMapping("/{id}/teilnehmer")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteTeilnehmerBulk(
+            @PathVariable Long id,
+            @RequestBody TeilnehmerBulkDeleteDTO dto
+    ) {
+        teilnehmerService.removeTeilnehmerBulk(id, dto.getPersonIds());
+    }
+
+    @PutMapping("/{veranstaltungId}/teilnehmer/{teilnehmerId}/kuerzel")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void assignKuerzel(
+            @PathVariable Long veranstaltungId,
+            @PathVariable Long teilnehmerId,
+            @RequestParam String kuerzel
+    ) {
+
+        finanzGruppeService.assignKuerzel(
+                veranstaltungId,
+                teilnehmerId,
+                kuerzel
+        );
+    }
+    @GetMapping("/{veranstaltungId}/teilnehmer/ohne-kuerzel")
+    public List<TeilnehmerKurzDTO> findOhneKuerzel(
+            @PathVariable Long veranstaltungId) {
+
+        return teilnehmerService.findOhneKuerzel(veranstaltungId);
+    }
+
+    @GetMapping("/{veranstaltungId}/finanzgruppen/{finanzGruppeId}/belege")
+    public ApiResponse<List<AbrechnungBelegDTO>> getBelegeByFinanzGruppe(
+            @PathVariable Long veranstaltungId,
+            @PathVariable Long finanzGruppeId
+    ) {
+        return ApiResponse.of(
+                belegService.findByFinanzGruppe(
+                        veranstaltungId,
+                        finanzGruppeId
+                )
+        );
+    }
+
+    private Pageable sanitizePageable(
+            Pageable pageable,
+            Set<String> allowedFields
+    ) {
+
+        Sort safeSort = Sort.unsorted();
+
+        for (Sort.Order order : pageable.getSort()) {
+
+            if (allowedFields.contains(order.getProperty())) {
+
+                safeSort = safeSort.and(
+                        Sort.by(order)
+                );
+            }
+        }
+
+        // Fallback Default Sort
+
+        if (safeSort.isUnsorted()) {
+
+            safeSort = Sort.by(
+                    Sort.Direction.DESC,
+                    "beginnDatum"
+            );
+        }
+
+        return PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                safeSort
+        );
+    }
+}

@@ -1,6 +1,6 @@
 package com.kcserver.support.builder;
-import com.kcserver.dto.person.PersonSaveDTO;
-import com.kcserver.entity.Person;
+import com.kcserver.core.dto.person.PersonSaveDTO;
+import com.kcserver.kjfp.entity.Person;
 
 import java.time.LocalDate;
 

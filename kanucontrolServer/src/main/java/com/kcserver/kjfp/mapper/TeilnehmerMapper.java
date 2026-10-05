@@ -1,0 +1,180 @@
+package com.kcserver.kjfp.mapper;
+
+import com.kcserver.core.dto.person.PersonRefDTO;
+import com.kcserver.kjfp.dto.teilnehmer.TeilnehmerDetailDTO;
+import com.kcserver.kjfp.dto.teilnehmer.TeilnehmerKurzDTO;
+import com.kcserver.kjfp.dto.teilnehmer.TeilnehmerListDTO;
+import com.kcserver.kjfp.dto.teilnehmer.TeilnehmerRefDTO;
+import com.kcserver.kjfp.entity.Mitglied;
+import com.kcserver.kjfp.entity.Person;
+import com.kcserver.kjfp.entity.Teilnehmer;
+import com.kcserver.kjfp.service.AltersService;
+import com.kcserver.kjfp.service.beitrag.TeilnehmerBeitragService;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
+import org.springframework.beans.factory.annotation.Autowired;
+
+@Mapper(
+        componentModel = "spring",
+        unmappedTargetPolicy = ReportingPolicy.ERROR
+)
+
+public abstract class TeilnehmerMapper {
+
+    @Autowired
+    protected TeilnehmerBeitragService teilnehmerBeitragService;
+
+    @Autowired
+    protected AltersService altersService;
+
+     /* =========================
+       ENTITY → LIST DTO
+       ========================= */
+
+    @Mapping(source = "person.id", target = "personId")
+    @Mapping(source = "person", target = "person")
+    @Mapping(source = "rolle", target = "rolle")
+    @Mapping(
+            target = "sollBeitrag",
+            expression = """
+    java(
+        teilnehmerBeitragService.getSollBeitrag(
+            teilnehmer.getVeranstaltung(),
+            teilnehmer
+        )
+    )
+"""
+    )
+    @Mapping(
+            target = "beitragsQuelle",
+            expression = """
+java(
+    teilnehmer.getIndividuellerBeitrag() != null
+        ? com.kcserver.kjfp.enumtype.BeitragsQuelle.INDIVIDUELL
+        : (
+            teilnehmer.getVeranstaltung().getBeitragsstruktur() != null
+                ? com.kcserver.kjfp.enumtype.BeitragsQuelle.STRUKTUR
+                : com.kcserver.kjfp.enumtype.BeitragsQuelle.STANDARD
+        )
+)
+"""
+    )
+    @Mapping(
+            target = "alterBeiBeginn",
+            expression = """
+java(
+    teilnehmer.getPerson().getGeburtsdatum() != null
+        ? altersService.berechneAlterBeiBeginn(
+            teilnehmer.getPerson().getGeburtsdatum(),
+            teilnehmer.getVeranstaltung().getBeginnDatum()
+        )
+        : null
+    )
+"""
+    )
+    @Mapping(target = "gezahlterBetrag", ignore = true)
+    @Mapping(target = "zahlungsstatus", ignore = true)
+    public abstract TeilnehmerListDTO toListDTO(
+            Teilnehmer teilnehmer
+    );
+
+    /* =========================
+       ENTITY → DETAIL DTO
+       ========================= */
+
+    @Mapping(source = "veranstaltung.id", target = "veranstaltungId")
+    @Mapping(source = "person.id", target = "personId")
+    @Mapping(source = "person", target = "person")
+    // rolle: null = normaler Teilnehmer
+    @Mapping(source = "rolle", target = "rolle")
+
+    @Mapping(source = "person.geburtsdatum", target = "geburtsdatum")
+    @Mapping(source = "person.plz", target = "plz")
+    @Mapping(source = "person.countryCode", target = "countryCode")
+    @Mapping(source = "person.sex", target = "sex")
+    public abstract TeilnehmerDetailDTO toDetailDTO(
+            Teilnehmer teilnehmer
+
+    );
+
+    /* =========================
+   ENTITY → KURZ DTO
+   ========================= */
+
+    @Mapping(source = "id", target = "id")
+    @Mapping(source = "person.id", target = "personId")
+    @Mapping(source = "person.vorname", target = "vorname")
+    @Mapping(source = "person.name", target = "nachname")
+    public abstract TeilnehmerKurzDTO toKurzDTO(
+            Teilnehmer teilnehmer
+
+    );
+
+     public TeilnehmerRefDTO toRefDTO(Teilnehmer t) {
+        if (t == null || t.getPerson() == null) return null;
+
+        Person p = t.getPerson();
+
+        String hauptverein = null;
+        if (p.getMitgliedschaften() != null) {
+            hauptverein = p.getMitgliedschaften().stream()
+                    .filter(Mitglied::getHauptVerein)
+                    .filter(m -> m.getVerein() != null)
+                    .map(m -> m.getVerein().getAbk())
+                    .findFirst()
+                    .orElse(null);
+        }
+
+        return new TeilnehmerRefDTO(
+                p.getId(),
+                p.getVorname(),
+                p.getName(),
+                hauptverein
+        );
+    }
+
+    /* =========================
+       HILFSMAPPING
+       ========================= */
+
+    public PersonRefDTO map(Person person) {
+
+        try {
+
+            if (person == null) {
+                return null;
+            }
+
+            PersonRefDTO dto = new PersonRefDTO();
+
+            dto.setId(person.getId());
+            dto.setVorname(person.getVorname());
+            dto.setName(person.getName());
+            dto.setSex(person.getSex());
+
+            // ⭐ Hauptverein bestimmen
+            if (person.getMitgliedschaften() != null) {
+
+                person.getMitgliedschaften().stream()
+                        .filter(m -> Boolean.TRUE.equals(m.getHauptVerein()))
+                        .findFirst()
+                        .ifPresent(m -> {
+
+                            if (m.getVerein() != null) {
+                                dto.setHauptvereinAbk(
+                                        m.getVerein().getAbk()
+                                );
+                            }
+                        });
+            }
+
+            return dto;
+
+        } catch (jakarta.persistence.EntityNotFoundException ex) {
+
+            // kaputter Teilnehmer-Datensatz
+            return null;
+        }
+    }
+}

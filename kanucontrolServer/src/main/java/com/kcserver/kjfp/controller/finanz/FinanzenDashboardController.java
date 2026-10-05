@@ -1,0 +1,29 @@
+package com.kcserver.kjfp.controller.finanz;
+
+import com.kcserver.api.response.ApiResponse;
+import com.kcserver.kjfp.dto.finanzen.FinanzenDashboardDTO;
+import com.kcserver.kjfp.service.finanz.FinanzenDashboardService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/api/veranstaltungen/{veranstaltungId}/finanzen")
+@PreAuthorize("hasAnyRole('ADMIN', 'KJFP')")
+public class FinanzenDashboardController {
+
+    private final FinanzenDashboardService service;
+
+    @GetMapping("/dashboard")
+    public ApiResponse<FinanzenDashboardDTO> getDashboard(
+            @PathVariable Long veranstaltungId
+    ) {
+        return ApiResponse.of(
+                service.getDashboard(veranstaltungId)
+        );
+    }
+}

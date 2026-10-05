@@ -1,8 +1,9 @@
 package com.kcserver.teilnehmer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kcserver.kjfp.enumtype.TeilnehmerRolle;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
-import com.kcserver.repository.TeilnehmerRepository;
+import com.kcserver.kjfp.repository.TeilnehmerRepository;
 import com.kcserver.support.api.PersonTestFactory;
 import com.kcserver.support.api.VeranstaltungTestFactory;
 import com.kcserver.support.api.VereinTestFactory;
@@ -61,7 +62,7 @@ class TeilnehmerLeiterChangeTest extends AbstractTenantIntegrationTest {
         long countLeiter =
                 teilnehmerRepository.countByVeranstaltungIdAndRolle(
                         veranstaltungId,
-                        com.kcserver.enumtype.TeilnehmerRolle.LEITER);
+                        TeilnehmerRolle.LEITER);
 
         assertEquals(1, countLeiter);
     }

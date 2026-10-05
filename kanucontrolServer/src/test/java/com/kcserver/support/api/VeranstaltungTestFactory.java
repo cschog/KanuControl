@@ -2,8 +2,8 @@ package com.kcserver.support.api;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kcserver.dto.veranstaltung.VeranstaltungCreateDTO;
-import com.kcserver.enumtype.VeranstaltungTyp;
+import com.kcserver.kjfp.dto.veranstaltung.VeranstaltungCreateDTO;
+import com.kcserver.kjfp.enumtype.VeranstaltungTyp;
 import com.kcserver.support.web.AbstractApiTestFactory;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.http.MediaType;

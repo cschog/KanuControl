@@ -1,8 +1,8 @@
 package com.kcserver.controller;
 
-import com.kcserver.dto.postalcode.PostalCodeLookupResponse;
-import com.kcserver.enumtype.CountryCode;
-import com.kcserver.service.postalcode.PostalCodeService;
+import com.kcserver.kjfp.dto.postalcode.PostalCodeLookupResponse;
+import com.kcserver.kjfp.enumtype.CountryCode;
+import com.kcserver.kjfp.service.postalcode.PostalCodeService;
 
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
 import org.junit.jupiter.api.Test;

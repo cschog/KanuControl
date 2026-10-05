@@ -1,6 +1,6 @@
 package com.kcserver.support.tenant;
 
-import com.kcserver.tenancy.TenantContext;
+import com.kcserver.core.tenancy.TenantContext;
 import org.junit.jupiter.api.extension.*;
 
 public class TestTenantExtension

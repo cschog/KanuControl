@@ -1,0 +1,829 @@
+package com.kcserver.kjfp.service;
+
+
+import com.kcserver.core.dto.person.PersonDataStatusDTO;
+import com.kcserver.core.dto.person.PersonListDTO;
+import com.kcserver.core.exception.ErrorMessages;
+import com.kcserver.core.mapper.PersonMapper;
+import com.kcserver.kjfp.dto.teilnehmer.*;
+import com.kcserver.kjfp.dto.zahlungsnachweis.ZahlungsnachweisListDTO;
+import com.kcserver.kjfp.entity.Person;
+import com.kcserver.kjfp.entity.Teilnehmer;
+import com.kcserver.kjfp.entity.Veranstaltung;
+import com.kcserver.kjfp.entity.beitraege.ZahlungsPosition;
+import com.kcserver.kjfp.entity.beitraege.Zahlungsnachweis;
+import com.kcserver.kjfp.enumtype.TeilnehmerRolle;
+import com.kcserver.kjfp.enumtype.Zahlungsstatus;
+import com.kcserver.kjfp.mapper.TeilnehmerMapper;
+import com.kcserver.kjfp.repository.MitgliedRepository;
+import com.kcserver.kjfp.repository.PersonRepository;
+
+import com.kcserver.kjfp.repository.VeranstaltungRepository;
+import com.kcserver.kjfp.repository.fahrkosten.ReisekostenabrechnungRepository;
+import com.kcserver.kjfp.service.beitrag.TeilnehmerBeitragService;
+import com.kcserver.kjfp.service.person.PersonDataStatusService;
+import com.kcserver.kjfp.service.zahlungsnachweis.ZahlungsstatusService;
+import com.kcserver.kjfp.specification.TeilnehmerSpecification;
+import com.kcserver.kjfp.repository.TeilnehmerRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+import java.math.BigDecimal;
+import com.kcserver.kjfp.repository.zahlungsnachweis.ZahlungsnachweisRepository;
+
+
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import static com.kcserver.core.exception.EntityFinder.getOr404;
+
+import org.springframework.data.domain.Pageable;
+
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class TeilnehmerService {
+
+    private final TeilnehmerRepository teilnehmerRepository;
+    private final VeranstaltungRepository veranstaltungRepository;
+    private final PersonRepository personRepository;
+    private final TeilnehmerMapper teilnehmerMapper;
+    private final PersonMapper personMapper;
+    private final MitgliedRepository mitgliedRepository;
+    private final TeilnehmerBeitragService teilnehmerBeitragService;
+    private final ReisekostenabrechnungRepository reisekostenabrechnungRepository;
+    private final ZahlungsnachweisRepository zahlungsnachweisRepository;
+    private final ZahlungsstatusService zahlungsstatusService;
+    private final PersonDataStatusService personDataStatusService;
+    private final AltersService altersService;
+
+
+    /* =========================================================
+       ADD SINGLE
+       ========================================================= */
+
+    public TeilnehmerDetailDTO addTeilnehmer(Long veranstaltungId, Long personId) {
+
+        Veranstaltung veranstaltung = veranstaltungRepository.findByIdWithRelations(veranstaltungId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        ErrorMessages.VERANSTALTUNG_NOT_FOUND
+                ));
+
+        Person person = getPerson(personId);
+
+        // ❗ Duplicate verhindern → 409
+        if (teilnehmerRepository
+                .findByVeranstaltungAndPerson(veranstaltung, person)
+                .isPresent()) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    ErrorMessages.TEILNEHMER_ALREADY_EXISTS
+            );
+        }
+
+        Teilnehmer teilnehmer = new Teilnehmer();
+        teilnehmer.setVeranstaltung(veranstaltung);
+        teilnehmer.setPerson(person);
+
+// ⭐ Neue Logik
+        boolean hasFunktion = mitgliedRepository
+                .existsByPerson_IdAndFunktionIsNotNull(person.getId());
+
+        if (hasFunktion) {
+            teilnehmer.setRolle(TeilnehmerRolle.MITARBEITER);
+        } else {
+            teilnehmer.setRolle(null);
+        }
+
+        return teilnehmerMapper.toDetailDTO(
+                teilnehmerRepository.save(teilnehmer)
+        );
+    }
+
+    /* =========================================================
+       ADD BULK
+       ========================================================= */
+
+    public void addTeilnehmerBulk(Long veranstaltungId, List<Long> personIds) {
+
+        Veranstaltung veranstaltung = veranstaltungRepository.findByIdWithRelations(veranstaltungId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, ErrorMessages.VERANSTALTUNG_NOT_FOUND
+                ));
+
+        for (Long personId : personIds) {
+
+            Person person = getPerson(personId);
+
+            boolean exists = teilnehmerRepository
+                    .findByVeranstaltungAndPerson(veranstaltung, person)
+                    .isPresent();
+
+            if (!exists) {
+                Teilnehmer t = new Teilnehmer();
+                t.setVeranstaltung(veranstaltung);
+                t.setPerson(person);
+                boolean hasFunktion = mitgliedRepository
+                        .existsByPerson_IdAndFunktionIsNotNull(person.getId());
+
+                t.setRolle(hasFunktion ? TeilnehmerRolle.MITARBEITER : null);
+                teilnehmerRepository.save(t);
+            }
+        }
+    }
+    /* =========================================================
+     UPDATE
+     ========================================================= */
+    public TeilnehmerDetailDTO update(
+            Long veranstaltungId,
+            Long teilnehmerId,
+            TeilnehmerUpdateDTO dto
+    ) {
+
+        Teilnehmer t = teilnehmerRepository.findById(teilnehmerId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        if (!t.getVeranstaltung().getId().equals(veranstaltungId)) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    ErrorMessages.TEILNEHMER_IN_VERANSTALTUNG_NOT_FOUND
+            );
+        }
+
+        if (dto.getRolle() != null) {
+
+            // Leiter darf nicht überschrieben werden
+            if (t.getRolle() == TeilnehmerRolle.LEITER) {
+                return teilnehmerMapper.toDetailDTO(t);
+            }
+
+            if (dto.getRolle() == TeilnehmerRolle.LEITER) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        ErrorMessages.LEITER_MUSS_UEBER_VERANSTALTUNG_GESETZT_WERDEN
+                );
+            }
+
+            t.setRolle(dto.getRolle());
+        }
+
+        return teilnehmerMapper.toDetailDTO(t);
+    }
+
+    /* =========================================================
+       UPDATE ROLE
+       ========================================================= */
+
+    public void updateRolle(Long veranstaltungId, Long personId, TeilnehmerRolle rolle) {
+
+        Teilnehmer t = teilnehmerRepository
+                .findByVeranstaltungIdAndPersonId(veranstaltungId, personId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, ErrorMessages.TEILNEHMER_NOT_FOUND
+                ));
+
+        // ❗ Leiter darf NICHT überschrieben werden
+        if (t.getRolle() == TeilnehmerRolle.LEITER) {
+            return;
+        }
+
+        // nur null oder MITARBEITER erlaubt
+        if (rolle == TeilnehmerRolle.LEITER) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    ErrorMessages.LEITER_MUSS_UEBER_VERANSTALTUNG_GESETZT_WERDEN
+            );
+        }
+
+        t.setRolle(rolle);   // null oder MITARBEITER
+    }
+
+    /* =========================================================
+       DELETE SINGLE
+       ========================================================= */
+
+    public void removeTeilnehmer(Long veranstaltungId, Long teilnehmerId) {
+
+        Teilnehmer teilnehmer = teilnehmerRepository.findById(teilnehmerId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, ErrorMessages.TEILNEHMER_NOT_FOUND
+                ));
+
+        if (!teilnehmer.getVeranstaltung().getId().equals(veranstaltungId)) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT, ErrorMessages.TEILNEHMER_NOT_IN_VERANSTALTUNG
+            );
+        }
+
+        if (teilnehmer.getRolle() == TeilnehmerRolle.LEITER) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    ErrorMessages.LEITER_DARF_NICHT_ENTFERNT_WERDEN
+            );
+        }
+
+        validateTeilnehmerKannEntferntWerden(
+                veranstaltungId,
+                teilnehmer.getPerson().getId()
+        );
+
+        teilnehmerRepository.delete(teilnehmer);
+    }
+
+    /* =========================================================
+       DELETE BULK
+       ========================================================= */
+
+    public void removeTeilnehmerBulk(Long veranstaltungId, List<Long> personIds) {
+
+        Veranstaltung v =
+                getOr404(
+                        veranstaltungRepository.findById(veranstaltungId),
+                        ErrorMessages.VERANSTALTUNG_NOT_FOUND
+                );
+
+        Long leiterId = v.getLeiter().getId();
+
+        List<Long> filteredIds = personIds.stream()
+                .filter(id -> !id.equals(leiterId))
+                .toList();
+
+        if (filteredIds.isEmpty()) return;
+
+        validateTeilnehmerKoennenEntferntWerden(
+                veranstaltungId,
+                filteredIds
+        );
+
+        teilnehmerRepository.deleteByVeranstaltungIdAndPersonIds(
+                veranstaltungId,
+                filteredIds
+        );
+    }
+
+    /* =========================================================
+     SEARCH (UI LIST)
+     ========================================================= */
+    @Transactional(readOnly = true)
+    public List<TeilnehmerListDTO> search(Long veranstaltungId, String search) {
+        return teilnehmerRepository.search(veranstaltungId, search)
+                .stream()
+                .map(teilnehmerMapper::toListDTO)
+                .toList();
+    }
+
+    /* =========================================================
+       SEARCH REF (Autocomplete)
+       ========================================================= */
+    @Transactional(readOnly = true)
+    public List<TeilnehmerRefDTO> searchRef(Long veranstaltungId, String search) {
+        return teilnehmerRepository.searchRef(veranstaltungId, search)
+                .stream()
+                .map(teilnehmerMapper::toRefDTO)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public long count(Long veranstaltungId) {
+        return teilnehmerRepository.countByVeranstaltungId(veranstaltungId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<TeilnehmerRefDTO> searchOhneFinanzgruppe(
+            Long veranstaltungId,
+            String search
+    ) {
+        return teilnehmerRepository.searchOhneFinanzgruppe(veranstaltungId, search)
+                .stream()
+                .map(teilnehmerMapper::toRefDTO)
+                .toList();
+    }
+
+    /* =========================================================
+       AVAILABLE
+       ========================================================= */
+    @Transactional(readOnly = true)
+    public List<PersonListDTO> findAvailable(
+            Long veranstaltungId,
+            String search
+    ) {
+
+        return teilnehmerRepository.findAvailable(veranstaltungId, search)
+                .stream()
+                .map(person -> {
+
+                    PersonListDTO dto =
+                            personMapper.toListDTO(person);
+
+                    PersonDataStatusDTO status =
+                            determinePersonStatus(
+                                    veranstaltungId,
+                                    person,
+                                    true
+                            );
+
+                    dto.setDataStatus(status.getStatus());
+
+                    return dto;
+                })
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<PersonListDTO> findAvailable(
+            Long veranstaltungId,
+            String search,
+            String verein,
+            Boolean aktiv,
+            Pageable pageable
+    ) {
+
+        return teilnehmerRepository
+                .findAvailable(
+                        veranstaltungId,
+                        search,
+                        verein,
+                        aktiv,
+                        pageable
+                )
+                .map(person -> {
+
+                    PersonListDTO dto =
+                            personMapper.toListDTO(person);
+
+                    PersonDataStatusDTO status =
+                            determinePersonStatus(
+                                    veranstaltungId,
+                                    person,
+                                    false
+                            );
+
+                    dto.setDataStatus(status.getStatus());
+
+                    return dto;
+                });
+    }
+
+    /* =========================================================
+       ASSIGNED
+       ========================================================= */
+    @Transactional(readOnly = true)
+    public List<PersonListDTO> getAssigned(Long veranstaltungId) {
+
+        Veranstaltung veranstaltung =
+                veranstaltungRepository
+                        .findById(veranstaltungId)
+                        .orElseThrow(() -> new ResponseStatusException(
+                                HttpStatus.NOT_FOUND,
+                                ErrorMessages.VERANSTALTUNG_NOT_FOUND
+                        ));
+
+        return teilnehmerRepository.findAllWithPerson(veranstaltungId)
+                .stream()
+                .map(t -> {
+
+                    Person person = t.getPerson();
+
+                    PersonListDTO dto =
+                            personMapper.toListDTO(person);
+
+                    boolean isLeiter =
+                            t.getRolle() == TeilnehmerRolle.LEITER;
+
+                    boolean isFahrer =
+                            reisekostenabrechnungRepository
+                                    .existsByVeranstaltungIdAndFahrerId(
+                                            veranstaltungId,
+                                            person.getId()
+                                    );
+
+                    PersonDataStatusDTO status =
+                            personDataStatusService.determineStatus(
+                                    person,
+                                    isLeiter,
+                                    isFahrer,
+                                    true,
+                                    t.getRolle(),
+                                    veranstaltung.getBeginnDatum()
+                            );
+
+                    dto.setDataStatus(status.getStatus());
+
+                    return dto;
+                })
+                .toList();
+    }
+
+    private PersonDataStatusDTO determinePersonStatus(
+            Long veranstaltungId,
+            Person person,
+            boolean isTeilnehmer
+    ) {
+        boolean isLeiter =
+                veranstaltungRepository.existsByIdAndLeiterId(
+                        veranstaltungId,
+                        person.getId()
+                );
+
+        boolean isFahrer =
+                reisekostenabrechnungRepository
+                        .existsByVeranstaltungIdAndFahrerId(
+                                veranstaltungId,
+                                person.getId()
+                        );
+
+        if (isTeilnehmer) {
+
+            Teilnehmer teilnehmer =
+                    teilnehmerRepository
+                            .findByVeranstaltungIdAndPersonId(
+                                    veranstaltungId,
+                                    person.getId()
+                            )
+                            .orElse(null);
+
+            Veranstaltung veranstaltung =
+                    veranstaltungRepository
+                            .findById(veranstaltungId)
+                            .orElse(null);
+
+            if (teilnehmer != null
+                    && veranstaltung != null
+                    && veranstaltung.getBeginnDatum() != null) {
+
+                return personDataStatusService.determineStatus(
+                        person,
+                        isLeiter,
+                        isFahrer,
+                        true,
+                        teilnehmer.getRolle(),
+                        veranstaltung.getBeginnDatum()
+                );
+            }
+        }
+
+        return personDataStatusService.determineStatus(
+                person,
+                isLeiter,
+                isFahrer,
+                isTeilnehmer
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public Page<TeilnehmerListDTO> getAssigned(
+            Long veranstaltungId,
+            TeilnehmerSearchCriteria criteria,
+            Pageable pageable
+    ) {
+        Specification<Teilnehmer> spec =
+                TeilnehmerSpecification.byCriteria(criteria)
+                        .and((root, query, cb) ->
+                                cb.equal(
+                                        root.get("veranstaltung").get("id"),
+                                        veranstaltungId
+                                )
+                        );
+
+        return teilnehmerRepository
+                .findAll(spec, pageable)
+                .map(teilnehmer -> {
+
+                    TeilnehmerListDTO dto =
+                            teilnehmerMapper.toListDTO(teilnehmer);
+
+                    Person person = teilnehmer.getPerson();
+
+                    PersonDataStatusDTO status =
+                            determinePersonStatus(
+                                    veranstaltungId,
+                                    person,
+                                    true
+                            );
+
+                    if (dto.getPerson() != null) {
+                        dto.getPerson().setDataStatus(status.getStatus());
+                    }
+
+                    return dto;
+                });
+    }
+    /* =========================================================
+       SET LEITER
+       ========================================================= */
+
+    public TeilnehmerDetailDTO setLeiter(Long veranstaltungId, Long personId) {
+
+        Veranstaltung veranstaltung =
+                getOr404(
+                        veranstaltungRepository.findById(veranstaltungId),
+                        ErrorMessages.VERANSTALTUNG_NOT_FOUND
+                );
+
+        Person neuerLeiter = getPerson(personId);
+
+        validateLeiterAge(neuerLeiter, veranstaltung);
+
+        // Alle bisherigen Leiterrollen entfernen
+        List<Teilnehmer> teilnehmer =
+                teilnehmerRepository.findAllWithPerson(veranstaltungId);
+
+        for (Teilnehmer t : teilnehmer) {
+            if (t.getRolle() == TeilnehmerRolle.LEITER
+                    && !t.getPerson().getId().equals(personId)) {
+
+                t.setRolle(null);
+                teilnehmerRepository.saveAndFlush(t);
+            }
+        }
+
+        // Neuen Leiter als Teilnehmer suchen
+        Teilnehmer neuerTeilnehmer =
+                teilnehmerRepository
+                        .findByVeranstaltungIdAndPersonId(
+                                veranstaltungId,
+                                personId
+                        )
+                        .orElseGet(() -> {
+
+                            Teilnehmer t = new Teilnehmer();
+                            t.setVeranstaltung(veranstaltung);
+                            t.setPerson(neuerLeiter);
+
+                            return t;
+                        });
+
+        // Neuer Leiter bekommt LEITER
+        neuerTeilnehmer.setRolle(TeilnehmerRolle.LEITER);
+
+        // Speichern
+        Teilnehmer gespeichert =
+                teilnehmerRepository.saveAndFlush(neuerTeilnehmer);
+
+        // Veranstaltung ebenfalls aktualisieren
+        veranstaltung.setLeiter(neuerLeiter);
+        veranstaltungRepository.saveAndFlush(veranstaltung);
+
+        return teilnehmerMapper.toDetailDTO(gespeichert);
+    }
+
+    private void validateLeiterAge(
+            Person person,
+            Veranstaltung veranstaltung
+    ) {
+
+        if (person.getGeburtsdatum() == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    ErrorMessages.GEBURTSDATUM_REQUIRED_FOR_LEITER
+            );
+        }
+
+        Integer alter =
+                altersService.berechneAlterBeiBeginn(
+                        person.getGeburtsdatum(),
+                        veranstaltung.getBeginnDatum()
+                );
+
+        if (alter == null || alter < 18) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    ErrorMessages.LEITER_MIND_ALTER
+            );
+        }
+    }
+
+    public TeilnehmerBeitraegeResponseDTO findAllByVeranstaltungForBeitraege(
+            Long veranstaltungId
+    ) {
+
+        Veranstaltung veranstaltung =
+                veranstaltungRepository
+                        .findById(veranstaltungId)
+                        .orElseThrow();
+
+        List<Teilnehmer> teilnehmer =
+                teilnehmerRepository.findAllWithPerson(
+                        veranstaltungId
+                );
+
+        Map<Long, BigDecimal> gezahlteBetraege =
+                zahlungsstatusService.getGezahlteBetraege(veranstaltungId);
+
+        List<TeilnehmerListDTO> teilnehmerDTOs =
+                teilnehmer.stream()
+                        .map(t -> {
+
+                            TeilnehmerListDTO dto =
+                                    teilnehmerMapper.toListDTO(t);
+
+                            BigDecimal sollBeitrag =
+                                    teilnehmerBeitragService.getSollBeitrag(
+                                            veranstaltung,
+                                            t
+                                    );
+
+                            BigDecimal gezahlterBetrag =
+                                    gezahlteBetraege.getOrDefault(
+                                            t.getId(),
+                                            BigDecimal.ZERO
+                                    );
+
+                            dto.setSollBeitrag(sollBeitrag);
+                            dto.setGezahlterBetrag(gezahlterBetrag);
+                            dto.setZahlungsstatus(
+                                    zahlungsstatusService.getStatus(
+                                            sollBeitrag,
+                                            gezahlterBetrag
+                                    )
+                            );
+
+                            return dto;
+                        })
+                        .toList();
+        TeilnehmerBeitraegeResponseDTO response =
+                new TeilnehmerBeitraegeResponseDTO();
+
+        response.setTeilnehmer(teilnehmerDTOs);
+
+/* =========================================================
+   ZAHLUNGSNACHWEISE
+   ========================================================= */
+
+        List<ZahlungsnachweisListDTO> zahlungsnachweise =
+                zahlungsnachweisRepository.findListByVeranstaltungId(
+                        veranstaltungId
+                );
+
+        List<Zahlungsnachweis> zahlungsnachweisDetails =
+                zahlungsnachweisRepository.findDetailsByVeranstaltungId(
+                        veranstaltungId
+                );
+
+        Map<Long, Zahlungsnachweis> nachweisMap =
+                zahlungsnachweisDetails.stream()
+                        .collect(Collectors.toMap(
+                                Zahlungsnachweis::getId,
+                                Function.identity()
+                        ));
+
+        for (ZahlungsnachweisListDTO dto : zahlungsnachweise) {
+
+            Zahlungsnachweis nachweis =
+                    nachweisMap.get(dto.getId());
+
+            if (nachweis != null) {
+                dto.setTeilnehmer(
+                        getTeilnehmerKurzDTOs(nachweis)
+                );
+            }
+        }
+
+        response.setZahlungsnachweise(zahlungsnachweise);
+
+        TeilnehmerBeitragSummaryDTO summary =
+                new TeilnehmerBeitragSummaryDTO();
+
+        BigDecimal sollSumme =
+                teilnehmerDTOs.stream()
+                        .map(TeilnehmerListDTO::getSollBeitrag)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal bezahltSumme =
+                teilnehmerDTOs.stream()
+                        .map(TeilnehmerListDTO::getGezahlterBetrag)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal offenSumme =
+                sollSumme.subtract(bezahltSumme).max(BigDecimal.ZERO);
+
+        long bezahlt =
+                teilnehmerDTOs.stream()
+                        .filter(t -> t.getZahlungsstatus() == Zahlungsstatus.GRUEN)
+                        .count();
+
+        long teilweise =
+                teilnehmerDTOs.stream()
+                        .filter(t -> t.getZahlungsstatus() == Zahlungsstatus.GELB)
+                        .count();
+
+        long offen =
+                teilnehmerDTOs.stream()
+                        .filter(t -> t.getZahlungsstatus() == Zahlungsstatus.ROT)
+                        .count();
+
+        summary.setAnzahlTeilnehmer(teilnehmerDTOs.size());
+        summary.setBezahlt((int) bezahlt);
+        summary.setTeilweise((int) teilweise);
+        summary.setOffen((int) offen);
+
+        summary.setSollSumme(sollSumme);
+        summary.setBezahltSumme(bezahltSumme);
+        summary.setOffenSumme(offenSumme);
+
+        response.setSummary(summary);
+
+        return response;
+    }
+
+    /* =========================================================
+       HELPER
+       ========================================================= */
+
+    private Person getPerson(Long id) {
+        return personRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, ErrorMessages.PERSON_NOT_FOUND
+                ));
+    }
+
+    private List<TeilnehmerKurzDTO> getTeilnehmerKurzDTOs(
+            Zahlungsnachweis zahlungsnachweis
+    ) {
+        return zahlungsnachweis.getPositionen()
+                .stream()
+                .map(ZahlungsPosition::getTeilnehmer)
+                .filter(Objects::nonNull)
+                .filter(t -> t.getPerson() != null)
+                .map(teilnehmer -> new TeilnehmerKurzDTO(
+                        teilnehmer.getId(),
+                        teilnehmer.getPerson().getId(),
+                        teilnehmer.getPerson().getVorname(),
+                        teilnehmer.getPerson().getName()
+                ))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<TeilnehmerKurzDTO> findOhneKuerzel(Long veranstaltungId) {
+
+        return teilnehmerRepository
+                .findByVeranstaltungIdAndFinanzGruppeIsNull(veranstaltungId)
+                .stream()
+                .map(teilnehmerMapper::toKurzDTO)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<TeilnehmerDetailDTO> findAllDetails(Long veranstaltungId) {
+
+        return teilnehmerRepository
+                .findAllWithPerson(veranstaltungId)
+                .stream()
+                .map(teilnehmerMapper::toDetailDTO)
+                .toList();
+    }
+    private void validateTeilnehmerKannEntferntWerden(
+            Long veranstaltungId,
+            Long personId
+    ) {
+        if (reisekostenabrechnungRepository
+                .existsByVeranstaltungAndPersonVerwendet(
+                        veranstaltungId,
+                        personId)) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    ErrorMessages.TEILNEHMER_USED_IN_REISEKOSTEN
+            );
+        }
+
+        Teilnehmer teilnehmer = teilnehmerRepository
+                .findByVeranstaltungIdAndPersonId(veranstaltungId, personId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        ErrorMessages.TEILNEHMER_NOT_FOUND
+                ));
+
+        if (zahlungsnachweisRepository
+                .existsByPositionenTeilnehmerId(teilnehmer.getId())) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    ErrorMessages.TEILNEHMER_HAS_ZAHLUNGSNACHWEISE
+            );
+        }
+    }
+    private void validateTeilnehmerKoennenEntferntWerden(
+            Long veranstaltungId,
+            List<Long> personIds
+    ) {
+        for (Long personId : personIds) {
+            validateTeilnehmerKannEntferntWerden(
+                    veranstaltungId,
+                    personId
+            );
+        }
+    }
+
+
+}

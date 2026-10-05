@@ -1,15 +1,15 @@
 package com.kcserver.unit;
 
-import com.kcserver.dto.abrechnung.AbrechnungBelegCreateDTO;
-import com.kcserver.dto.abrechnung.AbrechnungBelegDTO;
-import com.kcserver.dto.abrechnung.AbrechnungBuchungCreateDTO;
-import com.kcserver.entity.FinanzGruppe;
-import com.kcserver.entity.Teilnehmer;
-import com.kcserver.enumtype.FinanzKategorie;
-import com.kcserver.service.abrechnung.AbrechnungBelegService;
+import com.kcserver.kjfp.dto.abrechnung.AbrechnungBelegCreateDTO;
+import com.kcserver.kjfp.dto.abrechnung.AbrechnungBelegDTO;
+import com.kcserver.kjfp.dto.abrechnung.AbrechnungBuchungCreateDTO;
+import com.kcserver.kjfp.entity.FinanzGruppe;
+import com.kcserver.kjfp.entity.Teilnehmer;
+import com.kcserver.kjfp.enumtype.FinanzKategorie;
+import com.kcserver.kjfp.service.abrechnung.AbrechnungBelegService;
 import com.kcserver.integration.AbstractFinanzIntegrationTest;
-import com.kcserver.service.finanz.FinanzGruppeService;
-import com.kcserver.repository.finanz.FinanzGruppeRepository;
+import com.kcserver.kjfp.service.finanz.FinanzGruppeService;
+import com.kcserver.kjfp.repository.finanz.FinanzGruppeRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

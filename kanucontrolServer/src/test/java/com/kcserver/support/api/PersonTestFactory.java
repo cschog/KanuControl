@@ -3,7 +3,7 @@ package com.kcserver.support.api;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.MediaType;
 
-import com.kcserver.dto.person.PersonSaveDTO;
+import com.kcserver.core.dto.person.PersonSaveDTO;
 
 import com.kcserver.support.builder.MitgliedSaveDTOBuilder;
 import com.kcserver.support.builder.PersonSaveDTOBuilder;

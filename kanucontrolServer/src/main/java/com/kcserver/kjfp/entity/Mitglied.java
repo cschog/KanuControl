@@ -1,0 +1,39 @@
+package com.kcserver.kjfp.entity;
+
+import com.kcserver.core.audit.Auditable;
+import com.kcserver.kjfp.enumtype.MitgliedFunktion;
+import jakarta.persistence.*;
+import lombok.*;
+
+@Entity
+@Table(
+        name = "mitglied",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"person_id", "verein_id"})
+)
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
+public class Mitglied extends Auditable {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "person_id", nullable = false)
+    private Person person;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "verein_id", nullable = false)
+    private Verein verein;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = true)
+    private MitgliedFunktion funktion;
+
+    @Column(name = "haupt_verein", nullable = false)
+    private Boolean hauptVerein;
+}

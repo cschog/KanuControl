@@ -1,10 +1,10 @@
 package com.kcserver.integration;
 
-import com.kcserver.entity.Teilnehmer;
-import com.kcserver.entity.Veranstaltung;
-import com.kcserver.service.finanz.FinanzGruppeService;
-import com.kcserver.repository.TeilnehmerRepository;
-import com.kcserver.repository.VeranstaltungRepository;
+import com.kcserver.kjfp.entity.Teilnehmer;
+import com.kcserver.kjfp.entity.Veranstaltung;
+import com.kcserver.kjfp.service.finanz.FinanzGruppeService;
+import com.kcserver.kjfp.repository.TeilnehmerRepository;
+import com.kcserver.kjfp.repository.VeranstaltungRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;

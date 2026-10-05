@@ -1,0 +1,742 @@
+package com.kcserver.kjfp.service.person;
+
+
+import com.kcserver.core.dto.mitglied.MitgliedSaveDTO;
+import com.kcserver.core.dto.person.*;
+import com.kcserver.core.exception.ErrorMessages;
+import com.kcserver.core.mapper.PersonMapper;
+import com.kcserver.kjfp.dto.validation.DataStatus;
+import com.kcserver.kjfp.entity.*;
+import com.kcserver.kjfp.enumtype.CountryCode;
+import com.kcserver.kjfp.enumtype.TeilnehmerRolle;
+import com.kcserver.kjfp.repository.*;
+import com.kcserver.kjfp.repository.fahrkosten.FahrtabschnittMitfahrerRepository;
+import com.kcserver.kjfp.repository.fahrkosten.ReisekostenabrechnungRepository;
+import com.kcserver.kjfp.service.BankLookupService;
+import com.kcserver.kjfp.specification.PersonSpecification;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import com.kcserver.kjfp.dto.common.ScrollResponse;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
+
+@Service
+@Transactional
+public class PersonServiceImpl implements PersonService {
+
+    private final PersonRepository personRepository;
+    private final PersonMapper personMapper;
+    private final VereinRepository vereinRepository;
+    private final MitgliedRepository mitgliedRepository;
+    private final TeilnehmerRepository teilnehmerRepository;
+    private final ReisekostenabrechnungRepository reisekostenabrechnungRepository;
+    private final FahrtabschnittMitfahrerRepository fahrtabschnittMitfahrerRepository;
+    private final BankLookupService bankLookupService;
+    private final PersonDataStatusService personDataStatusService;
+    private final VeranstaltungRepository veranstaltungRepository;
+
+    public PersonServiceImpl(
+            PersonRepository personRepository,
+            PersonMapper personMapper,
+            VereinRepository vereinRepository,
+            MitgliedRepository mitgliedRepository,
+            TeilnehmerRepository teilnehmerRepository,
+            ReisekostenabrechnungRepository reisekostenabrechnungRepository,
+            FahrtabschnittMitfahrerRepository fahrtabschnittMitfahrerRepository,
+            BankLookupService bankLookupService,
+            PersonDataStatusService personDataStatusService,
+            VeranstaltungRepository veranstaltungRepository
+    ) {
+        this.personRepository = personRepository;
+        this.personMapper = personMapper;
+        this.vereinRepository = vereinRepository;
+        this.mitgliedRepository = mitgliedRepository;
+        this.teilnehmerRepository = teilnehmerRepository;
+        this.reisekostenabrechnungRepository = reisekostenabrechnungRepository;
+        this.fahrtabschnittMitfahrerRepository = fahrtabschnittMitfahrerRepository;
+        this.bankLookupService = bankLookupService;
+        this.personDataStatusService = personDataStatusService;
+        this.veranstaltungRepository = veranstaltungRepository;
+    }
+
+    /* =========================================================
+       READ
+       ========================================================= */
+    @Override
+    @Transactional(readOnly = true)
+    public ScrollResponse<PersonListDTO> scroll(
+            String cursorName,
+            String cursorVorname,
+            Long cursorId,
+            int size,
+            PersonSearchCriteria criteria
+    ) {
+
+        // Sonderfall: Nur Personen mit ERROR/WARNING
+        if ("problem".equalsIgnoreCase(criteria.getStatus())) {
+            return scrollProblemPersons(criteria);
+        }
+
+        boolean desc =
+                "desc".equalsIgnoreCase(criteria.getSortDirection());
+
+        Slice<Person> slice;
+
+        if (desc) {
+
+            slice = personRepository.scrollDesc(
+                    cursorName,
+                    cursorVorname,
+                    cursorId,
+                    criteria.getSearch(),
+                    criteria.getOrt(),
+                    criteria.getVereinId(),
+                    criteria.getAktiv(),
+                    PageRequest.of(0, size)
+            );
+
+        } else {
+
+            slice = personRepository.scroll(
+                    cursorName,
+                    cursorVorname,
+                    cursorId,
+                    criteria.getSearch(),
+                    criteria.getOrt(),
+                    criteria.getVereinId(),
+                    criteria.getAktiv(),
+                    PageRequest.of(0, size)
+            );
+        }
+
+        long total = personRepository.count(
+                PersonSpecification.byCriteria(criteria)
+        );
+
+        List<Person> persons = slice.getContent();
+
+        List<PersonListDTO> dtos = persons.stream()
+                .map(personMapper::toListDTO)
+                .toList();
+
+        enrichListStatus(persons, dtos);
+
+        return new ScrollResponse<>(
+                dtos,
+                total,
+                slice.hasNext()
+        );
+    }
+
+    private ScrollResponse<PersonListDTO> scrollProblemPersons(
+            PersonSearchCriteria criteria
+    ) {
+        Sort.Direction direction =
+                "desc".equalsIgnoreCase(criteria.getSortDirection())
+                        ? Sort.Direction.DESC
+                        : Sort.Direction.ASC;
+
+        String sortField = switch (criteria.getSortField()) {
+            case "vorname" -> "vorname";
+            case "ort" -> "ort";
+            case "alter" -> "geburtsdatum";
+            default -> "name";
+        };
+
+        Pageable pageable = PageRequest.of(
+                0,
+                1000,
+                Sort.by(direction, sortField)
+                        .and(Sort.by(
+                                direction,
+                                "vorname",
+                                "id"
+                        ))
+        );
+
+        List<Person> persons = personRepository
+                .findAll(
+                        PersonSpecification.byCriteria(criteria),
+                        pageable
+                )
+                .getContent();
+
+        List<PersonListDTO> dtos = persons.stream()
+                .map(personMapper::toListDTO)
+                .toList();
+
+        enrichListStatus(persons, dtos);
+
+        List<PersonListDTO> problemDtos = new ArrayList<>();
+
+        for (PersonListDTO dto : dtos) {
+            if (dto.getDataStatus() == DataStatus.ERROR
+                    || dto.getDataStatus() == DataStatus.WARNING) {
+                problemDtos.add(dto);
+            }
+        }
+
+        return new ScrollResponse<>(
+                problemDtos,
+                problemDtos.size(),
+                false
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PersonDetailDTO getPersonDetail(long id) {
+
+        Person person = personRepository.findDetailById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, ErrorMessages.PERSON_NOT_FOUND
+                ));
+
+        PersonDetailDTO dto = personMapper.toDetailDTO(person);
+        dto.setDataStatus(determinePersonStatus(person));
+
+        return dto;
+    }
+
+    private PersonDataStatusDTO determinePersonStatus(Person person) {
+
+        Optional<Veranstaltung> aktiveVeranstaltungOpt =
+                veranstaltungRepository.findByAktivTrue();
+
+        if (aktiveVeranstaltungOpt.isEmpty()) {
+            return personDataStatusService.determineStatus(
+                    person,
+                    false,
+                    false,
+                    false,
+                    null,
+                    null
+            );
+        }
+
+        Veranstaltung veranstaltung = aktiveVeranstaltungOpt.get();
+
+        Teilnehmer teilnehmer =
+                teilnehmerRepository
+                        .findByVeranstaltungAndPerson(veranstaltung, person)
+                        .orElse(null);
+
+        boolean isTeilnehmer = teilnehmer != null;
+
+        TeilnehmerRolle rolle =
+                teilnehmer != null
+                        ? teilnehmer.getRolle()
+                        : null;
+
+        boolean isLeiter =
+                veranstaltung.getLeiter() != null
+                        && veranstaltung.getLeiter().getId().equals(person.getId());
+
+        boolean isFahrer =
+                reisekostenabrechnungRepository
+                        .findFahrerPersonIdsByVeranstaltung(
+                                veranstaltung.getId(),
+                                List.of(person.getId())
+                        )
+                        .contains(person.getId());
+
+        return personDataStatusService.determineStatus(
+                person,
+                isLeiter,
+                isFahrer,
+                isTeilnehmer,
+                rolle,
+                veranstaltung.getBeginnDatum()
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PersonListDTO> getAll(Pageable pageable) {
+        Page<Person> page = personRepository.findAll(pageable);
+
+        List<Person> persons = page.getContent();
+
+        List<PersonListDTO> dtos = persons.stream()
+                .map(p -> {
+                    PersonListDTO dto = personMapper.toListDTO(p);
+                    dto.setMitgliedschaftenCount(
+                            p.getMitgliedschaften() == null
+                                    ? 0
+                                    : p.getMitgliedschaften().size()
+                    );
+                    return dto;
+                })
+                .toList();
+
+        enrichListStatus(persons, dtos);
+
+        return new org.springframework.data.domain.PageImpl<>(
+                dtos,
+                pageable,
+                page.getTotalElements()
+        );
+    }
+
+    @Override
+    public List<PersonRefDTO> searchRefList(
+            String search,
+            boolean nurLeiter,
+            LocalDate stichtag
+    ) {
+        List<Person> persons;
+
+        if (nurLeiter) {
+
+            LocalDate referenzDatum =
+                    stichtag != null
+                            ? stichtag
+                            : LocalDate.now();
+
+            persons = personRepository.searchLeiterRefList(
+                    search,
+                    referenzDatum.minusYears(18)
+            );
+
+        } else {
+            persons = personRepository.searchRefList(search);
+        }
+
+        return persons.stream()
+                .map(personMapper::toPersonRefDTO)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PersonListDTO> getAll(Sort sort, PersonSearchCriteria criteria) {
+
+        List<Person> persons = personRepository
+                .findAll(PersonSpecification.byCriteria(criteria), sort);
+
+        List<PersonListDTO> dtos = persons.stream()
+                .map(p -> {
+                    PersonListDTO dto = personMapper.toListDTO(p);
+                    dto.setMitgliedschaftenCount(
+                            p.getMitgliedschaften() == null
+                                    ? 0
+                                    : p.getMitgliedschaften().size()
+                    );
+                    return dto;
+                })
+                .toList();
+
+        enrichListStatus(persons, dtos);
+
+        return dtos;
+    }
+
+
+    /* =========================================================
+       CREATE
+       ========================================================= */
+
+    @Override
+    public PersonDetailDTO createPerson(PersonSaveDTO dto) {
+
+        if (dto.getGeburtsdatum() != null &&
+                personRepository.existsByVornameAndNameAndGeburtsdatum(
+                        dto.getVorname(),
+                        dto.getName(),
+                        dto.getGeburtsdatum()
+                )) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    ErrorMessages.PERSON_ALREADY_EXISTS
+            );
+        }
+
+        Person entity = personMapper.toNewEntity(dto);
+
+        if (entity.getCountryCode() == null) {
+            entity.setCountryCode(CountryCode.DE);
+        }
+        bankLookupService.fillBankNameIfMissing(entity);
+
+        Person saved = personRepository.save(entity);
+
+        // =====================================================
+        // Mitgliedschaften speichern
+        // =====================================================
+
+        if (dto.getMitgliedschaften() != null) {
+
+            for (MitgliedSaveDTO m : dto.getMitgliedschaften()) {
+
+                Verein verein = vereinRepository.findById(m.getVereinId())
+                        .orElseThrow(() -> new ResponseStatusException(
+                                HttpStatus.NOT_FOUND,
+                                ErrorMessages.VEREIN_NOT_FOUND
+                        ));
+
+                Mitglied mitglied = new Mitglied();
+
+                mitglied.setPerson(saved);
+
+                mitglied.setVerein(verein);
+
+                mitglied.setFunktion(
+                        m.getFunktion()
+                );
+
+                mitglied.setHauptVerein(
+                        Boolean.TRUE.equals(m.getHauptVerein())
+                );
+
+                mitgliedRepository.save(mitglied);
+            }
+        }
+
+        Person reloaded =
+                personRepository.findDetailById(saved.getId())
+                        .orElseThrow();
+
+        PersonDetailDTO result = personMapper.toDetailDTO(reloaded);
+        result.setDataStatus(determinePersonStatus(reloaded));
+
+        return result;
+    }
+
+    /* =========================================================
+       UPDATE
+       ========================================================= */
+
+    @Override
+    public PersonDetailDTO updatePerson(long id, PersonSaveDTO dto) {
+
+        // 1. LOAD
+        Person existing = personRepository.findDetailById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, ErrorMessages.PERSON_NOT_FOUND
+                ));
+
+        // 2. MERGE (finale Werte!)
+        String name = merge(dto.getName(), existing.getName());
+        String vorname = merge(dto.getVorname(), existing.getVorname());
+        LocalDate geburtsdatum = merge(dto.getGeburtsdatum(), existing.getGeburtsdatum());
+
+        // 3. VALIDATE
+        ensureUniquePerson(vorname, name, geburtsdatum, existing.getId());
+
+        // 4. APPLY
+        personMapper.updateFromDTO(dto, existing);
+
+        bankLookupService.fillBankNameIfMissing(existing);
+
+        // 5. EXTRA LOGIK
+        syncMitgliedschaften(existing, dto.getMitgliedschaften());
+
+        if (existing.getCountryCode() == null) {
+            existing.setCountryCode(CountryCode.DE);
+        }
+
+        PersonDetailDTO result = personMapper.toDetailDTO(existing);
+        result.setDataStatus(determinePersonStatus(existing));
+
+        return result;
+    }
+
+    /* =========================================================
+       DELETE
+       ========================================================= */
+
+    @Override
+    public void deletePerson(long id) {
+        if (!personRepository.existsById(id)) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    ErrorMessages.PERSON_NOT_FOUND
+            );
+        }
+
+        List<Teilnehmer> teilnahmen =
+                teilnehmerRepository.findByPersonId(id);
+
+        if (!teilnahmen.isEmpty()) {
+
+            String veranstaltungen = teilnahmen.stream()
+                    .map(t -> "• " + t.getVeranstaltung().getName())
+                    .distinct()
+                    .sorted()
+                    .collect(Collectors.joining("\n"));
+
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    ErrorMessages.PERSON_CANNOT_BE_DELETED
+                            + "\n\nVerwendet in:\n"
+                            + veranstaltungen
+            );
+        }
+
+        if (reisekostenabrechnungRepository.existsByFahrerId(id)) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    ErrorMessages.PERSON_USED_AS_FAHRER
+            );
+        }
+
+        if (fahrtabschnittMitfahrerRepository.existsByPersonId(id)) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    ErrorMessages.PERSON_USED_AS_MITFAHRER
+            );
+        }
+
+        personRepository.deleteById(id);
+    }
+
+    @Override
+    public BulkDeleteResultDTO deletePersons(List<Long> ids) {
+
+        if (ids == null || ids.isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    ErrorMessages.PERSON_NO_SELECTION
+            );
+        }
+
+        List<Long> deletedIds = new java.util.ArrayList<>();
+        List<BulkDeleteErrorDTO> errors = new java.util.ArrayList<>();
+
+        for (Long id : ids) {
+            try {
+                deletePerson(id);
+                deletedIds.add(id);
+
+            } catch (ResponseStatusException e) {
+
+                String message = e.getReason() != null
+                        ? e.getReason()
+                        : ErrorMessages.PERSON_CANNOT_BE_DELETED;
+
+                errors.add(
+                        new BulkDeleteErrorDTO(id, message)
+                );
+            }
+        }
+
+        return new BulkDeleteResultDTO(
+                deletedIds,
+                errors
+        );
+    }
+
+    /* =========================================================
+       SEARCH
+       ========================================================= */
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PersonListDTO> searchList(
+            PersonSearchCriteria criteria,
+            Pageable pageable
+    ) {
+        Page<Person> page = personRepository
+                .findAll(
+                        PersonSpecification.byCriteria(criteria),
+                        pageable
+                );
+
+        List<Person> persons = page.getContent();
+
+        List<PersonListDTO> dtos = persons.stream()
+                .map(p -> {
+                    PersonListDTO dto = personMapper.toListDTO(p);
+                    dto.setMitgliedschaftenCount(
+                            p.getMitgliedschaften() == null
+                                    ? 0
+                                    : p.getMitgliedschaften().size()
+                    );
+                    return dto;
+                })
+                .toList();
+
+        enrichListStatus(persons, dtos);
+
+        return new org.springframework.data.domain.PageImpl<>(
+                dtos,
+                pageable,
+                page.getTotalElements()
+        );
+    }
+
+    private void enrichListStatus(
+            List<Person> persons,
+            List<PersonListDTO> dtos
+    ) {
+        if (persons.isEmpty()) {
+            return;
+        }
+
+        Optional<Veranstaltung> aktiveVeranstaltungOpt =
+                veranstaltungRepository.findByAktivTrue();
+
+        if (aktiveVeranstaltungOpt.isEmpty()) {
+            for (int i = 0; i < persons.size(); i++) {
+                var status = personDataStatusService.determineStatus(
+                        persons.get(i),
+                        false,
+                        false,
+                        false,
+                        null,
+                        null
+                );
+
+                dtos.get(i).setDataStatus(status.getStatus());
+            }
+            return;
+        }
+
+        Veranstaltung veranstaltung = aktiveVeranstaltungOpt.get();
+
+        List<Long> personIds = persons.stream()
+                .map(Person::getId)
+                .toList();
+
+        var fahrerIds =
+                reisekostenabrechnungRepository.findFahrerPersonIdsByVeranstaltung(
+                        veranstaltung.getId(),
+                        personIds
+                );
+
+        for (int i = 0; i < persons.size(); i++) {
+
+            Person person = persons.get(i);
+            PersonListDTO dto = dtos.get(i);
+
+            Teilnehmer teilnehmer =
+                    teilnehmerRepository
+                            .findByVeranstaltungAndPerson(veranstaltung, person)
+                            .orElse(null);
+
+            boolean isTeilnehmer = teilnehmer != null;
+
+            TeilnehmerRolle rolle =
+                    teilnehmer != null
+                            ? teilnehmer.getRolle()
+                            : null;
+
+            boolean isLeiter =
+                    veranstaltung.getLeiter() != null
+                            && veranstaltung.getLeiter().getId().equals(person.getId());
+
+            boolean isFahrer =
+                    fahrerIds.contains(person.getId());
+
+            var status = personDataStatusService.determineStatus(
+                    person,
+                    isLeiter,
+                    isFahrer,
+                    isTeilnehmer,
+                    rolle,
+                    veranstaltung.getBeginnDatum()
+            );
+
+            dto.setDataStatus(status.getStatus());
+        }
+    }
+
+    /* =========================================================
+       Mitgliedschaften synchronisieren
+       ========================================================= */
+
+    private void syncMitgliedschaften(
+            Person person,
+            List<MitgliedSaveDTO> dtos
+    ) {
+        List<Mitglied> existing = person.getMitgliedschaften();
+
+        if (dtos == null) {
+            existing.clear();
+            return;
+        }
+
+        // 1️⃣ Entfernte Mitgliedschaften löschen
+        existing.removeIf(m ->
+                dtos.stream().noneMatch(dto ->
+                        dto.getVereinId().equals(m.getVerein().getId())
+                )
+        );
+
+        // 2️⃣ Upsert (update oder neu)
+        for (MitgliedSaveDTO dto : dtos) {
+
+            Mitglied mitglied = existing.stream()
+                    .filter(m -> m.getVerein().getId().equals(dto.getVereinId()))
+                    .findFirst()
+                    .orElseGet(() -> {
+                        Verein verein = vereinRepository.findById(dto.getVereinId())
+                                .orElseThrow(() -> new ResponseStatusException(
+                                        HttpStatus.NOT_FOUND,
+                                        ErrorMessages.VEREIN_NOT_FOUND
+                                ));
+
+                        Mitglied m = new Mitglied();
+                        m.setPerson(person);
+                        m.setVerein(verein);
+                        existing.add(m);
+                        return m;
+                    });
+
+            mitglied.setFunktion(dto.getFunktion());
+            mitglied.setHauptVerein(Boolean.TRUE.equals(dto.getHauptVerein()));
+        }
+
+        // 3️⃣ 🔑 HAUPTVEREIN-REGEL
+        List<Mitglied> hauptvereine = existing.stream()
+                .filter(Mitglied::getHauptVerein)
+                .toList();
+
+        if (hauptvereine.size() > 1) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    ErrorMessages.PERSON_ONLY_ONE_HAUPTVEREIN
+            );
+        }
+
+        if (hauptvereine.size() == 1) {
+            Mitglied haupt = hauptvereine.getFirst();
+
+            existing.forEach(m ->
+                    m.setHauptVerein(m == haupt)
+            );
+        }
+    }
+    private <T> T merge(T dtoValue, T entityValue) {
+        return dtoValue != null ? dtoValue : entityValue;
+    }
+
+    private void ensureUniquePerson(
+            String vorname,
+            String name,
+            LocalDate geburtsdatum,
+            Long currentId
+    ) {
+        personRepository
+                .findByVornameAndNameAndGeburtsdatum(vorname, name, geburtsdatum)
+                .filter(p -> !p.getId().equals(currentId))
+                .ifPresent(p -> {
+                    throw new ResponseStatusException(
+                            HttpStatus.CONFLICT,
+                            ErrorMessages.PERSON_ALREADY_EXISTS
+                    );
+                });
+    }
+}

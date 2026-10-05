@@ -3,7 +3,7 @@ package com.kcserver.support.api;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.MediaType;
-import com.kcserver.dto.verein.VereinDTO;
+import com.kcserver.kjfp.dto.verein.VereinDTO;
 import com.kcserver.support.web.AbstractApiTestFactory;
 import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
