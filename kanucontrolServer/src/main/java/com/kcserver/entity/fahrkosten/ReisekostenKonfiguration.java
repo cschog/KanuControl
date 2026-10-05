@@ -1,4 +1,4 @@
-package com.kcserver.entity;
+package com.kcserver.entity.fahrkosten;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

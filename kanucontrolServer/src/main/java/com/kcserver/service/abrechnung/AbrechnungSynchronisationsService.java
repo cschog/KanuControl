@@ -2,6 +2,9 @@ package com.kcserver.service.abrechnung;
 
 import com.kcserver.entity.*;
 
+import com.kcserver.entity.abrechnung.Abrechnung;
+import com.kcserver.entity.abrechnung.AbrechnungBeleg;
+import com.kcserver.entity.abrechnung.AbrechnungBuchung;
 import com.kcserver.enumtype.BuchungsHerkunft;
 import com.kcserver.enumtype.FinanzKategorie;
 import com.kcserver.exception.ErrorMessages;

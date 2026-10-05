@@ -1,6 +1,8 @@
-package com.kcserver.entity;
+package com.kcserver.entity.abrechnung;
 
 import com.kcserver.audit.Auditable;
+import com.kcserver.entity.Dokument;
+import com.kcserver.entity.FinanzGruppe;
 import com.kcserver.enumtype.BuchungsHerkunft;
 import jakarta.persistence.*;
 import lombok.Getter;

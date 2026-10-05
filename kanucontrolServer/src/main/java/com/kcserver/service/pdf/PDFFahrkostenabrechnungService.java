@@ -2,6 +2,10 @@ package com.kcserver.service.pdf;
 
 import com.kcserver.dto.reisekosten.KostenZeile;
 import com.kcserver.entity.*;
+import com.kcserver.entity.fahrkosten.Fahrtabschnitt;
+import com.kcserver.entity.fahrkosten.FahrtabschnittMitfahrer;
+import com.kcserver.entity.fahrkosten.ReisekostenKonfiguration;
+import com.kcserver.entity.fahrkosten.Reisekostenabrechnung;
 import com.kcserver.repository.fahrkosten.ReisekostenKonfigurationRepository;
 import com.kcserver.repository.fahrkosten.ReisekostenabrechnungRepository;
 import com.kcserver.util.PdfFilenameUtil;

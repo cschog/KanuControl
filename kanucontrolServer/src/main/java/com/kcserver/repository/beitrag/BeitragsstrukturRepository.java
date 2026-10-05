@@ -1,6 +1,6 @@
 package com.kcserver.repository.beitrag;
 
-import com.kcserver.entity.Beitragsstruktur;
+import com.kcserver.entity.beitraege.Beitragsstruktur;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

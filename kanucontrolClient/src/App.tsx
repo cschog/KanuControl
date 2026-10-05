@@ -27,6 +27,7 @@ import ReisekostenDetailPage from "@/components/finanzen/reisekosten/Reisekosten
 import ActiveSessionsPage from "@/components/admin/audit/ActiveSessionsPage";
 import AuditHistoryPage from "@/components/admin/audit/AuditHistoryPage";
 import AuditPage from "@/components/admin/audit/AuditPage";
+import VermietungStart from "@/components/vermietung/VermietungStart";
 
 const App: React.FC = () => {
   return (
@@ -47,6 +48,7 @@ const App: React.FC = () => {
           <Route path="/teilnehmer" element={<TeilnehmerScreen />} />
           <Route path="/dokumente" element={<DokumenteScreen />} />
           <Route path="/verwaltung" element={<VerwaltungPage />} />
+          <Route path="/vermietung" element={<VermietungStart />} />
 
           {/* =====================================================
               FINANZEN – NEUE STRUKTUR

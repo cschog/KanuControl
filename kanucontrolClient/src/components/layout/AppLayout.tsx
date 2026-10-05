@@ -12,7 +12,13 @@ export default function AppLayout() {
   const [floatingFooter, setFloatingFooter] = useState(false);
   const [footerHeight, setFooterHeight] = useState(0);
 
-  const isStartMenu = location.pathname === "/" || location.pathname === "/startmenue";
+  const isVermietung = location.pathname.startsWith("/vermietung");
+
+const isStartMenu =
+  location.pathname === "/" ||
+  location.pathname === "/startmenue" ||
+  location.pathname === "/vermietung";
+  
   const hideBackButtonOn =
     ["/veranstaltungen",
       "/verwaltung",
@@ -89,8 +95,8 @@ export default function AppLayout() {
                 ]
               : []),
             {
-              label: "Zurück zum Startmenü",
-              path: "/startmenue",
+              label: isVermietung ? "Zurück zur Vermietung" : "Zurück zum Startmenü",
+              path: isVermietung ? "/vermietung" : "/startmenue",
             },
           ]}
         />

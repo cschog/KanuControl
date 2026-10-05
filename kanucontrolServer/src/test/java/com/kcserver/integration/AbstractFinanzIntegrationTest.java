@@ -2,15 +2,20 @@ package com.kcserver.integration;
 
 import com.kcserver.dto.veranstaltung.VeranstaltungCreateDTO;
 import com.kcserver.entity.*;
+import com.kcserver.entity.abrechnung.Abrechnung;
+import com.kcserver.entity.beitraege.Beitragsregel;
+import com.kcserver.entity.beitraege.Beitragsstruktur;
 import com.kcserver.enumtype.AbrechnungsStatus;
 import com.kcserver.enumtype.Sex;
+import com.kcserver.enumtype.TeilnehmerRolle;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.repository.abrechnung.AbrechnungRepository;
-import com.kcserver.repository.finanz.FinanzGruppeRepository;
+import com.kcserver.repository.beitrag.BeitragsstrukturRepository;
+
 import com.kcserver.service.abrechnung.AbrechnungBelegService;
 import com.kcserver.service.abrechnung.AbrechnungService;
 import com.kcserver.service.finanz.FinanzGruppeService;
-import com.kcserver.service.planung.PlanungService;
+
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
 import com.kcserver.repository.*;
 import com.kcserver.service.veranstaltung.VeranstaltungService;
@@ -19,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 public abstract class AbstractFinanzIntegrationTest
         extends AbstractTenantIntegrationTest {
@@ -28,9 +34,12 @@ public abstract class AbstractFinanzIntegrationTest
     @Autowired protected VeranstaltungRepository veranstaltungRepository;
     @Autowired protected TeilnehmerRepository teilnehmerRepository;
     @Autowired protected AbrechnungRepository abrechnungRepository;
-    @Autowired protected FinanzGruppeRepository finanzGruppeRepository;
     @Autowired protected FinanzGruppeService finanzGruppeService;
-    @Autowired protected PlanungService planungService;
+
+
+    @Autowired protected UnterkunftsartRepository unterkunftsartRepository;
+    @Autowired protected VerpflegungsmodellRepository verpflegungsmodellRepository;
+    @Autowired protected BeitragsstrukturRepository beitragsstrukturRepository;
 
     @Autowired
     VeranstaltungService veranstaltungService;
@@ -69,6 +78,10 @@ public abstract class AbstractFinanzIntegrationTest
 
         v = veranstaltungRepository.save(v);
 
+        // HIER
+
+        addSimulationVoraussetzungen(v);
+
         // System-Finanzgruppe für das Vereinskonto
         finanzGruppeService.getOrCreateVereinsFinanzGruppe(v);
 
@@ -106,6 +119,48 @@ public abstract class AbstractFinanzIntegrationTest
         dto.setLeiterId(leiter.getId());
 
         return veranstaltungService.create(dto).data().getId();
+    }
+
+    protected void addSimulationVoraussetzungen(Veranstaltung veranstaltung) {
+        Unterkunftsart unterkunftsart =
+                unterkunftsartRepository.save(
+                        Unterkunftsart.builder()
+                                .bezeichnung("Test Unterkunft " + veranstaltung.getId())
+                                .preisProPersonUndNacht(new BigDecimal("20"))
+                                .aktiv(true)
+                                .build()
+                );
+
+        Verpflegungsmodell verpflegungsmodell =
+                verpflegungsmodellRepository.save(
+                        Verpflegungsmodell.builder()
+                                .bezeichnung("Test Verpflegung " + veranstaltung.getId())
+                                .preisProPersonUndTag(new BigDecimal("12"))
+                                .aktiv(true)
+                                .build()
+                );
+
+        Beitragsstruktur beitragsstruktur = new Beitragsstruktur();
+        beitragsstruktur.setName("Test Beitragsstruktur " + veranstaltung.getId());
+        beitragsstruktur.setAktiv(true);
+        beitragsstruktur.setTemplate(false);
+        beitragsstruktur.setSystem(false);
+
+        Beitragsregel regel = new Beitragsregel();
+        regel.setSortierung(1);
+        regel.setAlterBis(18);
+        regel.setRolle(TeilnehmerRolle.MITARBEITER);
+        regel.setBeitrag(new BigDecimal("100"));
+        regel.setStruktur(beitragsstruktur);
+
+        beitragsstruktur.setRegeln(List.of(regel));
+        beitragsstruktur = beitragsstrukturRepository.save(beitragsstruktur);
+
+        veranstaltung.setUnterkunftsart(unterkunftsart);
+        veranstaltung.setVerpflegungsmodell(verpflegungsmodell);
+        veranstaltung.setBeitragsstruktur(beitragsstruktur);
+
+        veranstaltungRepository.save(veranstaltung);
     }
 
     protected Long createTestVeranstaltung(

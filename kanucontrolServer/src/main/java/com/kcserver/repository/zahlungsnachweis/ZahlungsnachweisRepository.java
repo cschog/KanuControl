@@ -3,7 +3,7 @@ package com.kcserver.repository.zahlungsnachweis;
 import com.kcserver.dto.zahlungsnachweis.FinanzGruppeZahlungDTO;
 import com.kcserver.dto.zahlungsnachweis.OffeneUeberzahlungDTO;
 import com.kcserver.dto.zahlungsnachweis.ZahlungsnachweisListDTO;
-import com.kcserver.entity.Zahlungsnachweis;
+import com.kcserver.entity.beitraege.Zahlungsnachweis;
 import com.kcserver.enumtype.Zahlungsweg;
 import com.kcserver.repository.abrechnung.TeilnehmerZahlungSumme;
 import org.springframework.data.jpa.repository.EntityGraph;

@@ -1,6 +1,6 @@
 package com.kcserver.repository.fahrkosten;
 
-import com.kcserver.entity.ReisekostenKonfiguration;
+import com.kcserver.entity.fahrkosten.ReisekostenKonfiguration;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDate;

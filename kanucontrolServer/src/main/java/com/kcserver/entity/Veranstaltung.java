@@ -1,6 +1,8 @@
 package com.kcserver.entity;
 
 import com.kcserver.audit.Auditable;
+import com.kcserver.entity.beitraege.Beitragsstruktur;
+import com.kcserver.entity.beitraege.Zahlungsnachweis;
 import com.kcserver.enumtype.CountryCode;
 import com.kcserver.enumtype.VeranstaltungScope;
 import com.kcserver.enumtype.VeranstaltungTyp;

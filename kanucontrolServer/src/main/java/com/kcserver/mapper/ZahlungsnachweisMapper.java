@@ -3,8 +3,8 @@ package com.kcserver.mapper;
 import com.kcserver.dto.abrechnung.DokumentDTO;
 import com.kcserver.dto.zahlungsnachweis.*;
 import com.kcserver.entity.Dokument;
-import com.kcserver.entity.ZahlungsPosition;
-import com.kcserver.entity.Zahlungsnachweis;
+import com.kcserver.entity.beitraege.ZahlungsPosition;
+import com.kcserver.entity.beitraege.Zahlungsnachweis;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

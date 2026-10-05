@@ -2,6 +2,7 @@ package com.kcserver.service;
 
 import com.kcserver.config.FoerderConfig;
 import com.kcserver.entity.*;
+import com.kcserver.entity.planung.Planung;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.dto.simulation.PlanungsSimulation;
 import com.kcserver.exception.ErrorMessages;

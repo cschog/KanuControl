@@ -1,7 +1,7 @@
 package com.kcserver.service.postalcode;
 
 import com.kcserver.dto.postalcode.PostalCodeLookupResponse;
-import com.kcserver.entity.PostalCode;
+import com.kcserver.entity.postalcode.PostalCode;
 import com.kcserver.enumtype.CountryCode;
 import com.kcserver.repository.postalcode.PostalCodeRepository;
 

@@ -1,4 +1,4 @@
-package com.kcserver.entity;
+package com.kcserver.entity.beitraege;
 
 import jakarta.persistence.*;
 import com.kcserver.audit.Auditable;

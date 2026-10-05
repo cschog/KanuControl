@@ -1,6 +1,6 @@
 package com.kcserver.repository.abrechnung;
 
-import com.kcserver.entity.Abrechnung;
+import com.kcserver.entity.abrechnung.Abrechnung;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

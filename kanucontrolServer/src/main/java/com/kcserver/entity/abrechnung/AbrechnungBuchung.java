@@ -1,5 +1,7 @@
-package com.kcserver.entity;
+package com.kcserver.entity.abrechnung;
 
+import com.kcserver.entity.fahrkosten.Reisekostenabrechnung;
+import com.kcserver.entity.Teilnehmer;
 import com.kcserver.enumtype.BuchungsHerkunft;
 import com.kcserver.enumtype.FinanzKategorie;
 import com.kcserver.service.finanz.FinanzPosition;

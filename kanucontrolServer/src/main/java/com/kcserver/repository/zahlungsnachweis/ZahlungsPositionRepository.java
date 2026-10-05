@@ -1,6 +1,6 @@
 package com.kcserver.repository.zahlungsnachweis;
 
-import com.kcserver.entity.ZahlungsPosition;
+import com.kcserver.entity.beitraege.ZahlungsPosition;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

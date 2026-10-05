@@ -1,4 +1,4 @@
-package com.kcserver.entity;
+package com.kcserver.entity.fahrkosten;
 
 import com.kcserver.enumtype.CountryCode;
 import jakarta.persistence.*;

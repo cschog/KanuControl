@@ -3,6 +3,8 @@ package com.kcserver.service.zahlungsnachweis;
 import com.kcserver.dto.teilnehmer.TeilnehmerKurzDTO;
 import com.kcserver.dto.zahlungsnachweis.*;
 import com.kcserver.entity.*;
+import com.kcserver.entity.beitraege.ZahlungsPosition;
+import com.kcserver.entity.beitraege.Zahlungsnachweis;
 import com.kcserver.enumtype.Zahlungsweg;
 import com.kcserver.exception.ErrorMessages;
 import com.kcserver.mapper.ZahlungsnachweisMapper;

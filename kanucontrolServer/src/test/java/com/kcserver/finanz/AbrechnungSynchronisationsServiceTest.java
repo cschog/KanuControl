@@ -1,14 +1,13 @@
 package com.kcserver.finanz;
 
-import com.kcserver.entity.Abrechnung;
-import com.kcserver.entity.AbrechnungBeleg;
-import com.kcserver.entity.AbrechnungBuchung;
+import com.kcserver.entity.abrechnung.Abrechnung;
+import com.kcserver.entity.abrechnung.AbrechnungBeleg;
+import com.kcserver.entity.abrechnung.AbrechnungBuchung;
 import com.kcserver.entity.FinanzGruppe;
 import com.kcserver.entity.Teilnehmer;
 import com.kcserver.entity.Veranstaltung;
 import com.kcserver.enumtype.BuchungsHerkunft;
 import com.kcserver.enumtype.FinanzKategorie;
-import com.kcserver.enumtype.Zahlungsweg;
 import com.kcserver.repository.finanz.FinanzGruppeRepository;
 import com.kcserver.repository.TeilnehmerRepository;
 import com.kcserver.repository.abrechnung.AbrechnungRepository;
@@ -137,9 +136,16 @@ class AbrechnungSynchronisationsServiceTest {
                         BuchungsHerkunft.TEILNEHMERBEITRAG
                 )
         )
-                .thenReturn(
-                        beleg
-                );
+                .thenReturn(beleg);
+
+        when(
+                abrechnungBelegService.getOrCreateBeleg(
+                        abrechnung,
+                        vk,
+                        BuchungsHerkunft.KJFP
+                )
+        )
+                .thenReturn(beleg);
 
 
         // ---------------------------------------------------------
@@ -148,24 +154,10 @@ class AbrechnungSynchronisationsServiceTest {
 
         when(
                 zahlungsnachweisRepository
-                        .sumBetragByVeranstaltungAndZahlungsweg(
-                                1L,
-                                Zahlungsweg.UEBERWEISUNG
-                        )
+                        .sumBetragByVeranstaltung(1L)
         )
                 .thenReturn(
-                        new BigDecimal("75.00")
-                );
-
-        when(
-                zahlungsnachweisRepository
-                        .sumBetragByVeranstaltungAndZahlungsweg(
-                                1L,
-                                Zahlungsweg.QUITTUNG
-                        )
-        )
-                .thenReturn(
-                        new BigDecimal("25.00")
+                        new BigDecimal("100.00")
                 );
 
 
@@ -194,7 +186,8 @@ class AbrechnungSynchronisationsServiceTest {
         when(
                 foerderService.berechneKjfpZuschuss(
                         any(Veranstaltung.class),
-                        anyList()
+                        anyList(),
+                        eq(true)
                 )
         )
                 .thenReturn(

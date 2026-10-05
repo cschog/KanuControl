@@ -1,5 +1,7 @@
 package com.kcserver.entity;
 
+import com.kcserver.entity.abrechnung.AbrechnungBeleg;
+import com.kcserver.entity.beitraege.Zahlungsnachweis;
 import com.kcserver.enumtype.ReferenzObjekt;
 import jakarta.persistence.*;
 import lombok.Getter;

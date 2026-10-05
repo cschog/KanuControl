@@ -1,7 +1,7 @@
 package com.kcserver.service.planung;
 
-import com.kcserver.entity.Planung;
-import com.kcserver.entity.PlanungPosition;
+import com.kcserver.entity.planung.Planung;
+import com.kcserver.entity.planung.PlanungPosition;
 import com.kcserver.enumtype.FinanzKategorie;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

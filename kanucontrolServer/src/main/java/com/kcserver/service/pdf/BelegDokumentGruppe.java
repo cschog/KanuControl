@@ -1,6 +1,6 @@
 package com.kcserver.service.pdf;
 
-import com.kcserver.entity.AbrechnungBeleg;
+import com.kcserver.entity.abrechnung.AbrechnungBeleg;
 
 import java.util.List;
 

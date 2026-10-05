@@ -2,7 +2,7 @@ package com.kcserver.service.postalcode;
 
 import com.kcserver.dto.postalcode.PostalCodeCountryResponse;
 import com.kcserver.dto.postalcode.PostalCodeCountryUpdateRequest;
-import com.kcserver.entity.PostalCodeCountry;
+import com.kcserver.entity.postalcode.PostalCodeCountry;
 import com.kcserver.enumtype.CountryCode;
 import com.kcserver.repository.postalcode.PostalCodeCountryRepository;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package com.kcserver.entity;
+package com.kcserver.entity.planung;
 
 import com.kcserver.enumtype.FinanzKategorie;
 import com.kcserver.service.finanz.FinanzPosition;

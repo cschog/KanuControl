@@ -1,7 +1,7 @@
 package com.kcserver.service.pdf;
 
-import com.kcserver.entity.AbrechnungBeleg;
-import com.kcserver.entity.AbrechnungBuchung;
+import com.kcserver.entity.abrechnung.AbrechnungBeleg;
+import com.kcserver.entity.abrechnung.AbrechnungBuchung;
 import com.kcserver.entity.Dokument;
 import com.kcserver.enumtype.BuchungsHerkunft;
 import com.kcserver.enumtype.PdfDokumentTyp;

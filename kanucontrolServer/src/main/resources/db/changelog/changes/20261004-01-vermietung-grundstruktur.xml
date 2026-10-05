@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="20261004-01-vermietung-grundstruktur" author="chris">
+
+        <createTable tableName="mietobjekt">
+
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"
+                             primaryKeyName="pk_mietobjekt"
+                             nullable="false"/>
+            </column>
+
+            <column name="verein_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_mietobjekt_verein"
+                             references="verein(id)"/>
+            </column>
+
+            <column name="bezeichnung" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="beschreibung" type="VARCHAR(2000)"/>
+
+            <column name="strasse" type="VARCHAR(255)"/>
+            <column name="plz" type="VARCHAR(255)"/>
+            <column name="ort" type="VARCHAR(255)"/>
+
+            <column name="country_code" type="CHAR(2)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Aktuell ausgewähltes Mietobjekt -->
+            <column name="aktiv" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Kann dieses Mietobjekt neu vermietet werden? -->
+            <column name="mietbar" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_by" type="VARCHAR(255)"/>
+
+            <column name="last_modified_at" type="TIMESTAMP WITH TIME ZONE"/>
+
+            <column name="last_modified_by" type="VARCHAR(255)"/>
+
+        </createTable>
+
+
+        <createTable tableName="mietbereich">
+
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"
+                             primaryKeyName="pk_mietbereich"
+                             nullable="false"/>
+            </column>
+
+            <column name="mietobjekt_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_mietbereich_mietobjekt"
+                             references="mietobjekt(id)"/>
+            </column>
+
+            <column name="bezeichnung" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="beschreibung" type="VARCHAR(2000)"/>
+
+            <!-- Kann dieser Mietbereich neu vermietet werden? -->
+            <column name="mietbar" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_by" type="VARCHAR(255)"/>
+
+            <column name="last_modified_at" type="TIMESTAMP WITH TIME ZONE"/>
+
+            <column name="last_modified_by" type="VARCHAR(255)"/>
+
+        </createTable>
+
+
+        <createTable tableName="mietbereich_eigenschaft">
+
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"
+                             primaryKeyName="pk_mietbereich_eigenschaft"
+                             nullable="false"/>
+            </column>
+
+            <column name="mietbereich_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_mietbereich_eigenschaft_bereich"
+                             references="mietbereich(id)"/>
+            </column>
+
+            <column name="bezeichnung" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="typ" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="wert" type="VARCHAR(1000)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_by" type="VARCHAR(255)"/>
+
+            <column name="last_modified_at" type="TIMESTAMP WITH TIME ZONE"/>
+
+            <column name="last_modified_by" type="VARCHAR(255)"/>
+
+        </createTable>
+
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,6 +1,8 @@
 package com.kcserver.finanz;
 
 import com.kcserver.entity.*;
+import com.kcserver.entity.beitraege.Beitragsregel;
+import com.kcserver.entity.beitraege.Beitragsstruktur;
 import com.kcserver.service.AltersService;
 import com.kcserver.service.beitrag.BeitragsregelService;
 import com.kcserver.service.beitrag.TeilnehmerBeitragService;

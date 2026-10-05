@@ -1,7 +1,9 @@
 package com.kcserver.mapper;
 
 import com.kcserver.dto.abrechnung.*;
-import com.kcserver.entity.*;
+import com.kcserver.entity.abrechnung.Abrechnung;
+import com.kcserver.entity.abrechnung.AbrechnungBeleg;
+import com.kcserver.entity.abrechnung.AbrechnungBuchung;
 import com.kcserver.enumtype.BuchungsHerkunft;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

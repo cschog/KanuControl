@@ -1,10 +1,10 @@
 package com.kcserver.service.abrechnung;
 
 import com.kcserver.dto.abrechnung.DokumentDTO;
-import com.kcserver.entity.AbrechnungBeleg;
+import com.kcserver.entity.abrechnung.AbrechnungBeleg;
 import com.kcserver.entity.Dokument;
 import com.kcserver.entity.FinanzGruppe;
-import com.kcserver.entity.Zahlungsnachweis;
+import com.kcserver.entity.beitraege.Zahlungsnachweis;
 import com.kcserver.exception.ErrorMessages;
 import com.kcserver.mapper.DokumentMapper;
 import com.kcserver.repository.abrechnung.AbrechnungBelegRepository;

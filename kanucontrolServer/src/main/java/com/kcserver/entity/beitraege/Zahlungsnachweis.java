@@ -1,5 +1,8 @@
-package com.kcserver.entity;
+package com.kcserver.entity.beitraege;
 
+import com.kcserver.entity.Dokument;
+import com.kcserver.entity.FinanzGruppe;
+import com.kcserver.entity.Veranstaltung;
 import com.kcserver.enumtype.Zahlungsweg;
 import jakarta.persistence.*;
 import com.kcserver.audit.Auditable;

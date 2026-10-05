@@ -1,7 +1,7 @@
 package com.kcserver.service.zahlungsnachweis;
 
-import com.kcserver.entity.Zahlungsnachweis;
-import com.kcserver.entity.ZahlungsPosition;
+import com.kcserver.entity.beitraege.Zahlungsnachweis;
+import com.kcserver.entity.beitraege.ZahlungsPosition;
 import com.kcserver.repository.zahlungsnachweis.ZahlungsnachweisRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

@@ -2,7 +2,7 @@ package com.kcserver.service.reisekosten;
 
 import com.kcserver.dto.reisekosten.ReisekostenKonfigurationResponse;
 import com.kcserver.dto.reisekosten.ReisekostenKonfigurationSaveRequest;
-import com.kcserver.entity.ReisekostenKonfiguration;
+import com.kcserver.entity.fahrkosten.ReisekostenKonfiguration;
 import com.kcserver.repository.fahrkosten.ReisekostenKonfigurationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

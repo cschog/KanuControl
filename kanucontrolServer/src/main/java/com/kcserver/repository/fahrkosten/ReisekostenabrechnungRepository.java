@@ -1,6 +1,6 @@
 package com.kcserver.repository.fahrkosten;
 
-import com.kcserver.entity.Reisekostenabrechnung;
+import com.kcserver.entity.fahrkosten.Reisekostenabrechnung;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

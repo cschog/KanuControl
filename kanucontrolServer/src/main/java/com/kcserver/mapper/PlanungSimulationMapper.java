@@ -1,7 +1,7 @@
 package com.kcserver.mapper;
 
 import com.kcserver.dto.simulation.PlanungsSimulation;
-import com.kcserver.entity.Planung;
+import com.kcserver.entity.planung.Planung;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

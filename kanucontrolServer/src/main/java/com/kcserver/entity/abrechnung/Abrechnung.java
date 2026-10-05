@@ -1,5 +1,6 @@
-package com.kcserver.entity;
+package com.kcserver.entity.abrechnung;
 
+import com.kcserver.entity.Veranstaltung;
 import com.kcserver.enumtype.AbrechnungsStatus;
 import jakarta.persistence.*;
 import lombok.Getter;

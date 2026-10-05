@@ -1,7 +1,7 @@
 package com.kcserver.repository.abrechnung;
 
-import com.kcserver.entity.Abrechnung;
-import com.kcserver.entity.AbrechnungBeleg;
+import com.kcserver.entity.abrechnung.Abrechnung;
+import com.kcserver.entity.abrechnung.AbrechnungBeleg;
 import com.kcserver.entity.FinanzGruppe;
 import com.kcserver.enumtype.BuchungsHerkunft;
 import org.springframework.data.jpa.repository.JpaRepository;

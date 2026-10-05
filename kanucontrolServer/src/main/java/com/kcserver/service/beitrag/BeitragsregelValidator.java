@@ -1,6 +1,6 @@
 package com.kcserver.service.beitrag;
 
-import com.kcserver.entity.Beitragsregel;
+import com.kcserver.entity.beitraege.Beitragsregel;
 import com.kcserver.exception.ErrorMessages;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;

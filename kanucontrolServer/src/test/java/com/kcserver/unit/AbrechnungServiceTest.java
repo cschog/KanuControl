@@ -3,7 +3,7 @@ package com.kcserver.unit;
 import com.kcserver.dto.abrechnung.AbrechnungBelegCreateDTO;
 import com.kcserver.dto.abrechnung.AbrechnungBelegDTO;
 import com.kcserver.dto.abrechnung.AbrechnungBuchungCreateDTO;
-import com.kcserver.entity.Abrechnung;
+import com.kcserver.entity.abrechnung.Abrechnung;
 import com.kcserver.enumtype.AbrechnungsStatus;
 import com.kcserver.enumtype.FinanzKategorie;
 import com.kcserver.service.abrechnung.AbrechnungBelegService;

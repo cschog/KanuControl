@@ -18,8 +18,8 @@ import java.io.ByteArrayOutputStream;
 
 import static com.kcserver.util.StringUtils.heute;
 import static com.kcserver.util.StringUtils.join;
-import com.kcserver.entity.Planung;
-import com.kcserver.entity.PlanungPosition;
+import com.kcserver.entity.planung.Planung;
+import com.kcserver.entity.planung.PlanungPosition;
 import com.kcserver.enumtype.FinanzKategorie;
 import com.kcserver.repository.PlanungRepository;
 

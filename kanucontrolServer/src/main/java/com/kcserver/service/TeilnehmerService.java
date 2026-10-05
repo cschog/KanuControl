@@ -5,6 +5,8 @@ import com.kcserver.dto.person.PersonListDTO;
 import com.kcserver.dto.teilnehmer.*;
 import com.kcserver.dto.zahlungsnachweis.ZahlungsnachweisListDTO;
 import com.kcserver.entity.*;
+import com.kcserver.entity.beitraege.ZahlungsPosition;
+import com.kcserver.entity.beitraege.Zahlungsnachweis;
 import com.kcserver.enumtype.TeilnehmerRolle;
 import com.kcserver.enumtype.Zahlungsstatus;
 import com.kcserver.exception.ErrorMessages;
@@ -27,7 +29,6 @@ import java.math.BigDecimal;
 import com.kcserver.repository.zahlungsnachweis.ZahlungsnachweisRepository;
 
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;

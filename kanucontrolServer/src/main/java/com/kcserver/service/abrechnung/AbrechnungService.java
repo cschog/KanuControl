@@ -4,6 +4,8 @@ import com.kcserver.dto.abrechnung.AbrechnungDetailDTO;
 import com.kcserver.dto.finanzen.FinanzSummaryDTO;
 import com.kcserver.dto.validation.ValidationResultDTO;
 import com.kcserver.entity.*;
+import com.kcserver.entity.abrechnung.Abrechnung;
+import com.kcserver.entity.abrechnung.AbrechnungBuchung;
 import com.kcserver.enumtype.AbrechnungsStatus;
 import com.kcserver.enumtype.VeranstaltungTyp;
 import com.kcserver.exception.ErrorMessages;

@@ -2,8 +2,8 @@ package com.kcserver.mapper;
 
 import com.kcserver.dto.planung.PlanungDetailDTO;
 import com.kcserver.dto.planung.PlanungPositionDTO;
-import com.kcserver.entity.Planung;
-import com.kcserver.entity.PlanungPosition;
+import com.kcserver.entity.planung.Planung;
+import com.kcserver.entity.planung.PlanungPosition;
 import org.springframework.stereotype.Component;
 
 @Component

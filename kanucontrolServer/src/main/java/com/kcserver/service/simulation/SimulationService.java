@@ -1,7 +1,7 @@
 package com.kcserver.service.simulation;
 
 import com.kcserver.dto.simulation.PlanungsSimulation;
-import com.kcserver.entity.Planung;
+import com.kcserver.entity.planung.Planung;
 import com.kcserver.entity.Veranstaltung;
 import com.kcserver.enumtype.PlanungsStatus;
 import com.kcserver.exception.ErrorMessages;

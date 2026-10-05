@@ -5,7 +5,7 @@ import com.kcserver.dto.abrechnung.AbrechnungBelegDTO;
 import com.kcserver.dto.abrechnung.AbrechnungBuchungCreateDTO;
 import com.kcserver.dto.foerder.FoerdersatzCreateUpdateDTO;
 import com.kcserver.dto.foerder.FoerdersatzDTO;
-import com.kcserver.entity.Abrechnung;
+import com.kcserver.entity.abrechnung.Abrechnung;
 import com.kcserver.entity.Foerdersatz;
 import com.kcserver.enumtype.FinanzKategorie;
 import com.kcserver.enumtype.VeranstaltungTyp;
@@ -142,7 +142,6 @@ class FoerdersatzIntegrationTest extends AbstractFinanzIntegrationTest {
 
     @Test
     void shouldAllowSamePeriodForDifferentTyp() {
-
         FoerdersatzCreateUpdateDTO dto1 = new FoerdersatzCreateUpdateDTO();
 
         LocalDate start = LocalDate.now().plusYears(10);
@@ -153,13 +152,13 @@ class FoerdersatzIntegrationTest extends AbstractFinanzIntegrationTest {
         foerdersatzService.create(dto1);
 
         FoerdersatzCreateUpdateDTO dto2 = new FoerdersatzCreateUpdateDTO();
-        dto2.setTyp(VeranstaltungTyp.FM);
+        dto2.setTyp(VeranstaltungTyp.JEM);
         dto2.setGueltigVon(start);
         dto2.setFoerdersatz(new BigDecimal("30.00"));
 
         FoerdersatzDTO created = foerdersatzService.create(dto2);
 
-        assertThat(created.getTyp()).isEqualTo(VeranstaltungTyp.FM);
+        assertThat(created.getTyp()).isEqualTo(VeranstaltungTyp.JEM);
     }
 
     /* =========================================================

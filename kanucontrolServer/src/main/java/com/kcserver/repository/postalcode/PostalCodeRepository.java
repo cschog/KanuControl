@@ -1,6 +1,6 @@
 package com.kcserver.repository.postalcode;
 
-import com.kcserver.entity.PostalCode;
+import com.kcserver.entity.postalcode.PostalCode;
 import com.kcserver.enumtype.CountryCode;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;

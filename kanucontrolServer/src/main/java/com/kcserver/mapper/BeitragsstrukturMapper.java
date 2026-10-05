@@ -2,8 +2,8 @@ package com.kcserver.mapper;
 
 import com.kcserver.dto.beitrag.BeitragsregelDTO;
 import com.kcserver.dto.beitrag.BeitragsstrukturDTO;
-import com.kcserver.entity.Beitragsregel;
-import com.kcserver.entity.Beitragsstruktur;
+import com.kcserver.entity.beitraege.Beitragsregel;
+import com.kcserver.entity.beitraege.Beitragsstruktur;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 

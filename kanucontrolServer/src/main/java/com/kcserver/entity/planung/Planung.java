@@ -1,5 +1,6 @@
-package com.kcserver.entity;
+package com.kcserver.entity.planung;
 
+import com.kcserver.entity.Veranstaltung;
 import com.kcserver.enumtype.PlanungsStatus;
 import jakarta.persistence.*;
 import lombok.Getter;

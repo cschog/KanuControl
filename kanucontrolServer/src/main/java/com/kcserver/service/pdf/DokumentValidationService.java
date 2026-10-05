@@ -1,6 +1,6 @@
 package com.kcserver.service.pdf;
 
-import com.kcserver.entity.Planung;
+import com.kcserver.entity.planung.Planung;
 import com.kcserver.entity.Teilnehmer;
 import com.kcserver.entity.Veranstaltung;
 import com.kcserver.enumtype.PdfDokumentTyp;

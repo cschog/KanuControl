@@ -1,4 +1,4 @@
-package com.kcserver.entity;
+package com.kcserver.entity.beitraege;
 
 import com.kcserver.enumtype.TeilnehmerRolle;
 import com.kcserver.persistence.converter.TeilnehmerRolleConverter;

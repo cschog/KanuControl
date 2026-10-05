@@ -1,7 +1,7 @@
 package com.kcserver.repository;
 
-import com.kcserver.entity.Abrechnung;
-import com.kcserver.entity.Planung;
+import com.kcserver.entity.abrechnung.Abrechnung;
+import com.kcserver.entity.planung.Planung;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 

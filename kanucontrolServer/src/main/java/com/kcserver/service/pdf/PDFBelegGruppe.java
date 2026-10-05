@@ -1,6 +1,6 @@
 package com.kcserver.service.pdf;
 
-import com.kcserver.entity.Zahlungsnachweis;
+import com.kcserver.entity.beitraege.Zahlungsnachweis;
 
 import java.util.List;
 

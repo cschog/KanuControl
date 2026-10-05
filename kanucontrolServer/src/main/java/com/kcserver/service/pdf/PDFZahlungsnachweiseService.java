@@ -1,6 +1,8 @@
 package com.kcserver.service.pdf;
 
 import com.kcserver.entity.*;
+import com.kcserver.entity.beitraege.ZahlungsPosition;
+import com.kcserver.entity.beitraege.Zahlungsnachweis;
 import com.kcserver.enumtype.PdfDokumentTyp;
 import com.kcserver.exception.ErrorMessages;
 import com.kcserver.repository.VeranstaltungRepository;

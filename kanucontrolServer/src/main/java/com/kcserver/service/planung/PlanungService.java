@@ -1,7 +1,7 @@
 package com.kcserver.service.planung;
 
 import com.kcserver.dto.planung.PlanungDetailDTO;
-import com.kcserver.entity.Planung;
+import com.kcserver.entity.planung.Planung;
 import com.kcserver.enumtype.PlanungsStatus;
 import com.kcserver.exception.ErrorMessages;
 import com.kcserver.service.finanz.FinanzService;

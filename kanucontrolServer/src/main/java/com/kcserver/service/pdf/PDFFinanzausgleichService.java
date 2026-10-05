@@ -2,6 +2,11 @@ package com.kcserver.service.pdf;
 
 import com.kcserver.dto.finanzen.FinanzausgleichDTO;
 import com.kcserver.entity.*;
+import com.kcserver.entity.abrechnung.AbrechnungBeleg;
+import com.kcserver.entity.abrechnung.AbrechnungBuchung;
+import com.kcserver.entity.beitraege.ZahlungsPosition;
+import com.kcserver.entity.beitraege.Zahlungsnachweis;
+import com.kcserver.entity.fahrkosten.Reisekostenabrechnung;
 import com.kcserver.enumtype.FinanzKategorie;
 import com.kcserver.enumtype.PdfDokumentTyp;
 import com.kcserver.enumtype.Zahlungsweg;

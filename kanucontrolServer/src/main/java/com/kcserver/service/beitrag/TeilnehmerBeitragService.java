@@ -1,7 +1,7 @@
 package com.kcserver.service.beitrag;
 
-import com.kcserver.entity.Beitragsregel;
-import com.kcserver.entity.Beitragsstruktur;
+import com.kcserver.entity.beitraege.Beitragsregel;
+import com.kcserver.entity.beitraege.Beitragsstruktur;
 import com.kcserver.entity.Teilnehmer;
 import com.kcserver.entity.Veranstaltung;
 import com.kcserver.service.AltersService;
