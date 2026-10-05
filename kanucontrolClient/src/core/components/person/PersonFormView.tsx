@@ -1,0 +1,162 @@
+import React, { useEffect, useState } from "react";
+import { Box } from "@mui/material";
+import { PersonBaseForm } from "@/core/components/person/form/PersonBaseForm";
+import { PersonMembershipsCard } from "./PersonMembershipsCard";
+import { PersonActionBar } from "@/core/components/person/PersonActionBar";
+import ConfirmDeleteDialog from "@/core/components/common/ConfirmDeleteDialog";
+import { AddMembershipDialog } from "@/core/components/person/membership/AddMembershipDialog";
+import { usePersonForm } from "@/core/components/person/hooks/usePersonForm";
+import { updateMitgliedFunktion } from "@/kjfp/api/services/mitgliedApi";
+
+import { PersonDetail, PersonSave } from "@/kjfp/types/person/Person";
+import apiClient from "@/core/api/client/apiClient";
+import { VereinRef } from "@/kjfp/types/verein/VereinRef";
+import EmptyState from "@/core/components/common/EmptyState";
+
+/* =========================================================
+   Props
+   ========================================================= */
+
+interface PersonFormViewProps {
+  personDetail: PersonDetail | null;
+
+  editMode: boolean;
+
+  onEdit: () => void;
+  onCancelEdit: () => void;
+  onSpeichern: (person: PersonSave) => Promise<void>;
+
+  onDeletePerson: () => void;
+  onDeleteMitglied: (mitgliedId: number) => Promise<void>;
+  onSetHauptverein: (mitgliedId: number) => Promise<void>;
+
+  onCopy?: () => void;
+
+  onBack: () => void;
+
+  btnÄndernPerson: boolean;
+  btnLöschenPerson: boolean;
+
+  onReloadPerson: () => Promise<void>;
+}
+
+/* =========================================================
+   Component
+   ========================================================= */
+
+export const PersonFormView: React.FC<PersonFormViewProps> = ({
+  personDetail,
+  editMode,
+  onEdit,
+  onCancelEdit,
+  onSpeichern,
+  onDeletePerson,
+  onDeleteMitglied,
+  onSetHauptverein,
+  onBack,
+  onCopy,
+  btnÄndernPerson,
+  btnLöschenPerson,
+  onReloadPerson,
+}) => {
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [addVereinOpen, setAddVereinOpen] = useState(false);
+
+  const { form, update, buildSavePayload } = usePersonForm(personDetail);
+
+  const [vereine, setVereine] = useState<VereinRef[]>([]);
+
+  useEffect(() => {
+    apiClient.get<VereinRef[]>("/verein").then((res) => setVereine(res.data));
+  }, []);
+
+  if (!personDetail || !form) {
+    return (
+      <EmptyState title="Keine Person ausgewählt" description="Bitte wählen Sie eine Person aus." />
+    );
+  }
+
+  const zugeordneteIds = new Set((personDetail.mitgliedschaften ?? []).map((m) => m.verein.id));
+
+  const verfügbareVereine = vereine.filter((v) => !zugeordneteIds.has(v.id));
+
+  return (
+    <>
+      <Box
+        display="grid"
+        gridTemplateColumns={{
+          xs: "1fr",
+          sm: "repeat(2, 1fr)",
+          lg: "repeat(4, 1fr)", // 🔑 HIER die Spalten!
+        }}
+        gap={2}
+        sx={{ mt: 2 }}
+      >
+        <PersonBaseForm
+          form={form}
+          editMode={editMode}
+          mode="edit"
+          onChange={update}
+          fieldStatus={personDetail.dataStatus?.fields}
+        />
+      </Box>
+
+      {/* MEMBERSHIPS */}
+      <Box maxWidth="xl" mx="auto" sx={{ mt: 3 }}>
+        <PersonMembershipsCard
+          person={{ ...personDetail, mitgliedschaften: personDetail.mitgliedschaften ?? [] }}
+          editMode={editMode}
+          onSetHauptverein={onSetHauptverein}
+          onDeleteMitglied={onDeleteMitglied}
+          onChangeFunktion={async (mitgliedId, funktion) => {
+            await updateMitgliedFunktion(
+              mitgliedId,
+              funktion ?? undefined, // ⭐ FIX
+            );
+            await onReloadPerson();
+          }}
+        />
+      </Box>
+
+      {/* ACTION BAR */}
+      <PersonActionBar
+        editMode={editMode}
+        onEdit={onEdit}
+        onCancelEdit={onCancelEdit}
+        onSave={async () => {
+          const payload = buildSavePayload();
+
+          if (payload) {
+            await onSpeichern(payload);
+          }
+        }}
+        onDelete={() => setConfirmOpen(true)}
+        onBack={onBack}
+        onAddVerein={() => setAddVereinOpen(true)}
+        onCopy={onCopy}
+        disableEdit={btnÄndernPerson}
+        disableDelete={btnLöschenPerson}
+      />
+
+      {/* ======= DELETE ======= */}
+      <ConfirmDeleteDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={async () => {
+          await onDeletePerson();
+          setConfirmOpen(false);
+        }}
+        description={`Soll die Person „${personDetail.name}“ wirklich gelöscht werden?`}
+      />
+
+      {/* ======= ADD VEREIN ======= */}
+      <AddMembershipDialog
+        open={addVereinOpen}
+        onClose={() => setAddVereinOpen(false)}
+        personId={personDetail.id}
+        availableVereine={verfügbareVereine}
+        onAdded={onReloadPerson}
+      />
+    </>
+  );
+};

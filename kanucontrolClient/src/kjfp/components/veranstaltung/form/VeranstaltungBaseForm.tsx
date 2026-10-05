@@ -1,0 +1,254 @@
+import React from "react";
+import { MenuItem, TextField } from "@mui/material";
+
+import { RefAutocomplete } from "@/core/components/common/RefAutocomplete";
+
+import { useLoad } from "@/kjfp/hooks/useLoad";
+
+import { getUnterkunftsartRefs } from "@/kjfp/api/services/unterkunftsartApi";
+import { getVerpflegungsmodellRefs } from "@/kjfp/api/services/verpflegungsmodellApi";
+
+import { VeranstaltungFormModel } from "@/kjfp/types/veranstaltung/VeranstaltungFormModel";
+import { VeranstaltungTyp } from "@/kjfp/api/enums/VeranstaltungTyp";
+
+import { UnterkunftsartRef } from "@/kjfp/types/unterkunft/UnterkunftsartRef";
+import { VerpflegungsmodellRef } from "@/kjfp/types/verpflegung/VerpflegungsmodellRef";
+
+import { VereinAutocomplete } from "@/kjfp/components/verein/VereinAutocomplete";
+import { PersonAutocomplete } from "@/core/components/person/PersonAutocomplete";
+
+import FormFeld from "@/core/components/common/FormFeld";
+import { FormFeldDatePicker } from "@/core/components/common/FormFeldDatePicker";
+import { FormFeldTimePicker } from "@/core/components/common/FormFeldTimePicker";
+
+import { COUNTRIES } from "@/kjfp/api/enums/CountryCode";
+import PostalCodeAutocomplete from "@/core/components/common/PostalCodeAutocomplete";
+
+/* =========================================================
+   TYPES
+   ========================================================= */
+
+interface BeitragsstrukturDTO {
+  id: number;
+  name: string;
+}
+
+interface Props {
+  form: VeranstaltungFormModel;
+  editMode: boolean;
+  detailMode?: boolean;
+  beitragsstrukturen: BeitragsstrukturDTO[];
+
+  onChange: <K extends keyof VeranstaltungFormModel>(
+    key: K,
+    value: VeranstaltungFormModel[K],
+  ) => void;
+}
+
+/* =========================================================
+   COMPONENT
+   ========================================================= */
+
+export const VeranstaltungBaseForm: React.FC<Props> = ({
+  form,
+  editMode,
+  detailMode = false,
+  beitragsstrukturen,
+  onChange,
+}) => {
+  const unterkunftsarten = useLoad<UnterkunftsartRef[]>(getUnterkunftsartRefs, {
+    initialData: [],
+  });
+
+  const verpflegungsmodelle = useLoad<VerpflegungsmodellRef[]>(getVerpflegungsmodellRefs, {
+    initialData: [],
+  });
+
+  return (
+    <>
+      {/* ================= NAME ================= */}
+
+      <FormFeld
+        label="Bezeichnung"
+        value={form.name}
+        disabled={!editMode}
+        onChange={(v) => onChange("name", v)}
+      />
+
+      {/* ================= TYP ================= */}
+
+      <TextField
+        select
+        fullWidth
+        size="small"
+        label="Typ"
+        value={form.typ ?? ""}
+        disabled={!editMode}
+        onChange={(e) => onChange("typ", e.target.value as VeranstaltungTyp)}
+      >
+        <MenuItem value={VeranstaltungTyp.JEM}>JEM</MenuItem>
+        <MenuItem value={VeranstaltungTyp.FM}>FM</MenuItem>
+      </TextField>
+
+      {/* ================= LEITUNG ================= */}
+
+      <PersonAutocomplete
+        label="Leitung"
+        value={form.leiter}
+        disabled={!editMode}
+        nurLeiter
+        stichtag={form.beginnDatum}
+        onChange={(v) => onChange("leiter", v)}
+      />
+
+      {/* ================= VEREIN ================= */}
+
+      <VereinAutocomplete
+        value={form.verein}
+        disabled={!editMode}
+        onChange={(v) => onChange("verein", v)}
+      />
+
+      {/* ================= BEGINN ================= */}
+
+      <FormFeldDatePicker
+        label="Beginn Datum"
+        value={form.beginnDatum}
+        disabled={!editMode}
+        onChange={(v) => {
+          const date = v ?? "";
+
+          onChange("beginnDatum", date);
+
+          // Wenn Ende identisch oder leer → mitziehen
+          if (!form.endeDatum || form.endeDatum === form.beginnDatum) {
+            onChange("endeDatum", date);
+          }
+        }}
+      />
+
+      <FormFeldTimePicker
+        label="Beginn Zeit"
+        value={form.beginnZeit}
+        disabled={!editMode}
+        onChange={(v) => onChange("beginnZeit", v ?? "")}
+      />
+
+      {/* ================= ENDE ================= */}
+
+      <FormFeldDatePicker
+        label="Ende Datum"
+        value={form.endeDatum}
+        disabled={!editMode}
+        onChange={(v) => onChange("endeDatum", v ?? "")}
+      />
+
+      <FormFeldTimePicker
+        label="Ende Zeit"
+        value={form.endeZeit}
+        disabled={!editMode}
+        onChange={(v) => onChange("endeZeit", v ?? "")}
+        error={form.beginnDatum === form.endeDatum && form.endeZeit < form.beginnZeit}
+        helperText={
+          form.beginnDatum === form.endeDatum && form.endeZeit < form.beginnZeit
+            ? "Ende darf nicht vor Beginn liegen"
+            : undefined
+        }
+      />
+
+      {/* =====================================================
+         DETAIL MODE
+         ===================================================== */}
+
+      {detailMode && (
+        <>
+          {/* ================= LAND ================= */}
+
+          <TextField
+            select
+            fullWidth
+            size="small"
+            label="Land"
+            value={form.countryCode ?? ""}
+            disabled={!editMode}
+            onChange={(e) => {
+              const value = (e.target.value || undefined) as VeranstaltungFormModel["countryCode"];
+
+              onChange("countryCode", value);
+            }}
+          >
+            {COUNTRIES.map((c) => (
+              <MenuItem key={c.code} value={c.code}>
+                {c.label}
+              </MenuItem>
+            ))}
+          </TextField>
+
+          {/* ================= PLZ ================= */}
+
+          <PostalCodeAutocomplete
+            countryCode={form.countryCode ?? "DE"}
+            postalCode={form.plz}
+            disabled={!editMode}
+            onSelect={(item) => {
+              onChange("plz", item.postalCode);
+              onChange("ort", item.city);
+            }}
+          />
+          {/* ================= Ort ================= */}
+
+          <FormFeld
+            label="Ort"
+            value={form.ort ?? ""}
+            onChange={(v) => onChange("ort", v)}
+            disabled={!editMode}
+          />
+
+          {/* ================= BEITRAGSSTRUKTUR ================= */}
+
+          <TextField
+            select
+            fullWidth
+            size="small"
+            label="Beitragsstruktur"
+            value={form.beitragsstrukturId ?? ""}
+            disabled={!editMode}
+            onChange={(e) =>
+              onChange("beitragsstrukturId", e.target.value ? Number(e.target.value) : undefined)
+            }
+          >
+            <MenuItem value="">Keine</MenuItem>
+
+            {beitragsstrukturen.map((s) => (
+              <MenuItem key={s.id} value={s.id}>
+                {s.name}
+              </MenuItem>
+            ))}
+          </TextField>
+
+          {/* ================= UNTERKUNFT ================= */}
+
+          <RefAutocomplete
+            label="Unterkunftsart"
+            options={unterkunftsarten.data ?? []}
+            loading={unterkunftsarten.loading}
+            value={form.unterkunftsart}
+            disabled={!editMode}
+            onChange={(value) => onChange("unterkunftsart", value ?? undefined)}
+          />
+
+          {/* ================= VERPFLEGUNG ================= */}
+
+          <RefAutocomplete
+            label="Verpflegungsmodell"
+            options={verpflegungsmodelle.data ?? []}
+            loading={verpflegungsmodelle.loading}
+            value={form.verpflegungsmodell}
+            disabled={!editMode}
+            onChange={(value) => onChange("verpflegungsmodell", value ?? undefined)}
+          />
+        </>
+      )}
+    </>
+  );
+};

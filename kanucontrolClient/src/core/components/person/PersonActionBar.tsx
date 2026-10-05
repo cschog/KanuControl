@@ -1,0 +1,109 @@
+import React from "react";
+
+import { BottomActionBar } from "@/core/components/layout/BottomActionBar";
+
+interface PersonActionBarProps {
+  editMode: boolean;
+  onEdit: () => void;
+  onCancelEdit: () => void;
+  onSave: () => Promise<void>;
+  onDelete: () => void;
+  onBack: () => void;
+  onCopy?: () => void;
+  onAddVerein: () => void;
+  disableEdit: boolean;
+  disableDelete: boolean;
+}
+
+export const PersonActionBar: React.FC<PersonActionBarProps> = ({
+  editMode,
+
+  onEdit,
+
+  onCancelEdit,
+
+  onSave,
+
+  onDelete,
+
+  onBack,
+
+  onCopy,
+
+  onAddVerein,
+
+  disableEdit,
+
+  disableDelete,
+}) => {
+  if (editMode) {
+    return (
+      /* =================================================== */
+      /* EDIT MODE */
+      /* =================================================== */
+
+      <BottomActionBar
+        left={[
+          // ⭐ PRIMARY ACTION FIRST
+          {
+            label: "Speichern",
+            onClick: onSave,
+          },
+
+          {
+            label: "Abbrechen",
+            variant: "outlined",
+            onClick: onCancelEdit,
+          },
+
+          {
+            label: "Verein zuordnen",
+            variant: "outlined",
+            onClick: onAddVerein,
+          },
+        ]}
+      />
+    );
+  }
+
+  return (
+    /* ===================================================== */
+    /* VIEW MODE */
+    /* ===================================================== */
+
+    <BottomActionBar
+      left={[
+        {
+          label: "Ändern",
+          variant: "outlined",
+          disabled: disableEdit,
+          onClick: onEdit,
+        },
+
+        ...(onCopy
+          ? [
+              {
+                label: "Kopieren",
+                variant: "outlined" as const,
+                onClick: onCopy,
+              },
+            ]
+          : []),
+
+        {
+          label: "Zurück",
+          onClick: onBack,
+        },
+      ]}
+      right={[
+        {
+          label: "Löschen",
+          variant: "outlined",
+          color: "error",
+          disabled: disableDelete,
+          onClick: onDelete,
+        },
+      ]}
+    />
+  );
+};

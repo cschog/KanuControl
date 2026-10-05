@@ -1,0 +1,171 @@
+import {
+  Alert,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Typography,
+  Divider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from "@mui/material";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import PlanungspositionenTable from "@/kjfp/components/simulation/FinanzpositionenAccordion";
+import { useEffect, useState, useCallback } from "react";
+import { getPlanung, einreichen, wiederOeffnen } from "@/kjfp/api/services/planungApi";
+import { PlanungDetail } from "@/kjfp/types/planung";
+import { kategorieZuTyp } from "@/kjfp/types/finanz";
+import FinanzSummary from "@/core/components/common/FinanzSummary";
+import { ErrorDialog } from "@/core/components/common/ErrorDialog";
+import { getApiErrorMessage } from "@/kjfp/api/utils/apiError";
+
+interface Props {
+  veranstaltungId: number;
+  onOpenSimulation: () => void;
+}
+
+export default function PlanungPage({ veranstaltungId, onOpenSimulation }: Props) {
+  const [planung, setPlanung] = useState<PlanungDetail | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    try {
+      setError(null);
+
+      const data = await getPlanung(veranstaltungId);
+      setPlanung(data);
+    } catch (e: unknown) {
+      console.error(e);
+      setError(getApiErrorMessage(e));
+    }
+  }, [veranstaltungId]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  if (!planung) {
+    return (
+      <Box p={3}>
+        <Typography variant="h5" gutterBottom>
+          Finanzplanung
+        </Typography>
+
+        <Card>
+          <CardContent>
+            <Box display="flex" alignItems="center" gap={2} mb={2}>
+              <InfoOutlinedIcon color="info" fontSize="large" />
+
+              <Typography variant="h6">Es liegt noch keine Planung vor.</Typography>
+            </Box>
+
+            <Typography color="text.secondary" paragraph>
+              Erstellen Sie zunächst eine Simulation und speichern Sie diese. Anschließend kann die
+              Planung hier eingesehen und eingereicht werden.
+            </Typography>
+
+            <Button variant="contained" onClick={onOpenSimulation}>
+              Zur Simulation
+            </Button>
+          </CardContent>
+        </Card>
+      </Box>
+    );
+  }
+
+  const kosten = planung.positionen.filter((p) => kategorieZuTyp[p.kategorie] === "KOSTEN");
+  const einnahmen = planung.positionen.filter((p) => kategorieZuTyp[p.kategorie] === "EINNAHME");
+
+  const sumKosten = kosten.reduce((a, b) => a + b.betrag, 0);
+  const sumEinnahmen = einnahmen.reduce((a, b) => a + b.betrag, 0);
+  const saldo = sumEinnahmen - sumKosten;
+
+  const kjfpZuschuss = planung.positionen
+    .filter((p) => p.kategorie === "KJFP_ZUSCHUSS")
+    .reduce((sum, p) => sum + p.betrag, 0);
+
+  return (
+    <>
+      {planung.status === "EINGEREICHT" && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          Diese Planung wurde eingereicht und ist gesperrt.
+          <Button
+            size="small"
+            sx={{ ml: 2 }}
+            onClick={async () => {
+              try {
+                await wiederOeffnen(veranstaltungId);
+                await load();
+              } catch (e: unknown) {
+                console.error(e);
+                setError(getApiErrorMessage(e));
+              }
+            }}
+          >
+            Planung wieder öffnen
+          </Button>
+        </Alert>
+      )}
+
+      <FinanzSummary
+        kosten={sumKosten}
+        einnahmen={sumEinnahmen}
+        eigenanteil={saldo}
+        kjfpZuschuss={kjfpZuschuss}
+      />
+
+      <PlanungspositionenTable positionen={planung.positionen} />
+
+      <Divider sx={{ my: 3 }} />
+
+      {planung.status !== "EINGEREICHT" && (
+        <Box display="flex" justifyContent="center" mt={3}>
+          <Button
+            variant="contained"
+            color="warning"
+            size="large"
+            onClick={() => setConfirmOpen(true)}
+          >
+            Planung einreichen
+          </Button>
+        </Box>
+      )}
+
+      <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
+        <DialogTitle>Planung wirklich einreichen?</DialogTitle>
+
+        <DialogContent>
+          <Typography>
+            Nach dem Einreichen können keine Änderungen mehr vorgenommen werden.
+          </Typography>
+        </DialogContent>
+        <ErrorDialog open={!!error} message={error ?? ""} onClose={() => setError(null)} />
+        <DialogActions>
+          <Button onClick={() => setConfirmOpen(false)}>Abbrechen</Button>
+
+          <Button
+            color="warning"
+            variant="contained"
+            onClick={async () => {
+              try {
+                await einreichen(veranstaltungId);
+
+                setConfirmOpen(false);
+
+                await load();
+              } catch (e: unknown) {
+                console.error(e);
+                setError(getApiErrorMessage(e));
+              }
+            }}
+          >
+            Ja, einreichen
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
+  );
+}
