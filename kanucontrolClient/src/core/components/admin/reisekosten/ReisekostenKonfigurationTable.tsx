@@ -7,7 +7,7 @@ import AddIcon from "@mui/icons-material/Add";
 import { ColumnDef } from "@tanstack/react-table";
 
 import Money from "@/core/components/common/Money";
-import { GenericTableTanstack } from "@/core/components/common/GenericTableTanstack";
+import { GenericTableTanstack } from "@/core/components/table/GenericTableTanstack";
 
 import ReisekostenKonfigurationDialog from "@/core/components/admin/reisekosten/ReisekostenKonfigurationDialog";
 

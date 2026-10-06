@@ -21,7 +21,7 @@ import {
   Grid,
 } from "@mui/material";
 import { ColumnDef } from "@tanstack/react-table";
-import { GenericTableTanstack } from "@/core/components/common/GenericTableTanstack";
+import { GenericTableTanstack } from "@/core/components/table/GenericTableTanstack";
 
 import Money from "@/core/components/common/Money";
 import EditIcon from "@mui/icons-material/Edit";

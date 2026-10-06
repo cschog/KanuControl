@@ -22,7 +22,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { SortingState } from "@tanstack/react-table";
 import { useAppContext } from "@/core/components/context/AppContext";
 import { useDebounce } from "@/core/components/common/reference/hooks";
-import { GenericTableTanstack } from "@/core/components/common/GenericTableTanstack";
+import { GenericTableTanstack } from "@/core/components/table/GenericTableTanstack";
 import { teilnehmerAvailableColumns } from "@/kjfp/components/teilnehmer/teilnehmerAvailableColumns";
 import { teilnehmerAssignedColumns } from "@/kjfp/components/teilnehmer/teilnehmerAssignedColumns";
 import {

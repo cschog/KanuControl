@@ -13,7 +13,7 @@ import ConfirmDeleteDialog from "@/core/components/common/ConfirmDeleteDialog";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import { ColumnDef } from "@tanstack/react-table";
-import { GenericTableTanstack } from "@/core/components/common/GenericTableTanstack";
+import { GenericTableTanstack } from "@/core/components/table/GenericTableTanstack";
 import Money from "@/core/components/common/Money";
 import { useNavigate } from "react-router-dom";
 import { useReisekostenabrechnungen } from "@/kjfp/hooks/reisekosten/useReisekostenabrechnungen";

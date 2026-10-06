@@ -1,5 +1,5 @@
 export interface Mietbereich {
-  id?: number;
+  id: number;
   mietobjektId?: number;
 
   bezeichnung: string;

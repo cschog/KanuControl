@@ -20,7 +20,7 @@ import { useKikZuschlag } from "@/kjfp/hooks/kik/useKikZuschlag";
 
 import { KikDTO } from "@/kjfp/types/Kik";
 
-import { GenericTableTanstack } from "@/core/components/common/GenericTableTanstack";
+import { GenericTableTanstack } from "@/core/components/table/GenericTableTanstack";
 
 import { ColumnDef } from "@tanstack/react-table";
 

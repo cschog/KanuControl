@@ -9,7 +9,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 
 import { ColumnDef } from "@tanstack/react-table";
 
-import { GenericTableTanstack } from "@/core/components/common/GenericTableTanstack";
+import { GenericTableTanstack } from "@/core/components/table/GenericTableTanstack";
 
 import { FahrtabschnittRequest } from "@/kjfp/types/Reisekostenabrechnung";
 

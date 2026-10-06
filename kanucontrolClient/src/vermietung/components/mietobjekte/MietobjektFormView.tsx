@@ -1,5 +1,5 @@
-import React from "react";
-import { Box, Typography } from "@mui/material";
+import React, { useEffect, useState } from "react";
+import { Box, Button, Typography } from "@mui/material";
 
 import { MietobjektBaseForm } from "./MietobjektBaseForm";
 import { MietobjektActionBar } from "./MietobjektActionBar";
@@ -8,7 +8,7 @@ import { useMietobjektForm } from "@/vermietung/hooks/useMietobjektForm";
 
 import type { Mietobjekt } from "@/vermietung/types/Mietobjekt";
 import type { MietobjektSave } from "@/vermietung/types/MietobjektSave";
-
+import { MietbereicheView } from "./mietbereiche/MietbereicheView";
 
 interface Props {
   mietobjekt: Mietobjekt | null;
@@ -39,6 +39,11 @@ export const MietobjektFormView: React.FC<Props> = ({
   disableDelete,
 }) => {
   const { form, update, buildSavePayload } = useMietobjektForm(mietobjekt);
+  const [view, setView] = useState<"details" | "mietbereiche">("mietbereiche");
+
+  useEffect(() => {
+    setView("mietbereiche");
+  }, [mietobjekt?.id]);
 
   if (!mietobjekt || !form) {
     return (
@@ -53,38 +58,72 @@ export const MietobjektFormView: React.FC<Props> = ({
       {/* ================= FORM ================= */}
 
       <Box
-        display="grid"
-        gridTemplateColumns={{
-          xs: "1fr",
-          sm: "repeat(2, 1fr)",
-          lg: "repeat(4, 1fr)",
+        sx={{
+          display: "flex",
+          gap: 1,
+          mb: 2,
+          mt: 2,
         }}
-        gap={2}
-        sx={{ mt: 2 }}
       >
-        <MietobjektBaseForm form={form} editMode={editMode} onChange={update} />
+        <Button
+          variant={view === "details" ? "contained" : "outlined"}
+          onClick={() => setView("details")}
+        >
+          Objekt
+        </Button>
+
+        <Button
+          variant={view === "mietbereiche" ? "contained" : "outlined"}
+          onClick={() => setView("mietbereiche")}
+          disabled={mietobjekt.id <= 0}
+        >
+          Mietbereiche
+        </Button>
       </Box>
+
+      {view === "details" && (
+        <Box
+          display="grid"
+          gridTemplateColumns={{
+            xs: "1fr",
+            sm: "repeat(2, 1fr)",
+            lg: "repeat(4, 1fr)",
+          }}
+          gap={2}
+        >
+          <MietobjektBaseForm form={form} editMode={editMode} onChange={update} />
+        </Box>
+      )}
+
+      {view === "mietbereiche" && mietobjekt.id > 0 && (
+        <MietbereicheView
+          mietobjektId={mietobjekt.id}
+          mietobjektBezeichnung={mietobjekt.bezeichnung}
+        />
+      )}
 
       {/* ================= ACTION BAR ================= */}
 
-      <MietobjektActionBar
-        aktiv={mietobjekt.aktiv}
-        editMode={editMode}
-        onEdit={onEdit}
-        onCancelEdit={onCancelEdit}
-        onSave={async () => {
-          const payload = buildSavePayload();
+      {view === "details" && (
+        <MietobjektActionBar
+          aktiv={mietobjekt.aktiv}
+          editMode={editMode}
+          onEdit={onEdit}
+          onCancelEdit={onCancelEdit}
+          onSave={async () => {
+            const payload = buildSavePayload();
 
-          if (payload) {
-            await onSave(payload);
-          }
-        }}
-        onDelete={onDelete}
-        onBack={onBack}
-        onActivate={onActivate}
-        disableEdit={disableEdit}
-        disableDelete={disableDelete}
-      />
+            if (payload) {
+              await onSave(payload);
+            }
+          }}
+          onDelete={onDelete}
+          onBack={onBack}
+          onActivate={onActivate}
+          disableEdit={disableEdit}
+          disableDelete={disableDelete}
+        />
+      )}
     </>
   );
 };

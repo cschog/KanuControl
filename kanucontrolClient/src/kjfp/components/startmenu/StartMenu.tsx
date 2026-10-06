@@ -10,7 +10,6 @@ import { useAppContext } from "@/core/components/context/AppContext";
 import { ModuleButton } from "@/core/components/common/ModuleButton";
 import { moduleTypeMap } from "@/core/theme/moduleMap";
 import { FeedbackFab } from "@/core/components/userFeedBack/featureBase/FeedbackFab";
-import { isAdmin } from "@/core/auth/useTenant";
 import { ErrorDialog } from "@/core/components/common/ErrorDialog";
 import { getApiErrorMessage } from "@/kjfp/api/utils/apiError";
 
@@ -49,7 +48,6 @@ const StartMenue = () => {
       }`
     : `Mandant: ${schema}`;
 
-  const admin = isAdmin();
 
   const allgemeineButtons = [
     {
@@ -148,22 +146,6 @@ const StartMenue = () => {
               />
             </Grid>
           ))}
-        </Grid>
-      )}
-
-      {/* =====================================================
-          ADMINISTRATION – IMMER GANZ UNTEN
-         ===================================================== */}
-
-      {admin && (
-        <Grid container spacing={2} sx={{ mt: 2 }}>
-          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            <ModuleButton
-              label="Administration"
-              moduleType={moduleTypeMap.admin}
-              onClick={() => navigate("/admin")}
-            />
-          </Grid>
         </Grid>
       )}
 

@@ -16,8 +16,17 @@ export const moduleTypeMap: Record<string, ModuleType> = {
   // Reports
   dokumente: "report",
 
+  // Verwaltung
   verwaltung: "admin",
 
+  // System
   admin: "system",
   administration: "system",
+
+  // VERMIETUNG
+  mieter: "vermietungBlue",
+  mietobjekte: "vermietungBlue",
+  buchung: "vermietungYellow",
+  abrechnung: "vermietungYellow",
+  vermietungVerwaltung: "vermietungDark",
 };

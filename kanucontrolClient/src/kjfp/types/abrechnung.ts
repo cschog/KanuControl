@@ -1,5 +1,5 @@
 import { FinanzKategorie } from "@/kjfp/types/finanz";
-import { WithId } from "@/core/components/common/GenericTableTanstack";
+import { WithId } from "@/core/components/table/GenericTableTanstack";
 import { AbrechnungsStatus } from "@/kjfp/api/enums/AbrechnungsStatus";
 import { BuchungsHerkunft } from "@/kjfp/types/BuchungsHerkunft";
 import { DokumentDTO } from "@/kjfp/types/dokument";

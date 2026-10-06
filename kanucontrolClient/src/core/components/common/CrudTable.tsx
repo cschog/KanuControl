@@ -7,7 +7,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 
 import Money from "@/core/components/common/Money";
-import { GenericTableTanstack, WithId } from "@/core/components/common/GenericTableTanstack";
+import { GenericTableTanstack, WithId } from "@/core/components/table/GenericTableTanstack";
 
 import { ColumnDef } from "@tanstack/react-table";
 

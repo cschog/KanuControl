@@ -13,32 +13,32 @@ const VermietungStart = () => {
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <ModuleButton
-            label="Gäste"
-            moduleType={moduleTypeMap.finanzen}
-            onClick={() => navigate("/vermietung/gaeste")}
+            label="Mieter"
+            moduleType={moduleTypeMap.mieter}
+            onClick={() => navigate("/vermietung/mieter")}
           />
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <ModuleButton
             label="Mietobjekte"
-            moduleType={moduleTypeMap.finanzen}
+            moduleType={moduleTypeMap.mietobjekte}
             onClick={() => navigate("/vermietung/mietobjekte")}
           />
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <ModuleButton
-            label="Anmeldung"
-            moduleType={moduleTypeMap.finanzen}
-            onClick={() => navigate("/vermietung/anmeldung")}
+            label="Buchung"
+            moduleType={moduleTypeMap.buchung}
+            onClick={() => navigate("/vermietung/buchung")}
           />
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <ModuleButton
             label="Abrechnung"
-            moduleType={moduleTypeMap.finanzen}
+            moduleType={moduleTypeMap.abrechnung}
             onClick={() => navigate("/vermietung/abrechnung")}
           />
         </Grid>
@@ -46,7 +46,7 @@ const VermietungStart = () => {
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <ModuleButton
             label="Verwaltung"
-            moduleType={moduleTypeMap.finanzen}
+            moduleType={moduleTypeMap.vermietungVerwaltung}
             onClick={() => navigate("/vermietung/verwaltung")}
           />
         </Grid>

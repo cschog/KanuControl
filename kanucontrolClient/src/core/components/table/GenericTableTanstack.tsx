@@ -8,6 +8,7 @@ import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
+  getSortedRowModel,
   RowSelectionState,
   SortingState,
   useReactTable,
@@ -161,31 +162,30 @@ export function GenericTableTanstack<T extends WithId>({
    TABLE
    ========================================================= */
 
-  const table = useReactTable({
-    data,
-    columns: finalColumns,
+const table = useReactTable({
+  data,
+  columns: finalColumns,
 
-    state: {
-      sorting,
-      rowSelection,
-    },
+  state: {
+    sorting,
+    rowSelection,
+  },
 
-    enableRowSelection: true,
+  enableRowSelection: true,
 
-    getRowId: (row) => String(row.id),
+  getRowId: (row) => String(row.id),
 
-    onRowSelectionChange: setRowSelection,
+  onRowSelectionChange: setRowSelection,
 
-    manualSorting: true,
+  onSortingChange: (updater) => {
+    const nextSorting = typeof updater === "function" ? updater(sorting) : updater;
 
-    onSortingChange: (updater) => {
-      const nextSorting = typeof updater === "function" ? updater(sorting) : updater;
+    onSortingChange?.(nextSorting);
+  },
 
-      onSortingChange?.(nextSorting);
-    },
-
-    getCoreRowModel: getCoreRowModel(),
-  });
+  getCoreRowModel: getCoreRowModel(),
+  getSortedRowModel: getSortedRowModel(),
+});
 
   React.useEffect(() => {
     // Ohne selectedRowIds arbeitet die Tabelle
@@ -449,18 +449,26 @@ export function GenericTableTanstack<T extends WithId>({
                       selected={selected}
                       onClick={() => {
                         handleRowClick(row);
-                        toggleExpanded(row.original.id);
+
+                        if (detailPanel) {
+                          toggleExpanded(row.original.id);
+                        }
                       }}
                       sx={{
                         cursor: "pointer",
 
-                        // Geschlossene Zeile leicht grau
-                        backgroundColor: expandedRows.has(row.original.id) ? "#cdcdcd" : "#f5f5f5",
+                        backgroundColor: selected
+                          ? "action.selected"
+                          : detailPanel && expandedRows.has(row.original.id)
+                            ? "#cdcdcd"
+                            : undefined,
 
                         "&:hover": {
-                          backgroundColor: expandedRows.has(row.original.id)
-                            ? "#c5c5c5"
-                            : "#e8e8e8",
+                          backgroundColor: selected
+                            ? "action.selected"
+                            : detailPanel && expandedRows.has(row.original.id)
+                              ? "#c5c5c5"
+                              : undefined,
                         },
 
                         "& td": {

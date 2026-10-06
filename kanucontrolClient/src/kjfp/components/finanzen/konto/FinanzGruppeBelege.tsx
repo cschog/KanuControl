@@ -6,7 +6,7 @@ import { fontSize } from "@/core/theme/ui";
 import { Box, Typography } from "@mui/material";
 import { ErrorDialog } from "@/core/components/common/ErrorDialog";
 import { getApiErrorMessage } from "@/kjfp/api/utils/apiError";
-import { GenericTableTanstack } from "@/core/components/common/GenericTableTanstack";
+import { GenericTableTanstack } from "@/core/components/table/GenericTableTanstack";
 import { AbrechnungBeleg } from "@/kjfp/types/abrechnung";
 import { getBelegeByFinanzGruppe } from "@/kjfp/api/services/abrechnungApi";
 

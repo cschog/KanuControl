@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState, useRef } from "react";
 
 import { useTheme } from "@mui/material/styles";
 import { useMediaQuery } from "@mui/material";
-import { GenericTableTanstack } from "@/core/components/common/GenericTableTanstack";
+import { GenericTableTanstack } from "@/core/components/table/GenericTableTanstack";
 import { PersonFormView } from "@/core/components/person/PersonFormView";
 import { personColumnsTanstack } from "@/core/components/person/personColumnsTanstack";
 import { deleteMitglied, setHauptverein } from "@/kjfp/api/services/mitgliedApi";

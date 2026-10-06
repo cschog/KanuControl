@@ -1,4 +1,4 @@
-import { WithId } from "@/core/components/common/GenericTableTanstack";
+import { WithId } from "@/core/components/table/GenericTableTanstack";
 export interface KostenRow extends WithId {
   datum: string;
   person: string;

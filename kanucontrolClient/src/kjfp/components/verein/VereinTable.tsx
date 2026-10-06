@@ -1,6 +1,6 @@
 import Verein from "@/kjfp/types/verein/VereinFormModel";
 import { Box, Tooltip, Typography } from "@mui/material";
-import { GenericTableTanstack } from "@/core/components/common/GenericTableTanstack";
+import { GenericTableTanstack } from "@/core/components/table/GenericTableTanstack";
 
 import { vereinColumnsTanstack, VereinWithId } from "./vereinColumnsTanstack";
 

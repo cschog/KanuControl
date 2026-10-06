@@ -1,5 +1,5 @@
 import { Paper, Stack } from "@mui/material";
-import { GenericTableTanstack } from "@/core/components/common/GenericTableTanstack";
+import { GenericTableTanstack } from "@/core/components/table/GenericTableTanstack";
 import { buchungColumns } from "@/kjfp/components/finanzen/abrechnung/buchungColumns";
 import { AbrechnungBeleg, Buchung } from "@/kjfp/types/abrechnung";
 import BelegInfo from "@/kjfp/components/finanzen/abrechnung/BelegInfo";

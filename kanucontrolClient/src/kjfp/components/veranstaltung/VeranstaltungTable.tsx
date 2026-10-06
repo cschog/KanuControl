@@ -1,6 +1,6 @@
 import { Box, Typography } from "@mui/material";
 
-import { GenericTableTanstack } from "@/core/components/common/GenericTableTanstack";
+import { GenericTableTanstack } from "@/core/components/table/GenericTableTanstack";
 
 import { VeranstaltungList } from "@/kjfp/types/veranstaltung/VeranstaltungList";
 

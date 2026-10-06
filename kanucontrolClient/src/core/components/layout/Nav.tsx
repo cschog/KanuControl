@@ -35,6 +35,9 @@ const appEnv = import.meta.env.VITE_APP_ENV;
 const Navigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
+
+  const isModuleStart = location.pathname === "/";
+
   const isKjfpContext =
     location.pathname === "/startmenue" ||
     location.pathname.startsWith("/vereine") ||
@@ -43,8 +46,12 @@ const Navigation = () => {
     location.pathname.startsWith("/teilnehmer") ||
     location.pathname.startsWith("/dokumente") ||
     location.pathname.startsWith("/verwaltung") ||
-    location.pathname.startsWith("/admin") ||
     location.pathname.startsWith("/ausgabeReisekosten");
+
+  const showTopLevelTenant = isModuleStart;
+
+  const showKjfpContext = isKjfpContext;
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const { schema, active, loading } = useAppContext();
@@ -65,7 +72,7 @@ const Navigation = () => {
       });
   }, []);
 
-  const handleHome = () => navigate("/startmenue");
+  const handleHome = () => navigate("/");
 
   const handleOnlineClick = (event: React.MouseEvent<HTMLElement>) => {
     setOnlineAnchor(event.currentTarget);
@@ -226,7 +233,7 @@ const Navigation = () => {
 
           {/* ================= CONTEXT ================= */}
 
-          {isKjfpContext && (
+          {showTopLevelTenant && (
             <Box
               sx={{
                 mt: isMobile ? 0.5 : 0,
@@ -243,40 +250,71 @@ const Navigation = () => {
                 >
                   <CircularProgress size={14} color="inherit" />
 
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      opacity: 0.8,
-                    }}
-                  >
+                  <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                    Lade Tenant…
+                  </Typography>
+                </Box>
+              ) : (
+                <Typography
+                  variant="subtitle1"
+                  fontWeight={400}
+                  sx={{
+                    opacity: 0.98,
+                    fontSize: isMobile ? "0.9rem" : "1.2rem",
+                    letterSpacing: 0.2,
+                    lineHeight: 1.3,
+                  }}
+                >
+                  {schema}
+                </Typography>
+              )}
+            </Box>
+          )}
+
+          {showKjfpContext && (
+            <Box
+              sx={{
+                mt: isMobile ? 0.5 : 0,
+                ml: isMobile ? 0 : "74px",
+              }}
+            >
+              {loading ? (
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                  }}
+                >
+                  <CircularProgress size={14} color="inherit" />
+
+                  <Typography variant="body2" sx={{ opacity: 0.8 }}>
                     Lade Kontext…
                   </Typography>
                 </Box>
               ) : (
-                <Box>
-                  <Typography
-                    variant="subtitle1"
-                    fontWeight={400}
-                    sx={{
-                      opacity: 0.98,
-                      fontSize: isMobile ? "0.9rem" : "1.2rem",
-                      letterSpacing: 0.2,
-                      lineHeight: 1.3,
-                    }}
-                  >
-                    {active
-                      ? isMobile
-                        ? `${active.name}${
-                            active.leiter ? ` · ${active.leiter.vorname} ${active.leiter.name}` : ""
-                          }`
-                        : `${schema} · ${active.name} · ${
-                            active.leiter
-                              ? `${active.leiter.vorname} ${active.leiter.name}`
-                              : "kein Leiter"
-                          }`
-                      : schema}
-                  </Typography>
-                </Box>
+                <Typography
+                  variant="subtitle1"
+                  fontWeight={400}
+                  sx={{
+                    opacity: 0.98,
+                    fontSize: isMobile ? "0.9rem" : "1.2rem",
+                    letterSpacing: 0.2,
+                    lineHeight: 1.3,
+                  }}
+                >
+                  {active
+                    ? isMobile
+                      ? `${schema} · ${active.name}${
+                          active.leiter ? ` · ${active.leiter.vorname} ${active.leiter.name}` : ""
+                        }`
+                      : `${schema} · ${active.name} · ${
+                          active.leiter
+                            ? `${active.leiter.vorname} ${active.leiter.name}`
+                            : "kein Leiter"
+                        }`
+                    : schema}
+                </Typography>
               )}
             </Box>
           )}

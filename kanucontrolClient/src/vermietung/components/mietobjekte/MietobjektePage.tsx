@@ -20,12 +20,9 @@ export default function MietobjektePage() {
   const [mietobjekte, setMietobjekte] = useState<Mietobjekt[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
-  const [sorting, setSorting] = useState<
-    {
-      id: string;
-      desc: boolean;
-    }[]
-  >([]);
+  const [sorting, setSorting] = useState<{ id: string; desc: boolean }[]>([
+    { id: "bezeichnung", desc: false },
+  ]);
 
   const [editMode, setEditMode] = useState(false);
   const [newMode, setNewMode] = useState(false);

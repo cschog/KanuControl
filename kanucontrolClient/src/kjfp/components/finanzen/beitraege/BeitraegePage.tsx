@@ -30,7 +30,7 @@ import { zahlungsnachweiseColumns } from "@/kjfp/components/finanzen/beitraege/z
 import ZahlungsnachweisDialog from "@/kjfp/components/finanzen/beitraege/ZahlungsnachweisDialog";
 import { fontSize, padding, chip, layout, spacing } from "@/core/theme/ui";
 
-import { GenericTableTanstack } from "@/core/components/common/GenericTableTanstack";
+import { GenericTableTanstack } from "@/core/components/table/GenericTableTanstack";
 import { beitraegeColumns } from "@/kjfp/components/finanzen/beitraege/beitraegeColumns";
 import DeleteConfirmDialog from "@/core/components/common/DeleteConfirmDialog";
 

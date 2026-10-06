@@ -1,7 +1,7 @@
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Accordion, AccordionDetails, AccordionSummary, Box } from "@mui/material";
 
-import { GenericTableTanstack } from "@/core/components/common/GenericTableTanstack";
+import { GenericTableTanstack } from "@/core/components/table/GenericTableTanstack";
 import { buchungColumns } from "@/kjfp/components/finanzen/abrechnung/buchungColumns";
 import BuchungRow from "@/kjfp/components/finanzen/abrechnung/BuchungRow";
 

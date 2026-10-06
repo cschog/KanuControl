@@ -4,7 +4,7 @@ import { Box, Button, Chip, Stack, Typography } from "@mui/material";
 
 import { AxiosError } from "axios";
 
-import { GenericTableTanstack } from "@/core/components/common/GenericTableTanstack";
+import { GenericTableTanstack } from "@/core/components/table/GenericTableTanstack";
 import { kuerzelColumns } from "@/kjfp/components/finanzen/konto/finanzgruppeColumns";
 
 import KontoCreateForm from "./KontoCreateForm";
