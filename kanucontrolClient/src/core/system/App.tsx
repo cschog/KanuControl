@@ -1,3 +1,4 @@
+// src/core/system/App.tsx
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 
@@ -27,7 +28,8 @@ import ReisekostenDetailPage from "@/kjfp/components/finanzen/reisekosten/Reisek
 import ActiveSessionsPage from "@/core/components/admin/audit/ActiveSessionsPage";
 import AuditHistoryPage from "@/core/components/admin/audit/AuditHistoryPage";
 import AuditPage from "@/core/components/admin/audit/AuditPage";
-import VermietungStart from "@/vermietung/components/VermietungStart";
+import VermietungStartPage from "@/vermietung/pages/VermietungStart";
+import MietobjektePage from "@/vermietung/components/mietobjekte/MietobjektePage";
 
 const App: React.FC = () => {
   return (
@@ -48,7 +50,8 @@ const App: React.FC = () => {
           <Route path="/teilnehmer" element={<TeilnehmerScreen />} />
           <Route path="/dokumente" element={<DokumenteScreen />} />
           <Route path="/verwaltung" element={<VerwaltungPage />} />
-          <Route path="/vermietung" element={<VermietungStart />} />
+          <Route path="/vermietung" element={<VermietungStartPage />} />
+          <Route path="/vermietung/mietobjekte" element={<MietobjektePage />} />
 
           {/* =====================================================
               FINANZEN – NEUE STRUKTUR

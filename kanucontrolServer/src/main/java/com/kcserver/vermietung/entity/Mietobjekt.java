@@ -1,7 +1,6 @@
 package com.kcserver.vermietung.entity;
 
 import com.kcserver.core.audit.Auditable;
-import com.kcserver.kjfp.entity.Verein;
 import com.kcserver.kjfp.enumtype.CountryCode;
 import com.kcserver.core.converter.CountryCodeConverter;
 import jakarta.persistence.*;
@@ -25,10 +24,6 @@ public class Mietobjekt extends Auditable {
     @EqualsAndHashCode.Include
     @ToString.Include
     private Long id;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "verein_id", nullable = false)
-    private Verein verein;
 
     @Column(nullable = false)
     private String bezeichnung;

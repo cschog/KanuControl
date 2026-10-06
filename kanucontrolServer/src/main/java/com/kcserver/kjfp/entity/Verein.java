@@ -36,6 +36,9 @@ public class Verein extends Auditable {
     @Size(min = 1, max = 10)
     private String abk;
 
+    @Column(nullable = false)
+    private boolean hausverein = false;
+
     private String strasse;
     private String plz;
     private String ort;

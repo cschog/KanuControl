@@ -28,6 +28,12 @@ public class MietbereichService {
     @Transactional(readOnly = true)
     public List<MietbereichDTO> getAll(Long mietobjektId) {
 
+        if (!mietobjektRepository.existsById(mietobjektId)) {
+            throw new IllegalArgumentException(
+                    "Mietobjekt nicht gefunden: " + mietobjektId
+            );
+        }
+
         return mietbereichRepository.findByMietobjektId(mietobjektId)
                 .stream()
                 .map(this::toDTO)
@@ -35,7 +41,7 @@ public class MietbereichService {
     }
 
     @Transactional(readOnly = true)
-    public MietbereichDTO getById(Long id) {
+    public MietbereichDTO getById(Long mietobjektId, Long id) {
 
         Mietbereich bereich = mietbereichRepository.findById(id)
                 .orElseThrow(() ->
@@ -43,6 +49,12 @@ public class MietbereichService {
                                 "Mietbereich nicht gefunden: " + id
                         )
                 );
+
+        if (!bereich.getMietobjekt().getId().equals(mietobjektId)) {
+            throw new IllegalArgumentException(
+                    "Mietbereich gehört nicht zum angegebenen Mietobjekt."
+            );
+        }
 
         return toDTO(bereich);
     }
@@ -69,9 +81,31 @@ public class MietbereichService {
     }
 
     public MietbereichDTO update(
+            Long mietobjektId,
             Long id,
             MietbereichDTO dto
     ) {
+        Mietbereich bereich = mietbereichRepository.findById(id)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Mietbereich nicht gefunden: " + id
+                        )
+                );
+
+        if (!bereich.getMietobjekt().getId().equals(mietobjektId)) {
+            throw new IllegalArgumentException(
+                    "Mietbereich gehört nicht zum angegebenen Mietobjekt."
+            );
+        }
+
+        bereich.setBezeichnung(dto.getBezeichnung());
+        bereich.setBeschreibung(dto.getBeschreibung());
+        bereich.setMietbar(dto.isMietbar());
+
+        return toDTO(mietbereichRepository.save(bereich));
+    }
+
+    public void delete(Long mietobjektId, Long id) {
 
         Mietbereich bereich = mietbereichRepository.findById(id)
                 .orElseThrow(() ->
@@ -80,32 +114,13 @@ public class MietbereichService {
                         )
                 );
 
-        Mietobjekt mietobjekt = mietobjektRepository
-                .findById(dto.getMietobjektId())
-                .orElseThrow(() ->
-                        new IllegalArgumentException(
-                                "Mietobjekt nicht gefunden: "
-                                        + dto.getMietobjektId()
-                        )
-                );
-
-        bereich.setMietobjekt(mietobjekt);
-        bereich.setBezeichnung(dto.getBezeichnung());
-        bereich.setBeschreibung(dto.getBeschreibung());
-        bereich.setMietbar(dto.isMietbar());
-
-        return toDTO(mietbereichRepository.save(bereich));
-    }
-
-    public void delete(Long id) {
-
-        if (!mietbereichRepository.existsById(id)) {
+        if (!bereich.getMietobjekt().getId().equals(mietobjektId)) {
             throw new IllegalArgumentException(
-                    "Mietbereich nicht gefunden: " + id
+                    "Mietbereich gehört nicht zum angegebenen Mietobjekt."
             );
         }
 
-        mietbereichRepository.deleteById(id);
+        mietbereichRepository.delete(bereich);
     }
 
     private MietbereichDTO toDTO(Mietbereich bereich) {

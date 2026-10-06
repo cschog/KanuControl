@@ -30,6 +30,8 @@ public class VereinDTO {
     @Size(min = 1, max = 10)
     private String abk;
 
+    private boolean hausverein;
+
     private String strasse;
     private String plz;
     private String ort;

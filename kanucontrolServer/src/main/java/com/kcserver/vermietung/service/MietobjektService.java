@@ -1,9 +1,7 @@
 package com.kcserver.vermietung.service;
 
 import com.kcserver.vermietung.dto.MietobjektDTO;
-import com.kcserver.kjfp.entity.Verein;
 import com.kcserver.vermietung.entity.Mietobjekt;
-import com.kcserver.kjfp.repository.VereinRepository;
 import com.kcserver.vermietung.repository.MietobjektRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -18,19 +16,13 @@ import java.util.Optional;
 public class MietobjektService {
 
     private final MietobjektRepository mietobjektRepository;
-    private final VereinRepository vereinRepository;
 
-    public MietobjektService(
-            MietobjektRepository mietobjektRepository,
-            VereinRepository vereinRepository
-    ) {
+    public MietobjektService(MietobjektRepository mietobjektRepository) {
         this.mietobjektRepository = mietobjektRepository;
-        this.vereinRepository = vereinRepository;
     }
 
     @Transactional(readOnly = true)
     public List<MietobjektDTO> getAll() {
-
         return mietobjektRepository.findAll()
                 .stream()
                 .map(this::toDTO)
@@ -39,7 +31,6 @@ public class MietobjektService {
 
     @Transactional(readOnly = true)
     public MietobjektDTO getById(Long id) {
-
         Mietobjekt objekt = mietobjektRepository.findById(id)
                 .orElseThrow(() ->
                         new IllegalArgumentException(
@@ -52,16 +43,8 @@ public class MietobjektService {
 
     public MietobjektDTO create(MietobjektDTO dto) {
 
-        Verein verein = vereinRepository.findById(dto.getVereinId())
-                .orElseThrow(() ->
-                        new IllegalArgumentException(
-                                "Verein nicht gefunden: " + dto.getVereinId()
-                        )
-                );
-
         Mietobjekt objekt = new Mietobjekt();
 
-        objekt.setVerein(verein);
         objekt.setBezeichnung(dto.getBezeichnung());
         objekt.setBeschreibung(dto.getBeschreibung());
         objekt.setStrasse(dto.getStrasse());
@@ -78,10 +61,7 @@ public class MietobjektService {
         return toDTO(mietobjektRepository.save(objekt));
     }
 
-    public MietobjektDTO update(
-            Long id,
-            MietobjektDTO dto
-    ) {
+    public MietobjektDTO update(Long id, MietobjektDTO dto) {
 
         Mietobjekt objekt = mietobjektRepository.findById(id)
                 .orElseThrow(() ->
@@ -90,26 +70,24 @@ public class MietobjektService {
                         )
                 );
 
-        Verein verein = vereinRepository.findById(dto.getVereinId())
-                .orElseThrow(() ->
-                        new IllegalArgumentException(
-                                "Verein nicht gefunden: " + dto.getVereinId()
-                        )
-                );
-
-        objekt.setVerein(verein);
         objekt.setBezeichnung(dto.getBezeichnung());
         objekt.setBeschreibung(dto.getBeschreibung());
         objekt.setStrasse(dto.getStrasse());
         objekt.setPlz(dto.getPlz());
         objekt.setOrt(dto.getOrt());
         objekt.setCountryCode(dto.getCountryCode());
-
-        // aktiv wird ausschließlich über setActive() geändert
         objekt.setMietbar(dto.isMietbar());
+
+        if (dto.isAktiv() && !objekt.isAktiv()) {
+            mietobjektRepository.unsetAktivesMietobjekt();
+            mietobjektRepository.flush();
+        }
+
+        objekt.setAktiv(dto.isAktiv());
 
         return toDTO(mietobjektRepository.save(objekt));
     }
+
     public void delete(Long id) {
 
         Mietobjekt objekt = mietobjektRepository.findById(id)
@@ -126,8 +104,7 @@ public class MietobjektService {
 
         if (warAktiv) {
             Optional<Mietobjekt> neuAktiv =
-                    mietobjektRepository
-                            .findTopByIdNotOrderByIdDesc(id);
+                    mietobjektRepository.findTopByIdNotOrderByIdDesc(id);
 
             neuAktiv.ifPresent(mietobjekt -> {
                 mietobjekt.setAktiv(true);
@@ -141,7 +118,6 @@ public class MietobjektService {
         MietobjektDTO dto = new MietobjektDTO();
 
         dto.setId(objekt.getId());
-        dto.setVereinId(objekt.getVerein().getId());
         dto.setBezeichnung(objekt.getBezeichnung());
         dto.setBeschreibung(objekt.getBeschreibung());
         dto.setStrasse(objekt.getStrasse());

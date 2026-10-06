@@ -1,3 +1,5 @@
+// src/core/api/client/apiClient.ts
+
 import axios, { InternalAxiosRequestConfig } from "axios";
 import keycloak from "@/core/auth/keycloak";
 

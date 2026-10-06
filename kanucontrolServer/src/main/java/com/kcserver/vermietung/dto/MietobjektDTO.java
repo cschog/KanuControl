@@ -13,8 +13,6 @@ public class MietobjektDTO {
 
     private Long id;
 
-    private Long vereinId;
-
     @NotBlank
     @Size(max = 255)
     private String bezeichnung;

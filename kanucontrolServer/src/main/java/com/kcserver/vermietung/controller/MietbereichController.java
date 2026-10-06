@@ -46,9 +46,8 @@ public class MietbereichController {
             @PathVariable Long mietobjektId,
             @PathVariable Long id
     ) {
-
         return new ApiResponse<>(
-                mietbereichService.getById(id),
+                mietbereichService.getById(mietobjektId, id),
                 List.of()
         );
     }
@@ -78,7 +77,7 @@ public class MietbereichController {
         dto.setMietobjektId(mietobjektId);
 
         return new ApiResponse<>(
-                mietbereichService.update(id, dto),
+                mietbereichService.update(mietobjektId, id, dto),
                 List.of()
         );
     }
@@ -89,7 +88,6 @@ public class MietbereichController {
             @PathVariable Long mietobjektId,
             @PathVariable Long id
     ) {
-
-        mietbereichService.delete(id);
+        mietbereichService.delete(mietobjektId, id);
     }
 }

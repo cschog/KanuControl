@@ -179,3 +179,5 @@ databaseChangeLog:
       file: db/changelog/changes/20260923-02-fahrtkosten-enum-korrigieren.xml
   - include:
       file: db/changelog/changes/20261004-01-vermietung-grundstruktur.xml
+  - include:
+      file: db/changelog/changes/20261005-01-vermietung-hausverein.xml

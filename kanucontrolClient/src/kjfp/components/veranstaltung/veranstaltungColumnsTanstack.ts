@@ -1,3 +1,4 @@
+// src/kjfp/components/veranstaltung/veranstaltungColumnsTanstack.ts
 import { ColumnDef } from "@tanstack/react-table";
 import { VeranstaltungList } from "@/kjfp/types/veranstaltung/VeranstaltungList";
 
