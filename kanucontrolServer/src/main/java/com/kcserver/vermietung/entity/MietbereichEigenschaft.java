@@ -26,6 +26,9 @@ public class MietbereichEigenschaft extends Auditable {
     private Mietbereich mietbereich;
 
     @Column(nullable = false)
+    private Integer sortierung = 0;
+
+    @Column(nullable = false)
     private String bezeichnung;
 
     @Enumerated(EnumType.STRING)

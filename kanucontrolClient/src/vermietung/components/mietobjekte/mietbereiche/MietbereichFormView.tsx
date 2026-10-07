@@ -8,6 +8,7 @@ import { useMietbereichForm } from "@/vermietung/hooks/useMietbereichForm";
 
 import type { Mietbereich } from "@/vermietung/types/Mietbereich";
 import type { MietbereichSave } from "@/vermietung/types/MietbereichSave";
+import { MietbereichEigenschaften } from "@/vermietung/components/mietobjekte/mietbereiche/mietbereichEigenschaft/MietbereichEigenschaften";
 
 interface Props {
   mietbereich: Mietbereich | null;
@@ -72,6 +73,11 @@ export const MietbereichFormView: React.FC<Props> = ({
         onDelete={onDelete}
         onBack={onBack}
         disableDelete={disableDelete}
+      />
+
+      <MietbereichEigenschaften
+        mietobjektId={mietbereich.mietobjektId}
+        mietbereichId={mietbereich.id}
       />
     </>
   );

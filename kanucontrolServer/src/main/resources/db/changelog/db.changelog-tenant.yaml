@@ -181,3 +181,5 @@ databaseChangeLog:
       file: db/changelog/changes/20261004-01-vermietung-grundstruktur.xml
   - include:
       file: db/changelog/changes/20261005-01-vermietung-hausverein.xml
+  - include:
+      file: db/changelog/changes/20261007-01-mietbereich-eigenschaft-sortierung.xml
