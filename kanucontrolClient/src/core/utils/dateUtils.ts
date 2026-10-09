@@ -1,4 +1,4 @@
-// src/utils/dateUtils.ts
+// src/core/utils/dateUtils.ts
 export function normalizeGermanDate(input: string): string | null {
   if (!input) return null;
 

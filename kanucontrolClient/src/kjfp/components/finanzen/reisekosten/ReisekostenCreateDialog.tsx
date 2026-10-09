@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ReisekostenPersonAutocomplete } from "@/kjfp/components/finanzen/reisekosten/ReisekostenPersonAutocomplete";
-import { PersonRef } from "@/kjfp/types/person/PersonRef";
+import { PersonRef } from "@/core/api/types/person/PersonRef";
 
 import {
   Button,

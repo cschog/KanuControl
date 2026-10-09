@@ -1,6 +1,6 @@
 import { Box, Tooltip } from "@mui/material";
 import { ColumnDef } from "@tanstack/react-table";
-import { PersonList } from "@/kjfp/types/person/PersonList";
+import { PersonList } from "@/core/api/types/person/PersonList";
 
 export const teilnehmerAvailableColumns: ColumnDef<PersonList>[] = [
   {

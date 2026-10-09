@@ -32,7 +32,7 @@ import {
   removeTeilnehmerBulk,
   updateTeilnehmerRolle,
 } from "@/kjfp/api/services/teilnehmerApi";
-import { PersonList } from "@/kjfp/types/person/PersonList";
+import { PersonList } from "@/core/api/types/person/PersonList";
 import { TeilnehmerList } from "@/kjfp/types/TeilnehmerList";
 import { radius } from "@/core/theme/ui";
 import type { DataStatus } from "@/kjfp/types/common/DataStatus";

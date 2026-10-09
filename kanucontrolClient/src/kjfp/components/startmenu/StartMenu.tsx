@@ -2,8 +2,8 @@ import { Box, Alert } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { getAllVereine } from "@/kjfp/api/services/vereinApi";
-import { getPersonsPaged } from "@/kjfp/api/services/personApi";
+import { getAllVereine } from "@/core/api/services/vereinApi";
+import { getPersonsPaged } from "@/core/api/services/personApi";
 
 import { MenueHeader } from "@/core/components/layout/MenueHeader";
 import { useAppContext } from "@/core/components/context/AppContext";
@@ -47,7 +47,6 @@ const StartMenue = () => {
         active.leiter?.name ?? ""
       }`
     : `Mandant: ${schema}`;
-
 
   const allgemeineButtons = [
     {

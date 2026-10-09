@@ -1,6 +1,7 @@
+// src/core/components/person/PersonAutocomplete.tsx
 import { EntityAutocomplete } from "@/core/components/common/reference/EntityAutocomplete";
-import { PersonRef } from "@/kjfp/types/person/PersonRef";
-import { searchPersons } from "@/kjfp/api/services/personApi";
+import { PersonRef } from "@/core/api/types/person/PersonRef";
+import { searchPersons } from "@/core/api/services/personApi";
 import type { FieldStatus } from "@/core/components/common/FormFeld";
 
 interface Props {

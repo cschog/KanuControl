@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="20261008-04-buchung-mietbereich" author="chris">
+
+        <createTable tableName="buchung_mietbereich">
+
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"
+                             primaryKeyName="pk_buchung_mietbereich"
+                             nullable="false"/>
+            </column>
+
+            <column name="buchung_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_buchung_mietbereich_buchung"
+                             references="buchung(id)"/>
+            </column>
+
+            <column name="mietbereich_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_buchung_mietbereich_mietbereich"
+                             references="mietbereich(id)"/>
+            </column>
+
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_by" type="VARCHAR(255)"/>
+
+            <column name="last_modified_at" type="TIMESTAMP WITH TIME ZONE"/>
+
+            <column name="last_modified_by" type="VARCHAR(255)"/>
+
+        </createTable>
+
+        <addUniqueConstraint
+                tableName="buchung_mietbereich"
+                columnNames="buchung_id, mietbereich_id"
+                constraintName="uk_buchung_mietbereich"/>
+
+        <createIndex
+                tableName="buchung_mietbereich"
+                indexName="idx_buchung_mietbereich_buchung">
+
+            <column name="buchung_id"/>
+
+        </createIndex>
+
+        <createIndex
+                tableName="buchung_mietbereich"
+                indexName="idx_buchung_mietbereich_mietbereich">
+
+            <column name="mietbereich_id"/>
+
+        </createIndex>
+
+    </changeSet>
+
+</databaseChangeLog>

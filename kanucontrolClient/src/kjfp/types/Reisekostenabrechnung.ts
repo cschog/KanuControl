@@ -1,5 +1,5 @@
 // api/types/Reisekostenabrechnung.ts
-import { PersonRef } from "@/kjfp/types/person/PersonRef";
+import { PersonRef } from "@/core/api/types/person/PersonRef";
 
 export interface ReisekostenabrechnungListResponse {
   id: number;

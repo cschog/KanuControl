@@ -14,7 +14,7 @@ import {
 import { PersonBaseForm } from "@/core/components/person/form/PersonBaseForm";
 import { usePersonForm } from "@/core/components/person/hooks/usePersonForm";
 
-import { PersonSave } from "@/kjfp/types/person/Person";
+import { PersonSave } from "@/core/api/types/person/Person";
 
 /* =========================================================
    PROPS

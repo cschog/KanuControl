@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="20261008-02-buchungsnummer-counter" author="chris">
+
+        <createTable tableName="buchungsnummer_counter">
+
+            <column name="jahr" type="INT">
+                <constraints primaryKey="true"
+                             primaryKeyName="pk_buchungsnummer_counter"
+                             nullable="false"/>
+            </column>
+
+            <column name="letzte_nummer" type="INT">
+                <constraints nullable="false"/>
+            </column>
+
+        </createTable>
+
+    </changeSet>
+
+</databaseChangeLog>

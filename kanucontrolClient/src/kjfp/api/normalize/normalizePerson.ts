@@ -1,5 +1,5 @@
 // src/api/normalize/normalizePerson.ts
-import { PersonSave } from "@/kjfp/types/person/Person";
+import { PersonSave } from "@/core/api/types/person/Person";
 
 export function normalizePersonPayload(raw: PersonSave): PersonSave {
   const p: PersonSave = { ...raw };

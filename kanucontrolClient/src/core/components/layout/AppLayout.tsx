@@ -3,10 +3,16 @@ import Navigation from "@/core/components/layout/Nav";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import BackFooter from "@/core/components/common/BackFooter";
 import { useEffect, useRef, useState } from "react";
+import { VermietungProvider } from "@/vermietung/context/VermietungProvider";
 
-export default function AppLayout() {
+import { BackNavigationProvider } from "@/core/context/BackNavigationProvider";
+import { useBackNavigation } from "@/core/context/BackNavigationContext";
+
+function AppLayoutContent() {
   const navigate = useNavigate();
   const location = useLocation();
+
+  const { handleBack } = useBackNavigation();
 
   const contentRef = useRef<HTMLDivElement>(null);
   const [floatingFooter, setFloatingFooter] = useState(false);
@@ -65,42 +71,52 @@ export default function AppLayout() {
   }, []);
 
   return (
-    <Box>
-      <Navigation />
+    <VermietungProvider>
+      <Box>
+        <Navigation />
 
-      <Box
-        ref={contentRef}
-        sx={{
-          pt: { xs: 2, md: 4 },
-          px: { xs: 2, md: 4 },
-          pb: floatingFooter
-            ? `calc(${footerHeight}px + 16px + env(safe-area-inset-bottom))`
-            : { xs: 2, md: 4 },
-        }}
-      >
-        <Outlet />
+        <Box
+          ref={contentRef}
+          sx={{
+            pt: { xs: 2, md: 4 },
+            px: { xs: 2, md: 4 },
+            pb: floatingFooter
+              ? `calc(${footerHeight}px + 16px + env(safe-area-inset-bottom))`
+              : { xs: 2, md: 4 },
+          }}
+        >
+          <Outlet />
+        </Box>
+
+        {!isStartMenu && (
+          <BackFooter
+            floating={floatingFooter}
+            onHeightChange={setFooterHeight}
+            actions={[
+              ...(!hideBackButton
+                ? [
+                    {
+                      label: "Zurück",
+                      onClick: () => handleBack(() => navigate(-1)),
+                    },
+                  ]
+                : []),
+              {
+                label: isVermietung ? "Zurück zur Vermietung" : "Zurück zum Startmenü",
+                path: isVermietung ? "/vermietung" : "/startmenue",
+              },
+            ]}
+          />
+        )}
       </Box>
+    </VermietungProvider>
+  );
+}
 
-      {!isStartMenu && (
-        <BackFooter
-          floating={floatingFooter}
-          onHeightChange={setFooterHeight}
-          actions={[
-            ...(!hideBackButton
-              ? [
-                  {
-                    label: "Zurück",
-                    onClick: () => navigate(-1),
-                  },
-                ]
-              : []),
-            {
-              label: isVermietung ? "Zurück zur Vermietung" : "Zurück zum Startmenü",
-              path: isVermietung ? "/vermietung" : "/startmenue",
-            },
-          ]}
-        />
-      )}
-    </Box>
+export default function AppLayout() {
+  return (
+    <BackNavigationProvider>
+      <AppLayoutContent />
+    </BackNavigationProvider>
   );
 }

@@ -1,0 +1,43 @@
+// src/api/types/VereinFormModel.ts
+
+import { PersonRef } from "@/core/api/types/person/PersonRef";
+import { CountryCode } from "@/kjfp/api/enums/CountryCode";
+import type { DataStatus, DataFieldStatus } from "@/kjfp/types/common/DataStatus";
+
+export default interface VereinFormModel {
+  /** ID – nur bei READ / EDIT */
+  id?: number;
+
+  /** Pflichtfelder (Backend: @NotNull) */
+  name: string;
+  abk: string;
+
+  /** Adresse */
+  strasse?: string;
+  plz?: string;
+  ort?: string;
+  countryCode: CountryCode;
+
+  /** Kontakt */
+  telefon?: string;
+
+  /** Bankdaten */
+  bankName?: string;
+  iban?: string;
+  bic?: string;
+  schutzkonzept?: string; // ISO Date
+
+  kikZertifiziertSeit?: string;
+
+  kikZertifiziertBis?: string;
+
+  /** 🔗 Kontoinhaber (Person) */
+  kontoinhaber?: PersonRef;
+
+  mitgliederCount?: number;
+
+  dataStatus?: {
+    status: DataStatus;
+    fields: Record<string, DataFieldStatus>;
+  };
+}

@@ -29,6 +29,7 @@ import { getBackendVersion } from "@/kjfp/api/services/systemApi";
 import apiClient from "@/core/api/client/apiClient";
 import { InfoPage } from "@/kjfp/api/enums/InfoPage";
 import { radius } from "@/core/theme/ui";
+import { useVermietungContext } from "@/vermietung/context/VermietungContext";
 
 const appEnv = import.meta.env.VITE_APP_ENV;
 
@@ -47,6 +48,10 @@ const Navigation = () => {
     location.pathname.startsWith("/dokumente") ||
     location.pathname.startsWith("/verwaltung") ||
     location.pathname.startsWith("/ausgabeReisekosten");
+  
+  const isVermietungContext = location.pathname.startsWith("/vermietung");
+
+  const showVermietungContext = isVermietungContext;
 
   const showTopLevelTenant = isModuleStart;
 
@@ -55,6 +60,7 @@ const Navigation = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const { schema, active, loading } = useAppContext();
+  const { mietobjekt, loading: vermietungLoading } = useVermietungContext();
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const [onlineAnchor, setOnlineAnchor] = useState<HTMLElement | null>(null);
   const [backendVersion, setBackendVersion] = useState("...");
@@ -314,6 +320,43 @@ const Navigation = () => {
                             : "kein Leiter"
                         }`
                     : schema}
+                </Typography>
+              )}
+            </Box>
+          )}
+          {showVermietungContext && (
+            <Box
+              sx={{
+                mt: isMobile ? 0.5 : 0,
+                ml: isMobile ? 0 : "74px",
+              }}
+            >
+              {vermietungLoading ? (
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                  }}
+                >
+                  <CircularProgress size={14} color="inherit" />
+
+                  <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                    Lade Kontext…
+                  </Typography>
+                </Box>
+              ) : (
+                <Typography
+                  variant="subtitle1"
+                  fontWeight={400}
+                  sx={{
+                    opacity: 0.98,
+                    fontSize: isMobile ? "0.9rem" : "1.2rem",
+                    letterSpacing: 0.2,
+                    lineHeight: 1.3,
+                  }}
+                >
+                  {mietobjekt ? `${schema} · ${mietobjekt.bezeichnung}` : schema}
                 </Typography>
               )}
             </Box>

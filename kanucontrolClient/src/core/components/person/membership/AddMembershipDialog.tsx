@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 
 import apiClient from "@/core/api/client/apiClient";
-import { VereinRef } from "@/kjfp/types/verein/VereinRef";
+import { VereinRef } from "@/core/api/types/verein/VereinRef";
 import { getApiErrorMessage } from "@/kjfp/api/utils/apiError";
 import { ErrorDialog } from "@/core/components/common/ErrorDialog";
 

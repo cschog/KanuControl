@@ -1,4 +1,4 @@
-import { PersonDetail, PersonSave } from "@/kjfp/types/person/Person";
+import { PersonDetail, PersonSave } from "@/core/api/types/person/Person";
 import { normalizeGermanDate } from "@/core/utils/dateUtils";
 import { useEntityForm } from "@/core/components/common/hooks/useEntityForm";
 

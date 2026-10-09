@@ -7,6 +7,7 @@ interface Action {
   label: string;
   path?: string;
   onClick?: () => void;
+  back?: boolean;
 }
 
 interface Props {
@@ -44,13 +45,15 @@ export default function BackFooter({
         ]
       : []);
 
-  const handleAction = (action: Action) => {
-    if (action.onClick) {
-      action.onClick();
-    } else if (action.path) {
-      navigate(action.path);
-    }
-  };
+ const handleAction = (action: Action) => {
+   if (action.onClick) {
+     action.onClick();
+   } else if (action.back) {
+     navigate(-1);
+   } else if (action.path) {
+     navigate(action.path);
+   }
+ };
 
   /*
    * Höhe des Footers an AppLayout melden

@@ -6,7 +6,7 @@ import { Sex } from "@/kjfp/api/enums/Sex";
 import { COUNTRIES } from "@/kjfp/api/enums/CountryCode";
 import PostalCodeAutocomplete from "@/core/components/common/PostalCodeAutocomplete";
 
-import { PersonSave } from "@/kjfp/types/person/Person";
+import { PersonSave } from "@/core/api/types/person/Person";
 import type { DataFieldStatus } from "@/kjfp/types/common/DataStatus";
 
 interface Props {

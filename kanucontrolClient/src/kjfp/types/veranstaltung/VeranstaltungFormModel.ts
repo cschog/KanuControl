@@ -1,6 +1,6 @@
 import { VeranstaltungTyp } from "@/kjfp/api/enums/VeranstaltungTyp";
-import { VereinRef } from "@/kjfp/types/verein/VereinRef";
-import { PersonRef } from "@/kjfp/types/person/PersonRef";
+import { VereinRef } from "@/core/api/types/verein/VereinRef";
+import { PersonRef } from "@/core/api/types/person/PersonRef";
 import { CountryCode } from "@/kjfp/api/enums/CountryCode";
 
 import { VerpflegungsmodellRef } from "@/kjfp/types/veranstaltung/VerpflegungsmodellRef";

@@ -15,7 +15,7 @@ import {
   TextField,
 } from "@mui/material";
 
-import { PersonRef } from "@/kjfp/types/person/PersonRef";
+import { PersonRef } from "@/core/api/types/person/PersonRef";
 
 import { FahrtabschnittRequest } from "@/kjfp/types/Reisekostenabrechnung";
 

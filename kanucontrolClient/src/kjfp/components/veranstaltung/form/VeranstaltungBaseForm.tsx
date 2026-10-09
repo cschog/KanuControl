@@ -14,7 +14,7 @@ import { VeranstaltungTyp } from "@/kjfp/api/enums/VeranstaltungTyp";
 import { UnterkunftsartRef } from "@/kjfp/types/unterkunft/UnterkunftsartRef";
 import { VerpflegungsmodellRef } from "@/kjfp/types/verpflegung/VerpflegungsmodellRef";
 
-import { VereinAutocomplete } from "@/kjfp/components/verein/VereinAutocomplete";
+import { VereinAutocomplete } from "@/core/components/verein/VereinAutocomplete";
 import { PersonAutocomplete } from "@/core/components/person/PersonAutocomplete";
 
 import FormFeld from "@/core/components/common/FormFeld";

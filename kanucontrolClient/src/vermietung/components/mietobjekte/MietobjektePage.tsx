@@ -3,6 +3,7 @@ import { Alert, Box, Button, CircularProgress, Typography } from "@mui/material"
 
 import type { Mietobjekt } from "@/vermietung/types/Mietobjekt";
 import type { MietobjektSave } from "@/vermietung/types/MietobjektSave";
+import { useVermietungContext } from "@/vermietung/context/VermietungContext";
 
 import {
   createMietobjekt,
@@ -29,6 +30,7 @@ export default function MietobjektePage() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { reload: reloadVermietung } = useVermietungContext();
 
   const selectedMietobjekt = mietobjekte.find((m) => m.id === selectedId) ?? null;
 
@@ -161,6 +163,9 @@ async function handleSave(payload: MietobjektSave) {
       setError(null);
 
       await setMietobjektAktiv(selectedId);
+
+      // Zentralen Vermietung-Kontext sofort aktualisieren
+      await reloadVermietung();
 
       await loadMietobjekte(false);
 

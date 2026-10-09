@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import StarIcon from "@mui/icons-material/Star";
 
-import { PersonDetail } from "@/kjfp/types/person/Person";
+import { PersonDetail } from "@/core/api/types/person/Person";
 import { MitgliedFunktion, MitgliedFunktionLabel } from "@/kjfp/types/MitgliedFunktion";
 import { radius } from "@/core/theme/ui";
 

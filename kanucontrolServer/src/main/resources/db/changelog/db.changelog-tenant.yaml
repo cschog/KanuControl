@@ -183,3 +183,11 @@ databaseChangeLog:
       file: db/changelog/changes/20261005-01-vermietung-hausverein.xml
   - include:
       file: db/changelog/changes/20261007-01-mietbereich-eigenschaft-sortierung.xml
+  - include:
+      file: db/changelog/changes/20261008-01-buchung.xml
+  - include:
+      file: db/changelog/changes/20261008-02-buchungsnummer-counter.xml
+  - include:
+      file: db/changelog/changes/20261008-03-buchung-mieter.xml
+  - include:
+      file: db/changelog/changes/20261008-04-buchung-mietbereich.xml

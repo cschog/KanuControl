@@ -1,205 +1,36 @@
-// src/core/system/App.tsx
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { useRoutes } from "react-router-dom";
 
 import ModuleStart from "@/core/components/module/ModuleStart";
-
-import StartMenue from "@/kjfp/components/startmenu/StartMenu";
-import Vereine from "../../kjfp/components/verein/VereineScreen";
-import Personen from "../components/person/PersonenScreen";
-import Veranstaltungen from "@/kjfp/components/veranstaltung/VeranstaltungenScreen";
-import TeilnehmerScreen from "@/kjfp/components/teilnehmer/TeilnehmerScreen";
-import DokumenteScreen from "@/kjfp/components/dokumente/DokumenteScreen";
-import VerwaltungPage from "@/kjfp/components/verwaltung/VerwaltungPage";
-import AusgabeReisekosten from "../../kjfp/components/pdfAusgaben/AusgabeReisekosten";
-
 import AppLayout from "@/core/components/layout/AppLayout";
-import FinanzBereichMenue from "@/kjfp/components/finanzen/FinanzBereichMenue";
-import FinanzRoute from "@/kjfp/components/finanzen/FinanzRoute";
+import StartMenue from "@/kjfp/components/startmenu/StartMenu";
 
-import PostalCodeAdminPage from "@/core/components/admin/PostalCodeAdminPage";
-import AdminPage from "@/core/components/admin/AdminPage";
-import FoerdersatzAdminPage from "@/core/components/admin/foerdersatz/FoerdersatzAdminPage";
-import KikZuschlagAdminPage from "@/core/components/admin/kik/KikZuschlagAdminPage";
-import ReisekostenKonfigurationPage from "@/core/components/admin/reisekosten/ReisekostenKonfigurationPage";
-
-import ReisekostenDetailPage from "@/kjfp/components/finanzen/reisekosten/ReisekostenDetailPage";
-
-import ActiveSessionsPage from "@/core/components/admin/audit/ActiveSessionsPage";
-import AuditHistoryPage from "@/core/components/admin/audit/AuditHistoryPage";
-import AuditPage from "@/core/components/admin/audit/AuditPage";
-import VermietungStartPage from "@/vermietung/pages/VermietungStart";
-import MietobjektePage from "@/vermietung/components/mietobjekte/MietobjektePage";
+import KjfpRoutes from "@/core/system/routes/KjfpRoutes";
+import VermietungRoutes from "@/core/system/routes/VermietungRoutes";
+import AdminRoutes from "@/core/system/routes/AdminRoutes";
 
 const App: React.FC = () => {
-  return (
-    <div className="App">
-      <Routes>
-        <Route element={<AppLayout />}>
-          {/* =====================================================
-              START / ALLGEMEINE MODULE
-             ===================================================== */}
+  const routes = useRoutes([
+    {
+      element: <AppLayout />,
+      children: [
+        {
+          path: "/",
+          element: <ModuleStart />,
+        },
+        {
+          path: "/startmenue",
+          element: <StartMenue />,
+        },
 
-          <Route path="/" element={<ModuleStart />} />
-          <Route path="/" element={<StartMenue />} />
-          <Route path="/startmenue" element={<StartMenue />} />
+        ...KjfpRoutes,
+        ...VermietungRoutes,
+        ...AdminRoutes,
+      ],
+    },
+  ]);
 
-          <Route path="/vereine" element={<Vereine />} />
-          <Route path="/personen" element={<Personen />} />
-          <Route path="/veranstaltungen" element={<Veranstaltungen />} />
-          <Route path="/teilnehmer" element={<TeilnehmerScreen />} />
-          <Route path="/dokumente" element={<DokumenteScreen />} />
-          <Route path="/verwaltung" element={<VerwaltungPage />} />
-          <Route path="/vermietung" element={<VermietungStartPage />} />
-          <Route path="/vermietung/mietobjekte" element={<MietobjektePage />} />
-
-          {/* =====================================================
-              FINANZEN – NEUE STRUKTUR
-             ===================================================== */}
-
-          {/* =====================================================
-    FINANZEN
-   ===================================================== */}
-
-          <Route
-            path="/veranstaltungen/:veranstaltungId/finanzen/vorbereitung"
-            element={
-              <FinanzBereichMenue
-                title="Vorbereitung"
-                module={[
-                  {
-                    key: "simulation",
-                    label: "Simulation",
-                    path: "simulation",
-                  },
-                  {
-                    key: "planung",
-                    label: "Planung",
-                    path: "planung",
-                  },
-                ]}
-              />
-            }
-          />
-
-          <Route
-            path="/veranstaltungen/:veranstaltungId/finanzen/durchfuehrung"
-            element={
-              <FinanzBereichMenue
-                title="Durchführung"
-                module={[
-                  {
-                    key: "beitraege",
-                    label: "Beiträge",
-                    path: "beitraege",
-                  },
-                  {
-                    key: "abrechnung",
-                    label: "Abrechnung",
-                    path: "abrechnung",
-                  },
-                  {
-                    key: "fahrkosten",
-                    label: "Fahrkosten",
-                    path: "fahrkosten",
-                  },
-                  {
-                    key: "finanzgruppen",
-                    label: "Konten",
-                    path: "finanzgruppen",
-                  },
-                ]}
-              />
-            }
-          />
-
-          <Route
-            path="/veranstaltungen/:veranstaltungId/finanzen/auswertung"
-            element={
-              <FinanzBereichMenue
-                title="Auswertung"
-                module={[
-                  {
-                    key: "dashboard",
-                    label: "Dashboard",
-                    path: "dashboard",
-                  },
-                  {
-                    key: "finanzausgleich",
-                    label: "Finanzausgleich",
-                    path: "finanzausgleich",
-                  },
-                ]}
-              />
-            }
-          />
-
-          <Route
-            path="/veranstaltungen/:veranstaltungId/finanzen/simulation"
-            element={<FinanzRoute type="simulation" />}
-          />
-
-          <Route
-            path="/veranstaltungen/:veranstaltungId/finanzen/planung"
-            element={<FinanzRoute type="planung" />}
-          />
-
-          <Route
-            path="/veranstaltungen/:veranstaltungId/finanzen/abrechnung"
-            element={<FinanzRoute type="abrechnung" />}
-          />
-
-          <Route
-            path="/veranstaltungen/:veranstaltungId/finanzen/beitraege"
-            element={<FinanzRoute type="beitraege" />}
-          />
-
-          <Route
-            path="/veranstaltungen/:veranstaltungId/finanzen/fahrkosten"
-            element={<FinanzRoute type="fahrkosten" />}
-          />
-
-          <Route
-            path="/veranstaltungen/:veranstaltungId/finanzen/finanzgruppen"
-            element={<FinanzRoute type="finanzgruppen" />}
-          />
-
-          <Route
-            path="/veranstaltungen/:veranstaltungId/finanzen/dashboard"
-            element={<FinanzRoute type="dashboard" />}
-          />
-
-          <Route
-            path="/veranstaltungen/:veranstaltungId/finanzen/finanzausgleich"
-            element={<FinanzRoute type="finanzausgleich" />}
-          />
-
-          <Route
-            path="/veranstaltungen/:veranstaltungId/reisekosten/:id"
-            element={<ReisekostenDetailPage />}
-          />
-
-          <Route path="/ausgabeReisekosten" element={<AusgabeReisekosten />} />
-
-          {/* =====================================================
-              ADMINISTRATION
-             ===================================================== */}
-
-          <Route path="/admin" element={<AdminPage />} />
-          <Route path="/admin/postal-codes" element={<PostalCodeAdminPage />} />
-          <Route path="/admin/foerdersaetze" element={<FoerdersatzAdminPage />} />
-          <Route path="/admin/kik-zuschlaege" element={<KikZuschlagAdminPage />} />
-          <Route path="/admin/reisekosten" element={<ReisekostenKonfigurationPage />} />
-
-          <Route path="/admin/audit/active-sessions" element={<ActiveSessionsPage />} />
-
-          <Route path="/admin/audit/history" element={<AuditHistoryPage />} />
-
-          <Route path="/admin/audit" element={<AuditPage />} />
-        </Route>
-      </Routes>
-    </div>
-  );
+  return <div className="App">{routes}</div>;
 };
 
 export default App;

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="20261008-03-buchung-mieter" author="chris">
+
+        <dropForeignKeyConstraint
+                baseTableName="buchung"
+                constraintName="fk_buchung_buchende_person"/>
+
+        <renameColumn
+                tableName="buchung"
+                oldColumnName="buchende_person_id"
+                newColumnName="mieter_id"
+                columnDataType="BIGINT"/>
+
+        <addForeignKeyConstraint
+                baseTableName="buchung"
+                baseColumnNames="mieter_id"
+                referencedTableName="person"
+                referencedColumnNames="id"
+                constraintName="fk_buchung_mieter"/>
+
+    </changeSet>
+
+</databaseChangeLog>

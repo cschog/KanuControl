@@ -8,9 +8,9 @@ import { AddMembershipDialog } from "@/core/components/person/membership/AddMemb
 import { usePersonForm } from "@/core/components/person/hooks/usePersonForm";
 import { updateMitgliedFunktion } from "@/kjfp/api/services/mitgliedApi";
 
-import { PersonDetail, PersonSave } from "@/kjfp/types/person/Person";
+import { PersonDetail, PersonSave } from "@/core/api/types/person/Person";
 import apiClient from "@/core/api/client/apiClient";
-import { VereinRef } from "@/kjfp/types/verein/VereinRef";
+import { VereinRef } from "@/core/api/types/verein/VereinRef";
 import EmptyState from "@/core/components/common/EmptyState";
 
 /* =========================================================

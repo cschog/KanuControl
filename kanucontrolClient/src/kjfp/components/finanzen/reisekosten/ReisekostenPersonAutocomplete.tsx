@@ -1,5 +1,5 @@
 import { EntityAutocomplete } from "@/core/components/common/reference/EntityAutocomplete";
-import { PersonRef } from "@/kjfp/types/person/PersonRef";
+import { PersonRef } from "@/core/api/types/person/PersonRef";
 
 import { searchVerfuegbareReisekostenPersonen } from "@/kjfp/api/services/reisekostenApi";
 

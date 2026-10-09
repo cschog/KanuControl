@@ -15,8 +15,8 @@ import { BottomActionBar } from "@/core/components/layout/BottomActionBar";
 import { GridFilterModel } from "@mui/x-data-grid";
 import { getApiErrorMessage } from "@/kjfp/api/utils/apiError";
 import { ErrorDialog } from "@/core/components/common/ErrorDialog";
-import { VereinAutocomplete } from "@/kjfp/components/verein/VereinAutocomplete";
-import { VereinRef } from "@/kjfp/types/verein/VereinRef";
+import { VereinAutocomplete } from "@/core/components/verein/VereinAutocomplete";
+import { VereinRef } from "@/core/api/types/verein/VereinRef";
 
 import {
   getPersonById,
@@ -26,9 +26,9 @@ import {
   getPersonsScroll,
   createPerson,
   exportPersonsCsv,
-} from "@/kjfp/api/services/personApi";
+} from "@/core/api/services/personApi";
 
-import { PersonList, PersonDetail, PersonSave } from "@/kjfp/types/person/Person";
+import { PersonList, PersonDetail, PersonSave } from "@/core/api/types/person/Person";
 import { useDebounce } from "@/core/components/common/reference/hooks";
 import SearchField from "@/core/components/common/SearchField";
 

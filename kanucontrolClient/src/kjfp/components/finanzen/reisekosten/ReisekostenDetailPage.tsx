@@ -14,7 +14,7 @@ import { useReisekostenabrechnung } from "@/kjfp/hooks/reisekosten/useReisekoste
 import { updateReisekostenabrechnung } from "@/kjfp/api/services/reisekostenApi";
 import { BottomActionBar } from "@/core/components/layout/BottomActionBar";
 import { useNavigate } from "react-router-dom";
-import { PersonRef } from "@/kjfp/types/person/PersonRef";
+import { PersonRef } from "@/core/api/types/person/PersonRef";
 import { ReisekostenMitfahrerAutocomplete } from "@/kjfp/components/finanzen/reisekosten/ReisekostenMitfahrerAutocomplete";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
