@@ -36,6 +36,18 @@ public class Mietbereich extends Auditable {
     @Column(nullable = false)
     private boolean mietbar = true;
 
+    @Column(name = "direktbuchung_aktiv", nullable = false)
+    private boolean direktbuchungAktiv = true;
+
+    @Column(name = "airbnb_aktiv", nullable = false)
+    private boolean airbnbAktiv = false;
+
+    @Column(name = "bestand", nullable = false)
+    private Integer bestand = 1;
+
+    @Column(name = "mengeneinheit", length = 50)
+    private String mengeneinheit;
+
     @OneToMany(
             mappedBy = "mietbereich",
             cascade = CascadeType.ALL,

@@ -242,6 +242,8 @@ async function handleSave(payload: MietobjektSave) {
             countryCode: "DE",
             aktiv: true,
             mietbar: true,
+            direktbuchungAktiv: true,
+            airbnbAktiv: false,
           }}
           editMode={true}
           onEdit={() => setEditMode(true)}

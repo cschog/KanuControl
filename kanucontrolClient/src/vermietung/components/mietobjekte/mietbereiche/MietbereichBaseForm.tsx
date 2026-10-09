@@ -41,6 +41,53 @@ export const MietbereichBaseForm: React.FC<Props> = ({ form, editMode, onChange 
         <MenuItem value="ja">Ja</MenuItem>
         <MenuItem value="nein">Nein</MenuItem>
       </TextField>
+
+      <TextField
+        fullWidth
+        size="small"
+        type="number"
+        label="Bestand"
+        value={form.bestand}
+        disabled={!editMode}
+        slotProps={{
+          htmlInput: { min: 1, step: 1 },
+        }}
+        onChange={(e) => onChange("bestand", Number(e.target.value))}
+        helperText="Anzahl verfügbarer Einheiten"
+      />
+
+      <FormFeld
+        label="Mengeneinheit"
+        value={form.mengeneinheit}
+        disabled={!editMode}
+        onChange={(v) => onChange("mengeneinheit", v)}
+      />
+
+      <TextField
+        select
+        fullWidth
+        size="small"
+        label="Direktbuchung aktiv"
+        value={form.direktbuchungAktiv ? "ja" : "nein"}
+        disabled={!editMode}
+        onChange={(e) => onChange("direktbuchungAktiv", e.target.value === "ja")}
+      >
+        <MenuItem value="ja">Ja</MenuItem>
+        <MenuItem value="nein">Nein</MenuItem>
+      </TextField>
+
+      <TextField
+        select
+        fullWidth
+        size="small"
+        label="Airbnb aktiv"
+        value={form.airbnbAktiv ? "ja" : "nein"}
+        disabled={!editMode}
+        onChange={(e) => onChange("airbnbAktiv", e.target.value === "ja")}
+      >
+        <MenuItem value="ja">Ja</MenuItem>
+        <MenuItem value="nein">Nein</MenuItem>
+      </TextField>
     </>
   );
 };

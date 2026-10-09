@@ -3,6 +3,7 @@ package com.kcserver.vermietung.entity;
 import com.kcserver.core.audit.Auditable;
 import com.kcserver.kjfp.entity.Person;
 import com.kcserver.kjfp.entity.Verein;
+import com.kcserver.vermietung.enumtype.Buchungsquelle;
 import com.kcserver.vermietung.enumtype.Buchungsstatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -47,6 +48,10 @@ public class Buchung extends Auditable {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Buchungsstatus status = Buchungsstatus.ANFRAGE;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "buchungsquelle", nullable = false, length = 20)
+    private Buchungsquelle buchungsquelle;
 
     @Column(nullable = false)
     private LocalDate anreise;

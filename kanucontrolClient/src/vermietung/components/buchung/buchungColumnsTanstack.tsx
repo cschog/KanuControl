@@ -19,13 +19,14 @@ export const buchungColumnsTanstack: ColumnDef<Buchung>[] = [
   },
   {
     accessorKey: "anreise",
-    header: "Anreise",
+    header: "Beginn",
     cell: ({ row }) => formatGermanDate(row.original.anreise),
   },
   {
     accessorKey: "abreise",
-    header: "Abreise",
-    cell: ({ row }) => formatGermanDate(row.original.abreise),
+    header: "Ende",
+    cell: ({ row }) =>
+      row.original.unbefristet ? "Unbefristet" : formatGermanDate(row.original.abreise),
   },
   {
     accessorKey: "status",

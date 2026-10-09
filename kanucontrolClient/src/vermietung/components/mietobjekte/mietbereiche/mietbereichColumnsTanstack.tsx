@@ -16,4 +16,13 @@ export const mietbereichColumnsTanstack: ColumnDef<Mietbereich>[] = [
     header: "Mietbar",
     cell: ({ row }) => (row.original.mietbar ? "Ja" : "Nein"),
   },
+  {
+    accessorKey: "bestand",
+    header: "Bestand",
+  },
+  {
+    accessorKey: "mengeneinheit",
+    header: "Einheit",
+    cell: ({ row }) => row.original.mengeneinheit || "–",
+  },
 ];

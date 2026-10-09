@@ -7,4 +7,6 @@ export interface MietobjektSave {
   countryCode: string;
   aktiv: boolean;
   mietbar: boolean;
+  direktbuchungAktiv: boolean;
+  airbnbAktiv: boolean;
 }

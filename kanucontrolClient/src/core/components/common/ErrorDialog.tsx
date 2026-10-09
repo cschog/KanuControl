@@ -1,3 +1,4 @@
+// src/core/components/common/ErrorDialog.tsx
 import {
   Dialog,
   DialogTitle,

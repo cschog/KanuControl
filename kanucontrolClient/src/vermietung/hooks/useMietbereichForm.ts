@@ -7,6 +7,10 @@ const emptyForm: MietbereichSave = {
   bezeichnung: "",
   beschreibung: "",
   mietbar: true,
+  direktbuchungAktiv: true,
+  airbnbAktiv: false,
+  bestand: 1,
+  mengeneinheit: "",
 };
 
 export function useMietbereichForm(mietbereich: Mietbereich | null) {
@@ -22,6 +26,10 @@ export function useMietbereichForm(mietbereich: Mietbereich | null) {
       bezeichnung: mietbereich.bezeichnung ?? "",
       beschreibung: mietbereich.beschreibung ?? "",
       mietbar: mietbereich.mietbar,
+      direktbuchungAktiv: mietbereich.direktbuchungAktiv ?? true,
+      airbnbAktiv: mietbereich.airbnbAktiv ?? false,
+      bestand: mietbereich.bestand ?? 1,
+      mengeneinheit: mietbereich.mengeneinheit ?? "",
     });
   }, [mietbereich]);
 
@@ -37,11 +45,11 @@ export function useMietbereichForm(mietbereich: Mietbereich | null) {
   }
 
   function buildSavePayload(): MietbereichSave | null {
-    if (!form) {
+    if (!form || !form.bezeichnung.trim()) {
       return null;
     }
 
-    if (!form.bezeichnung.trim()) {
+    if (!Number.isInteger(form.bestand) || form.bestand < 1) {
       return null;
     }
 
@@ -49,6 +57,7 @@ export function useMietbereichForm(mietbereich: Mietbereich | null) {
       ...form,
       bezeichnung: form.bezeichnung.trim(),
       beschreibung: form.beschreibung.trim(),
+      mengeneinheit: form.mengeneinheit.trim(),
     };
   }
 

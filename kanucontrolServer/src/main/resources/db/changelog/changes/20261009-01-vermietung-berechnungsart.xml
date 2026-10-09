@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="20261009-01-vermietung-berechnungsart" author="chris">
+
+        <addColumn tableName="mietobjekt">
+            <column name="berechnungsart"
+                    type="VARCHAR(20)"
+                    defaultValue="ZEITRAUM">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="anreisezeit" type="TIME"/>
+            <column name="abreisezeit" type="TIME"/>
+        </addColumn>
+
+    </changeSet>
+
+</databaseChangeLog>

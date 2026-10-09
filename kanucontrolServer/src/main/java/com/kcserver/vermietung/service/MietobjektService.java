@@ -57,6 +57,8 @@ public class MietobjektService {
 
         objekt.setAktiv(true);
         objekt.setMietbar(dto.isMietbar());
+        objekt.setDirektbuchungAktiv(dto.isDirektbuchungAktiv());
+        objekt.setAirbnbAktiv(dto.isAirbnbAktiv());
 
         return toDTO(mietobjektRepository.save(objekt));
     }
@@ -77,6 +79,8 @@ public class MietobjektService {
         objekt.setOrt(dto.getOrt());
         objekt.setCountryCode(dto.getCountryCode());
         objekt.setMietbar(dto.isMietbar());
+        objekt.setDirektbuchungAktiv(dto.isDirektbuchungAktiv());
+        objekt.setAirbnbAktiv(dto.isAirbnbAktiv());
 
         if (dto.isAktiv() && !objekt.isAktiv()) {
             mietobjektRepository.unsetAktivesMietobjekt();
@@ -126,6 +130,8 @@ public class MietobjektService {
         dto.setCountryCode(objekt.getCountryCode());
         dto.setAktiv(objekt.isAktiv());
         dto.setMietbar(objekt.isMietbar());
+        dto.setDirektbuchungAktiv(objekt.isDirektbuchungAktiv());
+        dto.setAirbnbAktiv(objekt.isAirbnbAktiv());
 
         return dto;
     }

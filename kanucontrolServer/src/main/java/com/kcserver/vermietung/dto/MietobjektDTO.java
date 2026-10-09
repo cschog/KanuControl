@@ -34,4 +34,8 @@ public class MietobjektDTO {
     private boolean aktiv = true;
 
     private boolean mietbar = true;
+
+    private boolean direktbuchungAktiv = true;
+
+    private boolean airbnbAktiv = false;
 }

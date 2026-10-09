@@ -191,3 +191,11 @@ databaseChangeLog:
       file: db/changelog/changes/20261008-03-buchung-mieter.xml
   - include:
       file: db/changelog/changes/20261008-04-buchung-mietbereich.xml
+  - include:
+      file: db/changelog/changes/20261009-01-vermietung-berechnungsart.xml
+  - include:
+      file: db/changelog/changes/20261009-02-mietpreis.xml
+  - include:
+      file: db/changelog/changes/20261009-03-vermietung-buchungsquellen-bestand.xml
+  - include:
+      file: db/changelog/changes/20261009-04-buchung-tabellen-wiederherstellen.xml

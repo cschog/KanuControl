@@ -1,6 +1,8 @@
 package com.kcserver.vermietung.dto;
 
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
@@ -22,4 +24,15 @@ public class MietbereichDTO {
     private String beschreibung;
 
     private boolean mietbar = true;
+
+    private boolean direktbuchungAktiv = true;
+
+    private boolean airbnbAktiv = false;
+
+    @NotNull
+    @Min(1)
+    private Integer bestand = 1;
+
+    @Size(max = 50)
+    private String mengeneinheit;
 }

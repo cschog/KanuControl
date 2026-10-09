@@ -12,6 +12,8 @@ const emptyForm: MietobjektSave = {
   countryCode: "DE",
   aktiv: true,
   mietbar: true,
+  direktbuchungAktiv: true,
+  airbnbAktiv: false,
 };
 
 export function useMietobjektForm(mietobjekt: Mietobjekt | null) {
@@ -32,6 +34,8 @@ export function useMietobjektForm(mietobjekt: Mietobjekt | null) {
       countryCode: mietobjekt.countryCode ?? "DE",
       aktiv: mietobjekt.aktiv,
       mietbar: mietobjekt.mietbar,
+      direktbuchungAktiv: mietobjekt.direktbuchungAktiv ?? true,
+      airbnbAktiv: mietobjekt.airbnbAktiv ?? false,
     });
   }, [mietobjekt]);
 

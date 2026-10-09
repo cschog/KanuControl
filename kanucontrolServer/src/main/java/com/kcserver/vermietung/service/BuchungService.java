@@ -1,11 +1,15 @@
 package com.kcserver.vermietung.service;
 
+import com.kcserver.core.exception.ErrorMessages;
 import com.kcserver.kjfp.entity.Person;
 import com.kcserver.kjfp.entity.Verein;
 import com.kcserver.kjfp.repository.PersonRepository;
 import com.kcserver.kjfp.repository.VereinRepository;
 import com.kcserver.vermietung.dto.BuchungDTO;
+import com.kcserver.vermietung.dto.BuchungMietbereichDTO;
 import com.kcserver.vermietung.entity.*;
+import com.kcserver.vermietung.enumtype.Buchungsquelle;
+import com.kcserver.vermietung.enumtype.Buchungsstatus;
 import com.kcserver.vermietung.repository.BuchungRepository;
 import com.kcserver.vermietung.repository.BuchungsnummerCounterRepository;
 import com.kcserver.vermietung.repository.MietbereichRepository;
@@ -27,6 +31,9 @@ public class BuchungService {
     private final VereinRepository vereinRepository;
     private final MietobjektRepository mietobjektRepository;
     private final MietbereichRepository mietbereichRepository;
+
+    private static final java.time.LocalDate UNBEFRISTET_BIS =
+            java.time.LocalDate.of(3000, 12, 31);
 
     public BuchungService(
             BuchungRepository buchungRepository,
@@ -59,7 +66,11 @@ public class BuchungService {
         Buchung buchung = buchungRepository.findById(id)
                 .orElseThrow(() ->
                         new IllegalArgumentException(
-                                "Buchung nicht gefunden: " + id
+                                String.format(
+                                        java.util.Locale.GERMAN,
+                                        ErrorMessages.BUCHUNG_NOT_FOUND,
+                                        id
+                                )
                         )
                 );
 
@@ -73,33 +84,38 @@ public class BuchungService {
         Mietobjekt mietobjekt =
                 getMietobjekt(dto.getMietobjektId());
 
-        List<Mietbereich> mietbereiche =
-                getMietbereiche(dto.getMietbereichIds(), mietobjekt);
-
         Verein veranstalter =
                 getVeranstalter(dto.getVeranstalterVereinId());
 
         Buchung buchung = new Buchung();
+
+        buchung.setBuchungsquelle(
+                dto.getBuchungsquelle() != null
+                        ? dto.getBuchungsquelle()
+                        : Buchungsquelle.DIREKT
+        );
 
         buchung.setMieter(mieter);
         buchung.setMietobjekt(mietobjekt);
         buchung.setVeranstalter(veranstalter);
 
         buchung.setAnreise(dto.getAnreise());
-        buchung.setAbreise(dto.getAbreise());
+        buchung.setAbreise(
+                dto.isUnbefristet()
+                        ? UNBEFRISTET_BIS
+                        : dto.getAbreise()
+        );
 
         buchung.setStatus(
                 com.kcserver.vermietung.enumtype.Buchungsstatus.ANFRAGE
         );
 
-        for (Mietbereich mietbereich : mietbereiche) {
-            BuchungMietbereich zuordnung = new BuchungMietbereich();
-
-            zuordnung.setBuchung(buchung);
-            zuordnung.setMietbereich(mietbereich);
-
-            buchung.getMietbereiche().add(zuordnung);
-        }
+        setzeBuchungspositionen(
+                buchung,
+                dto,
+                mietobjekt,
+                buchung.getBuchungsquelle()
+        );
 
         vergebeBuchungsnummer(buchung);
 
@@ -108,15 +124,16 @@ public class BuchungService {
         );
     }
 
-    public BuchungDTO update(
-            Long id,
-            BuchungDTO dto
-    ) {
+    public BuchungDTO update(Long id, BuchungDTO dto) {
 
         Buchung buchung = buchungRepository.findById(id)
                 .orElseThrow(() ->
                         new IllegalArgumentException(
-                                "Buchung nicht gefunden: " + id
+                                String.format(
+                                        java.util.Locale.GERMAN,
+                                        ErrorMessages.BUCHUNG_NOT_FOUND,
+                                        id
+                                )
                         )
                 );
 
@@ -125,39 +142,51 @@ public class BuchungService {
         Mietobjekt mietobjekt =
                 getMietobjekt(dto.getMietobjektId());
 
-        List<Mietbereich> mietbereiche =
-                getMietbereiche(dto.getMietbereichIds(), mietobjekt);
-
         Verein veranstalter =
                 getVeranstalter(dto.getVeranstalterVereinId());
 
+        // Neue Stammdaten setzen.
         buchung.setMieter(mieter);
         buchung.setMietobjekt(mietobjekt);
         buchung.setVeranstalter(veranstalter);
-
         buchung.setAnreise(dto.getAnreise());
-        buchung.setAbreise(dto.getAbreise());
-
-        buchung.getMietbereiche().clear();
-
-        for (Mietbereich mietbereich : mietbereiche) {
-            BuchungMietbereich zuordnung = new BuchungMietbereich();
-
-            zuordnung.setBuchung(buchung);
-            zuordnung.setMietbereich(mietbereich);
-
-            buchung.getMietbereiche().add(zuordnung);
-        }
-
-        if (dto.getStatus() != null) {
-            buchung.setStatus(dto.getStatus());
-        }
-
-        // Buchungsnummer bleibt beim Update unverändert.
-
-        return toDTO(
-                buchungRepository.save(buchung)
+        buchung.setAbreise(
+                dto.isUnbefristet()
+                        ? UNBEFRISTET_BIS
+                        : dto.getAbreise()
         );
+        buchung.setBuchungsquelle(
+                dto.getBuchungsquelle() != null
+                        ? dto.getBuchungsquelle()
+                        : buchung.getBuchungsquelle()
+        );
+
+// Bestehende Zuordnungen entfernen.
+        buchung.getMietbereiche().clear();
+        buchungRepository.flush();
+
+// Neue Zuordnungen anlegen und Buchungsquelle prüfen.
+        setzeBuchungspositionen(
+                buchung,
+                dto,
+                mietobjekt,
+                dto.getBuchungsquelle()
+        );
+
+// Status bestimmen und gegebenenfalls Bestand prüfen.
+        Buchungsstatus neuerStatus = dto.getStatus() != null
+                ? dto.getStatus()
+                : buchung.getStatus();
+
+        if (neuerStatus == Buchungsstatus.BESTAETIGT) {
+            pruefeBestand(buchung, buchung.getId());
+        }
+
+        buchung.setStatus(neuerStatus);
+
+        buchungRepository.flush();
+
+        return toDTO(buchung);
     }
 
     public void delete(Long id) {
@@ -165,7 +194,11 @@ public class BuchungService {
         Buchung buchung = buchungRepository.findById(id)
                 .orElseThrow(() ->
                         new IllegalArgumentException(
-                                "Buchung nicht gefunden: " + id
+                                String.format(
+                                        java.util.Locale.GERMAN,
+                                        ErrorMessages.BUCHUNG_NOT_FOUND,
+                                        id
+                                )
                         )
                 );
 
@@ -290,9 +323,13 @@ public class BuchungService {
         );
 
         dto.setStatus(buchung.getStatus());
+        dto.setBuchungsquelle(buchung.getBuchungsquelle());
 
         dto.setAnreise(buchung.getAnreise());
         dto.setAbreise(buchung.getAbreise());
+        dto.setUnbefristet(
+                UNBEFRISTET_BIS.equals(buchung.getAbreise())
+        );
 
         dto.setMietobjektId(
                 buchung.getMietobjekt().getId()
@@ -308,6 +345,29 @@ public class BuchungService {
                         .map(zuordnung ->
                                 zuordnung.getMietbereich().getId()
                         )
+                        .toList()
+        );
+
+        dto.setPositionen(
+                buchung.getMietbereiche()
+                        .stream()
+                        .map(zuordnung -> {
+                            BuchungMietbereichDTO position =
+                                    new BuchungMietbereichDTO();
+
+                            position.setMietbereichId(
+                                    zuordnung.getMietbereich().getId()
+                            );
+                            position.setMietbereichBezeichnung(
+                                    zuordnung.getMietbereich().getBezeichnung()
+                            );
+                            position.setMengeneinheit(
+                                    zuordnung.getMietbereich().getMengeneinheit()
+                            );
+                            position.setAnzahl(zuordnung.getAnzahl());
+
+                            return position;
+                        })
                         .toList()
         );
 
@@ -330,5 +390,163 @@ public class BuchungService {
         );
 
         return dto;
+    }
+
+    private void setzeBuchungspositionen(
+            Buchung buchung,
+            BuchungDTO dto,
+            Mietobjekt mietobjekt,
+            Buchungsquelle buchungsquelle
+    ) {
+        List<BuchungMietbereichDTO> positionen = dto.getPositionen();
+
+        if (positionen == null) {
+            // Abwärtskompatibilität: bisherige mietbereichIds verwenden.
+            List<Mietbereich> mietbereiche =
+                    getMietbereiche(dto.getMietbereichIds(), mietobjekt);
+
+            for (Mietbereich mietbereich : mietbereiche) {
+                pruefeBuchungsquelle(
+                        buchungsquelle,
+                        mietobjekt,
+                        mietbereich
+                );
+                BuchungMietbereich zuordnung = new BuchungMietbereich();
+                zuordnung.setBuchung(buchung);
+                zuordnung.setMietbereich(mietbereich);
+                zuordnung.setAnzahl(1);
+                buchung.getMietbereiche().add(zuordnung);
+            }
+
+            return;
+        }
+
+        for (BuchungMietbereichDTO position : positionen) {
+            if (position.getMietbereichId() == null) {
+                throw new IllegalArgumentException(
+                        ErrorMessages.BUCHUNG_POSITION_MIETBEREICH_REQUIRED
+                );
+            }
+
+            if (position.getAnzahl() == null || position.getAnzahl() < 1) {
+                throw new IllegalArgumentException(
+                        ErrorMessages.BUCHUNG_POSITION_ANZAHL_INVALID
+                );
+            }
+
+            Mietbereich mietbereich = getMietbereiche(
+                    List.of(position.getMietbereichId()),
+                    mietobjekt
+            ).getFirst();
+
+            BuchungMietbereich zuordnung = new BuchungMietbereich();
+            buchung.getMietbereiche().add(zuordnung);
+            pruefeBuchungsquelle(
+                    buchungsquelle,
+                    mietobjekt,
+                    mietbereich
+            );
+            zuordnung.setBuchung(buchung);
+            zuordnung.setMietbereich(mietbereich);
+            zuordnung.setAnzahl(position.getAnzahl());
+        }
+    }
+
+    private void pruefeBuchungsquelle(
+            Buchungsquelle buchungsquelle,
+            Mietobjekt mietobjekt,
+            Mietbereich mietbereich
+    ) {
+        if (buchungsquelle == null) {
+            throw new IllegalArgumentException(
+                    ErrorMessages.BUCHUNG_QUELLE_REQUIRED
+            );
+        }
+
+        boolean amMietobjektAktiv = switch (buchungsquelle) {
+            case DIREKT -> mietobjekt.isDirektbuchungAktiv();
+            case AIRBNB -> mietobjekt.isAirbnbAktiv();
+        };
+
+        if (!amMietobjektAktiv) {
+            throw new IllegalArgumentException(
+                    String.format(
+                            java.util.Locale.GERMAN,
+                            ErrorMessages.BUCHUNG_QUELLE_MIETOBJEKT_NOT_ENABLED,
+                            buchungsquelle
+                    )
+            );
+        }
+
+        boolean amMietbereichAktiv = switch (buchungsquelle) {
+            case DIREKT -> mietbereich.isDirektbuchungAktiv();
+            case AIRBNB -> mietbereich.isAirbnbAktiv();
+        };
+
+        if (!amMietbereichAktiv) {
+            throw new IllegalArgumentException(
+                    String.format(
+                            java.util.Locale.GERMAN,
+                            ErrorMessages.BUCHUNG_QUELLE_MIETBEREICH_NOT_ENABLED,
+                            buchungsquelle,
+                            mietbereich.getBezeichnung()
+                    )
+            );
+        }
+    }
+
+    private void pruefeBestand(
+            Buchung buchung,
+            Long eigeneBuchungId
+    ) {
+        List<Buchung> bestehendeBuchungen;
+
+        if (eigeneBuchungId == null) {
+            bestehendeBuchungen =
+                    buchungRepository
+                            .findByStatusAndAnreiseLessThanAndAbreiseGreaterThan(
+                                    Buchungsstatus.BESTAETIGT,
+                                    buchung.getAbreise(),
+                                    buchung.getAnreise()
+                            );
+        } else {
+            bestehendeBuchungen =
+                    buchungRepository
+                            .findByStatusAndAnreiseLessThanAndAbreiseGreaterThanAndIdNot(
+                                    Buchungsstatus.BESTAETIGT,
+                                    buchung.getAbreise(),
+                                    buchung.getAnreise(),
+                                    eigeneBuchungId
+                            );
+        }
+
+        for (BuchungMietbereich neuePosition : buchung.getMietbereiche()) {
+            Mietbereich mietbereich = neuePosition.getMietbereich();
+
+            int bereitsGebucht = bestehendeBuchungen.stream()
+                    .filter(b -> b.getMietobjekt().getId()
+                            .equals(buchung.getMietobjekt().getId()))
+                    .flatMap(b -> b.getMietbereiche().stream())
+                    .filter(position -> position.getMietbereich().getId()
+                            .equals(mietbereich.getId()))
+                    .mapToInt(BuchungMietbereich::getAnzahl)
+                    .sum();
+
+            int angefordert = neuePosition.getAnzahl();
+            int bestand = mietbereich.getBestand();
+
+            if (bereitsGebucht + angefordert > bestand) {
+                throw new IllegalArgumentException(
+                        String.format(
+                                java.util.Locale.GERMAN,
+                                com.kcserver.core.exception.ErrorMessages.BUCHUNG_BESTAND_UNZUREICHEND,
+                                mietbereich.getBezeichnung(),
+                                bestand,
+                                bereitsGebucht,
+                                angefordert
+                        )
+                );
+            }
+        }
     }
 }

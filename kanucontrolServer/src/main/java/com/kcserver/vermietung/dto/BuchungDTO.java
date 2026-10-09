@@ -1,5 +1,6 @@
 package com.kcserver.vermietung.dto;
 
+import com.kcserver.vermietung.enumtype.Buchungsquelle;
 import com.kcserver.vermietung.enumtype.Buchungsstatus;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -20,15 +21,21 @@ public class BuchungDTO {
     @NotNull
     private LocalDate anreise;
 
-    @NotNull
     private LocalDate abreise;
+
+    private boolean unbefristet = false;
 
     @NotNull
     private Long mietobjektId;
 
     private List<Long> mietbereichIds;
 
+    private List<BuchungMietbereichDTO> positionen;
+
     private List<MietbereichRefDTO> mietbereiche;
+
+    @NotNull
+    private Buchungsquelle buchungsquelle = Buchungsquelle.DIREKT;
 
     @NotNull
     private Long mieterId;

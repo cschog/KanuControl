@@ -9,6 +9,7 @@ import { useBuchungForm } from "@/vermietung/hooks/useBuchungForm";
 
 import type { Buchung } from "@/vermietung/types/Buchung";
 import type { BuchungSave } from "@/vermietung/types/BuchungSave";
+import type { Buchungsquelle } from "@/vermietung/enums/Buchungsquelle";
 
 interface Props {
   buchung: Buchung | null;
@@ -24,6 +25,7 @@ interface Props {
   onBack: () => void;
 
   disableDelete: boolean;
+  neueBuchungsquelle?: Buchungsquelle;
 }
 
 const statusAnzeige: Record<
@@ -46,6 +48,7 @@ export const BuchungFormView: React.FC<Props> = ({
   onConfirm,
   onCancelBooking,
   disableDelete,
+  neueBuchungsquelle = "DIREKT",
 }) => {
   const {
     form,
@@ -56,7 +59,7 @@ export const BuchungFormView: React.FC<Props> = ({
     setMieter,
     setVeranstalter,
     buildSavePayload,
-  } = useBuchungForm(buchung);
+  } = useBuchungForm(buchung, neueBuchungsquelle);
 
   if (!form) {
     return (
@@ -89,16 +92,17 @@ export const BuchungFormView: React.FC<Props> = ({
 
         <Chip label={status.label} color={status.color} />
       </Box>
-
       <Box
-        display="grid"
-        gridTemplateColumns={{
-          xs: "1fr",
-          sm: "repeat(2, 1fr)",
-          lg: "repeat(3, 1fr)",
+        sx={{
+          display: "grid",
+          gridTemplateColumns: {
+            xs: "1fr",
+            md: "minmax(0, 1fr) minmax(0, 1fr)",
+          },
+          gap: 3,
+          mt: 3,
+          alignItems: "start",
         }}
-        gap={2}
-        sx={{ mt: 3 }}
       >
         <BuchungBaseForm
           form={form}

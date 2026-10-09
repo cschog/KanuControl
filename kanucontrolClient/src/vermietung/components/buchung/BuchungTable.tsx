@@ -2,7 +2,7 @@ import { GenericTableTanstack } from "@/core/components/table/GenericTableTansta
 
 import type { Buchung } from "@/vermietung/types/Buchung";
 
-import { buchungColumnsTanstack } from "@/vermietung/components/anmeldung/buchungColumnsTanstack";
+import { buchungColumnsTanstack } from "@/vermietung/components/buchung/buchungColumnsTanstack";
 
 interface Props {
   data: Buchung[];
@@ -33,6 +33,7 @@ export function BuchungTable({ data, selectedId, onSelect, sorting, onSortingCha
       onSelectRow={(row) => onSelect(row ?? null)}
       sorting={sorting}
       onSortingChange={onSortingChange}
+      getRowBackgroundColor={(row) => (row.buchungsquelle === "AIRBNB" ? "#FFF3E0" : undefined)}
       mobileRenderRow={(row) => (
         <div>
           <strong>{row.buchungsnummer}</strong>

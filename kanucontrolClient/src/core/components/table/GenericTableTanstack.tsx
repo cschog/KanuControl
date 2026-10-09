@@ -54,6 +54,7 @@ interface GenericTableTanstackProps<T extends WithId> {
   onSortingChange?: (sorting: SortingState) => void;
   onLoadMore?: () => void;
   hasMore?: boolean;
+  getRowBackgroundColor?: (row: T) => string | undefined;
 }
 
 export function GenericTableTanstack<T extends WithId>({
@@ -76,6 +77,7 @@ export function GenericTableTanstack<T extends WithId>({
   selectionOnly = false,
   emptyState,
   detailPanel,
+  getRowBackgroundColor,
 }: GenericTableTanstackProps<T>) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -162,30 +164,30 @@ export function GenericTableTanstack<T extends WithId>({
    TABLE
    ========================================================= */
 
-const table = useReactTable({
-  data,
-  columns: finalColumns,
+  const table = useReactTable({
+    data,
+    columns: finalColumns,
 
-  state: {
-    sorting,
-    rowSelection,
-  },
+    state: {
+      sorting,
+      rowSelection,
+    },
 
-  enableRowSelection: true,
+    enableRowSelection: true,
 
-  getRowId: (row) => String(row.id),
+    getRowId: (row) => String(row.id),
 
-  onRowSelectionChange: setRowSelection,
+    onRowSelectionChange: setRowSelection,
 
-  onSortingChange: (updater) => {
-    const nextSorting = typeof updater === "function" ? updater(sorting) : updater;
+    onSortingChange: (updater) => {
+      const nextSorting = typeof updater === "function" ? updater(sorting) : updater;
 
-    onSortingChange?.(nextSorting);
-  },
+      onSortingChange?.(nextSorting);
+    },
 
-  getCoreRowModel: getCoreRowModel(),
-  getSortedRowModel: getSortedRowModel(),
-});
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
 
   React.useEffect(() => {
     // Ohne selectedRowIds arbeitet die Tabelle
@@ -323,7 +325,7 @@ const table = useReactTable({
 
                     borderColor: selected ? "primary.main" : "divider",
 
-                    bgcolor: selected ? "action.selected" : undefined,
+                    bgcolor: selected ? "action.selected" : getRowBackgroundColor?.(row.original),
                   }}
                 >
                   <Box display="flex" alignItems="center" gap={1}>
@@ -461,14 +463,14 @@ const table = useReactTable({
                           ? "action.selected"
                           : detailPanel && expandedRows.has(row.original.id)
                             ? "#cdcdcd"
-                            : undefined,
+                            : getRowBackgroundColor?.(row.original),
 
                         "&:hover": {
                           backgroundColor: selected
                             ? "action.selected"
                             : detailPanel && expandedRows.has(row.original.id)
                               ? "#c5c5c5"
-                              : undefined,
+                              : getRowBackgroundColor?.(row.original),
                         },
 
                         "& td": {

@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="20261009-04-buchung-tabellen-wiederherstellen"
+               author="chris">
+
+        <!-- Tabelle buchung -->
+        <createTable tableName="buchung">
+
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"
+                             primaryKeyName="pk_buchung"
+                             nullable="false"/>
+            </column>
+
+            <column name="buchungsjahr" type="INT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="laufende_nummer" type="INT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="status" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="buchungsquelle" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="anreise" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="abreise" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="mietobjekt_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_buchung_mietobjekt"
+                             references="mietobjekt(id)"/>
+            </column>
+
+            <column name="mieter_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_buchung_mieter"
+                             references="person(id)"/>
+            </column>
+
+            <column name="veranstalter_verein_id" type="BIGINT">
+                <constraints foreignKeyName="fk_buchung_veranstalter_verein"
+                             references="verein(id)"/>
+            </column>
+
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_by" type="VARCHAR(255)"/>
+
+            <column name="last_modified_at" type="TIMESTAMP WITH TIME ZONE"/>
+
+            <column name="last_modified_by" type="VARCHAR(255)"/>
+
+        </createTable>
+
+        <addUniqueConstraint
+                tableName="buchung"
+                columnNames="buchungsjahr, laufende_nummer"
+                constraintName="uk_buchung_jahr_laufende_nummer"/>
+
+        <createIndex
+                tableName="buchung"
+                indexName="idx_buchung_mietobjekt_anreise_abreise">
+            <column name="mietobjekt_id"/>
+            <column name="anreise"/>
+            <column name="abreise"/>
+        </createIndex>
+
+        <!-- Tabelle buchung_mietbereich -->
+        <createTable tableName="buchung_mietbereich">
+
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"
+                             primaryKeyName="pk_buchung_mietbereich"
+                             nullable="false"/>
+            </column>
+
+            <column name="buchung_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_buchung_mietbereich_buchung"
+                             references="buchung(id)"/>
+            </column>
+
+            <column name="mietbereich_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_buchung_mietbereich_mietbereich"
+                             references="mietbereich(id)"/>
+            </column>
+
+            <column name="anzahl" type="INT" defaultValueNumeric="1">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_by" type="VARCHAR(255)"/>
+
+            <column name="last_modified_at" type="TIMESTAMP WITH TIME ZONE"/>
+
+            <column name="last_modified_by" type="VARCHAR(255)"/>
+
+        </createTable>
+
+        <addUniqueConstraint
+                tableName="buchung_mietbereich"
+                columnNames="buchung_id, mietbereich_id"
+                constraintName="uk_buchung_mietbereich"/>
+
+        <createIndex
+                tableName="buchung_mietbereich"
+                indexName="idx_buchung_mietbereich_buchung">
+            <column name="buchung_id"/>
+        </createIndex>
+
+        <createIndex
+                tableName="buchung_mietbereich"
+                indexName="idx_buchung_mietbereich_mietbereich">
+            <column name="mietbereich_id"/>
+        </createIndex>
+
+    </changeSet>
+
+</databaseChangeLog>

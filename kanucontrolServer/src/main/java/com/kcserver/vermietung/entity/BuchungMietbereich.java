@@ -38,4 +38,7 @@ public class BuchungMietbereich extends Auditable {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "mietbereich_id", nullable = false)
     private Mietbereich mietbereich;
+
+    @Column(name = "anzahl", nullable = false)
+    private Integer anzahl = 1;
 }

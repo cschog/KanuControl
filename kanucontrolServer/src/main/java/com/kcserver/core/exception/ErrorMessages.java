@@ -585,11 +585,51 @@ public final class ErrorMessages {
             "PLZ nicht gefunden";
 
     // =========================================================
-    // Reisekosten
+    // Vermietung / Buchungen
     // =========================================================
 
-    // Hier ergänzen wir die konkreten fachlichen Meldungen aus
-    // ReisekostenabrechnungServiceImpl nach der nächsten Prüfung.
+    public static final String BUCHUNG_NOT_FOUND =
+            "Buchung nicht gefunden: %s";
+
+    public static final String MIETER_NOT_FOUND =
+            "Mieter nicht gefunden.";
+
+    public static final String MIETOBJEKT_NOT_FOUND =
+            "Mietobjekt nicht gefunden.";
+
+    public static final String VERANSTALTER_NOT_FOUND =
+            "Veranstalter nicht gefunden.";
+
+    public static final String MIETBEREICH_NOT_FOUND =
+            "Mindestens ein Mietbereich wurde nicht gefunden.";
+
+    public static final String MIETBEREICH_WRONG_MIETOBJEKT =
+            "Mindestens ein Mietbereich gehört nicht zum angegebenen Mietobjekt.";
+
+    public static final String MIETBEREICH_NOT_RENTABLE =
+            "Mindestens ein ausgewählter Mietbereich ist nicht mietbar.";
+
+    public static final String BUCHUNG_POSITION_MIETBEREICH_REQUIRED =
+            "Eine Buchungsposition enthält keinen Mietbereich.";
+
+    public static final String BUCHUNG_POSITION_ANZAHL_INVALID =
+            "Die Anzahl muss mindestens 1 betragen.";
+
+    public static final String BUCHUNG_QUELLE_REQUIRED =
+            "Die Buchungsquelle muss angegeben werden.";
+
+    public static final String BUCHUNG_QUELLE_NOT_ENABLED =
+            "Die Buchungsquelle ist für dieses Mietobjekt nicht aktiviert.";
+
+    public static final String BUCHUNG_QUELLE_MIETBEREICH_NOT_ENABLED =
+            "Die Buchungsquelle %s ist für den Mietbereich '%s' nicht aktiviert.";
+
+    public static final String BUCHUNG_BESTAND_UNZUREICHEND =
+            "Nicht genügend Bestand für den Mietbereich '%s'. "
+                    + "Bestand: %d, bereits gebucht: %d, angefordert: %d.";
+
+    public static final String BUCHUNG_QUELLE_MIETOBJEKT_NOT_ENABLED =
+            "Die Buchungsquelle %s ist für dieses Mietobjekt nicht aktiviert.";
 
     private ErrorMessages() {
     }

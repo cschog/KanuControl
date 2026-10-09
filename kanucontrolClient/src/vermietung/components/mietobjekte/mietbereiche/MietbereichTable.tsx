@@ -64,6 +64,11 @@ export function MietbereichTable({ data, selectedId, onSelect, sorting, onSortin
               MIETBAR
             </Box>
           )}
+
+          <Typography variant="body2">
+            Bestand: {row.bestand}
+            {row.mengeneinheit ? ` ${row.mengeneinheit}` : ""}
+          </Typography>
         </Box>
       )}
     />

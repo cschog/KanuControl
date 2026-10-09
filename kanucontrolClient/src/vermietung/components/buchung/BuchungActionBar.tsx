@@ -1,7 +1,15 @@
 // src/vermietung/components/anmeldung/BuchungActionBar.tsx
 
-import React from "react";
-import { Box, Button } from "@mui/material";
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+} from "@mui/material";
+import { useState } from "react";
 
 import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
@@ -37,6 +45,21 @@ export const BuchungActionBar: React.FC<Props> = ({
   onDelete,
   disableDelete,
 }) => {
+const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+const handleConfirmCancel = () => {
+  setCancelDialogOpen(false);
+  onCancelBooking();
+};
+
+const handleConfirmDelete = () => {
+  setDeleteDialogOpen(false);
+  onDelete();
+};
+    
+    
+
   return (
     <Box
       sx={{
@@ -48,7 +71,6 @@ export const BuchungActionBar: React.FC<Props> = ({
         flexWrap: "wrap",
       }}
     >
-
       <Box
         sx={{
           display: "flex",
@@ -75,7 +97,7 @@ export const BuchungActionBar: React.FC<Props> = ({
                 variant="outlined"
                 color="error"
                 startIcon={<CancelIcon />}
-                onClick={onCancelBooking}
+                onClick={() => setCancelDialogOpen(true)}
               >
                 Stornieren
               </Button>
@@ -101,12 +123,58 @@ export const BuchungActionBar: React.FC<Props> = ({
           variant="outlined"
           color="error"
           startIcon={<DeleteIcon />}
-          onClick={onDelete}
+          onClick={() => setDeleteDialogOpen(true)}
           disabled={disableDelete}
         >
           Löschen
         </Button>
       </Box>
+      <Dialog open={cancelDialogOpen} onClose={() => setCancelDialogOpen(false)}>
+        <DialogTitle>Buchung stornieren?</DialogTitle>
+
+        <DialogContent>
+          <DialogContentText>
+            Möchtest du diese Buchung wirklich stornieren? Der Status wird auf „Storniert“ gesetzt.
+          </DialogContentText>
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={() => setCancelDialogOpen(false)}>Abbrechen</Button>
+
+          <Button
+            onClick={handleConfirmCancel}
+            color="error"
+            variant="contained"
+            startIcon={<CancelIcon />}
+          >
+            Jetzt stornieren
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+        <DialogTitle>Buchung löschen?</DialogTitle>
+
+        <DialogContent>
+          <DialogContentText>
+            Möchtest du diese Buchung wirklich unwiderruflich löschen? Diese Aktion kann nicht
+            rückgängig gemacht werden.
+          </DialogContentText>
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>Abbrechen</Button>
+
+          <Button
+            onClick={handleConfirmDelete}
+            color="error"
+            variant="contained"
+            startIcon={<DeleteIcon />}
+          >
+            Endgültig löschen
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

@@ -84,6 +84,32 @@ export const MietobjektBaseForm: React.FC<Props> = ({ form, editMode, onChange }
         <MenuItem value="ja">Ja</MenuItem>
         <MenuItem value="nein">Nein</MenuItem>
       </TextField>
+
+      <TextField
+        select
+        fullWidth
+        size="small"
+        label="Direktbuchung erlaubt"
+        value={form.direktbuchungAktiv ? "ja" : "nein"}
+        disabled={!editMode}
+        onChange={(e) => onChange("direktbuchungAktiv", e.target.value === "ja")}
+      >
+        <MenuItem value="ja">Ja</MenuItem>
+        <MenuItem value="nein">Nein</MenuItem>
+      </TextField>
+
+      <TextField
+        select
+        fullWidth
+        size="small"
+        label="Airbnb erlaubt"
+        value={form.airbnbAktiv ? "ja" : "nein"}
+        disabled={!editMode}
+        onChange={(e) => onChange("airbnbAktiv", e.target.value === "ja")}
+      >
+        <MenuItem value="ja">Ja</MenuItem>
+        <MenuItem value="nein">Nein</MenuItem>
+      </TextField>
     </>
   );
 };

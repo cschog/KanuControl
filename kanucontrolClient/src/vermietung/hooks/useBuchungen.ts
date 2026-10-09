@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import type { Buchung } from "@/vermietung/types/Buchung";
 import type { BuchungSave } from "@/vermietung/types/BuchungSave";
+import { getApiErrorMessage } from "@/kjfp/api/utils/apiError";
 
 import {
   createBuchung,
@@ -47,9 +48,9 @@ export function useBuchungen() {
       setSelectedId(created.id);
 
       return created;
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Fehler beim Anlegen der Buchung:", err);
-      setError("Die Buchung konnte nicht angelegt werden.");
+      setError(getApiErrorMessage(err));
       throw err;
     }
   }, []);
@@ -65,9 +66,9 @@ export function useBuchungen() {
       );
 
       return updated;
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Fehler beim Aktualisieren der Buchung:", err);
-      setError("Die Buchung konnte nicht gespeichert werden.");
+      setError(getApiErrorMessage(err));
       throw err;
     }
   }, []);

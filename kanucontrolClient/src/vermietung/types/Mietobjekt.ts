@@ -11,4 +11,7 @@ export interface Mietobjekt {
 
   aktiv: boolean;
   mietbar: boolean;
+
+  direktbuchungAktiv: boolean;
+  airbnbAktiv: boolean;
 }

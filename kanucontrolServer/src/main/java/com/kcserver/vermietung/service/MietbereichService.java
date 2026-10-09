@@ -76,6 +76,10 @@ public class MietbereichService {
         bereich.setBezeichnung(dto.getBezeichnung());
         bereich.setBeschreibung(dto.getBeschreibung());
         bereich.setMietbar(dto.isMietbar());
+        bereich.setDirektbuchungAktiv(dto.isDirektbuchungAktiv());
+        bereich.setAirbnbAktiv(dto.isAirbnbAktiv());
+        bereich.setBestand(dto.getBestand());
+        bereich.setMengeneinheit(dto.getMengeneinheit());
 
         return toDTO(mietbereichRepository.save(bereich));
     }
@@ -101,6 +105,10 @@ public class MietbereichService {
         bereich.setBezeichnung(dto.getBezeichnung());
         bereich.setBeschreibung(dto.getBeschreibung());
         bereich.setMietbar(dto.isMietbar());
+        bereich.setDirektbuchungAktiv(dto.isDirektbuchungAktiv());
+        bereich.setAirbnbAktiv(dto.isAirbnbAktiv());
+        bereich.setBestand(dto.getBestand());
+        bereich.setMengeneinheit(dto.getMengeneinheit());
 
         return toDTO(mietbereichRepository.save(bereich));
     }
@@ -132,6 +140,10 @@ public class MietbereichService {
         dto.setBezeichnung(bereich.getBezeichnung());
         dto.setBeschreibung(bereich.getBeschreibung());
         dto.setMietbar(bereich.isMietbar());
+        dto.setDirektbuchungAktiv(bereich.isDirektbuchungAktiv());
+        dto.setAirbnbAktiv(bereich.isAirbnbAktiv());
+        dto.setBestand(bereich.getBestand());
+        dto.setMengeneinheit(bereich.getMengeneinheit());
 
         return dto;
     }
