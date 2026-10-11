@@ -1,7 +1,9 @@
+
 export interface Mietobjekt {
   id: number;
 
   bezeichnung: string;
+  sortierung: number;
   beschreibung?: string;
 
   strasse?: string;
@@ -14,4 +16,6 @@ export interface Mietobjekt {
 
   direktbuchungAktiv: boolean;
   airbnbAktiv: boolean;
+  airbnbInserat: boolean;
+ 
 }

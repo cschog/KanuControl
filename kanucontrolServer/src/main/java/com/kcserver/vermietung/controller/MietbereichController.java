@@ -2,6 +2,7 @@ package com.kcserver.vermietung.controller;
 
 import com.kcserver.api.response.ApiResponse;
 import com.kcserver.vermietung.dto.MietbereichDTO;
+import com.kcserver.vermietung.dto.SortierungRequest;
 import com.kcserver.vermietung.service.MietbereichService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -80,6 +81,15 @@ public class MietbereichController {
                 mietbereichService.update(mietobjektId, id, dto),
                 List.of()
         );
+    }
+
+    @PutMapping("/sortierung")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void sortieren(
+            @PathVariable Long mietobjektId,
+            @RequestBody @Valid SortierungRequest request
+    ) {
+        mietbereichService.sortieren(mietobjektId, request);
     }
 
     @DeleteMapping("/{id}")

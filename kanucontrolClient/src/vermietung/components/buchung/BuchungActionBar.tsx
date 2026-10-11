@@ -15,8 +15,10 @@ import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CancelIcon from "@mui/icons-material/Cancel";
-
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import EventAvailableIcon from "@mui/icons-material/EventAvailable";
+import BlockIcon from "@mui/icons-material/Block";
+import TaskAltIcon from "@mui/icons-material/TaskAlt";
 
 import type { Buchungsstatus } from "@/vermietung/enums/Buchungsstatus";
 
@@ -27,8 +29,13 @@ interface Props {
   onEdit: () => void;
   onCancelEdit: () => void;
   onSave: () => void;
+
+  onReserve: () => void;
   onConfirm: () => void;
+  onReject: () => void;
   onCancelBooking: () => void;
+  onComplete: () => void;
+
   onDelete: () => void;
 
   disableDelete: boolean;
@@ -40,25 +47,35 @@ export const BuchungActionBar: React.FC<Props> = ({
   onEdit,
   onCancelEdit,
   onSave,
+  onReserve,
   onConfirm,
+  onReject,
   onCancelBooking,
+  onComplete,
   onDelete,
   disableDelete,
 }) => {
-const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
-const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-const handleConfirmCancel = () => {
-  setCancelDialogOpen(false);
-  onCancelBooking();
-};
+  const handleConfirmCancel = () => {
+    setCancelDialogOpen(false);
+    onCancelBooking();
+  };
 
-const handleConfirmDelete = () => {
-  setDeleteDialogOpen(false);
-  onDelete();
-};
-    
-    
+  const handleConfirmReject = () => {
+    setRejectDialogOpen(false);
+    onReject();
+  };
+
+  const handleConfirmDelete = () => {
+    setDeleteDialogOpen(false);
+    onDelete();
+  };
+
+  const terminalStatus =
+    status === "ABGELEHNT" || status === "STORNIERT" || status === "ABGESCHLOSSEN";
 
   return (
     <Box
@@ -82,30 +99,85 @@ const handleConfirmDelete = () => {
         {!editMode ? (
           <>
             {status === "ANFRAGE" && (
-              <Button
-                variant="contained"
-                color="success"
-                startIcon={<CheckCircleIcon />}
-                onClick={onConfirm}
-              >
-                Bestätigen
-              </Button>
+              <>
+                <Button
+                  variant="contained"
+                  color="info"
+                  startIcon={<EventAvailableIcon />}
+                  onClick={onReserve}
+                >
+                  Reservieren
+                </Button>
+
+                <Button
+                  variant="contained"
+                  color="success"
+                  startIcon={<CheckCircleIcon />}
+                  onClick={onConfirm}
+                >
+                  Bestätigen
+                </Button>
+
+                <Button
+                  variant="outlined"
+                  color="error"
+                  startIcon={<BlockIcon />}
+                  onClick={() => setRejectDialogOpen(true)}
+                >
+                  Ablehnen
+                </Button>
+              </>
             )}
 
-            {(status === "ANFRAGE" || status === "BESTAETIGT") && (
-              <Button
-                variant="outlined"
-                color="error"
-                startIcon={<CancelIcon />}
-                onClick={() => setCancelDialogOpen(true)}
-              >
-                Stornieren
-              </Button>
+            {status === "RESERVIERT" && (
+              <>
+                <Button
+                  variant="contained"
+                  color="success"
+                  startIcon={<CheckCircleIcon />}
+                  onClick={onConfirm}
+                >
+                  Bestätigen
+                </Button>
+
+                <Button
+                  variant="outlined"
+                  color="error"
+                  startIcon={<CancelIcon />}
+                  onClick={() => setCancelDialogOpen(true)}
+                >
+                  Stornieren
+                </Button>
+              </>
             )}
 
-            <Button variant="contained" startIcon={<EditIcon />} onClick={onEdit}>
-              Bearbeiten
-            </Button>
+            {status === "BESTAETIGT" && (
+              <>
+                <Button
+                  variant="contained"
+                  color="success"
+                  startIcon={<TaskAltIcon />}
+                  onClick={onComplete}
+                >
+                  Abschließen
+                </Button>
+
+                <Button
+                  variant="outlined"
+                  color="error"
+                  startIcon={<CancelIcon />}
+                  onClick={() => setCancelDialogOpen(true)}
+                >
+                  Stornieren
+                </Button>
+              </>
+            )}
+
+            {!terminalStatus && (
+              <Button variant="contained" startIcon={<EditIcon />} onClick={onEdit}>
+                Bearbeiten
+              </Button>
+            )}
           </>
         ) : (
           <>
@@ -129,6 +201,7 @@ const handleConfirmDelete = () => {
           Löschen
         </Button>
       </Box>
+
       <Dialog open={cancelDialogOpen} onClose={() => setCancelDialogOpen(false)}>
         <DialogTitle>Buchung stornieren?</DialogTitle>
 
@@ -148,6 +221,30 @@ const handleConfirmDelete = () => {
             startIcon={<CancelIcon />}
           >
             Jetzt stornieren
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={rejectDialogOpen} onClose={() => setRejectDialogOpen(false)}>
+        <DialogTitle>Buchungsanfrage ablehnen?</DialogTitle>
+
+        <DialogContent>
+          <DialogContentText>
+            Möchtest du diese Buchungsanfrage wirklich ablehnen? Die Buchung erhält den Status
+            „Abgelehnt“. Dieser Vorgang kann nicht rückgängig gemacht werden.
+          </DialogContentText>
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={() => setRejectDialogOpen(false)}>Abbrechen</Button>
+
+          <Button
+            onClick={handleConfirmReject}
+            color="error"
+            variant="contained"
+            startIcon={<BlockIcon />}
+          >
+            Jetzt ablehnen
           </Button>
         </DialogActions>
       </Dialog>

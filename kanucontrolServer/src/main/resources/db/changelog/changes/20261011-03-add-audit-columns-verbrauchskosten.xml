@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="add-audit-columns-verbrauchskosten" author="kc">
+
+        <addColumn tableName="verbrauchskosten">
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="created_by" type="VARCHAR(255)"/>
+            <column name="last_modified_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="last_modified_by" type="VARCHAR(255)"/>
+        </addColumn>
+
+        <addNotNullConstraint
+                tableName="verbrauchskosten"
+                columnName="created_at"
+                columnDataType="TIMESTAMP WITH TIME ZONE"/>
+
+    </changeSet>
+
+</databaseChangeLog>

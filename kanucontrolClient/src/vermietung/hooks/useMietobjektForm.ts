@@ -14,6 +14,7 @@ const emptyForm: MietobjektSave = {
   mietbar: true,
   direktbuchungAktiv: true,
   airbnbAktiv: false,
+  airbnbInserat: false,
 };
 
 export function useMietobjektForm(mietobjekt: Mietobjekt | null) {
@@ -36,6 +37,7 @@ export function useMietobjektForm(mietobjekt: Mietobjekt | null) {
       mietbar: mietobjekt.mietbar,
       direktbuchungAktiv: mietobjekt.direktbuchungAktiv ?? true,
       airbnbAktiv: mietobjekt.airbnbAktiv ?? false,
+      airbnbInserat: mietobjekt.airbnbInserat ?? false,
     });
   }, [mietobjekt]);
 

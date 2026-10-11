@@ -17,6 +17,7 @@ import {
 import { MietobjektTable } from "@/vermietung/components/mietobjekte/MietobjektTable";
 import { MietobjektFormView } from "@/vermietung/components/mietobjekte/MietobjektFormView";
 
+
 export default function MietobjektePage() {
   const [mietobjekte, setMietobjekte] = useState<Mietobjekt[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -98,20 +99,22 @@ async function handleSave(payload: MietobjektSave) {
   try {
     setError(null);
 
-    if (newMode) {
-      const created = await createMietobjekt({
-        ...payload,
-        aktiv: true,
-      });
+   if (newMode) {
+     const created = await createMietobjekt({
+       ...payload,
+       aktiv: true,
+     });
 
-      await loadMietobjekte(false);
+     // Mietobjekte und zentralen Kontext aktualisieren
+     await loadMietobjekte(false);
+     await reloadVermietung();
 
-      setSelectedId(created.id);
-      setNewMode(false);
-      setEditMode(false);
+     setSelectedId(created.id);
+     setNewMode(false);
+     setEditMode(false);
 
-      return;
-    }
+     return;
+   }
 
     if (!selectedId) {
       return;
@@ -133,26 +136,35 @@ async function handleSave(payload: MietobjektSave) {
   }
 }
 
-  async function handleDelete() {
-    if (!selectedMietobjekt) {
-      return;
-    }
+ async function handleDelete() {
+   if (!selectedMietobjekt) {
+     return;
+   }
 
-    try {
-      setError(null);
+   try {
+     setError(null);
 
-      await deleteMietobjekt(selectedMietobjekt.id);
+     await deleteMietobjekt(selectedMietobjekt.id);
 
-      const remaining = mietobjekte.filter((m) => m.id !== selectedMietobjekt.id);
+     // Mietobjekte mit dem aktuellen Aktiv-Status neu laden
+     const aktualisierteMietobjekte = await getMietobjekte();
 
-      setMietobjekte(remaining);
-      setSelectedId(remaining[0]?.id ?? null);
-      setEditMode(false);
-    } catch (err) {
-      console.error("Fehler beim Löschen des Mietobjekts:", err);
-      setError("Das Mietobjekt konnte nicht gelöscht werden.");
-    }
-  }
+     setMietobjekte(aktualisierteMietobjekte);
+
+     // Das aktive Objekt auswählen, sofern eines vorhanden ist
+     const aktivesObjekt = aktualisierteMietobjekte.find((m) => m.aktiv);
+
+     setSelectedId(aktivesObjekt?.id ?? aktualisierteMietobjekte[0]?.id ?? null);
+
+     setEditMode(false);
+
+     // Header und zentralen Kontext aktualisieren
+     await reloadVermietung();
+   } catch (err) {
+     console.error("Fehler beim Löschen des Mietobjekts:", err);
+     setError("Das Mietobjekt konnte nicht gelöscht werden.");
+   }
+ }
 
   async function handleActivate() {
     if (!selectedId) {
@@ -235,6 +247,7 @@ async function handleSave(payload: MietobjektSave) {
           mietobjekt={{
             id: 0,
             bezeichnung: "",
+            sortierung: 0,
             beschreibung: "",
             strasse: "",
             plz: "",
@@ -244,6 +257,8 @@ async function handleSave(payload: MietobjektSave) {
             mietbar: true,
             direktbuchungAktiv: true,
             airbnbAktiv: false,
+            airbnbInserat: false,
+          
           }}
           editMode={true}
           onEdit={() => setEditMode(true)}

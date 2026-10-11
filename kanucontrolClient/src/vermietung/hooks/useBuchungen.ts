@@ -4,12 +4,15 @@ import type { Buchung } from "@/vermietung/types/Buchung";
 import type { BuchungSave } from "@/vermietung/types/BuchungSave";
 import { getApiErrorMessage } from "@/kjfp/api/utils/apiError";
 
+import type { Buchungsstatus } from "@/vermietung/enums/Buchungsstatus";
+
 import {
   createBuchung,
   getBuchungen,
   getBuchung,
   updateBuchung,
   deleteBuchung,
+  aendereBuchungsstatus,
 } from "@/vermietung/api/buchungApi";
 
 export function useBuchungen() {
@@ -18,6 +21,24 @@ export function useBuchungen() {
   const [sorting, setSorting] = useState<{ id: string; desc: boolean }[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const changeStatus = useCallback(async (id: number, status: Buchungsstatus) => {
+    try {
+      setError(null);
+
+      const updated = await aendereBuchungsstatus(id, status);
+
+      setBuchungen((current) =>
+        current.map((buchung) => (buchung.id === updated.id ? updated : buchung)),
+      );
+
+      return updated;
+    } catch (err: unknown) {
+      console.error("Fehler beim Ändern des Buchungsstatus:", err);
+      setError(getApiErrorMessage(err));
+      throw err;
+    }
+  }, []);
 
   const loadBuchungen = useCallback(async () => {
     try {
@@ -95,20 +116,21 @@ export function useBuchungen() {
 
   const getById = useCallback(async (id: number) => getBuchung(id), []);
 
-  return {
-    buchungen,
-    selectedId,
-    setSelectedId,
-    sorting,
-    setSorting,
-    loading,
-    error,
-    setError,
-    loadBuchungen,
-    reload,
-    create,
-    update,
-    remove,
-    getById,
-  };
+ return {
+   buchungen,
+   selectedId,
+   setSelectedId,
+   sorting,
+   setSorting,
+   loading,
+   error,
+   setError,
+   loadBuchungen,
+   reload,
+   create,
+   update,
+   changeStatus,
+   remove,
+   getById,
+ };
 }

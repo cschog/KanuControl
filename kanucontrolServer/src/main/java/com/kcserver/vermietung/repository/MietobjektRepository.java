@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface MietobjektRepository
@@ -20,6 +21,9 @@ public interface MietobjektRepository
 """)
     int unsetAktivesMietobjekt();
 
-    Optional<Mietobjekt> findTopByIdNotOrderByIdDesc(Long id);
+    Optional<Mietobjekt> findTopByIdNotOrderByIdAsc(Long id);
 
+    List<Mietobjekt> findAllByOrderBySortierungAscIdAsc();
+
+    Optional<Mietobjekt> findFirstByOrderByIdAsc();
 }

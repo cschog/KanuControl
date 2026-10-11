@@ -3,7 +3,6 @@ package com.kcserver.vermietung.entity;
 import com.kcserver.core.audit.Auditable;
 import com.kcserver.kjfp.enumtype.CountryCode;
 import com.kcserver.core.converter.CountryCodeConverter;
-import com.kcserver.vermietung.enumtype.Berechnungsart;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -29,6 +28,9 @@ public class Mietobjekt extends Auditable {
     @Column(nullable = false)
     private String bezeichnung;
 
+    @Column(name = "sortierung", nullable = false)
+    private Integer sortierung = 0;
+
     @Column(length = 2000)
     private String beschreibung;
 
@@ -53,10 +55,6 @@ public class Mietobjekt extends Auditable {
 
     @Column(name = "airbnb_aktiv", nullable = false)
     private boolean airbnbAktiv = false;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "berechnungsart", nullable = false, length = 20)
-    private Berechnungsart berechnungsart = Berechnungsart.ZEITRAUM;
 
     @Column(name = "anreisezeit")
     private java.time.LocalTime anreisezeit;

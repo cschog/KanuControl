@@ -20,8 +20,11 @@ interface Props {
   onSave: (payload: BuchungSave) => Promise<void>;
 
   onDelete: () => void;
+  onReserve: () => void;
   onConfirm: () => void;
+  onReject: () => void;
   onCancelBooking: () => void;
+  onComplete: () => void;
   onBack: () => void;
 
   disableDelete: boolean;
@@ -33,6 +36,8 @@ const statusAnzeige: Record<
   { label: string; color: "warning" | "success" | "error" | "default" }
 > = {
   ANFRAGE: { label: "Anmeldung", color: "warning" },
+  ABGELEHNT: { label: "Abgelehnt", color: "error" },
+  RESERVIERT: { label: "Reserviert", color: "warning" },
   BESTAETIGT: { label: "Bestätigt", color: "success" },
   STORNIERT: { label: "Storniert", color: "error" },
   ABGESCHLOSSEN: { label: "Abgeschlossen", color: "default" },
@@ -45,14 +50,18 @@ export const BuchungFormView: React.FC<Props> = ({
   onCancelEdit,
   onSave,
   onDelete,
+  onReserve,
   onConfirm,
+  onReject,
   onCancelBooking,
+  onComplete,
   disableDelete,
   neueBuchungsquelle = "DIREKT",
 }) => {
   const {
     form,
     update,
+    resetForm,
     mietbereiche,
     mieter,
     veranstalter,
@@ -80,6 +89,10 @@ export const BuchungFormView: React.FC<Props> = ({
           gap: 2,
           flexWrap: "wrap",
           mt: 1,
+          px: 2,
+          py: 1,
+          borderRadius: 1,
+          backgroundColor: buchung?.buchungsquelle === "AIRBNB" ? "#FFF3E0" : "transparent",
         }}
       >
         <Typography variant="h5" component="h1" fontWeight={600}>
@@ -110,6 +123,9 @@ export const BuchungFormView: React.FC<Props> = ({
           mietbereiche={mietbereiche}
           mieter={mieter}
           veranstalter={veranstalter}
+          buchungspositionen={buchung?.positionen ?? []}
+          createdAt={buchung?.createdAt}
+          buchungsquelle={form.buchungsquelle}
           onMieterChange={setMieter}
           onVeranstalterChange={setVeranstalter}
           onChange={update}
@@ -120,7 +136,10 @@ export const BuchungFormView: React.FC<Props> = ({
         status={buchung?.status ?? "ANFRAGE"}
         editMode={editMode}
         onEdit={onEdit}
-        onCancelEdit={onCancelEdit}
+        onCancelEdit={() => {
+          resetForm();
+          onCancelEdit();
+        }}
         onSave={async () => {
           const payload = buildSavePayload();
 
@@ -128,8 +147,11 @@ export const BuchungFormView: React.FC<Props> = ({
             await onSave(payload);
           }
         }}
+        onReserve={onReserve}
         onConfirm={onConfirm}
+        onReject={onReject}
         onCancelBooking={onCancelBooking}
+        onComplete={onComplete}
         onDelete={onDelete}
         disableDelete={disableDelete}
       />

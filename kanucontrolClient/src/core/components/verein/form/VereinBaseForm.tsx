@@ -37,8 +37,6 @@ export const VereinBaseForm: React.FC<Props> = ({
     };
   };
 
-  console.log("schutzkonzept form:", form.schutzkonzept);
-
   return (
     <>
       {/* CREATE */}

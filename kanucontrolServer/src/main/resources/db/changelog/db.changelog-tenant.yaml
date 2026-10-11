@@ -199,3 +199,21 @@ databaseChangeLog:
       file: db/changelog/changes/20261009-03-vermietung-buchungsquellen-bestand.xml
   - include:
       file: db/changelog/changes/20261009-04-buchung-tabellen-wiederherstellen.xml
+  - include:
+      file: db/changelog/changes/20261010-01-add-sortierung-vermietung.xml
+  - include:
+      file: db/changelog/changes/20261010-02-mietbereich-berechnungsart.xml
+  - include:
+      file: db/changelog/changes/20261010-03-buchung-mietbereich-preissnapshot.xml
+  - include:
+      file: db/changelog/changes/20261011-01-add-airbnb-inserat-mietbereich.xml
+  - include:
+      file: db/changelog/changes/20261011-02-create-verbrauchskosten.xml
+  - include:
+      file: db/changelog/changes/20261011-03-add-audit-columns-verbrauchskosten.xml
+  - include:
+      file: db/changelog/changes/20261011-04-create-mietbereich-rabatt.xml
+  - include:
+      file: db/changelog/changes/20261011-05-add-verbrauchsart-to-verbrauchskosten.xml
+  - include:
+      file: db/changelog/changes/20261011-06-create-zaehler.xml

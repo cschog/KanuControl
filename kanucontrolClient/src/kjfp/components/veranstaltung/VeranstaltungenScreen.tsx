@@ -322,8 +322,6 @@ export default function VeranstaltungenScreen() {
       setError(null);
       const response = await createVeranstaltung(payload);
 
-      console.log("CREATE RESPONSE:", response);
-
       await fetchData();
       await reloadContext();
 

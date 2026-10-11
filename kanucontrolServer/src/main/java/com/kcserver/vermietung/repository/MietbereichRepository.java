@@ -9,4 +9,6 @@ public interface MietbereichRepository
         extends JpaRepository<Mietbereich, Long> {
 
     List<Mietbereich> findByMietobjektId(Long mietobjektId);
+
+    List<Mietbereich> findByMietobjektIdOrderBySortierungAscIdAsc(Long mietobjektId);
 }

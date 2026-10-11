@@ -110,6 +110,7 @@ export const MietobjektBaseForm: React.FC<Props> = ({ form, editMode, onChange }
         <MenuItem value="ja">Ja</MenuItem>
         <MenuItem value="nein">Nein</MenuItem>
       </TextField>
+
     </>
   );
 };

@@ -19,10 +19,20 @@ import type { BuchungSave } from "@/vermietung/types/BuchungSave";
 import { useVermietungContext } from "@/vermietung/context/VermietungContext";
 import { useBackNavigation } from "@/core/context/BackNavigationContext";
 import type { Buchungsquelle } from "@/vermietung/enums/Buchungsquelle";
+import type { Buchungsstatus } from "@/vermietung/enums/Buchungsstatus";
 
 const BuchungenView = () => {
-  const { buchungen, selectedId, setSelectedId, sorting, setSorting, create, update, remove } =
-    useBuchungen();
+ const {
+   buchungen,
+   selectedId,
+   setSelectedId,
+   sorting,
+   setSorting,
+   create,
+   update,
+   changeStatus,
+   remove,
+ } = useBuchungen();
 
   const { mietobjekt } = useVermietungContext();
 
@@ -38,6 +48,30 @@ const BuchungenView = () => {
   const [error, setError] = useState<string | null>(null);
 
   const { registerBackHandler } = useBackNavigation();
+
+  const handleStatusChange = async (status: Buchungsstatus) => {
+    if (!selectedBuchung) return;
+
+    setSaveError(null);
+
+    try {
+      const updated = await changeStatus(selectedBuchung.id, status);
+      setSelectedBuchung(updated);
+    } catch (err: unknown) {
+      console.error("Fehler beim Ändern des Buchungsstatus:", err);
+      setSaveError(getApiErrorMessage(err));
+    }
+  };
+
+  const handleReserve = () => handleStatusChange("RESERVIERT");
+
+  const handleConfirm = () => handleStatusChange("BESTAETIGT");
+
+  const handleReject = () => handleStatusChange("ABGELEHNT");
+
+  const handleCancelBooking = () => handleStatusChange("STORNIERT");
+
+  const handleComplete = () => handleStatusChange("ABGESCHLOSSEN");
 
   const handleSelect = (buchung: Buchung | null) => {
     setSelectedId(buchung?.id ?? null);
@@ -84,55 +118,6 @@ const BuchungenView = () => {
       console.error("Fehler beim Speichern der Buchung:", err);
       setSaveError(getApiErrorMessage(err));
     }
-  };
-
- const handleConfirm = async () => {
-   if (!selectedBuchung) return;
-
-   setSaveError(null);
-
-   try {
-     const updated = await update(selectedBuchung.id, {
-       anreise: selectedBuchung.anreise,
-       abreise: selectedBuchung.abreise,
-       mietobjektId: selectedBuchung.mietobjektId,
-       mietbereichIds: selectedBuchung.mietbereichIds ?? [],
-       positionen: (selectedBuchung.positionen ?? []).map((position) => ({
-         mietbereichId: position.mietbereichId,
-         anzahl: position.anzahl,
-       })),
-       buchungsquelle: selectedBuchung.buchungsquelle,
-       mieterId: selectedBuchung.mieterId,
-       veranstalterVereinId: selectedBuchung.veranstalterVereinId,
-       status: "BESTAETIGT",
-     });
-
-     setSelectedBuchung(updated);
-   } catch (err: unknown) {
-     console.error("Fehler beim Bestätigen der Buchung:", err);
-     setSaveError(getApiErrorMessage(err));
-   }
- };
-
-  const handleCancelBooking = async () => {
-    if (!selectedBuchung) return;
-
-    const updated = await update(selectedBuchung.id, {
-      anreise: selectedBuchung.anreise,
-      abreise: selectedBuchung.abreise,
-      mietobjektId: selectedBuchung.mietobjektId,
-      mietbereichIds: selectedBuchung.mietbereichIds ?? [],
-      mieterId: selectedBuchung.mieterId,
-      veranstalterVereinId: selectedBuchung.veranstalterVereinId,
-      buchungsquelle: selectedBuchung.buchungsquelle,
-      status: "STORNIERT",
-      positionen: (selectedBuchung.positionen ?? []).map((position) => ({
-        mietbereichId: position.mietbereichId,
-        anzahl: position.anzahl,
-      })),
-    });
-
-    setSelectedBuchung(updated);
   };
 
   const handleDelete = async () => {
@@ -206,8 +191,11 @@ if (showForm) {
         onEdit={() => setEditMode(true)}
         onCancelEdit={handleCancelEdit}
         onSave={handleSave}
+        onReserve={handleReserve}
         onConfirm={handleConfirm}
+        onReject={handleReject}
         onCancelBooking={handleCancelBooking}
+        onComplete={handleComplete}
         onDelete={handleDelete}
         onBack={handleBack}
         disableDelete={!selectedBuchung}

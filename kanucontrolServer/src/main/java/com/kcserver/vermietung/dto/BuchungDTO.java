@@ -5,6 +5,7 @@ import com.kcserver.vermietung.enumtype.Buchungsstatus;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -17,6 +18,8 @@ public class BuchungDTO {
     private Long id;
     private String buchungsnummer;
     private Buchungsstatus status;
+
+    private Instant createdAt;
 
     @NotNull
     private LocalDate anreise;

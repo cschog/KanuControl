@@ -44,12 +44,6 @@ export function useBuchungForm(
         anzahl: position.anzahl,
       }));
 
-      console.log("Buchung beim Laden:", {
-        anreise: buchung.anreise,
-        abreise: buchung.abreise,
-        unbefristet: buchung.unbefristet,
-      });
-
       setForm({
         anreise: buchung.anreise,
         abreise: buchung.abreise,
@@ -78,6 +72,38 @@ export function useBuchungForm(
       setForm(createInitialForm(neueBuchungsquelle));
     }
   }, [buchung, mietobjekt, neueBuchungsquelle]);
+
+  const resetForm = () => {
+    if (buchung) {
+      const positionen: BuchungPositionSave[] = (buchung.positionen ?? []).map((position) => ({
+        mietbereichId: position.mietbereichId,
+        anzahl: position.anzahl,
+      }));
+
+      setForm({
+        anreise: buchung.anreise,
+        abreise: buchung.abreise,
+        unbefristet: buchung.unbefristet,
+        mietobjektId: buchung.mietobjektId,
+        mietbereichIds:
+          buchung.mietbereichIds?.length > 0
+            ? [...buchung.mietbereichIds]
+            : positionen.map((position) => position.mietbereichId),
+        positionen,
+        mieterId: buchung.mieterId,
+        veranstalterVereinId: buchung.veranstalterVereinId,
+        status: buchung.status,
+        buchungsquelle: buchung.buchungsquelle,
+      });
+
+      return;
+    }
+
+    setForm({
+      ...createInitialForm(neueBuchungsquelle),
+      mietobjektId: mietobjekt?.id ?? 0,
+    });
+  };
 
   useEffect(() => {
     if (!buchung?.mieterId) {
@@ -123,8 +149,6 @@ export function useBuchungForm(
       try {
         const data = await getMietbereiche(mietobjektId);
         setMietbereiche(data.filter((mietbereich) => mietbereich.mietbar));
-        console.log("Geladene Mietbereiche:", data);
-        console.log("Gespeicherte Positionen:", buchung?.positionen);
       } catch (error) {
         console.error("Fehler beim Laden der Mietbereiche:", error);
         setMietbereiche([]);
@@ -215,14 +239,15 @@ export function useBuchungForm(
     form.buchungsquelle === "DIREKT" ? mietbereich.direktbuchungAktiv : mietbereich.airbnbAktiv,
   );
 
-  return {
-    form,
-    update,
-    mietbereiche: gefilterteMietbereiche,
-    mieter,
-    veranstalter,
-    setMieter: handleMieterChange,
-    setVeranstalter: handleVeranstalterChange,
-    buildSavePayload,
-  };
+return {
+  form,
+  update,
+  resetForm,
+  mietbereiche: gefilterteMietbereiche,
+  mieter,
+  veranstalter,
+  setMieter: handleMieterChange,
+  setVeranstalter: handleVeranstalterChange,
+  buildSavePayload,
+};
 }

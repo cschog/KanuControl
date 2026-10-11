@@ -37,3 +37,7 @@ export async function setMietobjektAktiv(id: number): Promise<Mietobjekt> {
 export async function deleteMietobjekt(id: number): Promise<void> {
   await apiClient.delete(`${BASE_URL}/${id}`);
 }
+
+export async function sortiereMietobjekte(ids: number[]): Promise<void> {
+  await apiClient.put(`${BASE_URL}/sortierung`, { ids });
+}

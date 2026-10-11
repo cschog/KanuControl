@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="20261010-02-buchung-mietbereich-preissnapshot"
+               author="kanucontrol">
+
+        <!-- 1. Snapshot-Spalten zunächst nullable ergänzen -->
+        <addColumn tableName="buchung_mietbereich">
+            <column name="vereinbarter_preis"
+                    type="DECIMAL(10,2)"/>
+            <column name="berechnungsart"
+                    type="VARCHAR(20)"/>
+        </addColumn>
+
+        <!-- 2. Berechnungsart aus dem aktuellen Mietbereich übernehmen -->
+        <sql>
+            UPDATE buchung_mietbereich bm
+            SET berechnungsart = mb.berechnungsart
+                FROM mietbereich mb
+            WHERE bm.mietbereich_id = mb.id;
+        </sql>
+
+        <!--
+     3. Vorhandene Preise initialisieren.
+     Maßgeblich ist der zum Erstellungsdatum der Buchung
+     gültige Mietpreis.
+ -->
+        <sql>
+            UPDATE buchung_mietbereich bm
+            SET vereinbarter_preis = (
+                SELECT mp.preis
+                FROM mietpreis mp
+                         JOIN buchung b
+                              ON b.id = bm.buchung_id
+                WHERE mp.mietbereich_id = bm.mietbereich_id
+                  AND mp.buchungsquelle = b.buchungsquelle
+                  AND mp.gueltig_ab &lt;=
+                      CAST(
+                              b.created_at AT TIME ZONE 'Europe/Berlin'
+                          AS DATE
+                      )
+                ORDER BY mp.gueltig_ab DESC, mp.id DESC
+                LIMIT 1
+                )
+            WHERE EXISTS (
+                SELECT 1
+                FROM mietpreis mp
+                JOIN buchung b
+                ON b.id = bm.buchung_id
+                WHERE mp.mietbereich_id = bm.mietbereich_id
+              AND mp.buchungsquelle = b.buchungsquelle
+              AND mp.gueltig_ab &lt;=
+                CAST(
+                b.created_at AT TIME ZONE 'Europe/Berlin'
+                AS DATE
+                )
+                );
+        </sql>
+
+        <!-- 4. Fehlende Snapshot-Daten prüfen -->
+        <sql splitStatements="false">
+            DO $$
+            BEGIN
+                IF EXISTS (
+                    SELECT 1
+                    FROM buchung_mietbereich
+                    WHERE vereinbarter_preis IS NULL
+                       OR berechnungsart IS NULL
+                ) THEN
+                    RAISE EXCEPTION
+                        'Preissnapshot-Migration abgebrochen: Für mindestens eine Buchungsposition fehlt Preis oder Berechnungsart. Bitte fehlende Mietpreise prüfen.';
+                END IF;
+            END;
+            $$;
+        </sql>
+
+        <!-- 5. Snapshot-Felder verpflichtend machen -->
+        <addNotNullConstraint
+                tableName="buchung_mietbereich"
+                columnName="vereinbarter_preis"
+                columnDataType="DECIMAL(10,2)"/>
+
+        <addNotNullConstraint
+                tableName="buchung_mietbereich"
+                columnName="berechnungsart"
+                columnDataType="VARCHAR(20)"/>
+
+    </changeSet>
+
+</databaseChangeLog>

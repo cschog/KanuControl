@@ -1,6 +1,8 @@
 // src/vermietung/components/buchung/BuchungBaseForm.tsx
 
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { getPreis } from "@/vermietung/api/buchungApi";
+import type { Buchungsquelle } from "@/vermietung/enums/Buchungsquelle";
 import { Box, Checkbox, FormControlLabel, Paper, TextField, Typography } from "@mui/material";
 
 import type { Mietbereich } from "@/vermietung/types/Mietbereich";
@@ -12,18 +14,105 @@ import FormFeld from "@/core/components/common/FormFeld";
 import { PersonAutocomplete } from "@/core/components/person/PersonAutocomplete";
 import { VereinAutocomplete } from "@/core/components/verein/VereinAutocomplete";
 
+import type { Buchung } from "@/vermietung/types/Buchung";
+
+import { BERECHNUNGSART_LABELS } from "@/vermietung/enums/Berechnungsart";
+
 interface Props {
   form: BuchungSave;
   editMode: boolean;
   mietbereiche: Mietbereich[];
   mieter?: PersonRef;
   veranstalter?: VereinRef;
+  buchungspositionen: Buchung["positionen"];
+  createdAt?: string;
+  buchungsquelle: Buchungsquelle;
 
   onMieterChange: (value?: PersonRef) => void;
   onVeranstalterChange: (value?: VereinRef) => void;
 
   onChange: <K extends keyof BuchungSave>(key: K, value: BuchungSave[K]) => void;
 }
+
+function useMietbereichPreise(
+  mietbereichIds: number[],
+  buchungspositionen: Buchung["positionen"],
+  buchungsquelle: Buchungsquelle,
+  stichtag: string,
+) {
+  const [preise, setPreise] = useState<Record<number, number>>({});
+  const [ladefehler, setLadefehler] = useState<Record<number, boolean>>({});
+
+  const mietbereichIdsKey = [...new Set(mietbereichIds)].sort((a, b) => a - b).join(",");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const ids = mietbereichIdsKey ? mietbereichIdsKey.split(",").map(Number) : [];
+
+    const gespeicherteIds = new Set(buchungspositionen.map((position) => position.mietbereichId));
+
+    const fehlendeIds = ids.filter((id) => !gespeicherteIds.has(id) && preise[id] === undefined);
+
+    if (fehlendeIds.length === 0) {
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const ladePreise = async () => {
+      const ergebnisse = await Promise.all(
+        fehlendeIds.map(async (id) => {
+          try {
+            const preis = await getPreis(id, buchungsquelle, stichtag);
+            return { id, preis, fehler: false };
+          } catch (error) {
+            console.error(`Preis für Mietbereich ${id} konnte nicht geladen werden:`, error);
+            return { id, preis: undefined, fehler: true };
+          }
+        }),
+      );
+
+      if (cancelled) return;
+
+      setPreise((aktuell) => {
+        const neu = { ...aktuell };
+
+        ergebnisse.forEach(({ id, preis }) => {
+          if (preis !== undefined) neu[id] = preis;
+        });
+
+        return neu;
+      });
+
+      setLadefehler((aktuell) => {
+        const neu = { ...aktuell };
+
+        ergebnisse.forEach(({ id, fehler }) => {
+          neu[id] = fehler;
+        });
+
+        return neu;
+      });
+    };
+
+    void ladePreise();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [mietbereichIdsKey, buchungspositionen, buchungsquelle, stichtag, preise]);
+
+  return { preise, ladefehler };
+}
+
+const formatPreis = (preis?: number) =>
+  preis == null
+    ? "Preis nicht verfügbar"
+    : new Intl.NumberFormat("de-DE", {
+        style: "currency",
+        currency: "EUR",
+      }).format(preis);
 
 export const BuchungBaseForm: React.FC<Props> = ({
   form,
@@ -34,11 +123,48 @@ export const BuchungBaseForm: React.FC<Props> = ({
   onMieterChange,
   onVeranstalterChange,
   onChange,
+  buchungspositionen,
+  createdAt,
+  buchungsquelle,
 }) => {
   const gefilterteMietbereiche = mietbereiche.filter((mietbereich) =>
     form.buchungsquelle === "DIREKT" ? mietbereich.direktbuchungAktiv : mietbereich.airbnbAktiv,
   );
 
+const stichtag = createdAt ? createdAt.slice(0, 10) : new Date().toLocaleDateString("sv-SE");
+
+const { preise: geladenePreise, ladefehler } = useMietbereichPreise(
+  form.positionen.map((position) => position.mietbereichId),
+  buchungspositionen,
+  buchungsquelle,
+  stichtag,
+);
+  
+  const gesamtpreis = form.positionen.reduce<number>((summe, position) => {
+    const buchungsposition = buchungspositionen.find(
+      (item) => item.mietbereichId === position.mietbereichId,
+    );
+
+    const preis = buchungsposition?.vereinbarterPreis ?? geladenePreise[position.mietbereichId];
+
+    if (preis === undefined || ladefehler[position.mietbereichId]) {
+      return summe;
+    }
+
+    return summe + preis * position.anzahl;
+  }, 0);
+
+  const gesamtpreisVollstaendig = form.positionen.every((position) => {
+    const buchungsposition = buchungspositionen.find(
+      (item) => item.mietbereichId === position.mietbereichId,
+    );
+
+    return (
+      buchungsposition?.vereinbarterPreis !== undefined ||
+      (geladenePreise[position.mietbereichId] !== undefined && !ladefehler[position.mietbereichId])
+    );
+  });
+  
   return (
     <>
       {/* Linke Spalte: Buchungsdaten */}
@@ -124,6 +250,16 @@ export const BuchungBaseForm: React.FC<Props> = ({
             borderRadius: 1,
           }}
         >
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="subtitle2" color="text.secondary">
+              Voraussichtliche Gesamteinnahmen
+            </Typography>
+
+            <Typography variant="h5" fontWeight={700} sx={{ mt: 0.5 }}>
+              {gesamtpreisVollstaendig ? formatPreis(gesamtpreis) : "Preise werden ermittelt …"}
+            </Typography>
+          </Box>
+
           <Typography variant="subtitle1" fontWeight={600} color="text.secondary" sx={{ mb: 1.5 }}>
             Mietbereiche / Positionen
           </Typography>
@@ -214,43 +350,79 @@ export const BuchungBaseForm: React.FC<Props> = ({
                     />
 
                     {position && (
-                      <TextField
-                        label="Menge"
-                        type="number"
-                        size="small"
-                        value={position.anzahl}
-                        disabled={!editMode}
+                      <Box
                         sx={{
-                          width: 110,
-                          flexShrink: 0,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1.5,
+                          flexWrap: "wrap",
                         }}
-                        slotProps={{
-                          htmlInput: {
-                            min: 1,
-                            max: mietbereich.bestand,
-                            step: 1,
-                          },
-                        }}
-                        onChange={(event) => {
-                          const rawValue = event.target.value;
-                          const anzahl = Number(rawValue);
+                      >
+                        <TextField
+                          label="Menge"
+                          type="number"
+                          size="small"
+                          value={position.anzahl}
+                          disabled={!editMode}
+                          sx={{ width: 110, flexShrink: 0 }}
+                          slotProps={{
+                            htmlInput: {
+                              min: 1,
+                              max: mietbereich.bestand,
+                              step: 1,
+                            },
+                          }}
+                          onChange={(event) => {
+                            const rawValue = event.target.value;
+                            const anzahl = Number(rawValue);
 
-                          if (
-                            rawValue === "" ||
-                            !Number.isInteger(anzahl) ||
-                            anzahl < 1 ||
-                            anzahl > mietbereich.bestand
-                          ) {
-                            return;
-                          }
+                            if (
+                              rawValue === "" ||
+                              !Number.isInteger(anzahl) ||
+                              anzahl < 1 ||
+                              anzahl > mietbereich.bestand
+                            ) {
+                              return;
+                            }
 
-                          const positionen = form.positionen.map((item) =>
-                            item.mietbereichId === mietbereich.id ? { ...item, anzahl } : item,
+                            const positionen = form.positionen.map((item) =>
+                              item.mietbereichId === mietbereich.id ? { ...item, anzahl } : item,
+                            );
+
+                            onChange("positionen", positionen);
+                          }}
+                        />
+
+                        {(() => {
+                          const buchungsposition = buchungspositionen.find(
+                            (item) => item.mietbereichId === mietbereich.id,
                           );
 
-                          onChange("positionen", positionen);
-                        }}
-                      />
+                          const preis =
+                            buchungsposition?.vereinbarterPreis ?? geladenePreise[mietbereich.id];
+
+                          const berechnungsart =
+                            buchungsposition?.berechnungsart ?? mietbereich.berechnungsart;
+
+                          return (
+                            <Box sx={{ minWidth: 110 }}>
+                              <Typography variant="body2" fontWeight={600}>
+                                {preis !== undefined
+                                  ? formatPreis(preis * position.anzahl)
+                                  : ladefehler[mietbereich.id]
+                                    ? "Preis nicht verfügbar"
+                                    : "Preis wird geladen …"}
+                              </Typography>
+
+                              {berechnungsart && (
+                                <Typography variant="caption" color="text.secondary">
+                                  {BERECHNUNGSART_LABELS[berechnungsart]}
+                                </Typography>
+                              )}
+                            </Box>
+                          );
+                        })()}
+                      </Box>
                     )}
                   </Box>
                 );

@@ -2,15 +2,20 @@ import { useEffect, useState } from "react";
 
 import type { Mietbereich } from "@/vermietung/types/Mietbereich";
 import type { MietbereichSave } from "@/vermietung/types/MietbereichSave";
+import { Berechnungsart } from "@/vermietung/enums/Berechnungsart";
 
 const emptyForm: MietbereichSave = {
   bezeichnung: "",
   beschreibung: "",
+  sortierung: 0,
   mietbar: true,
   direktbuchungAktiv: true,
   airbnbAktiv: false,
+  airbnbInserat: false,
   bestand: 1,
   mengeneinheit: "",
+  berechnungsart: Berechnungsart.TAG,
+  zaehlerId: null,
 };
 
 export function useMietbereichForm(mietbereich: Mietbereich | null) {
@@ -25,11 +30,15 @@ export function useMietbereichForm(mietbereich: Mietbereich | null) {
     setForm({
       bezeichnung: mietbereich.bezeichnung ?? "",
       beschreibung: mietbereich.beschreibung ?? "",
+      sortierung: mietbereich.sortierung ?? 0,
       mietbar: mietbereich.mietbar,
       direktbuchungAktiv: mietbereich.direktbuchungAktiv ?? true,
       airbnbAktiv: mietbereich.airbnbAktiv ?? false,
+      airbnbInserat: mietbereich.airbnbInserat ?? false,
       bestand: mietbereich.bestand ?? 1,
       mengeneinheit: mietbereich.mengeneinheit ?? "",
+      berechnungsart: mietbereich.berechnungsart ?? Berechnungsart.TAG,
+      zaehlerId: mietbereich.zaehlerId ?? null,
     });
   }, [mietbereich]);
 

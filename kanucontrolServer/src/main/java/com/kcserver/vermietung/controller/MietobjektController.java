@@ -2,6 +2,7 @@ package com.kcserver.vermietung.controller;
 
 import com.kcserver.api.response.ApiResponse;
 import com.kcserver.vermietung.dto.MietobjektDTO;
+import com.kcserver.vermietung.dto.SortierungRequest;
 import com.kcserver.vermietung.service.MietobjektService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -107,5 +108,17 @@ public class MietobjektController {
             @PathVariable Long id
     ) {
         mietobjektService.delete(id);
+    }
+
+    /* =========================================================
+   SORTIERUNG
+   ========================================================= */
+
+    @PutMapping("/sortierung")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void sortieren(
+            @Valid @RequestBody SortierungRequest request
+    ) {
+        mietobjektService.sortieren(request);
     }
 }

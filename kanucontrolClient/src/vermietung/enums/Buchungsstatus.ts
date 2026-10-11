@@ -1,2 +1,8 @@
 // src/vermietung/enums/Buchungsstatus.ts
-export type Buchungsstatus = "ANFRAGE" | "BESTAETIGT" | "STORNIERT" | "ABGESCHLOSSEN";
+export type Buchungsstatus =
+  | "ANFRAGE"
+  | "ABGELEHNT"
+  | "RESERVIERT"
+  | "BESTAETIGT"
+  | "STORNIERT"
+  | "ABGESCHLOSSEN";

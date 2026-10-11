@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+            http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="20261010-01-mietbereich-berechnungsart" author="kanucontrol">
+
+        <!-- 1. Berechnungsart in mietbereich ergänzen -->
+        <addColumn tableName="mietbereich">
+            <column name="berechnungsart"
+                    type="VARCHAR(20)"
+                    defaultValue="TAG">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <!-- 2. Bisherige Berechnungsart des Mietobjekts übernehmen -->
+        <sql>
+            UPDATE mietbereich mb
+            SET berechnungsart = mo.berechnungsart
+                FROM mietobjekt mo
+            WHERE mb.mietobjekt_id = mo.id
+              AND mo.berechnungsart IS NOT NULL;
+        </sql>
+
+        <!-- 3. Standardwert für neue Mietbereiche setzen -->
+        <addDefaultValue
+                tableName="mietbereich"
+                columnName="berechnungsart"
+                defaultValue="TAG"
+                columnDataType="VARCHAR(20)"/>
+
+        <!-- 4. Berechnungsart aus mietobjekt entfernen -->
+        <dropColumn
+                tableName="mietobjekt"
+                columnName="berechnungsart"/>
+
+    </changeSet>
+
+</databaseChangeLog>

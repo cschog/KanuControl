@@ -631,6 +631,129 @@ public final class ErrorMessages {
     public static final String BUCHUNG_QUELLE_MIETOBJEKT_NOT_ENABLED =
             "Die Buchungsquelle %s ist für dieses Mietobjekt nicht aktiviert.";
 
+    public static final String MIETOBJEKT_NO_ACTIVE =
+            "Kein aktives Mietobjekt vorhanden.";
+
+    // =========================================================
+    // Vermietung / Sortierung
+    // =========================================================
+
+    public static final String MIETOBJEKT_SORTIERUNG_DUPLICATE_IDS =
+            "Die Sortierung enthält doppelte Mietobjekt-IDs.";
+
+    public static final String MIETOBJEKT_SORTIERUNG_INCOMPLETE =
+            "Die Sortierung muss alle vorhandenen Mietobjekte enthalten.";
+
+    public static final String MIETOBJEKT_SORTIERUNG_INVALID =
+            "Mindestens ein Mietobjekt wurde nicht gefunden.";
+
+    public static final String MIETBEREICH_SORTIERUNG_DUPLICATE_IDS =
+            "Die Sortierung enthält doppelte Mietbereich-IDs.";
+
+    public static final String MIETBEREICH_SORTIERUNG_INCOMPLETE =
+            "Die Sortierung muss alle Mietbereiche des Mietobjekts enthalten.";
+
+    public static final String MIETBEREICH_SORTIERUNG_INVALID =
+            "Mindestens ein Mietbereich wurde nicht gefunden.";
+
+    // =========================================================
+    // Vermietung / Verbrauchskosten
+    // =========================================================
+
+    public static final String VERBRAUCHSKOSTEN_NOT_FOUND =
+            "Verbrauchskosten nicht gefunden.";
+
+    public static final String VERBRAUCHSKOSTEN_BEZEICHNUNG_REQUIRED =
+            "Die Bezeichnung der Verbrauchskosten ist erforderlich.";
+
+    public static final String VERBRAUCHSKOSTEN_ABRECHNUNGSART_REQUIRED =
+            "Die Abrechnungsart muss angegeben werden.";
+
+    public static final String VERBRAUCHSKOSTEN_PREIS_INVALID =
+            "Der Preis muss angegeben werden und darf nicht negativ sein.";
+
+    public static final String VERBRAUCHSKOSTEN_MENGENEINHEIT_REQUIRED =
+            "Bei der Abrechnungsart ZAEHLERSTAND muss eine Mengeneinheit angegeben werden.";
+
+    public static final String VERBRAUCHSKOSTEN_MENGENEINHEIT_NOT_ALLOWED =
+            "Eine Mengeneinheit darf nur bei der Abrechnungsart ZAEHLERSTAND angegeben werden.";
+
+    public static final String VERBRAUCHSKOSTEN_WRONG_MIETOBJEKT =
+            "Die Verbrauchskosten gehören nicht zum angegebenen Mietobjekt.";
+
+    public static final String MIETBEREICH_RABATT_NOT_FOUND =
+            "Rabattregel nicht gefunden.";
+
+    public static final String MIETBEREICH_RABATT_ART_REQUIRED =
+            "Die Rabattart muss angegeben werden.";
+
+    public static final String MIETBEREICH_RABATT_WERT_TYP_REQUIRED =
+            "Der Rabattwerttyp muss angegeben werden.";
+
+    public static final String MIETBEREICH_RABATT_WERT_INVALID =
+            "Der Rabattwert muss angegeben werden und darf nicht negativ sein.";
+
+    public static final String MIETBEREICH_RABATT_PROZENT_INVALID =
+            "Ein prozentualer Rabatt muss zwischen 0 und 100 liegen.";
+
+    public static final String MIETBEREICH_RABATT_INDIVIDUELL_UNZULAESSIG =
+            "Individuelle Rabatte werden direkt bei der Buchung erfasst.";
+
+    public static final String MIETBEREICH_RABATT_DUPLICATE =
+            "Für diese Rabattart existiert bereits eine Regel für den Mietbereich.";
+
+    public static final String MIETBEREICH_RABATT_WRONG_MIETBEREICH =
+            "Die Rabattregel gehört nicht zum angegebenen Mietbereich.";
+
+    public static final String VERBRAUCHSKOSTEN_VERBRAUCHSART_REQUIRED =
+            "Die Verbrauchsart muss angegeben werden.";
+
+    // =========================================================
+    // Vermietung / Zähler
+    // =========================================================
+
+    public static final String ZAEHLER_NOT_FOUND =
+            "Zähler nicht gefunden.";
+
+    public static final String ZAEHLER_WRONG_MIETOBJEKT =
+            "Der Zähler gehört nicht zum angegebenen Mietobjekt.";
+
+    public static final String ZAEHLER_BEZEICHNUNG_REQUIRED =
+            "Die Zählerbezeichnung ist erforderlich.";
+
+    public static final String ZAEHLER_VERBRAUCHSART_REQUIRED =
+            "Die Verbrauchsart muss angegeben werden.";
+
+    public static final String ZAEHLER_MENGENEINHEIT_REQUIRED =
+            "Die Mengeneinheit muss angegeben werden.";
+
+    public static final String ZAEHLERSTAND_NOT_FOUND =
+            "Zählerstand nicht gefunden.";
+
+    public static final String ZAEHLERSTAND_DATUM_REQUIRED =
+            "Das Ablesedatum muss angegeben werden.";
+
+    public static final String ZAEHLERSTAND_WERT_REQUIRED =
+            "Der Zählerstand muss angegeben werden.";
+
+    public static final String ZAEHLERSTAND_WERT_INVALID =
+            "Der Zählerstand darf nicht negativ sein.";
+
+    public static final String ZAEHLERSTAND_WRONG_ZAEHLER =
+            "Der Zählerstand gehört nicht zum angegebenen Zähler.";
+
+    public static final String ZAEHLERSTAND_DATUM_INVALID =
+            "Das Ablesedatum darf nicht vor einer bereits vorhandenen Ablesung liegen.";
+
+    public static final String ZAEHLER_BEZEICHNUNG_TOO_LONG =
+            "Die Zählerbezeichnung darf höchstens 100 Zeichen lang sein.";
+
+    public static final String ZAEHLER_NUMMER_TOO_LONG =
+            "Die Zählernummer darf höchstens 100 Zeichen lang sein.";
+
+    public static final String ZAEHLER_MENGENEINHEIT_TOO_LONG =
+            "Die Mengeneinheit darf höchstens 20 Zeichen lang sein.";
+
     private ErrorMessages() {
     }
 }

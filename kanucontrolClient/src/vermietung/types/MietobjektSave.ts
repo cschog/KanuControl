@@ -1,3 +1,4 @@
+
 export interface MietobjektSave {
   bezeichnung: string;
   beschreibung: string;
@@ -9,4 +10,5 @@ export interface MietobjektSave {
   mietbar: boolean;
   direktbuchungAktiv: boolean;
   airbnbAktiv: boolean;
+  airbnbInserat: boolean;
 }

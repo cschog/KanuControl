@@ -1,6 +1,7 @@
 package com.kcserver.vermietung.entity;
 
 import com.kcserver.core.audit.Auditable;
+import com.kcserver.vermietung.enumtype.Berechnungsart;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -30,6 +31,9 @@ public class Mietbereich extends Auditable {
     @Column(nullable = false)
     private String bezeichnung;
 
+    @Column(name = "sortierung", nullable = false)
+    private Integer sortierung = 0;
+
     @Column(length = 2000)
     private String beschreibung;
 
@@ -42,11 +46,29 @@ public class Mietbereich extends Auditable {
     @Column(name = "airbnb_aktiv", nullable = false)
     private boolean airbnbAktiv = false;
 
+    @Column(name = "airbnb_inserat", nullable = false)
+    private boolean airbnbInserat = false;
+
     @Column(name = "bestand", nullable = false)
     private Integer bestand = 1;
 
     @Column(name = "mengeneinheit", length = 50)
     private String mengeneinheit;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "berechnungsart", nullable = false, length = 20)
+    private Berechnungsart berechnungsart = Berechnungsart.TAG;
+
+    @OneToMany(
+            mappedBy = "mietbereich",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<MietbereichRabatt> rabatte = new ArrayList<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "zaehler_id")
+    private Zaehler zaehler;
 
     @OneToMany(
             mappedBy = "mietbereich",

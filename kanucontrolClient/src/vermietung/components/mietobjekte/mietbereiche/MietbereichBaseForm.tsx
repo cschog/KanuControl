@@ -5,6 +5,8 @@ import FormFeld from "@/core/components/common/FormFeld";
 
 import type { MietbereichSave } from "@/vermietung/types/MietbereichSave";
 
+import { Berechnungsart, BERECHNUNGSART_LABELS } from "@/vermietung/enums/Berechnungsart";
+
 interface Props {
   form: MietbereichSave;
   editMode: boolean;
@@ -13,6 +15,14 @@ interface Props {
 }
 
 export const MietbereichBaseForm: React.FC<Props> = ({ form, editMode, onChange }) => {
+  const handleAirbnbAktivChange = (aktiv: boolean) => {
+    onChange("airbnbAktiv", aktiv);
+
+    if (!aktiv) {
+      onChange("airbnbInserat", false);
+    }
+  };
+
   return (
     <>
       <FormFeld
@@ -67,6 +77,23 @@ export const MietbereichBaseForm: React.FC<Props> = ({ form, editMode, onChange 
         select
         fullWidth
         size="small"
+        label="Berechnungsart"
+        value={form.berechnungsart}
+        disabled={!editMode}
+        onChange={(e) => onChange("berechnungsart", e.target.value as Berechnungsart)}
+        helperText="Legt fest, wie der Mietpreis berechnet wird."
+      >
+        {Object.values(Berechnungsart).map((art) => (
+          <MenuItem key={art} value={art}>
+            {BERECHNUNGSART_LABELS[art]}
+          </MenuItem>
+        ))}
+      </TextField>
+
+      <TextField
+        select
+        fullWidth
+        size="small"
         label="Direktbuchung aktiv"
         value={form.direktbuchungAktiv ? "ja" : "nein"}
         disabled={!editMode}
@@ -83,7 +110,21 @@ export const MietbereichBaseForm: React.FC<Props> = ({ form, editMode, onChange 
         label="Airbnb aktiv"
         value={form.airbnbAktiv ? "ja" : "nein"}
         disabled={!editMode}
-        onChange={(e) => onChange("airbnbAktiv", e.target.value === "ja")}
+        onChange={(e) => handleAirbnbAktivChange(e.target.value === "ja")}
+      >
+        <MenuItem value="ja">Ja</MenuItem>
+        <MenuItem value="nein">Nein</MenuItem>
+      </TextField>
+
+      <TextField
+        select
+        fullWidth
+        size="small"
+        label="Airbnb-Inserat"
+        value={form.airbnbInserat ? "ja" : "nein"}
+        disabled={!editMode || !form.airbnbAktiv}
+        onChange={(e) => onChange("airbnbInserat", e.target.value === "ja")}
+        helperText="Kennzeichnet den Mietbereich, der dem Airbnb-Inserat entspricht."
       >
         <MenuItem value="ja">Ja</MenuItem>
         <MenuItem value="nein">Nein</MenuItem>

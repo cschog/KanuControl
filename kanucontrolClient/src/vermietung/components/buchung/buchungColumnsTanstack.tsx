@@ -40,6 +40,12 @@ function formatStatus(status: Buchung["status"]): string {
     case "ANFRAGE":
       return "Anfrage";
 
+    case "ABGELEHNT":
+      return "Abgelehnt";
+
+    case "RESERVIERT":
+      return "Reserviert";
+
     case "BESTAETIGT":
       return "Bestätigt";
 

@@ -1,6 +1,7 @@
 package com.kcserver.vermietung.dto;
 
 import com.kcserver.kjfp.enumtype.CountryCode;
+import com.kcserver.vermietung.enumtype.Berechnungsart;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
@@ -16,6 +17,8 @@ public class MietobjektDTO {
     @NotBlank
     @Size(max = 255)
     private String bezeichnung;
+
+    private Integer sortierung = 0;
 
     @Size(max = 2000)
     private String beschreibung;
