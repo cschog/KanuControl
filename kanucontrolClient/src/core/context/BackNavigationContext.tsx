@@ -4,6 +4,8 @@ import { createContext, useContext } from "react";
 export interface BackNavigationContextType {
   registerBackHandler: (handler: (() => void) | null) => void;
   handleBack: (fallback: () => void) => void;
+  detailViewOpen: boolean;
+  setDetailViewOpen: (open: boolean) => void;
 }
 
 export const BackNavigationContext = createContext<BackNavigationContextType | null>(null);

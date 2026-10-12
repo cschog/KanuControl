@@ -3,6 +3,7 @@ import { Alert, Box, Button, Typography } from "@mui/material";
 
 import type { Mietbereich } from "@/vermietung/types/Mietbereich";
 import type { MietbereichSave } from "@/vermietung/types/MietbereichSave";
+import { Berechnungsart } from "@/vermietung/enums/Berechnungsart";
 
 import {
   createMietbereich,
@@ -197,9 +198,16 @@ export function MietbereicheView({ mietobjektId, mietobjektBezeichnung }: Props)
           mietbereich={{
             id: 0,
             mietobjektId,
+            zaehlerId: null,
             bezeichnung: "",
+            sortierung: 0,
             beschreibung: "",
             mietbar: true,
+            direktbuchungAktiv: true,
+            airbnbAktiv: false,
+            airbnbInserat: false,
+            bestand: 1,
+            berechnungsart: Berechnungsart.TAG,
           }}
           editMode
           onEdit={() => setEditMode(true)}

@@ -198,7 +198,7 @@ databaseChangeLog:
   - include:
       file: db/changelog/changes/20261009-03-vermietung-buchungsquellen-bestand.xml
   - include:
-      file: db/changelog/changes/20261009-04-buchung-tabellen-wiederherstellen.xml
+      file: db/changelog/changes/20261012-01-buchung-buchungsquelle.xml
   - include:
       file: db/changelog/changes/20261010-01-add-sortierung-vermietung.xml
   - include:

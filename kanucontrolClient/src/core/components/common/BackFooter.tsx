@@ -16,6 +16,7 @@ interface Props {
   onClick?: () => void;
   actions?: Action[];
   floating?: boolean;
+  floatingOnMobile?: boolean;
   onHeightChange?: (height: number) => void;
 }
 
@@ -25,6 +26,7 @@ export default function BackFooter({
   onClick,
   actions,
   floating = false,
+  floatingOnMobile = true,
   onHeightChange,
 }: Props) {
   const navigate = useNavigate();
@@ -45,15 +47,15 @@ export default function BackFooter({
         ]
       : []);
 
- const handleAction = (action: Action) => {
-   if (action.onClick) {
-     action.onClick();
-   } else if (action.back) {
-     navigate(-1);
-   } else if (action.path) {
-     navigate(action.path);
-   }
- };
+  const handleAction = (action: Action) => {
+    if (action.onClick) {
+      action.onClick();
+    } else if (action.back) {
+      navigate(-1);
+    } else if (action.path) {
+      navigate(action.path);
+    }
+  };
 
   /*
    * Höhe des Footers an AppLayout melden
@@ -151,14 +153,36 @@ export default function BackFooter({
         mb: 0.5,
 
         ...(floating && {
-          position: "fixed",
-          bottom: `${bottomOffset}px`,
-          left: "50%",
-          transform: "translateX(-50%)",
+          position: {
+            xs: floatingOnMobile ? "fixed" : "static",
+            md: "fixed",
+          },
+
+          ...(floatingOnMobile
+            ? {
+                bottom: `${bottomOffset}px`,
+              }
+            : {
+                bottom: {
+                  xs: "auto",
+                  md: `${bottomOffset}px`,
+                },
+              }),
+
+          left: {
+            xs: floatingOnMobile ? "50%" : "auto",
+            md: "50%",
+          },
+
+          transform: {
+            xs: floatingOnMobile ? "translateX(-50%)" : "none",
+            md: "translateX(-50%)",
+          },
+
           zIndex: 1100,
 
           width: {
-            xs: "calc(100% - 32px)",
+            xs: floatingOnMobile ? "calc(100% - 32px)" : "100%",
             md: "auto",
           },
         }),

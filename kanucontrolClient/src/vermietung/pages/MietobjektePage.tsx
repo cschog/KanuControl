@@ -16,7 +16,7 @@ import {
 
 import { MietobjektTable } from "@/vermietung/components/mietobjekte/MietobjektTable";
 import { MietobjektFormView } from "@/vermietung/components/mietobjekte/MietobjektFormView";
-
+import { useBackNavigation } from "@/core/context/BackNavigationContext";
 
 export default function MietobjektePage() {
   const [mietobjekte, setMietobjekte] = useState<Mietobjekt[]>([]);
@@ -32,9 +32,10 @@ export default function MietobjektePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { reload: reloadVermietung } = useVermietungContext();
+  const { setDetailViewOpen } = useBackNavigation();
 
   const selectedMietobjekt = mietobjekte.find((m) => m.id === selectedId) ?? null;
-
+  
   async function loadMietobjekte(selectFirst = true) {
     try {
       setLoading(true);
@@ -68,6 +69,16 @@ export default function MietobjektePage() {
     setNewMode(true);
     setEditMode(true);
   }
+
+  useEffect(() => {
+    const formOpen = newMode || selectedId !== null;
+
+    setDetailViewOpen(formOpen);
+
+    return () => {
+      setDetailViewOpen(false);
+    };
+  }, [newMode, selectedId, setDetailViewOpen]);
 
   async function handleCancelEdit() {
     if (newMode) {

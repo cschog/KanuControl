@@ -8,7 +8,6 @@ import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
-  getSortedRowModel,
   RowSelectionState,
   SortingState,
   useReactTable,
@@ -179,6 +178,8 @@ export function GenericTableTanstack<T extends WithId>({
 
     onRowSelectionChange: setRowSelection,
 
+    manualSorting: true,
+
     onSortingChange: (updater) => {
       const nextSorting = typeof updater === "function" ? updater(sorting) : updater;
 
@@ -186,7 +187,6 @@ export function GenericTableTanstack<T extends WithId>({
     },
 
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
   });
 
   React.useEffect(() => {
@@ -451,26 +451,22 @@ export function GenericTableTanstack<T extends WithId>({
                       selected={selected}
                       onClick={() => {
                         handleRowClick(row);
-
-                        if (detailPanel) {
-                          toggleExpanded(row.original.id);
-                        }
+                        toggleExpanded(row.original.id);
                       }}
                       sx={{
                         cursor: "pointer",
 
+                        // Geschlossene Zeile leicht grau
                         backgroundColor: selected
                           ? "action.selected"
-                          : detailPanel && expandedRows.has(row.original.id)
+                          : expandedRows.has(row.original.id)
                             ? "#cdcdcd"
-                            : getRowBackgroundColor?.(row.original),
+                            : (getRowBackgroundColor?.(row.original) ?? "#f5f5f5"),
 
                         "&:hover": {
-                          backgroundColor: selected
-                            ? "action.selected"
-                            : detailPanel && expandedRows.has(row.original.id)
-                              ? "#c5c5c5"
-                              : getRowBackgroundColor?.(row.original),
+                          backgroundColor: expandedRows.has(row.original.id)
+                            ? "#c5c5c5"
+                            : "#e8e8e8",
                         },
 
                         "& td": {

@@ -1,6 +1,6 @@
-// src/core/context/BackNavigationProvider.tsx
 import { useCallback, useState } from "react";
 import type { ReactNode } from "react";
+
 import { BackNavigationContext } from "./BackNavigationContext";
 
 interface Props {
@@ -9,6 +9,7 @@ interface Props {
 
 export function BackNavigationProvider({ children }: Props) {
   const [backHandler, setBackHandler] = useState<(() => void) | null>(null);
+  const [detailViewOpen, setDetailViewOpen] = useState(false);
 
   const registerBackHandler = useCallback((handler: (() => void) | null) => {
     setBackHandler(() => handler);
@@ -26,7 +27,14 @@ export function BackNavigationProvider({ children }: Props) {
   );
 
   return (
-    <BackNavigationContext.Provider value={{ registerBackHandler, handleBack }}>
+    <BackNavigationContext.Provider
+      value={{
+        registerBackHandler,
+        handleBack,
+        detailViewOpen,
+        setDetailViewOpen,
+      }}
+    >
       {children}
     </BackNavigationContext.Provider>
   );

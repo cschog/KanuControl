@@ -17,6 +17,7 @@ import { getApiErrorMessage } from "@/kjfp/api/utils/apiError";
 import { ErrorDialog } from "@/core/components/common/ErrorDialog";
 import { VereinAutocomplete } from "@/core/components/verein/VereinAutocomplete";
 import { VereinRef } from "@/core/api/types/verein/VereinRef";
+import { useBackNavigation } from "@/core/context/BackNavigationContext";
 
 import {
   getPersonById,
@@ -83,6 +84,7 @@ export default function PersonenScreen() {
   const [copyData, setCopyData] = useState<Partial<PersonSave>>();
 
   const { active } = useAppContext();
+  const { setDetailViewOpen } = useBackNavigation();
   const [error, setError] = useState<string | null>(null);
 
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -376,6 +378,19 @@ export default function PersonenScreen() {
     setEditMode(false);
     setEditData(null);
   }, [selectedId]);
+
+  /*
+   * Detailansicht an AppLayout melden.
+   * Bei geöffneter Person wird der BackFooter auf Mobile
+   * unterhalb des Inhalts angezeigt.
+   */
+  useEffect(() => {
+    setDetailViewOpen(selectedId !== null);
+
+    return () => {
+      setDetailViewOpen(false);
+    };
+  }, [selectedId, setDetailViewOpen]);
 
   /* ========================================================= */
   /* UI */

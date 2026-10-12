@@ -1,7 +1,7 @@
 import type { RouteObject } from "react-router-dom";
 
 import VermietungStartPage from "@/vermietung/pages/VermietungStart";
-import MietobjektePage from "@/vermietung/components/mietobjekte/MietobjektePage";
+import MietobjektePage from "@/vermietung/pages/MietobjektePage";
 import BuchungenView from "@/vermietung/pages/BuchungenView";
 import VerwaltungPage from "@/vermietung/pages/VerwaltungPage";
 

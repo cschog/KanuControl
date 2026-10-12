@@ -10,6 +10,7 @@ import type { Mietobjekt } from "@/vermietung/types/Mietobjekt";
 import type { MietobjektSave } from "@/vermietung/types/MietobjektSave";
 import { MietbereicheView } from "./mietbereiche/MietbereicheView";
 
+
 interface Props {
   mietobjekt: Mietobjekt | null;
   editMode: boolean;

@@ -12,9 +12,10 @@ function AppLayoutContent() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { handleBack } = useBackNavigation();
+  const { handleBack, detailViewOpen } = useBackNavigation();
 
   const contentRef = useRef<HTMLDivElement>(null);
+
   const [floatingFooter, setFloatingFooter] = useState(false);
   const [footerHeight, setFooterHeight] = useState(0);
 
@@ -41,6 +42,10 @@ function AppLayoutContent() {
     /^\/veranstaltungen\/\d+\/finanzen\/durchfuehrung$/.test(location.pathname) ||
     /^\/veranstaltungen\/\d+\/finanzen\/auswertung$/.test(location.pathname);
 
+  /*
+   * Ermitteln, ob der Inhalt höher als der Viewport ist.
+   * Bei langen Listen wird der Footer schwebend angezeigt.
+   */
   useEffect(() => {
     const checkContentHeight = () => {
       const content = contentRef.current;
@@ -68,8 +73,16 @@ function AppLayoutContent() {
       window.removeEventListener("resize", checkContentHeight);
       observer.disconnect();
     };
-  }, []);
+  }, [location.pathname, detailViewOpen]);
 
+  /*
+   * Mobile:
+   * - Detailansicht: Footer unter dem Inhalt
+   * - Sonstige Seiten: Footer schwebend, wenn der Inhalt lang ist
+   *
+   * Desktop:
+   * - Bisheriges Verhalten
+   */
   return (
     <VermietungProvider>
       <Box>
@@ -80,33 +93,94 @@ function AppLayoutContent() {
           sx={{
             pt: { xs: 2, md: 4 },
             px: { xs: 2, md: 4 },
-            pb: floatingFooter
-              ? `calc(${footerHeight}px + 16px + env(safe-area-inset-bottom))`
-              : { xs: 2, md: 4 },
+            pb:
+              floatingFooter && !detailViewOpen
+                ? `calc(${footerHeight}px + 16px + env(safe-area-inset-bottom))`
+                : { xs: 2, md: 4 },
           }}
         >
           <Outlet />
+
+          {/* Mobiler Footer bei geöffneten Detail- und Editmasken */}
+          {!isStartMenu && detailViewOpen && (
+            <Box
+              sx={{
+                display: { xs: "block", md: "none" },
+                mt: 2,
+              }}
+            >
+              <BackFooter
+                floating={false}
+                onHeightChange={setFooterHeight}
+                actions={[
+                  ...(!hideBackButton
+                    ? [
+                        {
+                          label: "Zurück",
+                          onClick: () => handleBack(() => navigate(-1)),
+                        },
+                      ]
+                    : []),
+                  {
+                    label: isVermietung ? "Zurück zur Vermietung" : "Zurück zum Startmenü",
+                    path: isVermietung ? "/vermietung" : "/startmenue",
+                  },
+                ]}
+              />
+            </Box>
+          )}
         </Box>
 
+        {/* Footer für lange Listen und sonstige Seiten auf Mobile */}
+        {!isStartMenu && !detailViewOpen && (
+          <Box
+            sx={{
+              display: { xs: "block", md: "none" },
+            }}
+          >
+            <BackFooter
+              floating={floatingFooter}
+              onHeightChange={setFooterHeight}
+              actions={[
+                ...(!hideBackButton
+                  ? [
+                      {
+                        label: "Zurück",
+                        onClick: () => handleBack(() => navigate(-1)),
+                      },
+                    ]
+                  : []),
+                {
+                  label: isVermietung ? "Zurück zur Vermietung" : "Zurück zum Startmenü",
+                  path: isVermietung ? "/vermietung" : "/startmenue",
+                },
+              ]}
+            />
+          </Box>
+        )}
+
+        {/* Desktop-Footer */}
         {!isStartMenu && (
-          <BackFooter
-            floating={floatingFooter}
-            onHeightChange={setFooterHeight}
-            actions={[
-              ...(!hideBackButton
-                ? [
-                    {
-                      label: "Zurück",
-                      onClick: () => handleBack(() => navigate(-1)),
-                    },
-                  ]
-                : []),
-              {
-                label: isVermietung ? "Zurück zur Vermietung" : "Zurück zum Startmenü",
-                path: isVermietung ? "/vermietung" : "/startmenue",
-              },
-            ]}
-          />
+          <Box sx={{ display: { xs: "none", md: "block" } }}>
+            <BackFooter
+              floating={floatingFooter}
+              onHeightChange={setFooterHeight}
+              actions={[
+                ...(!hideBackButton
+                  ? [
+                      {
+                        label: "Zurück",
+                        onClick: () => handleBack(() => navigate(-1)),
+                      },
+                    ]
+                  : []),
+                {
+                  label: isVermietung ? "Zurück zur Vermietung" : "Zurück zum Startmenü",
+                  path: isVermietung ? "/vermietung" : "/startmenue",
+                },
+              ]}
+            />
+          </Box>
         )}
       </Box>
     </VermietungProvider>

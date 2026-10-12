@@ -47,7 +47,7 @@ const BuchungenView = () => {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const { registerBackHandler } = useBackNavigation();
+ const { registerBackHandler, setDetailViewOpen } = useBackNavigation();
 
   const handleStatusChange = async (status: Buchungsstatus) => {
     if (!selectedBuchung) return;
@@ -143,6 +143,14 @@ const BuchungenView = () => {
   const handleCancelEdit = () => {
     setEditMode(false);
   };
+
+  useEffect(() => {
+    setDetailViewOpen(showForm);
+
+    return () => {
+      setDetailViewOpen(false);
+    };
+  }, [showForm, setDetailViewOpen]);
 
   useEffect(() => {
     if (showForm) {

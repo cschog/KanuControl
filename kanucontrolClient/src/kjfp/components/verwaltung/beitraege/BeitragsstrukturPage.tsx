@@ -412,7 +412,15 @@ const BeitragsstrukturTable = () => {
           onChange={() => setExpandedId(expandedId === s.id ? null : s.id)}
         >
           {/* HEADER */}
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <AccordionSummary
+            expandIcon={<ExpandMoreIcon />}
+            sx={{
+              "& .MuiAccordionSummary-content": {
+                alignItems: "flex-start",
+                minWidth: 0,
+              },
+            }}
+          >
             <Stack
               direction="row"
               alignItems="flex-start"

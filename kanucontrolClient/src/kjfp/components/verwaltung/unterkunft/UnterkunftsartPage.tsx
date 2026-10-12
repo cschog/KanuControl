@@ -1,5 +1,4 @@
-// src/components/verwaltung/unterkunft/UnterkunftsartPage.tsx
-
+// src/kjfp/components/verwaltung/unterkunft/UnterkunftsartPage.tsx
 import { useEffect, useState } from "react";
 import { Alert, Box, CircularProgress } from "@mui/material";
 import { getApiErrorMessage } from "@/kjfp/api/utils/apiError";
@@ -13,7 +12,7 @@ import { UnterkunftsartDTO } from "@/kjfp/types/unterkunft/UnterkunftsartDTO";
 import { UnterkunftsartCreateUpdateDTO } from "@/kjfp/types/unterkunft/UnterkunftsartCreateUpdateDTO";
 import {
   getUnterkunftsarten,
-  createUnterkunftsart,
+ createUnterkunftsart,
   updateUnterkunftsart,
   deleteUnterkunftsart,
 } from "@/kjfp/api/services/unterkunftsartApi";
@@ -123,6 +122,7 @@ const UnterkunftsartPage = () => {
         data={data}
         loading={loading}
         onEdit={(row) => {
+          console.log("Unterkunftsart bearbeiten:", row);
           setEditing(row);
           setDialogOpen(true);
         }}
@@ -141,6 +141,8 @@ const UnterkunftsartPage = () => {
         }}
         onSave={handleSave}
       />
+    
+
       <ConfirmDeleteDialog
         open={deleteOpen}
         title="Unterkunftsart löschen"

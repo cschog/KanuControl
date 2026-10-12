@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.liquibase.org/xml/ns/dbchangelog
+          https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="20261012-01-buchung-buchungsquelle"
+               author="chris">
+
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists
+                        tableName="buchung"
+                        columnName="buchungsquelle"/>
+            </not>
+        </preConditions>
+
+        <addColumn tableName="buchung">
+            <column name="buchungsquelle"
+                    type="VARCHAR(20)"
+                    defaultValue="DIREKT">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+    </changeSet>
+
+</databaseChangeLog>

@@ -12,6 +12,7 @@ import { renderLoadingOrError } from "@/core/components/common/loadingOnErrorUti
 
 import { ErrorDialog } from "@/core/components/common/ErrorDialog";
 import { getApiErrorMessage } from "@/kjfp/api/utils/apiError";
+import { useBackNavigation } from "@/core/context/BackNavigationContext";
 
 import {
   getAllVereine,
@@ -38,6 +39,8 @@ export default function VereinScreen() {
 
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [csvImportOpen, setCsvImportOpen] = useState(false);
+
+  const { setDetailViewOpen } = useBackNavigation();
 
   /* ========================================================= */
   /* LOAD */
@@ -176,6 +179,20 @@ export default function VereinScreen() {
   const disableEdit = !selected || editMode;
 
   const disableDelete = !selected || editMode;
+
+  /* ========================================================= */
+  /* BACKFOOTER: LISTE ODER DETAILANSICHT */
+  /* ========================================================= */
+
+  useEffect(() => {
+    setDetailViewOpen(selected !== null);
+  }, [selected, setDetailViewOpen]);
+
+  useEffect(() => {
+    return () => {
+      setDetailViewOpen(false);
+    };
+  }, [setDetailViewOpen]);
 
   /* ========================================================= */
   /* UI */
