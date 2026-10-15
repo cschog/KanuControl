@@ -1,8 +1,8 @@
 package com.kcserver.vermietung.entity;
 
 import com.kcserver.core.audit.Auditable;
-import com.kcserver.kjfp.entity.Person;
-import com.kcserver.kjfp.entity.Verein;
+import com.kcserver.core.entity.Person;
+import com.kcserver.core.entity.Verein;
 import com.kcserver.vermietung.enumtype.Buchungsquelle;
 import com.kcserver.vermietung.enumtype.Buchungsstatus;
 import jakarta.persistence.*;
@@ -58,6 +58,15 @@ public class Buchung extends Auditable {
 
     @Column(nullable = false)
     private LocalDate abreise;
+
+    @Column(columnDefinition = "TEXT")
+    private String bemerkung;
+
+    /**
+     * Optionale Bewertung der Buchung, beispielsweise 1 bis 5 Sterne.
+     */
+    @Column
+    private Integer bewertung;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "mietobjekt_id", nullable = false)

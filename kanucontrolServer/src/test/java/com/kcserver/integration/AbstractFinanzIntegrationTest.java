@@ -2,6 +2,9 @@ package com.kcserver.integration;
 
 
 
+import com.kcserver.core.entity.Person;
+import com.kcserver.core.entity.Verein;
+import com.kcserver.core.repository.VereinRepository;
 import com.kcserver.kjfp.dto.veranstaltung.VeranstaltungCreateDTO;
 import com.kcserver.kjfp.entity.*;
 import com.kcserver.kjfp.entity.abrechnung.Abrechnung;

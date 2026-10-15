@@ -51,6 +51,6 @@ public class Zaehler extends Auditable {
     )
     private List<Zaehlerstand> zaehlerstaende = new ArrayList<>();
 
-    @OneToMany(mappedBy = "zaehler")
+    @ManyToMany(mappedBy = "zaehler", fetch = FetchType.LAZY)
     private List<Mietbereich> mietbereiche = new ArrayList<>();
 }

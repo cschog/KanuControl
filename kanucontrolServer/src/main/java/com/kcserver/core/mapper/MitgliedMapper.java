@@ -2,9 +2,9 @@ package com.kcserver.core.mapper;
 
 import com.kcserver.core.dto.mitglied.MitgliedDTO;
 import com.kcserver.core.dto.mitglied.MitgliedDetailDTO;
-import com.kcserver.kjfp.dto.verein.VereinRefDTO;
-import com.kcserver.kjfp.entity.Mitglied;
-import com.kcserver.kjfp.entity.Verein;
+import com.kcserver.core.dto.verein.VereinRefDTO;
+import com.kcserver.core.entity.Mitglied;
+import com.kcserver.core.entity.Verein;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;

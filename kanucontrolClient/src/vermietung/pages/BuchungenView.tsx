@@ -63,6 +63,23 @@ const BuchungenView = () => {
     }
   };
 
+  const handleReopen = async () => {
+    if (!selectedBuchung) return;
+
+    setSaveError(null);
+
+    try {
+      const updated = await changeStatus(selectedBuchung.id, "BESTAETIGT");
+
+      setSelectedBuchung(updated);
+      setEditMode(true);
+    } catch (err: unknown) {
+      console.error("Fehler beim Wiederöffnen der Buchung:", err);
+      setSaveError(getApiErrorMessage(err));
+    }
+  };
+
+
   const handleReserve = () => handleStatusChange("RESERVIERT");
 
   const handleConfirm = () => handleStatusChange("BESTAETIGT");
@@ -201,6 +218,7 @@ if (showForm) {
         onSave={handleSave}
         onReserve={handleReserve}
         onConfirm={handleConfirm}
+        onReopen={handleReopen}
         onReject={handleReject}
         onCancelBooking={handleCancelBooking}
         onComplete={handleComplete}

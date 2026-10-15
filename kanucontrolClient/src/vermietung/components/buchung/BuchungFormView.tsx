@@ -18,7 +18,7 @@ interface Props {
   onEdit: () => void;
   onCancelEdit: () => void;
   onSave: (payload: BuchungSave) => Promise<void>;
-
+  onReopen: () => Promise<void>;
   onDelete: () => void;
   onReserve: () => void;
   onConfirm: () => void;
@@ -55,6 +55,7 @@ export const BuchungFormView: React.FC<Props> = ({
   onReject,
   onCancelBooking,
   onComplete,
+  onReopen,
   disableDelete,
   neueBuchungsquelle = "DIREKT",
 }) => {
@@ -110,7 +111,7 @@ export const BuchungFormView: React.FC<Props> = ({
           display: "grid",
           gridTemplateColumns: {
             xs: "1fr",
-            md: "minmax(0, 1fr) minmax(0, 1fr)",
+            lg: "minmax(260px, 0.9fr) minmax(320px, 1.1fr) minmax(300px, 1fr)",
           },
           gap: 3,
           mt: 3,
@@ -120,10 +121,15 @@ export const BuchungFormView: React.FC<Props> = ({
         <BuchungBaseForm
           form={form}
           editMode={editMode}
+          buchungsdatenEditierbar={
+            editMode && buchung?.status !== "STORNIERT" && buchung?.status !== "ABGELEHNT"
+          }
           mietbereiche={mietbereiche}
           mieter={mieter}
           veranstalter={veranstalter}
           buchungspositionen={buchung?.positionen ?? []}
+          verbrauchskosten={buchung?.verbrauchskosten ?? []}
+          buchungsstatus={buchung?.status}
           createdAt={buchung?.createdAt}
           buchungsquelle={form.buchungsquelle}
           onMieterChange={setMieter}
@@ -149,6 +155,7 @@ export const BuchungFormView: React.FC<Props> = ({
         }}
         onReserve={onReserve}
         onConfirm={onConfirm}
+        onReopen={onReopen}
         onReject={onReject}
         onCancelBooking={onCancelBooking}
         onComplete={onComplete}

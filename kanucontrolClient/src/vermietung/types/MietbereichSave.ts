@@ -16,5 +16,5 @@ export interface MietbereichSave {
 
   berechnungsart: Berechnungsart;
 
-  zaehlerId: number | null;
+  zaehlerIds: number[];
 }

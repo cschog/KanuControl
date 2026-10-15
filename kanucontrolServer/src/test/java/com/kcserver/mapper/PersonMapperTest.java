@@ -2,7 +2,7 @@ package com.kcserver.mapper;
 
 import com.kcserver.core.dto.person.PersonListDTO;
 import com.kcserver.core.mapper.PersonMapperImpl;
-import com.kcserver.kjfp.entity.Person;
+import com.kcserver.core.entity.Person;
 import com.kcserver.core.mapper.PersonMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

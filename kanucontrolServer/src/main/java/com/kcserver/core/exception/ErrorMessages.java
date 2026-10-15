@@ -754,6 +754,49 @@ public final class ErrorMessages {
     public static final String ZAEHLER_MENGENEINHEIT_TOO_LONG =
             "Die Mengeneinheit darf höchstens 20 Zeichen lang sein.";
 
+    public static final String VERBRAUCHSABRECHNUNG_ANREISE_ABREISE_REQUIRED =
+            "Für die Verbrauchsabrechnung müssen Anreise und Abreise angegeben sein.";
+
+    public static final String VERBRAUCHSABRECHNUNG_UNBEFRISTET =
+            "Eine unbefristete Buchung kann erst abgeschlossen werden, "
+                    + "wenn ein tatsächliches Abreisedatum eingetragen wurde.";
+
+    public static final String VERBRAUCHSABRECHNUNG_ABREISE_INVALID =
+            "Das Abreisedatum muss nach dem Anreisedatum liegen.";
+
+    public static final String VERBRAUCHSABRECHNUNG_ZAEHLER_NICHT_ZUGEORDNET =
+            "Kein aktiver Zähler für %s ist einem gebuchten Mietbereich zugeordnet.";
+
+    public static final String VERBRAUCHSABRECHNUNG_ZAEHLERSTAENDE_FEHLEN =
+            "Keine Zählerstände für %s vorhanden. Bitte die Zählerverwaltung ergänzen.";
+
+    public static final String VERBRAUCHSABRECHNUNG_ZAEHLERSTAND_ABWEICHUNG =
+            "Der Zählerstand für %s liegt für die %s mehr als 24 Stunden "
+                    + "vom vorgesehenen Zeitpunkt entfernt. Vorgesehen: %s, "
+                    + "nächste Ablesung: %s. Bitte die Zählerverwaltung ergänzen.";
+
+    public static final String VERBRAUCHSABRECHNUNG_GLEICHER_ZAEHLERSTAND =
+            "Für den Zähler '%s' wurde für Anreise und Abreise derselbe "
+                    + "Zählerstand ausgewählt. Bitte weitere Ablesungen erfassen.";
+
+    public static final String VERBRAUCHSABRECHNUNG_ZAEHLERSTAND_REIHENFOLGE =
+            "Die Ablesung für die Anreise muss zeitlich vor der Ablesung "
+                    + "für die Abreise liegen. Bitte den Zähler '%s' prüfen.";
+
+    public static final String VERBRAUCHSABRECHNUNG_NEGATIVER_VERBRAUCH =
+            "Der Zählerstand von '%s' ist gesunken. Bitte prüfen, ob der Zähler "
+                    + "zurückgesetzt oder ausgetauscht wurde.";
+
+    public static final String VERBRAUCHSABRECHNUNG_VORSCHAU_UNBEFRISTET =
+            "Für eine unbefristete Buchung ist noch keine abschließende "
+                    + "Verbrauchskostenberechnung möglich.";
+
+    public static final String VERBRAUCHSABRECHNUNG_VORSCHAU_ZAEHLER_FEHLT =
+            "Kein aktiver, passender Zähler ist einem der gebuchten Mietbereiche zugeordnet.";
+
+    public static final String VERBRAUCHSABRECHNUNG_UNBEKANNTE_ABRECHNUNGSART =
+            "Unbekannte Verbrauchsabrechnungsart: %s";
+
     private ErrorMessages() {
     }
 }

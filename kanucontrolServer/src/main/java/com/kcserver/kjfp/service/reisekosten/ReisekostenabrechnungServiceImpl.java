@@ -4,7 +4,7 @@ package com.kcserver.kjfp.service.reisekosten;
 import com.kcserver.core.dto.person.PersonRefDTO;
 import com.kcserver.core.mapper.PersonMapper;
 import com.kcserver.kjfp.dto.reisekosten.*;
-import com.kcserver.kjfp.entity.Person;
+import com.kcserver.core.entity.Person;
 import com.kcserver.kjfp.entity.Teilnehmer;
 import com.kcserver.kjfp.entity.Veranstaltung;
 import com.kcserver.kjfp.entity.fahrkosten.Fahrtabschnitt;

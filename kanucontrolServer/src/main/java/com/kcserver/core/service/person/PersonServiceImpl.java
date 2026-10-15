@@ -1,10 +1,15 @@
-package com.kcserver.kjfp.service.person;
+package com.kcserver.core.service.person;
 
 
 import com.kcserver.core.dto.mitglied.MitgliedSaveDTO;
 import com.kcserver.core.dto.person.*;
+import com.kcserver.core.entity.Mitglied;
+import com.kcserver.core.entity.Person;
+import com.kcserver.core.entity.Verein;
 import com.kcserver.core.exception.ErrorMessages;
 import com.kcserver.core.mapper.PersonMapper;
+import com.kcserver.core.repository.MitgliedRepository;
+import com.kcserver.core.repository.VereinRepository;
 import com.kcserver.kjfp.dto.validation.DataStatus;
 import com.kcserver.kjfp.entity.*;
 import com.kcserver.kjfp.enumtype.CountryCode;

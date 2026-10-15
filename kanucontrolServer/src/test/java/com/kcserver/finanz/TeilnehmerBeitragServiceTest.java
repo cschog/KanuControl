@@ -1,6 +1,6 @@
 package com.kcserver.finanz;
 
-import com.kcserver.kjfp.entity.Person;
+import com.kcserver.core.entity.Person;
 import com.kcserver.kjfp.entity.Teilnehmer;
 import com.kcserver.kjfp.entity.Veranstaltung;
 import com.kcserver.kjfp.entity.beitraege.Beitragsregel;

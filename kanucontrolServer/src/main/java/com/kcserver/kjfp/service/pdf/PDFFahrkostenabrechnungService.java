@@ -1,7 +1,7 @@
 package com.kcserver.kjfp.service.pdf;
 
 import com.kcserver.kjfp.dto.reisekosten.KostenZeile;
-import com.kcserver.kjfp.entity.Person;
+import com.kcserver.core.entity.Person;
 import com.kcserver.kjfp.entity.fahrkosten.Fahrtabschnitt;
 import com.kcserver.kjfp.entity.fahrkosten.FahrtabschnittMitfahrer;
 import com.kcserver.kjfp.entity.fahrkosten.ReisekostenKonfiguration;

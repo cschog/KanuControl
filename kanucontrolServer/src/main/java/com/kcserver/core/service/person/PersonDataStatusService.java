@@ -1,9 +1,9 @@
-package com.kcserver.kjfp.service.person;
+package com.kcserver.core.service.person;
 
 import com.kcserver.core.dto.person.PersonDataStatusDTO;
 import com.kcserver.kjfp.dto.validation.DataFieldStatusDTO;
 import com.kcserver.kjfp.dto.validation.DataStatus;
-import com.kcserver.kjfp.entity.Person;
+import com.kcserver.core.entity.Person;
 import com.kcserver.kjfp.enumtype.TeilnehmerRolle;
 import com.kcserver.kjfp.service.AltersService;
 import lombok.RequiredArgsConstructor;

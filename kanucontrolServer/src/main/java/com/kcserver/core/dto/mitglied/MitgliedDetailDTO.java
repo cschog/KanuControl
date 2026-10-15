@@ -1,7 +1,7 @@
 package com.kcserver.core.dto.mitglied;
 
-import com.kcserver.kjfp.dto.verein.HasHauptverein;
-import com.kcserver.kjfp.dto.verein.VereinRefDTO;
+import com.kcserver.core.dto.verein.HasHauptverein;
+import com.kcserver.core.dto.verein.VereinRefDTO;
 import com.kcserver.kjfp.enumtype.MitgliedFunktion;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

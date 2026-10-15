@@ -23,6 +23,8 @@ const createInitialForm = (buchungsquelle: Buchungsquelle = "DIREKT"): BuchungSa
   veranstalterVereinId: undefined,
   status: "ANFRAGE",
   buchungsquelle,
+  bemerkung: "",
+  bewertung: null,
 });
 
 export function useBuchungForm(
@@ -58,6 +60,8 @@ export function useBuchungForm(
         veranstalterVereinId: buchung.veranstalterVereinId,
         status: buchung.status,
         buchungsquelle: buchung.buchungsquelle,
+        bemerkung: buchung.bemerkung ?? "",
+        bewertung: buchung.bewertung ?? null,
       });
 
       return;
@@ -94,6 +98,8 @@ export function useBuchungForm(
         veranstalterVereinId: buchung.veranstalterVereinId,
         status: buchung.status,
         buchungsquelle: buchung.buchungsquelle,
+        bemerkung: buchung.bemerkung ?? "",
+        bewertung: buchung.bewertung ?? null,
       });
 
       return;

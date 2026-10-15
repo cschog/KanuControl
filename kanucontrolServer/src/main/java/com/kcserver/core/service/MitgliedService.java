@@ -1,15 +1,15 @@
-package com.kcserver.kjfp.service;
+package com.kcserver.core.service;
 
 import com.kcserver.core.dto.mitglied.MitgliedDTO;
-import com.kcserver.kjfp.entity.Mitglied;
-import com.kcserver.kjfp.entity.Person;
-import com.kcserver.kjfp.entity.Verein;
+import com.kcserver.core.entity.Mitglied;
+import com.kcserver.core.entity.Person;
+import com.kcserver.core.entity.Verein;
 import com.kcserver.core.exception.BusinessRuleViolationException;
 import com.kcserver.core.exception.ErrorMessages;
 import com.kcserver.core.mapper.MitgliedMapper;
-import com.kcserver.kjfp.repository.MitgliedRepository;
+import com.kcserver.core.repository.MitgliedRepository;
 import com.kcserver.kjfp.repository.PersonRepository;
-import com.kcserver.kjfp.repository.VereinRepository;
+import com.kcserver.core.repository.VereinRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;

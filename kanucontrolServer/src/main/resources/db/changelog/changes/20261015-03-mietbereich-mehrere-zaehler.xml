@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+            http://www.liquibase.org/xml/ns/dbchangelog
+            https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20261015-03-mietbereich-mehrere-zaehler" author="chris">
+
+        <!-- Neue Zuordnungstabelle -->
+        <createTable tableName="mietbereich_zaehler">
+
+            <column name="mietbereich_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="zaehler_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+        </createTable>
+
+        <!-- Eindeutige Zuordnung -->
+        <addPrimaryKey
+                tableName="mietbereich_zaehler"
+                columnNames="mietbereich_id, zaehler_id"
+                constraintName="pk_mietbereich_zaehler"/>
+
+        <!-- Mietbereich referenzieren -->
+        <addForeignKeyConstraint
+                baseTableName="mietbereich_zaehler"
+                baseColumnNames="mietbereich_id"
+                referencedTableName="mietbereich"
+                referencedColumnNames="id"
+                constraintName="fk_mietbereich_zaehler_mietbereich"
+                onDelete="CASCADE"/>
+
+        <!-- Zähler referenzieren -->
+        <addForeignKeyConstraint
+                baseTableName="mietbereich_zaehler"
+                baseColumnNames="zaehler_id"
+                referencedTableName="zaehler"
+                referencedColumnNames="id"
+                constraintName="fk_mietbereich_zaehler_zaehler"
+                onDelete="CASCADE"/>
+
+        <!-- Alte Einzelzuordnung entfernen -->
+        <dropForeignKeyConstraint
+                baseTableName="mietbereich"
+                constraintName="fk_mietbereich_zaehler"/>
+
+        <dropColumn
+                tableName="mietbereich"
+                columnName="zaehler_id"/>
+
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,5 +1,8 @@
-import React from "react";
-import { MenuItem, TextField } from "@mui/material";
+import { useEffect, useState } from "react";
+import { Alert, Checkbox, ListItemText, MenuItem, TextField } from "@mui/material";
+
+import { getZaehler } from "@/vermietung/api/zaehlerApi";
+import type { Zaehler } from "@/vermietung/api/zaehlerApi";
 
 import FormFeld from "@/core/components/common/FormFeld";
 
@@ -10,11 +13,48 @@ import { Berechnungsart, BERECHNUNGSART_LABELS } from "@/vermietung/enums/Berech
 interface Props {
   form: MietbereichSave;
   editMode: boolean;
+  mietobjektId: number;
 
   onChange: <K extends keyof MietbereichSave>(key: K, value: MietbereichSave[K]) => void;
 }
 
-export const MietbereichBaseForm: React.FC<Props> = ({ form, editMode, onChange }) => {
+export const MietbereichBaseForm: React.FC<Props> = ({
+  form,
+  editMode,
+  mietobjektId,
+  onChange,
+}) => {
+  const [zaehler, setZaehler] = useState<Zaehler[]>([]);
+  const [zaehlerFehler, setZaehlerFehler] = useState<string | null>(null);
+
+  useEffect(() => {
+    let aktiv = true;
+
+    const laden = async () => {
+      try {
+        setZaehlerFehler(null);
+
+        const daten = await getZaehler(mietobjektId);
+
+        if (aktiv) {
+          setZaehler(daten);
+        }
+      } catch (error) {
+        console.error("Fehler beim Laden der Zähler:", error);
+
+        if (aktiv) {
+          setZaehlerFehler("Die Zähler konnten nicht geladen werden.");
+        }
+      }
+    };
+
+    void laden();
+
+    return () => {
+      aktiv = false;
+    };
+  }, [mietobjektId]);
+
   const handleAirbnbAktivChange = (aktiv: boolean) => {
     onChange("airbnbAktiv", aktiv);
 
@@ -22,6 +62,8 @@ export const MietbereichBaseForm: React.FC<Props> = ({ form, editMode, onChange 
       onChange("airbnbInserat", false);
     }
   };
+
+  // Der bisherige return-Block folgt hier.
 
   return (
     <>
@@ -89,6 +131,55 @@ export const MietbereichBaseForm: React.FC<Props> = ({ form, editMode, onChange 
           </MenuItem>
         ))}
       </TextField>
+
+      <TextField
+        select
+        fullWidth
+        size="small"
+        label="Zähler"
+        value={form.zaehlerIds}
+        disabled={!editMode}
+        slotProps={{
+          select: {
+            multiple: true,
+            renderValue: (selected) => {
+              const ids = selected as number[];
+
+              return zaehler
+                .filter((item) => ids.includes(item.id))
+                .map((item) => item.bezeichnung)
+                .join(", ");
+            },
+          },
+        }}
+        onChange={(e) => {
+          const value = e.target.value;
+
+          const ids =
+            typeof value === "string" ? value.split(",").map(Number) : (value as number[]);
+
+          onChange("zaehlerIds", ids);
+        }}
+        helperText="Alle für diesen Mietbereich benötigten Zähler auswählen."
+      >
+        {zaehler
+          .filter((item) => item.aktiv || form.zaehlerIds.includes(item.id))
+          .map((item) => (
+            <MenuItem key={item.id} value={item.id}>
+              <Checkbox checked={form.zaehlerIds.includes(item.id)} />
+              <ListItemText
+                primary={item.bezeichnung}
+                secondary={`${item.verbrauchsart}${
+                  item.zaehlernummer ? ` · Nr. ${item.zaehlernummer}` : ""
+                }`}
+              />
+            </MenuItem>
+          ))}
+      </TextField>
+
+      {zaehlerFehler && <Alert severity="error">{zaehlerFehler}</Alert>}
+
+      {zaehlerFehler && <Alert severity="error">{zaehlerFehler}</Alert>}
 
       <TextField
         select

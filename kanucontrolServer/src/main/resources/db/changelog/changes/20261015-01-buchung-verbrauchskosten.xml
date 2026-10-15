@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+        http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20261015-01-buchung-verbrauchskosten" author="chris">
+
+        <createTable tableName="buchung_verbrauchskosten">
+
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"
+                             primaryKeyName="pk_buchung_verbrauchskosten"
+                             nullable="false"/>
+            </column>
+
+            <column name="buchung_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="verbrauchskosten_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="bezeichnung" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="verbrauchsart" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="abrechnungsart" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="mengeneinheit" type="VARCHAR(20)"/>
+
+            <column name="preis" type="NUMERIC(10,2)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="anfangsstand" type="NUMERIC(15,3)"/>
+
+            <column name="endstand" type="NUMERIC(15,3)"/>
+
+            <column name="verbrauch" type="NUMERIC(15,3)"/>
+
+            <column name="anfangsablesung" type="TIMESTAMP"/>
+
+            <column name="endablesung" type="TIMESTAMP"/>
+
+            <column name="abrechnungstage" type="INTEGER"/>
+
+            <column name="kosten" type="NUMERIC(12,2)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Audit-Felder aus Auditable bitte mit deiner
+                 tatsächlichen Entity-Basisklasse abgleichen. -->
+
+        </createTable>
+
+        <addUniqueConstraint
+                tableName="buchung_verbrauchskosten"
+                columnNames="buchung_id, verbrauchskosten_id"
+                constraintName="uk_buchung_verbrauchskosten"/>
+
+        <addForeignKeyConstraint
+                baseTableName="buchung_verbrauchskosten"
+                baseColumnNames="buchung_id"
+                referencedTableName="buchung"
+                referencedColumnNames="id"
+                constraintName="fk_buchung_verbrauchskosten_buchung"
+                onDelete="CASCADE"/>
+
+    </changeSet>
+
+</databaseChangeLog>

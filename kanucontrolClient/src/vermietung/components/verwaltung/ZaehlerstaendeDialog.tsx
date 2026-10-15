@@ -26,6 +26,7 @@ import EditIcon from "@mui/icons-material/Edit";
 
 import {
   createZaehlerstand,
+  deleteZaehlerstand,
   getZaehlerstaende,
   updateZaehlerstand,
 } from "@/vermietung/api/zaehlerstandApi";
@@ -121,6 +122,19 @@ export default function ZaehlerstaendeDialog({ open, zaehler, onClose }: Props) 
     } else {
       await createZaehlerstand(zaehler.id, payload);
     }
+
+    await loadZaehlerstaende();
+  }
+
+  async function handleDelete() {
+    if (!zaehler || !selectedZaehlerstand) {
+      return;
+    }
+
+    await deleteZaehlerstand(zaehler.id, selectedZaehlerstand.id);
+
+    setStandDialogOpen(false);
+    setSelectedZaehlerstand(null);
 
     await loadZaehlerstaende();
   }
@@ -247,6 +261,7 @@ export default function ZaehlerstaendeDialog({ open, zaehler, onClose }: Props) 
         zaehlerstand={selectedZaehlerstand}
         onClose={() => setStandDialogOpen(false)}
         onSave={handleSave}
+        onDelete={handleDelete}
       />
     </>
   );

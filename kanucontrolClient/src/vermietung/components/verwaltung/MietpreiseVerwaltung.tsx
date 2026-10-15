@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import {
   Alert,
   Box,
@@ -47,6 +49,8 @@ export default function MietpreiseVerwaltung() {
   const [loading, setLoading] = useState(true);
   const [loadingPreise, setLoadingPreise] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   useEffect(() => {
     async function loadMietobjekte() {
@@ -227,104 +231,177 @@ export default function MietpreiseVerwaltung() {
             Aktuelle Mietpreise
           </Typography>
 
-          <TableContainer component={Paper} variant="outlined">
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Mietbereich</TableCell>
-                  <TableCell align="right">Direktbuchung</TableCell>
-                  <TableCell align="right">Airbnb</TableCell>
-                  <TableCell align="right">Aktionen</TableCell>
-                </TableRow>
-              </TableHead>
+          {isMobile ? (
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              {mietbereiche.map((bereich) => {
+                const direktPreis = ermittleAktuellenPreis(bereich.id, "DIREKT");
+                const airbnbPreis = ermittleAktuellenPreis(bereich.id, "AIRBNB");
 
-              <TableBody>
-                {mietbereiche.map((bereich) => {
-                  const direktPreis = ermittleAktuellenPreis(bereich.id, "DIREKT");
-                  const airbnbPreis = ermittleAktuellenPreis(bereich.id, "AIRBNB");
+                const Preiszeile = ({
+                  label,
+                  preis,
+                  quelle,
+                }: {
+                  label: string;
+                  preis: Mietpreis | undefined;
+                  quelle: "DIREKT" | "AIRBNB";
+                }) => (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      gap: 1,
+                    }}
+                  >
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        {label}
+                      </Typography>
+                      <Typography fontWeight={600}>{formatPreis(preis)}</Typography>
+                    </Box>
 
-                  return (
-                    <TableRow key={bereich.id} hover>
-                      <TableCell>{bereich.bezeichnung}</TableCell>
+                    <IconButton
+                      aria-label={`${label} ${preis ? "bearbeiten" : "anlegen"}`}
+                      onClick={() => (preis ? handleEdit(preis) : handleNew(bereich, quelle))}
+                    >
+                      {preis ? <EditIcon /> : <AddIcon />}
+                    </IconButton>
+                  </Box>
+                );
 
-                      <TableCell align="right">
-                        <Box
-                          sx={{
-                            display: "flex",
-                            justifyContent: "flex-end",
-                            alignItems: "center",
-                            gap: 1,
-                          }}
-                        >
-                          {formatPreis(direktPreis)}
+                return (
+                  <Paper key={bereich.id} variant="outlined" sx={{ p: 2 }}>
+                    <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1 }}>
+                      {bereich.bezeichnung}
+                    </Typography>
 
-                          <Tooltip
-                            title={direktPreis ? "Direktpreis bearbeiten" : "Direktpreis anlegen"}
+                    <Preiszeile label="Direktbuchung" preis={direktPreis} quelle="DIREKT" />
+
+                    <Preiszeile label="Airbnb" preis={airbnbPreis} quelle="AIRBNB" />
+
+                    <Button
+                      fullWidth
+                      variant="outlined"
+                      sx={{ mt: 1 }}
+                      onClick={() => {
+                        setSelectedMietbereich(bereich);
+                        setSelectedMietpreis(null);
+                        setDialogOpen(true);
+                      }}
+                    >
+                      Neuer Preis
+                    </Button>
+                  </Paper>
+                );
+              })}
+            </Box>
+          ) : (
+            <TableContainer component={Paper} variant="outlined">
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Mietbereich</TableCell>
+                    <TableCell align="right">Direktbuchung</TableCell>
+                    <TableCell align="right">Airbnb</TableCell>
+                    <TableCell align="right">Aktionen</TableCell>
+                  </TableRow>
+                </TableHead>
+
+                <TableBody>
+                  {mietbereiche.map((bereich) => {
+                    const direktPreis = ermittleAktuellenPreis(bereich.id, "DIREKT");
+                    const airbnbPreis = ermittleAktuellenPreis(bereich.id, "AIRBNB");
+
+                    return (
+                      <TableRow key={bereich.id} hover>
+                        <TableCell>{bereich.bezeichnung}</TableCell>
+
+                        <TableCell align="right">
+                          <Box
+                            sx={{
+                              display: "flex",
+                              justifyContent: "flex-end",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
                           >
-                            <IconButton
-                              size="small"
-                              onClick={() =>
-                                direktPreis ? handleEdit(direktPreis) : handleNew(bereich, "DIREKT")
+                            {formatPreis(direktPreis)}
+
+                            <Tooltip
+                              title={direktPreis ? "Direktpreis bearbeiten" : "Direktpreis anlegen"}
+                            >
+                              <IconButton
+                                size="small"
+                                onClick={() =>
+                                  direktPreis
+                                    ? handleEdit(direktPreis)
+                                    : handleNew(bereich, "DIREKT")
+                                }
+                              >
+                                {direktPreis ? (
+                                  <EditIcon fontSize="small" />
+                                ) : (
+                                  <AddIcon fontSize="small" />
+                                )}
+                              </IconButton>
+                            </Tooltip>
+                          </Box>
+                        </TableCell>
+
+                        <TableCell align="right">
+                          <Box
+                            sx={{
+                              display: "flex",
+                              justifyContent: "flex-end",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
+                          >
+                            {formatPreis(airbnbPreis)}
+
+                            <Tooltip
+                              title={
+                                airbnbPreis ? "Airbnb-Preis bearbeiten" : "Airbnb-Preis anlegen"
                               }
                             >
-                              {direktPreis ? (
-                                <EditIcon fontSize="small" />
-                              ) : (
-                                <AddIcon fontSize="small" />
-                              )}
-                            </IconButton>
-                          </Tooltip>
-                        </Box>
-                      </TableCell>
+                              <IconButton
+                                size="small"
+                                onClick={() =>
+                                  airbnbPreis
+                                    ? handleEdit(airbnbPreis)
+                                    : handleNew(bereich, "AIRBNB")
+                                }
+                              >
+                                {airbnbPreis ? (
+                                  <EditIcon fontSize="small" />
+                                ) : (
+                                  <AddIcon fontSize="small" />
+                                )}
+                              </IconButton>
+                            </Tooltip>
+                          </Box>
+                        </TableCell>
 
-                      <TableCell align="right">
-                        <Box
-                          sx={{
-                            display: "flex",
-                            justifyContent: "flex-end",
-                            alignItems: "center",
-                            gap: 1,
-                          }}
-                        >
-                          {formatPreis(airbnbPreis)}
-
-                          <Tooltip
-                            title={airbnbPreis ? "Airbnb-Preis bearbeiten" : "Airbnb-Preis anlegen"}
+                        <TableCell align="right">
+                          <Button
+                            size="small"
+                            onClick={() => {
+                              setSelectedMietbereich(bereich);
+                              setSelectedMietpreis(null);
+                              setDialogOpen(true);
+                            }}
                           >
-                            <IconButton
-                              size="small"
-                              onClick={() =>
-                                airbnbPreis ? handleEdit(airbnbPreis) : handleNew(bereich, "AIRBNB")
-                              }
-                            >
-                              {airbnbPreis ? (
-                                <EditIcon fontSize="small" />
-                              ) : (
-                                <AddIcon fontSize="small" />
-                              )}
-                            </IconButton>
-                          </Tooltip>
-                        </Box>
-                      </TableCell>
-
-                      <TableCell align="right">
-                        <Button
-                          size="small"
-                          onClick={() => {
-                            setSelectedMietbereich(bereich);
-                            setSelectedMietpreis(null);
-                            setDialogOpen(true);
-                          }}
-                        >
-                          Neuer Preis
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                            Neuer Preis
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
         </>
       )}
 

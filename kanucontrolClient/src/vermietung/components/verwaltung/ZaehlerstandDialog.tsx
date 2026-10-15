@@ -17,6 +17,7 @@ interface Props {
   zaehlerstand: Zaehlerstand | null;
   onClose: () => void;
   onSave: (payload: ZaehlerstandSave) => Promise<void>;
+  onDelete: () => Promise<void>;
 }
 
 function getCurrentDateTime(): string {
@@ -26,13 +27,22 @@ function getCurrentDateTime(): string {
   return new Date(now.getTime() - offset).toISOString().slice(0, 16);
 }
 
-export default function ZaehlerstandDialog({ open, zaehlerstand, onClose, onSave }: Props) {
+export default function ZaehlerstandDialog({
+  open,
+  zaehlerstand,
+  onClose,
+  onSave,
+  onDelete,
+}: Props) {
   const [ablesedatum, setAblesedatum] = useState("");
   const [wert, setWert] = useState("");
   const [bemerkung, setBemerkung] = useState("");
 
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const busy = saving || deleting;
 
   useEffect(() => {
     if (!open) {
@@ -91,8 +101,38 @@ export default function ZaehlerstandDialog({ open, zaehlerstand, onClose, onSave
     }
   }
 
+  async function handleDelete() {
+    if (!zaehlerstand) {
+      return;
+    }
+
+    const bestaetigt = window.confirm(
+      `Möchtest du diesen Zählerstand wirklich löschen?\n\n` +
+        `Ablesedatum: ${zaehlerstand.ablesedatum.replace("T", " ")}\n` +
+        `Zählerstand: ${zaehlerstand.zaehlerstand}\n\n` +
+        "Das Löschen kann nicht rückgängig gemacht werden.",
+    );
+
+    if (!bestaetigt) {
+      return;
+    }
+
+    setDeleting(true);
+    setError(null);
+
+    try {
+      await onDelete();
+      onClose();
+    } catch (err) {
+      console.error("Fehler beim Löschen des Zählerstands:", err);
+      setError("Der Zählerstand konnte nicht gelöscht werden.");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   return (
-    <Dialog open={open} onClose={saving ? undefined : onClose} fullWidth maxWidth="sm">
+    <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth="sm">
       <DialogTitle>{zaehlerstand ? "Zählerstand bearbeiten" : "Zählerstand erfassen"}</DialogTitle>
 
       <DialogContent>
@@ -106,6 +146,7 @@ export default function ZaehlerstandDialog({ open, zaehlerstand, onClose, onSave
             onChange={(event) => setAblesedatum(event.target.value)}
             required
             fullWidth
+            disabled={busy}
             slotProps={{
               inputLabel: { shrink: true },
             }}
@@ -118,6 +159,7 @@ export default function ZaehlerstandDialog({ open, zaehlerstand, onClose, onSave
             onChange={(event) => setWert(event.target.value)}
             required
             fullWidth
+            disabled={busy}
             slotProps={{
               htmlInput: {
                 min: 0,
@@ -135,6 +177,7 @@ export default function ZaehlerstandDialog({ open, zaehlerstand, onClose, onSave
             minRows={2}
             maxRows={5}
             fullWidth
+            disabled={busy}
             slotProps={{
               htmlInput: {
                 maxLength: 1000,
@@ -146,12 +189,18 @@ export default function ZaehlerstandDialog({ open, zaehlerstand, onClose, onSave
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose} disabled={saving}>
+        {zaehlerstand && (
+          <Button color="error" onClick={handleDelete} disabled={busy} sx={{ mr: "auto" }}>
+            {deleting ? "Wird gelöscht …" : "Löschen"}
+          </Button>
+        )}
+
+        <Button onClick={onClose} disabled={busy}>
           Abbrechen
         </Button>
 
-        <Button variant="contained" onClick={handleSave} disabled={saving}>
-          Speichern
+        <Button variant="contained" onClick={handleSave} disabled={busy}>
+          {saving ? "Wird gespeichert …" : "Speichern"}
         </Button>
       </DialogActions>
     </Dialog>

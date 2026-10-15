@@ -40,7 +40,7 @@ import type { DataStatus } from "@/kjfp/types/common/DataStatus";
 export default function TeilnehmerScreen() {
   const { active } = useAppContext();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   /* =========================================================
      DATA

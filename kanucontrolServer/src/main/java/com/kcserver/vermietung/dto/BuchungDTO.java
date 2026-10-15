@@ -45,8 +45,24 @@ public class BuchungDTO {
 
     private Long veranstalterVereinId;
 
+    /**
+     * Interne Bemerkungen zur Buchung bzw. zum Mieter.
+     */
+    private String bemerkung;
+
+    /**
+     * Bewertung des Mieters von 1 bis 5 Sternen.
+     */
+    @jakarta.validation.constraints.Min(1)
+    @jakarta.validation.constraints.Max(5)
+    private Integer bewertung;
+
     // Anzeigeinformationen
     private String mieterVorname;
     private String mieterName;
     private String mietobjektBezeichnung;
+
+    private List<BuchungVerbrauchskostenDTO> verbrauchskosten;
+
+    private List<VerbrauchskostenVorschauDTO> verbrauchskostenVorschau;
 }

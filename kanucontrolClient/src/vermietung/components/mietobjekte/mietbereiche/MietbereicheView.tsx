@@ -198,7 +198,7 @@ export function MietbereicheView({ mietobjektId, mietobjektBezeichnung }: Props)
           mietbereich={{
             id: 0,
             mietobjektId,
-            zaehlerId: null,
+            zaehlerIds: [],
             bezeichnung: "",
             sortierung: 0,
             beschreibung: "",

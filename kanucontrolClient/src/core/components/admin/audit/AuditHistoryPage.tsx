@@ -1,12 +1,9 @@
 import { Box } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { BottomActionBar } from "@/core/components/layout/BottomActionBar";
 import { useAuditHistory } from "@/kjfp/hooks/audit/useAuditHistory";
 
 export default function AuditHistoryPage() {
-  const navigate = useNavigate();
 
   const [paginationModel, setPaginationModel] = useState({
     page: 0,
@@ -45,29 +42,35 @@ export default function AuditHistoryPage() {
     },
   ];
 
-  return (
-    <Box>
-      <DataGrid
-        autoHeight
-        loading={isLoading}
-        rows={data?.content ?? []}
-        columns={columns}
-        rowCount={data?.totalElements ?? 0}
-        paginationMode="server"
-        paginationModel={paginationModel}
-        onPaginationModelChange={setPaginationModel}
-        pageSizeOptions={[10, 25, 50, 100]}
-      />
+ return (
+   <Box
+     sx={{
+       pb: {
+         xs: 16,
+         md: 3,
+       },
+     }}
+   >
+     <DataGrid
+       autoHeight
+       loading={isLoading}
+       rows={data?.content ?? []}
+       columns={columns}
+       rowCount={data?.totalElements ?? 0}
+       paginationMode="server"
+       paginationModel={paginationModel}
+       onPaginationModelChange={setPaginationModel}
+       pageSizeOptions={[10, 25, 50, 100]}
+       sx={{
+         "& .MuiDataGrid-footerContainer": {
+           minHeight: 64,
+         },
+         "& .MuiTablePagination-root": {
+           overflow: "visible",
+         },
+       }}
+     />
 
-      <BottomActionBar
-        left={[
-          {
-            label: "Zurück",
-            onClick: () => navigate("/admin"),
-            variant: "outlined",
-          },
-        ]}
-      />
-    </Box>
-  );
+   </Box>
+ );
 }

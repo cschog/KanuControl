@@ -5,10 +5,10 @@ import com.kcserver.core.dto.person.PersonDetailDTO;
 import com.kcserver.core.dto.person.PersonListDTO;
 import com.kcserver.core.dto.person.PersonRefDTO;
 import com.kcserver.core.dto.person.PersonSaveDTO;
-import com.kcserver.kjfp.entity.Mitglied;
-import com.kcserver.kjfp.entity.Person;
+import com.kcserver.core.entity.Mitglied;
+import com.kcserver.core.entity.Person;
 
-import com.kcserver.kjfp.entity.Verein;
+import com.kcserver.core.entity.Verein;
 import com.kcserver.kjfp.enumtype.CountryCode;
 import org.mapstruct.*;
 

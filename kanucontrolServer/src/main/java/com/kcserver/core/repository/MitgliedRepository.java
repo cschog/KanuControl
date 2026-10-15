@@ -1,6 +1,6 @@
-package com.kcserver.kjfp.repository;
+package com.kcserver.core.repository;
 
-import com.kcserver.kjfp.entity.Mitglied;
+import com.kcserver.core.entity.Mitglied;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;

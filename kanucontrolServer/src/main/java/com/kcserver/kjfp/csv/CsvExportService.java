@@ -1,6 +1,6 @@
 package com.kcserver.kjfp.csv;
 
-import com.kcserver.kjfp.entity.Person;
+import com.kcserver.core.entity.Person;
 import com.kcserver.core.exception.ErrorMessages;
 import com.kcserver.kjfp.repository.PersonRepository;
 import lombok.RequiredArgsConstructor;

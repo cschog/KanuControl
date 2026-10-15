@@ -1,8 +1,8 @@
 package com.kcserver.kjfp.specification;
 
 import com.kcserver.core.dto.person.PersonSearchCriteria;
-import com.kcserver.kjfp.entity.Mitglied;
-import com.kcserver.kjfp.entity.Person;
+import com.kcserver.core.entity.Mitglied;
+import com.kcserver.core.entity.Person;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;

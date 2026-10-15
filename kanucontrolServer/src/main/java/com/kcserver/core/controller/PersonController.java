@@ -1,7 +1,7 @@
-package com.kcserver.kjfp.controller;
+package com.kcserver.core.controller;
 
 import com.kcserver.core.dto.person.*;
-import com.kcserver.kjfp.service.person.PersonService;
+import com.kcserver.core.service.person.PersonService;
 import com.kcserver.core.validation.OnCreate;
 import com.kcserver.core.validation.OnUpdate;
 import org.springframework.data.domain.Page;

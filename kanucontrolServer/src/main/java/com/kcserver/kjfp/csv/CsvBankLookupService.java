@@ -1,7 +1,7 @@
 package com.kcserver.kjfp.csv;
 
-import com.kcserver.kjfp.entity.Person;
-import com.kcserver.kjfp.entity.Verein;
+import com.kcserver.core.entity.Person;
+import com.kcserver.core.entity.Verein;
 import com.kcserver.kjfp.service.BankLookupService;
 import jakarta.annotation.PostConstruct;
 import org.springframework.core.io.ClassPathResource;

@@ -6,7 +6,9 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -66,9 +68,17 @@ public class Mietbereich extends Auditable {
     )
     private List<MietbereichRabatt> rabatte = new ArrayList<>();
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "zaehler_id")
-    private Zaehler zaehler;
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "mietbereich_zaehler",
+            joinColumns = @JoinColumn(name = "mietbereich_id"),
+            inverseJoinColumns = @JoinColumn(name = "zaehler_id"),
+            uniqueConstraints = @UniqueConstraint(
+                    name = "uk_mietbereich_zaehler",
+                    columnNames = {"mietbereich_id", "zaehler_id"}
+            )
+    )
+    private Set<Zaehler> zaehler = new HashSet<>();
 
     @OneToMany(
             mappedBy = "mietbereich",

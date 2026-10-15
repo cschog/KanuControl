@@ -1,6 +1,8 @@
 package com.kcserver.kjfp.entity;
 
 import com.kcserver.core.audit.Auditable;
+import com.kcserver.core.entity.Person;
+import com.kcserver.core.entity.Verein;
 import com.kcserver.kjfp.entity.beitraege.Beitragsstruktur;
 import com.kcserver.kjfp.entity.beitraege.Zahlungsnachweis;
 import com.kcserver.kjfp.enumtype.CountryCode;

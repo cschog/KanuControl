@@ -341,7 +341,14 @@ function SortierTabelle({
   onReset,
 }: SortierTabelleProps) {
   return (
-    <Box>
+  <Box
+    sx={{
+      pb: {
+        xs: 12,
+        md: 3,
+      },
+    }}
+  >
       <Typography variant="h6" sx={{ mb: 1 }}>
         {titel}
       </Typography>

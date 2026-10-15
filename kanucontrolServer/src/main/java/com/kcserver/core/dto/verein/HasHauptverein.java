@@ -1,4 +1,4 @@
-package com.kcserver.kjfp.dto.verein;
+package com.kcserver.core.dto.verein;
 
 public interface    HasHauptverein {
     Boolean getHauptVerein();

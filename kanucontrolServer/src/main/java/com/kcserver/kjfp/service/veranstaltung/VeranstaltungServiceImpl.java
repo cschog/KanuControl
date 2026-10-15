@@ -2,8 +2,11 @@ package com.kcserver.kjfp.service.veranstaltung;
 
 import com.kcserver.api.response.ApiResponse;
 import com.kcserver.core.dto.person.PersonListDTO;
+import com.kcserver.core.entity.Person;
+import com.kcserver.core.entity.Verein;
 import com.kcserver.core.exception.ErrorMessages;
 import com.kcserver.core.mapper.PersonMapper;
+import com.kcserver.core.repository.VereinRepository;
 import com.kcserver.kjfp.dto.beitrag.BeitragsstrukturDTO;
 import com.kcserver.kjfp.dto.veranstaltung.*;
 import com.kcserver.kjfp.entity.*;

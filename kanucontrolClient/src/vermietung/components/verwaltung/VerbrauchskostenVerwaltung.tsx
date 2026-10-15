@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import {
   Alert,
   Box,
@@ -50,6 +52,8 @@ export default function VerbrauchskostenVerwaltung() {
   const [loading, setLoading] = useState(true);
   const [loadingDaten, setLoadingDaten] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   useEffect(() => {
     async function loadMietobjekte() {
@@ -155,7 +159,14 @@ export default function VerbrauchskostenVerwaltung() {
   }
 
   return (
-    <Box>
+    <Box
+      sx={{
+        pb: {
+          xs: 12,
+          md: 3,
+        },
+      }}
+    >
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
@@ -215,56 +226,137 @@ export default function VerbrauchskostenVerwaltung() {
             Verbrauchskosten
           </Typography>
 
-          <TableContainer component={Paper} variant="outlined">
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Bezeichnung</TableCell>
-                  <TableCell>Abrechnungsart</TableCell>
-                  <TableCell>Mengeneinheit</TableCell>
-                  <TableCell align="right">Preis</TableCell>
-                  <TableCell align="center">Status</TableCell>
-                  <TableCell align="right">Aktionen</TableCell>
-                </TableRow>
-              </TableHead>
+          {isMobile ? (
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              {verbrauchskosten.map((item) => (
+                <Paper key={item.id} variant="outlined" sx={{ p: 2 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                      gap: 1,
+                    }}
+                  >
+                    <Typography variant="subtitle1" fontWeight={600}>
+                      {item.bezeichnung}
+                    </Typography>
 
-              <TableBody>
-                {verbrauchskosten.map((item) => (
-                  <TableRow key={item.id} hover>
-                    <TableCell>{item.bezeichnung}</TableCell>
+                    <Chip
+                      size="small"
+                      label={item.aktiv ? "Aktiv" : "Inaktiv"}
+                      color={item.aktiv ? "success" : "default"}
+                    />
+                  </Box>
 
-                    <TableCell>{formatAbrechnungsart(item)}</TableCell>
+                  <Box sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 1 }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "flex-start",
+                        gap: 2,
+                      }}
+                    >
+                      <Typography color="text.secondary">Abrechnungsart</Typography>
+                      <Typography textAlign="right">{formatAbrechnungsart(item)}</Typography>
+                    </Box>
 
-                    <TableCell>{item.mengeneinheit ?? "–"}</TableCell>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        gap: 2,
+                      }}
+                    >
+                      <Typography color="text.secondary">Mengeneinheit</Typography>
+                      <Typography>{item.mengeneinheit ?? "–"}</Typography>
+                    </Box>
 
-                    <TableCell align="right">
-                      {formatPreis(item.preis)}
-                      {item.abrechnungsart === "TAGESPREIS" && " / Tag"}
-                      {item.abrechnungsart === "ZAEHLERSTAND" &&
-                        item.mengeneinheit &&
-                        ` / ${item.mengeneinheit}`}
-                    </TableCell>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "flex-start",
+                        gap: 2,
+                      }}
+                    >
+                      <Typography color="text.secondary">Preis</Typography>
 
-                    <TableCell align="center">
-                      <Chip
-                        size="small"
-                        label={item.aktiv ? "Aktiv" : "Inaktiv"}
-                        color={item.aktiv ? "success" : "default"}
-                      />
-                    </TableCell>
+                      <Typography fontWeight={600} textAlign="right">
+                        {formatPreis(item.preis)}
+                        {item.abrechnungsart === "TAGESPREIS" && " / Tag"}
+                        {item.abrechnungsart === "ZAEHLERSTAND" &&
+                          item.mengeneinheit &&
+                          ` / ${item.mengeneinheit}`}
+                      </Typography>
+                    </Box>
+                  </Box>
 
-                    <TableCell align="right">
-                      <Tooltip title="Verbrauchskosten bearbeiten">
-                        <IconButton size="small" onClick={() => handleEdit(item)}>
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </TableCell>
+                  <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 1 }}>
+                    <Button
+                      variant="outlined"
+                      startIcon={<EditIcon />}
+                      onClick={() => handleEdit(item)}
+                    >
+                      Bearbeiten
+                    </Button>
+                  </Box>
+                </Paper>
+              ))}
+            </Box>
+          ) : (
+            <TableContainer component={Paper} variant="outlined">
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Bezeichnung</TableCell>
+                    <TableCell>Abrechnungsart</TableCell>
+                    <TableCell>Mengeneinheit</TableCell>
+                    <TableCell align="right">Preis</TableCell>
+                    <TableCell align="center">Status</TableCell>
+                    <TableCell align="right">Aktionen</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                </TableHead>
+
+                <TableBody>
+                  {verbrauchskosten.map((item) => (
+                    <TableRow key={item.id} hover>
+                      <TableCell>{item.bezeichnung}</TableCell>
+
+                      <TableCell>{formatAbrechnungsart(item)}</TableCell>
+
+                      <TableCell>{item.mengeneinheit ?? "–"}</TableCell>
+
+                      <TableCell align="right">
+                        {formatPreis(item.preis)}
+                        {item.abrechnungsart === "TAGESPREIS" && " / Tag"}
+                        {item.abrechnungsart === "ZAEHLERSTAND" &&
+                          item.mengeneinheit &&
+                          ` / ${item.mengeneinheit}`}
+                      </TableCell>
+
+                      <TableCell align="center">
+                        <Chip
+                          size="small"
+                          label={item.aktiv ? "Aktiv" : "Inaktiv"}
+                          color={item.aktiv ? "success" : "default"}
+                        />
+                      </TableCell>
+
+                      <TableCell align="right">
+                        <Tooltip title="Verbrauchskosten bearbeiten">
+                          <IconButton size="small" onClick={() => handleEdit(item)}>
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
         </>
       )}
 

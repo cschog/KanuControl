@@ -1,9 +1,9 @@
-package com.kcserver.kjfp.controller;
+package com.kcserver.core.controller;
 
 import com.kcserver.api.response.ApiResponse;
-import com.kcserver.kjfp.dto.verein.VereinDTO;
-import com.kcserver.kjfp.dto.verein.VereinRefDTO;
-import com.kcserver.kjfp.service.VereinService;
+import com.kcserver.core.dto.verein.VereinDTO;
+import com.kcserver.core.dto.verein.VereinRefDTO;
+import com.kcserver.core.service.VereinService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

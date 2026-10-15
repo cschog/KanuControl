@@ -3,7 +3,15 @@
 import React, { useEffect, useState } from "react";
 import { getPreis } from "@/vermietung/api/buchungApi";
 import type { Buchungsquelle } from "@/vermietung/enums/Buchungsquelle";
-import { Box, Checkbox, FormControlLabel, Paper, TextField, Typography } from "@mui/material";
+import {
+  Box,
+  Checkbox,
+  FormControlLabel,
+  MenuItem,
+  Paper,
+  TextField,
+  Typography,
+} from "@mui/material";
 
 import type { Mietbereich } from "@/vermietung/types/Mietbereich";
 import type { PersonRef } from "@/core/api/types/person/PersonRef";
@@ -27,6 +35,9 @@ interface Props {
   buchungspositionen: Buchung["positionen"];
   createdAt?: string;
   buchungsquelle: Buchungsquelle;
+  buchungsdatenEditierbar: boolean;
+  verbrauchskosten: Buchung["verbrauchskosten"];
+  buchungsstatus?: Buchung["status"];
 
   onMieterChange: (value?: PersonRef) => void;
   onVeranstalterChange: (value?: VereinRef) => void;
@@ -114,9 +125,30 @@ const formatPreis = (preis?: number) =>
         currency: "EUR",
       }).format(preis);
 
+const formatZahl = (wert?: number | null, nachkommastellen = 3) =>
+  wert == null
+    ? "–"
+    : new Intl.NumberFormat("de-DE", {
+        maximumFractionDigits: nachkommastellen,
+      }).format(wert);
+
+const formatDatumZeit = (wert?: string | null) => {
+  if (!wert) return "–";
+
+  const datum = new Date(wert);
+
+  if (Number.isNaN(datum.getTime())) return wert;
+
+  return new Intl.DateTimeFormat("de-DE", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(datum);
+};
+
 export const BuchungBaseForm: React.FC<Props> = ({
   form,
   editMode,
+  buchungsdatenEditierbar,
   mietbereiche,
   mieter,
   veranstalter,
@@ -126,20 +158,22 @@ export const BuchungBaseForm: React.FC<Props> = ({
   buchungspositionen,
   createdAt,
   buchungsquelle,
+  verbrauchskosten,
+  buchungsstatus,
 }) => {
   const gefilterteMietbereiche = mietbereiche.filter((mietbereich) =>
     form.buchungsquelle === "DIREKT" ? mietbereich.direktbuchungAktiv : mietbereich.airbnbAktiv,
   );
 
-const stichtag = createdAt ? createdAt.slice(0, 10) : new Date().toLocaleDateString("sv-SE");
+  const stichtag = createdAt ? createdAt.slice(0, 10) : new Date().toLocaleDateString("sv-SE");
 
-const { preise: geladenePreise, ladefehler } = useMietbereichPreise(
-  form.positionen.map((position) => position.mietbereichId),
-  buchungspositionen,
-  buchungsquelle,
-  stichtag,
-);
-  
+  const { preise: geladenePreise, ladefehler } = useMietbereichPreise(
+    form.positionen.map((position) => position.mietbereichId),
+    buchungspositionen,
+    buchungsquelle,
+    stichtag,
+  );
+
   const gesamtpreis = form.positionen.reduce<number>((summe, position) => {
     const buchungsposition = buchungspositionen.find(
       (item) => item.mietbereichId === position.mietbereichId,
@@ -164,7 +198,7 @@ const { preise: geladenePreise, ladefehler } = useMietbereichPreise(
       (geladenePreise[position.mietbereichId] !== undefined && !ladefehler[position.mietbereichId])
     );
   });
-  
+
   return (
     <>
       {/* Linke Spalte: Buchungsdaten */}
@@ -179,14 +213,14 @@ const { preise: geladenePreise, ladefehler } = useMietbereichPreise(
         <PersonAutocomplete
           label="Mieter"
           value={mieter}
-          disabled={!editMode}
+          disabled={!buchungsdatenEditierbar}
           onChange={onMieterChange}
         />
 
         <VereinAutocomplete
           label="Veranstalter"
           value={veranstalter}
-          disabled={!editMode}
+          disabled={!buchungsdatenEditierbar}
           onChange={onVeranstalterChange}
         />
 
@@ -194,7 +228,7 @@ const { preise: geladenePreise, ladefehler } = useMietbereichPreise(
           label="Beginn"
           type="date"
           value={form.anreise}
-          disabled={!editMode}
+          disabled={!buchungsdatenEditierbar}
           slotProps={{
             inputLabel: {
               shrink: true,
@@ -207,7 +241,7 @@ const { preise: geladenePreise, ladefehler } = useMietbereichPreise(
           control={
             <Checkbox
               checked={form.unbefristet ?? false}
-              disabled={!editMode}
+              disabled={!buchungsdatenEditierbar}
               onChange={(event) => onChange("unbefristet", event.target.checked)}
             />
           }
@@ -219,7 +253,7 @@ const { preise: geladenePreise, ladefehler } = useMietbereichPreise(
             label="Ende"
             type="date"
             value={form.abreise}
-            disabled={!editMode}
+            disabled={!buchungsdatenEditierbar}
             slotProps={{
               inputLabel: {
                 shrink: true,
@@ -239,9 +273,40 @@ const { preise: geladenePreise, ladefehler } = useMietbereichPreise(
             onChange={(v) => onChange("abreise", v)}
           />
         )}
+
+        <TextField
+          label="Bemerkung"
+          value={form.bemerkung ?? ""}
+          disabled={!editMode}
+          multiline
+          minRows={3}
+          fullWidth
+          onChange={(event) => onChange("bemerkung", event.target.value)}
+        />
+
+        <TextField
+          select
+          label="Bewertung des Mieters"
+          value={form.bewertung ?? ""}
+          disabled={!editMode}
+          fullWidth
+          onChange={(event) => {
+            const value = event.target.value;
+            onChange("bewertung", value === "" ? null : Number(value));
+          }}
+          helperText="Optionale Bewertung von 1 bis 5 Sternen"
+        >
+          <MenuItem value="">Keine Bewertung</MenuItem>
+          {[1, 2, 3, 4, 5].map((wert) => (
+            <MenuItem key={wert} value={wert}>
+              {"★".repeat(wert)}
+              {"☆".repeat(5 - wert)} ({wert}/5)
+            </MenuItem>
+          ))}
+        </TextField>
       </Box>
 
-      {/* Rechte Spalte: Mietbereiche und Positionen */}
+      {/* Mittlere Spalte: Mietbereiche und Positionen */}
       <Box sx={{ minWidth: 0 }}>
         <Paper
           variant="outlined"
@@ -311,7 +376,7 @@ const { preise: geladenePreise, ladefehler } = useMietbereichPreise(
                         <Checkbox
                           size="small"
                           checked={selected}
-                          disabled={!editMode}
+                          disabled={!buchungsdatenEditierbar}
                           onChange={(event) => {
                             const checked = event.target.checked;
 
@@ -363,7 +428,7 @@ const { preise: geladenePreise, ladefehler } = useMietbereichPreise(
                           type="number"
                           size="small"
                           value={position.anzahl}
-                          disabled={!editMode}
+                          disabled={!buchungsdatenEditierbar}
                           sx={{ width: 110, flexShrink: 0 }}
                           slotProps={{
                             htmlInput: {
@@ -427,6 +492,167 @@ const { preise: geladenePreise, ladefehler } = useMietbereichPreise(
                   </Box>
                 );
               })}
+            </Box>
+          )}
+        </Paper>
+      </Box>
+      {/* Dritte Spalte: Verbrauchswerte und Kosten */}
+      <Box sx={{ minWidth: 0 }}>
+        <Paper
+          variant="outlined"
+          sx={{
+            p: 2,
+            borderRadius: 1,
+          }}
+        >
+          <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>
+            Verbrauchswerte und Kosten
+          </Typography>
+
+          {form.buchungsquelle === "AIRBNB" ? (
+            <Typography variant="body2" color="text.secondary">
+              Für Airbnb-Buchungen ist keine Zählerstandsprüfung beim Abschluss erforderlich.
+            </Typography>
+          ) : buchungsstatus !== "ABGESCHLOSSEN" ? (
+            <Typography variant="body2" color="text.secondary">
+              Die Verbrauchskosten werden beim Abschluss der Buchung berechnet. Voraussetzung sind
+              die erforderlichen Zählerstände innerhalb des zulässigen Zeitfensters.
+            </Typography>
+          ) : !verbrauchskosten || verbrauchskosten.length === 0 ? (
+            <Typography variant="body2" color="text.secondary">
+              Für diese Buchung sind keine Verbrauchskosten gespeichert.
+            </Typography>
+          ) : (
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              {verbrauchskosten.map((kosten) => (
+                <Box
+                  key={kosten.id}
+                  sx={{
+                    pb: 2,
+                    borderBottom: "1px solid",
+                    borderColor: "divider",
+                    "&:last-child": {
+                      pb: 0,
+                      borderBottom: 0,
+                    },
+                  }}
+                >
+                  <Typography variant="subtitle2" fontWeight={600}>
+                    {kosten.bezeichnung}
+                  </Typography>
+
+                  {kosten.abrechnungsart === "ZAEHLERSTAND" ? (
+                    <Box sx={{ mt: 1 }}>
+                      <Box
+                        sx={{
+                          display: "grid",
+                          gridTemplateColumns: "1fr auto",
+                          columnGap: 1,
+                          rowGap: 0.75,
+                        }}
+                      >
+                        <Typography variant="body2" color="text.secondary">
+                          Anfangsstand
+                        </Typography>
+                        <Typography variant="body2" textAlign="right">
+                          {formatZahl(kosten.anfangsstand)}
+                          {kosten.mengeneinheit ? ` ${kosten.mengeneinheit}` : ""}
+                        </Typography>
+
+                        <Typography variant="caption" color="text.secondary">
+                          {formatDatumZeit(kosten.anfangsablesung)}
+                        </Typography>
+                        <Box />
+
+                        <Typography variant="body2" color="text.secondary">
+                          Endstand
+                        </Typography>
+                        <Typography variant="body2" textAlign="right">
+                          {formatZahl(kosten.endstand)}
+                          {kosten.mengeneinheit ? ` ${kosten.mengeneinheit}` : ""}
+                        </Typography>
+
+                        <Typography variant="caption" color="text.secondary">
+                          {formatDatumZeit(kosten.endablesung)}
+                        </Typography>
+                        <Box />
+
+                        <Typography variant="body2" color="text.secondary">
+                          Verbrauch
+                        </Typography>
+                        <Typography variant="body2" fontWeight={600} textAlign="right">
+                          {formatZahl(kosten.verbrauch)}
+                          {kosten.mengeneinheit ? ` ${kosten.mengeneinheit}` : ""}
+                        </Typography>
+
+                        <Typography variant="body2" color="text.secondary">
+                          Preis je Einheit
+                        </Typography>
+                        <Typography variant="body2" textAlign="right">
+                          {formatPreis(kosten.preis)}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  ) : kosten.abrechnungsart === "TAGESPREIS" ? (
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        gap: 1,
+                        mt: 1,
+                      }}
+                    >
+                      <Typography variant="body2" color="text.secondary">
+                        {formatZahl(kosten.abrechnungstage, 0)} Tage × {formatPreis(kosten.preis)}
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                      Pauschalbetrag
+                    </Typography>
+                  )}
+
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "baseline",
+                      gap: 1,
+                      mt: 1.5,
+                    }}
+                  >
+                    <Typography variant="body2" color="text.secondary">
+                      Kosten
+                    </Typography>
+
+                    <Typography variant="subtitle1" fontWeight={700}>
+                      {formatPreis(kosten.kosten)}
+                    </Typography>
+                  </Box>
+                </Box>
+              ))}
+
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "baseline",
+                  gap: 1,
+                  pt: 1,
+                  borderTop: "2px solid",
+                  borderColor: "divider",
+                }}
+              >
+                <Typography variant="subtitle1" fontWeight={600}>
+                  Verbrauchskosten gesamt
+                </Typography>
+
+                <Typography variant="h6" fontWeight={700}>
+                  {formatPreis(
+                    verbrauchskosten.reduce((summe, kosten) => summe + kosten.kosten, 0),
+                  )}
+                </Typography>
+              </Box>
             </Box>
           )}
         </Paper>

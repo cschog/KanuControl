@@ -1,4 +1,4 @@
-package com.kcserver.kjfp.dto.verein;
+package com.kcserver.core.dto.verein;
 
 import com.kcserver.core.dto.person.PersonRefDTO;
 import com.kcserver.kjfp.dto.validation.VereinDataStatusDTO;

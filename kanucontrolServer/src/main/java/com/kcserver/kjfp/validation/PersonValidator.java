@@ -1,7 +1,7 @@
 package com.kcserver.kjfp.validation;
 
 import com.kcserver.core.validation.ValidationResult;
-import com.kcserver.kjfp.entity.Person;
+import com.kcserver.core.entity.Person;
 import com.kcserver.core.exception.ErrorMessages;
 import org.springframework.stereotype.Component;
 

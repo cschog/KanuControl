@@ -1,6 +1,6 @@
 package com.kcserver.support.builder;
 
-import com.kcserver.kjfp.entity.Verein;
+import com.kcserver.core.entity.Verein;
 
 public class VereinBuilder {
 

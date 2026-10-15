@@ -1,7 +1,7 @@
 package com.kcserver.kjfp.validation;
 
 import com.kcserver.core.dto.mitglied.HasMitgliedschaften;
-import com.kcserver.kjfp.dto.verein.HasHauptverein;
+import com.kcserver.core.dto.verein.HasHauptverein;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 

@@ -217,3 +217,13 @@ databaseChangeLog:
       file: db/changelog/changes/20261011-05-add-verbrauchsart-to-verbrauchskosten.xml
   - include:
       file: db/changelog/changes/20261011-06-create-zaehler.xml
+  - include:
+      file: db/changelog/changes/20261014-01-buchung-bemerkung-bewertung.xml
+  - include:
+      file: db/changelog/changes/20261015-01-buchung-verbrauchskosten.xml
+  - include:
+      file: db/changelog/changes/20261015-02-buchung-verbrauchskosten-audit.xml
+  - include:
+      file: db/changelog/changes/20261015-03-mietbereich-mehrere-zaehler.xml
+  - include:
+      file: db/changelog/changes/20261016-01-buchung-verbrauchskosten-zaehler.xml

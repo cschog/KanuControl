@@ -1,12 +1,12 @@
-package com.kcserver.kjfp.controller;
+package com.kcserver.core.controller;
 
 import com.kcserver.api.response.ApiResponse;
 import com.kcserver.core.dto.mitglied.MitgliedDTO;
 import com.kcserver.core.dto.mitglied.MitgliedDetailDTO;
-import com.kcserver.kjfp.entity.Mitglied;
+import com.kcserver.core.entity.Mitglied;
 import org.springframework.data.domain.Pageable;
 import com.kcserver.core.mapper.MitgliedMapper;
-import com.kcserver.kjfp.service.MitgliedService;
+import com.kcserver.core.service.MitgliedService;
 import com.kcserver.core.validation.OnCreate;
 import com.kcserver.core.validation.OnUpdate;
 import org.springframework.http.HttpStatus;

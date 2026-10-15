@@ -2,7 +2,7 @@ package com.kcserver.kjfp.dto.veranstaltung;
 
 import com.kcserver.core.dto.person.PersonDetailDTO;
 import com.kcserver.kjfp.dto.unterkunft.UnterkunftsartRefDTO;
-import com.kcserver.kjfp.dto.verein.VereinRefDTO;
+import com.kcserver.core.dto.verein.VereinRefDTO;
 import com.kcserver.kjfp.dto.verpflegung.VerpflegungsmodellRefDTO;
 import com.kcserver.kjfp.enumtype.CountryCode;
 import com.kcserver.kjfp.enumtype.VeranstaltungScope;

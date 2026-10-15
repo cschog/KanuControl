@@ -67,7 +67,36 @@ export default function ReisekostenKonfigurationTable() {
         </Button>
       </Box>
 
-      <GenericTableTanstack data={data} columns={columns} loading={isLoading} height={600} />
+      <GenericTableTanstack
+        data={data}
+        columns={columns}
+        loading={isLoading}
+        height={600}
+        fixedColumnWidths={false}
+        mobileRenderRow={(row) => (
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+            <Box>
+              <strong>Gültig von:</strong> {row.gueltigVon}
+            </Box>
+
+            <Box>
+              <strong>Gültig bis:</strong> {row.gueltigBis ?? "offen"}
+            </Box>
+
+            <Box>
+              <strong>PKW:</strong> <Money value={row.pkwSatz} />
+            </Box>
+
+            <Box>
+              <strong>Mitfahrer:</strong> <Money value={row.mitfahrerSatz} />
+            </Box>
+
+            <Box>
+              <strong>Anhänger:</strong> <Money value={row.anhaengerSatz} />
+            </Box>
+          </Box>
+        )}
+      />
 
       <ReisekostenKonfigurationDialog
         open={dialogOpen}

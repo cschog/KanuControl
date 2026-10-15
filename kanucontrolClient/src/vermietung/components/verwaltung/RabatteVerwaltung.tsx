@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import {
   Alert,
   Box,
@@ -59,6 +61,8 @@ export default function RabatteVerwaltung() {
   const [loading, setLoading] = useState(true);
   const [loadingRabatte, setLoadingRabatte] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   useEffect(() => {
     async function loadMietobjekte() {
@@ -216,141 +220,276 @@ export default function RabatteVerwaltung() {
     );
   }
 
-  return (
-    <Box>
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
+ return (
+   <Box
+     sx={{
+       pb: {
+         xs: 12,
+         md: 3,
+       },
+     }}
+   >
+     {error && (
+       <Alert severity="error" sx={{ mb: 2 }}>
+         {error}
+       </Alert>
+     )}
 
-      <FormControl sx={{ minWidth: 280, mb: 3 }}>
-        <InputLabel id="rabatte-mietobjekt-label">Mietobjekt</InputLabel>
+     <FormControl sx={{ minWidth: 280, mb: 3 }}>
+       <InputLabel id="rabatte-mietobjekt-label">Mietobjekt</InputLabel>
 
-        <Select
-          labelId="rabatte-mietobjekt-label"
-          value={mietobjektId}
-          label="Mietobjekt"
-          onChange={handleMietobjektChange}
-        >
-          {mietobjekte.map((objekt) => (
-            <MenuItem key={objekt.id} value={objekt.id}>
-              {objekt.bezeichnung}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+       <Select
+         labelId="rabatte-mietobjekt-label"
+         value={mietobjektId}
+         label="Mietobjekt"
+         onChange={handleMietobjektChange}
+       >
+         {mietobjekte.map((objekt) => (
+           <MenuItem key={objekt.id} value={objekt.id}>
+             {objekt.bezeichnung}
+           </MenuItem>
+         ))}
+       </Select>
+     </FormControl>
 
-      {mietobjekte.length === 0 ? (
-        <Alert severity="info">Es sind noch keine Mietobjekte vorhanden.</Alert>
-      ) : loadingRabatte ? (
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
-          <CircularProgress />
-        </Box>
-      ) : mietbereiche.length === 0 ? (
-        <Alert severity="info">Für dieses Mietobjekt sind keine Mietbereiche vorhanden.</Alert>
-      ) : (
-        <>
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            Rabattregeln je Mietbereich
-          </Typography>
+     {mietobjekte.length === 0 ? (
+       <Alert severity="info">Es sind noch keine Mietobjekte vorhanden.</Alert>
+     ) : loadingRabatte ? (
+       <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+         <CircularProgress />
+       </Box>
+     ) : mietbereiche.length === 0 ? (
+       <Alert severity="info">Für dieses Mietobjekt sind keine Mietbereiche vorhanden.</Alert>
+     ) : (
+       <>
+         <Typography variant="h6" sx={{ mb: 2 }}>
+           Rabattregeln je Mietbereich
+         </Typography>
 
-          <TableContainer component={Paper} variant="outlined">
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Mietbereich</TableCell>
-                  <TableCell>Rabattart</TableCell>
-                  <TableCell>Berechnung</TableCell>
-                  <TableCell align="right">Rabatt</TableCell>
-                  <TableCell align="center">Status</TableCell>
-                  <TableCell align="right">Aktionen</TableCell>
-                </TableRow>
-              </TableHead>
+         {isMobile ? (
+           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+             {mietbereiche.map((bereich) => {
+               const bereichsRabatte = rabatte.filter(
+                 (rabatt) => rabatt.mietbereichId === bereich.id,
+               );
 
-              <TableBody>
-                {mietbereiche.map((bereich) => {
-                  const bereichsRabatte = rabatte.filter(
-                    (rabatt) => rabatt.mietbereichId === bereich.id,
-                  );
+               return (
+                 <Paper key={bereich.id} variant="outlined" sx={{ p: 2 }}>
+                   <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1 }}>
+                     {bereich.bezeichnung}
+                   </Typography>
 
-                  if (bereichsRabatte.length === 0) {
-                    return (
-                      <TableRow key={bereich.id} hover>
-                        <TableCell>{bereich.bezeichnung}</TableCell>
-                        <TableCell colSpan={4}>
-                          <Typography variant="body2" color="text.secondary">
-                            Keine Rabattregeln konfiguriert
-                          </Typography>
-                        </TableCell>
-                        <TableCell align="right">
-                          <Tooltip title="Rabattregel hinzufügen">
-                            <IconButton size="small" onClick={() => handleNew(bereich)}>
-                              <AddIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  }
+                   {bereichsRabatte.length === 0 ? (
+                     <Box>
+                       <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                         Keine Rabattregeln konfiguriert
+                       </Typography>
 
-                  return bereichsRabatte.map((rabatt, index) => (
-                    <TableRow key={rabatt.id} hover>
-                      <TableCell>{index === 0 ? bereich.bezeichnung : ""}</TableCell>
+                       <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+                         <IconButton
+                           aria-label="Rabattregel hinzufügen"
+                           onClick={() => handleNew(bereich)}
+                         >
+                           <AddIcon />
+                         </IconButton>
+                       </Box>
+                     </Box>
+                   ) : (
+                     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                       {bereichsRabatte.map((rabatt) => (
+                         <Box
+                           key={rabatt.id}
+                           sx={{
+                             borderTop: 1,
+                             borderColor: "divider",
+                             pt: 1.5,
+                           }}
+                         >
+                           <Box sx={{ display: "flex", justifyContent: "space-between", gap: 1 }}>
+                             <Typography color="text.secondary">Rabattart</Typography>
+                             <Typography fontWeight={500}>
+                               {bezeichnungRabattart(rabatt.rabattart)}
+                             </Typography>
+                           </Box>
 
-                      <TableCell>{bezeichnungRabattart(rabatt.rabattart)}</TableCell>
+                           <Box
+                             sx={{
+                               display: "flex",
+                               justifyContent: "space-between",
+                               gap: 1,
+                               mt: 0.5,
+                             }}
+                           >
+                             <Typography color="text.secondary">Berechnung</Typography>
+                             <Typography>
+                               {bezeichnungRabattwertTyp(rabatt.rabattwertTyp)}
+                             </Typography>
+                           </Box>
 
-                      <TableCell>{bezeichnungRabattwertTyp(rabatt.rabattwertTyp)}</TableCell>
+                           <Box
+                             sx={{
+                               display: "flex",
+                               justifyContent: "space-between",
+                               gap: 1,
+                               mt: 0.5,
+                             }}
+                           >
+                             <Typography color="text.secondary">Rabatt</Typography>
+                             <Typography fontWeight={600}>{formatRabatt(rabatt)}</Typography>
+                           </Box>
 
-                      <TableCell align="right">{formatRabatt(rabatt)}</TableCell>
+                           <Box
+                             sx={{
+                               display: "flex",
+                               justifyContent: "space-between",
+                               alignItems: "center",
+                               mt: 1,
+                             }}
+                           >
+                             <Chip
+                               size="small"
+                               label={rabatt.aktiv ? "Aktiv" : "Inaktiv"}
+                               color={rabatt.aktiv ? "success" : "default"}
+                             />
 
-                      <TableCell align="center">
-                        <Chip
-                          size="small"
-                          label={rabatt.aktiv ? "Aktiv" : "Inaktiv"}
-                          color={rabatt.aktiv ? "success" : "default"}
-                        />
-                      </TableCell>
+                             <Box>
+                               <Tooltip title="Rabatt bearbeiten">
+                                 <IconButton
+                                   aria-label="Rabatt bearbeiten"
+                                   onClick={() => handleEdit(bereich, rabatt)}
+                                 >
+                                   <EditIcon />
+                                 </IconButton>
+                               </Tooltip>
 
-                      <TableCell align="right">
-                        <Tooltip title="Rabatt bearbeiten">
-                          <IconButton size="small" onClick={() => handleEdit(bereich, rabatt)}>
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
+                               <Tooltip title="Rabatt löschen">
+                                 <IconButton
+                                   aria-label="Rabatt löschen"
+                                   color="error"
+                                   onClick={() => void handleDelete(bereich, rabatt)}
+                                 >
+                                   <DeleteIcon />
+                                 </IconButton>
+                               </Tooltip>
+                             </Box>
+                           </Box>
+                         </Box>
+                       ))}
 
-                        <Tooltip title="Rabatt löschen">
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => void handleDelete(bereich, rabatt)}
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
+                       <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+                         <IconButton
+                           aria-label="Weitere Rabattregel hinzufügen"
+                           onClick={() => handleNew(bereich)}
+                         >
+                           <AddIcon />
+                         </IconButton>
+                       </Box>
+                     </Box>
+                   )}
+                 </Paper>
+               );
+             })}
+           </Box>
+         ) : (
+           <TableContainer component={Paper} variant="outlined">
+             <Table>
+               <TableHead>
+                 <TableRow>
+                   <TableCell>Mietbereich</TableCell>
+                   <TableCell>Rabattart</TableCell>
+                   <TableCell>Berechnung</TableCell>
+                   <TableCell align="right">Rabatt</TableCell>
+                   <TableCell align="center">Status</TableCell>
+                   <TableCell align="right">Aktionen</TableCell>
+                 </TableRow>
+               </TableHead>
 
-                        <Tooltip title="Weitere Rabattregel hinzufügen">
-                          <IconButton size="small" onClick={() => handleNew(bereich)}>
-                            <AddIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      </TableCell>
-                    </TableRow>
-                  ));
-                })}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </>
-      )}
+               <TableBody>
+                 {mietbereiche.map((bereich) => {
+                   const bereichsRabatte = rabatte.filter(
+                     (rabatt) => rabatt.mietbereichId === bereich.id,
+                   );
 
-      <MietbereichRabattDialog
-        open={dialogOpen}
-        mietbereich={selectedMietbereich}
-        rabatt={selectedRabatt}
-        onClose={() => setDialogOpen(false)}
-        onSave={handleSave}
-      />
-    </Box>
-  );
+                   if (bereichsRabatte.length === 0) {
+                     return (
+                       <TableRow key={bereich.id} hover>
+                         <TableCell>{bereich.bezeichnung}</TableCell>
+
+                         <TableCell colSpan={4}>
+                           <Typography variant="body2" color="text.secondary">
+                             Keine Rabattregeln konfiguriert
+                           </Typography>
+                         </TableCell>
+
+                         <TableCell align="right">
+                           <Tooltip title="Rabattregel hinzufügen">
+                             <IconButton size="small" onClick={() => handleNew(bereich)}>
+                               <AddIcon fontSize="small" />
+                             </IconButton>
+                           </Tooltip>
+                         </TableCell>
+                       </TableRow>
+                     );
+                   }
+
+                   return bereichsRabatte.map((rabatt, index) => (
+                     <TableRow key={rabatt.id} hover>
+                       <TableCell>{index === 0 ? bereich.bezeichnung : ""}</TableCell>
+
+                       <TableCell>{bezeichnungRabattart(rabatt.rabattart)}</TableCell>
+
+                       <TableCell>{bezeichnungRabattwertTyp(rabatt.rabattwertTyp)}</TableCell>
+
+                       <TableCell align="right">{formatRabatt(rabatt)}</TableCell>
+
+                       <TableCell align="center">
+                         <Chip
+                           size="small"
+                           label={rabatt.aktiv ? "Aktiv" : "Inaktiv"}
+                           color={rabatt.aktiv ? "success" : "default"}
+                         />
+                       </TableCell>
+
+                       <TableCell align="right">
+                         <Tooltip title="Rabatt bearbeiten">
+                           <IconButton size="small" onClick={() => handleEdit(bereich, rabatt)}>
+                             <EditIcon fontSize="small" />
+                           </IconButton>
+                         </Tooltip>
+
+                         <Tooltip title="Rabatt löschen">
+                           <IconButton
+                             size="small"
+                             color="error"
+                             onClick={() => void handleDelete(bereich, rabatt)}
+                           >
+                             <DeleteIcon fontSize="small" />
+                           </IconButton>
+                         </Tooltip>
+
+                         <Tooltip title="Weitere Rabattregel hinzufügen">
+                           <IconButton size="small" onClick={() => handleNew(bereich)}>
+                             <AddIcon fontSize="small" />
+                           </IconButton>
+                         </Tooltip>
+                       </TableCell>
+                     </TableRow>
+                   ));
+                 })}
+               </TableBody>
+             </Table>
+           </TableContainer>
+         )}
+       </>
+     )}
+
+     <MietbereichRabattDialog
+       open={dialogOpen}
+       mietbereich={selectedMietbereich}
+       rabatt={selectedRabatt}
+       onClose={() => setDialogOpen(false)}
+       onSave={handleSave}
+     />
+   </Box>
+ );
 }

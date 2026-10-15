@@ -7,6 +7,9 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -17,7 +20,7 @@ public class MietbereichDTO {
 
     private Long mietobjektId;
 
-    private Long zaehlerId;
+    private Set<Long> zaehlerIds = new HashSet<>();
 
     @NotBlank
     @Size(max = 255)

@@ -62,7 +62,7 @@ export default function PersonenScreen() {
   const [loading, setLoading] = useState(false);
 
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const cursorRef = useRef<Cursor>(null);
   const loadingRef = useRef(false);

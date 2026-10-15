@@ -1,15 +1,17 @@
-package com.kcserver.kjfp.service;
+package com.kcserver.core.service;
 
-import com.kcserver.kjfp.dto.verein.VereinDTO;
-import com.kcserver.kjfp.dto.verein.VereinRefDTO;
-import com.kcserver.kjfp.entity.Person;
-import com.kcserver.kjfp.entity.Verein;
+import com.kcserver.core.dto.verein.VereinDTO;
+import com.kcserver.core.dto.verein.VereinRefDTO;
+import com.kcserver.core.entity.Person;
+import com.kcserver.core.entity.Verein;
 import com.kcserver.core.exception.ErrorMessages;
 import com.kcserver.kjfp.mapper.VereinMapper;
-import com.kcserver.kjfp.repository.MitgliedRepository;
+import com.kcserver.core.repository.MitgliedRepository;
 import com.kcserver.kjfp.repository.PersonRepository;
 import com.kcserver.kjfp.repository.VeranstaltungRepository;
-import com.kcserver.kjfp.repository.VereinRepository;
+import com.kcserver.core.repository.VereinRepository;
+import com.kcserver.kjfp.service.BankLookupService;
+import com.kcserver.kjfp.service.VereinDataStatusService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;

@@ -3,11 +3,11 @@ package com.kcserver.kjfp.service;
 import com.kcserver.core.dto.person.PersonDataStatusDTO;
 import com.kcserver.kjfp.dto.validation.DataFieldStatusDTO;
 import com.kcserver.kjfp.dto.validation.DataStatus;
-import com.kcserver.kjfp.entity.Person;
+import com.kcserver.core.entity.Person;
 import com.kcserver.kjfp.entity.Teilnehmer;
 import com.kcserver.kjfp.entity.Veranstaltung;
 import com.kcserver.kjfp.repository.TeilnehmerRepository;
-import com.kcserver.kjfp.service.person.PersonDataStatusService;
+import com.kcserver.core.service.person.PersonDataStatusService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

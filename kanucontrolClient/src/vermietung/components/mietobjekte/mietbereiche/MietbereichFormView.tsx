@@ -56,7 +56,12 @@ export const MietbereichFormView: React.FC<Props> = ({
         gap={2}
         sx={{ mt: 2 }}
       >
-        <MietbereichBaseForm form={form} editMode={editMode} onChange={update} />
+        <MietbereichBaseForm
+          form={form}
+          editMode={editMode}
+          mietobjektId={mietbereich.mietobjektId}
+          onChange={update}
+        />
       </Box>
 
       <MietbereichActionBar

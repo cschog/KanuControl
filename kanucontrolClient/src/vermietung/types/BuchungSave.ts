@@ -22,4 +22,7 @@ export interface BuchungSave {
 
   veranstalterVereinId?: number;
   status?: Buchungsstatus;
+  
+  bemerkung: string;
+  bewertung: number | null;
 }

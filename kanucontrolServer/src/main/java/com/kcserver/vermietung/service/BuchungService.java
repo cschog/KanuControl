@@ -1,12 +1,13 @@
 package com.kcserver.vermietung.service;
 
 import com.kcserver.core.exception.ErrorMessages;
-import com.kcserver.kjfp.entity.Person;
-import com.kcserver.kjfp.entity.Verein;
+import com.kcserver.core.entity.Person;
+import com.kcserver.core.entity.Verein;
 import com.kcserver.kjfp.repository.PersonRepository;
-import com.kcserver.kjfp.repository.VereinRepository;
+import com.kcserver.core.repository.VereinRepository;
 import com.kcserver.vermietung.dto.BuchungDTO;
 import com.kcserver.vermietung.dto.BuchungMietbereichDTO;
+import com.kcserver.vermietung.dto.BuchungVerbrauchskostenDTO;
 import com.kcserver.vermietung.entity.*;
 import com.kcserver.vermietung.enumtype.Buchungsquelle;
 import com.kcserver.vermietung.enumtype.Buchungsstatus;
@@ -31,6 +32,12 @@ public class BuchungService {
     private final MietobjektRepository mietobjektRepository;
     private final MietbereichRepository mietbereichRepository;
     private final MietpreisRepository mietpreisRepository;
+    private final ZaehlerRepository zaehlerRepository;
+    private final ZaehlerstandRepository zaehlerstandRepository;
+    private final VerbrauchsabrechnungService
+            verbrauchsabrechnungService;
+    private final BuchungVerbrauchskostenRepository
+            buchungVerbrauchskostenRepository;
 
     private static final java.time.LocalDate UNBEFRISTET_BIS =
             java.time.LocalDate.of(3000, 12, 31);
@@ -42,7 +49,11 @@ public class BuchungService {
             VereinRepository vereinRepository,
             MietobjektRepository mietobjektRepository,
             MietbereichRepository mietbereichRepository,
-            MietpreisRepository mietpreisRepository
+            MietpreisRepository mietpreisRepository,
+            ZaehlerRepository zaehlerRepository,
+            ZaehlerstandRepository zaehlerstandRepository,
+            VerbrauchsabrechnungService verbrauchsabrechnungService,
+            BuchungVerbrauchskostenRepository buchungVerbrauchskostenRepository
     ) {
         this.buchungRepository = buchungRepository;
         this.buchungsnummerCounterRepository =
@@ -52,6 +63,11 @@ public class BuchungService {
         this.mietobjektRepository = mietobjektRepository;
         this.mietbereichRepository = mietbereichRepository;
         this.mietpreisRepository = mietpreisRepository;
+        this.zaehlerRepository = zaehlerRepository;
+        this.zaehlerstandRepository = zaehlerstandRepository;
+        this.verbrauchsabrechnungService = verbrauchsabrechnungService;
+        this.buchungVerbrauchskostenRepository =
+                buchungVerbrauchskostenRepository;
     }
 
     @Transactional(readOnly = true)
@@ -76,7 +92,15 @@ public class BuchungService {
                         )
                 );
 
-        return toDTO(buchung);
+        BuchungDTO dto = toDTO(buchung);
+
+        if (buchung.getStatus() == Buchungsstatus.ABRECHENBAR) {
+            dto.setVerbrauchskostenVorschau(
+                    verbrauchsabrechnungService.berechneVorschau(buchung)
+            );
+        }
+
+        return dto;
     }
 
     public BuchungDTO create(BuchungDTO dto) {
@@ -100,6 +124,8 @@ public class BuchungService {
         buchung.setMieter(mieter);
         buchung.setMietobjekt(mietobjekt);
         buchung.setVeranstalter(veranstalter);
+        buchung.setBemerkung(dto.getBemerkung());
+        buchung.setBewertung(dto.getBewertung());
 
         buchung.setAnreise(dto.getAnreise());
         buchung.setAbreise(
@@ -134,12 +160,49 @@ public class BuchungService {
                 .orElseThrow(() ->
                         new IllegalArgumentException(
                                 String.format(
-                                        java.util.Locale.GERMAN,
+                                        Locale.GERMAN,
                                         ErrorMessages.BUCHUNG_NOT_FOUND,
                                         id
                                 )
                         )
                 );
+
+        // Der Status darf nicht über die allgemeine Aktualisierung
+        // geändert werden.
+        if (dto.getStatus() != null
+                && dto.getStatus() != buchung.getStatus()) {
+            throw new IllegalArgumentException(
+                    "Der Buchungsstatus darf nicht über die "
+                            + "allgemeine Aktualisierung geändert werden. "
+                            + "Verwende dafür die Statusänderung."
+            );
+        }
+
+        if (dto.getBewertung() != null
+                && (dto.getBewertung() < 1 || dto.getBewertung() > 5)) {
+            throw new IllegalArgumentException(
+                    "Die Bewertung muss zwischen 1 und 5 liegen."
+            );
+        }
+
+        // Stornierte und abgelehnte Buchungen dürfen ausschließlich
+        // bei Bemerkung und Bewertung geändert werden.
+        if (buchung.getStatus() == Buchungsstatus.STORNIERT
+                || buchung.getStatus() == Buchungsstatus.ABGELEHNT) {
+
+            if (!sindBuchungsdatenUnveraendert(buchung, dto)) {
+                throw new IllegalArgumentException(
+                        "Bei stornierten oder abgelehnten Buchungen "
+                                + "dürfen nur Bemerkung und Bewertung "
+                                + "geändert werden."
+                );
+            }
+
+            buchung.setBemerkung(dto.getBemerkung());
+            buchung.setBewertung(dto.getBewertung());
+
+            return toDTO(buchungRepository.save(buchung));
+        }
 
         Person mieter = getMieter(dto.getMieterId());
 
@@ -161,6 +224,10 @@ public class BuchungService {
         buchung.setMieter(mieter);
         buchung.setMietobjekt(mietobjekt);
         buchung.setVeranstalter(veranstalter);
+
+        buchung.setBemerkung(dto.getBemerkung());
+        buchung.setBewertung(dto.getBewertung());
+
         buchung.setAnreise(dto.getAnreise());
         buchung.setAbreise(
                 dto.isUnbefristet()
@@ -168,7 +235,10 @@ public class BuchungService {
                         : dto.getAbreise()
         );
 
-        // Bestehende Positionen behalten ihre Preissnapshots.
+        // Auch bei ABGESCHLOSSEN bleibt der Status unverändert.
+        // Die Buchung kann korrigiert und später ausdrücklich
+        // erneut abgeschlossen werden.
+
         synchronisiereBuchungspositionen(
                 buchung,
                 dto,
@@ -176,18 +246,98 @@ public class BuchungService {
                 buchung.getBuchungsquelle()
         );
 
-        if (dto.getStatus() != null
-                && dto.getStatus() != buchung.getStatus()) {
-            throw new IllegalArgumentException(
-                    "Der Buchungsstatus darf nicht über die "
-                            + "allgemeine Aktualisierung geändert werden. "
-                            + "Verwende dafür die Statusänderung."
-            );
-        }
-
         buchungRepository.flush();
 
         return toDTO(buchung);
+    }
+
+    private boolean sindBuchungsdatenUnveraendert(
+            Buchung buchung,
+            BuchungDTO dto
+    ) {
+        if (dto.getMieterId() == null
+                || dto.getMietobjektId() == null
+                || dto.getAnreise() == null) {
+            return false;
+        }
+
+        LocalDate gewuenschteAbreise = dto.isUnbefristet()
+                ? UNBEFRISTET_BIS
+                : dto.getAbreise();
+
+        if (!Objects.equals(
+                buchung.getMieter().getId(),
+                dto.getMieterId())) {
+            return false;
+        }
+
+        if (!Objects.equals(
+                buchung.getMietobjekt().getId(),
+                dto.getMietobjektId())) {
+            return false;
+        }
+
+        Long bisherigerVeranstalterId =
+                buchung.getVeranstalter() != null
+                        ? buchung.getVeranstalter().getId()
+                        : null;
+
+        if (!Objects.equals(
+                bisherigerVeranstalterId,
+                dto.getVeranstalterVereinId())) {
+            return false;
+        }
+
+        if (!Objects.equals(
+                buchung.getAnreise(),
+                dto.getAnreise())) {
+            return false;
+        }
+
+        if (!Objects.equals(
+                buchung.getAbreise(),
+                gewuenschteAbreise)) {
+            return false;
+        }
+
+        Map<Long, Integer> bestehendePositionen = new HashMap<>();
+
+        for (BuchungMietbereich position : buchung.getMietbereiche()) {
+            bestehendePositionen.put(
+                    position.getMietbereich().getId(),
+                    position.getAnzahl()
+            );
+        }
+
+        Map<Long, Integer> gewuenschtePositionen = new HashMap<>();
+
+        if (dto.getPositionen() != null) {
+            for (BuchungMietbereichDTO position : dto.getPositionen()) {
+                if (position.getMietbereichId() == null
+                        || position.getAnzahl() == null
+                        || position.getAnzahl() < 1
+                        || gewuenschtePositionen.containsKey(
+                        position.getMietbereichId())) {
+                    return false;
+                }
+
+                gewuenschtePositionen.put(
+                        position.getMietbereichId(),
+                        position.getAnzahl()
+                );
+            }
+        } else if (dto.getMietbereichIds() != null) {
+            for (Long mietbereichId : dto.getMietbereichIds()) {
+                if (mietbereichId == null
+                        || gewuenschtePositionen.containsKey(mietbereichId)) {
+                    return false;
+                }
+
+                gewuenschtePositionen.put(mietbereichId, 1);
+            }
+        }
+
+        return bestehendePositionen.equals(gewuenschtePositionen);
     }
 
     public void delete(Long id) {
@@ -398,6 +548,32 @@ public class BuchungService {
                         : null
         );
 
+        dto.setBemerkung(buchung.getBemerkung());
+        dto.setBewertung(buchung.getBewertung());
+
+        dto.setVerbrauchskosten(
+                buchungVerbrauchskostenRepository
+                        .findByBuchungIdOrderByIdAsc(buchung.getId())
+                        .stream()
+                        .map(kosten -> new BuchungVerbrauchskostenDTO(
+                                kosten.getId(),
+                                kosten.getVerbrauchskostenId(),
+                                kosten.getBezeichnung(),
+                                kosten.getVerbrauchsart(),
+                                kosten.getAbrechnungsart(),
+                                kosten.getMengeneinheit(),
+                                kosten.getPreis(),
+                                kosten.getAnfangsstand(),
+                                kosten.getEndstand(),
+                                kosten.getVerbrauch(),
+                                kosten.getAnfangsablesung(),
+                                kosten.getEndablesung(),
+                                kosten.getAbrechnungstage(),
+                                kosten.getKosten()
+                        ))
+                        .toList()
+        );
+
         return dto;
     }
 
@@ -432,8 +608,10 @@ public class BuchungService {
                 ));
     }
 
-    public BuchungDTO aendereStatus(Long id, Buchungsstatus neuerStatus) {
-
+    public BuchungDTO aendereStatus(
+            Long id,
+            Buchungsstatus neuerStatus
+    ) {
         Buchung buchung = buchungRepository.findById(id)
                 .orElseThrow(() ->
                         new IllegalArgumentException(
@@ -468,6 +646,14 @@ public class BuchungService {
             pruefeBestand(buchung, buchung.getId());
         }
 
+        /*
+         * Die Verbrauchsabrechnung muss erfolgreich sein,
+         * bevor der Status geändert wird.
+         */
+        if (neuerStatus == Buchungsstatus.ABGESCHLOSSEN) {
+            verbrauchsabrechnungService.berechneUndSpeichere(buchung);
+        }
+
         buchung.setStatus(neuerStatus);
 
         return toDTO(buchungRepository.save(buchung));
@@ -492,10 +678,17 @@ public class BuchungService {
                             || neuerStatus == Buchungsstatus.STORNIERT;
 
             case BESTAETIGT ->
-                    neuerStatus == Buchungsstatus.STORNIERT
-                            || neuerStatus == Buchungsstatus.ABGESCHLOSSEN;
+                    neuerStatus == Buchungsstatus.ABRECHENBAR
+                            || neuerStatus == Buchungsstatus.STORNIERT;
 
-            case ABGELEHNT, STORNIERT, ABGESCHLOSSEN -> false;
+            case ABRECHENBAR ->
+                    neuerStatus == Buchungsstatus.ABGESCHLOSSEN
+                            || neuerStatus == Buchungsstatus.STORNIERT;
+
+            case ABGESCHLOSSEN ->
+                    neuerStatus == Buchungsstatus.BESTAETIGT;
+
+            case ABGELEHNT, STORNIERT -> false;
         };
     }
 

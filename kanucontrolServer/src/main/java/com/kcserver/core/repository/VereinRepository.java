@@ -1,8 +1,9 @@
-package com.kcserver.kjfp.repository;
+package com.kcserver.core.repository;
 
-import com.kcserver.kjfp.entity.Verein;
+import com.kcserver.core.entity.Verein;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.jpa.repository.Query;
@@ -39,4 +40,20 @@ public interface VereinRepository
         ORDER BY v.name
     """)
     List<Verein> searchRefList(@Param("search") String search);
+
+    /**
+     * Findet den bisherigen Hausverein.
+     */
+    Optional<Verein> findByHausvereinTrue();
+
+    /**
+     * Setzt hausverein für alle Vereine zurück.
+     */
+    @Modifying
+    @Query("""
+    UPDATE Verein v
+    SET v.hausverein = false
+    WHERE v.hausverein = true
+""")
+    int unsetHausverein();
 }

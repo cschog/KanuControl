@@ -1,6 +1,7 @@
 package com.kcserver.kjfp.entity;
 
 import com.kcserver.core.audit.Auditable;
+import com.kcserver.core.entity.Person;
 import com.kcserver.kjfp.enumtype.TeilnehmerRolle;
 import com.kcserver.kjfp.converter.TeilnehmerRolleConverter;
 import jakarta.persistence.*;

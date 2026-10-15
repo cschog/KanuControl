@@ -1,4 +1,4 @@
-package com.kcserver.kjfp.service.person;
+package com.kcserver.core.service.person;
 
 import com.kcserver.core.dto.person.*;
 import com.kcserver.kjfp.dto.common.ScrollResponse;

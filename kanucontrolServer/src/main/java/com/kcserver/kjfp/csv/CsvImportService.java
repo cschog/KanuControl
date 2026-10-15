@@ -1,8 +1,8 @@
 package com.kcserver.kjfp.csv;
 
 import com.kcserver.core.dto.person.PersonSaveDTO;
-import com.kcserver.kjfp.service.MitgliedService;
-import com.kcserver.kjfp.service.person.PersonService;
+import com.kcserver.core.service.MitgliedService;
+import com.kcserver.core.service.person.PersonService;
 import com.kcserver.core.validation.OnCreate;
 import jakarta.validation.Validator;
 import lombok.extern.slf4j.Slf4j;

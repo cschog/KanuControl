@@ -1,6 +1,6 @@
 package com.kcserver.kjfp.repository;
 
-import com.kcserver.kjfp.entity.Person;
+import com.kcserver.core.entity.Person;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;

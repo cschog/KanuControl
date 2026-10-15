@@ -28,6 +28,7 @@ interface Props {
 
   onEdit: () => void;
   onCancelEdit: () => void;
+  onReopen: () => Promise<void>;
   onSave: () => void;
 
   onReserve: () => void;
@@ -50,14 +51,19 @@ export const BuchungActionBar: React.FC<Props> = ({
   onReserve,
   onConfirm,
   onReject,
+  onReopen,
   onCancelBooking,
   onComplete,
   onDelete,
   disableDelete,
 }) => {
+  const [reserveDialogOpen, setReserveDialogOpen] = useState(false);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [reopenDialogOpen, setReopenDialogOpen] = useState(false);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
 
   const handleConfirmCancel = () => {
     setCancelDialogOpen(false);
@@ -69,13 +75,30 @@ export const BuchungActionBar: React.FC<Props> = ({
     onReject();
   };
 
+  const handleConfirmComplete = () => {
+    setCompleteDialogOpen(false);
+    onComplete();
+  };
+
   const handleConfirmDelete = () => {
     setDeleteDialogOpen(false);
     onDelete();
   };
 
-  const terminalStatus =
-    status === "ABGELEHNT" || status === "STORNIERT" || status === "ABGESCHLOSSEN";
+  const handleConfirmReserve = () => {
+    setReserveDialogOpen(false);
+    onReserve();
+  };
+
+  const handleConfirmBooking = () => {
+    setConfirmDialogOpen(false);
+    onConfirm();
+  };
+
+  const handleConfirmReopen = async () => {
+    setReopenDialogOpen(false);
+    await onReopen();
+  };
 
   return (
     <Box
@@ -104,7 +127,7 @@ export const BuchungActionBar: React.FC<Props> = ({
                   variant="contained"
                   color="info"
                   startIcon={<EventAvailableIcon />}
-                  onClick={onReserve}
+                  onClick={() => setReserveDialogOpen(true)}
                 >
                   Reservieren
                 </Button>
@@ -113,7 +136,7 @@ export const BuchungActionBar: React.FC<Props> = ({
                   variant="contained"
                   color="success"
                   startIcon={<CheckCircleIcon />}
-                  onClick={onConfirm}
+                  onClick={() => setConfirmDialogOpen(true)}
                 >
                   Bestätigen
                 </Button>
@@ -135,7 +158,7 @@ export const BuchungActionBar: React.FC<Props> = ({
                   variant="contained"
                   color="success"
                   startIcon={<CheckCircleIcon />}
-                  onClick={onConfirm}
+                  onClick={() => setConfirmDialogOpen(true)}
                 >
                   Bestätigen
                 </Button>
@@ -157,7 +180,7 @@ export const BuchungActionBar: React.FC<Props> = ({
                   variant="contained"
                   color="success"
                   startIcon={<TaskAltIcon />}
-                  onClick={onComplete}
+                  onClick={() => setCompleteDialogOpen(true)}
                 >
                   Abschließen
                 </Button>
@@ -173,11 +196,19 @@ export const BuchungActionBar: React.FC<Props> = ({
               </>
             )}
 
-            {!terminalStatus && (
-              <Button variant="contained" startIcon={<EditIcon />} onClick={onEdit}>
-                Bearbeiten
-              </Button>
-            )}
+            <Button
+              variant="contained"
+              startIcon={<EditIcon />}
+              onClick={() => {
+                if (status === "ABGESCHLOSSEN") {
+                  setReopenDialogOpen(true);
+                } else {
+                  onEdit();
+                }
+              }}
+            >
+              Bearbeiten
+            </Button>
           </>
         ) : (
           <>
@@ -201,6 +232,83 @@ export const BuchungActionBar: React.FC<Props> = ({
           Löschen
         </Button>
       </Box>
+
+      {/* Abgeschlossene Buchung wieder öffnen */}
+      <Dialog open={reopenDialogOpen} onClose={() => setReopenDialogOpen(false)}>
+        <DialogTitle>Abgeschlossene Buchung wieder öffnen?</DialogTitle>
+
+        <DialogContent>
+          <DialogContentText>
+            Möchtest du diese abgeschlossene Buchung wirklich wieder öffnen? Der Status wird auf
+            „Bestätigt“ zurückgesetzt. Anschließend kannst du die Buchungsdaten korrigieren. Zum
+            erneuten Abschließen müssen die Abschlussprüfungen wieder erfolgreich durchlaufen
+            werden.
+          </DialogContentText>
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={() => setReopenDialogOpen(false)}>Abbrechen</Button>
+
+          <Button
+            onClick={handleConfirmReopen}
+            color="warning"
+            variant="contained"
+            startIcon={<EditIcon />}
+          >
+            Buchung wieder öffnen
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Reservieren */}
+      <Dialog open={reserveDialogOpen} onClose={() => setReserveDialogOpen(false)}>
+        <DialogTitle>Buchung reservieren?</DialogTitle>
+
+        <DialogContent>
+          <DialogContentText>
+            Möchtest du diese Buchung wirklich reservieren? Die Buchung erhält anschließend den
+            Status „Reserviert“.
+          </DialogContentText>
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={() => setReserveDialogOpen(false)}>Abbrechen</Button>
+
+          <Button
+            onClick={handleConfirmReserve}
+            color="info"
+            variant="contained"
+            startIcon={<EventAvailableIcon />}
+          >
+            Jetzt reservieren
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Bestätigen */}
+      <Dialog open={confirmDialogOpen} onClose={() => setConfirmDialogOpen(false)}>
+        <DialogTitle>Buchung bestätigen?</DialogTitle>
+
+        <DialogContent>
+          <DialogContentText>
+            Möchtest du diese Buchung wirklich bestätigen? Bitte prüfe vorher den Buchungszeitraum
+            und die ausgewählten Mietbereiche.
+          </DialogContentText>
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={() => setConfirmDialogOpen(false)}>Abbrechen</Button>
+
+          <Button
+            onClick={handleConfirmBooking}
+            color="success"
+            variant="contained"
+            startIcon={<CheckCircleIcon />}
+          >
+            Jetzt bestätigen
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Dialog open={cancelDialogOpen} onClose={() => setCancelDialogOpen(false)}>
         <DialogTitle>Buchung stornieren?</DialogTitle>
@@ -245,6 +353,30 @@ export const BuchungActionBar: React.FC<Props> = ({
             startIcon={<BlockIcon />}
           >
             Jetzt ablehnen
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={completeDialogOpen} onClose={() => setCompleteDialogOpen(false)}>
+        <DialogTitle>Buchung abschließen?</DialogTitle>
+
+        <DialogContent>
+          <DialogContentText>
+            Möchtest du diese Buchung wirklich abschließen? Bitte prüfe vorher die Buchungsdaten und
+            die erbrachten Leistungen.
+          </DialogContentText>
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={() => setCompleteDialogOpen(false)}>Abbrechen</Button>
+
+          <Button
+            onClick={handleConfirmComplete}
+            color="success"
+            variant="contained"
+            startIcon={<TaskAltIcon />}
+          >
+            Jetzt abschließen
           </Button>
         </DialogActions>
       </Dialog>

@@ -6,6 +6,7 @@ public enum Buchungsstatus {
     ABGELEHNT,
     RESERVIERT,
     BESTAETIGT,
+    ABRECHENBAR,
     STORNIERT,
     ABGESCHLOSSEN
 }

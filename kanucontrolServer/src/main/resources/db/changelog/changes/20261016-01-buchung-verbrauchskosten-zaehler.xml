@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+            http://www.liquibase.org/xml/ns/dbchangelog
+            https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet
+            id="20261016-01-buchung-verbrauchskosten-zaehler"
+            author="chris">
+
+        <!-- Zählerinformationen im Abrechnungssnapshot speichern -->
+        <addColumn tableName="buchung_verbrauchskosten">
+            <column name="zaehler_id" type="BIGINT"/>
+            <column name="zaehler_bezeichnung" type="VARCHAR(100)"/>
+        </addColumn>
+
+        <!-- Bisherige Eindeutigkeitsregel entfernen -->
+        <dropUniqueConstraint
+                tableName="buchung_verbrauchskosten"
+                constraintName="uk_buchung_verbrauchskosten"/>
+
+        <!--
+            Eine Pauschale bzw. ein Tagespreis darf je Konfiguration
+            nur einmal pro Buchung vorkommen.
+
+            Bei Zählerabrechnungen sind mehrere Zähler je Konfiguration
+            erlaubt. Jeder Zähler darf aber nur einmal vorkommen.
+        -->
+        <sql>
+            CREATE UNIQUE INDEX uk_bvk_ohne_zaehler
+                ON buchung_verbrauchskosten (buchung_id, verbrauchskosten_id)
+                WHERE zaehler_id IS NULL;
+        </sql>
+
+        <sql>
+            CREATE UNIQUE INDEX uk_bvk_mit_zaehler
+                ON buchung_verbrauchskosten
+                    (buchung_id, verbrauchskosten_id, zaehler_id)
+                WHERE zaehler_id IS NOT NULL;
+        </sql>
+
+        <rollback>
+            <sql>DROP INDEX IF EXISTS uk_bvk_mit_zaehler;</sql>
+            <sql>DROP INDEX IF EXISTS uk_bvk_ohne_zaehler;</sql>
+
+            <addUniqueConstraint
+                    tableName="buchung_verbrauchskosten"
+                    columnNames="buchung_id,verbrauchskosten_id"
+                    constraintName="uk_buchung_verbrauchskosten"/>
+
+            <dropColumn
+                    tableName="buchung_verbrauchskosten"
+                    columnName="zaehler_bezeichnung"/>
+
+            <dropColumn
+                    tableName="buchung_verbrauchskosten"
+                    columnName="zaehler_id"/>
+        </rollback>
+
+    </changeSet>
+
+</databaseChangeLog>

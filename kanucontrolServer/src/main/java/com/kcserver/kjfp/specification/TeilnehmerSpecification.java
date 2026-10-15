@@ -1,10 +1,10 @@
 package com.kcserver.kjfp.specification;
 
 import com.kcserver.kjfp.dto.teilnehmer.TeilnehmerSearchCriteria;
-import com.kcserver.kjfp.entity.Mitglied;
-import com.kcserver.kjfp.entity.Person;
+import com.kcserver.core.entity.Mitglied;
+import com.kcserver.core.entity.Person;
 import com.kcserver.kjfp.entity.Teilnehmer;
-import com.kcserver.kjfp.entity.Verein;
+import com.kcserver.core.entity.Verein;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;

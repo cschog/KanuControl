@@ -86,9 +86,9 @@ public class MietbereichService {
                         ErrorMessages.MIETOBJEKT_NOT_FOUND
                 ));
 
-        Zaehler zaehler = findeZaehler(
+        Set<Zaehler> zaehler = findeZaehler(
                 mietobjekt.getId(),
-                dto.getZaehlerId()
+                dto.getZaehlerIds()
         );
 
         Mietbereich bereich = new Mietbereich();
@@ -133,9 +133,9 @@ public class MietbereichService {
 
         validateAirbnbInserat(dto);
 
-        Zaehler zaehler = findeZaehler(
+        Set<Zaehler> zaehler = findeZaehler(
                 mietobjektId,
-                dto.getZaehlerId()
+                dto.getZaehlerIds()
         );
 
         bereich.setZaehler(zaehler);
@@ -222,26 +222,38 @@ public class MietbereichService {
         mietbereichRepository.saveAll(alleBereiche);
     }
 
-    private Zaehler findeZaehler(Long mietobjektId, Long zaehlerId) {
+    private Set<Zaehler> findeZaehler(
+            Long mietobjektId,
+            Set<Long> zaehlerIds
+    ) {
+        Set<Zaehler> ergebnis = new HashSet<>();
 
-        if (zaehlerId == null) {
-            return null;
+        if (zaehlerIds == null || zaehlerIds.isEmpty()) {
+            return ergebnis;
         }
 
-        Zaehler zaehler = zaehlerRepository.findById(zaehlerId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        ErrorMessages.ZAEHLER_NOT_FOUND
-                ));
+        for (Long zaehlerId : zaehlerIds) {
+            if (zaehlerId == null) {
+                continue;
+            }
 
-        if (!zaehler.getMietobjekt().getId().equals(mietobjektId)) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    ErrorMessages.ZAEHLER_WRONG_MIETOBJEKT
-            );
+            Zaehler zaehler = zaehlerRepository.findById(zaehlerId)
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.NOT_FOUND,
+                            ErrorMessages.ZAEHLER_NOT_FOUND
+                    ));
+
+            if (!zaehler.getMietobjekt().getId().equals(mietobjektId)) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        ErrorMessages.ZAEHLER_WRONG_MIETOBJEKT
+                );
+            }
+
+            ergebnis.add(zaehler);
         }
 
-        return zaehler;
+        return ergebnis;
     }
 
     private void validateAirbnbInserat(MietbereichDTO dto) {
@@ -270,10 +282,12 @@ public class MietbereichService {
         dto.setMengeneinheit(bereich.getMengeneinheit());
         dto.setSortierung(bereich.getSortierung());
         dto.setBerechnungsart(bereich.getBerechnungsart());
-        dto.setZaehlerId(
-                bereich.getZaehler() != null
-                        ? bereich.getZaehler().getId()
-                        : null
+        dto.setZaehlerIds(
+                bereich.getZaehler() == null
+                        ? new HashSet<>()
+                        : bereich.getZaehler().stream()
+                        .map(Zaehler::getId)
+                        .collect(Collectors.toSet())
         );
 
         return dto;

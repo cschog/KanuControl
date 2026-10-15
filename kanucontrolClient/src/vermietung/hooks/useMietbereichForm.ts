@@ -15,7 +15,7 @@ const emptyForm: MietbereichSave = {
   bestand: 1,
   mengeneinheit: "",
   berechnungsart: Berechnungsart.TAG,
-  zaehlerId: null,
+  zaehlerIds: [],
 };
 
 export function useMietbereichForm(mietbereich: Mietbereich | null) {
@@ -38,7 +38,7 @@ export function useMietbereichForm(mietbereich: Mietbereich | null) {
       bestand: mietbereich.bestand ?? 1,
       mengeneinheit: mietbereich.mengeneinheit ?? "",
       berechnungsart: mietbereich.berechnungsart ?? Berechnungsart.TAG,
-      zaehlerId: mietbereich.zaehlerId ?? null,
+      zaehlerIds: mietbereich.zaehlerIds ?? [],
     });
   }, [mietbereich]);
 
@@ -67,6 +67,7 @@ export function useMietbereichForm(mietbereich: Mietbereich | null) {
       bezeichnung: form.bezeichnung.trim(),
       beschreibung: form.beschreibung.trim(),
       mengeneinheit: form.mengeneinheit.trim(),
+      zaehlerIds: [...new Set(form.zaehlerIds)],
     };
   }
 

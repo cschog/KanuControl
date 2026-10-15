@@ -3,7 +3,6 @@ import { Berechnungsart } from "@/vermietung/enums/Berechnungsart";
 export interface Mietbereich {
   id: number;
   mietobjektId: number;
-  zaehlerId: number | null;
 
   bezeichnung: string;
   sortierung: number;
@@ -18,4 +17,6 @@ export interface Mietbereich {
   mengeneinheit?: string;
 
   berechnungsart: Berechnungsart;
+
+  zaehlerIds: number[];
 }

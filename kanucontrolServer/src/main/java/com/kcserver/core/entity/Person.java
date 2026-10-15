@@ -1,4 +1,4 @@
-package com.kcserver.kjfp.entity;
+package com.kcserver.core.entity;
 
 import com.kcserver.core.audit.Auditable;
 import com.kcserver.kjfp.enumtype.CountryCode;

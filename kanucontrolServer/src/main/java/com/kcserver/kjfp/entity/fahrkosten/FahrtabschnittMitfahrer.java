@@ -1,6 +1,6 @@
 package com.kcserver.kjfp.entity.fahrkosten;
 
-import com.kcserver.kjfp.entity.Person;
+import com.kcserver.core.entity.Person;
 import jakarta.persistence.*;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

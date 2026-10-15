@@ -1,14 +1,14 @@
 package com.kcserver.kjfp.mapper;
 
 import com.kcserver.core.dto.person.PersonRefDTO;
-import com.kcserver.kjfp.dto.verein.VereinDTO;
-import com.kcserver.kjfp.entity.Person;
-import com.kcserver.kjfp.entity.Verein;
+import com.kcserver.core.dto.verein.VereinDTO;
+import com.kcserver.core.entity.Person;
+import com.kcserver.core.entity.Verein;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.ReportingPolicy;
-import com.kcserver.kjfp.dto.verein.VereinRefDTO;
+import com.kcserver.core.dto.verein.VereinRefDTO;
 import org.mapstruct.InheritConfiguration;
 import org.mapstruct.Named;
 

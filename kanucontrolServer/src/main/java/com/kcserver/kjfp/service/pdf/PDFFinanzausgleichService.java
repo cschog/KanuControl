@@ -1,5 +1,6 @@
 package com.kcserver.kjfp.service.pdf;
 
+import com.kcserver.core.entity.Person;
 import com.kcserver.kjfp.dto.finanzen.FinanzausgleichDTO;
 import com.kcserver.kjfp.entity.*;
 import com.kcserver.kjfp.entity.abrechnung.AbrechnungBeleg;

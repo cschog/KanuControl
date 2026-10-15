@@ -3,8 +3,8 @@ package com.kcserver.kjfp.service;
 import com.kcserver.kjfp.dto.validation.DataFieldStatusDTO;
 import com.kcserver.kjfp.dto.validation.DataStatus;
 import com.kcserver.kjfp.dto.validation.VereinDataStatusDTO;
-import com.kcserver.kjfp.entity.Person;
-import com.kcserver.kjfp.entity.Verein;
+import com.kcserver.core.entity.Person;
+import com.kcserver.core.entity.Verein;
 import com.kcserver.core.exception.ErrorMessages;
 import org.springframework.stereotype.Service;
 

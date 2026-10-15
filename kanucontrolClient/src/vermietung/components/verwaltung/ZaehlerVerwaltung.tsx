@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
+import { useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import {
   Alert,
   Box,
@@ -16,6 +18,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Typography,
   Paper,
 } from "@mui/material";
 
@@ -47,6 +50,8 @@ export default function ZaehlerVerwaltung() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   useEffect(() => {
     const loadMietobjekte = async () => {
@@ -136,7 +141,14 @@ export default function ZaehlerVerwaltung() {
   };
 
   return (
-    <Box>
+    <Box
+      sx={{
+        pb: {
+          xs: 12,
+          md: 3,
+        },
+      }}
+    >
       <Stack
         direction={{ xs: "column", sm: "row" }}
         spacing={2}
@@ -185,6 +197,69 @@ export default function ZaehlerVerwaltung() {
         <Alert severity="info">Bitte wähle zunächst ein Mietobjekt aus.</Alert>
       ) : zaehler.length === 0 ? (
         <Alert severity="info">Für dieses Mietobjekt sind noch keine Zähler angelegt.</Alert>
+      ) : isMobile ? (
+        <Stack spacing={2}>
+          {zaehler.map((item) => (
+            <Paper key={item.id} variant="outlined" sx={{ p: 2 }}>
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="flex-start"
+                spacing={1}
+              >
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography variant="subtitle1" fontWeight={600}>
+                    {item.bezeichnung}
+                  </Typography>
+
+                  <Typography variant="body2" color="text.secondary">
+                    {verbrauchsartLabel[item.verbrauchsart]}
+                  </Typography>
+                </Box>
+
+                <Chip
+                  label={item.aktiv ? "Aktiv" : "Inaktiv"}
+                  color={item.aktiv ? "success" : "default"}
+                  size="small"
+                />
+              </Stack>
+
+              <Box sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 1 }}>
+                <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}>
+                  <Typography color="text.secondary">Zählernummer</Typography>
+                  <Typography textAlign="right">{item.zaehlernummer || "–"}</Typography>
+                </Box>
+
+                <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}>
+                  <Typography color="text.secondary">Einheit</Typography>
+                  <Typography>{item.mengeneinheit}</Typography>
+                </Box>
+              </Box>
+
+              <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
+                <Button
+                  fullWidth
+                  size="small"
+                  variant="outlined"
+                  startIcon={<AssessmentIcon />}
+                  onClick={() => handleShowStaende(item)}
+                >
+                  Zählerstände
+                </Button>
+
+                <Button
+                  fullWidth
+                  size="small"
+                  variant="outlined"
+                  startIcon={<EditIcon />}
+                  onClick={() => handleEdit(item)}
+                >
+                  Bearbeiten
+                </Button>
+              </Stack>
+            </Paper>
+          ))}
+        </Stack>
       ) : (
         <TableContainer component={Paper} variant="outlined">
           <Table>

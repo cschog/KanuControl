@@ -41,6 +41,8 @@ import { VeranstaltungFormModel } from "@/kjfp/types/veranstaltung/Veranstaltung
 
 import { useReloadAppContext } from "@/core/components/context/AppContextBridge";
 
+import { useBackNavigation } from "@/core/context/BackNavigationContext";
+
 /* =========================================================
    TYPES
    ========================================================= */
@@ -90,6 +92,8 @@ export default function VeranstaltungenScreen() {
   const [warningDialogOpen, setWarningDialogOpen] = useState(false);
   const [dialogTitle, setDialogTitle] = useState("");
 
+  const { setDetailViewOpen } = useBackNavigation();
+
   /* =========================================================
      LOAD DATA
      ========================================================= */
@@ -138,6 +142,14 @@ export default function VeranstaltungenScreen() {
   useEffect(() => {
     loadBeitragsstrukturen();
   }, []);
+
+  useEffect(() => {
+    setDetailViewOpen(selectedVeranstaltung !== null);
+
+    return () => {
+      setDetailViewOpen(false);
+    };
+  }, [selectedVeranstaltung, setDetailViewOpen]);
 
   /* =========================================================
      SELECT
