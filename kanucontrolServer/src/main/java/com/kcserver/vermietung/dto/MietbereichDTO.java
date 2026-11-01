@@ -22,6 +22,8 @@ public class MietbereichDTO {
 
     private Set<Long> zaehlerIds = new HashSet<>();
 
+    private Set<Long> erforderlicheMietbereichIds = new HashSet<>();
+
     @NotBlank
     @Size(max = 255)
     private String bezeichnung;

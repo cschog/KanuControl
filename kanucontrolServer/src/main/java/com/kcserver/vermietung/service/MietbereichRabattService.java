@@ -170,7 +170,8 @@ public class MietbereichRabattService {
             );
         }
 
-        if (dto.getRabattart() == Rabattart.INDIVIDUELL) {
+        if (dto.getRabattart() == Rabattart.INDIVIDUELL
+                || dto.getRabattart() == Rabattart.KEIN_RABATT) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     ErrorMessages.MIETBEREICH_RABATT_INDIVIDUELL_UNZULAESSIG

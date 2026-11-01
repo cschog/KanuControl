@@ -1,6 +1,7 @@
 package com.kcserver.vermietung.dto;
 
 import com.kcserver.vermietung.enumtype.Berechnungsart;
+import com.kcserver.vermietung.enumtype.RabattwertTyp;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -27,4 +28,10 @@ public class BuchungMietbereichDTO {
 
     /** Bei der Anmeldung gültige Berechnungsart */
     private Berechnungsart berechnungsart;
+
+    private RabattwertTyp rabattwertTyp;
+
+    private BigDecimal rabattwert;
+
+    private BigDecimal rabattbetrag = BigDecimal.ZERO;
 }

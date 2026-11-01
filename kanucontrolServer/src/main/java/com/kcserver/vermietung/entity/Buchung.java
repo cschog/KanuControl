@@ -5,10 +5,13 @@ import com.kcserver.core.entity.Person;
 import com.kcserver.core.entity.Verein;
 import com.kcserver.vermietung.enumtype.Buchungsquelle;
 import com.kcserver.vermietung.enumtype.Buchungsstatus;
+import com.kcserver.vermietung.enumtype.Rabattart;
+import com.kcserver.vermietung.enumtype.RabattwertTyp;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,6 +55,20 @@ public class Buchung extends Auditable {
     @Enumerated(EnumType.STRING)
     @Column(name = "buchungsquelle", nullable = false, length = 20)
     private Buchungsquelle buchungsquelle;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "rabattart", nullable = false, length = 20)
+    private Rabattart rabattart = Rabattart.KEIN_RABATT;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "rabattwert_typ", length = 20)
+    private RabattwertTyp rabattwertTyp;
+
+    @Column(name = "rabattwert", precision = 10, scale = 2)
+    private BigDecimal rabattwert;
+
+    @Column(name = "rabattbetrag", nullable = false, precision = 10, scale = 2)
+    private BigDecimal rabattbetrag = BigDecimal.ZERO;
 
     @Column(name = "anreise", nullable = false)
     private LocalDateTime anreise;

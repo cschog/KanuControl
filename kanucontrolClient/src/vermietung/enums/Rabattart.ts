@@ -1,4 +1,6 @@
 export enum Rabattart {
   VEREIN = "VEREIN",
   VERBAND = "VERBAND",
+  INDIVIDUELL = "INDIVIDUELL",
+  KEIN_RABATT = "KEIN_RABATT",
 }

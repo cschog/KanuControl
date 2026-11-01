@@ -2,6 +2,7 @@ package com.kcserver.vermietung.controller;
 
 import com.kcserver.api.response.ApiResponse;
 import com.kcserver.vermietung.dto.MietbereichDTO;
+import com.kcserver.vermietung.dto.MietbereichVoraussetzungenDTO;
 import com.kcserver.vermietung.dto.SortierungRequest;
 import com.kcserver.vermietung.service.MietbereichService;
 import jakarta.validation.Valid;
@@ -79,6 +80,22 @@ public class MietbereichController {
 
         return new ApiResponse<>(
                 mietbereichService.update(mietobjektId, id, dto),
+                List.of()
+        );
+    }
+
+    @PutMapping("/{id}/voraussetzungen")
+    public ApiResponse<MietbereichDTO> setVoraussetzungen(
+            @PathVariable Long mietobjektId,
+            @PathVariable Long id,
+            @RequestBody MietbereichVoraussetzungenDTO dto
+    ) {
+        return new ApiResponse<>(
+                mietbereichService.setVoraussetzungen(
+                        mietobjektId,
+                        id,
+                        dto.getErforderlicheMietbereichIds()
+                ),
                 List.of()
         );
     }

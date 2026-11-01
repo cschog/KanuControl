@@ -2,6 +2,7 @@ package com.kcserver.vermietung.entity;
 
 import com.kcserver.core.audit.Auditable;
 import com.kcserver.vermietung.enumtype.Berechnungsart;
+import com.kcserver.vermietung.enumtype.RabattwertTyp;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -51,4 +52,14 @@ public class BuchungMietbereich extends Auditable {
 
     @Column(name = "vereinbarter_preis", nullable = false, precision = 10, scale = 2)
     private BigDecimal vereinbarterPreis;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "rabattwert_typ", length = 20)
+    private RabattwertTyp rabattwertTyp;
+
+    @Column(name = "rabattwert", precision = 10, scale = 2)
+    private BigDecimal rabattwert;
+
+    @Column(name = "rabattbetrag", nullable = false, precision = 10, scale = 2)
+    private BigDecimal rabattbetrag = BigDecimal.ZERO;
 }

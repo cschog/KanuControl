@@ -44,3 +44,15 @@ export async function deleteMietbereich(mietobjektId: number, id: number): Promi
 export async function sortiereMietbereiche(mietobjektId: number, ids: number[]): Promise<void> {
   await apiClient.put(`${baseUrl(mietobjektId)}/sortierung`, { ids });
 }
+
+export async function setMietbereichVoraussetzungen(
+  mietobjektId: number,
+  mietbereichId: number,
+  erforderlicheMietbereichIds: number[],
+): Promise<Mietbereich> {
+  const response = await apiClient.put<Mietbereich>(
+    `${baseUrl(mietobjektId)}/${mietbereichId}/voraussetzungen`,
+    { erforderlicheMietbereichIds },
+  );
+  return response.data;
+}

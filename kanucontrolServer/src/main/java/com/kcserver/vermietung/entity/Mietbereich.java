@@ -80,6 +80,18 @@ public class Mietbereich extends Auditable {
     )
     private Set<Zaehler> zaehler = new HashSet<>();
 
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "mietbereich_voraussetzung",
+            joinColumns = @JoinColumn(name = "mietbereich_id"),
+            inverseJoinColumns = @JoinColumn(name = "erforderlicher_mietbereich_id"),
+            uniqueConstraints = @UniqueConstraint(
+                    name = "uk_mietbereich_voraussetzung",
+                    columnNames = {"mietbereich_id", "erforderlicher_mietbereich_id"}
+            )
+    )
+    private Set<Mietbereich> voraussetzungen = new HashSet<>();
+
     @OneToMany(
             mappedBy = "mietbereich",
             cascade = CascadeType.ALL,

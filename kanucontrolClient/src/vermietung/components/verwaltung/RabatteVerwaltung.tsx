@@ -200,6 +200,10 @@ export default function RabatteVerwaltung() {
         return "Verein";
       case Rabattart.VERBAND:
         return "Verband";
+      case Rabattart.INDIVIDUELL:
+        return "Individuell";
+      case Rabattart.KEIN_RABATT:
+        return "Kein Rabatt";
     }
   }
 

@@ -3,5 +3,6 @@ package com.kcserver.vermietung.enumtype;
 public enum Rabattart {
     VEREIN,
     VERBAND,
-    INDIVIDUELL
+    INDIVIDUELL,
+    KEIN_RABATT
 }

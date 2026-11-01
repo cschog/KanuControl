@@ -14,6 +14,13 @@ public interface MietbereichRabattRepository
             Long mietbereichId
     );
 
+    List<MietbereichRabatt> findByMietbereichIdAndAktivTrue(Long mietbereichId);
+
+    Optional<MietbereichRabatt> findByMietbereichIdAndRabattartAndAktivTrue(
+            Long mietbereichId,
+            Rabattart rabattart
+    );
+
     Optional<MietbereichRabatt> findByIdAndMietbereichId(
             Long id,
             Long mietbereichId

@@ -19,4 +19,5 @@ export interface Mietbereich {
   berechnungsart: Berechnungsart;
 
   zaehlerIds: number[];
+  erforderlicheMietbereichIds?: number[];
 }

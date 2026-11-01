@@ -6,6 +6,7 @@ import RabatteVerwaltung from "@/vermietung/components/verwaltung/RabatteVerwalt
 import SortierungVerwaltung from "@/vermietung/components/verwaltung/SortierungVerwaltung";
 import VerbrauchskostenVerwaltung from "@/vermietung/components/verwaltung/VerbrauchskostenVerwaltung";
 import ZaehlerVerwaltung from "@/vermietung/components/verwaltung/ZaehlerVerwaltung";
+import MietbereichAbhaengigkeitenVerwaltung from "@/vermietung/components/verwaltung/MietbereichAbhaengigkeitenVerwaltung";
 
 const VerwaltungPage = () => {
   const [tab, setTab] = useState(0);
@@ -28,6 +29,7 @@ const VerwaltungPage = () => {
         <Tab label="Verbrauchskosten" />
         <Tab label="Sortierung" />
         <Tab label="Zählerverwaltung" />
+        <Tab label="Abhängigkeiten" />
       </Tabs>
 
       {tab === 0 && <MietpreiseVerwaltung />}
@@ -35,6 +37,7 @@ const VerwaltungPage = () => {
       {tab === 2 && <VerbrauchskostenVerwaltung />}
       {tab === 3 && <SortierungVerwaltung />}
       {tab === 4 && <ZaehlerVerwaltung />}
+      {tab === 5 && <MietbereichAbhaengigkeitenVerwaltung />}
     </Box>
   );
 };

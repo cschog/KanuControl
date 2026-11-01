@@ -13,6 +13,7 @@ import type { Buchungsquelle } from "@/vermietung/enums/Buchungsquelle";
 
 interface Props {
   buchung: Buchung | null;
+  initialZeitraum?: { anreiseDatum: string; abreiseDatum: string } | null;
   editMode: boolean;
 
   onEdit: () => void;
@@ -46,6 +47,7 @@ const statusAnzeige: Record<
 
 export const BuchungFormView: React.FC<Props> = ({
   buchung,
+  initialZeitraum,
   editMode,
   onEdit,
   onCancelEdit,
@@ -65,12 +67,13 @@ export const BuchungFormView: React.FC<Props> = ({
     update,
     resetForm,
     mietbereiche,
+    rabatteByMietbereich,
     mieter,
     veranstalter,
     setMieter,
     setVeranstalter,
     buildSavePayload,
-  } = useBuchungForm(buchung, neueBuchungsquelle);
+  } = useBuchungForm(buchung, neueBuchungsquelle, initialZeitraum ?? undefined);
 
   if (!form) {
     return (
@@ -121,11 +124,13 @@ export const BuchungFormView: React.FC<Props> = ({
       >
         <BuchungBaseForm
           form={form}
+          neueBuchung={!buchung}
           editMode={editMode}
           buchungsdatenEditierbar={
             editMode && buchung?.status !== "STORNIERT" && buchung?.status !== "ABGELEHNT"
           }
           mietbereiche={mietbereiche}
+          rabatteByMietbereich={rabatteByMietbereich}
           mieter={mieter}
           veranstalter={veranstalter}
           buchungspositionen={buchung?.positionen ?? []}

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+            http://www.liquibase.org/xml/ns/dbchangelog
+            https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20261101-02-buchung-rabatt-snapshots" author="chris">
+        <addColumn tableName="buchung">
+            <column name="rabattart" type="VARCHAR(20)" defaultValue="KEIN_RABATT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rabattwert_typ" type="VARCHAR(20)"/>
+            <column name="rabattwert" type="DECIMAL(10,2)"/>
+            <column name="rabattbetrag" type="DECIMAL(10,2)" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <addColumn tableName="buchung_mietbereich">
+            <column name="rabattwert_typ" type="VARCHAR(20)"/>
+            <column name="rabattwert" type="DECIMAL(10,2)"/>
+            <column name="rabattbetrag" type="DECIMAL(10,2)" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

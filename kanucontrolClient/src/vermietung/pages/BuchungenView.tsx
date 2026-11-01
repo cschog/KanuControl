@@ -1,7 +1,7 @@
 // src/vermietung/pages/BuchungenView.tsx
 
 import { useCallback, useEffect, useState } from "react";
-import { Box, Button, MenuItem, TextField, Typography } from "@mui/material";
+import { Box, Button, MenuItem, Tab, Tabs, TextField, Typography } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { getBuchung } from "@/vermietung/api/buchungApi";
 
@@ -21,6 +21,7 @@ import { useVermietungContext } from "@/vermietung/context/VermietungContext";
 import { useBackNavigation } from "@/core/context/BackNavigationContext";
 import type { Buchungsquelle } from "@/vermietung/enums/Buchungsquelle";
 import type { Buchungsstatus } from "@/vermietung/enums/Buchungsstatus";
+import Buchungskalender from "@/vermietung/components/buchung/Buchungskalender";
 
 const BuchungenView = () => {
  const {
@@ -40,8 +41,10 @@ const BuchungenView = () => {
   const [mietobjekte, setMietobjekte] = useState<Mietobjekt[]>([]);
   const [filterMietobjektId, setFilterMietobjektId] = useState<number | "">("");
   const [filterInitialisiert, setFilterInitialisiert] = useState(false);
+  const [ansicht, setAnsicht] = useState<"LISTE" | "KALENDER">("LISTE");
 
   const [showForm, setShowForm] = useState(false);
+  const [initialZeitraum, setInitialZeitraum] = useState<{ anreiseDatum: string; abreiseDatum: string } | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [selectedBuchung, setSelectedBuchung] = useState<Buchung | null>(null);
   const [neueBuchungsquelle, setNeueBuchungsquelle] = useState<Buchungsquelle>("DIREKT");
@@ -96,6 +99,7 @@ const handleReopen = async () => {
   const handleComplete = () => handleStatusChange("ABGESCHLOSSEN");
 
   const handleSelect = async (buchung: Buchung | null) => {
+    setInitialZeitraum(null);
     setSelectedId(buchung?.id ?? null);
     setSelectedBuchung(null);
     setShowForm(!!buchung);
@@ -115,10 +119,14 @@ const handleReopen = async () => {
     }
   };
 
-  const handleNew = (buchungsquelle: Buchungsquelle) => {
+  const handleNew = (
+    buchungsquelle: Buchungsquelle,
+    zeitraum?: { anreiseDatum: string; abreiseDatum: string },
+  ) => {
     setSelectedId(null);
     setSelectedBuchung(null);
     setNeueBuchungsquelle(buchungsquelle);
+    setInitialZeitraum(zeitraum ?? null);
     setShowForm(true);
     setEditMode(true);
   };
@@ -148,6 +156,7 @@ const handleReopen = async () => {
 
       setSelectedBuchung(created);
       setSelectedId(created.id);
+      setInitialZeitraum(null);
       setEditMode(false);
     } catch (err: unknown) {
       console.error("Fehler beim Speichern der Buchung:", err);
@@ -166,11 +175,13 @@ const handleReopen = async () => {
     setSelectedId(null);
     setShowForm(false);
     setEditMode(false);
+    setInitialZeitraum(null);
   };
 
   const handleBack = useCallback(() => {
     setSelectedBuchung(null);
     setSelectedId(null);
+    setInitialZeitraum(null);
     setShowForm(false);
     setEditMode(false);
   }, [setSelectedId]);
@@ -219,16 +230,31 @@ const handleReopen = async () => {
     }
   }, [mietobjekt, filterInitialisiert]);
 
-  const filteredBuchungen =
+  const gefilterteBuchungen =
     filterMietobjektId === ""
       ? buchungen
       : buchungen.filter((buchung) => buchung.mietobjektId === filterMietobjektId);
+
+  // Später beginnende Buchungen stehen oben; fehlende/ungültige Termine kommen ans Ende.
+  const filteredBuchungen = [...gefilterteBuchungen].sort((a, b) => {
+    const beginnA = Date.parse(a.anreise ?? "");
+    const beginnB = Date.parse(b.anreise ?? "");
+    const istBeginnAGueltig = Number.isFinite(beginnA);
+    const istBeginnBGueltig = Number.isFinite(beginnB);
+
+    if (!istBeginnAGueltig || !istBeginnBGueltig) {
+      return Number(istBeginnBGueltig) - Number(istBeginnAGueltig);
+    }
+
+    return beginnB - beginnA;
+  });
 
 if (showForm) {
   return (
     <Box sx={{ p: 3 }}>
       <BuchungFormView
         buchung={selectedBuchung}
+        initialZeitraum={initialZeitraum}
         neueBuchungsquelle={neueBuchungsquelle}
         editMode={editMode}
         onEdit={() => setEditMode(true)}
@@ -332,13 +358,30 @@ if (showForm) {
       </Box>
 
       {/* Tabelle unterhalb des Headers */}
-      <BuchungTable
-        data={filteredBuchungen}
-        selectedId={selectedId}
-        onSelect={handleSelect}
-        sorting={sorting}
-        onSortingChange={setSorting}
-      />
+      <Tabs value={ansicht} onChange={(_, value) => setAnsicht(value)} sx={{ mb: 2 }}>
+        <Tab value="LISTE" label="Liste" />
+        <Tab value="KALENDER" label="Kalender" />
+      </Tabs>
+
+      {ansicht === "LISTE" ? (
+        <BuchungTable
+          data={filteredBuchungen}
+          selectedId={selectedId}
+          onSelect={handleSelect}
+          sorting={sorting}
+          onSortingChange={setSorting}
+        />
+      ) : (
+        <Buchungskalender
+          buchungen={filteredBuchungen}
+          onSelect={(buchung) => void handleSelect(buchung)}
+          canCreateRange={filterMietobjektId !== "" && filterMietobjektId === mietobjekt?.id}
+          onCreateRange={(anreiseDatum, abreiseDatum) => {
+            const buchungsquelle = mietobjekt?.direktbuchungAktiv ? "DIREKT" : "AIRBNB";
+            handleNew(buchungsquelle, { anreiseDatum, abreiseDatum });
+          }}
+        />
+      )}
 
       <ErrorDialog open={!!error} message={error ?? ""} onClose={() => setError(null)} />
     </Box>

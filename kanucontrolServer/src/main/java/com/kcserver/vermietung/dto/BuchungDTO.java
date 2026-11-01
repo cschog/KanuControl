@@ -2,6 +2,8 @@ package com.kcserver.vermietung.dto;
 
 import com.kcserver.vermietung.enumtype.Buchungsquelle;
 import com.kcserver.vermietung.enumtype.Buchungsstatus;
+import com.kcserver.vermietung.enumtype.Rabattart;
+import com.kcserver.vermietung.enumtype.RabattwertTyp;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
@@ -65,4 +67,12 @@ public class BuchungDTO {
     private List<BuchungVerbrauchskostenDTO> verbrauchskosten;
 
     private List<VerbrauchskostenVorschauDTO> verbrauchskostenVorschau;
+
+    private Rabattart rabattart = Rabattart.KEIN_RABATT;
+
+    private RabattwertTyp rabattwertTyp;
+
+    private java.math.BigDecimal rabattwert;
+
+    private java.math.BigDecimal rabattbetrag = java.math.BigDecimal.ZERO;
 }

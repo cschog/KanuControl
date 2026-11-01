@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { getPreis } from "@/vermietung/api/buchungApi";
 import type { Buchungsquelle } from "@/vermietung/enums/Buchungsquelle";
 import {
+  Alert,
   Box,
   Checkbox,
   FormControlLabel,
@@ -25,15 +26,20 @@ import { VereinAutocomplete } from "@/core/components/verein/VereinAutocomplete"
 import type { VerbrauchskostenVorschau } from "@/vermietung/types/VerbrauchskostenVorschau";
 import type { Buchung } from "@/vermietung/types/Buchung";
 import { BERECHNUNGSART_LABELS } from "@/vermietung/enums/Berechnungsart";
+import { Rabattart } from "@/vermietung/enums/Rabattart";
+import { RabattwertTyp } from "@/vermietung/enums/RabattwertTyp";
+import type { MietbereichRabatt } from "@/vermietung/types/MietbereichRabatt";
 
 interface Props {
   form: BuchungSave;
+  neueBuchung: boolean;
   editMode: boolean;
   mietbereiche: Mietbereich[];
+  rabatteByMietbereich: Record<number, MietbereichRabatt[]>;
   mieter?: PersonRef;
   veranstalter?: VereinRef;
   buchungspositionen: Buchung["positionen"];
-  createdAt?: string;
+  createdAt?: string | null;
   buchungsquelle: Buchungsquelle;
   buchungsdatenEditierbar: boolean;
   verbrauchskosten: Buchung["verbrauchskosten"];
@@ -148,9 +154,11 @@ const formatDatumZeit = (wert?: string | null) => {
 
 export const BuchungBaseForm: React.FC<Props> = ({
   form,
+  neueBuchung,
   editMode,
   buchungsdatenEditierbar,
   mietbereiche,
+  rabatteByMietbereich,
   mieter,
   veranstalter,
   onMieterChange,
@@ -163,13 +171,14 @@ export const BuchungBaseForm: React.FC<Props> = ({
   verbrauchskostenVorschau,
   buchungsstatus,
 }) => {
+  const [voraussetzungsFehler, setVoraussetzungsFehler] = useState<string | null>(null);
   const gefilterteMietbereiche = mietbereiche.filter((mietbereich) =>
     form.buchungsquelle === "DIREKT" ? mietbereich.direktbuchungAktiv : mietbereich.airbnbAktiv,
   );
 
   const stichtag = createdAt ? createdAt.slice(0, 10) : new Date().toLocaleDateString("sv-SE");
 
-  const { mietobjekt } = useVermietungContext();
+  const { mietobjekt, loading: mietobjektLoading } = useVermietungContext();
 
   const { preise: geladenePreise, ladefehler } = useMietbereichPreise(
     form.positionen.map((position) => position.mietbereichId),
@@ -203,6 +212,94 @@ export const BuchungBaseForm: React.FC<Props> = ({
     );
   });
 
+  const rabattbetrag = (() => {
+    if (form.rabattart === Rabattart.INDIVIDUELL && form.rabattwertTyp === RabattwertTyp.ABSOLUT) {
+      return Math.min(gesamtpreis, Math.max(0, form.rabattwert ?? 0));
+    }
+
+    return form.positionen.reduce((summe, position) => {
+      const areaPrice = buchungspositionen.find((item) => item.mietbereichId === position.mietbereichId)?.vereinbarterPreis
+        ?? geladenePreise[position.mietbereichId];
+      if (areaPrice === undefined || ladefehler[position.mietbereichId]) return summe;
+
+      const positionspreis = areaPrice * position.anzahl;
+      const aktiveRabatte = (rabatteByMietbereich[position.mietbereichId] ?? []).filter((rabatt) => rabatt.aktiv);
+      let regel: MietbereichRabatt | undefined;
+      let wertTyp: RabattwertTyp | null = null;
+      let wert: number | null = null;
+
+      if (form.rabattart === Rabattart.INDIVIDUELL && form.rabattwertTyp === RabattwertTyp.PROZENTUAL) {
+        if (aktiveRabatte.length > 0) {
+          wertTyp = RabattwertTyp.PROZENTUAL;
+          wert = form.rabattwert ?? 0;
+        }
+      } else if (form.rabattart === Rabattart.VEREIN || form.rabattart === Rabattart.VERBAND) {
+        regel = aktiveRabatte.find((rabatt) => rabatt.rabattart === form.rabattart);
+        wertTyp = regel?.rabattwertTyp ?? null;
+        wert = regel?.rabattwert ?? null;
+      }
+
+      if (wertTyp === RabattwertTyp.PROZENTUAL && wert != null) {
+        return summe + Math.min(positionspreis, positionspreis * wert / 100);
+      }
+      if (wertTyp === RabattwertTyp.ABSOLUT && wert != null) {
+        return summe + Math.min(positionspreis, wert);
+      }
+      return summe;
+    }, 0);
+  })();
+
+  const mietpreisNachRabatt = Math.max(0, gesamtpreis - rabattbetrag);
+  const standardzeitenFehlen = Boolean(
+    !mietobjekt?.anreisezeit || (!form.unbefristet && !mietobjekt?.abreisezeit),
+  );
+
+  const findeVoraussetzungen = (bereichId: number, besucht = new Set<number>()): number[] | null => {
+    if (besucht.has(bereichId)) return [];
+    besucht.add(bereichId);
+    const bereich = gefilterteMietbereiche.find((item) => item.id === bereichId);
+    if (!bereich) return null;
+    const ergebnis = new Set<number>();
+    for (const voraussetzungId of bereich.erforderlicheMietbereichIds ?? []) {
+      const weitere = findeVoraussetzungen(voraussetzungId, besucht);
+      if (weitere === null) return null;
+      ergebnis.add(voraussetzungId);
+      weitere.forEach((id) => ergebnis.add(id));
+    }
+    return [...ergebnis];
+  };
+
+  const aendereMietbereichAuswahl = (bereichId: number, ausgewaehlt: boolean) => {
+    setVoraussetzungsFehler(null);
+    if (ausgewaehlt) {
+      const voraussetzungen = findeVoraussetzungen(bereichId);
+      if (voraussetzungen === null) {
+        setVoraussetzungsFehler("Ein benötigter Mietbereich ist für diese Buchungsquelle nicht verfügbar.");
+        return;
+      }
+      const ids = new Set([...form.positionen.map((position) => position.mietbereichId), bereichId, ...voraussetzungen]);
+      onChange("positionen", [...ids].map((id) =>
+        form.positionen.find((position) => position.mietbereichId === id) ?? { mietbereichId: id, anzahl: 1 },
+      ));
+      return;
+    }
+
+    const zuEntfernendeIds = new Set<number>([bereichId]);
+    let erweitert = true;
+    while (erweitert) {
+      erweitert = false;
+      for (const position of form.positionen) {
+        if (zuEntfernendeIds.has(position.mietbereichId)) continue;
+        const mietbereich = gefilterteMietbereiche.find((item) => item.id === position.mietbereichId);
+        if ((mietbereich?.erforderlicheMietbereichIds ?? []).some((id) => zuEntfernendeIds.has(id))) {
+          zuEntfernendeIds.add(position.mietbereichId);
+          erweitert = true;
+        }
+      }
+    }
+    onChange("positionen", form.positionen.filter((position) => !zuEntfernendeIds.has(position.mietbereichId)));
+  };
+
   return (
     <>
       {/* Linke Spalte: Buchungsdaten */}
@@ -235,11 +332,27 @@ export const BuchungBaseForm: React.FC<Props> = ({
             gap: 2,
           }}
         >
+          {neueBuchung && buchungsdatenEditierbar && mietobjektLoading && (
+            <Alert severity="info" sx={{ gridColumn: "1 / -1" }}>
+              Das aktive Mietobjekt und seine Standardzeiten werden geladen.
+            </Alert>
+          )}
+          {neueBuchung && buchungsdatenEditierbar && !mietobjektLoading && !mietobjekt && (
+            <Alert severity="error" sx={{ gridColumn: "1 / -1" }}>
+              Es ist kein aktives Mietobjekt ausgewählt. Eine Buchung ist erst möglich, wenn ein Mietobjekt aktiviert ist.
+            </Alert>
+          )}
+          {neueBuchung && buchungsdatenEditierbar && !mietobjektLoading && mietobjekt && standardzeitenFehlen && (
+            <Alert severity="warning" sx={{ gridColumn: "1 / -1" }}>
+              Für dieses Mietobjekt fehlen Standardzeiten. Bitte hinterlege die Standard-Anreisezeit
+              {!form.unbefristet && " und Standard-Abreisezeit"} unter VERMIETUNG → Mietobjekte.
+            </Alert>
+          )}
           <FormFeld
             label="Beginn"
             type="date"
             value={form.anreise?.slice(0, 10) ?? ""}
-            disabled={!buchungsdatenEditierbar}
+            disabled={!buchungsdatenEditierbar || (neueBuchung && (mietobjektLoading || !mietobjekt?.anreisezeit))}
             slotProps={{ inputLabel: { shrink: true } }}
             onChange={(datum) => {
               if (!datum) {
@@ -263,7 +376,7 @@ export const BuchungBaseForm: React.FC<Props> = ({
             label="Uhrzeit"
             type="time"
             value={form.anreise?.slice(11, 16) ?? ""}
-            disabled={!buchungsdatenEditierbar}
+            disabled={!buchungsdatenEditierbar || (neueBuchung && (mietobjektLoading || !mietobjekt?.anreisezeit))}
             fullWidth
             size="small"
             slotProps={{
@@ -283,7 +396,7 @@ export const BuchungBaseForm: React.FC<Props> = ({
           control={
             <Checkbox
               checked={form.unbefristet ?? false}
-              disabled={!buchungsdatenEditierbar}
+              disabled={!buchungsdatenEditierbar || (neueBuchung && (mietobjektLoading || !mietobjekt?.abreisezeit))}
               onChange={(event) => onChange("unbefristet", event.target.checked)}
             />
           }
@@ -302,7 +415,7 @@ export const BuchungBaseForm: React.FC<Props> = ({
               label="Ende"
               type="date"
               value={form.abreise?.slice(0, 10) ?? ""}
-              disabled={!buchungsdatenEditierbar}
+              disabled={!buchungsdatenEditierbar || (neueBuchung && (mietobjektLoading || !mietobjekt?.abreisezeit))}
               slotProps={{ inputLabel: { shrink: true } }}
               onChange={(datum) => {
                 if (!datum) {
@@ -373,6 +486,43 @@ export const BuchungBaseForm: React.FC<Props> = ({
             </MenuItem>
           ))}
         </TextField>
+
+        <TextField
+          select
+          label="Rabatt"
+          value={form.rabattart ?? Rabattart.KEIN_RABATT}
+          disabled={!buchungsdatenEditierbar}
+          fullWidth
+          onChange={(event) => onChange("rabattart", event.target.value as Rabattart)}
+        >
+          <MenuItem value={Rabattart.KEIN_RABATT}>Kein Rabatt</MenuItem>
+          <MenuItem value={Rabattart.VEREIN}>Vereinsrabatt</MenuItem>
+          <MenuItem value={Rabattart.VERBAND}>Verbandsrabatt</MenuItem>
+          <MenuItem value={Rabattart.INDIVIDUELL}>Individueller Rabatt</MenuItem>
+        </TextField>
+
+        {form.rabattart === Rabattart.INDIVIDUELL && (
+          <Box sx={{ display: "grid", gridTemplateColumns: "minmax(120px, 1fr) minmax(110px, 1fr)", gap: 1 }}>
+            <TextField
+              select
+              label="Rabattart"
+              value={form.rabattwertTyp ?? RabattwertTyp.PROZENTUAL}
+              disabled={!buchungsdatenEditierbar}
+              onChange={(event) => onChange("rabattwertTyp", event.target.value as RabattwertTyp)}
+            >
+              <MenuItem value={RabattwertTyp.PROZENTUAL}>Prozent</MenuItem>
+              <MenuItem value={RabattwertTyp.ABSOLUT}>Euro</MenuItem>
+            </TextField>
+            <TextField
+              label={form.rabattwertTyp === RabattwertTyp.PROZENTUAL ? "Prozent" : "Betrag (€)"}
+              type="number"
+              value={form.rabattwert ?? 0}
+              disabled={!buchungsdatenEditierbar}
+              slotProps={{ htmlInput: { min: 0, ...(form.rabattwertTyp === RabattwertTyp.PROZENTUAL ? { max: 100 } : {}), step: "0.01" }}}
+              onChange={(event) => onChange("rabattwert", event.target.value === "" ? 0 : Number(event.target.value))}
+            />
+          </Box>
+        )}
       </Box>
 
       {/* Mittlere Spalte: Mietbereiche und Positionen */}
@@ -385,18 +535,28 @@ export const BuchungBaseForm: React.FC<Props> = ({
           }}
         >
           <Box sx={{ mb: 2 }}>
-            <Typography variant="subtitle2" color="text.secondary">
-              Voraussichtliche Gesamteinnahmen
-            </Typography>
-
-            <Typography variant="h5" fontWeight={700} sx={{ mt: 0.5 }}>
+            <Typography variant="subtitle2" color="text.secondary">Mietpreis vor Rabatt</Typography>
+            <Typography variant="h6" fontWeight={600} sx={{ mt: 0.5 }}>
               {gesamtpreisVollstaendig ? formatPreis(gesamtpreis) : "Preise werden ermittelt …"}
             </Typography>
+            {rabattbetrag > 0 && (
+              <>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>Rabatt</Typography>
+                <Typography variant="body1" color="success.main">− {formatPreis(rabattbetrag)}</Typography>
+              </>
+            )}
+            <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 0.75 }}>Mietpreis nach Rabatt</Typography>
+            <Typography variant="h5" fontWeight={700} sx={{ mt: 0.5 }}>
+              {gesamtpreisVollstaendig ? formatPreis(mietpreisNachRabatt) : "Preise werden ermittelt …"}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">Verbrauchskosten sind nicht rabattiert.</Typography>
           </Box>
 
           <Typography variant="subtitle1" fontWeight={600} color="text.secondary" sx={{ mb: 1.5 }}>
             Mietbereiche / Positionen
           </Typography>
+
+          {voraussetzungsFehler && <Alert severity="error" sx={{ mb: 1.5 }}>{voraussetzungsFehler}</Alert>}
 
           {gefilterteMietbereiche.length === 0 ? (
             <Typography variant="body2" color="text.secondary">
@@ -447,21 +607,7 @@ export const BuchungBaseForm: React.FC<Props> = ({
                           checked={selected}
                           disabled={!buchungsdatenEditierbar}
                           onChange={(event) => {
-                            const checked = event.target.checked;
-
-                            const positionen = checked
-                              ? [
-                                  ...form.positionen,
-                                  {
-                                    mietbereichId: mietbereich.id,
-                                    anzahl: 1,
-                                  },
-                                ]
-                              : form.positionen.filter(
-                                  (item) => item.mietbereichId !== mietbereich.id,
-                                );
-
-                            onChange("positionen", positionen);
+                            aendereMietbereichAuswahl(mietbereich.id, event.target.checked);
                           }}
                         />
                       }
@@ -474,6 +620,15 @@ export const BuchungBaseForm: React.FC<Props> = ({
                           >
                             {mietbereich.bezeichnung}
                           </Typography>
+
+                          {(mietbereich.erforderlicheMietbereichIds ?? []).length > 0 && (
+                            <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                              Erfordert: {gefilterteMietbereiche
+                                .filter((item) => (mietbereich.erforderlicheMietbereichIds ?? []).includes(item.id))
+                                .map((item) => item.bezeichnung)
+                                .join(", ") || "einen anderen Mietbereich"}
+                            </Typography>
+                          )}
 
                           <Typography variant="caption" color="text.secondary">
                             Bestand: {mietbereich.bestand}

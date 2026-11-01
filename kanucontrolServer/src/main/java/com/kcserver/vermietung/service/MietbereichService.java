@@ -157,6 +157,83 @@ public class MietbereichService {
         return toDTO(mietbereichRepository.save(bereich));
     }
 
+    public MietbereichDTO setVoraussetzungen(
+            Long mietobjektId,
+            Long mietbereichId,
+            Set<Long> erforderlicheMietbereichIds
+    ) {
+        Mietbereich bereich = mietbereichRepository.findById(mietbereichId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        ErrorMessages.MIETBEREICH_NOT_FOUND
+                ));
+
+        if (!bereich.getMietobjekt().getId().equals(mietobjektId)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    ErrorMessages.MIETBEREICH_WRONG_MIETOBJEKT
+            );
+        }
+
+        Set<Long> ids = erforderlicheMietbereichIds == null
+                ? Set.of()
+                : erforderlicheMietbereichIds;
+        if (!bereich.isMietbar()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Für einen nicht mietbaren Mietbereich können keine Voraussetzungen festgelegt werden."
+            );
+        }
+        if (ids.contains(mietbereichId)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Ein Mietbereich kann nicht sich selbst voraussetzen."
+            );
+        }
+
+        List<Mietbereich> voraussetzungen = mietbereichRepository.findAllById(ids);
+        if (voraussetzungen.size() != ids.size()
+                || voraussetzungen.stream().anyMatch(voraussetzung ->
+                !voraussetzung.getMietobjekt().getId().equals(mietobjektId)
+                        || !voraussetzung.isMietbar())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Voraussetzungen müssen Mietbereiche desselben Mietobjekts sein."
+            );
+        }
+
+        for (Mietbereich voraussetzung : voraussetzungen) {
+            if (erreichtMietbereich(voraussetzung, mietbereichId, new HashSet<>())) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Die Abhängigkeit würde einen Kreis erzeugen."
+                );
+            }
+        }
+
+        bereich.setVoraussetzungen(new HashSet<>(voraussetzungen));
+        return toDTO(mietbereichRepository.save(bereich));
+    }
+
+    private boolean erreichtMietbereich(
+            Mietbereich start,
+            Long gesucht,
+            Set<Long> besucht
+    ) {
+        if (start.getId().equals(gesucht)) {
+            return true;
+        }
+        if (!besucht.add(start.getId())) {
+            return false;
+        }
+        return start.getVoraussetzungen().stream()
+                .anyMatch(voraussetzung -> erreichtMietbereich(
+                        voraussetzung,
+                        gesucht,
+                        besucht
+                ));
+    }
+
     public void delete(Long mietobjektId, Long id) {
 
         Mietbereich bereich = mietbereichRepository.findById(id)
@@ -275,6 +352,13 @@ public class MietbereichService {
         dto.setMengeneinheit(bereich.getMengeneinheit());
         dto.setSortierung(bereich.getSortierung());
         dto.setBerechnungsart(bereich.getBerechnungsart());
+        dto.setErforderlicheMietbereichIds(
+                bereich.getVoraussetzungen() == null
+                        ? new HashSet<>()
+                        : bereich.getVoraussetzungen().stream()
+                        .map(Mietbereich::getId)
+                        .collect(Collectors.toSet())
+        );
         dto.setZaehlerIds(
                 bereich.getZaehler() == null
                         ? new HashSet<>()

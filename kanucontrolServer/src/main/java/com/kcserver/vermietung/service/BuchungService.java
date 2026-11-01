@@ -11,12 +11,16 @@ import com.kcserver.vermietung.dto.BuchungVerbrauchskostenDTO;
 import com.kcserver.vermietung.entity.*;
 import com.kcserver.vermietung.enumtype.Buchungsquelle;
 import com.kcserver.vermietung.enumtype.Buchungsstatus;
+import com.kcserver.vermietung.enumtype.Rabattart;
+import com.kcserver.vermietung.enumtype.RabattwertTyp;
 import com.kcserver.vermietung.repository.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.*;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 
 @Slf4j
@@ -32,6 +36,7 @@ public class BuchungService {
     private final MietobjektRepository mietobjektRepository;
     private final MietbereichRepository mietbereichRepository;
     private final MietpreisRepository mietpreisRepository;
+    private final MietbereichRabattRepository mietbereichRabattRepository;
     private final ZaehlerRepository zaehlerRepository;
     private final ZaehlerstandRepository zaehlerstandRepository;
     private final VerbrauchsabrechnungService
@@ -50,6 +55,7 @@ public class BuchungService {
             MietobjektRepository mietobjektRepository,
             MietbereichRepository mietbereichRepository,
             MietpreisRepository mietpreisRepository,
+            MietbereichRabattRepository mietbereichRabattRepository,
             ZaehlerRepository zaehlerRepository,
             ZaehlerstandRepository zaehlerstandRepository,
             VerbrauchsabrechnungService verbrauchsabrechnungService,
@@ -63,6 +69,7 @@ public class BuchungService {
         this.mietobjektRepository = mietobjektRepository;
         this.mietbereichRepository = mietbereichRepository;
         this.mietpreisRepository = mietpreisRepository;
+        this.mietbereichRabattRepository = mietbereichRabattRepository;
         this.zaehlerRepository = zaehlerRepository;
         this.zaehlerstandRepository = zaehlerstandRepository;
         this.verbrauchsabrechnungService = verbrauchsabrechnungService;
@@ -206,6 +213,9 @@ public class BuchungService {
                 buchung.getBuchungsquelle()
         );
 
+        validiereMietbereichVoraussetzungen(buchung);
+        berechneBuchungsrabatt(buchung, dto, false);
+
         buchungRepository.flush();
 
         return toDTO(buchung);
@@ -261,6 +271,11 @@ public class BuchungService {
             return toDTO(buchungRepository.save(buchung));
         }
 
+        boolean rabattAuswahlUnveraendert =
+                Objects.equals(buchung.getRabattart(), dto.getRabattart())
+                        && Objects.equals(buchung.getRabattwertTyp(), dto.getRabattwertTyp())
+                        && Objects.equals(buchung.getRabattwert(), dto.getRabattwert());
+
         Person mieter = getMieter(dto.getMieterId());
 
         Mietobjekt mietobjekt =
@@ -312,6 +327,15 @@ public class BuchungService {
                 mietobjekt,
                 buchung.getBuchungsquelle()
         );
+
+        validiereMietbereichVoraussetzungen(buchung);
+
+        if (buchung.getStatus() == Buchungsstatus.RESERVIERT
+                || buchung.getStatus() == Buchungsstatus.BESTAETIGT) {
+            pruefeBestand(buchung, buchung.getId());
+        }
+
+        berechneBuchungsrabatt(buchung, dto, rabattAuswahlUnveraendert);
 
         buchungRepository.flush();
 
@@ -587,6 +611,10 @@ public class BuchungService {
 
         dto.setStatus(buchung.getStatus());
         dto.setBuchungsquelle(buchung.getBuchungsquelle());
+        dto.setRabattart(buchung.getRabattart());
+        dto.setRabattwertTyp(buchung.getRabattwertTyp());
+        dto.setRabattwert(buchung.getRabattwert());
+        dto.setRabattbetrag(buchung.getRabattbetrag());
 
         dto.setAnreise(buchung.getAnreise());
         dto.setAbreise(buchung.getAbreise());
@@ -636,6 +664,12 @@ public class BuchungService {
                             position.setBerechnungsart(
                                     zuordnung.getBerechnungsart()
                             );
+
+                            position.setRabattwertTyp(
+                                    zuordnung.getRabattwertTyp()
+                            );
+                            position.setRabattwert(zuordnung.getRabattwert());
+                            position.setRabattbetrag(zuordnung.getRabattbetrag());
 
                             return position;
                         })
@@ -944,6 +978,151 @@ public class BuchungService {
                         position.getMietbereich().getId()
                 )
         );
+    }
+
+    private void berechneBuchungsrabatt(
+            Buchung buchung,
+            BuchungDTO dto,
+            boolean rabattAuswahlUnveraendert
+    ) {
+        Rabattart rabattart = dto.getRabattart() == null
+                ? Rabattart.KEIN_RABATT
+                : dto.getRabattart();
+        RabattwertTyp rabattwertTyp = dto.getRabattwertTyp();
+        BigDecimal rabattwert = dto.getRabattwert();
+
+        if (rabattart == Rabattart.INDIVIDUELL) {
+            if (rabattwertTyp == null || rabattwert == null || rabattwert.signum() < 0) {
+                throw new IllegalArgumentException(
+                        "Für einen individuellen Rabatt müssen Werttyp und ein nicht negativer Betrag angegeben werden."
+                );
+            }
+            if (rabattwertTyp == RabattwertTyp.PROZENTUAL
+                    && rabattwert.compareTo(new BigDecimal("100")) > 0) {
+                throw new IllegalArgumentException(
+                        "Ein prozentualer Rabatt darf maximal 100 % betragen."
+                );
+            }
+        } else {
+            rabattwertTyp = null;
+            rabattwert = null;
+        }
+
+        buchung.setRabattart(rabattart);
+        buchung.setRabattwertTyp(rabattwertTyp);
+        buchung.setRabattwert(rabattwert);
+
+        BigDecimal gesamtMietpreis = buchung.getMietbereiche().stream()
+                .map(this::berechnePositionspreis)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal gesamtrabatt = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+
+        if (rabattart == Rabattart.INDIVIDUELL
+                && rabattwertTyp == RabattwertTyp.ABSOLUT) {
+            gesamtrabatt = rabattwert.min(gesamtMietpreis).setScale(2, RoundingMode.HALF_UP);
+            buchung.getMietbereiche().forEach(position -> {
+                position.setRabattwertTyp(null);
+                position.setRabattwert(null);
+                position.setRabattbetrag(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
+            });
+            buchung.setRabattbetrag(gesamtrabatt);
+            return;
+        }
+
+        for (BuchungMietbereich position : buchung.getMietbereiche()) {
+            RabattwertTyp positionsRabattwertTyp = null;
+            BigDecimal positionsRabattwert = null;
+
+            boolean bestehenderSnapshot = rabattAuswahlUnveraendert
+                    && position.getId() != null;
+
+            if (bestehenderSnapshot) {
+                positionsRabattwertTyp = position.getRabattwertTyp();
+                positionsRabattwert = position.getRabattwert();
+            } else if (rabattart == Rabattart.VEREIN
+                    || rabattart == Rabattart.VERBAND) {
+                MietbereichRabatt regel = mietbereichRabattRepository
+                        .findByMietbereichIdAndRabattartAndAktivTrue(
+                                position.getMietbereich().getId(),
+                                rabattart
+                        )
+                        .orElse(null);
+                if (regel != null) {
+                    positionsRabattwertTyp = regel.getRabattwertTyp();
+                    positionsRabattwert = regel.getRabattwert();
+                }
+            } else if (rabattart == Rabattart.INDIVIDUELL
+                    && rabattwertTyp == RabattwertTyp.PROZENTUAL) {
+                boolean rabattierbar = !mietbereichRabattRepository
+                        .findByMietbereichIdAndAktivTrue(
+                                position.getMietbereich().getId()
+                        )
+                        .isEmpty();
+                if (rabattierbar) {
+                    positionsRabattwertTyp = rabattwertTyp;
+                    positionsRabattwert = rabattwert;
+                }
+            }
+
+            BigDecimal positionspreis = berechnePositionspreis(position);
+            BigDecimal positionsrabatt = berechnePositionsrabatt(
+                    positionspreis,
+                    positionsRabattwertTyp,
+                    positionsRabattwert
+            );
+
+            position.setRabattwertTyp(positionsRabattwertTyp);
+            position.setRabattwert(positionsRabattwert);
+            position.setRabattbetrag(positionsrabatt);
+            gesamtrabatt = gesamtrabatt.add(positionsrabatt);
+        }
+
+        buchung.setRabattbetrag(gesamtrabatt.setScale(2, RoundingMode.HALF_UP));
+    }
+
+    private BigDecimal berechnePositionspreis(BuchungMietbereich position) {
+        if (position.getVereinbarterPreis() == null || position.getAnzahl() == null) {
+            return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+        }
+        return position.getVereinbarterPreis()
+                .multiply(BigDecimal.valueOf(position.getAnzahl()))
+                .setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private void validiereMietbereichVoraussetzungen(Buchung buchung) {
+        Set<Long> ausgewaehlteIds = buchung.getMietbereiche().stream()
+                .map(position -> position.getMietbereich().getId())
+                .collect(java.util.stream.Collectors.toSet());
+
+        for (BuchungMietbereich position : buchung.getMietbereiche()) {
+            Mietbereich bereich = position.getMietbereich();
+            for (Mietbereich voraussetzung : bereich.getVoraussetzungen()) {
+                if (!ausgewaehlteIds.contains(voraussetzung.getId())) {
+                    throw new IllegalArgumentException(
+                            "Der Mietbereich '" + bereich.getBezeichnung()
+                                    + "' kann nur zusammen mit '"
+                                    + voraussetzung.getBezeichnung() + "' gebucht werden."
+                    );
+                }
+            }
+        }
+    }
+
+    private BigDecimal berechnePositionsrabatt(
+            BigDecimal positionspreis,
+            RabattwertTyp rabattwertTyp,
+            BigDecimal rabattwert
+    ) {
+        if (rabattwertTyp == null || rabattwert == null || positionspreis.signum() <= 0) {
+            return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+        }
+
+        BigDecimal rabatt = rabattwertTyp == RabattwertTyp.PROZENTUAL
+                ? positionspreis.multiply(rabattwert)
+                        .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP)
+                : rabattwert.min(positionspreis);
+
+        return rabatt.min(positionspreis).setScale(2, RoundingMode.HALF_UP);
     }
 
     private void setzeBuchungspositionen(

@@ -3,12 +3,18 @@ import type { Buchungsquelle } from "@/vermietung/enums/Buchungsquelle";
 import { Berechnungsart } from "@/vermietung/enums/Berechnungsart";
 import type { BuchungVerbrauchskosten } from "@/vermietung/types/BuchungVerbrauchskosten";
 import type { VerbrauchskostenVorschau } from "./VerbrauchskostenVorschau";
+import type { Rabattart } from "@/vermietung/enums/Rabattart";
+import type { RabattwertTyp } from "@/vermietung/enums/RabattwertTyp";
 
 export interface BuchungPosition {
   mietbereichId: number;
+  mietbereichBezeichnung?: string;
   anzahl: number;
   vereinbarterPreis?: number;
   berechnungsart?: Berechnungsart;
+  rabattwertTyp?: RabattwertTyp | null;
+  rabattwert?: number | null;
+  rabattbetrag?: number;
 }
 
 export interface Buchung {
@@ -17,7 +23,7 @@ export interface Buchung {
   status: Buchungsstatus;
   buchungsquelle: Buchungsquelle;
 
-  createdAt: string;
+  createdAt: string | null;
 
   anreise: string;
   abreise: string;
@@ -38,6 +44,11 @@ export interface Buchung {
 
   bemerkung?: string | null;
   bewertung?: number | null;
+
+  rabattart: Rabattart;
+  rabattwertTyp?: RabattwertTyp | null;
+  rabattwert?: number | null;
+  rabattbetrag: number;
 
   verbrauchskosten?: BuchungVerbrauchskosten[];
   verbrauchskostenVorschau: VerbrauchskostenVorschau[];

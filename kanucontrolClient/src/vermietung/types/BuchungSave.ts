@@ -1,5 +1,7 @@
 import type { Buchungsstatus } from "@/vermietung/enums/Buchungsstatus";
 import type { Buchungsquelle } from "@/vermietung/enums/Buchungsquelle";
+import type { Rabattart } from "@/vermietung/enums/Rabattart";
+import type { RabattwertTyp } from "@/vermietung/enums/RabattwertTyp";
 
 export interface BuchungPositionSave {
   mietbereichId: number;
@@ -25,4 +27,8 @@ export interface BuchungSave {
   
   bemerkung: string;
   bewertung: number | null;
+
+  rabattart: Rabattart;
+  rabattwertTyp: RabattwertTyp | null;
+  rabattwert: number | null;
 }

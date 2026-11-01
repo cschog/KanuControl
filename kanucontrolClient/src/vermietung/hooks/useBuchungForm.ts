@@ -9,6 +9,10 @@ import { getPersonById } from "@/core/api/services/personApi";
 
 import type { Buchung } from "@/vermietung/types/Buchung";
 import type { BuchungSave, BuchungPositionSave } from "@/vermietung/types/BuchungSave";
+import type { MietbereichRabatt } from "@/vermietung/types/MietbereichRabatt";
+import { getMietbereichRabatte } from "@/vermietung/api/mietbereichRabattApi";
+import { Rabattart } from "@/vermietung/enums/Rabattart";
+import { RabattwertTyp } from "@/vermietung/enums/RabattwertTyp";
 import { useVermietungContext } from "@/vermietung/context/VermietungContext";
 import type { Buchungsquelle } from "@/vermietung/enums/Buchungsquelle";
 
@@ -25,19 +29,20 @@ const createInitialForm = (buchungsquelle: Buchungsquelle = "DIREKT"): BuchungSa
   buchungsquelle,
   bemerkung: "",
   bewertung: null,
+  rabattart: Rabattart.KEIN_RABATT,
+  rabattwertTyp: RabattwertTyp.PROZENTUAL,
+  rabattwert: 0,
 });
 
-const kombiniereDatumUndZeit = (datum: string, zeit: string | null | undefined): string => {
-  if (!datum || !zeit) return "";
-
-  const formatierteZeit = zeit.length === 5 ? `${zeit}:00` : zeit;
-
-  return `${datum}T${formatierteZeit}`;
+const datumMitZeit = (datum: string, zeit: string | null | undefined): string => {
+  const formatierteZeit = !zeit ? "00:00:00" : zeit.length === 5 ? `${zeit}:00` : zeit;
+  return datum ? `${datum}T${formatierteZeit}` : "";
 };
 
 export function useBuchungForm(
   buchung: Buchung | null,
   neueBuchungsquelle: Buchungsquelle = "DIREKT",
+  initialZeitraum?: { anreiseDatum: string; abreiseDatum: string },
 ) {
   const { mietobjekt } = useVermietungContext();
 
@@ -46,6 +51,7 @@ export function useBuchungForm(
   const [mieter, setMieter] = useState<PersonRef | undefined>();
   const [veranstalter, setVeranstalter] = useState<VereinRef | undefined>();
   const [mietbereiche, setMietbereiche] = useState<Mietbereich[]>([]);
+  const [rabatteByMietbereich, setRabatteByMietbereich] = useState<Record<number, MietbereichRabatt[]>>({});
 
   useEffect(() => {
     if (buchung) {
@@ -70,24 +76,26 @@ export function useBuchungForm(
         buchungsquelle: buchung.buchungsquelle,
         bemerkung: buchung.bemerkung ?? "",
         bewertung: buchung.bewertung ?? null,
+        rabattart: buchung.rabattart ?? Rabattart.KEIN_RABATT,
+        rabattwertTyp: buchung.rabattwertTyp ?? RabattwertTyp.PROZENTUAL,
+        rabattwert: buchung.rabattwert ?? 0,
       });
 
       return;
     }
 
-   if (mietobjekt) {
-     const initialForm = createInitialForm(neueBuchungsquelle);
-
-     setForm({
-       ...initialForm,
-       mietobjektId: mietobjekt.id,
-       anreise: kombiniereDatumUndZeit(initialForm.anreise, mietobjekt.anreisezeit),
-       abreise: kombiniereDatumUndZeit(initialForm.abreise, mietobjekt.abreisezeit),
-     });
-   } else {
-     setForm(createInitialForm(neueBuchungsquelle));
-   }
-  }, [buchung, mietobjekt, neueBuchungsquelle]);
+    setForm((current) => ({
+      ...current,
+      mietobjektId: mietobjekt?.id ?? current.mietobjektId,
+      buchungsquelle: neueBuchungsquelle,
+      ...(initialZeitraum
+        ? {
+            anreise: datumMitZeit(initialZeitraum.anreiseDatum, mietobjekt?.anreisezeit),
+            abreise: datumMitZeit(initialZeitraum.abreiseDatum, mietobjekt?.abreisezeit),
+          }
+        : {}),
+    }));
+  }, [buchung, mietobjekt?.id, neueBuchungsquelle, initialZeitraum?.anreiseDatum, initialZeitraum?.abreiseDatum]);
 
   const resetForm = () => {
     if (buchung) {
@@ -112,6 +120,9 @@ export function useBuchungForm(
         buchungsquelle: buchung.buchungsquelle,
         bemerkung: buchung.bemerkung ?? "",
         bewertung: buchung.bewertung ?? null,
+        rabattart: buchung.rabattart ?? Rabattart.KEIN_RABATT,
+        rabattwertTyp: buchung.rabattwertTyp ?? RabattwertTyp.PROZENTUAL,
+        rabattwert: buchung.rabattwert ?? 0,
       });
 
       return;
@@ -160,16 +171,28 @@ export function useBuchungForm(
 
     if (!mietobjektId) {
       setMietbereiche([]);
+      setRabatteByMietbereich({});
       return;
     }
 
     const loadMietbereiche = async () => {
       try {
         const data = await getMietbereiche(mietobjektId);
-        setMietbereiche(data.filter((mietbereich) => mietbereich.mietbar));
+        const mietbareBereiche = data.filter((mietbereich) => mietbereich.mietbar);
+        setMietbereiche(mietbareBereiche);
+        const rabatte = await Promise.all(mietbareBereiche.map(async (bereich) => {
+          try {
+            return [bereich.id, await getMietbereichRabatte(mietobjektId, bereich.id)] as const;
+          } catch (error) {
+            console.error(`Rabatte für Mietbereich ${bereich.id} konnten nicht geladen werden:`, error);
+            return [bereich.id, []] as const;
+          }
+        }));
+        setRabatteByMietbereich(Object.fromEntries(rabatte));
       } catch (error) {
         console.error("Fehler beim Laden der Mietbereiche:", error);
         setMietbereiche([]);
+        setRabatteByMietbereich({});
       }
     };
 
@@ -262,6 +285,7 @@ return {
   update,
   resetForm,
   mietbereiche: gefilterteMietbereiche,
+  rabatteByMietbereich,
   mieter,
   veranstalter,
   setMieter: handleMieterChange,

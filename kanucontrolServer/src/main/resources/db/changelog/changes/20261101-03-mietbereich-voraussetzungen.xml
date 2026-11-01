@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+            http://www.liquibase.org/xml/ns/dbchangelog
+            https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20261101-03-mietbereich-voraussetzungen" author="chris">
+        <createTable tableName="mietbereich_voraussetzung">
+            <column name="mietbereich_id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true"
+                             primaryKeyName="pk_mietbereich_voraussetzung"/>
+            </column>
+            <column name="erforderlicher_mietbereich_id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true"
+                             primaryKeyName="pk_mietbereich_voraussetzung"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="mietbereich_voraussetzung"
+                baseColumnNames="mietbereich_id"
+                constraintName="fk_mietbereich_voraussetzung_bereich"
+                referencedTableName="mietbereich"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+        <addForeignKeyConstraint
+                baseTableName="mietbereich_voraussetzung"
+                baseColumnNames="erforderlicher_mietbereich_id"
+                constraintName="fk_mietbereich_voraussetzung_erforderlich"
+                referencedTableName="mietbereich"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+    </changeSet>
+</databaseChangeLog>
