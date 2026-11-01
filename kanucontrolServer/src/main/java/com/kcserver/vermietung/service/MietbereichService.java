@@ -7,6 +7,8 @@ import com.kcserver.vermietung.entity.Mietbereich;
 import com.kcserver.vermietung.entity.Mietobjekt;
 import com.kcserver.vermietung.entity.Zaehler;
 import com.kcserver.vermietung.enumtype.Berechnungsart;
+import com.kcserver.vermietung.enumtype.Buchungsquelle;
+import com.kcserver.vermietung.dto.MietbereichVoraussetzungenDTO;
 import com.kcserver.vermietung.repository.MietbereichRepository;
 import com.kcserver.vermietung.repository.MietobjektRepository;
 import com.kcserver.vermietung.repository.ZaehlerRepository;
@@ -160,7 +162,7 @@ public class MietbereichService {
     public MietbereichDTO setVoraussetzungen(
             Long mietobjektId,
             Long mietbereichId,
-            Set<Long> erforderlicheMietbereichIds
+            MietbereichVoraussetzungenDTO dto
     ) {
         Mietbereich bereich = mietbereichRepository.findById(mietbereichId)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -175,50 +177,110 @@ public class MietbereichService {
             );
         }
 
-        Set<Long> ids = erforderlicheMietbereichIds == null
-                ? Set.of()
-                : erforderlicheMietbereichIds;
         if (!bereich.isMietbar()) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Für einen nicht mietbaren Mietbereich können keine Voraussetzungen festgelegt werden."
             );
         }
+        Set<Long> direktIds = dto.getErforderlicheMietbereichIdsDirekt() != null
+                ? dto.getErforderlicheMietbereichIdsDirekt()
+                : dto.getErforderlicheMietbereichIds();
+        Set<Mietbereich> direkt = validiereRegelBereiche(
+                mietobjektId, mietbereichId, direktIds, "Voraussetzungen"
+        );
+        Set<Mietbereich> airbnb = validiereRegelBereiche(
+                mietobjektId,
+                mietbereichId,
+                dto.getErforderlicheMietbereichIdsAirbnb() == null
+                        ? bereich.getVoraussetzungenAirbnb().stream().map(Mietbereich::getId).collect(Collectors.toSet())
+                        : dto.getErforderlicheMietbereichIdsAirbnb(),
+                "Voraussetzungen"
+        );
+        Set<Mietbereich> belegt = validiereRegelBereiche(
+                mietobjektId,
+                mietbereichId,
+                dto.getBelegteMietbereichIds() == null
+                        ? bereich.getBelegteMietbereiche().stream().map(Mietbereich::getId).collect(Collectors.toSet())
+                        : dto.getBelegteMietbereichIds(),
+                "Belegte Mietbereiche"
+        );
+
+        if (direkt.stream().anyMatch(item -> !item.isDirektbuchungAktiv())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Direkt-Voraussetzungen müssen für Direktbuchungen aktiviert sein."
+            );
+        }
+        if (airbnb.stream().anyMatch(item -> !item.isAirbnbAktiv())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Airbnb-Voraussetzungen müssen für Airbnb-Buchungen aktiviert sein."
+            );
+        }
+
+        validiereVoraussetzungsKreis(bereich, direkt, Buchungsquelle.DIREKT);
+        validiereVoraussetzungsKreis(bereich, airbnb, Buchungsquelle.AIRBNB);
+        for (Mietbereich komponent : belegt) {
+            if (erreichtBelegung(komponent, mietbereichId, new HashSet<>())) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Die Belegungszusammensetzung würde einen Kreis erzeugen."
+                );
+            }
+        }
+
+        bereich.setVoraussetzungenDirekt(direkt);
+        bereich.setVoraussetzungenAirbnb(airbnb);
+        bereich.setBelegteMietbereiche(belegt);
+        return toDTO(mietbereichRepository.save(bereich));
+    }
+
+    private Set<Mietbereich> validiereRegelBereiche(
+            Long mietobjektId,
+            Long mietbereichId,
+            Set<Long> angeforderteIds,
+            String feldname
+    ) {
+        Set<Long> ids = angeforderteIds == null ? Set.of() : angeforderteIds;
         if (ids.contains(mietbereichId)) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Ein Mietbereich kann nicht sich selbst voraussetzen."
+                    "Ein Mietbereich kann nicht sich selbst voraussetzen oder belegen."
             );
         }
-
-        List<Mietbereich> voraussetzungen = mietbereichRepository.findAllById(ids);
-        if (voraussetzungen.size() != ids.size()
-                || voraussetzungen.stream().anyMatch(voraussetzung ->
-                !voraussetzung.getMietobjekt().getId().equals(mietobjektId)
-                        || !voraussetzung.isMietbar())) {
+        List<Mietbereich> bereiche = mietbereichRepository.findAllById(ids);
+        if (bereiche.size() != ids.size()
+                || bereiche.stream().anyMatch(item ->
+                !item.getMietobjekt().getId().equals(mietobjektId) || !item.isMietbar())) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Voraussetzungen müssen Mietbereiche desselben Mietobjekts sein."
+                    feldname + " müssen mietbare Bereiche desselben Mietobjekts sein."
             );
         }
+        return new HashSet<>(bereiche);
+    }
 
-        for (Mietbereich voraussetzung : voraussetzungen) {
-            if (erreichtMietbereich(voraussetzung, mietbereichId, new HashSet<>())) {
+    private void validiereVoraussetzungsKreis(
+            Mietbereich bereich,
+            Set<Mietbereich> neueVoraussetzungen,
+            Buchungsquelle quelle
+    ) {
+        for (Mietbereich voraussetzung : neueVoraussetzungen) {
+            if (erreichtMietbereich(voraussetzung, bereich.getId(), new HashSet<>(), quelle)) {
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST,
                         "Die Abhängigkeit würde einen Kreis erzeugen."
                 );
             }
         }
-
-        bereich.setVoraussetzungen(new HashSet<>(voraussetzungen));
-        return toDTO(mietbereichRepository.save(bereich));
     }
 
     private boolean erreichtMietbereich(
             Mietbereich start,
             Long gesucht,
-            Set<Long> besucht
+            Set<Long> besucht,
+            Buchungsquelle quelle
     ) {
         if (start.getId().equals(gesucht)) {
             return true;
@@ -226,12 +288,23 @@ public class MietbereichService {
         if (!besucht.add(start.getId())) {
             return false;
         }
-        return start.getVoraussetzungen().stream()
+        Set<Mietbereich> voraussetzungen = quelle == Buchungsquelle.DIREKT
+                ? start.getVoraussetzungenDirekt()
+                : start.getVoraussetzungenAirbnb();
+        return voraussetzungen.stream()
                 .anyMatch(voraussetzung -> erreichtMietbereich(
                         voraussetzung,
                         gesucht,
-                        besucht
+                        besucht,
+                        quelle
                 ));
+    }
+
+    private boolean erreichtBelegung(Mietbereich start, Long gesucht, Set<Long> besucht) {
+        if (start.getId().equals(gesucht)) return true;
+        if (!besucht.add(start.getId())) return false;
+        return start.getBelegteMietbereiche().stream()
+                .anyMatch(kind -> erreichtBelegung(kind, gesucht, besucht));
     }
 
     public void delete(Long mietobjektId, Long id) {
@@ -352,10 +425,27 @@ public class MietbereichService {
         dto.setMengeneinheit(bereich.getMengeneinheit());
         dto.setSortierung(bereich.getSortierung());
         dto.setBerechnungsart(bereich.getBerechnungsart());
-        dto.setErforderlicheMietbereichIds(
-                bereich.getVoraussetzungen() == null
+        dto.setErforderlicheMietbereichIdsDirekt(
+                bereich.getVoraussetzungenDirekt() == null
                         ? new HashSet<>()
-                        : bereich.getVoraussetzungen().stream()
+                        : bereich.getVoraussetzungenDirekt().stream()
+                        .map(Mietbereich::getId)
+                        .collect(Collectors.toSet())
+        );
+        dto.setErforderlicheMietbereichIds(
+                dto.getErforderlicheMietbereichIdsDirekt()
+        );
+        dto.setErforderlicheMietbereichIdsAirbnb(
+                bereich.getVoraussetzungenAirbnb() == null
+                        ? new HashSet<>()
+                        : bereich.getVoraussetzungenAirbnb().stream()
+                        .map(Mietbereich::getId)
+                        .collect(Collectors.toSet())
+        );
+        dto.setBelegteMietbereichIds(
+                bereich.getBelegteMietbereiche() == null
+                        ? new HashSet<>()
+                        : bereich.getBelegteMietbereiche().stream()
                         .map(Mietbereich::getId)
                         .collect(Collectors.toSet())
         );

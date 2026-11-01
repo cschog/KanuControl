@@ -14,13 +14,25 @@ import {
 import SaveIcon from "@mui/icons-material/Save";
 
 import { getMietobjekte } from "@/vermietung/api/mietobjektApi";
-import { getMietbereiche, setMietbereichVoraussetzungen } from "@/vermietung/api/mietbereichApi";
+import { getMietbereiche, setMietbereichRegeln, type MietbereichRegeln } from "@/vermietung/api/mietbereichApi";
+import { getApiErrorMessage } from "@/kjfp/api/utils/apiError";
 import type { Mietobjekt } from "@/vermietung/types/Mietobjekt";
 import type { Mietbereich } from "@/vermietung/types/Mietbereich";
 
 const sortIds = (ids: number[]) => [...ids].sort((a, b) => a - b);
 const gleicheIds = (a: number[], b: number[]) =>
   JSON.stringify(sortIds(a)) === JSON.stringify(sortIds(b));
+
+const direkteVoraussetzungen = (bereich: Mietbereich) =>
+  bereich.erforderlicheMietbereichIdsDirekt ?? bereich.erforderlicheMietbereichIds ?? [];
+const airbnbVoraussetzungen = (bereich: Mietbereich) => bereich.erforderlicheMietbereichIdsAirbnb ?? [];
+const belegteBereiche = (bereich: Mietbereich) => bereich.belegteMietbereichIds ?? [];
+
+function gleicheRegeln(a: Mietbereich, b: Mietbereich): boolean {
+  return gleicheIds(direkteVoraussetzungen(a), direkteVoraussetzungen(b))
+    && gleicheIds(airbnbVoraussetzungen(a), airbnbVoraussetzungen(b))
+    && gleicheIds(belegteBereiche(a), belegteBereiche(b));
+}
 
 export default function MietbereichAbhaengigkeitenVerwaltung() {
   const [mietobjekte, setMietobjekte] = useState<Mietobjekt[]>([]);
@@ -77,26 +89,35 @@ export default function MietbereichAbhaengigkeitenVerwaltung() {
       setSavingId(bereich.id);
       setError(null);
       setSuccess(null);
-      const aktualisiert = await setMietbereichVoraussetzungen(
+      const regeln: MietbereichRegeln = {
+        erforderlicheMietbereichIdsDirekt: direkteVoraussetzungen(bereich),
+        erforderlicheMietbereichIdsAirbnb: airbnbVoraussetzungen(bereich),
+        belegteMietbereichIds: belegteBereiche(bereich),
+      };
+      const aktualisiert = await setMietbereichRegeln(
         mietobjektId,
         bereich.id,
-        bereich.erforderlicheMietbereichIds ?? [],
+        regeln,
       );
       setMietbereiche((aktuell) => aktuell.map((item) => item.id === bereich.id ? aktualisiert : item));
       setUrspruenglicheMietbereiche((aktuell) => aktuell.map((item) => item.id === bereich.id ? aktualisiert : item));
       setSuccess(`Abhängigkeiten für „${bereich.bezeichnung}“ gespeichert.`);
     } catch (err) {
       console.error("Abhängigkeiten konnten nicht gespeichert werden:", err);
-      setError("Die Abhängigkeiten konnten nicht gespeichert werden. Prüfe, ob die Auswahl einen Abhängigkeitskreis erzeugt.");
+      setError(getApiErrorMessage(err, "Die Abhängigkeiten konnten nicht gespeichert werden."));
     } finally {
       setSavingId(null);
     }
   }
 
-  function aendereVoraussetzungen(bereichId: number, ids: number[]) {
+  function aendereRegel(
+    bereichId: number,
+    key: keyof MietbereichRegeln,
+    ids: number[],
+  ) {
     setSuccess(null);
     setMietbereiche((aktuell) => aktuell.map((bereich) =>
-      bereich.id === bereichId ? { ...bereich, erforderlicheMietbereichIds: ids } : bereich,
+      bereich.id === bereichId ? { ...bereich, [key]: ids } : bereich,
     ));
   }
 
@@ -128,44 +149,65 @@ export default function MietbereichAbhaengigkeitenVerwaltung() {
       )}
 
       {!loading && mietbereiche.map((bereich) => {
-        const voraussetzungen = bereich.erforderlicheMietbereichIds ?? [];
-        const original = (urspruenglicheMietbereiche.find((item) => item.id === bereich.id)?.erforderlicheMietbereichIds ?? []);
-        const geaendert = !gleicheIds(voraussetzungen, original);
-        const auswahl = mietbereiche.filter((item) => item.mietbar && item.id !== bereich.id);
+        const original = urspruenglicheMietbereiche.find((item) => item.id === bereich.id) ?? bereich;
+        const geaendert = !gleicheRegeln(bereich, original);
+        const auswahlFuer = (key: keyof MietbereichRegeln, selectedIds: number[]) => mietbereiche.filter((item) => {
+          if (!item.mietbar || item.id === bereich.id) return false;
+          if (key === "erforderlicheMietbereichIdsDirekt") return item.direktbuchungAktiv || selectedIds.includes(item.id);
+          if (key === "erforderlicheMietbereichIdsAirbnb") return item.airbnbAktiv || selectedIds.includes(item.id);
+          return true;
+        });
 
         return (
-          <Paper key={bereich.id} variant="outlined" sx={{ p: 2, display: "grid", gridTemplateColumns: { xs: "1fr", md: "minmax(180px, 0.7fr) minmax(260px, 1.3fr) auto" }, gap: 2, alignItems: "center" }}>
+          <Paper key={bereich.id} variant="outlined" sx={{ p: 2, display: "grid", gridTemplateColumns: { xs: "1fr", md: "minmax(150px, 0.6fr) repeat(3, minmax(190px, 1fr)) auto" }, gap: 2, alignItems: "center" }}>
             <Box>
               <Typography fontWeight={600}>{bereich.bezeichnung}</Typography>
               <Typography variant="caption" color="text.secondary">{bereich.mietbar ? "Mietbar" : "Nicht mietbar"}</Typography>
             </Box>
-            <TextField
-              select
-              label="Erfordert diese Mietbereiche"
-              value={voraussetzungen}
-              disabled={!bereich.mietbar || savingId === bereich.id}
-              slotProps={{
-                select: {
-                  multiple: true,
-                  renderValue: (selected) => {
-                    const ids = selected as number[];
-                    return mietbereiche.filter((item) => ids.includes(item.id)).map((item) => item.bezeichnung).join(", ") || "Keine Voraussetzung";
-                  },
-                },
-              }}
-              onChange={(event) => {
-                const value = event.target.value;
-                aendereVoraussetzungen(bereich.id, typeof value === "string" ? value.split(",").map(Number) : value as number[]);
-              }}
-              helperText="Auswahl ist nur möglich, wenn alle Voraussetzungen mitgebucht werden."
-            >
-              {auswahl.map((item) => (
-                <MenuItem key={item.id} value={item.id}>
-                  <Checkbox checked={voraussetzungen.includes(item.id)} />
-                  <ListItemText primary={item.bezeichnung} />
-                </MenuItem>
-              ))}
-            </TextField>
+            {([
+              ["erforderlicheMietbereichIdsDirekt", "Direktbuchung: setzt voraus", direkteVoraussetzungen(bereich), "Alle markierten Bereiche müssen mitgebucht werden."],
+              ["erforderlicheMietbereichIdsAirbnb", "Airbnb: setzt voraus", airbnbVoraussetzungen(bereich), "Alle markierten Bereiche müssen mitgebucht werden."],
+              ["belegteMietbereichIds", "Belegt zusätzlich", belegteBereiche(bereich), "Diese Bereiche werden für Überschneidungen ebenfalls blockiert."],
+            ] as const).map(([key, label, selectedIds, helperText]) => {
+              const auswahl = auswahlFuer(key, selectedIds);
+              return (
+                <TextField
+                  key={key}
+                  select
+                  label={label}
+                  value={selectedIds}
+                  disabled={!bereich.mietbar || savingId === bereich.id}
+                  slotProps={{
+                    select: {
+                      multiple: true,
+                      renderValue: (selected) => {
+                        const ids = selected as number[];
+                        return mietbereiche.filter((item) => ids.includes(item.id)).map((item) => item.bezeichnung).join(", ") || "Keine";
+                      },
+                    },
+                  }}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    aendereRegel(bereich.id, key, typeof value === "string" ? value.split(",").map(Number) : value as number[]);
+                  }}
+                  helperText={helperText}
+                >
+                  {auswahl.map((item) => (
+                    <MenuItem key={item.id} value={item.id}>
+                      <Checkbox checked={selectedIds.includes(item.id)} />
+                      <ListItemText
+                        primary={item.bezeichnung}
+                        secondary={key === "erforderlicheMietbereichIdsDirekt" && !item.direktbuchungAktiv
+                          ? "Für Direktbuchungen nicht aktiviert"
+                          : key === "erforderlicheMietbereichIdsAirbnb" && !item.airbnbAktiv
+                            ? "Für Airbnb nicht aktiviert"
+                            : undefined}
+                      />
+                    </MenuItem>
+                  ))}
+                </TextField>
+              );
+            })}
             <Button
               variant="contained"
               startIcon={<SaveIcon />}

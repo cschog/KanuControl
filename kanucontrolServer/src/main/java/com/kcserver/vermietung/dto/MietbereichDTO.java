@@ -24,6 +24,12 @@ public class MietbereichDTO {
 
     private Set<Long> erforderlicheMietbereichIds = new HashSet<>();
 
+    private Set<Long> erforderlicheMietbereichIdsDirekt = new HashSet<>();
+
+    private Set<Long> erforderlicheMietbereichIdsAirbnb = new HashSet<>();
+
+    private Set<Long> belegteMietbereichIds = new HashSet<>();
+
     @NotBlank
     @Size(max = 255)
     private String bezeichnung;

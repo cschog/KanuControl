@@ -991,6 +991,13 @@ public class BuchungService {
         RabattwertTyp rabattwertTyp = dto.getRabattwertTyp();
         BigDecimal rabattwert = dto.getRabattwert();
 
+        if (buchung.getBuchungsquelle() == Buchungsquelle.AIRBNB) {
+            rabattart = Rabattart.KEIN_RABATT;
+            rabattwertTyp = null;
+            rabattwert = null;
+            rabattAuswahlUnveraendert = false;
+        }
+
         if (rabattart == Rabattart.INDIVIDUELL) {
             if (rabattwertTyp == null || rabattwert == null || rabattwert.signum() < 0) {
                 throw new IllegalArgumentException(
@@ -1096,7 +1103,10 @@ public class BuchungService {
 
         for (BuchungMietbereich position : buchung.getMietbereiche()) {
             Mietbereich bereich = position.getMietbereich();
-            for (Mietbereich voraussetzung : bereich.getVoraussetzungen()) {
+            Set<Mietbereich> voraussetzungen = buchung.getBuchungsquelle() == Buchungsquelle.DIREKT
+                    ? bereich.getVoraussetzungenDirekt()
+                    : bereich.getVoraussetzungenAirbnb();
+            for (Mietbereich voraussetzung : voraussetzungen) {
                 if (!ausgewaehlteIds.contains(voraussetzung.getId())) {
                     throw new IllegalArgumentException(
                             "Der Mietbereich '" + bereich.getBezeichnung()
@@ -1258,27 +1268,47 @@ public class BuchungService {
                             );
         }
 
-        for (BuchungMietbereich neuePosition : buchung.getMietbereiche()) {
-            Mietbereich mietbereich = neuePosition.getMietbereich();
+        Map<Long, Mietbereich> beanspruchteBereiche = new HashMap<>();
+        Map<Long, Integer> angeforderteMengen = new HashMap<>();
+        Set<Long> bereitsInnerhalbDerBuchungBelegt = new HashSet<>();
 
+        for (BuchungMietbereich position : buchung.getMietbereiche()) {
+            Set<Mietbereich> ressourcen = ermittleBelegteRessourcen(
+                    position.getMietbereich(), new HashSet<>()
+            );
+            for (Mietbereich ressource : ressourcen) {
+                if (!bereitsInnerhalbDerBuchungBelegt.add(ressource.getId())) {
+                    throw new IllegalArgumentException(
+                            "Die ausgewählten Mietbereiche überschneiden sich bei '"
+                                    + ressource.getBezeichnung()
+                                    + "' und können nicht gemeinsam gebucht werden."
+                    );
+                }
+                beanspruchteBereiche.put(ressource.getId(), ressource);
+                angeforderteMengen.merge(ressource.getId(), position.getAnzahl(), Integer::sum);
+            }
+        }
+
+        for (Map.Entry<Long, Mietbereich> entry : beanspruchteBereiche.entrySet()) {
+            Mietbereich ressource = entry.getValue();
             int bereitsGebucht = bestehendeBuchungen.stream()
                     .filter(b -> b.getMietobjekt().getId()
                             .equals(buchung.getMietobjekt().getId()))
                     .flatMap(b -> b.getMietbereiche().stream())
-                    .filter(position -> position.getMietbereich().getId()
-                            .equals(mietbereich.getId()))
-                    .mapToInt(BuchungMietbereich::getAnzahl)
+                    .filter(position -> ermittleBelegteRessourcen(
+                            position.getMietbereich(), new HashSet<>()
+                    ).stream().anyMatch(belegt -> belegt.getId().equals(entry.getKey())))
+                    .mapToInt(position -> position.getAnzahl())
                     .sum();
-
-            int angefordert = neuePosition.getAnzahl();
-            int bestand = mietbereich.getBestand();
+            int angefordert = angeforderteMengen.get(entry.getKey());
+            int bestand = ressource.getBestand();
 
             if (bereitsGebucht + angefordert > bestand) {
                 throw new IllegalArgumentException(
                         String.format(
                                 Locale.GERMAN,
                                 ErrorMessages.BUCHUNG_BESTAND_UNZUREICHEND,
-                                mietbereich.getBezeichnung(),
+                                ressource.getBezeichnung(),
                                 bestand,
                                 bereitsGebucht,
                                 angefordert
@@ -1286,6 +1316,27 @@ public class BuchungService {
                 );
             }
         }
+    }
+
+    private Set<Mietbereich> ermittleBelegteRessourcen(
+            Mietbereich mietbereich,
+            Set<Long> besucht
+    ) {
+        if (!besucht.add(mietbereich.getId())) {
+            throw new IllegalStateException("Zyklische Belegungszusammensetzung bei '"
+                    + mietbereich.getBezeichnung() + "'.");
+        }
+        Set<Mietbereich> komponenten = mietbereich.getBelegteMietbereiche();
+        if (komponenten == null || komponenten.isEmpty()) {
+            return Set.of(mietbereich);
+        }
+
+        Set<Mietbereich> ressourcen = new HashSet<>();
+        ressourcen.add(mietbereich);
+        for (Mietbereich komponent : komponenten) {
+            ressourcen.addAll(ermittleBelegteRessourcen(komponent, new HashSet<>(besucht)));
+        }
+        return ressourcen;
     }
 
     private Mietpreis ermittleMietpreis(

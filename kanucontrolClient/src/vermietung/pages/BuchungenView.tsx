@@ -41,6 +41,7 @@ const BuchungenView = () => {
   const [mietobjekte, setMietobjekte] = useState<Mietobjekt[]>([]);
   const [filterMietobjektId, setFilterMietobjektId] = useState<number | "">("");
   const [filterInitialisiert, setFilterInitialisiert] = useState(false);
+  const [buchungsanzeige, setBuchungsanzeige] = useState<"STANDARD" | "ALLE">("STANDARD");
   const [ansicht, setAnsicht] = useState<"LISTE" | "KALENDER">("LISTE");
 
   const [showForm, setShowForm] = useState(false);
@@ -230,10 +231,11 @@ const handleReopen = async () => {
     }
   }, [mietobjekt, filterInitialisiert]);
 
-  const gefilterteBuchungen =
-    filterMietobjektId === ""
-      ? buchungen
-      : buchungen.filter((buchung) => buchung.mietobjektId === filterMietobjektId);
+  const gefilterteBuchungen = buchungen.filter((buchung) => {
+    const passtZumMietobjekt = filterMietobjektId === "" || buchung.mietobjektId === filterMietobjektId;
+    const istAusgeblendet = buchung.status === "ABGELEHNT" || buchung.status === "STORNIERT";
+    return passtZumMietobjekt && (buchungsanzeige === "ALLE" || !istAusgeblendet);
+  });
 
   // Später beginnende Buchungen stehen oben; fehlende/ungültige Termine kommen ans Ende.
   const filteredBuchungen = [...gefilterteBuchungen].sort((a, b) => {
@@ -325,6 +327,18 @@ if (showForm) {
                 {objekt.bezeichnung}
               </MenuItem>
             ))}
+          </TextField>
+
+          <TextField
+            select
+            size="small"
+            label="Buchungen"
+            value={buchungsanzeige}
+            onChange={(event) => setBuchungsanzeige(event.target.value as "STANDARD" | "ALLE")}
+            sx={{ width: { xs: "100%", sm: 230 } }}
+          >
+            <MenuItem value="STANDARD">Ohne abgelehnte und stornierte</MenuItem>
+            <MenuItem value="ALLE">Alle Buchungen</MenuItem>
           </TextField>
 
           <Box

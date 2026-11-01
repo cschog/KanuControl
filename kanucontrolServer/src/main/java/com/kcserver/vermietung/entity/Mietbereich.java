@@ -90,7 +90,31 @@ public class Mietbereich extends Auditable {
                     columnNames = {"mietbereich_id", "erforderlicher_mietbereich_id"}
             )
     )
-    private Set<Mietbereich> voraussetzungen = new HashSet<>();
+    private Set<Mietbereich> voraussetzungenDirekt = new HashSet<>();
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "mietbereich_voraussetzung_airbnb",
+            joinColumns = @JoinColumn(name = "mietbereich_id"),
+            inverseJoinColumns = @JoinColumn(name = "erforderlicher_mietbereich_id"),
+            uniqueConstraints = @UniqueConstraint(
+                    name = "uk_mietbereich_voraussetzung_airbnb",
+                    columnNames = {"mietbereich_id", "erforderlicher_mietbereich_id"}
+            )
+    )
+    private Set<Mietbereich> voraussetzungenAirbnb = new HashSet<>();
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "mietbereich_belegung",
+            joinColumns = @JoinColumn(name = "mietbereich_id"),
+            inverseJoinColumns = @JoinColumn(name = "belegter_mietbereich_id"),
+            uniqueConstraints = @UniqueConstraint(
+                    name = "uk_mietbereich_belegung",
+                    columnNames = {"mietbereich_id", "belegter_mietbereich_id"}
+            )
+    )
+    private Set<Mietbereich> belegteMietbereiche = new HashSet<>();
 
     @OneToMany(
             mappedBy = "mietbereich",

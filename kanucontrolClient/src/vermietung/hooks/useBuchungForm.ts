@@ -76,9 +76,9 @@ export function useBuchungForm(
         buchungsquelle: buchung.buchungsquelle,
         bemerkung: buchung.bemerkung ?? "",
         bewertung: buchung.bewertung ?? null,
-        rabattart: buchung.rabattart ?? Rabattart.KEIN_RABATT,
-        rabattwertTyp: buchung.rabattwertTyp ?? RabattwertTyp.PROZENTUAL,
-        rabattwert: buchung.rabattwert ?? 0,
+        rabattart: buchung.buchungsquelle === "AIRBNB" ? Rabattart.KEIN_RABATT : buchung.rabattart ?? Rabattart.KEIN_RABATT,
+        rabattwertTyp: buchung.buchungsquelle === "AIRBNB" ? null : buchung.rabattwertTyp ?? RabattwertTyp.PROZENTUAL,
+        rabattwert: buchung.buchungsquelle === "AIRBNB" ? null : buchung.rabattwert ?? 0,
       });
 
       return;
@@ -88,6 +88,9 @@ export function useBuchungForm(
       ...current,
       mietobjektId: mietobjekt?.id ?? current.mietobjektId,
       buchungsquelle: neueBuchungsquelle,
+      ...(neueBuchungsquelle === "AIRBNB"
+        ? { rabattart: Rabattart.KEIN_RABATT, rabattwertTyp: null, rabattwert: null }
+        : {}),
       ...(initialZeitraum
         ? {
             anreise: datumMitZeit(initialZeitraum.anreiseDatum, mietobjekt?.anreisezeit),
@@ -120,9 +123,9 @@ export function useBuchungForm(
         buchungsquelle: buchung.buchungsquelle,
         bemerkung: buchung.bemerkung ?? "",
         bewertung: buchung.bewertung ?? null,
-        rabattart: buchung.rabattart ?? Rabattart.KEIN_RABATT,
-        rabattwertTyp: buchung.rabattwertTyp ?? RabattwertTyp.PROZENTUAL,
-        rabattwert: buchung.rabattwert ?? 0,
+        rabattart: buchung.buchungsquelle === "AIRBNB" ? Rabattart.KEIN_RABATT : buchung.rabattart ?? Rabattart.KEIN_RABATT,
+        rabattwertTyp: buchung.buchungsquelle === "AIRBNB" ? null : buchung.rabattwertTyp ?? RabattwertTyp.PROZENTUAL,
+        rabattwert: buchung.buchungsquelle === "AIRBNB" ? null : buchung.rabattwert ?? 0,
       });
 
       return;

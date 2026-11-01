@@ -94,7 +94,7 @@ public class MietbereichController {
                 mietbereichService.setVoraussetzungen(
                         mietobjektId,
                         id,
-                        dto.getErforderlicheMietbereichIds()
+                        dto
                 ),
                 List.of()
         );

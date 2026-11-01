@@ -175,6 +175,9 @@ export const BuchungBaseForm: React.FC<Props> = ({
   const gefilterteMietbereiche = mietbereiche.filter((mietbereich) =>
     form.buchungsquelle === "DIREKT" ? mietbereich.direktbuchungAktiv : mietbereich.airbnbAktiv,
   );
+  const voraussetzungenFuer = (bereich: Mietbereich) => form.buchungsquelle === "DIREKT"
+    ? bereich.erforderlicheMietbereichIdsDirekt ?? bereich.erforderlicheMietbereichIds ?? []
+    : bereich.erforderlicheMietbereichIdsAirbnb ?? [];
 
   const stichtag = createdAt ? createdAt.slice(0, 10) : new Date().toLocaleDateString("sv-SE");
 
@@ -213,6 +216,7 @@ export const BuchungBaseForm: React.FC<Props> = ({
   });
 
   const rabattbetrag = (() => {
+    if (form.buchungsquelle === "AIRBNB") return 0;
     if (form.rabattart === Rabattart.INDIVIDUELL && form.rabattwertTyp === RabattwertTyp.ABSOLUT) {
       return Math.min(gesamtpreis, Math.max(0, form.rabattwert ?? 0));
     }
@@ -260,7 +264,7 @@ export const BuchungBaseForm: React.FC<Props> = ({
     const bereich = gefilterteMietbereiche.find((item) => item.id === bereichId);
     if (!bereich) return null;
     const ergebnis = new Set<number>();
-    for (const voraussetzungId of bereich.erforderlicheMietbereichIds ?? []) {
+    for (const voraussetzungId of voraussetzungenFuer(bereich)) {
       const weitere = findeVoraussetzungen(voraussetzungId, besucht);
       if (weitere === null) return null;
       ergebnis.add(voraussetzungId);
@@ -291,7 +295,7 @@ export const BuchungBaseForm: React.FC<Props> = ({
       for (const position of form.positionen) {
         if (zuEntfernendeIds.has(position.mietbereichId)) continue;
         const mietbereich = gefilterteMietbereiche.find((item) => item.id === position.mietbereichId);
-        if ((mietbereich?.erforderlicheMietbereichIds ?? []).some((id) => zuEntfernendeIds.has(id))) {
+        if (mietbereich && voraussetzungenFuer(mietbereich).some((id) => zuEntfernendeIds.has(id))) {
           zuEntfernendeIds.add(position.mietbereichId);
           erweitert = true;
         }
@@ -487,21 +491,25 @@ export const BuchungBaseForm: React.FC<Props> = ({
           ))}
         </TextField>
 
-        <TextField
-          select
-          label="Rabatt"
-          value={form.rabattart ?? Rabattart.KEIN_RABATT}
-          disabled={!buchungsdatenEditierbar}
-          fullWidth
-          onChange={(event) => onChange("rabattart", event.target.value as Rabattart)}
-        >
-          <MenuItem value={Rabattart.KEIN_RABATT}>Kein Rabatt</MenuItem>
-          <MenuItem value={Rabattart.VEREIN}>Vereinsrabatt</MenuItem>
-          <MenuItem value={Rabattart.VERBAND}>Verbandsrabatt</MenuItem>
-          <MenuItem value={Rabattart.INDIVIDUELL}>Individueller Rabatt</MenuItem>
-        </TextField>
+        {form.buchungsquelle === "AIRBNB" ? (
+          <Alert severity="info">Für Airbnb-Buchungen ist keine Rabattierung vorgesehen.</Alert>
+        ) : (
+          <TextField
+            select
+            label="Rabatt"
+            value={form.rabattart ?? Rabattart.KEIN_RABATT}
+            disabled={!buchungsdatenEditierbar}
+            fullWidth
+            onChange={(event) => onChange("rabattart", event.target.value as Rabattart)}
+          >
+            <MenuItem value={Rabattart.KEIN_RABATT}>Kein Rabatt</MenuItem>
+            <MenuItem value={Rabattart.VEREIN}>Vereinsrabatt</MenuItem>
+            <MenuItem value={Rabattart.VERBAND}>Verbandsrabatt</MenuItem>
+            <MenuItem value={Rabattart.INDIVIDUELL}>Individueller Rabatt</MenuItem>
+          </TextField>
+        )}
 
-        {form.rabattart === Rabattart.INDIVIDUELL && (
+        {form.buchungsquelle !== "AIRBNB" && form.rabattart === Rabattart.INDIVIDUELL && (
           <Box sx={{ display: "grid", gridTemplateColumns: "minmax(120px, 1fr) minmax(110px, 1fr)", gap: 1 }}>
             <TextField
               select
@@ -535,21 +543,32 @@ export const BuchungBaseForm: React.FC<Props> = ({
           }}
         >
           <Box sx={{ mb: 2 }}>
-            <Typography variant="subtitle2" color="text.secondary">Mietpreis vor Rabatt</Typography>
-            <Typography variant="h6" fontWeight={600} sx={{ mt: 0.5 }}>
-              {gesamtpreisVollstaendig ? formatPreis(gesamtpreis) : "Preise werden ermittelt …"}
-            </Typography>
-            {rabattbetrag > 0 && (
+            {form.buchungsquelle === "AIRBNB" ? (
               <>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>Rabatt</Typography>
-                <Typography variant="body1" color="success.main">− {formatPreis(rabattbetrag)}</Typography>
+                <Typography variant="subtitle2" color="text.secondary">Mietpreis</Typography>
+                <Typography variant="h5" fontWeight={700} sx={{ mt: 0.5 }}>
+                  {gesamtpreisVollstaendig ? formatPreis(gesamtpreis) : "Preise werden ermittelt …"}
+                </Typography>
+              </>
+            ) : (
+              <>
+                <Typography variant="subtitle2" color="text.secondary">Mietpreis vor Rabatt</Typography>
+                <Typography variant="h6" fontWeight={600} sx={{ mt: 0.5 }}>
+                  {gesamtpreisVollstaendig ? formatPreis(gesamtpreis) : "Preise werden ermittelt …"}
+                </Typography>
+                {rabattbetrag > 0 && (
+                  <>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>Rabatt</Typography>
+                    <Typography variant="body1" color="success.main">− {formatPreis(rabattbetrag)}</Typography>
+                  </>
+                )}
+                <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 0.75 }}>Mietpreis nach Rabatt</Typography>
+                <Typography variant="h5" fontWeight={700} sx={{ mt: 0.5 }}>
+                  {gesamtpreisVollstaendig ? formatPreis(mietpreisNachRabatt) : "Preise werden ermittelt …"}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">Verbrauchskosten sind nicht rabattiert.</Typography>
               </>
             )}
-            <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 0.75 }}>Mietpreis nach Rabatt</Typography>
-            <Typography variant="h5" fontWeight={700} sx={{ mt: 0.5 }}>
-              {gesamtpreisVollstaendig ? formatPreis(mietpreisNachRabatt) : "Preise werden ermittelt …"}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">Verbrauchskosten sind nicht rabattiert.</Typography>
           </Box>
 
           <Typography variant="subtitle1" fontWeight={600} color="text.secondary" sx={{ mb: 1.5 }}>
@@ -621,10 +640,10 @@ export const BuchungBaseForm: React.FC<Props> = ({
                             {mietbereich.bezeichnung}
                           </Typography>
 
-                          {(mietbereich.erforderlicheMietbereichIds ?? []).length > 0 && (
+                          {voraussetzungenFuer(mietbereich).length > 0 && (
                             <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
                               Erfordert: {gefilterteMietbereiche
-                                .filter((item) => (mietbereich.erforderlicheMietbereichIds ?? []).includes(item.id))
+                                .filter((item) => voraussetzungenFuer(mietbereich).includes(item.id))
                                 .map((item) => item.bezeichnung)
                                 .join(", ") || "einen anderen Mietbereich"}
                             </Typography>

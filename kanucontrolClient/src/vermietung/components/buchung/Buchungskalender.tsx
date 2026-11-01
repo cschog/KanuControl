@@ -61,6 +61,7 @@ function BuchungChip({ buchung, onSelect, fullWidth = false }: {
   const titel = [
     mietername,
     `Buchung ${buchung.buchungsnummer}`,
+    `Status: ${statusLabel[buchung.status]}`,
     buchung.mietobjektBezeichnung,
     `${formatUhrzeit(buchung.anreise)}–${buchung.unbefristet ? "unbefristet" : formatUhrzeit(buchung.abreise)}`,
   ].filter(Boolean).join(" · ");

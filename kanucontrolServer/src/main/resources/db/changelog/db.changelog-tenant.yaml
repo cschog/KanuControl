@@ -237,3 +237,5 @@ databaseChangeLog:
       file: db/changelog/changes/20261101-02-buchung-rabatt-snapshots.xml
   - include:
       file: db/changelog/changes/20261101-03-mietbereich-voraussetzungen.xml
+  - include:
+      file: db/changelog/changes/20261101-04-mietbereich-regeln-und-belegung.xml

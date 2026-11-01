@@ -45,14 +45,20 @@ export async function sortiereMietbereiche(mietobjektId: number, ids: number[]):
   await apiClient.put(`${baseUrl(mietobjektId)}/sortierung`, { ids });
 }
 
-export async function setMietbereichVoraussetzungen(
+export interface MietbereichRegeln {
+  erforderlicheMietbereichIdsDirekt: number[];
+  erforderlicheMietbereichIdsAirbnb: number[];
+  belegteMietbereichIds: number[];
+}
+
+export async function setMietbereichRegeln(
   mietobjektId: number,
   mietbereichId: number,
-  erforderlicheMietbereichIds: number[],
+  regeln: MietbereichRegeln,
 ): Promise<Mietbereich> {
   const response = await apiClient.put<Mietbereich>(
     `${baseUrl(mietobjektId)}/${mietbereichId}/voraussetzungen`,
-    { erforderlicheMietbereichIds },
+    regeln,
   );
   return response.data;
 }
