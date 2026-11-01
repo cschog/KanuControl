@@ -243,13 +243,6 @@ public class MietbereichService {
                             ErrorMessages.ZAEHLER_NOT_FOUND
                     ));
 
-            if (!zaehler.getMietobjekt().getId().equals(mietobjektId)) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        ErrorMessages.ZAEHLER_WRONG_MIETOBJEKT
-                );
-            }
-
             ergebnis.add(zaehler);
         }
 

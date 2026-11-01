@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
+import java.time.LocalTime;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -33,6 +35,9 @@ public class MietobjektDTO {
     private String ort;
 
     private CountryCode countryCode = CountryCode.DE;
+
+    private LocalTime anreisezeit;
+    private LocalTime abreisezeit;
 
     private boolean aktiv = true;
 

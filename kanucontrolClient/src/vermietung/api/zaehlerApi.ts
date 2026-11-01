@@ -4,7 +4,6 @@ export type Verbrauchsart = "STROM" | "GAS" | "WASSER";
 
 export interface Zaehler {
   id: number;
-  mietobjektId: number;
   bezeichnung: string;
   verbrauchsart: Verbrauchsart;
   zaehlernummer: string | null;
@@ -20,38 +19,32 @@ export interface ZaehlerSave {
   aktiv: boolean;
 }
 
-function baseUrl(mietobjektId: number) {
-  return `/vermietung/objekte/${mietobjektId}/zaehler`;
-}
+const baseUrl = "/vermietung/zaehler";
 
-export async function getZaehler(mietobjektId: number): Promise<Zaehler[]> {
-  const response = await apiClient.get<Zaehler[]>(baseUrl(mietobjektId));
+export async function getZaehler(): Promise<Zaehler[]> {
+  const response = await apiClient.get<Zaehler[]>(baseUrl);
 
   return response.data;
 }
 
-export async function getZaehlerById(mietobjektId: number, id: number): Promise<Zaehler> {
-  const response = await apiClient.get<Zaehler>(`${baseUrl(mietobjektId)}/${id}`);
+export async function getZaehlerById(id: number): Promise<Zaehler> {
+  const response = await apiClient.get<Zaehler>(`${baseUrl}/${id}`);
 
   return response.data;
 }
 
-export async function createZaehler(mietobjektId: number, zaehler: ZaehlerSave): Promise<Zaehler> {
-  const response = await apiClient.post<Zaehler>(baseUrl(mietobjektId), zaehler);
+export async function createZaehler(zaehler: ZaehlerSave): Promise<Zaehler> {
+  const response = await apiClient.post<Zaehler>(baseUrl, zaehler);
 
   return response.data;
 }
 
-export async function updateZaehler(
-  mietobjektId: number,
-  id: number,
-  zaehler: ZaehlerSave,
-): Promise<Zaehler> {
-  const response = await apiClient.put<Zaehler>(`${baseUrl(mietobjektId)}/${id}`, zaehler);
+export async function updateZaehler(id: number, zaehler: ZaehlerSave): Promise<Zaehler> {
+  const response = await apiClient.put<Zaehler>(`${baseUrl}/${id}`, zaehler);
 
   return response.data;
 }
 
-export async function deleteZaehler(mietobjektId: number, id: number): Promise<void> {
-  await apiClient.delete(`${baseUrl(mietobjektId)}/${id}`);
+export async function deleteZaehler(id: number): Promise<void> {
+  await apiClient.delete(`${baseUrl}/${id}`);
 }

@@ -6,6 +6,8 @@ export interface MietobjektSave {
   plz: string;
   ort: string;
   countryCode: string;
+  anreisezeit: string | null;
+  abreisezeit: string | null;
   aktiv: boolean;
   mietbar: boolean;
   direktbuchungAktiv: boolean;

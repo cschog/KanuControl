@@ -21,39 +21,38 @@ interface Props {
 export const MietbereichBaseForm: React.FC<Props> = ({
   form,
   editMode,
-  mietobjektId,
   onChange,
 }) => {
   const [zaehler, setZaehler] = useState<Zaehler[]>([]);
   const [zaehlerFehler, setZaehlerFehler] = useState<string | null>(null);
 
-  useEffect(() => {
-    let aktiv = true;
+ useEffect(() => {
+   let aktiv = true;
 
-    const laden = async () => {
-      try {
-        setZaehlerFehler(null);
+   async function ladeZaehler() {
+     try {
+       setZaehlerFehler(null);
 
-        const daten = await getZaehler(mietobjektId);
+       const daten = await getZaehler();
 
-        if (aktiv) {
-          setZaehler(daten);
-        }
-      } catch (error) {
-        console.error("Fehler beim Laden der Zähler:", error);
+       if (aktiv) {
+         setZaehler(daten);
+       }
+     } catch (err) {
+       console.error("Fehler beim Laden der Zähler:", err);
 
-        if (aktiv) {
-          setZaehlerFehler("Die Zähler konnten nicht geladen werden.");
-        }
-      }
-    };
+       if (aktiv) {
+         setZaehlerFehler("Die Zähler konnten nicht geladen werden.");
+       }
+     }
+   }
 
-    void laden();
+   void ladeZaehler();
 
-    return () => {
-      aktiv = false;
-    };
-  }, [mietobjektId]);
+   return () => {
+     aktiv = false;
+   };
+ }, []);
 
   const handleAirbnbAktivChange = (aktiv: boolean) => {
     onChange("airbnbAktiv", aktiv);

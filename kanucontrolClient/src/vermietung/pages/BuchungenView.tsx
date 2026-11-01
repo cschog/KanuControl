@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Box, Button, MenuItem, TextField, Typography } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import { getBuchung } from "@/vermietung/api/buchungApi";
 
 import { ErrorDialog } from "@/core/components/common/ErrorDialog";
 import { getApiErrorMessage } from "@/kjfp/api/utils/apiError";
@@ -62,22 +63,26 @@ const BuchungenView = () => {
       setSaveError(getApiErrorMessage(err));
     }
   };
+const handleReopen = async () => {
+  if (!selectedBuchung) return;
 
-  const handleReopen = async () => {
-    if (!selectedBuchung) return;
+  setSaveError(null);
 
-    setSaveError(null);
+  try {
+    // Buchung wieder auf ABRECHENBAR setzen
+    const updated = await changeStatus(selectedBuchung.id, "ABRECHENBAR");
 
-    try {
-      const updated = await changeStatus(selectedBuchung.id, "BESTAETIGT");
+    // Buchung erneut laden, damit auch die Verbrauchskosten-Vorschau
+    // vom Backend berechnet und mitgeliefert wird.
+    const aktuelleBuchung = await getBuchung(updated.id);
 
-      setSelectedBuchung(updated);
-      setEditMode(true);
-    } catch (err: unknown) {
-      console.error("Fehler beim Wiederöffnen der Buchung:", err);
-      setSaveError(getApiErrorMessage(err));
-    }
-  };
+    setSelectedBuchung(aktuelleBuchung);
+    setEditMode(true);
+  } catch (err: unknown) {
+    console.error("Fehler beim Wiederöffnen der Buchung:", err);
+    setSaveError(getApiErrorMessage(err));
+  }
+};
 
 
   const handleReserve = () => handleStatusChange("RESERVIERT");
@@ -90,11 +95,24 @@ const BuchungenView = () => {
 
   const handleComplete = () => handleStatusChange("ABGESCHLOSSEN");
 
-  const handleSelect = (buchung: Buchung | null) => {
+  const handleSelect = async (buchung: Buchung | null) => {
     setSelectedId(buchung?.id ?? null);
-    setSelectedBuchung(buchung);
+    setSelectedBuchung(null);
     setShowForm(!!buchung);
     setEditMode(false);
+
+    if (!buchung) {
+      return;
+    }
+
+    try {
+      const aktuelleBuchung = await getBuchung(buchung.id);
+      setSelectedBuchung(aktuelleBuchung);
+    } catch (err: unknown) {
+      console.error("Fehler beim Laden der Buchung:", err);
+      setError(getApiErrorMessage(err));
+      setShowForm(false);
+    }
   };
 
   const handleNew = (buchungsquelle: Buchungsquelle) => {

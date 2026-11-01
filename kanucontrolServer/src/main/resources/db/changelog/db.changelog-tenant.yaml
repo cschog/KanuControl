@@ -227,3 +227,9 @@ databaseChangeLog:
       file: db/changelog/changes/20261015-03-mietbereich-mehrere-zaehler.xml
   - include:
       file: db/changelog/changes/20261016-01-buchung-verbrauchskosten-zaehler.xml
+  - include:
+      file: db/changelog/changes/20261016-02-buchung-anreise-abreise-timestamp.xml
+  - include:
+      file: db/changelog/changes/20261022-01-zaehler-ohne-mietobjekt.xml
+  - include:
+      file: db/changelog/changes/20261101-01-buchung-anreise-abreise-standardzeiten.xml

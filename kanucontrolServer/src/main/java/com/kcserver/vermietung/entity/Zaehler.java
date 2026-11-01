@@ -24,10 +24,6 @@ public class Zaehler extends Auditable {
     @ToString.Include
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "mietobjekt_id", nullable = false)
-    private Mietobjekt mietobjekt;
-
     @Column(nullable = false, length = 100)
     private String bezeichnung;
 

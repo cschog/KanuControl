@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+            http://www.liquibase.org/xml/ns/dbchangelog
+            https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20261101-01-buchung-anreise-abreise-standardzeiten"
+               author="chris">
+
+        <!-- No-op when 20261016-02 has already changed the columns. -->
+        <modifyDataType
+                tableName="buchung"
+                columnName="anreise"
+                newDataType="TIMESTAMP WITHOUT TIME ZONE"/>
+
+        <modifyDataType
+                tableName="buchung"
+                columnName="abreise"
+                newDataType="TIMESTAMP WITHOUT TIME ZONE"/>
+
+        <sql dbms="postgresql"><![CDATA[
+            UPDATE buchung b
+            SET anreise = b.anreise::date
+                + COALESCE(m.anreisezeit, TIME '16:00:00')
+            FROM mietobjekt m
+            WHERE m.id = b.mietobjekt_id;
+
+            UPDATE buchung b
+            SET abreise = b.abreise::date
+                + COALESCE(m.abreisezeit, TIME '14:00:00')
+            FROM mietobjekt m
+            WHERE m.id = b.mietobjekt_id;
+        ]]></sql>
+
+    </changeSet>
+
+</databaseChangeLog>

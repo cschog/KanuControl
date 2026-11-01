@@ -2,9 +2,7 @@ package com.kcserver.vermietung.service;
 
 import com.kcserver.core.exception.ErrorMessages;
 import com.kcserver.vermietung.dto.ZaehlerDTO;
-import com.kcserver.vermietung.entity.Mietobjekt;
 import com.kcserver.vermietung.entity.Zaehler;
-import com.kcserver.vermietung.repository.MietobjektRepository;
 import com.kcserver.vermietung.repository.ZaehlerRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -18,51 +16,36 @@ import java.util.List;
 public class ZaehlerService {
 
     private final ZaehlerRepository zaehlerRepository;
-    private final MietobjektRepository mietobjektRepository;
 
     public ZaehlerService(
-            ZaehlerRepository zaehlerRepository,
-            MietobjektRepository mietobjektRepository
+            ZaehlerRepository zaehlerRepository
     ) {
         this.zaehlerRepository = zaehlerRepository;
-        this.mietobjektRepository = mietobjektRepository;
     }
 
     @Transactional(readOnly = true)
-    public List<ZaehlerDTO> getAll(Long mietobjektId) {
-
-        pruefeMietobjekt(mietobjektId);
+    public List<ZaehlerDTO> getAll() {
 
         return zaehlerRepository
-                .findByMietobjektIdOrderByIdAsc(mietobjektId)
+                .findAllByOrderByIdAsc()
                 .stream()
                 .map(this::toDTO)
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public ZaehlerDTO getById(Long mietobjektId, Long id) {
+    public ZaehlerDTO getById(Long id) {
 
-        Zaehler zaehler = findeZaehler(mietobjektId, id);
+        Zaehler zaehler = findeZaehler(id);
 
         return toDTO(zaehler);
     }
 
-    public ZaehlerDTO create(Long mietobjektId, ZaehlerDTO dto) {
+    public ZaehlerDTO create(ZaehlerDTO dto) {
 
-        pruefeMietobjekt(mietobjektId);
         validiere(dto);
 
-        Mietobjekt mietobjekt = mietobjektRepository
-                .findById(mietobjektId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        ErrorMessages.MIETOBJEKT_NOT_FOUND
-                ));
-
         Zaehler zaehler = new Zaehler();
-
-        zaehler.setMietobjekt(mietobjekt);
 
         uebernehmeDaten(dto, zaehler);
 
@@ -70,53 +53,32 @@ public class ZaehlerService {
     }
 
     public ZaehlerDTO update(
-            Long mietobjektId,
             Long id,
             ZaehlerDTO dto
     ) {
-        Zaehler zaehler = findeZaehler(mietobjektId, id);
+        Zaehler zaehler = findeZaehler(id);
 
         validiere(dto);
-
         uebernehmeDaten(dto, zaehler);
 
         return toDTO(zaehlerRepository.save(zaehler));
     }
 
-    public void delete(Long mietobjektId, Long id) {
+    public void delete(Long id) {
 
-        Zaehler zaehler = findeZaehler(mietobjektId, id);
+        Zaehler zaehler = findeZaehler(id);
 
         zaehlerRepository.delete(zaehler);
     }
 
-    private void pruefeMietobjekt(Long mietobjektId) {
+    private Zaehler findeZaehler(Long id) {
 
-        if (!mietobjektRepository.existsById(mietobjektId)) {
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND,
-                    ErrorMessages.MIETOBJEKT_NOT_FOUND
-            );
-        }
-    }
-
-    private Zaehler findeZaehler(Long mietobjektId, Long id) {
-
-        Zaehler zaehler = zaehlerRepository
+        return zaehlerRepository
                 .findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         ErrorMessages.ZAEHLER_NOT_FOUND
                 ));
-
-        if (!zaehler.getMietobjekt().getId().equals(mietobjektId)) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    ErrorMessages.ZAEHLER_WRONG_MIETOBJEKT
-            );
-        }
-
-        return zaehler;
     }
 
     private void validiere(ZaehlerDTO dto) {
@@ -173,12 +135,14 @@ public class ZaehlerService {
     ) {
         zaehler.setBezeichnung(dto.getBezeichnung().trim());
         zaehler.setVerbrauchsart(dto.getVerbrauchsart());
+
         zaehler.setZaehlernummer(
                 dto.getZaehlernummer() == null
                         || dto.getZaehlernummer().isBlank()
                         ? null
                         : dto.getZaehlernummer().trim()
         );
+
         zaehler.setMengeneinheit(dto.getMengeneinheit().trim());
         zaehler.setAktiv(dto.isAktiv());
     }
@@ -188,7 +152,6 @@ public class ZaehlerService {
         ZaehlerDTO dto = new ZaehlerDTO();
 
         dto.setId(zaehler.getId());
-        dto.setMietobjektId(zaehler.getMietobjekt().getId());
         dto.setBezeichnung(zaehler.getBezeichnung());
         dto.setVerbrauchsart(zaehler.getVerbrauchsart());
         dto.setZaehlernummer(zaehler.getZaehlernummer());

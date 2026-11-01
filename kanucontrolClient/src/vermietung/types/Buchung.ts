@@ -2,6 +2,7 @@ import type { Buchungsstatus } from "@/vermietung/enums/Buchungsstatus";
 import type { Buchungsquelle } from "@/vermietung/enums/Buchungsquelle";
 import { Berechnungsart } from "@/vermietung/enums/Berechnungsart";
 import type { BuchungVerbrauchskosten } from "@/vermietung/types/BuchungVerbrauchskosten";
+import type { VerbrauchskostenVorschau } from "./VerbrauchskostenVorschau";
 
 export interface BuchungPosition {
   mietbereichId: number;
@@ -39,4 +40,5 @@ export interface Buchung {
   bewertung?: number | null;
 
   verbrauchskosten?: BuchungVerbrauchskosten[];
+  verbrauchskostenVorschau: VerbrauchskostenVorschau[];
 }

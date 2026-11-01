@@ -175,6 +175,17 @@ export const BuchungActionBar: React.FC<Props> = ({
             )}
 
             {status === "BESTAETIGT" && (
+              <Button
+                variant="outlined"
+                color="error"
+                startIcon={<CancelIcon />}
+                onClick={() => setCancelDialogOpen(true)}
+              >
+                Stornieren
+              </Button>
+            )}
+
+            {status === "ABRECHENBAR" && (
               <>
                 <Button
                   variant="contained"
@@ -240,9 +251,8 @@ export const BuchungActionBar: React.FC<Props> = ({
         <DialogContent>
           <DialogContentText>
             Möchtest du diese abgeschlossene Buchung wirklich wieder öffnen? Der Status wird auf
-            „Bestätigt“ zurückgesetzt. Anschließend kannst du die Buchungsdaten korrigieren. Zum
-            erneuten Abschließen müssen die Abschlussprüfungen wieder erfolgreich durchlaufen
-            werden.
+            „Abrechenbar“ zurückgesetzt. Anschließend kannst du die Buchungsdaten korrigieren. Beim
+            erneuten Abschließen werden die Verbrauchskosten erneut geprüft und gespeichert.
           </DialogContentText>
         </DialogContent>
 
@@ -362,8 +372,9 @@ export const BuchungActionBar: React.FC<Props> = ({
 
         <DialogContent>
           <DialogContentText>
-            Möchtest du diese Buchung wirklich abschließen? Bitte prüfe vorher die Buchungsdaten und
-            die erbrachten Leistungen.
+            Möchtest du diese Buchung wirklich abschließen? Dabei werden die Verbrauchskosten und
+            die erbrachten Leistungen abschließend geprüft. Die berechneten Verbrauchskosten werden
+            dauerhaft gespeichert.
           </DialogContentText>
         </DialogContent>
 

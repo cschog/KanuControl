@@ -13,11 +13,11 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/vermietung/objekte/{mietobjektId}/zaehler")
+@RequestMapping("/api/vermietung/zaehler")
 @PreAuthorize("hasAnyRole('ADMIN', 'VERMIETUNG')")
 @Tag(
         name = "Zähler",
-        description = "Verwaltung der Zähler eines Mietobjekts"
+        description = "Zentrale Verwaltung aller Zähler"
 )
 @SecurityRequirement(name = "bearerAuth")
 public class ZaehlerController {
@@ -29,22 +29,19 @@ public class ZaehlerController {
     }
 
     @GetMapping
-    public ApiResponse<List<ZaehlerDTO>> getAll(
-            @PathVariable Long mietobjektId
-    ) {
+    public ApiResponse<List<ZaehlerDTO>> getAll() {
         return new ApiResponse<>(
-                zaehlerService.getAll(mietobjektId),
+                zaehlerService.getAll(),
                 List.of()
         );
     }
 
     @GetMapping("/{id}")
     public ApiResponse<ZaehlerDTO> getById(
-            @PathVariable Long mietobjektId,
             @PathVariable Long id
     ) {
         return new ApiResponse<>(
-                zaehlerService.getById(mietobjektId, id),
+                zaehlerService.getById(id),
                 List.of()
         );
     }
@@ -52,23 +49,21 @@ public class ZaehlerController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<ZaehlerDTO> create(
-            @PathVariable Long mietobjektId,
             @Valid @RequestBody ZaehlerDTO dto
     ) {
         return new ApiResponse<>(
-                zaehlerService.create(mietobjektId, dto),
+                zaehlerService.create(dto),
                 List.of()
         );
     }
 
     @PutMapping("/{id}")
     public ApiResponse<ZaehlerDTO> update(
-            @PathVariable Long mietobjektId,
             @PathVariable Long id,
             @Valid @RequestBody ZaehlerDTO dto
     ) {
         return new ApiResponse<>(
-                zaehlerService.update(mietobjektId, id, dto),
+                zaehlerService.update(id, dto),
                 List.of()
         );
     }
@@ -76,9 +71,8 @@ public class ZaehlerController {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(
-            @PathVariable Long mietobjektId,
             @PathVariable Long id
     ) {
-        zaehlerService.delete(mietobjektId, id);
+        zaehlerService.delete(id);
     }
 }

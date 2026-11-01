@@ -10,10 +10,9 @@ import java.util.List;
 @Repository
 public interface ZaehlerRepository extends JpaRepository<Zaehler, Long> {
 
-    List<Zaehler> findByMietobjektIdOrderByIdAsc(Long mietobjektId);
+    List<Zaehler> findAllByOrderByIdAsc();
 
-    List<Zaehler> findByMietobjektIdAndVerbrauchsartAndAktivTrue(
-            Long mietobjektId,
+    List<Zaehler> findByVerbrauchsartAndAktivTrue(
             Verbrauchsart verbrauchsart
     );
 }

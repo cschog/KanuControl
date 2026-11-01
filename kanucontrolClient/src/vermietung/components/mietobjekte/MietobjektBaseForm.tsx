@@ -32,6 +32,34 @@ export const MietobjektBaseForm: React.FC<Props> = ({ form, editMode, onChange }
         onChange={(v) => onChange("beschreibung", v)}
       />
 
+      <TextField
+        label="Standard-Anreisezeit"
+        type="time"
+        value={form.anreisezeit ?? ""}
+        disabled={!editMode}
+        fullWidth
+        size="small"
+        slotProps={{
+          inputLabel: { shrink: true },
+          htmlInput: { step: 300 },
+        }}
+        onChange={(e) => onChange("anreisezeit", e.target.value || null)}
+      />
+
+      <TextField
+        label="Standard-Abreisezeit"
+        type="time"
+        value={form.abreisezeit ?? ""}
+        disabled={!editMode}
+        fullWidth
+        size="small"
+        slotProps={{
+          inputLabel: { shrink: true },
+          htmlInput: { step: 300 },
+        }}
+        onChange={(e) => onChange("abreisezeit", e.target.value || null)}
+      />
+
       <FormFeld
         label="Straße"
         value={form.strasse}
@@ -110,7 +138,6 @@ export const MietobjektBaseForm: React.FC<Props> = ({ form, editMode, onChange }
         <MenuItem value="ja">Ja</MenuItem>
         <MenuItem value="nein">Nein</MenuItem>
       </TextField>
-
     </>
   );
 };

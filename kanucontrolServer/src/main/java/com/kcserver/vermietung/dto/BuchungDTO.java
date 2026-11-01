@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.Instant;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -22,9 +22,9 @@ public class BuchungDTO {
     private Instant createdAt;
 
     @NotNull
-    private LocalDate anreise;
+    private LocalDateTime anreise;
 
-    private LocalDate abreise;
+    private LocalDateTime abreise;
 
     private boolean unbefristet = false;
 

@@ -7,10 +7,6 @@ import {
   Button,
   Chip,
   CircularProgress,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
   Stack,
   Table,
   TableBody,
@@ -22,14 +18,9 @@ import {
   Paper,
 } from "@mui/material";
 
-import type { SelectChangeEvent } from "@mui/material";
-
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import AssessmentIcon from "@mui/icons-material/Assessment";
-
-import { getMietobjekte } from "@/vermietung/api/mietobjektApi";
-import type { Mietobjekt } from "@/vermietung/types/Mietobjekt";
 
 import { getZaehler, createZaehler, updateZaehler } from "@/vermietung/api/zaehlerApi";
 
@@ -39,9 +30,6 @@ import ZaehlerDialog from "@/vermietung/components/verwaltung/ZaehlerDialog";
 import ZaehlerstaendeDialog from "@/vermietung/components/verwaltung/ZaehlerstaendeDialog";
 
 export default function ZaehlerVerwaltung() {
-  const [mietobjekte, setMietobjekte] = useState<Mietobjekt[]>([]);
-  const [selectedMietobjektId, setSelectedMietobjektId] = useState<number | "">("");
-
   const [zaehler, setZaehler] = useState<Zaehler[]>([]);
   const [selectedZaehler, setSelectedZaehler] = useState<Zaehler | null>(null);
 
@@ -50,41 +38,16 @@ export default function ZaehlerVerwaltung() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  useEffect(() => {
-    const loadMietobjekte = async () => {
-      try {
-        setError(null);
-
-        const data = await getMietobjekte();
-
-        setMietobjekte(data);
-
-        if (data.length > 0) {
-          setSelectedMietobjektId(data[0].id);
-        }
-      } catch (err) {
-        console.error("Fehler beim Laden der Mietobjekte:", err);
-        setError("Die Mietobjekte konnten nicht geladen werden.");
-      }
-    };
-
-    void loadMietobjekte();
-  }, []);
-
   const loadZaehler = useCallback(async () => {
-    if (selectedMietobjektId === "") {
-      setZaehler([]);
-      return;
-    }
-
     setLoading(true);
     setError(null);
 
     try {
-      const data = await getZaehler(selectedMietobjektId);
+      const data = await getZaehler();
       setZaehler(data);
     } catch (err) {
       console.error("Fehler beim Laden der Zähler:", err);
@@ -92,18 +55,11 @@ export default function ZaehlerVerwaltung() {
     } finally {
       setLoading(false);
     }
-  }, [selectedMietobjektId]);
+  }, []);
 
   useEffect(() => {
     void loadZaehler();
   }, [loadZaehler]);
-
-  function handleMietobjektChange(event: SelectChangeEvent<number | "">) {
-    const value = event.target.value;
-
-    setSelectedMietobjektId(value === "" ? "" : Number(value));
-    setSelectedZaehler(null);
-  }
 
   function handleCreate() {
     setSelectedZaehler(null);
@@ -121,14 +77,10 @@ export default function ZaehlerVerwaltung() {
   }
 
   async function handleSave(payload: ZaehlerSave) {
-    if (selectedMietobjektId === "") {
-      return;
-    }
-
-    if (selectedZaehler && dialogOpen) {
-      await updateZaehler(selectedMietobjektId, selectedZaehler.id, payload);
+    if (selectedZaehler) {
+      await updateZaehler(selectedZaehler.id, payload);
     } else {
-      await createZaehler(selectedMietobjektId, payload);
+      await createZaehler(payload);
     }
 
     await loadZaehler();
@@ -156,29 +108,15 @@ export default function ZaehlerVerwaltung() {
         justifyContent="space-between"
         sx={{ mb: 3 }}
       >
-        <FormControl sx={{ minWidth: 260 }}>
-          <InputLabel id="zaehler-mietobjekt-label">Mietobjekt</InputLabel>
+        <Box>
+          <Typography variant="h6">Zählerverwaltung</Typography>
 
-          <Select
-            labelId="zaehler-mietobjekt-label"
-            value={selectedMietobjektId}
-            label="Mietobjekt"
-            onChange={handleMietobjektChange}
-          >
-            {mietobjekte.map((mietobjekt) => (
-              <MenuItem key={mietobjekt.id} value={mietobjekt.id}>
-                {mietobjekt.bezeichnung}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+          <Typography variant="body2" color="text.secondary">
+            Zentrale Verwaltung aller Zähler unabhängig von Mietobjekten.
+          </Typography>
+        </Box>
 
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleCreate}
-          disabled={selectedMietobjektId === ""}
-        >
+        <Button variant="contained" startIcon={<AddIcon />} onClick={handleCreate}>
           Zähler anlegen
         </Button>
       </Stack>
@@ -193,10 +131,8 @@ export default function ZaehlerVerwaltung() {
         <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
           <CircularProgress />
         </Box>
-      ) : selectedMietobjektId === "" ? (
-        <Alert severity="info">Bitte wähle zunächst ein Mietobjekt aus.</Alert>
       ) : zaehler.length === 0 ? (
-        <Alert severity="info">Für dieses Mietobjekt sind noch keine Zähler angelegt.</Alert>
+        <Alert severity="info">Es sind noch keine Zähler angelegt.</Alert>
       ) : isMobile ? (
         <Stack spacing={2}>
           {zaehler.map((item) => (
@@ -224,14 +160,35 @@ export default function ZaehlerVerwaltung() {
                 />
               </Stack>
 
-              <Box sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 1 }}>
-                <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}>
+              <Box
+                sx={{
+                  mt: 2,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 1,
+                }}
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: 2,
+                  }}
+                >
                   <Typography color="text.secondary">Zählernummer</Typography>
+
                   <Typography textAlign="right">{item.zaehlernummer || "–"}</Typography>
                 </Box>
 
-                <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: 2,
+                  }}
+                >
                   <Typography color="text.secondary">Einheit</Typography>
+
                   <Typography>{item.mengeneinheit}</Typography>
                 </Box>
               </Box>

@@ -8,7 +8,7 @@ import com.kcserver.vermietung.enumtype.Buchungsstatus;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,11 +53,11 @@ public class Buchung extends Auditable {
     @Column(name = "buchungsquelle", nullable = false, length = 20)
     private Buchungsquelle buchungsquelle;
 
-    @Column(nullable = false)
-    private LocalDate anreise;
+    @Column(name = "anreise", nullable = false)
+    private LocalDateTime anreise;
 
-    @Column(nullable = false)
-    private LocalDate abreise;
+    @Column(name = "abreise", nullable = false)
+    private LocalDateTime abreise;
 
     @Column(columnDefinition = "TEXT")
     private String bemerkung;

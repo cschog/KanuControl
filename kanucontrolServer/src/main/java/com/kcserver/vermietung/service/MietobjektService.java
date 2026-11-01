@@ -53,6 +53,8 @@ public class MietobjektService {
         objekt.setOrt(dto.getOrt());
         objekt.setCountryCode(dto.getCountryCode());
         objekt.setSortierung(dto.getSortierung());
+        objekt.setAnreisezeit(dto.getAnreisezeit());
+        objekt.setAbreisezeit(dto.getAbreisezeit());
 
         mietobjektRepository.unsetAktivesMietobjekt();
         mietobjektRepository.flush();
@@ -80,6 +82,8 @@ public class MietobjektService {
         objekt.setOrt(dto.getOrt());
         objekt.setCountryCode(dto.getCountryCode());
         objekt.setSortierung(dto.getSortierung());
+        objekt.setAnreisezeit(dto.getAnreisezeit());
+        objekt.setAbreisezeit(dto.getAbreisezeit());
         objekt.setMietbar(dto.isMietbar());
         objekt.setDirektbuchungAktiv(dto.isDirektbuchungAktiv());
         objekt.setAirbnbAktiv(dto.isAirbnbAktiv());
@@ -128,6 +132,8 @@ public class MietobjektService {
         dto.setOrt(objekt.getOrt());
         dto.setCountryCode(objekt.getCountryCode());
         dto.setSortierung(objekt.getSortierung());
+        dto.setAnreisezeit(objekt.getAnreisezeit());
+        dto.setAbreisezeit(objekt.getAbreisezeit());
         dto.setAktiv(objekt.isAktiv());
         dto.setMietbar(objekt.isMietbar());
         dto.setDirektbuchungAktiv(objekt.isDirektbuchungAktiv());

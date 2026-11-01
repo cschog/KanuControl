@@ -27,6 +27,14 @@ const createInitialForm = (buchungsquelle: Buchungsquelle = "DIREKT"): BuchungSa
   bewertung: null,
 });
 
+const kombiniereDatumUndZeit = (datum: string, zeit: string | null | undefined): string => {
+  if (!datum || !zeit) return "";
+
+  const formatierteZeit = zeit.length === 5 ? `${zeit}:00` : zeit;
+
+  return `${datum}T${formatierteZeit}`;
+};
+
 export function useBuchungForm(
   buchung: Buchung | null,
   neueBuchungsquelle: Buchungsquelle = "DIREKT",
@@ -67,14 +75,18 @@ export function useBuchungForm(
       return;
     }
 
-    if (mietobjekt) {
-      setForm({
-        ...createInitialForm(neueBuchungsquelle),
-        mietobjektId: mietobjekt.id,
-      });
-    } else {
-      setForm(createInitialForm(neueBuchungsquelle));
-    }
+   if (mietobjekt) {
+     const initialForm = createInitialForm(neueBuchungsquelle);
+
+     setForm({
+       ...initialForm,
+       mietobjektId: mietobjekt.id,
+       anreise: kombiniereDatumUndZeit(initialForm.anreise, mietobjekt.anreisezeit),
+       abreise: kombiniereDatumUndZeit(initialForm.abreise, mietobjekt.abreisezeit),
+     });
+   } else {
+     setForm(createInitialForm(neueBuchungsquelle));
+   }
   }, [buchung, mietobjekt, neueBuchungsquelle]);
 
   const resetForm = () => {

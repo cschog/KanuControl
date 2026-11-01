@@ -14,8 +14,6 @@ public class ZaehlerDTO {
 
     private Long id;
 
-    private Long mietobjektId;
-
     @NotBlank
     @Size(max = 100)
     private String bezeichnung;

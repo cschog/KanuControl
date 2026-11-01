@@ -17,7 +17,7 @@ import java.math.RoundingMode;
 import java.time.Duration;
 
 import java.time.LocalDateTime;
-import java.time.LocalTime;
+
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
@@ -25,17 +25,8 @@ import java.util.*;
 @Transactional
 public class VerbrauchsabrechnungService {
 
-    private static final LocalTime DEFAULT_ANREISEZEIT =
-            LocalTime.of(16, 0);
-
-    private static final LocalTime DEFAULT_ABREISEZEIT =
-            LocalTime.of(14, 0);
-
     private static final Duration MAX_ABWEICHUNG =
             Duration.ofDays(1);
-
-    private static final BigDecimal NULLBETRAG =
-            BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
 
     private final VerbrauchskostenRepository verbrauchskostenRepository;
     private final ZaehlerRepository zaehlerRepository;
@@ -89,23 +80,13 @@ public class VerbrauchsabrechnungService {
                     "Das Abreisedatum muss nach dem Anreisedatum liegen."
             );
         }
-
-        LocalDateTime anreiseZeitpunkt = buchung.getAnreise().atTime(
-                buchung.getMietobjekt().getAnreisezeit() != null
-                        ? buchung.getMietobjekt().getAnreisezeit()
-                        : DEFAULT_ANREISEZEIT
-        );
-
-        LocalDateTime abreiseZeitpunkt = buchung.getAbreise().atTime(
-                buchung.getMietobjekt().getAbreisezeit() != null
-                        ? buchung.getMietobjekt().getAbreisezeit()
-                        : DEFAULT_ABREISEZEIT
-        );
+        LocalDateTime anreiseZeitpunkt = buchung.getAnreise();
+        LocalDateTime abreiseZeitpunkt = buchung.getAbreise();
 
         int abrechnungstage = Math.toIntExact(
                 ChronoUnit.DAYS.between(
-                        buchung.getAnreise(),
-                        buchung.getAbreise()
+                        buchung.getAnreise().toLocalDate(),
+                        buchung.getAbreise().toLocalDate()
                 )
         );
 
@@ -168,9 +149,8 @@ public class VerbrauchsabrechnungService {
             }
         }
 
-        buchungVerbrauchskostenRepository.deleteByBuchungId(
-                buchung.getId()
-        );
+        buchungVerbrauchskostenRepository.deleteByBuchungId(buchung.getId());
+        buchungVerbrauchskostenRepository.flush();
 
         buchungVerbrauchskostenRepository.saveAll(snapshots);
         buchungVerbrauchskostenRepository.flush();
@@ -193,11 +173,7 @@ public class VerbrauchsabrechnungService {
 
             for (Zaehler zaehler : position.getMietbereich().getZaehler()) {
 
-                if (!zaehler.isAktiv()
-                        || zaehler.getMietobjekt() == null
-                        || !zaehler.getMietobjekt().getId().equals(
-                        buchung.getMietobjekt().getId()
-                )) {
+                if (!zaehler.isAktiv()) {
                     continue;
                 }
 
@@ -299,22 +275,13 @@ public class VerbrauchsabrechnungService {
             return ergebnis;
         }
 
-        LocalDateTime anreiseZeitpunkt = buchung.getAnreise().atTime(
-                buchung.getMietobjekt().getAnreisezeit() != null
-                        ? buchung.getMietobjekt().getAnreisezeit()
-                        : DEFAULT_ANREISEZEIT
-        );
-
-        LocalDateTime abreiseZeitpunkt = buchung.getAbreise().atTime(
-                buchung.getMietobjekt().getAbreisezeit() != null
-                        ? buchung.getMietobjekt().getAbreisezeit()
-                        : DEFAULT_ABREISEZEIT
-        );
+        LocalDateTime anreiseZeitpunkt = buchung.getAnreise();
+        LocalDateTime abreiseZeitpunkt = buchung.getAbreise();
 
         int abrechnungstage = Math.toIntExact(
                 ChronoUnit.DAYS.between(
-                        buchung.getAnreise(),
-                        buchung.getAbreise()
+                        buchung.getAnreise().toLocalDate(),
+                        buchung.getAbreise().toLocalDate()
                 )
         );
 
@@ -345,10 +312,6 @@ public class VerbrauchsabrechnungService {
 
             mietbereich.getZaehler().stream()
                     .filter(Zaehler::isAktiv)
-                    .filter(z -> z.getMietobjekt() != null)
-                    .filter(z -> z.getMietobjekt().getId().equals(
-                            buchung.getMietobjekt().getId()
-                    ))
                     .forEach(z -> zugeordneteZaehler.putIfAbsent(
                             z.getId(),
                             z

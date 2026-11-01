@@ -4,7 +4,7 @@ import com.kcserver.vermietung.entity.Buchung;
 import com.kcserver.vermietung.enumtype.Buchungsstatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -17,29 +17,32 @@ public interface BuchungRepository extends JpaRepository<Buchung, Long> {
 
     List<Buchung> findByStatusAndAnreiseLessThanAndAbreiseGreaterThan(
             Buchungsstatus status,
-            LocalDate abreise,
-            LocalDate anreise
+            LocalDateTime abreise,
+            LocalDateTime anreise
     );
 
     List<Buchung> findByStatusAndAnreiseLessThanAndAbreiseGreaterThanAndIdNot(
             Buchungsstatus status,
-            LocalDate abreise,
-            LocalDate anreise,
+            LocalDateTime abreise,
+            LocalDateTime anreise,
             Long id
     );
 
-    List<Buchung>
-    findByStatusInAndAnreiseLessThanAndAbreiseGreaterThan(
+    List<Buchung> findByStatusInAndAnreiseLessThanAndAbreiseGreaterThan(
             Collection<Buchungsstatus> status,
-            LocalDate abreise,
-            LocalDate anreise
+            LocalDateTime abreise,
+            LocalDateTime anreise
     );
 
-    List<Buchung>
-    findByStatusInAndAnreiseLessThanAndAbreiseGreaterThanAndIdNot(
+    List<Buchung> findByStatusInAndAnreiseLessThanAndAbreiseGreaterThanAndIdNot(
             Collection<Buchungsstatus> status,
-            LocalDate abreise,
-            LocalDate anreise,
+            LocalDateTime abreise,
+            LocalDateTime anreise,
             Long id
+    );
+
+    List<Buchung> findByStatusAndAbreiseLessThanEqual(
+            Buchungsstatus status,
+            LocalDateTime stichtag
     );
 }

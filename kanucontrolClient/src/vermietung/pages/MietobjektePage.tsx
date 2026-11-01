@@ -269,7 +269,8 @@ async function handleSave(payload: MietobjektSave) {
             direktbuchungAktiv: true,
             airbnbAktiv: false,
             airbnbInserat: false,
-          
+            anreisezeit: "",
+            abreisezeit: "",
           }}
           editMode={true}
           onEdit={() => setEditMode(true)}

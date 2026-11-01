@@ -12,14 +12,14 @@ import com.kcserver.vermietung.entity.*;
 import com.kcserver.vermietung.enumtype.Buchungsquelle;
 import com.kcserver.vermietung.enumtype.Buchungsstatus;
 import com.kcserver.vermietung.repository.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.Year;
-import java.time.ZoneId;
+import java.time.*;
 import java.util.*;
 
+@Slf4j
 @Service
 @Transactional
 public class BuchungService {
@@ -39,8 +39,8 @@ public class BuchungService {
     private final BuchungVerbrauchskostenRepository
             buchungVerbrauchskostenRepository;
 
-    private static final java.time.LocalDate UNBEFRISTET_BIS =
-            java.time.LocalDate.of(3000, 12, 31);
+    private static final LocalDateTime UNBEFRISTET_BIS =
+            LocalDateTime.of(3000, 12, 31, 14, 0);
 
     public BuchungService(
             BuchungRepository buchungRepository,
@@ -78,7 +78,7 @@ public class BuchungService {
                 .toList();
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public BuchungDTO getById(Long id) {
 
         Buchung buchung = buchungRepository.findById(id)
@@ -92,8 +92,21 @@ public class BuchungService {
                         )
                 );
 
+        // Prüfen, ob eine bestätigte Buchung abrechenbar geworden ist.
+        if (buchung.getStatus() == Buchungsstatus.BESTAETIGT
+                && buchung.getAbreise() != null
+                && buchung.getAbreise().getYear() < 2999
+                && !buchung.getAbreise().isAfter(LocalDateTime.now())) {
+
+            buchung.setStatus(Buchungsstatus.ABRECHENBAR);
+
+            buchung = buchungRepository.save(buchung);
+        }
+
+        // Erst nach der Statusprüfung das DTO erstellen.
         BuchungDTO dto = toDTO(buchung);
 
+        // Vorschau nur bei abrechenbaren Buchungen berechnen.
         if (buchung.getStatus() == Buchungsstatus.ABRECHENBAR) {
             dto.setVerbrauchskostenVorschau(
                     verbrauchsabrechnungService.berechneVorschau(buchung)
@@ -127,12 +140,56 @@ public class BuchungService {
         buchung.setBemerkung(dto.getBemerkung());
         buchung.setBewertung(dto.getBewertung());
 
-        buchung.setAnreise(dto.getAnreise());
-        buchung.setAbreise(
-                dto.isUnbefristet()
-                        ? UNBEFRISTET_BIS
-                        : dto.getAbreise()
-        );
+        boolean unbefristet = dto.isUnbefristet();
+
+        // Die Standardzeiten müssen am Mietobjekt konfiguriert sein.
+        if (mietobjekt.getAnreisezeit() == null) {
+            throw new IllegalArgumentException(
+                    "Für das Mietobjekt \""
+                            + mietobjekt.getBezeichnung()
+                            + "\" ist keine Standard-Anreisezeit hinterlegt."
+            );
+        }
+
+        if (!unbefristet && mietobjekt.getAbreisezeit() == null) {
+            throw new IllegalArgumentException(
+                    "Für das Mietobjekt \""
+                            + mietobjekt.getBezeichnung()
+                            + "\" ist keine Standard-Abreisezeit hinterlegt."
+            );
+        }
+
+        // Datum und Uhrzeit werden vollständig vom Frontend übernommen.
+        LocalDateTime anreise = dto.getAnreise();
+
+        if (anreise == null) {
+            throw new IllegalArgumentException(
+                    "Bitte gib Datum und Uhrzeit der Anreise an."
+            );
+        }
+
+        LocalDateTime abreise;
+
+        if (unbefristet) {
+            abreise = UNBEFRISTET_BIS;
+        } else {
+            abreise = dto.getAbreise();
+
+            if (abreise == null) {
+                throw new IllegalArgumentException(
+                        "Bitte gib Datum und Uhrzeit der Abreise an."
+                );
+            }
+
+            if (!abreise.isAfter(anreise)) {
+                throw new IllegalArgumentException(
+                        "Die Abreise muss nach der Anreise liegen."
+                );
+            }
+        }
+
+        buchung.setAnreise(anreise);
+        buchung.setAbreise(abreise);
 
         buchung.setStatus(Buchungsstatus.ANFRAGE);
 
@@ -228,12 +285,22 @@ public class BuchungService {
         buchung.setBemerkung(dto.getBemerkung());
         buchung.setBewertung(dto.getBewertung());
 
-        buchung.setAnreise(dto.getAnreise());
-        buchung.setAbreise(
-                dto.isUnbefristet()
-                        ? UNBEFRISTET_BIS
-                        : dto.getAbreise()
+        boolean unbefristet = dto.isUnbefristet();
+
+        LocalDateTime anreise = dto.getAnreise();
+        LocalDateTime abreise = unbefristet
+                ? UNBEFRISTET_BIS
+                : dto.getAbreise();
+
+        pruefeBuchungszeiten(
+                mietobjekt,
+                anreise,
+                abreise,
+                unbefristet
         );
+
+        buchung.setAnreise(anreise);
+        buchung.setAbreise(abreise);
 
         // Auch bei ABGESCHLOSSEN bleibt der Status unverändert.
         // Die Buchung kann korrigiert und später ausdrücklich
@@ -251,6 +318,51 @@ public class BuchungService {
         return toDTO(buchung);
     }
 
+    private void pruefeBuchungszeiten(
+            Mietobjekt mietobjekt,
+            LocalDateTime anreise,
+            LocalDateTime abreise,
+            boolean unbefristet
+    ) {
+        if (mietobjekt.getAnreisezeit() == null) {
+            throw new IllegalArgumentException(
+                    "Für das Mietobjekt \""
+                            + mietobjekt.getBezeichnung()
+                            + "\" ist keine Standard-Anreisezeit hinterlegt."
+            );
+        }
+
+        if (!unbefristet && mietobjekt.getAbreisezeit() == null) {
+            throw new IllegalArgumentException(
+                    "Für das Mietobjekt \""
+                            + mietobjekt.getBezeichnung()
+                            + "\" ist keine Standard-Abreisezeit hinterlegt."
+            );
+        }
+
+        if (anreise == null) {
+            throw new IllegalArgumentException(
+                    "Bitte gib Datum und Uhrzeit der Anreise an."
+            );
+        }
+
+        if (unbefristet) {
+            return;
+        }
+
+        if (abreise == null) {
+            throw new IllegalArgumentException(
+                    "Bitte gib Datum und Uhrzeit der Abreise an."
+            );
+        }
+
+        if (!abreise.isAfter(anreise)) {
+            throw new IllegalArgumentException(
+                    "Die Abreise muss nach der Anreise liegen."
+            );
+        }
+    }
+
     private boolean sindBuchungsdatenUnveraendert(
             Buchung buchung,
             BuchungDTO dto
@@ -261,7 +373,7 @@ public class BuchungService {
             return false;
         }
 
-        LocalDate gewuenschteAbreise = dto.isUnbefristet()
+        LocalDateTime gewuenschteAbreise = dto.isUnbefristet()
                 ? UNBEFRISTET_BIS
                 : dto.getAbreise();
 
@@ -608,6 +720,41 @@ public class BuchungService {
                 ));
     }
 
+    /**
+     * Stellt bestätigte Buchungen nach Erreichen des Abreisezeitpunkts
+     * auf ABRECHENBAR um.
+     *
+     * Unbefristete Buchungen werden nicht umgestellt.
+     */
+    public int aktualisiereAbrechenbareBuchungen() {
+        LocalDateTime jetzt = LocalDateTime.now();
+
+        List<Buchung> faelligeBuchungen =
+                buchungRepository.findByStatusAndAbreiseLessThanEqual(
+                        Buchungsstatus.BESTAETIGT,
+                        jetzt
+                );
+
+        int anzahl = 0;
+
+        for (Buchung buchung : faelligeBuchungen) {
+            // Unbefristete Buchungen nicht automatisch umstellen.
+            if (buchung.getAbreise() != null
+                    && buchung.getAbreise().getYear() >= 2999) {
+                continue;
+            }
+
+            buchung.setStatus(Buchungsstatus.ABRECHENBAR);
+            anzahl++;
+        }
+
+        if (anzahl > 0) {
+            buchungRepository.flush();
+        }
+
+        return anzahl;
+    }
+
     public BuchungDTO aendereStatus(
             Long id,
             Buchungsstatus neuerStatus
@@ -686,7 +833,7 @@ public class BuchungService {
                             || neuerStatus == Buchungsstatus.STORNIERT;
 
             case ABGESCHLOSSEN ->
-                    neuerStatus == Buchungsstatus.BESTAETIGT;
+                    neuerStatus == Buchungsstatus.ABRECHENBAR;
 
             case ABGELEHNT, STORNIERT -> false;
         };

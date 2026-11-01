@@ -39,6 +39,7 @@ const statusAnzeige: Record<
   ABGELEHNT: { label: "Abgelehnt", color: "error" },
   RESERVIERT: { label: "Reserviert", color: "warning" },
   BESTAETIGT: { label: "Bestätigt", color: "success" },
+  ABRECHENBAR: { label: "Abrechenbar", color: "warning" },
   STORNIERT: { label: "Storniert", color: "error" },
   ABGESCHLOSSEN: { label: "Abgeschlossen", color: "default" },
 };
@@ -129,6 +130,7 @@ export const BuchungFormView: React.FC<Props> = ({
           veranstalter={veranstalter}
           buchungspositionen={buchung?.positionen ?? []}
           verbrauchskosten={buchung?.verbrauchskosten ?? []}
+          verbrauchskostenVorschau={buchung?.verbrauchskostenVorschau ?? []}
           buchungsstatus={buchung?.status}
           createdAt={buchung?.createdAt}
           buchungsquelle={form.buchungsquelle}
