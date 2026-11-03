@@ -115,7 +115,9 @@ public abstract class AbstractFinanzIntegrationTest
         dto.setName("Finanztest");
         dto.setTyp(typ);
         dto.setBeginnDatum(start);
-        dto.setEndeDatum(start.plusDays(1));
+        // JEM benötigt mindestens fünf Kalendertage; kürzere Veranstaltungen
+        // werden vom Service fachlich korrekt automatisch zu FM umgestuft.
+        dto.setEndeDatum(start.plusDays(typ == VeranstaltungTyp.JEM ? 4 : 1));
         dto.setBeginnZeit(LocalTime.NOON);
         dto.setEndeZeit(LocalTime.MIDNIGHT);
         dto.setVereinId(verein.getId());

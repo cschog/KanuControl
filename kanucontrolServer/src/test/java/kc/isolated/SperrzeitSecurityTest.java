@@ -1,4 +1,4 @@
-package com.kcserver.unit;
+package kc.isolated;
 import com.kcserver.vermietung.controller.SperrzeitController;
 import com.kcserver.vermietung.service.SperrzeitService;
 import org.junit.jupiter.api.*;

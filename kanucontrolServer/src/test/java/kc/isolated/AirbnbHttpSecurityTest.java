@@ -1,4 +1,4 @@
-package com.kcserver.unit;
+package kc.isolated;
 import com.kcserver.core.config.SecurityConfig;
 import com.kcserver.core.tenancy.*;
 import com.kcserver.vermietung.controller.PublicAirbnbController;

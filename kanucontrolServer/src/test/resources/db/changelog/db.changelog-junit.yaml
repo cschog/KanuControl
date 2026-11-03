@@ -1,0 +1,7 @@
+# Globale Tabellen, die von den Integrationstests verwendet werden.
+# Keine Übernahme von Bestandsdaten aus einer vorhandenen KC-Installation.
+databaseChangeLog:
+  - include:
+      file: db/changelog/changes-global/2026-05-30-global-002-create-foerdersatz.xml
+  - include:
+      file: db/changelog/changes-global/2026-05-30-global-005-create-kik-zuschlag.xml

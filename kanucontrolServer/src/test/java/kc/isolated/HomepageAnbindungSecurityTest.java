@@ -1,4 +1,4 @@
-package com.kcserver.unit;
+package kc.isolated;
 
 import com.kcserver.vermietung.controller.HomepageAnbindungController;
 import com.kcserver.vermietung.dto.HomepageAnbindungDTO;

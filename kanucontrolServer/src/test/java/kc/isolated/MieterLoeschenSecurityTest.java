@@ -1,4 +1,4 @@
-package com.kcserver.unit;
+package kc.isolated;
 import com.kcserver.vermietung.controller.MieterController;
 import com.kcserver.vermietung.service.MieterService;
 import org.junit.jupiter.api.*;

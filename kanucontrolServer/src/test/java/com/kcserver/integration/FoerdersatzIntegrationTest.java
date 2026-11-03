@@ -59,14 +59,15 @@ class FoerdersatzIntegrationTest extends AbstractFinanzIntegrationTest {
     @BeforeEach
     void setup() {
 
-        foerdersatzRepository.findAll().forEach(f ->
-
-                System.out.println(
-                        f.getTyp() + " "
-                                + f.getGueltigVon() + " "
-                                + f.getFoerdersatz()
-                )
-        );
+        // Eigene, zurückgerollte Testdaten statt Fördersätzen aus einer bestehenden DB.
+        foerdersatzRepository.deleteAllInBatch();
+        FoerdersatzCreateUpdateDTO basis = new FoerdersatzCreateUpdateDTO();
+        basis.setTyp(VeranstaltungTyp.JEM);
+        basis.setGueltigVon(TEST_DATE.withDayOfYear(1));
+        basis.setGueltigBis(LocalDate.of(2030, 12, 31));
+        basis.setFoerdersatz(new BigDecimal("25.00"));
+        basis.setBeschluss("Testbeschluss");
+        foerdersatzService.create(basis);
 
         // Veranstaltung beginnt fix in 2026 → deterministisch
         veranstaltungId = createTestVeranstaltung(
@@ -80,6 +81,7 @@ class FoerdersatzIntegrationTest extends AbstractFinanzIntegrationTest {
                 .findById(veranstaltungId)
                 .orElseThrow();
 
+        assertThat(veranstaltung.getTyp()).isEqualTo(VeranstaltungTyp.JEM);
         teilnehmerId = createTeilnehmer(veranstaltung, null).getId();
     }
 

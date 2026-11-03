@@ -1,4 +1,4 @@
-package com.kcserver.unit;
+package kc.isolated;
 
 import com.kcserver.kjfp.repository.PersonRepository;
 import jakarta.persistence.*;

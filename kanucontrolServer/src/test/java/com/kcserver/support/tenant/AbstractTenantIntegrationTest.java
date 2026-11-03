@@ -11,6 +11,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.context.transaction.BeforeTransaction;
+import org.springframework.test.context.transaction.TestTransaction;
 import com.kcserver.support.config.TestSecurityConfig;
 
 @SpringBootTest
@@ -40,12 +42,22 @@ public abstract class AbstractTenantIntegrationTest {
        TENANT BOOTSTRAP
        ========================================================= */
 
+    @BeforeTransaction
+    void provisionTenantBeforeTransaction() {
+        // Liquibase öffnet eine eigene Verbindung. Das Schema muss deshalb
+        // bereits committed sein, bevor die Testtransaktion beginnt.
+        tenantSchemaProvisioner.createFromBaseline(tenant());
+        TenantContext.setCurrentTenant(tenant());
+    }
+
     @BeforeEach
     void setupTenant() {
         String tenant = tenant();
 
         // ⭐ Schema sicherstellen
-        tenantSchemaProvisioner.createFromBaseline(tenant);
+        if (!TestTransaction.isActive()) {
+            tenantSchemaProvisioner.createFromBaseline(tenant);
+        }
 
         // ⭐ ThreadLocal für Hibernate Resolver
         TenantContext.setCurrentTenant(tenant);
