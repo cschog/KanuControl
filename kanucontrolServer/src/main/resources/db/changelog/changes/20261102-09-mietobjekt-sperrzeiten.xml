@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+ <changeSet id="20261102-09-mietobjekt-sperrzeiten" author="codex">
+  <createTable tableName="mietobjekt_sperrzeit">
+   <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true" nullable="false"/></column>
+   <column name="version" type="BIGINT"/>
+   <column name="mietobjekt_id" type="BIGINT"><constraints nullable="false"/></column>
+   <column name="von" type="TIMESTAMP"><constraints nullable="false"/></column>
+   <column name="bis" type="TIMESTAMP"><constraints nullable="false"/></column>
+   <column name="ganztaegig" type="BOOLEAN"><constraints nullable="false"/></column>
+   <column name="grund" type="VARCHAR(500)"><constraints nullable="false"/></column>
+   <column name="created_at" type="TIMESTAMP"><constraints nullable="false"/></column>
+   <column name="created_by" type="VARCHAR(255)"/>
+   <column name="last_modified_at" type="TIMESTAMP"/>
+   <column name="last_modified_by" type="VARCHAR(255)"/>
+  </createTable>
+  <addForeignKeyConstraint baseTableName="mietobjekt_sperrzeit" baseColumnNames="mietobjekt_id" referencedTableName="mietobjekt" referencedColumnNames="id" constraintName="fk_sperrzeit_mietobjekt" onDelete="CASCADE"/>
+  <createIndex tableName="mietobjekt_sperrzeit" indexName="idx_sperrzeit_objekt_zeit"><column name="mietobjekt_id"/><column name="von"/><column name="bis"/></createIndex>
+  <rollback><dropTable tableName="mietobjekt_sperrzeit"/></rollback>
+ </changeSet>
+</databaseChangeLog>

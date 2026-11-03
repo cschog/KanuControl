@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+ <changeSet id="2026-11-03-airbnb-kalender-export" author="codex">
+  <createTable tableName="airbnb_kalender_export">
+   <column name="tenant" type="VARCHAR(63)"><constraints nullable="false"/></column>
+   <column name="mietobjekt_id" type="BIGINT"><constraints nullable="false"/></column>
+   <column name="aktiv" type="BOOLEAN"><constraints nullable="false"/></column>
+   <column name="mietbereich_ids" type="VARCHAR(5000)"><constraints nullable="false"/></column>
+   <column name="version" type="BIGINT"><constraints nullable="false"/></column>
+   <column name="token_hash" type="VARCHAR(64)"><constraints unique="true" uniqueConstraintName="uk_airbnb_feed_hash"/></column>
+  </createTable>
+  <addPrimaryKey tableName="airbnb_kalender_export" columnNames="tenant,mietobjekt_id" constraintName="pk_airbnb_kalender_export"/>
+  <rollback><dropTable tableName="airbnb_kalender_export"/></rollback>
+ </changeSet>
+</databaseChangeLog>

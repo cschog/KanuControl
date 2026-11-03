@@ -209,6 +209,10 @@ public class PersonServiceImpl implements PersonService {
                         HttpStatus.NOT_FOUND, ErrorMessages.PERSON_NOT_FOUND
                 ));
 
+        if (!person.isKjfpSichtbar()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, ErrorMessages.PERSON_NOT_FOUND);
+        }
+
         PersonDetailDTO dto = personMapper.toDetailDTO(person);
         dto.setDataStatus(determinePersonStatus(person));
 
@@ -270,7 +274,7 @@ public class PersonServiceImpl implements PersonService {
     @Override
     @Transactional(readOnly = true)
     public Page<PersonListDTO> getAll(Pageable pageable) {
-        Page<Person> page = personRepository.findAll(pageable);
+        Page<Person> page = personRepository.findByKjfpSichtbarTrue(pageable);
 
         List<Person> persons = page.getContent();
 
@@ -324,6 +328,13 @@ public class PersonServiceImpl implements PersonService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<PersonRefDTO> searchVermietungRefList(String search) {
+        return personRepository.searchVermietungRefList(search).stream()
+                .map(personMapper::toPersonRefDTO)
+                .toList();
+    }
+
     @Override
     @Transactional(readOnly = true)
     public List<PersonListDTO> getAll(Sort sort, PersonSearchCriteria criteria) {
@@ -369,6 +380,7 @@ public class PersonServiceImpl implements PersonService {
         }
 
         Person entity = personMapper.toNewEntity(dto);
+        entity.setKjfpSichtbar(true);
 
         if (entity.getCountryCode() == null) {
             entity.setCountryCode(CountryCode.DE);
@@ -432,6 +444,10 @@ public class PersonServiceImpl implements PersonService {
                         HttpStatus.NOT_FOUND, ErrorMessages.PERSON_NOT_FOUND
                 ));
 
+        if (!existing.isKjfpSichtbar()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, ErrorMessages.PERSON_NOT_FOUND);
+        }
+
         // 2. MERGE (finale Werte!)
         String name = merge(dto.getName(), existing.getName());
         String vorname = merge(dto.getVorname(), existing.getVorname());
@@ -464,7 +480,8 @@ public class PersonServiceImpl implements PersonService {
 
     @Override
     public void deletePerson(long id) {
-        if (!personRepository.existsById(id)) {
+        Person person = personRepository.findById(id).orElse(null);
+        if (person == null || !person.isKjfpSichtbar()) {
             throw new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
                     ErrorMessages.PERSON_NOT_FOUND

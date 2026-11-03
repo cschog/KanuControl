@@ -1,70 +1,35 @@
 # Über KanuControl
 
-## KanuControl
+KanuControl unterstützt Vereine bei der Planung und Abrechnung von Veranstaltungen sowie bei der Vermietung. Diese Hilfe beschreibt die Arbeitsbereiche **KJFP** und **Vermietung**. Beide nutzen gemeinsame Vereins- und Personendaten im jeweiligen Vereinsmandanten.
 
-KanuControl ist eine Software zur Verwaltung von Kanuvereinen und Vereinsveranstaltungen.
+## KJFP
 
-Die wesentliche Zielsetzung von KanuControl ist die Unterstützung von Vereinen bei der Planung, Beantragung, Durchführung und Abrechnung von geförderten Jugendmaßnahmen.
+Das KJFP-Modul begleitet Jugendmaßnahmen und Vereinsveranstaltungen von den Stammdaten über Teilnehmer, Simulation und Planung bis zu Beiträgen, Abrechnung, Fahrkosten, Finanzausgleich und Dokumenten.
 
-Hierzu werden alle relevanten Informationen zu Personen, Vereinen, Veranstaltungen, Teilnehmern, Beiträgen und Reisekosten zentral verwaltet und für die spätere Zuschussbeantragung aufbereitet.
+[Bedienungsanleitung KJFP](/info/bedienungsanleitung-kjfp.md)
 
-## Funktionen
+## Vermietung
 
-KanuControl unterstützt unter anderem:
+Das Vermietungsmodul verwaltet Mieter, Mietobjekte, Mietbereiche, Bestände, Preise und Buchungen. Hinzu kommen Anzahlung, Kaution, Verbrauchskosten, Sperrzeiten, die Homepage-Anbindung mit WordPress sowie der einseitige Kalenderexport von KC zu Airbnb.
 
-- Planung und Verwaltung von Jugendmaßnahmen
-- Ermittlung förderfähiger Teilnehmer
-- Unterstützung bei Zuschussanträgen und Verwendungsnachweisen
-- Reisekostenabrechnungen
-- Teilnehmerverwaltung
-- Personen- und Mitgliederverwaltung
-- Vereinsverwaltung
-- Finanz- und Beitragsverwaltung
-- Mehrmandantenbetrieb für mehrere Vereine
+[Bedienungsanleitung Vermietung](/info/bedienungsanleitung-vermietung.md)
 
-## Zielsetzung
+## Gemeinsame Bedienung
 
-Viele Vereinsaufgaben werden noch mit Tabellenkalkulationen, Papierformularen oder verschiedenen Einzellösungen durchgeführt.
+Welche Module sichtbar sind, hängt von der Freischaltung und den Benutzerrollen ab. Der Kopfbereich zeigt den Verein sowie je nach Modul die aktive Veranstaltung oder das aktive Mietobjekt. Die Anleitungen sind über das Fragezeichen erreichbar.
 
-KanuControl verfolgt das Ziel, diese Prozesse in einer zentralen Anwendung zusammenzuführen und den Verwaltungsaufwand für Vereine zu reduzieren.
+## Technologie und Betrieb
 
-## Technologie
+Die Anwendung verwendet React und TypeScript im Frontend sowie Spring Boot, PostgreSQL, Keycloak und Liquibase im Backend. Vereinsdaten werden mandantenbezogen verwaltet; Benutzer melden sich über den eingerichteten Authentifizierungsdienst an.
 
-KanuControl basiert auf modernen Open-Source-Technologien:
+Die tatsächlich laufenden Frontend- und Backend-Versionen stehen im Kopfbereich der Anwendung. Die Dokumentation ist auf den Funktionsstand **2.1.0 vom 3. November 2026** abgestimmt. Angaben zu Datenschutz und Betreiber stehen in den jeweils eigenen Informationsseiten.
 
-- React
-- TypeScript
-- Spring Boot
-- PostgreSQL
-- Keycloak
-- Liquibase
+## Entwicklung und Kontakt
 
-## Datenschutz und Sicherheit
+KanuControl wird kontinuierlich weiterentwickelt. Rückmeldungen sollten den verwendeten Bereich, den Arbeitsschritt und gegebenenfalls die angezeigte Fehlermeldung nennen.
 
-KanuControl ist mandantenfähig aufgebaut.
+Chris Schog · Deutschland
 
-Jeder Verein wird in einem eigenen Datenbankschema verwaltet. Die Benutzeranmeldung erfolgt über einen zentralen Authentifizierungsdienst. Die Kommunikation erfolgt verschlüsselt über HTTPS.
-
-Zur Sicherstellung der Verfügbarkeit werden tägliche Datensicherungen erstellt.
-
-## Entwicklung
-
-KanuControl wird kontinuierlich weiterentwickelt.
-
-Anregungen, Fehlerberichte und Verbesserungsvorschläge sind jederzeit willkommen.
-
-## Version
-
-Frontend: V1.7.0
-Backend: V1.7.0
-Datenbankschema: Version 102
-
-## Kontakt
-
-Chris Schog
-
-Deutschland
-
----
+[Hilfeübersicht öffnen](/info/bedienungsanleitung.md)
 
 © KanuControl

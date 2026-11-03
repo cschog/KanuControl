@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+    <changeSet id="20261102-04-finanzbewegung-audit" author="chris">
+        <renameColumn tableName="buchung_finanzbewegung" oldColumnName="updated_at" newColumnName="last_modified_at" columnDataType="TIMESTAMP"/>
+        <addColumn tableName="buchung_finanzbewegung">
+            <column name="created_by" type="VARCHAR(255)"/>
+            <column name="last_modified_by" type="VARCHAR(255)"/>
+        </addColumn>
+        <sql>UPDATE buchung_finanzbewegung SET created_at = CURRENT_TIMESTAMP WHERE created_at IS NULL</sql>
+        <modifyDataType tableName="buchung_finanzbewegung" columnName="created_at" newDataType="TIMESTAMP WITH TIME ZONE"/>
+        <modifyDataType tableName="buchung_finanzbewegung" columnName="last_modified_at" newDataType="TIMESTAMP WITH TIME ZONE"/>
+        <addNotNullConstraint tableName="buchung_finanzbewegung" columnName="created_at" columnDataType="TIMESTAMP WITH TIME ZONE"/>
+        <rollback>
+            <dropNotNullConstraint tableName="buchung_finanzbewegung" columnName="created_at" columnDataType="TIMESTAMP WITH TIME ZONE"/>
+            <modifyDataType tableName="buchung_finanzbewegung" columnName="created_at" newDataType="TIMESTAMP"/>
+            <modifyDataType tableName="buchung_finanzbewegung" columnName="last_modified_at" newDataType="TIMESTAMP"/>
+            <dropColumn tableName="buchung_finanzbewegung" columnName="created_by"/>
+            <dropColumn tableName="buchung_finanzbewegung" columnName="last_modified_by"/>
+            <renameColumn tableName="buchung_finanzbewegung" oldColumnName="last_modified_at" newColumnName="updated_at" columnDataType="TIMESTAMP"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

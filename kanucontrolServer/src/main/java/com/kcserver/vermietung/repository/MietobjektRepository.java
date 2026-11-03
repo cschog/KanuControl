@@ -11,6 +11,10 @@ import java.util.Optional;
 public interface MietobjektRepository
         extends JpaRepository<Mietobjekt, Long> {
 
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @Query("select m from Mietobjekt m where m.id = :id")
+    Optional<Mietobjekt> findLockedById(@org.springframework.data.repository.query.Param("id") Long id);
+
     Optional<Mietobjekt> findByAktivTrue();
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)

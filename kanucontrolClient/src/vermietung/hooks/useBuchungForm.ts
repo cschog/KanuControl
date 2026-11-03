@@ -5,7 +5,6 @@ import type { Mietbereich } from "@/vermietung/types/Mietbereich";
 
 import type { PersonRef } from "@/core/api/types/person/PersonRef";
 import type { VereinRef } from "@/core/api/types/verein/VereinRef";
-import { getPersonById } from "@/core/api/services/personApi";
 
 import type { Buchung } from "@/vermietung/types/Buchung";
 import type { BuchungSave, BuchungPositionSave } from "@/vermietung/types/BuchungSave";
@@ -27,17 +26,27 @@ const createInitialForm = (buchungsquelle: Buchungsquelle = "DIREKT"): BuchungSa
   veranstalterVereinId: undefined,
   status: "ANFRAGE",
   buchungsquelle,
+  anzahlJugendliche: null,
+  jugendAlterVon: null,
+  jugendAlterBis: null,
+  anzahlErwachsene: null,
   bemerkung: "",
   bewertung: null,
   rabattart: Rabattart.KEIN_RABATT,
   rabattwertTyp: RabattwertTyp.PROZENTUAL,
   rabattwert: 0,
+  kautionBetrag: buchungsquelle === "DIREKT" ? 250 : 0,
+  anzahlungBetrag: buchungsquelle === "DIREKT" ? 50 : 0,
 });
 
 const datumMitZeit = (datum: string, zeit: string | null | undefined): string => {
   const formatierteZeit = !zeit ? "00:00:00" : zeit.length === 5 ? `${zeit}:00` : zeit;
   return datum ? `${datum}T${formatierteZeit}` : "";
 };
+
+const mieterAusBuchung = (buchung: Buchung | null): PersonRef | undefined => buchung?.mieterId
+  ? { id: buchung.mieterId, name: buchung.mieterName, vorname: buchung.mieterVorname }
+  : undefined;
 
 export function useBuchungForm(
   buchung: Buchung | null,
@@ -46,7 +55,7 @@ export function useBuchungForm(
 ) {
   const { mietobjekt } = useVermietungContext();
 
-  const [form, setForm] = useState<BuchungSave>(createInitialForm());
+  const [form, setForm] = useState<BuchungSave>(() => createInitialForm(neueBuchungsquelle));
 
   const [mieter, setMieter] = useState<PersonRef | undefined>();
   const [veranstalter, setVeranstalter] = useState<VereinRef | undefined>();
@@ -54,53 +63,7 @@ export function useBuchungForm(
   const [rabatteByMietbereich, setRabatteByMietbereich] = useState<Record<number, MietbereichRabatt[]>>({});
 
   useEffect(() => {
-    if (buchung) {
-      const positionen: BuchungPositionSave[] = (buchung.positionen ?? []).map((position) => ({
-        mietbereichId: position.mietbereichId,
-        anzahl: position.anzahl,
-      }));
-
-      setForm({
-        anreise: buchung.anreise,
-        abreise: buchung.abreise,
-        unbefristet: buchung.unbefristet,
-        mietobjektId: buchung.mietobjektId,
-        mietbereichIds:
-          buchung.mietbereichIds?.length > 0
-            ? buchung.mietbereichIds
-            : positionen.map((position) => position.mietbereichId),
-        positionen,
-        mieterId: buchung.mieterId,
-        veranstalterVereinId: buchung.veranstalterVereinId,
-        status: buchung.status,
-        buchungsquelle: buchung.buchungsquelle,
-        bemerkung: buchung.bemerkung ?? "",
-        bewertung: buchung.bewertung ?? null,
-        rabattart: buchung.buchungsquelle === "AIRBNB" ? Rabattart.KEIN_RABATT : buchung.rabattart ?? Rabattart.KEIN_RABATT,
-        rabattwertTyp: buchung.buchungsquelle === "AIRBNB" ? null : buchung.rabattwertTyp ?? RabattwertTyp.PROZENTUAL,
-        rabattwert: buchung.buchungsquelle === "AIRBNB" ? null : buchung.rabattwert ?? 0,
-      });
-
-      return;
-    }
-
-    setForm((current) => ({
-      ...current,
-      mietobjektId: mietobjekt?.id ?? current.mietobjektId,
-      buchungsquelle: neueBuchungsquelle,
-      ...(neueBuchungsquelle === "AIRBNB"
-        ? { rabattart: Rabattart.KEIN_RABATT, rabattwertTyp: null, rabattwert: null }
-        : {}),
-      ...(initialZeitraum
-        ? {
-            anreise: datumMitZeit(initialZeitraum.anreiseDatum, mietobjekt?.anreisezeit),
-            abreise: datumMitZeit(initialZeitraum.abreiseDatum, mietobjekt?.abreisezeit),
-          }
-        : {}),
-    }));
-  }, [buchung, mietobjekt?.id, neueBuchungsquelle, initialZeitraum?.anreiseDatum, initialZeitraum?.abreiseDatum]);
-
-  const resetForm = () => {
+    setMieter(mieterAusBuchung(buchung));
     if (buchung) {
       const positionen: BuchungPositionSave[] = (buchung.positionen ?? []).map((position) => ({
         mietbereichId: position.mietbereichId,
@@ -121,11 +84,77 @@ export function useBuchungForm(
         veranstalterVereinId: buchung.veranstalterVereinId,
         status: buchung.status,
         buchungsquelle: buchung.buchungsquelle,
+        anzahlJugendliche: buchung.anzahlJugendliche ?? null,
+        jugendAlterVon: buchung.jugendAlterVon ?? null,
+        jugendAlterBis: buchung.jugendAlterBis ?? null,
+        anzahlErwachsene: buchung.anzahlErwachsene ?? null,
         bemerkung: buchung.bemerkung ?? "",
         bewertung: buchung.bewertung ?? null,
         rabattart: buchung.buchungsquelle === "AIRBNB" ? Rabattart.KEIN_RABATT : buchung.rabattart ?? Rabattart.KEIN_RABATT,
         rabattwertTyp: buchung.buchungsquelle === "AIRBNB" ? null : buchung.rabattwertTyp ?? RabattwertTyp.PROZENTUAL,
         rabattwert: buchung.buchungsquelle === "AIRBNB" ? null : buchung.rabattwert ?? 0,
+        kautionBetrag: buchung.buchungsquelle === "AIRBNB" ? 0 : buchung.kautionBetrag ?? 0,
+        anzahlungBetrag: buchung.buchungsquelle === "AIRBNB" ? 0 : buchung.anzahlungBetrag ?? 0,
+      });
+
+      return;
+    }
+
+    setForm((current) => ({
+      ...current,
+      mietobjektId: mietobjekt?.id ?? current.mietobjektId,
+      buchungsquelle: neueBuchungsquelle,
+      ...(neueBuchungsquelle === "AIRBNB"
+        ? {
+            rabattart: Rabattart.KEIN_RABATT,
+            rabattwertTyp: null,
+            rabattwert: null,
+            kautionBetrag: 0,
+            anzahlungBetrag: 0,
+          }
+        : {}),
+      ...(initialZeitraum
+        ? {
+            anreise: datumMitZeit(initialZeitraum.anreiseDatum, mietobjekt?.anreisezeit),
+            abreise: datumMitZeit(initialZeitraum.abreiseDatum, mietobjekt?.abreisezeit),
+          }
+        : {}),
+    }));
+  }, [buchung, mietobjekt?.id, neueBuchungsquelle, initialZeitraum?.anreiseDatum, initialZeitraum?.abreiseDatum]);
+
+  const resetForm = () => {
+    setMieter(mieterAusBuchung(buchung));
+    if (buchung) {
+      const positionen: BuchungPositionSave[] = (buchung.positionen ?? []).map((position) => ({
+        mietbereichId: position.mietbereichId,
+        anzahl: position.anzahl,
+      }));
+
+      setForm({
+        anreise: buchung.anreise,
+        abreise: buchung.abreise,
+        unbefristet: buchung.unbefristet,
+        mietobjektId: buchung.mietobjektId,
+        mietbereichIds:
+          buchung.mietbereichIds?.length > 0
+            ? [...buchung.mietbereichIds]
+            : positionen.map((position) => position.mietbereichId),
+        positionen,
+        mieterId: buchung.mieterId,
+        veranstalterVereinId: buchung.veranstalterVereinId,
+        status: buchung.status,
+        buchungsquelle: buchung.buchungsquelle,
+        anzahlJugendliche: buchung.anzahlJugendliche ?? null,
+        jugendAlterVon: buchung.jugendAlterVon ?? null,
+        jugendAlterBis: buchung.jugendAlterBis ?? null,
+        anzahlErwachsene: buchung.anzahlErwachsene ?? null,
+        bemerkung: buchung.bemerkung ?? "",
+        bewertung: buchung.bewertung ?? null,
+        rabattart: buchung.buchungsquelle === "AIRBNB" ? Rabattart.KEIN_RABATT : buchung.rabattart ?? Rabattart.KEIN_RABATT,
+        rabattwertTyp: buchung.buchungsquelle === "AIRBNB" ? null : buchung.rabattwertTyp ?? RabattwertTyp.PROZENTUAL,
+        rabattwert: buchung.buchungsquelle === "AIRBNB" ? null : buchung.rabattwert ?? 0,
+        kautionBetrag: buchung.buchungsquelle === "AIRBNB" ? 0 : buchung.kautionBetrag ?? 0,
+        anzahlungBetrag: buchung.buchungsquelle === "AIRBNB" ? 0 : buchung.anzahlungBetrag ?? 0,
       });
 
       return;
@@ -136,38 +165,6 @@ export function useBuchungForm(
       mietobjektId: mietobjekt?.id ?? 0,
     });
   };
-
-  useEffect(() => {
-    if (!buchung?.mieterId) {
-      setMieter(undefined);
-      return;
-    }
-
-    let cancelled = false;
-
-    const loadMieter = async () => {
-      try {
-        const person = await getPersonById(buchung.mieterId);
-
-        if (cancelled) return;
-
-        setMieter({
-          id: person.id,
-          name: person.name,
-          vorname: person.vorname,
-        });
-      } catch (error) {
-        console.error("Fehler beim Laden des Mieters:", error);
-        if (!cancelled) setMieter(undefined);
-      }
-    };
-
-    void loadMieter();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [buchung?.id, buchung?.mieterId]);
 
   useEffect(() => {
     const mietobjektId = buchung?.mietobjektId ?? mietobjekt?.id;

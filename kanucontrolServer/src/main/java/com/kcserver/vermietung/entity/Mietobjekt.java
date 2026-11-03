@@ -68,4 +68,8 @@ public class Mietobjekt extends Auditable {
             orphanRemoval = true
     )
     private List<Mietbereich> mietbereiche = new ArrayList<>();
+
+    @OneToMany(mappedBy = "mietobjekt", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("von ASC, id ASC")
+    private List<MietobjektSperrzeit> sperrzeiten = new ArrayList<>();
 }

@@ -59,6 +59,35 @@ public class BuchungDTO {
     @jakarta.validation.constraints.Max(5)
     private Integer bewertung;
 
+    @jakarta.validation.constraints.Min(0)
+    private Integer anzahlJugendliche;
+
+    @jakarta.validation.constraints.Min(0)
+    @jakarta.validation.constraints.Max(120)
+    private Integer jugendAlterVon;
+
+    @jakarta.validation.constraints.Min(0)
+    @jakarta.validation.constraints.Max(120)
+    private Integer jugendAlterBis;
+
+    @jakarta.validation.constraints.Min(0)
+    private Integer anzahlErwachsene;
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @jakarta.validation.constraints.AssertTrue(message = "Teilnehmerzahlen und Altersspanne der Jugendlichen prüfen.")
+    public boolean isTeilnehmerdatenGueltig() {
+        if (anzahlJugendliche != null && anzahlJugendliche < 0
+                || anzahlErwachsene != null && anzahlErwachsene < 0) return false;
+        if (anzahlJugendliche == null || anzahlJugendliche == 0) {
+            return jugendAlterVon == null && jugendAlterBis == null;
+        }
+        return jugendAlterVon != null && jugendAlterBis != null
+                && jugendAlterVon >= 0 && jugendAlterVon <= jugendAlterBis
+                && jugendAlterBis <= 120;
+    }
+
+    private String herkunft;
+
     // Anzeigeinformationen
     private String mieterVorname;
     private String mieterName;
@@ -75,4 +104,10 @@ public class BuchungDTO {
     private java.math.BigDecimal rabattwert;
 
     private java.math.BigDecimal rabattbetrag = java.math.BigDecimal.ZERO;
+
+    @jakarta.validation.constraints.DecimalMin("0.00")
+    private java.math.BigDecimal kautionBetrag = java.math.BigDecimal.ZERO;
+
+    @jakarta.validation.constraints.DecimalMin("0.00")
+    private java.math.BigDecimal anzahlungBetrag = java.math.BigDecimal.ZERO;
 }

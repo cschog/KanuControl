@@ -21,7 +21,7 @@ public class PersonSpecification {
             if (query != null && !Long.class.equals(query.getResultType())) {
                 query.distinct(true);
             }
-            Predicate predicate = cb.conjunction();
+            Predicate predicate = cb.isTrue(root.get("kjfpSichtbar"));
 
             // =========================
             // Name / Vorname (Kombifeld)

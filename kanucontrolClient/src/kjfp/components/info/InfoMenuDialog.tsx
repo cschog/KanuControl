@@ -7,7 +7,7 @@ import {
   ListItemText,
 } from "@mui/material";
 
-import { InfoPage } from "@/kjfp/api/enums/InfoPage";
+import type { InfoPage } from "@/kjfp/api/enums/InfoPage";
 
 type Props = {
   open: boolean;
@@ -32,7 +32,19 @@ export function InfoMenuDialog({ open, onClose, onSelect }: Props) {
           </ListItemButton>
 
           <ListItemButton onClick={() => handleClick("help")}>
-            <ListItemText primary="📖 Hilfe" />
+            <ListItemText primary="Hilfeübersicht" />
+          </ListItemButton>
+
+          <ListItemButton onClick={() => handleClick("help-kjfp")}>
+            <ListItemText primary="Bedienungsanleitung KJFP" />
+          </ListItemButton>
+
+          <ListItemButton onClick={() => handleClick("help-vermietung")}>
+            <ListItemText primary="Bedienungsanleitung Vermietung" />
+          </ListItemButton>
+
+          <ListItemButton onClick={() => handleClick("homepage")}>
+            <ListItemText primary="Homepage-Anbindung" />
           </ListItemButton>
 
           <ListItemButton onClick={() => handleClick("privacy")}>

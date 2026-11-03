@@ -1,5 +1,8 @@
-import { useMemo, useState } from "react";
+import { getSperrzeiten, type Sperrzeit } from "@/vermietung/api/sperrzeitApi";
+import { getApiErrorMessage } from "@/kjfp/api/utils/apiError";
+import { useEffect, useMemo, useState } from "react";
 import {
+  Alert,
   Box,
   Button,
   ButtonBase,
@@ -18,6 +21,7 @@ import "dayjs/locale/de";
 import type { Buchung } from "@/vermietung/types/Buchung";
 
 interface Props {
+  objekte: { id: number; bezeichnung: string }[];
   buchungen: Buchung[];
   onSelect: (buchung: Buchung) => void;
   canCreateRange: boolean;
@@ -104,7 +108,24 @@ function BuchungChip({ buchung, onSelect, fullWidth = false }: {
   );
 }
 
-export default function Buchungskalender({ buchungen, onSelect, canCreateRange, onCreateRange }: Props) {
+export default function Buchungskalender({ objekte, buchungen, onSelect, canCreateRange, onCreateRange }: Props) {
+  const [sperren, setSperren] = useState<(Sperrzeit & { objektId: number })[]>([]);
+  const [sperrfehler, setSperrfehler] = useState<string | null>(null);
+  const objektKey = objekte.map(o => o.id).sort((a, b) => a - b).join(",");
+  useEffect(() => {
+    let cancelled = false;
+    setSperren([]); setSperrfehler(null);
+    const ids = objektKey ? objektKey.split(",").map(Number) : [];
+    Promise.all(ids.map(async id => (await getSperrzeiten(id)).map(s => ({ ...s, objektId: id }))))
+      .then(data => { if (!cancelled) setSperren(data.flat()); })
+      .catch((err: unknown) => { if (!cancelled) setSperrfehler(getApiErrorMessage(err, "Sperrzeiten konnten nicht geladen werden.")); });
+    return () => { cancelled = true; };
+  }, [objektKey]);
+  const sperrChips = (tag: Dayjs) => sperren.filter(s =>
+    dayjs(s.von).isBefore(tag.add(1, "day").startOf("day")) && dayjs(s.bis).isAfter(tag.startOf("day"))
+  ).map(s => <Tooltip key={s.id} title={`${objekte.find(o => o.id === s.objektId)?.bezeichnung ?? "Mietobjekt"}: ${s.grund} · ${dayjs(s.von).format("DD.MM. HH:mm")}–${dayjs(s.bis).format("DD.MM. HH:mm")}`}>
+    <Chip size="small" label="Gesperrt" sx={{ bgcolor: "grey.700", color: "common.white" }} />
+  </Tooltip>);
   const [monat, setMonat] = useState<Dayjs>(() => dayjs().locale("de").startOf("month"));
   const [zeitraum, setZeitraum] = useState<{ start: Dayjs; ende: Dayjs | null } | null>(null);
 
@@ -168,6 +189,7 @@ export default function Buchungskalender({ buchungen, onSelect, canCreateRange, 
 
   return (
     <Box>
+      {sperrfehler && <Alert severity="error" sx={{ mb: 2 }}>{sperrfehler}</Alert>}
       <Box
         sx={{
           display: "flex",
@@ -240,6 +262,7 @@ export default function Buchungskalender({ buchungen, onSelect, canCreateRange, 
         {(Object.keys(statusLabel) as Buchung["status"][]).map((status) => (
           <Chip key={status} size="small" color={statusFarbe[status]} label={statusLabel[status]} />
         ))}
+        <Chip size="small" label="Gesperrt" sx={{ bgcolor: "grey.700", color: "common.white" }} />
       </Box>
 
       {mietobjekte.length > 0 && (
@@ -318,10 +341,11 @@ export default function Buchungskalender({ buchungen, onSelect, canCreateRange, 
                 </Typography>
               </ButtonBase>
               <Stack spacing={0.5} sx={{ flex: 1, minWidth: 0 }}>
+                {sperrChips(tag)}
                 {tagBuchungen.length ? tagBuchungen.map((buchung) => (
                   <BuchungChip key={buchung.id} buchung={buchung} onSelect={onSelect} fullWidth />
                 )) : (
-                  <Typography variant="caption" color="text.disabled" sx={{ py: 1 }}>
+                  sperrChips(tag).length === 0 && <Typography variant="caption" color="text.disabled" sx={{ py: 1 }}>
                     Keine Buchungen
                   </Typography>
                 )}
@@ -394,6 +418,7 @@ export default function Buchungskalender({ buchungen, onSelect, canCreateRange, 
                   </ButtonBase>
 
                   <Stack spacing={0.5}>
+                    {sperrChips(tag)}
                     {tagBuchungen.slice(0, 4).map((buchung) => (
                       <BuchungChip key={buchung.id} buchung={buchung} onSelect={onSelect} />
                     ))}

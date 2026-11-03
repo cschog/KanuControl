@@ -1,6 +1,7 @@
 // src/vermietung/components/anmeldung/BuchungFormView.tsx
 
-import { Box, Chip, Typography } from "@mui/material";
+import { Box, Button, Chip, Typography } from "@mui/material";
+import PaymentsIcon from "@mui/icons-material/Payments";
 
 import { BuchungBaseForm } from "./BuchungBaseForm";
 import { BuchungActionBar } from "./BuchungActionBar";
@@ -27,6 +28,7 @@ interface Props {
   onCancelBooking: () => void;
   onComplete: () => void;
   onBack: () => void;
+  onOpenFinanzen: () => void;
 
   disableDelete: boolean;
   neueBuchungsquelle?: Buchungsquelle;
@@ -59,6 +61,7 @@ export const BuchungFormView: React.FC<Props> = ({
   onCancelBooking,
   onComplete,
   onReopen,
+  onOpenFinanzen,
   disableDelete,
   neueBuchungsquelle = "DIREKT",
 }) => {
@@ -109,6 +112,12 @@ export const BuchungFormView: React.FC<Props> = ({
         </Typography>
 
         <Chip label={status.label} color={status.color} />
+        {buchung?.herkunft === "HOMEPAGE" && <Chip label="Homepage-Anfrage" variant="outlined" />}
+        {buchung && !editMode && buchung.status !== "ABGELEHNT" && buchung.status !== "STORNIERT" && (
+          <Button variant="outlined" startIcon={<PaymentsIcon />} onClick={onOpenFinanzen}>
+            Finanzen
+          </Button>
+        )}
       </Box>
       <Box
         sx={{
@@ -134,6 +143,9 @@ export const BuchungFormView: React.FC<Props> = ({
           mieter={mieter}
           veranstalter={veranstalter}
           buchungspositionen={buchung?.positionen ?? []}
+          rabattSnapshotVerwenden={!!buchung && form.rabattart === buchung.rabattart
+            && (form.rabattart !== "INDIVIDUELL" || (form.rabattwertTyp === buchung.rabattwertTyp
+              && form.rabattwert === buchung.rabattwert))}
           verbrauchskosten={buchung?.verbrauchskosten ?? []}
           verbrauchskostenVorschau={buchung?.verbrauchskostenVorschau ?? []}
           buchungsstatus={buchung?.status}

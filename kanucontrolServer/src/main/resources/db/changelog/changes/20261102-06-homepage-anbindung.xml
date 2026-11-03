@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+    <changeSet id="20261102-06-homepage-anbindung" author="codex">
+        <createTable tableName="homepage_anbindung">
+            <column name="mietobjekt_id" type="BIGINT"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="version" type="BIGINT"/>
+            <column name="bezeichnung" type="VARCHAR(100)"><constraints nullable="false"/></column>
+            <column name="homepage_url" type="VARCHAR(2048)"/>
+            <column name="datenschutz_url" type="VARCHAR(2048)"/>
+            <column name="hausregeln_url" type="VARCHAR(2048)"/>
+            <column name="empfaenger_email" type="VARCHAR(254)"/>
+            <column name="gast_bestaetigung" type="BOOLEAN" defaultValueBoolean="true"><constraints nullable="false"/></column>
+            <column name="verwaltungs_benachrichtigung" type="BOOLEAN" defaultValueBoolean="false"><constraints nullable="false"/></column>
+            <column name="teilnehmer_pflicht" type="BOOLEAN" defaultValueBoolean="true"><constraints nullable="false"/></column>
+            <column name="created_at" type="TIMESTAMP"><constraints nullable="false"/></column>
+            <column name="created_by" type="VARCHAR(255)"/>
+            <column name="last_modified_at" type="TIMESTAMP"/>
+            <column name="last_modified_by" type="VARCHAR(255)"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="homepage_anbindung" baseColumnNames="mietobjekt_id"
+            referencedTableName="mietobjekt" referencedColumnNames="id" constraintName="fk_homepage_mietobjekt" onDelete="CASCADE"/>
+        <createTable tableName="homepage_anbindung_mietbereich">
+            <column name="mietobjekt_id" type="BIGINT"><constraints nullable="false"/></column>
+            <column name="mietbereich_id" type="BIGINT"><constraints nullable="false"/></column>
+        </createTable>
+        <addPrimaryKey tableName="homepage_anbindung_mietbereich" columnNames="mietobjekt_id,mietbereich_id" constraintName="pk_homepage_mietbereich"/>
+        <addForeignKeyConstraint baseTableName="homepage_anbindung_mietbereich" baseColumnNames="mietobjekt_id"
+            referencedTableName="homepage_anbindung" referencedColumnNames="mietobjekt_id" constraintName="fk_homepage_bereich_config" onDelete="CASCADE"/>
+        <addForeignKeyConstraint baseTableName="homepage_anbindung_mietbereich" baseColumnNames="mietbereich_id"
+            referencedTableName="mietbereich" referencedColumnNames="id" constraintName="fk_homepage_bereich" onDelete="CASCADE"/>
+        <rollback>
+            <dropTable tableName="homepage_anbindung_mietbereich"/>
+            <dropTable tableName="homepage_anbindung"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

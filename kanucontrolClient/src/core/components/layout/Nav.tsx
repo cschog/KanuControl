@@ -376,7 +376,7 @@ const Navigation = () => {
         >
           {/* Zeile 1 */}
           <Box>
-            <IconButton color="inherit" onClick={() => setMenuOpen(true)}>
+            <IconButton aria-label="Hilfe und Informationen" color="inherit" onClick={() => setMenuOpen(true)}>
               <HelpOutlineIcon />
             </IconButton>
 

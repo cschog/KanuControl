@@ -46,10 +46,13 @@ public class Person extends Auditable {
 
     private LocalDate geburtsdatum;
 
-    @NotNull(groups = OnCreate.class)
     @Convert(converter = SexConverter.class)
-    @Column(nullable = false, length = 1)
+    @Column(length = 1)
     private Sex sex;   // ✅ Enum M/W/D → CHAR(1)
+
+    /** Personen aus dem Vermietungsbereich bleiben aus KJFP-Listen ausgeschlossen. */
+    @Column(name = "kjfp_sichtbar", nullable = false)
+    private boolean kjfpSichtbar = true;
 
     @Email
     @Column(length = 255)

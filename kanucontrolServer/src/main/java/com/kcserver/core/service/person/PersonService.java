@@ -51,4 +51,6 @@ public interface PersonService {
             boolean nurLeiter,
             LocalDate stichtag
     );
+
+    List<PersonRefDTO> searchVermietungRefList(String search);
 }

@@ -239,3 +239,22 @@ databaseChangeLog:
       file: db/changelog/changes/20261101-03-mietbereich-voraussetzungen.xml
   - include:
       file: db/changelog/changes/20261101-04-mietbereich-regeln-und-belegung.xml
+  - include:
+      file: db/changelog/changes/20261102-01-mieterverwaltung.xml
+  - include:
+      file: db/changelog/changes/20261102-02-buchung-kaution.xml
+  - include:
+      file: db/changelog/changes/20261102-03-buchung-anzahlung-finanzbewegungen.xml
+  - include:
+      file: db/changelog/changes/20261102-04-finanzbewegung-audit.xml
+  - include:
+      file: db/changelog/changes/20261102-05-buchung-teilnehmer.xml
+  - include:
+      file: db/changelog/changes/20261102-06-homepage-anbindung.xml
+  - include:
+      file: db/changelog/changes/20261102-07-homepage-integration.xml
+  - include:
+      file: db/changelog/changes/20261102-08-homepage-status-mails.xml
+
+  - include:
+      file: db/changelog/changes/20261102-09-mietobjekt-sperrzeiten.xml

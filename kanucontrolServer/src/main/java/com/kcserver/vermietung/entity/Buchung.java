@@ -36,6 +36,9 @@ import java.util.List;
 )
 public class Buchung extends Auditable {
 
+    private static final LocalDateTime UNBEFRISTET_BIS =
+            LocalDateTime.of(3000, 12, 31, 14, 0);
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @EqualsAndHashCode.Include
@@ -70,11 +73,32 @@ public class Buchung extends Auditable {
     @Column(name = "rabattbetrag", nullable = false, precision = 10, scale = 2)
     private BigDecimal rabattbetrag = BigDecimal.ZERO;
 
+    @Column(name = "kaution_betrag", nullable = false, precision = 10, scale = 2)
+    private BigDecimal kautionBetrag = BigDecimal.ZERO;
+
+    @Column(name = "anzahlung_betrag", nullable = false, precision = 10, scale = 2)
+    private BigDecimal anzahlungBetrag = BigDecimal.ZERO;
+
     @Column(name = "anreise", nullable = false)
     private LocalDateTime anreise;
 
     @Column(name = "abreise", nullable = false)
     private LocalDateTime abreise;
+
+    @Column(name = "anzahl_jugendliche")
+    private Integer anzahlJugendliche;
+
+    @Column(name = "jugend_alter_von")
+    private Integer jugendAlterVon;
+
+    @Column(name = "jugend_alter_bis")
+    private Integer jugendAlterBis;
+
+    @Column(name = "anzahl_erwachsene")
+    private Integer anzahlErwachsene;
+
+    @Column(name = "herkunft", length = 40)
+    private String herkunft;
 
     @Column(columnDefinition = "TEXT")
     private String bemerkung;
@@ -115,5 +139,10 @@ public class Buchung extends Auditable {
                 buchungsjahr,
                 laufendeNummer
         );
+    }
+
+    @Transient
+    public boolean isUnbefristet() {
+        return UNBEFRISTET_BIS.equals(abreise);
     }
 }

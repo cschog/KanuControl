@@ -1,6 +1,7 @@
 // src/vermietung/components/buchung/BuchungBaseForm.tsx
 
 import React, { useEffect, useState } from "react";
+import { geldRunden, mietEinheiten } from "@/vermietung/utils/mietpreis";
 import { getPreis } from "@/vermietung/api/buchungApi";
 import type { Buchungsquelle } from "@/vermietung/enums/Buchungsquelle";
 import {
@@ -39,6 +40,7 @@ interface Props {
   mieter?: PersonRef;
   veranstalter?: VereinRef;
   buchungspositionen: Buchung["positionen"];
+  rabattSnapshotVerwenden?: boolean;
   createdAt?: string | null;
   buchungsquelle: Buchungsquelle;
   buchungsdatenEditierbar: boolean;
@@ -165,6 +167,7 @@ export const BuchungBaseForm: React.FC<Props> = ({
   onVeranstalterChange,
   onChange,
   buchungspositionen,
+  rabattSnapshotVerwenden = false,
   createdAt,
   buchungsquelle,
   verbrauchskosten,
@@ -190,6 +193,12 @@ export const BuchungBaseForm: React.FC<Props> = ({
     stichtag,
   );
 
+  const einheitenFuer = (mietbereichId: number) => mietEinheiten(
+    buchungspositionen.find((p) => p.mietbereichId === mietbereichId)?.berechnungsart
+      ?? mietbereiche.find((p) => p.id === mietbereichId)?.berechnungsart,
+    form.anreise, form.abreise, form.unbefristet,
+  );
+
   const gesamtpreis = form.positionen.reduce<number>((summe, position) => {
     const buchungsposition = buchungspositionen.find(
       (item) => item.mietbereichId === position.mietbereichId,
@@ -201,7 +210,7 @@ export const BuchungBaseForm: React.FC<Props> = ({
       return summe;
     }
 
-    return summe + preis * position.anzahl;
+    return summe + geldRunden(preis * position.anzahl * einheitenFuer(position.mietbereichId));
   }, 0);
 
   const gesamtpreisVollstaendig = form.positionen.every((position) => {
@@ -216,7 +225,7 @@ export const BuchungBaseForm: React.FC<Props> = ({
   });
 
   const rabattbetrag = (() => {
-    if (form.buchungsquelle === "AIRBNB") return 0;
+    if (form.buchungsquelle === "AIRBNB" || form.rabattart === Rabattart.KEIN_RABATT) return 0;
     if (form.rabattart === Rabattart.INDIVIDUELL && form.rabattwertTyp === RabattwertTyp.ABSOLUT) {
       return Math.min(gesamtpreis, Math.max(0, form.rabattwert ?? 0));
     }
@@ -226,13 +235,20 @@ export const BuchungBaseForm: React.FC<Props> = ({
         ?? geladenePreise[position.mietbereichId];
       if (areaPrice === undefined || ladefehler[position.mietbereichId]) return summe;
 
-      const positionspreis = areaPrice * position.anzahl;
+      const faktor = position.anzahl * einheitenFuer(position.mietbereichId);
+      const positionspreis = geldRunden(areaPrice * faktor);
       const aktiveRabatte = (rabatteByMietbereich[position.mietbereichId] ?? []).filter((rabatt) => rabatt.aktiv);
       let regel: MietbereichRabatt | undefined;
       let wertTyp: RabattwertTyp | null = null;
       let wert: number | null = null;
 
-      if (form.rabattart === Rabattart.INDIVIDUELL && form.rabattwertTyp === RabattwertTyp.PROZENTUAL) {
+      const snapshot = rabattSnapshotVerwenden
+        ? buchungspositionen.find((p) => p.mietbereichId === position.mietbereichId)
+        : undefined;
+      if (snapshot) {
+        wertTyp = snapshot.rabattwertTyp ?? null;
+        wert = snapshot.rabattwert ?? null;
+      } else if (form.rabattart === Rabattart.INDIVIDUELL && form.rabattwertTyp === RabattwertTyp.PROZENTUAL) {
         if (aktiveRabatte.length > 0) {
           wertTyp = RabattwertTyp.PROZENTUAL;
           wert = form.rabattwert ?? 0;
@@ -244,10 +260,10 @@ export const BuchungBaseForm: React.FC<Props> = ({
       }
 
       if (wertTyp === RabattwertTyp.PROZENTUAL && wert != null) {
-        return summe + Math.min(positionspreis, positionspreis * wert / 100);
+        return summe + geldRunden(Math.min(positionspreis, positionspreis * wert / 100));
       }
       if (wertTyp === RabattwertTyp.ABSOLUT && wert != null) {
-        return summe + Math.min(positionspreis, wert);
+        return summe + geldRunden(Math.min(positionspreis, wert * faktor));
       }
       return summe;
     }, 0);
@@ -317,10 +333,39 @@ export const BuchungBaseForm: React.FC<Props> = ({
       >
         <PersonAutocomplete
           label="Mieter"
+          vermietung
           value={mieter}
           disabled={!buchungsdatenEditierbar}
           onChange={onMieterChange}
         />
+
+        {form.buchungsquelle === "DIREKT" ? (
+          <TextField
+            label="Anzahlung (€)"
+            type="number"
+            value={form.anzahlungBetrag ?? 0}
+            disabled={!buchungsdatenEditierbar}
+            fullWidth
+            size="small"
+            slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
+            onChange={(event) => onChange("anzahlungBetrag", Math.max(0, Number(event.target.value) || 0))}
+          />
+        ) : null}
+
+        {form.buchungsquelle === "DIREKT" ? (
+          <TextField
+            label="Kaution (€)"
+            type="number"
+            value={form.kautionBetrag ?? 0}
+            disabled={!buchungsdatenEditierbar}
+            fullWidth
+            size="small"
+            slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
+            onChange={(event) => onChange("kautionBetrag", Math.max(0, Number(event.target.value) || 0))}
+          />
+        ) : (
+          <Alert severity="info">Für Airbnb-Buchungen werden keine Anzahlung und keine Kaution erhoben.</Alert>
+        )}
 
         <VereinAutocomplete
           label="Veranstalter"
@@ -458,6 +503,72 @@ export const BuchungBaseForm: React.FC<Props> = ({
               }}
             />
           </Box>
+        )}
+
+        <Typography variant="h6">Teilnehmer</Typography>
+        <Typography variant="body2" color="text.secondary">
+          Leere Felder bedeuten „nicht erfasst“. Bei Jugendlichen bitte das ungefähre Alter angeben.
+        </Typography>
+        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
+          <TextField
+            label="Anzahl Jugendliche"
+            type="number"
+            value={form.anzahlJugendliche ?? ""}
+            disabled={!buchungsdatenEditierbar}
+            required={false}
+            slotProps={{ htmlInput: { min: 0, step: 1 } }}
+            onChange={(event) => {
+              const value = event.target.value === "" ? null : Number(event.target.value);
+              onChange("anzahlJugendliche", value);
+              if (value == null || value === 0) {
+                onChange("jugendAlterVon", null);
+                onChange("jugendAlterBis", null);
+              }
+            }}
+            fullWidth
+          />
+          <TextField
+            label="Alter ungefähr von"
+            type="number"
+            value={form.jugendAlterVon ?? ""}
+            disabled={!buchungsdatenEditierbar || !(form.anzahlJugendliche && form.anzahlJugendliche > 0)}
+            required={!!form.anzahlJugendliche && form.anzahlJugendliche > 0}
+            slotProps={{ htmlInput: { min: 0, step: 1, max: 120 } }}
+            onChange={(event) => {
+              const value = event.target.value === "" ? null : Number(event.target.value);
+              onChange("jugendAlterVon", value);
+            }}
+            fullWidth
+          />
+          <TextField
+            label="Alter ungefähr bis"
+            type="number"
+            value={form.jugendAlterBis ?? ""}
+            disabled={!buchungsdatenEditierbar || !(form.anzahlJugendliche && form.anzahlJugendliche > 0)}
+            required={!!form.anzahlJugendliche && form.anzahlJugendliche > 0}
+            slotProps={{ htmlInput: { min: 0, step: 1, max: 120 } }}
+            onChange={(event) => {
+              const value = event.target.value === "" ? null : Number(event.target.value);
+              onChange("jugendAlterBis", value);
+            }}
+            fullWidth
+          />
+          <TextField
+            label="Anzahl Erwachsene"
+            type="number"
+            value={form.anzahlErwachsene ?? ""}
+            disabled={!buchungsdatenEditierbar}
+            required={false}
+            slotProps={{ htmlInput: { min: 0, step: 1 } }}
+            onChange={(event) => {
+              const value = event.target.value === "" ? null : Number(event.target.value);
+              onChange("anzahlErwachsene", value);
+            }}
+            fullWidth
+          />
+        </Box>
+        {form.anzahlJugendliche != null && form.anzahlErwachsene != null && (
+          <Typography>Teilnehmer gesamt: {form.anzahlJugendliche + form.anzahlErwachsene}</Typography>
         )}
 
         <TextField
@@ -666,40 +777,42 @@ export const BuchungBaseForm: React.FC<Props> = ({
                           flexWrap: "wrap",
                         }}
                       >
-                        <TextField
-                          label="Menge"
-                          type="number"
-                          size="small"
-                          value={position.anzahl}
-                          disabled={!buchungsdatenEditierbar}
-                          sx={{ width: 110, flexShrink: 0 }}
-                          slotProps={{
-                            htmlInput: {
-                              min: 1,
-                              max: mietbereich.bestand,
-                              step: 1,
-                            },
-                          }}
-                          onChange={(event) => {
-                            const rawValue = event.target.value;
-                            const anzahl = Number(rawValue);
+                        {mietbereich.bestand !== 1 && (
+                          <TextField
+                            label="Menge"
+                            type="number"
+                            size="small"
+                            value={position.anzahl}
+                            disabled={!buchungsdatenEditierbar}
+                            sx={{ width: 110, flexShrink: 0 }}
+                            slotProps={{
+                              htmlInput: {
+                                min: 1,
+                                max: mietbereich.bestand,
+                                step: 1,
+                              },
+                            }}
+                            onChange={(event) => {
+                              const rawValue = event.target.value;
+                              const anzahl = Number(rawValue);
 
-                            if (
-                              rawValue === "" ||
-                              !Number.isInteger(anzahl) ||
-                              anzahl < 1 ||
-                              anzahl > mietbereich.bestand
-                            ) {
-                              return;
-                            }
+                              if (
+                                rawValue === "" ||
+                                !Number.isInteger(anzahl) ||
+                                anzahl < 1 ||
+                                anzahl > mietbereich.bestand
+                              ) {
+                                return;
+                              }
 
-                            const positionen = form.positionen.map((item) =>
-                              item.mietbereichId === mietbereich.id ? { ...item, anzahl } : item,
-                            );
+                              const positionen = form.positionen.map((item) =>
+                                item.mietbereichId === mietbereich.id ? { ...item, anzahl } : item,
+                              );
 
-                            onChange("positionen", positionen);
-                          }}
-                        />
+                              onChange("positionen", positionen);
+                            }}
+                          />
+                        )}
 
                         {(() => {
                           const buchungsposition = buchungspositionen.find(
@@ -716,7 +829,7 @@ export const BuchungBaseForm: React.FC<Props> = ({
                             <Box sx={{ minWidth: 110 }}>
                               <Typography variant="body2" fontWeight={600}>
                                 {preis !== undefined
-                                  ? formatPreis(preis * position.anzahl)
+                                  ? formatPreis(geldRunden(preis * position.anzahl * einheitenFuer(mietbereich.id)))
                                   : ladefehler[mietbereich.id]
                                     ? "Preis nicht verfügbar"
                                     : "Preis wird geladen …"}
@@ -725,6 +838,8 @@ export const BuchungBaseForm: React.FC<Props> = ({
                               {berechnungsart && (
                                 <Typography variant="caption" color="text.secondary">
                                   {BERECHNUNGSART_LABELS[berechnungsart]}
+                                  {berechnungsart === "TAG" && !form.unbefristet && ` · ${einheitenFuer(mietbereich.id)} Miettage`}
+                                  {berechnungsart === "TAG" && form.unbefristet && " · vorläufig ohne Laufzeit"}
                                 </Typography>
                               )}
                             </Box>

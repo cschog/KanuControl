@@ -11,6 +11,8 @@ import com.kcserver.vermietung.dto.BuchungVerbrauchskostenDTO;
 import com.kcserver.vermietung.entity.*;
 import com.kcserver.vermietung.enumtype.Buchungsquelle;
 import com.kcserver.vermietung.enumtype.Buchungsstatus;
+import com.kcserver.vermietung.enumtype.Finanzbewegungsart;
+import com.kcserver.vermietung.enumtype.Finanzkategorie;
 import com.kcserver.vermietung.enumtype.Rabattart;
 import com.kcserver.vermietung.enumtype.RabattwertTyp;
 import com.kcserver.vermietung.repository.*;
@@ -29,6 +31,8 @@ import java.util.*;
 public class BuchungService {
 
     private final BuchungRepository buchungRepository;
+    private final HomepageStatusMailService homepageStatusMailService;
+    private final MieterRepository mieterRepository;
     private final BuchungsnummerCounterRepository
             buchungsnummerCounterRepository;
     private final PersonRepository personRepository;
@@ -43,12 +47,15 @@ public class BuchungService {
             verbrauchsabrechnungService;
     private final BuchungVerbrauchskostenRepository
             buchungVerbrauchskostenRepository;
+    private final BuchungFinanzbewegungRepository
+            buchungFinanzbewegungRepository;
 
     private static final LocalDateTime UNBEFRISTET_BIS =
             LocalDateTime.of(3000, 12, 31, 14, 0);
 
     public BuchungService(
             BuchungRepository buchungRepository,
+            MieterRepository mieterRepository,
             BuchungsnummerCounterRepository buchungsnummerCounterRepository,
             PersonRepository personRepository,
             VereinRepository vereinRepository,
@@ -59,9 +66,13 @@ public class BuchungService {
             ZaehlerRepository zaehlerRepository,
             ZaehlerstandRepository zaehlerstandRepository,
             VerbrauchsabrechnungService verbrauchsabrechnungService,
-            BuchungVerbrauchskostenRepository buchungVerbrauchskostenRepository
+            BuchungVerbrauchskostenRepository buchungVerbrauchskostenRepository,
+            BuchungFinanzbewegungRepository buchungFinanzbewegungRepository,
+            HomepageStatusMailService homepageStatusMailService
     ) {
         this.buchungRepository = buchungRepository;
+        this.homepageStatusMailService = homepageStatusMailService;
+        this.mieterRepository = mieterRepository;
         this.buchungsnummerCounterRepository =
                 buchungsnummerCounterRepository;
         this.personRepository = personRepository;
@@ -75,6 +86,8 @@ public class BuchungService {
         this.verbrauchsabrechnungService = verbrauchsabrechnungService;
         this.buchungVerbrauchskostenRepository =
                 buchungVerbrauchskostenRepository;
+        this.buchungFinanzbewegungRepository =
+                buchungFinanzbewegungRepository;
     }
 
     @Transactional(readOnly = true)
@@ -88,7 +101,7 @@ public class BuchungService {
     @Transactional
     public BuchungDTO getById(Long id) {
 
-        Buchung buchung = buchungRepository.findById(id)
+        Buchung buchung = buchungRepository.findLockedById(id)
                 .orElseThrow(() ->
                         new IllegalArgumentException(
                                 String.format(
@@ -105,6 +118,7 @@ public class BuchungService {
                 && buchung.getAbreise().getYear() < 2999
                 && !buchung.getAbreise().isAfter(LocalDateTime.now())) {
 
+            homepageStatusMailService.vormerken(buchung, Buchungsstatus.ABRECHENBAR);
             buchung.setStatus(Buchungsstatus.ABRECHENBAR);
 
             buchung = buchungRepository.save(buchung);
@@ -123,12 +137,22 @@ public class BuchungService {
         return dto;
     }
 
+    /** Gemeinsame Objektsperre für Sperrzeiten und neue Homepage-Anfragen. */
+    public void sperreMietobjekt(Long id) {
+        mietobjektRepository.findLockedById(id);
+    }
+
     public BuchungDTO create(BuchungDTO dto) {
+
+        if (!dto.isTeilnehmerdatenGueltig()) {
+            throw new IllegalArgumentException("Bitte Teilnehmerzahlen und Altersspanne der Jugendlichen prüfen.");
+        }
 
         Person mieter = getMieter(dto.getMieterId());
 
         Mietobjekt mietobjekt =
                 getMietobjekt(dto.getMietobjektId());
+        mietobjektRepository.findLockedById(mietobjekt.getId());
 
         Verein veranstalter =
                 getVeranstalter(dto.getVeranstalterVereinId());
@@ -142,61 +166,34 @@ public class BuchungService {
         );
 
         buchung.setMieter(mieter);
+        ensureMieter(mieter);
+        buchung.setKautionBetrag(buchung.getBuchungsquelle() == Buchungsquelle.DIREKT
+                ? Optional.ofNullable(dto.getKautionBetrag()).orElse(BigDecimal.ZERO)
+                : BigDecimal.ZERO);
+        buchung.setAnzahlungBetrag(buchung.getBuchungsquelle() == Buchungsquelle.DIREKT
+                ? Optional.ofNullable(dto.getAnzahlungBetrag()).orElse(BigDecimal.ZERO)
+                : BigDecimal.ZERO);
+
         buchung.setMietobjekt(mietobjekt);
         buchung.setVeranstalter(veranstalter);
         buchung.setBemerkung(dto.getBemerkung());
         buchung.setBewertung(dto.getBewertung());
+        buchung.setAnzahlJugendliche(dto.getAnzahlJugendliche());
+        buchung.setJugendAlterVon(dto.getJugendAlterVon());
+        buchung.setJugendAlterBis(dto.getJugendAlterBis());
+        buchung.setAnzahlErwachsene(dto.getAnzahlErwachsene());
 
         boolean unbefristet = dto.isUnbefristet();
-
-        // Die Standardzeiten müssen am Mietobjekt konfiguriert sein.
-        if (mietobjekt.getAnreisezeit() == null) {
-            throw new IllegalArgumentException(
-                    "Für das Mietobjekt \""
-                            + mietobjekt.getBezeichnung()
-                            + "\" ist keine Standard-Anreisezeit hinterlegt."
-            );
-        }
-
-        if (!unbefristet && mietobjekt.getAbreisezeit() == null) {
-            throw new IllegalArgumentException(
-                    "Für das Mietobjekt \""
-                            + mietobjekt.getBezeichnung()
-                            + "\" ist keine Standard-Abreisezeit hinterlegt."
-            );
-        }
-
-        // Datum und Uhrzeit werden vollständig vom Frontend übernommen.
         LocalDateTime anreise = dto.getAnreise();
+        LocalDateTime abreise = unbefristet
+                ? UNBEFRISTET_BIS
+                : dto.getAbreise();
 
-        if (anreise == null) {
-            throw new IllegalArgumentException(
-                    "Bitte gib Datum und Uhrzeit der Anreise an."
-            );
-        }
-
-        LocalDateTime abreise;
-
-        if (unbefristet) {
-            abreise = UNBEFRISTET_BIS;
-        } else {
-            abreise = dto.getAbreise();
-
-            if (abreise == null) {
-                throw new IllegalArgumentException(
-                        "Bitte gib Datum und Uhrzeit der Abreise an."
-                );
-            }
-
-            if (!abreise.isAfter(anreise)) {
-                throw new IllegalArgumentException(
-                        "Die Abreise muss nach der Anreise liegen."
-                );
-            }
-        }
+        pruefeBuchungszeiten(mietobjekt, anreise, abreise, unbefristet);
 
         buchung.setAnreise(anreise);
         buchung.setAbreise(abreise);
+        SperrzeitService.pruefe(mietobjekt, anreise, abreise);
 
         buchung.setStatus(Buchungsstatus.ANFRAGE);
 
@@ -222,6 +219,10 @@ public class BuchungService {
     }
 
     public BuchungDTO update(Long id, BuchungDTO dto) {
+
+        if (!dto.isTeilnehmerdatenGueltig()) {
+            throw new IllegalArgumentException("Bitte Teilnehmerzahlen und Altersspanne der Jugendlichen prüfen.");
+        }
 
         Buchung buchung = buchungRepository.findById(id)
                 .orElseThrow(() ->
@@ -280,6 +281,7 @@ public class BuchungService {
 
         Mietobjekt mietobjekt =
                 getMietobjekt(dto.getMietobjektId());
+        mietobjektRepository.findLockedById(mietobjekt.getId());
 
         Verein veranstalter =
                 getVeranstalter(dto.getVeranstalterVereinId());
@@ -294,11 +296,43 @@ public class BuchungService {
         }
 
         buchung.setMieter(mieter);
+        ensureMieter(mieter);
+        BigDecimal neueKaution = buchung.getBuchungsquelle() == Buchungsquelle.DIREKT
+                ? Optional.ofNullable(dto.getKautionBetrag()).orElse(BigDecimal.ZERO)
+                : BigDecimal.ZERO;
+        BigDecimal bereitsVerwahrteKaution =
+                buchungFinanzbewegungRepository
+                        .findByBuchungIdOrderByDatumAscIdAsc(buchung.getId())
+                        .stream()
+                        .filter(bewegung -> bewegung.getKategorie()
+                                == Finanzkategorie.KAUTION)
+                        .map(bewegung -> switch (bewegung.getArt()) {
+                            case EINGANG -> bewegung.getBetrag();
+                            case RUECKZAHLUNG, VERRECHNUNG -> bewegung.getBetrag().negate();
+                        })
+                        .reduce(BigDecimal.ZERO, BigDecimal::add)
+                        .max(BigDecimal.ZERO);
+        if (neueKaution.compareTo(bereitsVerwahrteKaution) < 0) {
+            throw new IllegalArgumentException(
+                    "Der Kautionsbetrag kann nicht unter den noch verwahrten "
+                            + "Kautionssaldo von " + bereitsVerwahrteKaution
+                            + " € reduziert werden. Bitte erst zurückzahlen "
+                            + "oder verrechnen."
+            );
+        }
+        buchung.setKautionBetrag(neueKaution);
+        buchung.setAnzahlungBetrag(buchung.getBuchungsquelle() == Buchungsquelle.DIREKT
+                ? Optional.ofNullable(dto.getAnzahlungBetrag()).orElse(BigDecimal.ZERO)
+                : BigDecimal.ZERO);
         buchung.setMietobjekt(mietobjekt);
         buchung.setVeranstalter(veranstalter);
 
         buchung.setBemerkung(dto.getBemerkung());
         buchung.setBewertung(dto.getBewertung());
+        buchung.setAnzahlJugendliche(dto.getAnzahlJugendliche());
+        buchung.setJugendAlterVon(dto.getJugendAlterVon());
+        buchung.setJugendAlterBis(dto.getJugendAlterBis());
+        buchung.setAnzahlErwachsene(dto.getAnzahlErwachsene());
 
         boolean unbefristet = dto.isUnbefristet();
 
@@ -316,6 +350,7 @@ public class BuchungService {
 
         buchung.setAnreise(anreise);
         buchung.setAbreise(abreise);
+        SperrzeitService.pruefe(mietobjekt, anreise, abreise);
 
         // Auch bei ABGESCHLOSSEN bleibt der Status unverändert.
         // Die Buchung kann korrigiert und später ausdrücklich
@@ -385,6 +420,12 @@ public class BuchungService {
                     "Die Abreise muss nach der Anreise liegen."
             );
         }
+
+        if (!abreise.toLocalDate().isAfter(anreise.toLocalDate())) {
+            throw new IllegalArgumentException(
+                    "Der Mindestaufenthalt beträgt eine Übernachtung. Die Abreise muss frühestens am Folgetag liegen."
+            );
+        }
     }
 
     private boolean sindBuchungsdatenUnveraendert(
@@ -392,6 +433,10 @@ public class BuchungService {
             BuchungDTO dto
     ) {
         if (dto.getMieterId() == null
+                || !Objects.equals(buchung.getAnzahlJugendliche(), dto.getAnzahlJugendliche())
+                || !Objects.equals(buchung.getJugendAlterVon(), dto.getJugendAlterVon())
+                || !Objects.equals(buchung.getJugendAlterBis(), dto.getJugendAlterBis())
+                || !Objects.equals(buchung.getAnzahlErwachsene(), dto.getAnzahlErwachsene())
                 || dto.getMietobjektId() == null
                 || dto.getAnreise() == null) {
             return false;
@@ -534,11 +579,11 @@ public class BuchungService {
     }
 
     /**
-     * Vergibt die nächste Buchungsnummer für das aktuelle Jahr.
+     * Vergibt die nächste Buchungsnummer für das Jahr der Anreise.
      */
     private void vergebeBuchungsnummer(Buchung buchung) {
 
-        int jahr = Year.now().getValue();
+        int jahr = buchung.getAnreise().getYear();
 
         BuchungsnummerCounter counter =
                 buchungsnummerCounterRepository.findByJahr(jahr)
@@ -554,8 +599,10 @@ public class BuchungService {
                             );
                         });
 
-        int naechsteNummer =
-                counter.getLetzteNummer() + 1;
+        int letzteVorhandeneNummer = buchungRepository
+                .findTopByBuchungsjahrOrderByLaufendeNummerDesc(jahr)
+                .map(Buchung::getLaufendeNummer).orElse(0);
+        int naechsteNummer = Math.max(counter.getLetzteNummer(), letzteVorhandeneNummer) + 1;
 
         counter.setLetzteNummer(naechsteNummer);
 
@@ -566,13 +613,21 @@ public class BuchungService {
     }
 
     private Person getMieter(Long mieterId) {
+        // Mit dem Löschen eines Mieters serialisieren, bevor ein Profil angelegt
+        // oder die neue Buchungsverknüpfung gespeichert wird.
+        Person person = personRepository.findLockedById(mieterId)
+                .orElseThrow(() -> new IllegalArgumentException("Mieter nicht gefunden: " + mieterId));
+        if (!person.isKjfpSichtbar() && !mieterRepository.existsByPersonId(mieterId)) {
+            throw new IllegalArgumentException("Der ausgewählte Mieter ist nicht mehr vorhanden. Bitte die Mieterauswahl neu laden.");
+        }
+        return person;
+    }
 
-        return personRepository.findById(mieterId)
-                .orElseThrow(() ->
-                        new IllegalArgumentException(
-                                "Mieter nicht gefunden: " + mieterId
-                        )
-                );
+    private void ensureMieter(Person person) {
+        Mieter mieter = mieterRepository.findByPersonId(person.getId()).orElseGet(Mieter::new);
+        mieter.setPerson(person);
+        mieter.setAktiv(true);
+        mieterRepository.save(mieter);
     }
 
     private Mietobjekt getMietobjekt(Long mietobjektId) {
@@ -614,7 +669,9 @@ public class BuchungService {
         dto.setRabattart(buchung.getRabattart());
         dto.setRabattwertTyp(buchung.getRabattwertTyp());
         dto.setRabattwert(buchung.getRabattwert());
-        dto.setRabattbetrag(buchung.getRabattbetrag());
+        dto.setRabattbetrag(BuchungPreiskalkulation.rabatt(buchung));
+        dto.setKautionBetrag(buchung.getKautionBetrag());
+        dto.setAnzahlungBetrag(buchung.getAnzahlungBetrag());
 
         dto.setAnreise(buchung.getAnreise());
         dto.setAbreise(buchung.getAbreise());
@@ -669,7 +726,8 @@ public class BuchungService {
                                     zuordnung.getRabattwertTyp()
                             );
                             position.setRabattwert(zuordnung.getRabattwert());
-                            position.setRabattbetrag(zuordnung.getRabattbetrag());
+                            position.setRabattbetrag(BuchungPreiskalkulation.positionsRabatt(
+                                    zuordnung, zuordnung.getRabattwertTyp(), zuordnung.getRabattwert()));
 
                             return position;
                         })
@@ -695,7 +753,13 @@ public class BuchungService {
         );
 
         dto.setBemerkung(buchung.getBemerkung());
+        dto.setHerkunft(buchung.getHerkunft());
         dto.setBewertung(buchung.getBewertung());
+        dto.setAnzahlJugendliche(buchung.getAnzahlJugendliche());
+        dto.setJugendAlterVon(buchung.getJugendAlterVon());
+        dto.setJugendAlterBis(buchung.getJugendAlterBis());
+        dto.setAnzahlErwachsene(buchung.getAnzahlErwachsene());
+
 
         dto.setVerbrauchskosten(
                 buchungVerbrauchskostenRepository
@@ -778,6 +842,7 @@ public class BuchungService {
                 continue;
             }
 
+            homepageStatusMailService.vormerken(buchung, Buchungsstatus.ABRECHENBAR);
             buchung.setStatus(Buchungsstatus.ABRECHENBAR);
             anzahl++;
         }
@@ -793,7 +858,7 @@ public class BuchungService {
             Long id,
             Buchungsstatus neuerStatus
     ) {
-        Buchung buchung = buchungRepository.findById(id)
+        Buchung buchung = buchungRepository.findLockedById(id)
                 .orElseThrow(() ->
                         new IllegalArgumentException(
                                 String.format(
@@ -824,6 +889,7 @@ public class BuchungService {
 
         if (neuerStatus == Buchungsstatus.RESERVIERT
                 || neuerStatus == Buchungsstatus.BESTAETIGT) {
+            mietobjektRepository.findLockedById(buchung.getMietobjekt().getId());
             pruefeBestand(buchung, buchung.getId());
         }
 
@@ -832,12 +898,107 @@ public class BuchungService {
          * bevor der Status geändert wird.
          */
         if (neuerStatus == Buchungsstatus.ABGESCHLOSSEN) {
+            pruefeKautionsabschluss(buchung);
             verbrauchsabrechnungService.berechneUndSpeichere(buchung);
         }
+
+        homepageStatusMailService.vormerken(buchung, neuerStatus);
 
         buchung.setStatus(neuerStatus);
 
         return toDTO(buchungRepository.save(buchung));
+    }
+
+    private void pruefeKautionsabschluss(Buchung buchung) {
+        if (buchung.getBuchungsquelle() != Buchungsquelle.DIREKT) {
+            return;
+        }
+
+        List<BuchungFinanzbewegung> kautionsbewegungen =
+                buchungFinanzbewegungRepository
+                        .findByBuchungIdOrderByDatumAscIdAsc(buchung.getId())
+                        .stream()
+                        .filter(bewegung ->
+                                bewegung.getKategorie()
+                                        == Finanzkategorie.KAUTION)
+                        .toList();
+        BigDecimal kautionSoll = Optional.ofNullable(
+                buchung.getKautionBetrag()
+        ).orElse(BigDecimal.ZERO);
+        if (kautionSoll.signum() <= 0 && kautionsbewegungen.isEmpty()) {
+            return;
+        }
+
+        BigDecimal eingegangen = summeFinanzbewegungen(
+                kautionsbewegungen,
+                Finanzbewegungsart.EINGANG
+        );
+        BigDecimal zurueckgezahlt = summeFinanzbewegungen(
+                kautionsbewegungen,
+                Finanzbewegungsart.RUECKZAHLUNG
+        );
+        BigDecimal verrechnet = summeFinanzbewegungen(
+                kautionsbewegungen,
+                Finanzbewegungsart.VERRECHNUNG
+        );
+
+        List<BuchungFinanzbewegung> alleBewegungen =
+                buchungFinanzbewegungRepository
+                        .findByBuchungIdOrderByDatumAscIdAsc(buchung.getId());
+        BigDecimal mietEingegangen = alleBewegungen.stream()
+                .filter(bewegung -> bewegung.getKategorie() == Finanzkategorie.ANZAHLUNG
+                        || bewegung.getKategorie() == Finanzkategorie.MIETE)
+                .filter(bewegung -> bewegung.getArt() == Finanzbewegungsart.EINGANG)
+                .map(BuchungFinanzbewegung::getBetrag)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal mietRueckzahlungen = alleBewegungen.stream()
+                .filter(bewegung -> bewegung.getKategorie() == Finanzkategorie.ANZAHLUNG
+                        || bewegung.getKategorie() == Finanzkategorie.MIETE)
+                .filter(bewegung -> bewegung.getArt() == Finanzbewegungsart.RUECKZAHLUNG)
+                .map(BuchungFinanzbewegung::getBetrag)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal mietBrutto = buchung.getMietbereiche().stream()
+                .map(this::berechnePositionspreis)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal mietSoll = mietBrutto.subtract(BuchungPreiskalkulation.rabatt(buchung)).max(BigDecimal.ZERO);
+        BigDecimal mietUeberzahlung = mietEingegangen.subtract(mietSoll)
+                .max(BigDecimal.ZERO);
+        BigDecimal mietRueckzahlungAusKaution = mietRueckzahlungen
+                .subtract(mietUeberzahlung)
+                .max(BigDecimal.ZERO)
+                .min(eingegangen.subtract(zurueckgezahlt).subtract(verrechnet).max(BigDecimal.ZERO));
+
+        BigDecimal nochOffen = kautionSoll.subtract(eingegangen);
+        if (nochOffen.signum() > 0) {
+            throw new IllegalArgumentException(
+                    "Die Buchung kann erst abgeschlossen werden, wenn die "
+                            + "Kaution vollständig eingegangen ist. Noch offen: "
+                            + nochOffen + " €."
+            );
+        }
+
+        BigDecimal kautionssaldo = eingegangen
+                .subtract(zurueckgezahlt)
+                .subtract(verrechnet)
+                .subtract(mietRueckzahlungAusKaution);
+        if (kautionssaldo.signum() != 0) {
+            throw new IllegalArgumentException(
+                    "Die Buchung kann erst abgeschlossen werden, wenn die "
+                            + "Kaution vollständig zurückgezahlt oder mit "
+                            + "Verbrauchskosten verrechnet wurde. Noch nicht "
+                            + "abgerechnet: " + kautionssaldo + " €."
+            );
+        }
+    }
+
+    private BigDecimal summeFinanzbewegungen(
+            List<BuchungFinanzbewegung> bewegungen,
+            Finanzbewegungsart art
+    ) {
+        return bewegungen.stream()
+                .filter(bewegung -> bewegung.getArt() == art)
+                .map(BuchungFinanzbewegung::getBetrag)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     private boolean istStatusuebergangErlaubt(
@@ -1071,12 +1232,8 @@ public class BuchungService {
                 }
             }
 
-            BigDecimal positionspreis = berechnePositionspreis(position);
-            BigDecimal positionsrabatt = berechnePositionsrabatt(
-                    positionspreis,
-                    positionsRabattwertTyp,
-                    positionsRabattwert
-            );
+            BigDecimal positionsrabatt = BuchungPreiskalkulation.positionsRabatt(
+                    position, positionsRabattwertTyp, positionsRabattwert);
 
             position.setRabattwertTyp(positionsRabattwertTyp);
             position.setRabattwert(positionsRabattwert);
@@ -1088,12 +1245,7 @@ public class BuchungService {
     }
 
     private BigDecimal berechnePositionspreis(BuchungMietbereich position) {
-        if (position.getVereinbarterPreis() == null || position.getAnzahl() == null) {
-            return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
-        }
-        return position.getVereinbarterPreis()
-                .multiply(BigDecimal.valueOf(position.getAnzahl()))
-                .setScale(2, RoundingMode.HALF_UP);
+        return BuchungPreiskalkulation.preis(position);
     }
 
     private void validiereMietbereichVoraussetzungen(Buchung buchung) {
@@ -1116,23 +1268,6 @@ public class BuchungService {
                 }
             }
         }
-    }
-
-    private BigDecimal berechnePositionsrabatt(
-            BigDecimal positionspreis,
-            RabattwertTyp rabattwertTyp,
-            BigDecimal rabattwert
-    ) {
-        if (rabattwertTyp == null || rabattwert == null || positionspreis.signum() <= 0) {
-            return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
-        }
-
-        BigDecimal rabatt = rabattwertTyp == RabattwertTyp.PROZENTUAL
-                ? positionspreis.multiply(rabattwert)
-                        .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP)
-                : rabattwert.min(positionspreis);
-
-        return rabatt.min(positionspreis).setScale(2, RoundingMode.HALF_UP);
     }
 
     private void setzeBuchungspositionen(
@@ -1238,10 +1373,39 @@ public class BuchungService {
         }
     }
 
+    /** Nutzt dieselbe Zeit-, Bereichs- und Bestandsprüfung wie die interne Reservierung. */
+    @Transactional(readOnly = true, noRollbackFor = IllegalArgumentException.class)
+    public void pruefeHomepageVerfuegbarkeit(Long mietobjektId, LocalDate anreise, LocalDate abreise,
+            List<BuchungMietbereichDTO> positionen) {
+        Mietobjekt objekt = getMietobjekt(mietobjektId);
+        if (!objekt.isMietbar() || !objekt.isDirektbuchungAktiv()
+                || objekt.getAnreisezeit() == null || objekt.getAbreisezeit() == null) {
+            throw new IllegalArgumentException("Das Mietobjekt ist online nicht buchbar.");
+        }
+        if (anreise == null || abreise == null || anreise.isBefore(LocalDate.now(ZoneId.of("Europe/Berlin")))
+                || !abreise.isAfter(anreise) || positionen == null || positionen.isEmpty()) {
+            throw new IllegalArgumentException("Bitte einen zukünftigen Zeitraum mit mindestens einer Übernachtung und Mietbereiche auswählen.");
+        }
+        Buchung pruefung = new Buchung();
+        pruefung.setMietobjekt(objekt);
+        pruefung.setBuchungsquelle(Buchungsquelle.DIREKT);
+        pruefung.setAnreise(anreise.atTime(objekt.getAnreisezeit()));
+        pruefung.setAbreise(abreise.atTime(objekt.getAbreisezeit()));
+        pruefeBuchungszeiten(objekt, pruefung.getAnreise(), pruefung.getAbreise(), false);
+        if (positionen.stream().map(BuchungMietbereichDTO::getMietbereichId).distinct().count() != positionen.size()) {
+            throw new IllegalArgumentException("Mietbereiche dürfen nur einmal ausgewählt werden.");
+        }
+        BuchungDTO dto = new BuchungDTO(); dto.setPositionen(positionen);
+        setzeBuchungspositionen(pruefung, dto, objekt, Buchungsquelle.DIREKT);
+        validiereMietbereichVoraussetzungen(pruefung);
+        pruefeBestand(pruefung, null);
+    }
+
     private void pruefeBestand(
             Buchung buchung,
             Long eigeneBuchungId
     ) {
+        SperrzeitService.pruefe(buchung.getMietobjekt(), buchung.getAnreise(), buchung.getAbreise());
         List<Buchungsstatus> bestandsrelevanteStatus = List.of(
                 Buchungsstatus.RESERVIERT,
                 Buchungsstatus.BESTAETIGT
@@ -1316,6 +1480,99 @@ public class BuchungService {
                 );
             }
         }
+    }
+
+    /** Eine Abfrage pro Monat; freigegebener Mietername, aber keine Kontaktdaten oder internen Buchungs-IDs. */
+    @Transactional(readOnly = true)
+    public com.kcserver.vermietung.dto.HomepageIntegrationDTO.Kalender homepageKalender(
+            Mietobjekt objekt, Mietbereich bereich, java.time.YearMonth monat, Set<Long> freigegeben) {
+        Set<Mietbereich> auswahl = new HashSet<>();
+        kalenderVoraussetzungen(bereich, freigegeben, auswahl);
+        Map<Long, Mietbereich> ressourcen = new HashMap<>();
+        boolean ueberschneidung = false;
+        for (Mietbereich b : auswahl) {
+            for (Mietbereich r : ermittleBelegteRessourcen(b, new HashSet<>())) {
+                if (ressourcen.putIfAbsent(r.getId(), r) != null) ueberschneidung = true;
+            }
+        }
+        List<Buchung> buchungen = buchungRepository.findByStatusInAndAnreiseLessThanAndAbreiseGreaterThan(
+                List.of(Buchungsstatus.RESERVIERT, Buchungsstatus.BESTAETIGT, Buchungsstatus.ABRECHENBAR, Buchungsstatus.ABGESCHLOSSEN),
+                monat.plusMonths(1).atDay(1).atTime(objekt.getAbreisezeit()),
+                monat.atDay(1).atStartOfDay()).stream()
+                .filter(b -> Objects.equals(b.getMietobjekt().getId(), objekt.getId())).toList();
+        // Zusammensetzungen nur einmal auflösen, nicht für jeden Kalendertag erneut.
+        record Belegung(Buchung buchung, Map<Long, Integer> mengen) {}
+        List<Belegung> belegungen = new ArrayList<>();
+        for (Buchung b : buchungen) {
+            Map<Long, Integer> mengen = new HashMap<>();
+            for (BuchungMietbereich p : b.getMietbereiche()) {
+                for (Mietbereich r : ermittleBelegteRessourcen(p.getMietbereich(), new HashSet<>())) {
+                    if (ressourcen.containsKey(r.getId())) mengen.merge(r.getId(), p.getAnzahl(), Integer::sum);
+                }
+            }
+            if (!mengen.isEmpty()) belegungen.add(new Belegung(b, mengen));
+        }
+        List<com.kcserver.vermietung.dto.HomepageIntegrationDTO.KalenderTag> tage = new ArrayList<>();
+        for (int d = 1; d <= monat.lengthOfMonth(); d++) {
+            LocalDate datum = monat.atDay(d);
+            List<com.kcserver.vermietung.dto.HomepageIntegrationDTO.KalenderBelegung> zeitbelegungen = belegungen.stream()
+                    .map(Belegung::buchung)
+                    .filter(b -> b.getAnreise().isBefore(datum.plusDays(1).atStartOfDay())
+                            && b.getAbreise().isAfter(datum.atStartOfDay()))
+                    .sorted(java.util.Comparator.comparing(Buchung::getAnreise))
+                    .map(b -> new com.kcserver.vermietung.dto.HomepageIntegrationDTO.KalenderBelegung(
+                            b.getAnreise().isBefore(datum.atStartOfDay()) ? datum.atStartOfDay() : b.getAnreise(),
+                            b.getAbreise().isAfter(datum.plusDays(1).atStartOfDay()) ? datum.plusDays(1).atStartOfDay() : b.getAbreise(),
+                            b.getStatus() == Buchungsstatus.RESERVIERT ? "RESERVIERT" : "BELEGT", b.getBuchungsnummer(), homepageMietername(b)))
+                    .toList();
+            LocalDateTime von = datum.atTime(objekt.getAnreisezeit());
+            LocalDateTime bis = datum.plusDays(1).atTime(objekt.getAbreisezeit());
+            Map<Long, Integer> alle = new HashMap<>(), feste = new HashMap<>();
+            Set<String> nummern = new TreeSet<>();
+            for (Belegung belegung : belegungen) {
+                Buchung b = belegung.buchung();
+                if (!b.getAnreise().isBefore(bis) || !b.getAbreise().isAfter(von)) continue;
+                if (b.getBuchungsnummer() != null) nummern.add(b.getBuchungsnummer());
+                belegung.mengen().forEach((id, menge) -> {
+                    alle.merge(id, menge, Integer::sum);
+                    if (b.getStatus() != Buchungsstatus.RESERVIERT) feste.merge(id, menge, Integer::sum);
+                });
+            }
+            for (MietobjektSperrzeit sperre : objekt.getSperrzeiten()) {
+                if (SperrzeitService.ueberlappt(sperre.getVon(), sperre.getBis(), datum.atStartOfDay(), datum.plusDays(1).atStartOfDay())) {
+                    zeitbelegungen = new ArrayList<>(zeitbelegungen);
+                    zeitbelegungen.add(new com.kcserver.vermietung.dto.HomepageIntegrationDTO.KalenderBelegung(
+                            sperre.getVon().isBefore(datum.atStartOfDay()) ? datum.atStartOfDay() : sperre.getVon(),
+                            sperre.getBis().isAfter(datum.plusDays(1).atStartOfDay()) ? datum.plusDays(1).atStartOfDay() : sperre.getBis(),
+                            "GESPERRT", null, null));
+                }
+            }
+            boolean gesperrt = objekt.getSperrzeiten().stream().anyMatch(sperre ->
+                    SperrzeitService.ueberlappt(sperre.getVon(), sperre.getBis(), von, bis));
+            int frei = gesperrt || ueberschneidung ? 0 : ressourcen.values().stream()
+                    .mapToInt(r -> Math.max(0, r.getBestand() - alle.getOrDefault(r.getId(), 0))).min().orElse(0);
+            boolean festBelegt = ueberschneidung || ressourcen.values().stream()
+                    .anyMatch(r -> feste.getOrDefault(r.getId(), 0) >= r.getBestand());
+            tage.add(new com.kcserver.vermietung.dto.HomepageIntegrationDTO.KalenderTag(
+                    datum, gesperrt ? "GESPERRT" : frei > 0 ? "FREI" : festBelegt ? "BELEGT" : "RESERVIERT", frei, List.copyOf(nummern), zeitbelegungen));
+        }
+        return new com.kcserver.vermietung.dto.HomepageIntegrationDTO.Kalender(monat.toString(), bereich.getId(), tage);
+    }
+
+    /** Der vollständige Mietername ist ausdrücklich für den öffentlichen Homepagekalender freigegeben. */
+    private String homepageMietername(Buchung buchung) {
+        if (buchung.getMieter() == null) return null;
+        String vorname = Objects.toString(buchung.getMieter().getVorname(), "").trim();
+        String nachname = Objects.toString(buchung.getMieter().getName(), "").trim();
+        String vollstaendig = (vorname + " " + nachname).trim();
+        return vollstaendig.isEmpty() ? null : vollstaendig;
+    }
+
+    private void kalenderVoraussetzungen(Mietbereich b, Set<Long> freigegeben, Set<Mietbereich> auswahl) {
+        if (!freigegeben.contains(b.getId()) || !b.isMietbar() || !b.isDirektbuchungAktiv())
+            throw new IllegalArgumentException("Ein erforderlicher Mietbereich ist online nicht freigegeben.");
+        if (!auswahl.add(b)) return;
+        for (Mietbereich voraussetzung : b.getVoraussetzungenDirekt()) kalenderVoraussetzungen(voraussetzung, freigegeben, auswahl);
     }
 
     private Set<Mietbereich> ermittleBelegteRessourcen(

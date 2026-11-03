@@ -11,6 +11,16 @@ import java.util.Optional;
 
 public interface BuchungRepository extends JpaRepository<Buchung, Long> {
 
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @org.springframework.data.jpa.repository.Query("select b from Buchung b where b.id = :id")
+    Optional<Buchung> findLockedById(@org.springframework.data.repository.query.Param("id") Long id);
+
+    List<Buchung> findByMietobjektIdAndStatusInAndAnreiseLessThanAndAbreiseGreaterThan(
+            Long mietobjektId, Collection<Buchungsstatus> status, LocalDateTime bis, LocalDateTime von);
+
+    // mieter verweist auf Person, nicht auf den Mieterstammsatz. Alle Status zählen.
+    boolean existsByMieterId(Long personId);
+
     Optional<Buchung> findTopByBuchungsjahrOrderByLaufendeNummerDesc(
             Integer buchungsjahr
     );
@@ -41,6 +51,7 @@ public interface BuchungRepository extends JpaRepository<Buchung, Long> {
             Long id
     );
 
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
     List<Buchung> findByStatusAndAbreiseLessThanEqual(
             Buchungsstatus status,
             LocalDateTime stichtag

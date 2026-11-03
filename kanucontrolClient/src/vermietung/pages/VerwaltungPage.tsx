@@ -1,3 +1,5 @@
+import AirbnbExportVerwaltung from "@/vermietung/components/verwaltung/AirbnbExportVerwaltung";
+import SperrzeitenVerwaltung from "@/vermietung/components/verwaltung/SperrzeitenVerwaltung";
 import { Box, Typography, Tabs, Tab } from "@mui/material";
 import { useState } from "react";
 
@@ -7,6 +9,8 @@ import SortierungVerwaltung from "@/vermietung/components/verwaltung/SortierungV
 import VerbrauchskostenVerwaltung from "@/vermietung/components/verwaltung/VerbrauchskostenVerwaltung";
 import ZaehlerVerwaltung from "@/vermietung/components/verwaltung/ZaehlerVerwaltung";
 import MietbereichAbhaengigkeitenVerwaltung from "@/vermietung/components/verwaltung/MietbereichAbhaengigkeitenVerwaltung";
+
+import HomepageAnbindungVerwaltung from "@/vermietung/components/verwaltung/HomepageAnbindungVerwaltung";
 
 const VerwaltungPage = () => {
   const [tab, setTab] = useState(0);
@@ -30,6 +34,9 @@ const VerwaltungPage = () => {
         <Tab label="Sortierung" />
         <Tab label="Zählerverwaltung" />
         <Tab label="Abhängigkeiten" />
+        <Tab label="Homepage-Anbindung" />
+        <Tab label="Sperrzeiten" />
+        <Tab label="Airbnb-Export" />
       </Tabs>
 
       {tab === 0 && <MietpreiseVerwaltung />}
@@ -38,6 +45,9 @@ const VerwaltungPage = () => {
       {tab === 3 && <SortierungVerwaltung />}
       {tab === 4 && <ZaehlerVerwaltung />}
       {tab === 5 && <MietbereichAbhaengigkeitenVerwaltung />}
+      {tab === 6 && <HomepageAnbindungVerwaltung />}
+      {tab === 7 && <SperrzeitenVerwaltung />}
+      {tab === 8 && <AirbnbExportVerwaltung />}
     </Box>
   );
 };

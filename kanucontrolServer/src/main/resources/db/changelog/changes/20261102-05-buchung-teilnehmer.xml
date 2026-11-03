@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+    <changeSet id="20261102-05-buchung-teilnehmer" author="codex">
+        <addColumn tableName="buchung">
+            <column name="anzahl_jugendliche" type="INT"/>
+            <column name="jugend_alter_von" type="INT"/>
+            <column name="jugend_alter_bis" type="INT"/>
+            <column name="anzahl_erwachsene" type="INT"/>
+        </addColumn>
+        <rollback>
+            <dropColumn tableName="buchung" columnName="anzahl_jugendliche"/>
+            <dropColumn tableName="buchung" columnName="jugend_alter_von"/>
+            <dropColumn tableName="buchung" columnName="jugend_alter_bis"/>
+            <dropColumn tableName="buchung" columnName="anzahl_erwachsene"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

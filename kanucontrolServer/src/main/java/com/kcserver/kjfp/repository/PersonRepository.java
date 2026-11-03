@@ -18,6 +18,10 @@ public interface PersonRepository
         extends JpaRepository<Person, Long>,
         JpaSpecificationExecutor<Person> {
 
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @Query("select p from Person p where p.id = :id")
+    Optional<Person> findLockedById(@Param("id") Long id);
+
     boolean existsByVornameAndNameAndGeburtsdatum(
             String vorname,
             String name,
@@ -45,6 +49,7 @@ WHERE (
     (p.name = :cursorName AND p.vorname > :cursorVorname) OR
     (p.name = :cursorName AND p.vorname = :cursorVorname AND p.id > :cursorId)
 )
+AND p.kjfpSichtbar = true
 AND (
     :search IS NULL OR :search = '' OR
     LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR
@@ -86,6 +91,7 @@ WHERE (
     (p.name = :cursorName AND p.vorname < :cursorVorname) OR
     (p.name = :cursorName AND p.vorname = :cursorVorname AND p.id < :cursorId)
 )
+AND p.kjfpSichtbar = true
 AND (
     :search IS NULL OR :search = '' OR
     LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR
@@ -122,6 +128,9 @@ ORDER BY p.name DESC, p.vorname DESC, p.id DESC
     })
     Page<Person> findAll(Pageable pageable);
 
+    @EntityGraph(attributePaths = {"mitgliedschaften", "mitgliedschaften.verein"})
+    Page<Person> findByKjfpSichtbarTrue(Pageable pageable);
+
     @EntityGraph(attributePaths = {
             "mitgliedschaften",
             "mitgliedschaften.verein"
@@ -156,6 +165,7 @@ WHERE (
     OR LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%'))
     OR LOWER(p.vorname) LIKE LOWER(CONCAT('%', :search, '%'))
 )
+AND p.kjfpSichtbar = true
 ORDER BY p.name, p.vorname
 """)
     List<Person> searchRefList(@Param("search") String search);
@@ -166,6 +176,7 @@ FROM Person p
 LEFT JOIN FETCH p.mitgliedschaften m
 LEFT JOIN FETCH m.verein
 WHERE p.aktiv = true
+AND p.kjfpSichtbar = true
 AND p.geburtsdatum IS NOT NULL
 AND p.geburtsdatum <= :stichtag
 AND (
@@ -180,4 +191,18 @@ ORDER BY p.name, p.vorname
             @Param("search") String search,
             @Param("stichtag") LocalDate stichtag
     );
+
+    @Query("""
+SELECT DISTINCT p
+FROM Person p
+LEFT JOIN FETCH p.mitgliedschaften m
+LEFT JOIN FETCH m.verein
+WHERE ((p.aktiv = true AND p.kjfpSichtbar = true)
+    OR EXISTS (SELECT mp.id FROM Mieter mp WHERE mp.person = p AND mp.aktiv = true))
+AND (:search IS NULL OR :search = ''
+    OR LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%'))
+    OR LOWER(p.vorname) LIKE LOWER(CONCAT('%', :search, '%')))
+ORDER BY p.name, p.vorname
+""")
+    List<Person> searchVermietungRefList(@Param("search") String search);
 }

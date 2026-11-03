@@ -20,6 +20,7 @@ export interface BuchungPosition {
 export interface Buchung {
   id: number;
   buchungsnummer: string;
+  herkunft?: string | null;
   status: Buchungsstatus;
   buchungsquelle: Buchungsquelle;
 
@@ -42,6 +43,11 @@ export interface Buchung {
 
   veranstalterVereinId?: number;
 
+  anzahlJugendliche?: number | null;
+  jugendAlterVon?: number | null;
+  jugendAlterBis?: number | null;
+  anzahlErwachsene?: number | null;
+
   bemerkung?: string | null;
   bewertung?: number | null;
 
@@ -49,6 +55,8 @@ export interface Buchung {
   rabattwertTyp?: RabattwertTyp | null;
   rabattwert?: number | null;
   rabattbetrag: number;
+  kautionBetrag: number;
+  anzahlungBetrag: number;
 
   verbrauchskosten?: BuchungVerbrauchskosten[];
   verbrauchskostenVorschau: VerbrauchskostenVorschau[];

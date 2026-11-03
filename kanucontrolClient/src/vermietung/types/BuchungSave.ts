@@ -25,10 +25,17 @@ export interface BuchungSave {
   veranstalterVereinId?: number;
   status?: Buchungsstatus;
   
+  anzahlJugendliche?: number | null;
+  jugendAlterVon?: number | null;
+  jugendAlterBis?: number | null;
+  anzahlErwachsene?: number | null;
+
   bemerkung: string;
   bewertung: number | null;
 
   rabattart: Rabattart;
   rabattwertTyp: RabattwertTyp | null;
   rabattwert: number | null;
+  kautionBetrag: number;
+  anzahlungBetrag: number;
 }

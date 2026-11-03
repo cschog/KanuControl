@@ -1,6 +1,7 @@
 // src/vermietung/pages/BuchungenView.tsx
 
 import { useCallback, useEffect, useState } from "react";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { Box, Button, MenuItem, Tab, Tabs, TextField, Typography } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { getBuchung } from "@/vermietung/api/buchungApi";
@@ -53,6 +54,11 @@ const BuchungenView = () => {
   const [error, setError] = useState<string | null>(null);
 
  const { registerBackHandler, setDetailViewOpen } = useBackNavigation();
+ const location = useLocation();
+ const navigate = useNavigate();
+ const [searchParams] = useSearchParams();
+ const buchungIdAusUrl = Number(searchParams.get("buchungId"));
+ const returnTo = (location.state as { returnTo?: string } | null)?.returnTo;
 
   const handleStatusChange = async (status: Buchungsstatus) => {
     if (!selectedBuchung) return;
@@ -99,7 +105,7 @@ const handleReopen = async () => {
 
   const handleComplete = () => handleStatusChange("ABGESCHLOSSEN");
 
-  const handleSelect = async (buchung: Buchung | null) => {
+  const handleSelect = useCallback(async (buchung: Buchung | null) => {
     setInitialZeitraum(null);
     setSelectedId(buchung?.id ?? null);
     setSelectedBuchung(null);
@@ -118,7 +124,15 @@ const handleReopen = async () => {
       setError(getApiErrorMessage(err));
       setShowForm(false);
     }
-  };
+  }, [setSelectedId]);
+
+  useEffect(() => {
+    if (!Number.isFinite(buchungIdAusUrl) || buchungIdAusUrl <= 0 || buchungen.length === 0) return;
+    if (showForm && selectedId === buchungIdAusUrl) return;
+
+    const zielBuchung = buchungen.find((buchung) => buchung.id === buchungIdAusUrl);
+    if (zielBuchung) void handleSelect(zielBuchung);
+  }, [buchungIdAusUrl, buchungen, handleSelect, selectedId, showForm]);
 
   const handleNew = (
     buchungsquelle: Buchungsquelle,
@@ -180,12 +194,17 @@ const handleReopen = async () => {
   };
 
   const handleBack = useCallback(() => {
+    if (returnTo) {
+      navigate(returnTo);
+      return;
+    }
+
     setSelectedBuchung(null);
     setSelectedId(null);
     setInitialZeitraum(null);
     setShowForm(false);
     setEditMode(false);
-  }, [setSelectedId]);
+  }, [navigate, returnTo, setSelectedId]);
 
   const handleCancelEdit = () => {
     setEditMode(false);
@@ -270,6 +289,15 @@ if (showForm) {
         onComplete={handleComplete}
         onDelete={handleDelete}
         onBack={handleBack}
+        onOpenFinanzen={() => {
+          if (!selectedBuchung) return;
+          navigate(`/vermietung/finanzen?buchungId=${selectedBuchung.id}`, {
+            state: {
+              returnTo: `${location.pathname}${location.search}`,
+              returnToState: location.state ?? null,
+            },
+          });
+        }}
         disableDelete={!selectedBuchung}
       />
 
@@ -387,6 +415,7 @@ if (showForm) {
         />
       ) : (
         <Buchungskalender
+          objekte={mietobjekte.filter(o => filterMietobjektId === "" || o.id === filterMietobjektId)}
           buchungen={filteredBuchungen}
           onSelect={(buchung) => void handleSelect(buchung)}
           canCreateRange={filterMietobjektId !== "" && filterMietobjektId === mietobjekt?.id}

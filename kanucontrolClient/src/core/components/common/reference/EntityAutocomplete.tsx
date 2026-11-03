@@ -82,11 +82,10 @@ export function EntityAutocomplete<T extends RefBase>({
     };
   }, [debounce, fetch]);
 
+  const selectedLabel = value ? getLabel(value) : "";
   useEffect(() => {
-    if (!value) {
-      setInput("");
-    }
-  }, [value]);
+    setInput(selectedLabel);
+  }, [value?.id, selectedLabel]);
 
   /* ================= FIELD ================= */
 
@@ -104,9 +103,7 @@ export function EntityAutocomplete<T extends RefBase>({
       onChange={(_, v) => {
         onChange(v ?? undefined);
 
-        if (v) {
-          setInput("");
-        }
+        setInput(v ? getLabel(v) : "");
       }}
       renderInput={(params) => (
         <TextField

@@ -11,6 +11,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import com.kcserver.api.response.ApiResponse;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -227,6 +228,14 @@ public class PersonController {
         return ApiResponse.of(
                 personService.searchRefList(search, nurLeiter, stichtag)
         );
+    }
+
+    @GetMapping("/vermietung/search/ref")
+    @PreAuthorize("hasAnyRole('ADMIN', 'VERMIETUNG')")
+    public ApiResponse<List<PersonRefDTO>> searchVermietungRef(
+            @RequestParam(required = false) String search
+    ) {
+        return ApiResponse.of(personService.searchVermietungRefList(search));
     }
 
     /* =========================

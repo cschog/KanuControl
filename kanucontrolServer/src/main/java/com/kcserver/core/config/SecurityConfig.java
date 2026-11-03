@@ -18,11 +18,21 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 @Profile("!junit")
 public class SecurityConfig {
 
+    // Der Filter gehört nur in die Security-Chain, nicht zusätzlich in die Servlet-Filterkette.
+    @Bean
+    public org.springframework.boot.web.servlet.FilterRegistrationBean<com.kcserver.vermietung.ical.PublicAirbnbTenantFilter> airbnbFilterRegistration(
+            com.kcserver.vermietung.ical.PublicAirbnbTenantFilter filter) {
+        var registration = new org.springframework.boot.web.servlet.FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
             CorsConfigurationSource corsConfigurationSource,
-            TenantFilter tenantFilter
+            TenantFilter tenantFilter,
+            com.kcserver.vermietung.ical.PublicAirbnbTenantFilter publicAirbnbTenantFilter
     ) throws Exception {
 
         JwtAuthenticationConverter jwtAuthenticationConverter =
@@ -52,10 +62,16 @@ public class SecurityConfig {
                                 "/api/csv-import/mapping-template"
                         ).permitAll()
 
-                        .requestMatchers("/api/active-schema").authenticated()
+                        .requestMatchers(new org.springframework.security.web.util.matcher.RegexRequestMatcher(
+                                com.kcserver.vermietung.ical.AirbnbFeedPath.REGEX + "(?:\\?.*)?", "GET")).permitAll()
+                        .requestMatchers(new org.springframework.security.web.util.matcher.RegexRequestMatcher(
+                                com.kcserver.vermietung.ical.AirbnbFeedPath.REGEX + "(?:\\?.*)?", "HEAD")).permitAll()
+
+                        .requestMatchers("/api/integrationen/homepage/**").hasRole("HOMEPAGE_INTEGRATION")
 
                         // 🔒 alles andere geschützt
-                        .anyRequest().authenticated()
+                        .anyRequest().access(new org.springframework.security.web.access.expression.WebExpressionAuthorizationManager(
+                                "isAuthenticated() and !hasRole('HOMEPAGE_INTEGRATION')"))
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt
@@ -63,10 +79,8 @@ public class SecurityConfig {
                         )
                 )
 
-                .addFilterAfter(
-                        tenantFilter,
-                        BearerTokenAuthenticationFilter.class
-                );
+                .addFilterAfter(publicAirbnbTenantFilter, BearerTokenAuthenticationFilter.class)
+                .addFilterAfter(tenantFilter, com.kcserver.vermietung.ical.PublicAirbnbTenantFilter.class);
 
         return http.build();
     }
