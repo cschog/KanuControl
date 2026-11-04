@@ -2,6 +2,7 @@ import AirbnbExportVerwaltung from "@/vermietung/components/verwaltung/AirbnbExp
 import SperrzeitenVerwaltung from "@/vermietung/components/verwaltung/SperrzeitenVerwaltung";
 import { Box, Typography, Tabs, Tab } from "@mui/material";
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 import MietpreiseVerwaltung from "@/vermietung/components/verwaltung/MietpreiseVerwaltung";
 import RabatteVerwaltung from "@/vermietung/components/verwaltung/RabatteVerwaltung";
@@ -13,7 +14,8 @@ import MietbereichAbhaengigkeitenVerwaltung from "@/vermietung/components/verwal
 import HomepageAnbindungVerwaltung from "@/vermietung/components/verwaltung/HomepageAnbindungVerwaltung";
 
 const VerwaltungPage = () => {
-  const [tab, setTab] = useState(0);
+  const [params] = useSearchParams();
+  const [tab, setTab] = useState(params.get("bereich") === "zaehler" ? 4 : 0);
 
   return (
     <Box sx={{ p: 3 }}>

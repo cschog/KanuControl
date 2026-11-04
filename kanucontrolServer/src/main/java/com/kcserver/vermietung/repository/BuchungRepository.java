@@ -10,6 +10,25 @@ import java.util.List;
 import java.util.Optional;
 
 public interface BuchungRepository extends JpaRepository<Buchung, Long> {
+    @org.springframework.data.jpa.repository.Query("""
+    select distinct b from Buchung b join fetch b.mietbereiche p join fetch p.mietbereich
+    where b.status in :status and b.anreise < :bis and b.abreise > :von and b.mietobjekt.id in :objekte
+    """)
+    List<Buchung> findForConsumptionDashboard(
+        @org.springframework.data.repository.query.Param("objekte") java.util.Collection<Long> objekte,
+        @org.springframework.data.repository.query.Param("status") java.util.Collection<Buchungsstatus> status,
+        @org.springframework.data.repository.query.Param("von") LocalDateTime von,
+        @org.springframework.data.repository.query.Param("bis") LocalDateTime bis);
+
+    @org.springframework.data.jpa.repository.Query("""
+    select distinct b from Buchung b
+    join fetch b.mieter join fetch b.mietobjekt left join fetch b.mietbereiche
+    where b.anreise >= :von and b.anreise < :bis
+    """)
+    java.util.List<Buchung> findForFinanceDashboard(
+        @org.springframework.data.repository.query.Param("von") java.time.LocalDateTime von,
+        @org.springframework.data.repository.query.Param("bis") java.time.LocalDateTime bis);
+
 
     @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
     @org.springframework.data.jpa.repository.Query("select b from Buchung b where b.id = :id")

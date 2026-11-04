@@ -1,3 +1,4 @@
+import AblesungBestaetigungDialog from "@/vermietung/components/buchung/AblesungBestaetigungDialog";
 // src/vermietung/pages/BuchungenView.tsx
 
 import { useCallback, useEffect, useState } from "react";
@@ -42,6 +43,7 @@ const BuchungenView = () => {
   const [mietobjekte, setMietobjekte] = useState<Mietobjekt[]>([]);
   const [filterMietobjektId, setFilterMietobjektId] = useState<number | "">("");
   const [filterInitialisiert, setFilterInitialisiert] = useState(false);
+  const [filterJahr, setFilterJahr] = useState<number | "">("");
   const [buchungsanzeige, setBuchungsanzeige] = useState<"STANDARD" | "ALLE">("STANDARD");
   const [ansicht, setAnsicht] = useState<"LISTE" | "KALENDER">("LISTE");
 
@@ -50,6 +52,8 @@ const BuchungenView = () => {
   const [editMode, setEditMode] = useState(false);
   const [selectedBuchung, setSelectedBuchung] = useState<Buchung | null>(null);
   const [neueBuchungsquelle, setNeueBuchungsquelle] = useState<Buchungsquelle>("DIREKT");
+  const [ablesungBestaetigung, setAblesungBestaetigung] = useState<Buchung | null>(null);
+  const [abschlussAktiv, setAbschlussAktiv] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -103,7 +107,53 @@ const handleReopen = async () => {
 
   const handleCancelBooking = () => handleStatusChange("STORNIERT");
 
-  const handleComplete = () => handleStatusChange("ABGESCHLOSSEN");
+  const abschliessen = async (buchung: Buchung, bestaetigt: boolean) => {
+    const ablesungen = bestaetigt ? buchung.verbrauchskostenVorschau
+      .filter(k => k.bestaetigungErforderlich)
+      .map(k => ({
+        zaehlerId: k.zaehlerId!, anreise: buchung.anreise, abreise: buchung.abreise,
+        anfangsablesung: k.anfangsablesung!, endablesung: k.endablesung!,
+        anfangsstand: k.anfangsstand!, endstand: k.endstand!,
+      })) : [];
+    const updated = await changeStatus(buchung.id, "ABGESCHLOSSEN", ablesungen);
+    setSelectedBuchung(updated);
+  };
+
+  const handleComplete = async () => {
+    if (!selectedBuchung || abschlussAktiv) return;
+    setAbschlussAktiv(true);
+    setSaveError(null);
+    try {
+      const aktuell = await getBuchung(selectedBuchung.id);
+      setSelectedBuchung(aktuell);
+      const vorschau = aktuell.verbrauchskostenVorschau ?? [];
+      if (vorschau.some(k => !k.erfolgreich && !k.bestaetigungErforderlich)) {
+        setSaveError("Die Verbrauchskosten sind unvollständig. Bitte die Hinweise bei den Verbrauchswerten prüfen.");
+      } else if (vorschau.some(k => k.bestaetigungErforderlich)) {
+        setAblesungBestaetigung(aktuell);
+      } else {
+        await abschliessen(aktuell, false);
+      }
+    } catch (err: unknown) {
+      setSaveError(getApiErrorMessage(err));
+    } finally {
+      setAbschlussAktiv(false);
+    }
+  };
+
+  const handleAblesungenBestaetigen = async () => {
+    if (!ablesungBestaetigung || abschlussAktiv) return;
+    setAbschlussAktiv(true);
+    setSaveError(null);
+    try {
+      await abschliessen(ablesungBestaetigung, true);
+    } catch (err: unknown) {
+      setSaveError(getApiErrorMessage(err));
+    } finally {
+      setAblesungBestaetigung(null);
+      setAbschlussAktiv(false);
+    }
+  };
 
   const handleSelect = useCallback(async (buchung: Buchung | null) => {
     setInitialZeitraum(null);
@@ -250,6 +300,11 @@ const handleReopen = async () => {
     }
   }, [mietobjekt, filterInitialisiert]);
 
+  const buchungsjahre = [...new Set(
+    buchungen.map((buchung) => Number(buchung.anreise.slice(0, 4)))
+      .filter((jahr) => Number.isInteger(jahr) && jahr > 0),
+  )].sort((a, b) => b - a);
+
   const gefilterteBuchungen = buchungen.filter((buchung) => {
     const passtZumMietobjekt = filterMietobjektId === "" || buchung.mietobjektId === filterMietobjektId;
     const istAusgeblendet = buchung.status === "ABGELEHNT" || buchung.status === "STORNIERT";
@@ -291,7 +346,7 @@ if (showForm) {
         onBack={handleBack}
         onOpenFinanzen={() => {
           if (!selectedBuchung) return;
-          navigate(`/vermietung/finanzen?buchungId=${selectedBuchung.id}`, {
+          navigate(`/vermietung/abrechnung?buchungId=${selectedBuchung.id}`, {
             state: {
               returnTo: `${location.pathname}${location.search}`,
               returnToState: location.state ?? null,
@@ -299,6 +354,13 @@ if (showForm) {
           });
         }}
         disableDelete={!selectedBuchung}
+      />
+
+      <AblesungBestaetigungDialog
+        buchung={ablesungBestaetigung}
+        busy={abschlussAktiv}
+        onCancel={() => setAblesungBestaetigung(null)}
+        onConfirm={() => void handleAblesungenBestaetigen()}
       />
 
       <ErrorDialog
@@ -330,6 +392,7 @@ if (showForm) {
             display: "flex",
             flexDirection: { xs: "column", sm: "row" },
             gap: 1,
+            flexWrap: "wrap",
             width: { xs: "100%", sm: "auto" },
           }}
         >
@@ -356,6 +419,24 @@ if (showForm) {
               </MenuItem>
             ))}
           </TextField>
+
+          {ansicht === "LISTE" && (
+            <TextField
+              select
+              size="small"
+              label="Jahr"
+              value={filterJahr}
+              onChange={(event) =>
+                setFilterJahr(event.target.value === "" ? "" : Number(event.target.value))
+              }
+              sx={{ width: { xs: "100%", sm: 150 } }}
+            >
+              <MenuItem value="">Alle Jahre</MenuItem>
+              {buchungsjahre.map((jahr) => (
+                <MenuItem key={jahr} value={jahr}>{jahr}</MenuItem>
+              ))}
+            </TextField>
+          )}
 
           <TextField
             select
@@ -407,7 +488,9 @@ if (showForm) {
 
       {ansicht === "LISTE" ? (
         <BuchungTable
-          data={filteredBuchungen}
+          data={filteredBuchungen.filter((buchung) =>
+            filterJahr === "" || Number(buchung.anreise.slice(0, 4)) === filterJahr,
+          )}
           selectedId={selectedId}
           onSelect={handleSelect}
           sorting={sorting}

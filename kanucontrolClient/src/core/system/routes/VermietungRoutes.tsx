@@ -5,7 +5,10 @@ import MietobjektePage from "@/vermietung/pages/MietobjektePage";
 import BuchungenView from "@/vermietung/pages/BuchungenView";
 import VerwaltungPage from "@/vermietung/pages/VerwaltungPage";
 import MieterPage from "@/vermietung/pages/MieterPage";
-import FinanzenPage from "@/vermietung/pages/FinanzenPage";
+import AbrechnungPage from "@/vermietung/pages/AbrechnungPage";
+import FinanzDashboardPage from "@/vermietung/pages/FinanzDashboardPage";
+
+import VerbrauchDashboardPage from "@/vermietung/pages/VerbrauchDashboardPage";
 
 const VermietungRoutes: RouteObject[] = [
   {
@@ -26,8 +29,11 @@ const VermietungRoutes: RouteObject[] = [
   },
   {
     path: "/vermietung/finanzen",
-    element: <FinanzenPage />,
+    element: <AbrechnungPage />,
   },
+  { path: "/vermietung/abrechnung", element: <AbrechnungPage /> },
+  { path: "/vermietung/verbrauch-dashboard", element: <VerbrauchDashboardPage /> },
+  { path: "/vermietung/finanz-dashboard", element: <FinanzDashboardPage /> },
   {
     path: "/vermietung/verwaltung",
     element: <VerwaltungPage />,

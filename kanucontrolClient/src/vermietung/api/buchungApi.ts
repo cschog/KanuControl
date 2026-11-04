@@ -1,3 +1,4 @@
+import type { AblesungBestaetigung } from "@/vermietung/types/VerbrauchskostenVorschau";
 import apiClient from "@/core/api/client/apiClient";
 
 import type { Buchung } from "@/vermietung/types/Buchung";
@@ -53,8 +54,8 @@ export async function deleteBuchung(id: number): Promise<void> {
   await apiClient.delete(`${baseUrl()}/${id}`);
 }
 
-export async function aendereBuchungsstatus(id: number, status: Buchungsstatus): Promise<Buchung> {
-  const response = await apiClient.patch<Buchung>(`${baseUrl()}/${id}/status`, { status });
+export async function aendereBuchungsstatus(id: number, status: Buchungsstatus, ablesungenBestaetigt: AblesungBestaetigung[] = []): Promise<Buchung> {
+  const response = await apiClient.patch<Buchung>(`${baseUrl()}/${id}/status`, { status, ablesungenBestaetigt });
 
   return response.data;
 }

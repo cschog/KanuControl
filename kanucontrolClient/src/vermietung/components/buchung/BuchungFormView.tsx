@@ -115,7 +115,7 @@ export const BuchungFormView: React.FC<Props> = ({
         {buchung?.herkunft === "HOMEPAGE" && <Chip label="Homepage-Anfrage" variant="outlined" />}
         {buchung && !editMode && buchung.status !== "ABGELEHNT" && buchung.status !== "STORNIERT" && (
           <Button variant="outlined" startIcon={<PaymentsIcon />} onClick={onOpenFinanzen}>
-            Finanzen
+            Abrechnung
           </Button>
         )}
       </Box>

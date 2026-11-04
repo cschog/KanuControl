@@ -15,6 +15,9 @@ public interface ZaehlerstandRepository
             Long zaehlerId
     );
 
+    List<Zaehlerstand> findByZaehlerIdInAndAblesedatumLessThanEqualOrderByAblesedatumAscIdAsc(
+        java.util.Collection<Long> ids, LocalDateTime stand);
+
     boolean existsByZaehlerIdAndAblesedatumBetween(
             Long zaehlerId,
             LocalDateTime von,

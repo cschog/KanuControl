@@ -13,7 +13,9 @@ Diese Anleitung beschreibt die Vermietung von Objekten wie dem Bootshaus. Für V
 - [5. Buchungsstatus und Bearbeitung](#5-buchungsstatus-und-bearbeitung)
 - [6. Buchungsliste und KC-Kalender](#6-buchungsliste-und-kc-kalender)
 - [7. Mietpreise und Rabatte](#7-mietpreise-und-rabatte)
-- [8. Finanzen, Anzahlung und Kaution](#8-finanzen-anzahlung-und-kaution)
+- [8. Abrechnung, Anzahlung und Kaution](#8-abrechnung-anzahlung-und-kaution)
+- [Finanz-Dashboard: Jahresumsatz und Planungsgrenze](#finanz-dashboard-jahresumsatz-und-planungsgrenze)
+- [Verbrauch & Belegung](#verbrauch-belegung)
 - [9. Verbrauchskosten und Zähler](#9-verbrauchskosten-und-zahler)
 - [10. Sperrzeiten](#10-sperrzeiten)
 - [11. Homepage-Anfragen und Bootshauskalender](#11-homepage-anfragen-und-bootshauskalender)
@@ -26,7 +28,7 @@ Diese Anleitung beschreibt die Vermietung von Objekten wie dem Bootshaus. Für V
 
 Wähle nach der Anmeldung das Modul **Vermietung**. Dafür benötigst du die Rolle VERMIETUNG oder ADMIN. Ist nur dieses Modul freigeschaltet, wird es direkt geöffnet.
 
-Das Startmenü enthält **Mieter**, **Mietobjekte**, **Buchung**, **Finanzen** und **Verwaltung**. Im Kopfbereich stehen Verein und aktives Mietobjekt. Prüfe diesen Kontext vor dem Anlegen einer Buchung.
+Das Startmenü enthält **Mieter**, **Mietobjekte**, **Buchung**, **Abrechnung**, **Finanz-Dashboard**, **Verbrauch & Belegung** und **Verwaltung**. Im Kopfbereich stehen Verein und aktives Mietobjekt. Prüfe diesen Kontext vor dem Anlegen einer Buchung.
 
 Die Verwaltung enthält mehrere Reiter. **Sperrzeiten** und **Airbnb-Export** stehen rechts hinter **Homepage-Anbindung**. Wenn nicht alle Reiter sichtbar sind, scrolle die Reiterleiste horizontal oder nutze den Pfeil am rechten Rand. Auf einem kleinen Bildschirm kannst du die Leiste verschieben.
 
@@ -117,7 +119,7 @@ Zum Korrigieren einer abgeschlossenen Abrechnung kann sie wieder auf **Abrechenb
 
 ## 6. Buchungsliste und KC-Kalender
 
-In der Buchungsübersicht kannst du nach Mietobjekt filtern und zwischen Liste und Kalender wechseln. Für das Anlegen aus einer Kalenderauswahl muss das aktive Mietobjekt im Filter ausgewählt sein.
+In der Buchungsübersicht kannst du nach Mietobjekt filtern und zwischen Liste und Kalender wechseln. In der Liste grenzt der Filter **Jahr** die Buchungen nach ihrem Anreisejahr ein; **Alle Jahre** zeigt den gesamten Bestand. Der Jahresfilter lässt sich mit Mietobjekt und Buchungsstatus kombinieren. Für das Anlegen aus einer Kalenderauswahl muss das aktive Mietobjekt im Filter ausgewählt sein.
 
 Im Kalender markieren zwei Klicks den Beginn und das Ende eines Zeitraums. Über **Buchung für Zeitraum anlegen** werden diese Daten in ein neues Formular übernommen. Prüfe dort die Uhrzeiten und den Mietumfang.
 
@@ -139,9 +141,9 @@ Andere Berechnungsarten, etwa eine Pauschale pro Buchung, werden nicht mit Miett
 
 Unter **Verwaltung → Rabatte** werden die vorgesehenen Mietbereichsrabatte gepflegt. Individuelle Buchungsrabatte sind im Buchungsformular zu prüfen. Gespeicherte Preis- und Rabattschnappschüsse sind für bestehende Buchungen maßgeblich; eine Preisänderung in der Verwaltung bedeutet keine automatische Neuberechnung aller alten Buchungen.
 
-## 8. Finanzen, Anzahlung und Kaution
+## 8. Abrechnung, Anzahlung und Kaution
 
-Öffne **Vermietung → Finanzen** oder die Schaltfläche **Finanzen** einer Buchung. Dort werden Soll, erfasste Zahlungen, offene Beträge und Bewegungen zu Anzahlung, Miete, Verbrauchskosten und Kaution betrachtet.
+Öffne **Vermietung → Abrechnung** oder die Schaltfläche **Abrechnung** einer Buchung. Dort werden Soll, erfasste Zahlungen, offene Beträge und Bewegungen zu Anzahlung, Miete, Verbrauchskosten und Kaution betrachtet.
 
 ### Sollbeträge und Zahlungseingänge
 
@@ -160,6 +162,14 @@ Vor dem Abschließen muss die Kaution geklärt sein. Noch nicht zurückgezahlte 
 Unter **Verwaltung → Verbrauchskosten** und **Zählerverwaltung** werden Verbrauchsarten, Preise und Zähler eingerichtet. Zähler können den relevanten Mietbereichen zugeordnet werden.
 
 Erfasse für eine Buchung die benötigten Zählerstände und prüfe die Verbrauchskostenvorschau. Beim Abschließen werden die Verbrauchskosten geprüft und gespeichert. Werden Daten nachträglich korrigiert, öffne die Abrechnung wieder und schließe sie nach der Prüfung erneut ab.
+
+### Entfernte Ablesungen für die Abrechnung freigeben
+
+Bei einer abrechenbaren Direktbuchung sucht KC je Zähler die zeitlich nächstliegende Ablesung zu Anreise und Abreise. Bis einschließlich 24 Stunden Abstand ist keine zusätzliche Freigabe erforderlich. Bei größerem Abstand zeigt die Verbrauchsvorschau die nächstliegenden Stände, Ablesezeitpunkte und vorläufigen Kosten an. Diese Vorschläge zählen noch nicht als vollständig berechnete Verbrauchskosten.
+
+Beim **Abschließen** lädt KC die Vorschau neu. Der Dialog **Entfernte Zählerstände verwenden?** zeigt Anfangs- und Endstand, die jeweiligen Ablesezeitpunkte, den Abstand zu den Buchungsterminen und die Kosten. Prüfe, ob der gemessene Zeitraum für diese Buchung verwendbar ist; er kann Verbrauch außerhalb des Aufenthalts enthalten. Mit **Werte verwenden und abschließen** erlaubst du die Verwendung dieser konkreten Stände. **Abbrechen** lässt die Buchung und bisherige Verbrauchskosten unverändert.
+
+Die Zustimmung gilt nur für die angezeigten Stände und den geprüften Buchungszeitraum. Ändern sich diese vor dem Speichern, muss die aktuelle Vorschau erneut geprüft werden. Fehlende Ablesungen, derselbe Stand für Anfang und Ende, falsche zeitliche Reihenfolge und fallende Zählerstände bleiben gesperrt. Die tatsächlich verwendeten Werte und Ablesezeitpunkte werden beim Abschluss im Verbrauchskosten-Snapshot gespeichert. Beim Wiederöffnen und erneuten Abschließen wird erneut geprüft und gegebenenfalls nachgefragt. Für Airbnb bleibt die Verbrauchsabrechnung entfallen.
 
 ## 10. Sperrzeiten
 
@@ -252,3 +262,33 @@ Aktualisiere den verknüpften Kalender bei Airbnb manuell und prüfe, ob dort de
 Prüfe Zählerstände, Verbrauchskosten und noch offene Kautionsvorgänge. Folge der konkreten Fehlermeldung; das Ändern eines Sollbetrags allein erfasst keine Zahlung.
 
 [Zur Hilfeübersicht](/info/bedienungsanleitung.md)
+
+
+## Finanz-Dashboard: Jahresumsatz und Planungsgrenze
+
+Unter **Vermietung → Finanz-Dashboard** siehst du die Einnahmen aller in KC erfassten Vermietungen des Vereins. Die Jahresauswahl folgt dem Datum der erfassten Zahlungsbewegung, nicht dem Aufenthaltsjahr. Anzahlungen, Miete und Verbrauchskosten zählen als Einnahmen; Rückzahlungen mindern sie im Rückzahlungsjahr. Reine Kautionen zählen nicht. Eine mit Verbrauchskosten verrechnete Kaution zählt einmal bei den Verbrauchskosten. Tatsächliche Zahlungen bleiben auch bei einer Stornierung enthalten, bis die Rückzahlung erfasst wurde.
+
+Die Planungsgrenze beträgt zunächst 25.000 Euro. Über **Grenze für … ändern** kannst du sie für jedes Jahr separat speichern. Fortschrittsbalken, Restspielraum und Warnungen beziehen sich auf diese persönliche Planungsgrenze. Das Dashboard berücksichtigt ausschließlich Vermietungen in KC, keine anderen Umsätze des Vereins.
+
+Die **Buchungsplanung** addiert zum erfassten Jahresumsatz bekannte offene Beträge aus reservierten, bestätigten, abrechenbaren und abgeschlossenen Buchungen mit Anreise im gewählten Jahr. Bereits erfasste Zahlungen aus früheren Jahren werden dabei abgezogen. Noch nicht abgerechnete Verbrauchskosten und unbefristete künftige Mieten werden nicht geschätzt. Da KC keinen erwarteten Zahlungstermin kennt, ist das eine Planung nach Anreisejahr und keine garantierte Einnahmeprognose.
+
+Der **lineare Trend** rechnet den bisherigen Jahresumsatz anhand der vergangenen Kalendertage auf das Jahresende hoch. Saisonale Schwankungen werden dabei nicht berücksichtigt. Die Jahresprognose verwendet vorsichtig den höheren Wert aus Buchungsplanung und linearem Trend. Für vergangene Jahre wird der tatsächliche erfasste Umsatz angezeigt; für künftige Jahre gibt es nur die Buchungsplanung.
+
+Monatsübersicht, Vorjahresverlauf, Direkt-/Airbnb-Summen und die Liste der Buchungen machen die Beträge nachvollziehbar. Über eine Buchungsnummer öffnest du ihre **Abrechnung**. Erfasse Zahlungen vollständig; bei Plattformbuchungen dürfen Gebühren nicht einfach als Umsatzminderung vom Mieterlös abgezogen werden.
+
+Die Planungsgrenze ersetzt keine steuerliche Beurteilung: [§ 19 UStG](https://www.gesetze-im-internet.de/ustg_1980/__19.html) unterscheidet aktuell 25.000 Euro Gesamtumsatz im Vorjahr und 100.000 Euro im laufenden Jahr. Welche Umsätze im Einzelfall einzubeziehen sind, muss für den Verein gesondert beurteilt werden.
+
+
+## Verbrauch & Belegung
+
+Unter **Vermietung → Verbrauch & Belegung** wählst du Mietobjekt und Kalenderjahr. Die Übersicht zeigt Gas, Wasser und Strom pro zugeordnetem Zähler in dessen hinterlegter Einheit (z. B. m³ oder kWh). Unterschiedliche Einheiten werden nicht addiert oder automatisch umgerechnet. Auch inaktive Zähler mit historischen Daten bleiben sichtbar. Über **Zählerstände** öffnest du die Zählerverwaltung direkt.
+
+Grundlage sind jeweils zwei aufeinanderfolgende Ablesungen. Nur deren Differenz ist gemessen. Liegt das ganze Messintervall innerhalb einer Buchungszeit oder ganz ohne Buchung, ist die Zuordnung eindeutig. Überspannt ein Intervall Buchungen und Leerzeiten, Monats- oder Jahresgrenzen, wird der Verbrauch zeitanteilig verteilt und als **geschätzt** gekennzeichnet. Häufigere Ablesungen, besonders bei An- und Abreise, verbessern die Aussagekraft. Es wird nicht über die letzte vorhandene Ablesung hinaus hochgerechnet. Lücken und fallende Zählerstände (z. B. bei einem Zählerwechsel) werden ausgelassen und erläutert.
+
+Die Kennzahlen vergleichen Verbrauch in Zeiten **mit Buchung** und **ohne Buchung**, zusätzlich jeweils pro 24 abgedeckte Stunden. „Ohne Buchung“ ist kein Nachweis tatsächlichen Leerstands: Vereinsnutzung, Reinigung, Heizung und Sperrzeiten können ebenfalls Verbrauch verursachen. Reservierte, bestätigte, abrechenbare und abgeschlossene Buchungen zählen; Anfragen, abgelehnte und stornierte Buchungen nicht. Die genauen Uhrzeiten werden berücksichtigt, überlappende Buchungen zählen zeitlich nur einmal.
+
+Das Monatsdiagramm stellt Verbrauch und Buchungsanteil gegenüber. Schraffierte Säulen kennzeichnen zeitanteilige Schätzungen. Die grauen Markierungen und Striche in der Tabelle bedeuten **keine Messdaten**, nicht Nullverbrauch. Der Buchungsanteil bezieht sich auf die betrachtete Monatszeit bis zum Datenstand; die Verbrauchssummen dagegen nur auf die durch gültige Ableseintervalle abgedeckten Stunden. Beachte deshalb die Messabdeckung.
+
+Das Streudiagramm verwendet nur vollständige, gemessene Intervalle im gewählten Zeitraum. Jeder Punkt vergleicht den Buchungsanteil mit dem gemessenen Verbrauch pro 24 Stunden desselben Intervalls. Pearson r wird erst bei mindestens drei Intervallen mit Unterschieden in Buchungsanteil und Verbrauchsrate angezeigt. Geschätzte Monatsstücke werden nicht als unabhängige Messpunkte gezählt. Ein Zusammenhang beweist keine Ursache; insbesondere bei Gas beeinflussen Wetter und Heizverhalten den Verbrauch.
+
+Der Zeitstrahl und die aufklappbare Intervalltabelle zeigen die zugehörigen Buchungsnummern. Maßgeblich ist die aktuelle Zuordnung der Zähler zu Mietbereichen. Wird ein Zähler über mehrere Mietobjekte geteilt, umfasst seine Auswertung auch deren zugeordnete Buchungen und trägt einen entsprechenden Hinweis. Der gemessene Gesamtverbrauch eines gemeinsamen Zählers lässt sich ohne zusätzliche Messungen nicht auf die einzelnen Objekte aufteilen. Diese Übersicht verändert keine Verbrauchsabrechnung und keine Zählerstände.

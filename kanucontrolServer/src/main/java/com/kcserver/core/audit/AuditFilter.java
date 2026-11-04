@@ -46,7 +46,7 @@ public class AuditFilter extends OncePerRequestFilter {
                             "preferred_username"
                     );
 
-            if (username == null || username.isBlank()) {
+            if (!AuditAccountPolicy.isPersonalAccount(username)) {
                 filterChain.doFilter(request, response);
                 return;
             }

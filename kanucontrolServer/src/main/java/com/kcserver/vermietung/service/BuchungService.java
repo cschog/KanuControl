@@ -6,6 +6,7 @@ import com.kcserver.core.entity.Verein;
 import com.kcserver.kjfp.repository.PersonRepository;
 import com.kcserver.core.repository.VereinRepository;
 import com.kcserver.vermietung.dto.BuchungDTO;
+import com.kcserver.vermietung.dto.AblesungBestaetigungDTO;
 import com.kcserver.vermietung.dto.BuchungMietbereichDTO;
 import com.kcserver.vermietung.dto.BuchungVerbrauchskostenDTO;
 import com.kcserver.vermietung.entity.*;
@@ -858,6 +859,11 @@ public class BuchungService {
             Long id,
             Buchungsstatus neuerStatus
     ) {
+        return aendereStatus(id, neuerStatus, List.of());
+    }
+
+    public BuchungDTO aendereStatus(Long id, Buchungsstatus neuerStatus,
+                                    List<AblesungBestaetigungDTO> bestaetigungen) {
         Buchung buchung = buchungRepository.findLockedById(id)
                 .orElseThrow(() ->
                         new IllegalArgumentException(
@@ -899,7 +905,11 @@ public class BuchungService {
          */
         if (neuerStatus == Buchungsstatus.ABGESCHLOSSEN) {
             pruefeKautionsabschluss(buchung);
-            verbrauchsabrechnungService.berechneUndSpeichere(buchung);
+            if (bestaetigungen == null || bestaetigungen.isEmpty()) {
+                verbrauchsabrechnungService.berechneUndSpeichere(buchung);
+            } else {
+                verbrauchsabrechnungService.berechneUndSpeichere(buchung, bestaetigungen);
+            }
         }
 
         homepageStatusMailService.vormerken(buchung, neuerStatus);

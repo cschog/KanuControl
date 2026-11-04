@@ -899,14 +899,14 @@ export const BuchungBaseForm: React.FC<Props> = ({
                     {!kosten.erfolgreich && (
                       <Typography
                         variant="body2"
-                        color="error"
+                        color={kosten.bestaetigungErforderlich ? "warning.main" : "error"}
                         sx={{ mt: 1, overflowWrap: "anywhere" }}
                       >
                         {kosten.hinweis ?? "Die Verbrauchskosten konnten nicht berechnet werden."}
                       </Typography>
                     )}
 
-                    {kosten.erfolgreich && (
+                    {(kosten.erfolgreich || kosten.bestaetigungErforderlich) && (
                       <>
                         {kosten.abrechnungsart === "ZAEHLERSTAND" ? (
                           <Box
@@ -1022,8 +1022,8 @@ export const BuchungBaseForm: React.FC<Props> = ({
           ) : buchungsstatus !== "ABGESCHLOSSEN" ? (
             <Typography variant="body2" color="text.secondary">
               Die Verbrauchskosten werden nach Ende des Buchungszeitraums in der Vorschau berechnet.
-              Voraussetzung sind die erforderlichen Zählerstände innerhalb des zulässigen
-              Zeitfensters.
+              Liegt eine nächstliegende Ablesung mehr als 24 Stunden vom Termin entfernt,
+              muss ihre Verwendung beim Abschluss bestätigt werden.
             </Typography>
           ) : !verbrauchskosten || verbrauchskosten.length === 0 ? (
             <Typography variant="body2" color="text.secondary">

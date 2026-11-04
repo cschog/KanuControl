@@ -37,10 +37,20 @@ const VermietungStart = () => {
 
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <ModuleButton
-            label="Finanzen"
+            label="Abrechnung"
             moduleType={moduleTypeMap.abrechnung}
-            onClick={() => navigate("/vermietung/finanzen")}
+            onClick={() => navigate("/vermietung/abrechnung")}
           />
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+          <ModuleButton label="Finanz-Dashboard" moduleType={moduleTypeMap.abrechnung}
+            onClick={() => navigate("/vermietung/finanz-dashboard")} />
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+          <ModuleButton label="Verbrauch & Belegung" moduleType={moduleTypeMap.abrechnung}
+            onClick={() => navigate("/vermietung/verbrauch-dashboard")} />
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>

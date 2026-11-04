@@ -14,5 +14,7 @@ public interface BuchungVerbrauchskostenRepository
             Long buchungId
     );
 
+    List<BuchungVerbrauchskosten> findByBuchungIdIn(java.util.Collection<Long> ids);
+
     void deleteByBuchungId(Long buchungId);
 }

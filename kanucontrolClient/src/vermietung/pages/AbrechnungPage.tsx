@@ -113,7 +113,7 @@ function statusText(row: BuchungFinanzen) {
   if (totalPaid + 0.005 < totalDue) return "Angezahlt";
   return "Bezahlt";
 }
-const FinanzenPage = () => {
+const AbrechnungPage = () => {
   const [rows, setRows] = useState<BuchungFinanzen[]>([]);
   const location = useLocation();
   const navigate = useNavigate();
@@ -154,14 +154,14 @@ const FinanzenPage = () => {
   };
   return <Box sx={{ p: 3 }}>
     <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" alignItems={{ xs: "stretch", sm: "center" }} spacing={1} sx={{ mb: 1 }}>
-      <Typography variant="h4">Finanzen Vermietung</Typography>
+      <Typography variant="h4">Abrechnung Vermietung</Typography>
       {navigationState?.returnTo && (
         <Button
           variant="outlined"
           startIcon={<ArrowBackIcon />}
           onClick={() => navigate(navigationState.returnTo!, { state: navigationState.returnToState ?? null })}
         >
-          Zurück zur Buchung
+          {navigationState.returnTo?.includes("finanz-dashboard") ? "Zurück zum Finanz-Dashboard" : "Zurück zur Buchung"}
         </Button>
       )}
     </Stack>
@@ -279,4 +279,4 @@ const FinanzenPage = () => {
     <ErrorDialog open={!!error} message={error ?? ""} onClose={()=>setError(null)} />
   </Box>;
 };
-export default FinanzenPage;
+export default AbrechnungPage;

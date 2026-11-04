@@ -258,3 +258,6 @@ databaseChangeLog:
 
   - include:
       file: db/changelog/changes/20261102-09-mietobjekt-sperrzeiten.xml
+
+  - include:
+      file: db/changelog/changes/20261104-01-vermietung-finanz-dashboard.xml

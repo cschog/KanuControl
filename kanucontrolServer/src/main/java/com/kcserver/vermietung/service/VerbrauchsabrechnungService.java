@@ -1,6 +1,7 @@
 package com.kcserver.vermietung.service;
 
 import com.kcserver.vermietung.dto.VerbrauchskostenVorschauDTO;
+import com.kcserver.vermietung.dto.AblesungBestaetigungDTO;
 import com.kcserver.vermietung.entity.*;
 import com.kcserver.vermietung.enumtype.Buchungsquelle;
 import com.kcserver.core.exception.ErrorMessages;
@@ -56,6 +57,10 @@ public class VerbrauchsabrechnungService {
      * bevor vorhandene Snapshots ersetzt werden.
      */
     public void berechneUndSpeichere(Buchung buchung) {
+        berechneUndSpeichere(buchung, List.of());
+    }
+
+    public void berechneUndSpeichere(Buchung buchung, List<AblesungBestaetigungDTO> bestaetigungen) {
 
         if (buchung.getBuchungsquelle() == Buchungsquelle.AIRBNB) {
             return;
@@ -131,7 +136,8 @@ public class VerbrauchsabrechnungService {
                                     konfiguration,
                                     zaehler,
                                     anreiseZeitpunkt,
-                                    abreiseZeitpunkt
+                                    abreiseZeitpunkt,
+                                    bestaetigungen == null ? List.of() : bestaetigungen
                             )
                     );
                 }
@@ -189,7 +195,8 @@ public class VerbrauchsabrechnungService {
             Verbrauchskosten konfiguration,
             Zaehler zaehler,
             LocalDateTime anreiseZeitpunkt,
-            LocalDateTime abreiseZeitpunkt
+            LocalDateTime abreiseZeitpunkt,
+            List<AblesungBestaetigungDTO> bestaetigungen
     ) {
         BuchungVerbrauchskosten snapshot = new BuchungVerbrauchskosten();
 
@@ -210,7 +217,8 @@ public class VerbrauchsabrechnungService {
                 zaehler,
                 snapshot,
                 anreiseZeitpunkt,
-                abreiseZeitpunkt
+                abreiseZeitpunkt,
+                bestaetigungen
         );
 
         return snapshot;
@@ -436,14 +444,12 @@ public class VerbrauchsabrechnungService {
         Zaehlerstand anfang = findeNaechstenStand(
                 staende,
                 anreiseZeitpunkt,
-                "Anreise",
                 zaehler.getBezeichnung()
         );
 
         Zaehlerstand ende = findeNaechstenStand(
                 staende,
                 abreiseZeitpunkt,
-                "Abreise",
                 zaehler.getBezeichnung()
         );
 
@@ -484,6 +490,7 @@ public class VerbrauchsabrechnungService {
                 .multiply(konfiguration.getPreis())
                 .setScale(2, RoundingMode.HALF_UP);
 
+        boolean bestaetigungNoetig = abweichend(anfang, anreiseZeitpunkt) || abweichend(ende, abreiseZeitpunkt);
         return new VerbrauchskostenVorschauDTO(
                 zaehler.getId(),
                 zaehler.getBezeichnung(),
@@ -499,8 +506,9 @@ public class VerbrauchsabrechnungService {
                 ende.getAblesedatum(),
                 null,
                 kosten,
-                true,
-                null
+                !bestaetigungNoetig,
+                bestaetigungNoetig ? "Nächstliegende Ablesungen: mehr als 24 Stunden Abstand. Verwendung beim Abschluss bestätigen." : null,
+                bestaetigungNoetig
         );
     }
 
@@ -595,7 +603,8 @@ public class VerbrauchsabrechnungService {
             Zaehler ausgewaehlterZaehler,
             BuchungVerbrauchskosten snapshot,
             LocalDateTime anreiseZeitpunkt,
-            LocalDateTime abreiseZeitpunkt
+            LocalDateTime abreiseZeitpunkt,
+            List<AblesungBestaetigungDTO> bestaetigungen
     ) {
         List<Zaehlerstand> staende =
                 zaehlerstandRepository
@@ -608,14 +617,12 @@ public class VerbrauchsabrechnungService {
         Zaehlerstand anfang = findeNaechstenStand(
                 staende,
                 anreiseZeitpunkt,
-                "Anreise",
                 bezeichnung
         );
 
         Zaehlerstand ende = findeNaechstenStand(
                 staende,
                 abreiseZeitpunkt,
-                "Abreise",
                 bezeichnung
         );
 
@@ -633,6 +640,21 @@ public class VerbrauchsabrechnungService {
                             + "der Ablesung für die Abreise liegen. "
                             + "Bitte den Zähler „" + bezeichnung + "“ prüfen."
             );
+        }
+
+        if (abweichend(anfang, anreiseZeitpunkt) || abweichend(ende, abreiseZeitpunkt)) {
+            boolean bestaetigt = bestaetigungen.stream().anyMatch(b ->
+                    Objects.equals(b.zaehlerId(), ausgewaehlterZaehler.getId())
+                    && Objects.equals(b.anreise(), anreiseZeitpunkt)
+                    && Objects.equals(b.abreise(), abreiseZeitpunkt)
+                    && Objects.equals(b.anfangsablesung(), anfang.getAblesedatum())
+                    && Objects.equals(b.endablesung(), ende.getAblesedatum())
+                    && b.anfangsstand() != null && b.anfangsstand().compareTo(anfang.getZaehlerstand()) == 0
+                    && b.endstand() != null && b.endstand().compareTo(ende.getZaehlerstand()) == 0);
+            if (!bestaetigt) {
+                throw new IllegalArgumentException("Die nächstliegenden Ablesungen für „" + bezeichnung
+                        + "“ liegen mehr als 24 Stunden entfernt. Bitte die aktuelle Vorschau prüfen und ihre Verwendung bestätigen.");
+            }
         }
 
         BigDecimal verbrauch = ende.getZaehlerstand()
@@ -660,10 +682,13 @@ public class VerbrauchsabrechnungService {
         snapshot.setKosten(kosten);
     }
 
+    private boolean abweichend(Zaehlerstand stand, LocalDateTime soll) {
+        return Duration.between(soll, stand.getAblesedatum()).abs().compareTo(MAX_ABWEICHUNG) > 0;
+    }
+
     private Zaehlerstand findeNaechstenStand(
             List<Zaehlerstand> staende,
             LocalDateTime sollZeitpunkt,
-            String vorgang,
             String bezeichnung
     ) {
         if (staende.isEmpty()) {
@@ -677,31 +702,14 @@ public class VerbrauchsabrechnungService {
         }
 
         Zaehlerstand naechsterStand = staende.stream()
-                .min(Comparator.comparing(
+                .min(Comparator.<Zaehlerstand, Duration>comparing(
                         stand -> Duration.between(
                                 sollZeitpunkt,
                                 stand.getAblesedatum()
                         ).abs()
-                ))
+                ).thenComparing(Zaehlerstand::getAblesedatum)
+                 .thenComparing(Zaehlerstand::getId))
                 .orElseThrow();
-
-        Duration abweichung = Duration.between(
-                sollZeitpunkt,
-                naechsterStand.getAblesedatum()
-        ).abs();
-
-        if (abweichung.compareTo(MAX_ABWEICHUNG) > 0) {
-            throw new IllegalArgumentException(
-                    String.format(
-                            Locale.GERMAN,
-                            ErrorMessages.VERBRAUCHSABRECHNUNG_ZAEHLERSTAND_ABWEICHUNG,
-                            bezeichnung,
-                            vorgang,
-                            sollZeitpunkt,
-                            naechsterStand.getAblesedatum()
-                    )
-            );
-        }
 
         return naechsterStand;
     }

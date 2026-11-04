@@ -17,5 +17,16 @@ export interface VerbrauchskostenVorschau {
   abrechnungstage: number | null;
   kosten: number | null;
   erfolgreich: boolean;
+  bestaetigungErforderlich: boolean;
   hinweis: string | null;
+}
+
+export interface AblesungBestaetigung {
+  zaehlerId: number;
+  anreise: string;
+  abreise: string;
+  anfangsablesung: string;
+  endablesung: string;
+  anfangsstand: number;
+  endstand: number;
 }

@@ -2,6 +2,7 @@ package com.kcserver.vermietung.controller;
 
 import com.kcserver.api.response.ApiResponse;
 import com.kcserver.vermietung.dto.BuchungDTO;
+import com.kcserver.vermietung.dto.AblesungBestaetigungDTO;
 import com.kcserver.vermietung.enumtype.Buchungsstatus;
 import com.kcserver.vermietung.service.BuchungService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -97,14 +98,15 @@ public class BuchungController {
             @RequestBody @Valid BuchungsstatusRequest request
     ) {
         return new ApiResponse<>(
-                buchungService.aendereStatus(id, request.status()),
+                buchungService.aendereStatus(id, request.status(), request.ablesungenBestaetigt()),
                 List.of()
         );
     }
 
     public record BuchungsstatusRequest(
             @jakarta.validation.constraints.NotNull
-            Buchungsstatus status
+            Buchungsstatus status,
+            List<@Valid @jakarta.validation.constraints.NotNull AblesungBestaetigungDTO> ablesungenBestaetigt
     ) {
     }
 

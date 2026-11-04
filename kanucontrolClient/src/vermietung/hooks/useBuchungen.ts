@@ -1,3 +1,4 @@
+import type { AblesungBestaetigung } from "@/vermietung/types/VerbrauchskostenVorschau";
 import { useCallback, useEffect, useState } from "react";
 
 import type { Buchung } from "@/vermietung/types/Buchung";
@@ -22,11 +23,11 @@ export function useBuchungen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const changeStatus = useCallback(async (id: number, status: Buchungsstatus) => {
+  const changeStatus = useCallback(async (id: number, status: Buchungsstatus, ablesungenBestaetigt: AblesungBestaetigung[] = []) => {
     try {
       setError(null);
 
-      const updated = await aendereBuchungsstatus(id, status);
+      const updated = await aendereBuchungsstatus(id, status, ablesungenBestaetigt);
 
       setBuchungen((current) =>
         current.map((buchung) => (buchung.id === updated.id ? updated : buchung)),

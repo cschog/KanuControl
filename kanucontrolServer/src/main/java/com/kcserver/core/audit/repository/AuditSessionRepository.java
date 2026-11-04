@@ -86,6 +86,7 @@ public interface AuditSessionRepository
     select a
     from AuditSession a
     where a.logoutTime is null
+      and lower(a.username) not like 'service-account-%'
     order by a.lastSeen desc
 """)
     List<AuditSession> findActiveSessions();
@@ -93,18 +94,30 @@ public interface AuditSessionRepository
     @Query("""
     select a
     from AuditSession a
+    where lower(a.username) not like 'service-account-%'
     order by a.loginTime desc
 """)
     Page<AuditSession> findHistory(Pageable pageable);
 
+    @Query("""
+    select count(a) from AuditSession a
+    where a.logoutTime is null
+      and lower(a.username) not like 'service-account-%'
+    """)
     long countByLogoutTimeIsNull();
-    long countByLoginTimeAfter(LocalDateTime since);
+    @Query("""
+    select count(a) from AuditSession a
+    where a.loginTime > :since
+      and lower(a.username) not like 'service-account-%'
+    """)
+    long countByLoginTimeAfter(@Param("since") LocalDateTime since);
 
     @Query("""
     select count(a)
     from AuditSession a
     where a.logoutTime is null
       and a.ipAddress not like '192.168.100.%'
+      and lower(a.username) not like 'service-account-%'
 """)
     long countExternalSessions();
 
@@ -112,6 +125,7 @@ public interface AuditSessionRepository
     select count(distinct a.tenant)
     from AuditSession a
     where a.logoutTime is null
+      and lower(a.username) not like 'service-account-%'
 """)
     long countActiveTenants();
 
@@ -122,6 +136,7 @@ where a.tenant = :tenant
   and a.logoutTime is null
   and a.lastSeen >= :since
   and a.username <> :currentUsername
+  and lower(a.username) not like 'service-account-%'
 order by a.username
 """)
     List<String> findOtherOnlineUsers(

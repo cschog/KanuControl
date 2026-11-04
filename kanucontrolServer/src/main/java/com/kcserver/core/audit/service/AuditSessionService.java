@@ -1,6 +1,7 @@
 package com.kcserver.core.audit.service;
 
 import com.kcserver.core.audit.enumtype.SessionEndReason;
+import com.kcserver.core.audit.AuditAccountPolicy;
 import com.kcserver.core.audit.repository.AuditSessionRepository;
 import com.kcserver.core.tenancy.TenantContext;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,10 @@ public class AuditSessionService {
             String ip,
             String userAgent
     ) {
+
+        if (!AuditAccountPolicy.isPersonalAccount(username)) {
+            return;
+        }
 
         LocalDateTime now = LocalDateTime.now();
 
