@@ -1,13 +1,13 @@
 package com.kcserver.veranstaltung;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kcserver.kjfp.dto.veranstaltung.VeranstaltungCreateDTO;
-import com.kcserver.kjfp.entity.Veranstaltung;
-import com.kcserver.kjfp.enumtype.TeilnehmerRolle;
+import com.kcserver.core.dto.veranstaltung.VeranstaltungCreateDTO;
+import com.kcserver.core.entity.Veranstaltung;
+import com.kcserver.core.enumtype.TeilnehmerRolle;
 import com.kcserver.kjfp.enumtype.VeranstaltungTyp;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
-import com.kcserver.kjfp.repository.TeilnehmerRepository;
-import com.kcserver.kjfp.repository.VeranstaltungRepository;
+import com.kcserver.core.repository.TeilnehmerRepository;
+import com.kcserver.core.repository.VeranstaltungRepository;
 import com.kcserver.support.api.PersonTestFactory;
 import com.kcserver.support.api.VereinTestFactory;
 import org.junit.jupiter.api.BeforeEach;

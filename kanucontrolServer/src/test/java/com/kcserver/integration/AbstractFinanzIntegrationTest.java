@@ -1,18 +1,22 @@
 package com.kcserver.integration;
 
+import com.kcserver.core.entity.Teilnehmer;
+import com.kcserver.core.entity.Veranstaltung;
+import com.kcserver.core.repository.TeilnehmerRepository;
+import com.kcserver.core.repository.VeranstaltungRepository;
 
 
 import com.kcserver.core.entity.Person;
 import com.kcserver.core.entity.Verein;
 import com.kcserver.core.repository.VereinRepository;
-import com.kcserver.kjfp.dto.veranstaltung.VeranstaltungCreateDTO;
+import com.kcserver.core.dto.veranstaltung.VeranstaltungCreateDTO;
 import com.kcserver.kjfp.entity.*;
 import com.kcserver.kjfp.entity.abrechnung.Abrechnung;
 import com.kcserver.kjfp.entity.beitraege.Beitragsregel;
 import com.kcserver.kjfp.entity.beitraege.Beitragsstruktur;
 import com.kcserver.kjfp.enumtype.AbrechnungsStatus;
 import com.kcserver.kjfp.enumtype.Sex;
-import com.kcserver.kjfp.enumtype.TeilnehmerRolle;
+import com.kcserver.core.enumtype.TeilnehmerRolle;
 import com.kcserver.kjfp.enumtype.VeranstaltungTyp;
 import com.kcserver.kjfp.repository.*;
 import com.kcserver.kjfp.repository.abrechnung.AbrechnungRepository;
@@ -21,7 +25,7 @@ import com.kcserver.kjfp.service.abrechnung.AbrechnungBelegService;
 import com.kcserver.kjfp.service.abrechnung.AbrechnungService;
 import com.kcserver.kjfp.service.finanz.FinanzGruppeService;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
-import com.kcserver.kjfp.service.veranstaltung.VeranstaltungService;
+import com.kcserver.core.service.veranstaltung.VeranstaltungService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;

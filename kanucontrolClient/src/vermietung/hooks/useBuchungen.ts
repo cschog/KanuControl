@@ -23,11 +23,11 @@ export function useBuchungen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const changeStatus = useCallback(async (id: number, status: Buchungsstatus, ablesungenBestaetigt: AblesungBestaetigung[] = []) => {
+  const changeStatus = useCallback(async (id: number, status: Buchungsstatus, ablesungenBestaetigt: AblesungBestaetigung[] = [], sendEmail = false) => {
     try {
       setError(null);
 
-      const updated = await aendereBuchungsstatus(id, status, ablesungenBestaetigt);
+      const updated = await aendereBuchungsstatus(id, status, ablesungenBestaetigt, sendEmail);
 
       setBuchungen((current) =>
         current.map((buchung) => (buchung.id === updated.id ? updated : buchung)),
@@ -37,6 +37,12 @@ export function useBuchungen() {
     } catch (err: unknown) {
       console.error("Fehler beim Ändern des Buchungsstatus:", err);
       setError(getApiErrorMessage(err));
+      try {
+        const latest = await getBuchungen();
+        setBuchungen(latest);
+      } catch (refreshError) {
+        console.error("Statusänderung konnte nach einem Fehler nicht aktualisiert werden:", refreshError);
+      }
       throw err;
     }
   }, []);

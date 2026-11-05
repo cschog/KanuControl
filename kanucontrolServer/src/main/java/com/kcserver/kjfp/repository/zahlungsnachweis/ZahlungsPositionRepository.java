@@ -39,4 +39,12 @@ public interface ZahlungsPositionRepository
     BigDecimal sumBetragByVeranstaltungId(
             @Param("veranstaltungId") Long veranstaltungId
     );
+
+    @Query("""
+    select coalesce(sum(case when n.urspruenglicherZahlungsnachweis is not null then -p.betrag else p.betrag end), 0)
+    from ZahlungsPosition p join p.zahlungsnachweis n
+    where n.veranstaltung.id = :veranstaltungId
+      and p.teilnehmer.kjfpZugeordnet = true
+    """)
+    BigDecimal sumKjfpBetragByVeranstaltung(@Param("veranstaltungId") Long veranstaltungId);
 }

@@ -1208,8 +1208,6 @@ public class A4LayoutEngine {
     }
 
 
-
-
     /*
      * =========================================================
      * A7-BLOCK
@@ -2832,7 +2830,6 @@ public class A4LayoutEngine {
                 ? second
                 : first;
     }
-
 
 
     /*

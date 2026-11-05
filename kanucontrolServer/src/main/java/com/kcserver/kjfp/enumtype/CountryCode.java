@@ -1,5 +1,7 @@
 package com.kcserver.kjfp.enumtype;
 
+import com.kcserver.core.enumtype.CodeEnum;
+
 /**
  * ISO 3166-1 alpha-2 country codes (Europe)
  */

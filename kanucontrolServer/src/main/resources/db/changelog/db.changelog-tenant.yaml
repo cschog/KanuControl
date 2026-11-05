@@ -261,3 +261,11 @@ databaseChangeLog:
 
   - include:
       file: db/changelog/changes/20261104-01-vermietung-finanz-dashboard.xml
+
+
+  - include:
+      file: db/changelog/changes/20261105-01-gemeinsame-veranstaltung.xml
+  - include:
+      file: db/changelog/changes/20261105-02-fahrten.xml
+  - include:
+      file: db/changelog/changes/20261105-03-remove-geburtsdatum-geschaetzt.xml

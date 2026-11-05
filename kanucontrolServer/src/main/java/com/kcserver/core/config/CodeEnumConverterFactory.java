@@ -1,6 +1,6 @@
 package com.kcserver.core.config;
 
-import com.kcserver.kjfp.enumtype.CodeEnum;
+import com.kcserver.core.enumtype.CodeEnum;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.converter.ConverterFactory;
 import org.springframework.stereotype.Component;

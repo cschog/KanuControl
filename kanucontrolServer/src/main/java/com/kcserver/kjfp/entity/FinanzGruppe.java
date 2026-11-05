@@ -1,5 +1,8 @@
 package com.kcserver.kjfp.entity;
 
+import com.kcserver.core.entity.Teilnehmer;
+import com.kcserver.core.entity.Veranstaltung;
+
 import com.kcserver.kjfp.enumtype.FinanzgruppeTyp;
 import jakarta.persistence.*;
 import lombok.*;

@@ -4,15 +4,15 @@ import com.kcserver.kjfp.dto.abrechnung.AbrechnungDetailDTO;
 import com.kcserver.kjfp.dto.finanzen.FinanzSummaryDTO;
 import com.kcserver.kjfp.dto.validation.ValidationResultDTO;
 import com.kcserver.kjfp.entity.Foerdersatz;
-import com.kcserver.kjfp.entity.Teilnehmer;
-import com.kcserver.kjfp.entity.Veranstaltung;
+import com.kcserver.core.entity.Teilnehmer;
+import com.kcserver.core.entity.Veranstaltung;
 import com.kcserver.kjfp.entity.abrechnung.Abrechnung;
 import com.kcserver.kjfp.entity.abrechnung.AbrechnungBuchung;
 import com.kcserver.kjfp.enumtype.AbrechnungsStatus;
 import com.kcserver.kjfp.enumtype.VeranstaltungTyp;
 import com.kcserver.core.exception.ErrorMessages;
-import com.kcserver.kjfp.repository.TeilnehmerRepository;
-import com.kcserver.kjfp.repository.VeranstaltungRepository;
+import com.kcserver.core.repository.TeilnehmerRepository;
+import com.kcserver.core.repository.VeranstaltungRepository;
 import com.kcserver.kjfp.repository.abrechnung.AbrechnungRepository;
 import com.kcserver.kjfp.repository.zahlungsnachweis.ZahlungsnachweisRepository;
 import com.kcserver.kjfp.service.finanz.FinanzService;
@@ -50,7 +50,6 @@ public class AbrechnungService {
     private final ZahlungsnachweisRepository zahlungsnachweisRepository;
 
 
-
     /* =========================================================
        GET OR CREATE
        ========================================================= */
@@ -72,7 +71,7 @@ public class AbrechnungService {
         AbrechnungDetailDTO dto = mapper.toDTO(abrechnung);
 
         List<Teilnehmer> teilnehmer =
-                teilnehmerRepository.findAllWithPerson(veranstaltungId);
+                teilnehmerRepository.findAllKjfpWithPerson(veranstaltungId);
 
         BigDecimal rueckzahlungen =
                 zahlungsnachweisRepository
@@ -88,6 +87,27 @@ public class AbrechnungService {
 
         dto.setFinanz(summary);
 
+        BigDecimal kjfpKosten = BigDecimal.ZERO;
+        BigDecimal kjfpEinnahmen = BigDecimal.ZERO;
+        BigDecimal sonstigeKosten = BigDecimal.ZERO;
+        BigDecimal sonstigeEinnahmen = BigDecimal.ZERO;
+        for (AbrechnungBuchung position : getAllPositionen(abrechnung)) {
+            BigDecimal gesamt = position.getBetrag();
+            BigDecimal zugeordnet = position.getKjfpBetrag() == null ? gesamt : position.getKjfpBetrag();
+            BigDecimal rest = gesamt.subtract(zugeordnet);
+            if (position.getKategorie().isKosten()) {
+                kjfpKosten = kjfpKosten.add(zugeordnet);
+                sonstigeKosten = sonstigeKosten.add(rest);
+            } else if (position.getKategorie().isEinnahme()) {
+                kjfpEinnahmen = kjfpEinnahmen.add(zugeordnet);
+                sonstigeEinnahmen = sonstigeEinnahmen.add(rest);
+            }
+        }
+        summary.setKjfpKosten(kjfpKosten);
+        summary.setKjfpEinnahmen(kjfpEinnahmen);
+        summary.setSonstigeKosten(sonstigeKosten);
+        summary.setSonstigeEinnahmen(sonstigeEinnahmen);
+
         return dto;
     }
 
@@ -101,7 +121,7 @@ public class AbrechnungService {
 
         List<Teilnehmer> teilnehmer =
                 teilnehmerRepository
-                        .findAllWithPerson(veranstaltungId);
+                        .findAllKjfpWithPerson(veranstaltungId);
 
         return validator.getAbrechnungValidation(
                 veranstaltung,

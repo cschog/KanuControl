@@ -58,7 +58,6 @@ public class PDFDocumentComposer {
     }
 
 
-
     /**
      * Platziert eine importierte PDF-Seite auf einer A4-Seite.
      */

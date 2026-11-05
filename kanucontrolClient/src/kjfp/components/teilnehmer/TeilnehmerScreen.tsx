@@ -31,6 +31,9 @@ import {
   addTeilnehmerBulk,
   removeTeilnehmerBulk,
   updateTeilnehmerRolle,
+  getGemeinsameTeilnehmer,
+  addAllgemeineTeilnehmerBulk,
+  setTeilnehmerKjfpZuordnung,
 } from "@/kjfp/api/services/teilnehmerApi";
 import { PersonList } from "@/core/api/types/person/PersonList";
 import { TeilnehmerList } from "@/kjfp/types/TeilnehmerList";
@@ -51,6 +54,8 @@ export default function TeilnehmerScreen() {
   const [selAvailable, setSelAvailable] = useState<PersonList[]>([]);
   const [selAssigned, setSelAssigned] = useState<TeilnehmerList[]>([]);
   const [mobileMode, setMobileMode] = useState<"available" | "assigned">("available");
+  const [gemeinsameSicht, setGemeinsameSicht] = useState(false);
+  const gemeinsameAnsicht = !!active && (!active.kjfpAktiv || (active.fahrtenAktiv && gemeinsameSicht));
   const [error, setError] = useState<string | null>(null);
   const [roleWarningOpen, setRoleWarningOpen] = useState(false);
   const [pendingRoleChange, setPendingRoleChange] = useState<{
@@ -165,7 +170,8 @@ export default function TeilnehmerScreen() {
 
     setTotalAvailable(a?.totalElements ?? 0);
 
-    const b = await getTeilnehmer(
+    const b = !gemeinsameAnsicht
+      ? await getTeilnehmer(
       active.id,
       0,
       1000,
@@ -173,11 +179,16 @@ export default function TeilnehmerScreen() {
       debounceVereinR || undefined,
       mapSortField(sortingR[0]?.id ?? "fullname"),
       sortingR[0]?.desc ? "desc" : "asc",
-    );
+      )
+      : await getGemeinsameTeilnehmer(active.id).then((content) => ({ content, totalElements: content.length }));
 
-    setAssigned(b?.content ?? []);
-
-    setTotalAssigned(b?.totalElements ?? 0);
+    const matching = b.content.filter((t) => {
+      const name = `${t.person?.vorname ?? ""} ${t.person?.name ?? ""}`.toLowerCase();
+      return (!debounceSearchR || name.includes(debounceSearchR.toLowerCase())) &&
+        (!debounceVereinR || (t.person?.hauptvereinAbk ?? "").toLowerCase().includes(debounceVereinR.toLowerCase()));
+    });
+    setAssigned(matching);
+    setTotalAssigned(matching.length);
   }, [
     active?.id,
     debounceSearchL,
@@ -186,6 +197,7 @@ export default function TeilnehmerScreen() {
     debounceVereinR,
     sortingL,
     sortingR,
+    gemeinsameAnsicht,
   ]);
 
   useEffect(() => {
@@ -224,10 +236,9 @@ export default function TeilnehmerScreen() {
 
     try {
       setError(null);
-      await addTeilnehmerBulk(
-        active.id,
-        selAvailable.map((p) => p.id),
-      );
+      const ids = selAvailable.map((p) => p.id);
+      if (gemeinsameAnsicht) await addAllgemeineTeilnehmerBulk(active.id, ids);
+      else await addTeilnehmerBulk(active.id, ids);
 
       setSelAvailable([]);
       setResetLeftSelection((v) => v + 1);
@@ -352,7 +363,16 @@ export default function TeilnehmerScreen() {
   };
 
   const assignedColumns = teilnehmerAssignedColumns({
-    onRoleClick: handleRoleChange,
+    onRoleClick: gemeinsameAnsicht ? () => undefined : handleRoleChange,
+    showKjfpAssignment: gemeinsameAnsicht && active?.kjfpAktiv,
+    onKjfpToggle: gemeinsameAnsicht && active?.kjfpAktiv ? async (row) => {
+      try {
+        await setTeilnehmerKjfpZuordnung(active.id, row.id, !row.kjfpZugeordnet);
+        await load();
+      } catch (e: unknown) {
+        setError(getApiErrorMessage(e));
+      }
+    } : undefined,
   });
 
   const getStatusMarker = (status?: DataStatus) => {
@@ -421,6 +441,11 @@ export default function TeilnehmerScreen() {
         >
           Teilnehmer — {active.name}
         </Typography>
+        {active.kjfpAktiv && active.fahrtenAktiv && (
+          <Button size="small" variant="outlined" sx={{ mb: 1 }} onClick={() => setGemeinsameSicht((v) => !v)}>
+            {gemeinsameAnsicht ? "KJFP-Teilnehmer anzeigen" : "Alle Veranstaltungsteilnehmer anzeigen"}
+          </Button>
+        )}
 
         <Box
           sx={{
@@ -590,6 +615,9 @@ export default function TeilnehmerScreen() {
                           <Typography fontWeight={600}>
                             {row.person?.name}, {row.person?.vorname}
                           </Typography>
+                          {gemeinsameAnsicht && active.kjfpAktiv && (
+                            <Chip size="small" label={row.kjfpZugeordnet ? "KJFP" : "Allgemein"} variant={row.kjfpZugeordnet ? "filled" : "outlined"} onClick={() => assignedColumns && setTeilnehmerKjfpZuordnung(active.id, row.id, !row.kjfpZugeordnet).then(load).catch((e: unknown) => setError(getApiErrorMessage(e)))} />
+                          )}
                         </Box>
 
                         <Box
@@ -620,7 +648,7 @@ export default function TeilnehmerScreen() {
                             label={row.rolle === "L" ? "L" : row.rolle === "M" ? "M" : "+"}
                             color={row.rolle === "L" ? "secondary" : "default"}
                             variant={row.rolle === "L" ? "filled" : "outlined"}
-                            onClick={() => handleRoleChange(row.rolle ?? null, row.personId)}
+                            onClick={() => !gemeinsameAnsicht && handleRoleChange(row.rolle ?? null, row.personId)}
                             sx={{
                               fontWeight: 700,
                               minWidth: 34,
@@ -728,6 +756,11 @@ export default function TeilnehmerScreen() {
       >
         Teilnehmer — {active.name}
       </Typography>
+      {active.kjfpAktiv && active.fahrtenAktiv && (
+        <Button size="small" variant="outlined" sx={{ mb: 1 }} onClick={() => setGemeinsameSicht((v) => !v)}>
+          {gemeinsameAnsicht ? "KJFP-Teilnehmer anzeigen" : "Alle Veranstaltungsteilnehmer anzeigen"}
+        </Button>
+      )}
 
       <Grid container spacing={2}>
         {/* LEFT */}

@@ -1,5 +1,10 @@
 package com.kcserver.core.service.person;
 
+import com.kcserver.core.entity.Teilnehmer;
+import com.kcserver.core.entity.Veranstaltung;
+import com.kcserver.core.repository.TeilnehmerRepository;
+import com.kcserver.core.repository.VeranstaltungRepository;
+
 
 import com.kcserver.core.dto.mitglied.MitgliedSaveDTO;
 import com.kcserver.core.dto.person.*;
@@ -11,9 +16,8 @@ import com.kcserver.core.mapper.PersonMapper;
 import com.kcserver.core.repository.MitgliedRepository;
 import com.kcserver.core.repository.VereinRepository;
 import com.kcserver.kjfp.dto.validation.DataStatus;
-import com.kcserver.kjfp.entity.*;
 import com.kcserver.kjfp.enumtype.CountryCode;
-import com.kcserver.kjfp.enumtype.TeilnehmerRolle;
+import com.kcserver.core.enumtype.TeilnehmerRolle;
 import com.kcserver.kjfp.repository.*;
 import com.kcserver.kjfp.repository.fahrkosten.FahrtabschnittMitfahrerRepository;
 import com.kcserver.kjfp.repository.fahrkosten.ReisekostenabrechnungRepository;

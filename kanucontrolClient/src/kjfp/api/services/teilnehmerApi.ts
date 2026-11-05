@@ -14,6 +14,23 @@ type TeilnehmerBackend = Omit<TeilnehmerList, "rolle"> & {
   rolle: string | null;
 };
 
+export async function getGemeinsameTeilnehmer(veranstaltungId: number) {
+  const response = await apiClient.get<TeilnehmerList[]>(`/veranstaltungen/${veranstaltungId}/teilnehmer/allgemein`);
+  return response.data ?? [];
+}
+
+export function addAllgemeinenTeilnehmer(veranstaltungId: number, personId: number) {
+  return apiClient.post(`/veranstaltungen/${veranstaltungId}/teilnehmer/allgemein/${personId}`);
+}
+
+export function addAllgemeineTeilnehmerBulk(veranstaltungId: number, personIds: number[]) {
+  return apiClient.post(`/veranstaltungen/${veranstaltungId}/teilnehmer/allgemein/bulk`, { personIds });
+}
+
+export function setTeilnehmerKjfpZuordnung(veranstaltungId: number, teilnehmerId: number, zugeordnet: boolean) {
+  return apiClient.put(`/veranstaltungen/${veranstaltungId}/teilnehmer/${teilnehmerId}/kjfp-zuordnung`, { zugeordnet });
+}
+
 /* =========================================================
    AVAILABLE
    ========================================================= */

@@ -8,7 +8,10 @@ export interface VeranstaltungSave {
   id?: number;
 
   name: string;
-  typ: VeranstaltungTyp;
+  typ?: VeranstaltungTyp;
+  kjfpAktiv: boolean;
+  fahrtenAktiv: boolean;
+  beschreibung?: string;
 
   unterkunftsartId?: number;
   verpflegungsmodellId?: number;
@@ -20,10 +23,10 @@ export interface VeranstaltungSave {
   ort?: string;
 
   beginnDatum: string;
-  beginnZeit: string;
+  beginnZeit?: string;
   endeDatum: string;
-  endeZeit: string;
+  endeZeit?: string;
 
   vereinId: number;
-  leiterId: number;
+  leiterId?: number;
 }

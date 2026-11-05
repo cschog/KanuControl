@@ -53,6 +53,7 @@ const BuchungenView = () => {
   const [selectedBuchung, setSelectedBuchung] = useState<Buchung | null>(null);
   const [neueBuchungsquelle, setNeueBuchungsquelle] = useState<Buchungsquelle>("DIREKT");
   const [ablesungBestaetigung, setAblesungBestaetigung] = useState<Buchung | null>(null);
+  const [abschlussSendEmail, setAbschlussSendEmail] = useState(false);
   const [abschlussAktiv, setAbschlussAktiv] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -64,27 +65,36 @@ const BuchungenView = () => {
  const buchungIdAusUrl = Number(searchParams.get("buchungId"));
  const returnTo = (location.state as { returnTo?: string } | null)?.returnTo;
 
-  const handleStatusChange = async (status: Buchungsstatus) => {
+  const refreshSelectedBuchung = async (id: number) => {
+    try { setSelectedBuchung(await getBuchung(id)); } catch { /* retain the original error */ }
+  };
+
+  const handleStatusChange = async (status: Buchungsstatus, sendEmail = false) => {
     if (!selectedBuchung) return;
 
     setSaveError(null);
 
     try {
-      const updated = await changeStatus(selectedBuchung.id, status);
+      const updated = await changeStatus(selectedBuchung.id, status, [], sendEmail);
       setSelectedBuchung(updated);
+      // Die Status-API liefert nicht in jedem Fall die berechnete
+      // Verbrauchskosten-Vorschau mit. Für die Detailansicht deshalb die
+      // vollständige Buchung nach dem Statuswechsel erneut laden.
+      await refreshSelectedBuchung(updated.id);
     } catch (err: unknown) {
       console.error("Fehler beim Ändern des Buchungsstatus:", err);
+      await refreshSelectedBuchung(selectedBuchung.id);
       setSaveError(getApiErrorMessage(err));
     }
   };
-const handleReopen = async () => {
+const handleReopen = async (sendEmail = false) => {
   if (!selectedBuchung) return;
 
   setSaveError(null);
 
   try {
     // Buchung wieder auf ABRECHENBAR setzen
-    const updated = await changeStatus(selectedBuchung.id, "ABRECHENBAR");
+    const updated = await changeStatus(selectedBuchung.id, "ABRECHENBAR", [], sendEmail);
 
     // Buchung erneut laden, damit auch die Verbrauchskosten-Vorschau
     // vom Backend berechnet und mitgeliefert wird.
@@ -94,20 +104,21 @@ const handleReopen = async () => {
     setEditMode(true);
   } catch (err: unknown) {
     console.error("Fehler beim Wiederöffnen der Buchung:", err);
+    await refreshSelectedBuchung(selectedBuchung.id);
     setSaveError(getApiErrorMessage(err));
   }
 };
 
 
-  const handleReserve = () => handleStatusChange("RESERVIERT");
+  const handleReserve = (sendEmail: boolean) => handleStatusChange("RESERVIERT", sendEmail);
 
-  const handleConfirm = () => handleStatusChange("BESTAETIGT");
+  const handleConfirm = (sendEmail: boolean) => handleStatusChange("BESTAETIGT", sendEmail);
 
-  const handleReject = () => handleStatusChange("ABGELEHNT");
+  const handleReject = (sendEmail: boolean) => handleStatusChange("ABGELEHNT", sendEmail);
 
-  const handleCancelBooking = () => handleStatusChange("STORNIERT");
+  const handleCancelBooking = (sendEmail: boolean) => handleStatusChange("STORNIERT", sendEmail);
 
-  const abschliessen = async (buchung: Buchung, bestaetigt: boolean) => {
+  const abschliessen = async (buchung: Buchung, bestaetigt: boolean, sendEmail = false) => {
     const ablesungen = bestaetigt ? buchung.verbrauchskostenVorschau
       .filter(k => k.bestaetigungErforderlich)
       .map(k => ({
@@ -115,13 +126,15 @@ const handleReopen = async () => {
         anfangsablesung: k.anfangsablesung!, endablesung: k.endablesung!,
         anfangsstand: k.anfangsstand!, endstand: k.endstand!,
       })) : [];
-    const updated = await changeStatus(buchung.id, "ABGESCHLOSSEN", ablesungen);
+    const updated = await changeStatus(buchung.id, "ABGESCHLOSSEN", ablesungen, sendEmail);
     setSelectedBuchung(updated);
+    await refreshSelectedBuchung(updated.id);
   };
 
-  const handleComplete = async () => {
+  const handleComplete = async (sendEmail: boolean) => {
     if (!selectedBuchung || abschlussAktiv) return;
     setAbschlussAktiv(true);
+    setAbschlussSendEmail(sendEmail);
     setSaveError(null);
     try {
       const aktuell = await getBuchung(selectedBuchung.id);
@@ -132,9 +145,10 @@ const handleReopen = async () => {
       } else if (vorschau.some(k => k.bestaetigungErforderlich)) {
         setAblesungBestaetigung(aktuell);
       } else {
-        await abschliessen(aktuell, false);
+        await abschliessen(aktuell, false, sendEmail);
       }
     } catch (err: unknown) {
+      if (selectedBuchung) await refreshSelectedBuchung(selectedBuchung.id);
       setSaveError(getApiErrorMessage(err));
     } finally {
       setAbschlussAktiv(false);
@@ -146,11 +160,13 @@ const handleReopen = async () => {
     setAbschlussAktiv(true);
     setSaveError(null);
     try {
-      await abschliessen(ablesungBestaetigung, true);
+      await abschliessen(ablesungBestaetigung, true, abschlussSendEmail);
     } catch (err: unknown) {
+      await refreshSelectedBuchung(ablesungBestaetigung.id);
       setSaveError(getApiErrorMessage(err));
     } finally {
       setAblesungBestaetigung(null);
+      setAbschlussSendEmail(false);
       setAbschlussAktiv(false);
     }
   };
@@ -205,6 +221,9 @@ const handleReopen = async () => {
         const updated = await update(selectedBuchung.id, payload);
 
         setSelectedBuchung(updated);
+        // Die Update-Antwort enthält nicht immer die berechnete
+        // Verbrauchskosten-Vorschau. Nach dem Speichern die Detaildaten neu laden.
+        await refreshSelectedBuchung(updated.id);
         setEditMode(false);
         return;
       }
@@ -359,7 +378,7 @@ if (showForm) {
       <AblesungBestaetigungDialog
         buchung={ablesungBestaetigung}
         busy={abschlussAktiv}
-        onCancel={() => setAblesungBestaetigung(null)}
+        onCancel={() => { setAblesungBestaetigung(null); setAbschlussSendEmail(false); }}
         onConfirm={() => void handleAblesungenBestaetigen()}
       />
 

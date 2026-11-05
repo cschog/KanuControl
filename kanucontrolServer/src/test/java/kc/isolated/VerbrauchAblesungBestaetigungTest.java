@@ -93,6 +93,38 @@ class VerbrauchAblesungBestaetigungTest {
         readings(reading(2,start.plusHours(25),"110"),reading(1,start.minusHours(25),"100"),reading(3,end,"125"));
         assertEquals(start.minusHours(25),preview().anfangsablesung());
     }
+    @Test void januarBuchungSchlaegtVorherigeNovemberAblesungVor() {
+        booking.setAnreise(LocalDateTime.of(2026,1,24,8,0));
+        booking.setAbreise(LocalDateTime.of(2026,1,25,14,0));
+        var november=LocalDateTime.of(2025,11,2,0,0);
+        var januar=LocalDateTime.of(2026,1,25,0,0);
+        readings(reading(1,november,"4261"),reading(2,januar,"4748"));
+        var p=preview();assertEquals(november,p.anfangsablesung());assertEquals(januar,p.endablesung());
+        assertEquals(new BigDecimal("487"),p.verbrauch());assertTrue(p.bestaetigungErforderlich());
+        assertThrows(IllegalArgumentException.class,()->service.berechneUndSpeichere(booking));
+        var ok=new AblesungBestaetigungDTO(2L,booking.getAnreise(),booking.getAbreise(),
+                p.anfangsablesung(),p.endablesung(),p.anfangsstand(),p.endstand());
+        service.berechneUndSpeichere(booking,List.of(ok));
+        @SuppressWarnings("unchecked") ArgumentCaptor<List<BuchungVerbrauchskosten>> captor=ArgumentCaptor.forClass(List.class);
+        verify(snapshots).saveAll(captor.capture());
+        assertEquals(november,captor.getValue().getFirst().getAnfangsablesung());
+        assertEquals(januar,captor.getValue().getFirst().getEndablesung());
+    }
+    @Test void gemeinsameAnfangsablesungErgaenztNaechsteSpaetereAblesung() {
+        readings(reading(1,start,"100"),reading(2,end.plusDays(20),"125"));
+        var p=preview();assertEquals(start,p.anfangsablesung());assertEquals(end.plusDays(20),p.endablesung());
+        assertTrue(p.bestaetigungErforderlich());
+    }
+    @Test void gleicheZeitpunkteSindKeinGueltigesMessintervall() {
+        readings(reading(1,start,"100"),reading(2,start,"101"));
+        assertFalse(preview().erfolgreich());assertFalse(preview().bestaetigungErforderlich());
+        assertThrows(IllegalArgumentException.class,()->service.berechneUndSpeichere(booking));
+    }
+    @Test void gemeinsameEndablesungBehaeltEndeAuchBeiSpaeteremMesswert() {
+        readings(reading(1,start.minusDays(90),"100"),reading(2,end,"125"),reading(3,end.plusDays(2),"130"));
+        assertEquals(start.minusDays(90),preview().anfangsablesung());
+        assertEquals(end,preview().endablesung());
+    }
     @Test void airbnbBenoetigtWeiterhinKeineVerbrauchsabrechnung() {
         booking.setBuchungsquelle(Buchungsquelle.AIRBNB);assertTrue(service.berechneVorschau(booking).isEmpty());service.berechneUndSpeichere(booking);verifyNoInteractions(reads,snapshots);
     }

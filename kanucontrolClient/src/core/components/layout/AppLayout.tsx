@@ -19,12 +19,15 @@ function AppLayoutContent() {
   const [floatingFooter, setFloatingFooter] = useState(false);
   const [footerHeight, setFooterHeight] = useState(0);
 
-  const isVermietung = location.pathname.startsWith("/vermietung");
+  const isFahrten = location.pathname.startsWith("/fahrten");
+  const modulStart = isFahrten ? "/fahrten" : location.pathname.startsWith("/vermietung") ? "/vermietung" : "/startmenue";
+  const modulZurueck = isFahrten ? "Zurück zu Fahrten" : location.pathname.startsWith("/vermietung") ? "Zurück zur Vermietung" : "Zurück zum Startmenü";
 
   const isStartMenu =
     location.pathname === "/" ||
     location.pathname === "/startmenue" ||
-    location.pathname === "/vermietung";
+    location.pathname === "/vermietung" ||
+    location.pathname === "/fahrten";
 
   const hideBackButtonOn = [
     "/veranstaltungen",
@@ -122,8 +125,8 @@ function AppLayoutContent() {
                       ]
                     : []),
                   {
-                    label: isVermietung ? "Zurück zur Vermietung" : "Zurück zum Startmenü",
-                    path: isVermietung ? "/vermietung" : "/startmenue",
+                    label: modulZurueck,
+                    path: modulStart,
                   },
                 ]}
               />
@@ -151,8 +154,8 @@ function AppLayoutContent() {
                     ]
                   : []),
                 {
-                  label: isVermietung ? "Zurück zur Vermietung" : "Zurück zum Startmenü",
-                  path: isVermietung ? "/vermietung" : "/startmenue",
+                  label: modulZurueck,
+                  path: modulStart,
                 },
               ]}
             />
@@ -175,8 +178,8 @@ function AppLayoutContent() {
                     ]
                   : []),
                 {
-                  label: isVermietung ? "Zurück zur Vermietung" : "Zurück zum Startmenü",
-                  path: isVermietung ? "/vermietung" : "/startmenue",
+                  label: modulZurueck,
+                  path: modulStart,
                 },
               ]}
             />

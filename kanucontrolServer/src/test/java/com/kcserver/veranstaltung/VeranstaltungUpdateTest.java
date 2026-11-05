@@ -2,8 +2,8 @@ package com.kcserver.veranstaltung;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kcserver.kjfp.dto.veranstaltung.VeranstaltungCreateDTO;
-import com.kcserver.kjfp.dto.veranstaltung.VeranstaltungUpdateDTO;
+import com.kcserver.core.dto.veranstaltung.VeranstaltungCreateDTO;
+import com.kcserver.core.dto.veranstaltung.VeranstaltungUpdateDTO;
 import com.kcserver.kjfp.enumtype.VeranstaltungTyp;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
 

@@ -3,11 +3,20 @@
 import { ModuleType } from "./moduleColors";
 
 export const moduleTypeMap: Record<string, ModuleType> = {
+  KJFP: "core",
+  VERMIETUNG: "vermietungBlue",
   // Grundmodule
   vereine: "core",
   mitglieder: "core",
   veranstaltungen: "core",
   teilnehmer: "core",
+  personen: "core",
+  aktionen: "core",
+  aktionsAbrechnung: "addon",
+  auswertung: "report",
+  fahrten: "addon",
+  kanus: "addon",
+  gewaesser: "addon",
 
   // Ergänzungen
   finanzen: "addon",

@@ -1,7 +1,7 @@
 package com.kcserver.kjfp.mapper;
 
 import com.kcserver.kjfp.dto.finanzen.FinanzGruppeDetailDTO;
-import com.kcserver.kjfp.dto.teilnehmer.TeilnehmerKurzDTO;
+import com.kcserver.core.dto.teilnehmer.TeilnehmerKurzDTO;
 import com.kcserver.kjfp.entity.FinanzGruppe;
 import org.springframework.stereotype.Component;
 

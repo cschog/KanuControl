@@ -1,7 +1,6 @@
 package com.kcserver.vermietung.dto;
 
 import com.kcserver.kjfp.enumtype.CountryCode;
-import com.kcserver.vermietung.enumtype.Berechnungsart;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;

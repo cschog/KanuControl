@@ -15,6 +15,7 @@ public class AbrechnungBuchungCreateDTO {
 
     @NotNull
     private BigDecimal betrag;
+    private BigDecimal kjfpBetrag;
     private String beschreibung;
 
     private Zahlungsweg zahlungsweg;

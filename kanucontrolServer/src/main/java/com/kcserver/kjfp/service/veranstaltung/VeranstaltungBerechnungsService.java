@@ -1,6 +1,6 @@
 package com.kcserver.kjfp.service.veranstaltung;
 
-import com.kcserver.kjfp.entity.Veranstaltung;
+import com.kcserver.core.entity.Veranstaltung;
 import org.springframework.stereotype.Service;
 
 import java.time.temporal.ChronoUnit;
@@ -9,7 +9,6 @@ import java.time.temporal.ChronoUnit;
 public class VeranstaltungBerechnungsService {
 
     private static final long MAX_BERECHNUNGSTAGE = 21;
-
 
 
     /* =========================================================

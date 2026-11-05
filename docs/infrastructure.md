@@ -110,6 +110,27 @@ Internal IP
 * billing logic
 * planning logic
 
+### Booking status email (SMTP)
+
+Status emails selected by a user in KanuControl are sent by the backend after the booking status has been committed. Configure SMTP on the backend service with environment variables; do not commit credentials to this repository:
+
+| Variable | Purpose | Default |
+|---|---|---|
+| `KC_SMTP_ENABLED` | Enable direct status email delivery | `false` |
+| `KC_SMTP_TEST_MODE` | Redirect SMTP status emails exclusively to the test recipient, with `[TEST]` subject prefix | `false` |
+| `KC_SMTP_TEST_RECIPIENT` | Single plain email address required in test mode | — |
+| `KC_SMTP_HOST` | SMTP host | — |
+| `KC_SMTP_PORT` | SMTP port | `587` |
+| `KC_SMTP_USERNAME` | SMTP account name | — |
+| `KC_SMTP_PASSWORD` | SMTP account password | — |
+| `KC_SMTP_FROM` | Authorized sender address | — |
+| `KC_SMTP_STARTTLS` | Use STARTTLS (typical port 587) | `true` |
+| `KC_SMTP_SSL` | Use implicit TLS (typical port 465) | `false` |
+
+Set `KC_SMTP_STARTTLS=false` when using implicit TLS. When SMTP is enabled, host and sender address are required; username and password must either both be present or both be empty. The backend reports a send error to the user while preserving the already changed booking status. Website booking intake confirmation emails continue to use the WordPress mail service.
+
+For booking tests, set `KC_SMTP_TEST_MODE=true` and `KC_SMTP_TEST_RECIPIENT=your-test-address@example.com` alongside the existing SMTP settings and restart the updated backend. With SMTP enabled, an invalid or missing test address prevents startup. Delivery checks it again and never falls back to the tenant address. With test mode disabled, the original recipient is used. These settings apply only to backend SMTP status emails, not WordPress intake confirmations or the legacy status-mail queue.
+
 ## keycloak-prod
 
 ### Purpose

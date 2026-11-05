@@ -13,6 +13,7 @@ import { useEffect, useState } from "react";
 
 import { Buchung, BuchungCreate } from "@/kjfp/types/abrechnung";
 import { FinanzKategorie, FinanzTyp, kategorieZuTyp } from "@/kjfp/types/finanz";
+import { useAppContext } from "@/core/components/context/AppContext";
 
 interface Props {
   open: boolean;
@@ -26,6 +27,8 @@ export default function BuchungDialog({ open, typ, initialData, onClose, onSave 
   const [kategorie, setKategorie] = useState<FinanzKategorie | "">("");
   const [betrag, setBetrag] = useState("");
   const [beschreibung, setBeschreibung] = useState("");
+  const [kjfpBetrag, setKjfpBetrag] = useState("");
+  const { active } = useAppContext();
 
   /* =========================================================
      INIT (Neu oder Bearbeiten)
@@ -36,10 +39,12 @@ export default function BuchungDialog({ open, typ, initialData, onClose, onSave 
       setKategorie(initialData.kategorie);
       setBetrag(initialData.betrag.toString());
       setBeschreibung(initialData.beschreibung ?? "");
+      setKjfpBetrag((initialData.kjfpBetrag ?? initialData.betrag).toString());
     } else {
       setKategorie("");
       setBetrag("");
       setBeschreibung("");
+      setKjfpBetrag("");
     }
   }, [initialData, open]);
 
@@ -61,6 +66,7 @@ export default function BuchungDialog({ open, typ, initialData, onClose, onSave 
     const payload: BuchungCreate = {
       kategorie,
       betrag: parseFloat(betrag),
+      kjfpBetrag: active?.kjfpAktiv ? Number(kjfpBetrag || betrag) : 0,
       beschreibung,
     };
 
@@ -98,6 +104,18 @@ export default function BuchungDialog({ open, typ, initialData, onClose, onSave 
             onChange={(e) => setBetrag(e.target.value)}
             fullWidth
           />
+
+          {active?.kjfpAktiv && (
+            <TextField
+              label="Davon KJFP-Anteil (€)"
+              type="number"
+              inputProps={{ min: 0, max: Number(betrag || 0), step: "0.01" }}
+              value={kjfpBetrag}
+              onChange={(e) => setKjfpBetrag(e.target.value)}
+              helperText="Der KJFP-Anteil darf den Gesamtbetrag nicht überschreiten."
+              fullWidth
+            />
+          )}
 
           <TextField
             label="Beschreibung"

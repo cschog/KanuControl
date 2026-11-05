@@ -1,9 +1,9 @@
 package com.kcserver.kjfp.service.zahlungsnachweis;
 
-import com.kcserver.kjfp.dto.teilnehmer.TeilnehmerKurzDTO;
+import com.kcserver.core.dto.teilnehmer.TeilnehmerKurzDTO;
 import com.kcserver.kjfp.entity.FinanzGruppe;
-import com.kcserver.kjfp.entity.Teilnehmer;
-import com.kcserver.kjfp.entity.Veranstaltung;
+import com.kcserver.core.entity.Teilnehmer;
+import com.kcserver.core.entity.Veranstaltung;
 import com.kcserver.kjfp.entity.beitraege.ZahlungsPosition;
 import com.kcserver.kjfp.entity.beitraege.Zahlungsnachweis;
 import com.kcserver.kjfp.enumtype.Zahlungsweg;
@@ -11,8 +11,8 @@ import com.kcserver.core.exception.ErrorMessages;
 import com.kcserver.kjfp.dto.zahlungsnachweis.*;
 import com.kcserver.kjfp.mapper.ZahlungsnachweisMapper;
 import com.kcserver.kjfp.repository.finanz.FinanzGruppeRepository;
-import com.kcserver.kjfp.repository.TeilnehmerRepository;
-import com.kcserver.kjfp.repository.VeranstaltungRepository;
+import com.kcserver.core.repository.TeilnehmerRepository;
+import com.kcserver.core.repository.VeranstaltungRepository;
 import com.kcserver.kjfp.repository.zahlungsnachweis.ZahlungsnachweisRepository;
 import com.kcserver.kjfp.service.beitrag.TeilnehmerBeitragService;
 import com.kcserver.kjfp.service.finanz.FinanzGruppeService;

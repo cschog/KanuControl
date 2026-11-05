@@ -5,7 +5,6 @@ import com.kcserver.kjfp.enumtype.CountryCode;
 import com.kcserver.kjfp.enumtype.Sex;
 import com.kcserver.core.converter.CountryCodeConverter;
 import com.kcserver.core.converter.SexConverter;
-import com.kcserver.core.validation.OnCreate;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;

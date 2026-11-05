@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+ <changeSet id="20261105-01-gemeinsame-veranstaltung" author="codex">
+  <addColumn tableName="veranstaltung"><column name="kjfp_aktiv" type="boolean" defaultValueBoolean="true"><constraints nullable="false"/></column><column name="fahrten_aktiv" type="boolean" defaultValueBoolean="false"><constraints nullable="false"/></column></addColumn>
+  <addColumn tableName="teilnehmer"><column name="kjfp_zugeordnet" type="boolean" defaultValueBoolean="true"><constraints nullable="false"/></column></addColumn>
+  <addColumn tableName="person"><column name="geburtsdatum_geschaetzt" type="boolean" defaultValueBoolean="false"><constraints nullable="false"/></column></addColumn>
+  <addColumn tableName="abrechnung_buchung"><column name="kjfp_betrag" type="numeric(12,2)"/></addColumn>
+  <dropNotNullConstraint tableName="veranstaltung" columnName="typ" columnDataType="varchar(3)"/>
+  <modifyDataType tableName="veranstaltung" columnName="typ" newDataType="varchar(20)"/>
+  <dropNotNullConstraint tableName="veranstaltung" columnName="beginn_zeit" columnDataType="time without time zone"/>
+  <dropNotNullConstraint tableName="veranstaltung" columnName="ende_zeit" columnDataType="time without time zone"/>
+  <dropNotNullConstraint tableName="veranstaltung" columnName="leiter_id" columnDataType="bigint"/>
+  <addColumn tableName="veranstaltung"><column name="beschreibung" type="varchar(4000)"/></addColumn>
+  <rollback><dropColumn tableName="veranstaltung" columnName="beschreibung"/><dropColumn tableName="abrechnung_buchung" columnName="kjfp_betrag"/><dropColumn tableName="person" columnName="geburtsdatum_geschaetzt"/><dropColumn tableName="teilnehmer" columnName="kjfp_zugeordnet"/><dropColumn tableName="veranstaltung" columnName="fahrten_aktiv"/><dropColumn tableName="veranstaltung" columnName="kjfp_aktiv"/></rollback>
+ </changeSet>
+</databaseChangeLog>

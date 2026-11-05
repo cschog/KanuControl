@@ -8,6 +8,7 @@ export const PAGE_CONFIG = {
   help: { title: "Hilfeübersicht", file: "/info/bedienungsanleitung.md" },
   "help-kjfp": { title: "Bedienungsanleitung KJFP", file: "/info/bedienungsanleitung-kjfp.md" },
   "help-vermietung": { title: "Bedienungsanleitung Vermietung", file: "/info/bedienungsanleitung-vermietung.md" },
+  "help-fahrten": { title: "Bedienungsanleitung Fahrten", file: "/info/bedienungsanleitung-fahrten.md" },
   homepage: { title: "Homepage-Anbindung", file: "/info/homepage-anbindung.md" },
   news: { title: "Was ist neu?", file: "/info/releases/releases.md" },
   privacy: { title: "Datenschutz", file: "/info/datenschutz.md" },

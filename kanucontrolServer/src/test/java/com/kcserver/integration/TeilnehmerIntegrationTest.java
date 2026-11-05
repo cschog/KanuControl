@@ -1,14 +1,14 @@
 package com.kcserver.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kcserver.kjfp.dto.teilnehmer.TeilnehmerUpdateDTO;
+import com.kcserver.core.dto.teilnehmer.TeilnehmerUpdateDTO;
 
-import com.kcserver.kjfp.enumtype.TeilnehmerRolle;
+import com.kcserver.core.enumtype.TeilnehmerRolle;
 import com.kcserver.support.api.PersonTestFactory;
 import com.kcserver.support.api.VereinTestFactory;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
 
-import com.kcserver.kjfp.repository.TeilnehmerRepository;
+import com.kcserver.core.repository.TeilnehmerRepository;
 import com.kcserver.support.api.TeilnehmerTestFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -151,5 +151,36 @@ class TeilnehmerIntegrationTest extends AbstractTenantIntegrationTest {
         mockMvc.perform(
                         post("/api/veranstaltungen/{vId}/teilnehmer/{personId}", veranstaltungId, personId))
                 .andExpect(status().isConflict());
+    }
+    @Test
+    void allgemeineTeilnahmeFunktioniertOhneKjfpUndBleibtVomFachmodulGetrennt() throws Exception {
+        ensureTenantSchema();
+        jdbcTemplate.update("UPDATE veranstaltung SET kjfp_aktiv=false, fahrten_aktiv=true WHERE id=?", veranstaltungId);
+        String response = mockMvc.perform(post(
+                        "/api/veranstaltungen/{v}/teilnehmer/allgemein/{p}", veranstaltungId, personId))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        var data = objectMapper.readTree(response).path("data");
+        assertFalse(data.path("kjfpZugeordnet").asBoolean());
+        long teilnehmerId = data.path("id").asLong();
+        assertTrue(teilnehmerId > 0);
+        mockMvc.perform(put("/api/veranstaltungen/{v}/teilnehmer/{t}/kjfp-zuordnung", veranstaltungId, teilnehmerId)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"zugeordnet\":true}"))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void kjfpZuordnungFunktioniertNachControllerTrennung() throws Exception {
+        String response = mockMvc.perform(post(
+                        "/api/veranstaltungen/{v}/teilnehmer/allgemein/{p}", veranstaltungId, personId))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        long teilnehmerId = objectMapper.readTree(response).path("data").path("id").asLong();
+        for (boolean zugeordnet : new boolean[]{true, false}) {
+            String changed = mockMvc.perform(put(
+                            "/api/veranstaltungen/{v}/teilnehmer/{t}/kjfp-zuordnung", veranstaltungId, teilnehmerId)
+                            .contentType(MediaType.APPLICATION_JSON).content("{\"zugeordnet\":" + zugeordnet + "}"))
+                    .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+            org.junit.jupiter.api.Assertions.assertEquals(zugeordnet,
+                    objectMapper.readTree(changed).path("data").path("kjfpZugeordnet").asBoolean());
+        }
     }
 }

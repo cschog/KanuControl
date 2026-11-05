@@ -14,6 +14,7 @@ public class AbrechnungBuchungDTO {
     private BuchungsHerkunft herkunft;
     private FinanzKategorie kategorie;
     private BigDecimal betrag;
+    private BigDecimal kjfpBetrag;
     private String beschreibung;
     private Zahlungsweg zahlungsweg;
 }

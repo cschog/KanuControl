@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -169,6 +170,7 @@ public class AbrechnungBelegService {
 
         position.setKategorie(dto.getKategorie());
         position.setBetrag(dto.getBetrag());
+        position.setKjfpBetrag(resolveKjfpBetrag(beleg, dto));
         position.setBeschreibung(dto.getBeschreibung());
         position.setHerkunft(BuchungsHerkunft.MANUELL);
 
@@ -198,9 +200,26 @@ public class AbrechnungBelegService {
 
         pos.setKategorie(dto.getKategorie());
         pos.setBetrag(dto.getBetrag());
+        pos.setKjfpBetrag(resolveKjfpBetrag(pos.getBeleg(), dto));
         pos.setBeschreibung(dto.getBeschreibung());
 
         return mapper.toDTO(pos);
+    }
+
+    private BigDecimal resolveKjfpBetrag(AbrechnungBeleg beleg, AbrechnungBuchungCreateDTO dto) {
+        BigDecimal kjfpBetrag = dto.getKjfpBetrag();
+        if (kjfpBetrag == null) {
+            kjfpBetrag = beleg.getAbrechnung().getVeranstaltung().isKjfpAktiv()
+                    ? dto.getBetrag()
+                    : BigDecimal.ZERO;
+        }
+        if (kjfpBetrag.signum() < 0 || kjfpBetrag.compareTo(dto.getBetrag()) > 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der KJFP-Anteil muss zwischen 0 und dem Gesamtbetrag liegen.");
+        }
+        if (!beleg.getAbrechnung().getVeranstaltung().isKjfpAktiv() && kjfpBetrag.signum() != 0) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Für diese Veranstaltung ist die KJFP-Förderverwaltung nicht aktiviert.");
+        }
+        return kjfpBetrag;
     }
 
     /* =========================================================

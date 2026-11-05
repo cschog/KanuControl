@@ -43,6 +43,10 @@ export function InfoMenuDialog({ open, onClose, onSelect }: Props) {
             <ListItemText primary="Bedienungsanleitung Vermietung" />
           </ListItemButton>
 
+          <ListItemButton onClick={() => handleClick("help-fahrten")}>
+            <ListItemText primary="Bedienungsanleitung Fahrten" />
+          </ListItemButton>
+
           <ListItemButton onClick={() => handleClick("homepage")}>
             <ListItemText primary="Homepage-Anbindung" />
           </ListItemButton>

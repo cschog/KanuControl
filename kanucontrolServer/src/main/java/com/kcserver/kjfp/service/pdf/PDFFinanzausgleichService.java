@@ -1,5 +1,8 @@
 package com.kcserver.kjfp.service.pdf;
 
+import com.kcserver.core.entity.Teilnehmer;
+import com.kcserver.core.entity.Veranstaltung;
+
 import com.kcserver.core.entity.Person;
 import com.kcserver.kjfp.dto.finanzen.FinanzausgleichDTO;
 import com.kcserver.kjfp.entity.*;
@@ -12,7 +15,7 @@ import com.kcserver.kjfp.enumtype.FinanzKategorie;
 import com.kcserver.kjfp.enumtype.PdfDokumentTyp;
 import com.kcserver.kjfp.enumtype.Zahlungsweg;
 import com.kcserver.core.exception.ErrorMessages;
-import com.kcserver.kjfp.repository.VeranstaltungRepository;
+import com.kcserver.core.repository.VeranstaltungRepository;
 import com.kcserver.kjfp.repository.abrechnung.AbrechnungBelegRepository;
 import com.kcserver.kjfp.repository.abrechnung.AbrechnungBuchungRepository;
 import com.kcserver.kjfp.repository.abrechnung.AbrechnungRepository;

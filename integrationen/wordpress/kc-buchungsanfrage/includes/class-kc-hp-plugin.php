@@ -13,7 +13,6 @@ final class KC_HP_Plugin {
         add_action('admin_post_kc_hp_retry', [self::class, 'retry']);
         add_action('admin_post_kc_hp_test', [self::class, 'test']);
         add_action('admin_post_kc_hp_resend', [self::class, 'resend']);
-        add_action('admin_post_kc_hp_status_retry', ['KC_HP_Status_Mails', 'retry']);
         KC_HP_Calendar::init();
         add_shortcode('kc_buchungsanfrage', [self::class, 'shortcode']);
         add_action('wp_enqueue_scripts', [self::class, 'assets']);
@@ -272,7 +271,7 @@ final class KC_HP_Plugin {
         }
         if (!$rows) { echo '<tr><td colspan="5">Noch keine Vorgänge vorhanden.</td></tr>'; }
         echo '</tbody></table>';
-        KC_HP_Status_Mails::admin();
+        echo '<h2>Statusmails aus KC</h2><p>Statusmails werden jetzt direkt vom KanuControl-Server über dessen SMTP-Konfiguration versendet. WordPress verarbeitet keine KC-Statusmail-Aufträge mehr. Die vorhandene Tabelle mit älteren Aufträgen bleibt zur Rückwärtskompatibilität erhalten.</p>';
         echo '<p>Abgeschlossene lokale Kopien werden nach 30 Tagen entfernt. Ausstehende und angehaltene Vorgänge bleiben zur Prüfung erhalten. Zugangsdaten in Datenbanksicherungen entsprechend schützen. Die aktuelle Anleitung liegt im Plugin als README.md.</p></div>';
     }
 }

@@ -5,15 +5,15 @@ import com.kcserver.core.dto.person.PersonRefDTO;
 import com.kcserver.core.mapper.PersonMapper;
 import com.kcserver.kjfp.dto.reisekosten.*;
 import com.kcserver.core.entity.Person;
-import com.kcserver.kjfp.entity.Teilnehmer;
-import com.kcserver.kjfp.entity.Veranstaltung;
+import com.kcserver.core.entity.Teilnehmer;
+import com.kcserver.core.entity.Veranstaltung;
 import com.kcserver.kjfp.entity.fahrkosten.Fahrtabschnitt;
 import com.kcserver.kjfp.entity.fahrkosten.FahrtabschnittMitfahrer;
 import com.kcserver.kjfp.entity.fahrkosten.ReisekostenKonfiguration;
 import com.kcserver.kjfp.entity.fahrkosten.Reisekostenabrechnung;
 import com.kcserver.kjfp.repository.PersonRepository;
-import com.kcserver.kjfp.repository.TeilnehmerRepository;
-import com.kcserver.kjfp.repository.VeranstaltungRepository;
+import com.kcserver.core.repository.TeilnehmerRepository;
+import com.kcserver.core.repository.VeranstaltungRepository;
 import com.kcserver.kjfp.repository.fahrkosten.FahrtabschnittMitfahrerRepository;
 import com.kcserver.kjfp.repository.fahrkosten.ReisekostenKonfigurationRepository;
 import com.kcserver.kjfp.repository.fahrkosten.ReisekostenabrechnungRepository;
@@ -216,7 +216,6 @@ public class ReisekostenabrechnungServiceImpl
         );
 
 
-
         abrechnung.setGesamtKilometer(0);
         abrechnung.setGesamtBetrag(BigDecimal.ZERO);
 
@@ -265,7 +264,6 @@ public class ReisekostenabrechnungServiceImpl
                             return dto;
                         })
                         .toList(),
-
 
 
                 abrechnung.getFahrtabschnitte()

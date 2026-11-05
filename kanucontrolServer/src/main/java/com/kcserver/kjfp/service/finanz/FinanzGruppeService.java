@@ -1,14 +1,14 @@
 package com.kcserver.kjfp.service.finanz;
 
 import com.kcserver.kjfp.entity.FinanzGruppe;
-import com.kcserver.kjfp.entity.Teilnehmer;
-import com.kcserver.kjfp.entity.Veranstaltung;
+import com.kcserver.core.entity.Teilnehmer;
+import com.kcserver.core.entity.Veranstaltung;
 import com.kcserver.core.exception.BusinessRuleViolationException;
 import com.kcserver.core.exception.ErrorMessages;
 import com.kcserver.kjfp.repository.abrechnung.AbrechnungBelegRepository;
 import com.kcserver.kjfp.repository.finanz.FinanzGruppeRepository;
-import com.kcserver.kjfp.repository.TeilnehmerRepository;
-import com.kcserver.kjfp.repository.VeranstaltungRepository;
+import com.kcserver.core.repository.TeilnehmerRepository;
+import com.kcserver.core.repository.VeranstaltungRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;

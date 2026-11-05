@@ -4,8 +4,8 @@ package com.kcserver.kjfp.service.finanz;
 import com.kcserver.kjfp.dto.finanzen.BetragPositionDTO;
 import com.kcserver.kjfp.dto.finanzen.FinanzenDashboardDTO;
 import com.kcserver.kjfp.dto.finanzen.FoerderungDashboardDTO;
-import com.kcserver.kjfp.entity.Teilnehmer;
-import com.kcserver.kjfp.entity.Veranstaltung;
+import com.kcserver.core.entity.Teilnehmer;
+import com.kcserver.core.entity.Veranstaltung;
 import com.kcserver.kjfp.entity.abrechnung.Abrechnung;
 import com.kcserver.kjfp.entity.abrechnung.AbrechnungBuchung;
 import com.kcserver.kjfp.entity.planung.Planung;
@@ -13,8 +13,8 @@ import com.kcserver.kjfp.entity.planung.PlanungPosition;
 import com.kcserver.kjfp.enumtype.FinanzKategorie;
 import com.kcserver.kjfp.repository.PlanungPositionRepository;
 import com.kcserver.kjfp.repository.PlanungRepository;
-import com.kcserver.kjfp.repository.TeilnehmerRepository;
-import com.kcserver.kjfp.repository.VeranstaltungRepository;
+import com.kcserver.core.repository.TeilnehmerRepository;
+import com.kcserver.core.repository.VeranstaltungRepository;
 import com.kcserver.kjfp.repository.abrechnung.AbrechnungBuchungRepository;
 import com.kcserver.kjfp.repository.abrechnung.AbrechnungRepository;
 import com.kcserver.kjfp.service.FoerderService;
@@ -353,8 +353,6 @@ public class FinanzenDashboardService {
                         )
                         .toList()
         );
-
-
 
 
         return dto;

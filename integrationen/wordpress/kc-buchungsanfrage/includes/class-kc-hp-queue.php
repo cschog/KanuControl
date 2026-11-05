@@ -185,7 +185,6 @@ final class KC_HP_Queue {
     public static function work(): void {
         global $wpdb;
         if (KC_HP_Api::settings()['mode'] !== 'live') { return; }
-        KC_HP_Status_Mails::work();
         $ids = $wpdb->get_col($wpdb->prepare('SELECT id FROM ' . self::table()
             . " WHERE next_attempt<=%d AND lease_until<%d AND (status='pending' OR (status='confirmed' AND (guest_mail='pending' OR admin_mail='pending'))) ORDER BY id LIMIT 5", time(), time()));
         foreach ($ids as $id) { self::process((int) $id); }

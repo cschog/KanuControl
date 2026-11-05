@@ -8,7 +8,7 @@ import com.kcserver.core.exception.ErrorMessages;
 import com.kcserver.kjfp.mapper.VereinMapper;
 import com.kcserver.core.repository.MitgliedRepository;
 import com.kcserver.kjfp.repository.PersonRepository;
-import com.kcserver.kjfp.repository.VeranstaltungRepository;
+import com.kcserver.core.repository.VeranstaltungRepository;
 import com.kcserver.core.repository.VereinRepository;
 import com.kcserver.kjfp.service.BankLookupService;
 import com.kcserver.kjfp.service.VereinDataStatusService;

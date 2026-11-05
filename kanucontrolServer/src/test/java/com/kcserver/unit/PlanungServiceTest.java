@@ -2,14 +2,14 @@ package com.kcserver.unit;
 
 import com.kcserver.kjfp.dto.simulation.PlanungsSimulation;
 import com.kcserver.kjfp.entity.Unterkunftsart;
-import com.kcserver.kjfp.entity.Veranstaltung;
+import com.kcserver.core.entity.Veranstaltung;
 import com.kcserver.kjfp.entity.Verpflegungsmodell;
 import com.kcserver.kjfp.entity.beitraege.Beitragsregel;
 import com.kcserver.kjfp.entity.beitraege.Beitragsstruktur;
 import com.kcserver.kjfp.enumtype.PlanungsStatus;
-import com.kcserver.kjfp.enumtype.TeilnehmerRolle;
+import com.kcserver.core.enumtype.TeilnehmerRolle;
 import com.kcserver.kjfp.repository.UnterkunftsartRepository;
-import com.kcserver.kjfp.repository.VeranstaltungRepository;
+import com.kcserver.core.repository.VeranstaltungRepository;
 import com.kcserver.kjfp.repository.VerpflegungsmodellRepository;
 import com.kcserver.kjfp.repository.beitrag.BeitragsstrukturRepository;
 import com.kcserver.kjfp.service.planung.PlanungService;

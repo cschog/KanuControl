@@ -1,8 +1,8 @@
 package com.kcserver.kjfp.service.pdf;
 
 import com.kcserver.core.dto.person.PersonRefDTO;
-import com.kcserver.kjfp.dto.teilnehmer.TeilnehmerDetailDTO;
-import com.kcserver.kjfp.dto.veranstaltung.VeranstaltungDetailDTO;
+import com.kcserver.core.dto.teilnehmer.TeilnehmerDetailDTO;
+import com.kcserver.core.dto.veranstaltung.VeranstaltungDetailDTO;
 import com.kcserver.kjfp.enumtype.PdfDokumentTyp;
 import com.kcserver.kjfp.service.AltersService;
 import com.kcserver.core.util.PdfFilenameUtil;

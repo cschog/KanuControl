@@ -13,6 +13,8 @@ function emptyVeranstaltung(): VeranstaltungFormModel {
   return {
     name: "",
     typ: VeranstaltungTyp.JEM,
+    kjfpAktiv: true,
+    fahrtenAktiv: false,
 
     beginnDatum: today,
     beginnZeit: "10:00",
@@ -97,13 +99,10 @@ export function useVeranstaltungForm(initial: VeranstaltungFormModel | null) {
     if (!form) return null;
 
     if (
-      !form.typ ||
       !form.beginnDatum ||
-      !form.beginnZeit ||
       !form.endeDatum ||
-      !form.endeZeit ||
       !form.verein ||
-      !form.leiter
+      (form.kjfpAktiv && (!form.typ || !form.beginnZeit || !form.endeZeit || !form.leiter))
     ) {
       return null;
     }
@@ -111,16 +110,19 @@ export function useVeranstaltungForm(initial: VeranstaltungFormModel | null) {
     return {
       id: form.id,
       name: form.name,
-      typ: form.typ,
+      typ: form.kjfpAktiv ? form.typ : undefined,
+      kjfpAktiv: form.kjfpAktiv,
+      fahrtenAktiv: form.fahrtenAktiv,
+      beschreibung: form.beschreibung,
 
       beginnDatum: form.beginnDatum,
-      beginnZeit: form.beginnZeit,
+      beginnZeit: form.kjfpAktiv ? form.beginnZeit : undefined,
 
       endeDatum: form.endeDatum,
-      endeZeit: form.endeZeit,
+      endeZeit: form.kjfpAktiv ? form.endeZeit : undefined,
 
       vereinId: form.verein.id,
-      leiterId: form.leiter.id,
+      leiterId: form.kjfpAktiv ? form.leiter?.id : undefined,
 
       /* ===== Detailfelder ===== */
 
@@ -159,11 +161,10 @@ export function useVeranstaltungForm(initial: VeranstaltungFormModel | null) {
   const isValid =
     !!form &&
     form.name.trim().length >= 2 &&
-    !!form.typ &&
     !!form.beginnDatum &&
     !!form.endeDatum &&
     !!form.verein &&
-    !!form.leiter &&
+    (!form.kjfpAktiv || (!!form.typ && !!form.leiter && !!form.beginnZeit && !!form.endeZeit)) &&
     isEndTimeValid;
 
   /* =========================

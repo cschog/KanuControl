@@ -4,11 +4,17 @@ import com.kcserver.vermietung.dto.HomepageStatusMailDTO;
 import com.kcserver.vermietung.entity.*;
 import com.kcserver.vermietung.enumtype.Buchungsstatus;
 import com.kcserver.vermietung.repository.*;
+import com.kcserver.vermietung.config.SmtpMailProperties;
 import jakarta.validation.Validator;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpStatus;
+import org.springframework.mail.MailException;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -16,19 +22,71 @@ import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+@Slf4j
 @Service @Transactional @RequiredArgsConstructor
 public class HomepageStatusMailService {
     private final HomepageStatusMailRepository mails;
     private final HomepageAnbindungRepository anbindungen;
     private final Validator validator;
+    private final ObjectProvider<JavaMailSender> mailSenders;
+    private final SmtpMailProperties smtpConfig;
     private record Adresse(@NotBlank @Email String email) {}
 
-    /** Wird innerhalb derselben Transaktion wie die Buchungsentscheidung aufgerufen. */
+    /** Legacy-Einreihung für bestehende Integrationsclients. */
+    @Deprecated(forRemoval = false)
     public void vormerken(Buchung buchung, Buchungsstatus neuerStatus) {
-        if (!"HOMEPAGE".equals(buchung.getHerkunft()) || neuerStatus == null || buchung.getStatus() == neuerStatus) return;
+        if (!"HOMEPAGE".equals(buchung.getHerkunft())) return;
+        if (neuerStatus == null || buchung.getStatus() == neuerStatus) return;
+        HomepageStatusMail mail = erstelleMail(buchung, neuerStatus, buchung.getStatus());
+        if (mail != null) mails.save(mail);
+    }
+
+    /** Versendet die Statusmail synchron über den KC-seitig konfigurierten SMTP-Server. */
+    public void senden(Buchung buchung, Buchungsstatus neuerStatus, Buchungsstatus alterStatus) {
+        if (neuerStatus == null) return;
+        HomepageStatusMail mail = erstelleMail(buchung, neuerStatus, alterStatus);
+        if (mail == null) return;
+        if (!smtpConfig.isEnabled()) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                    "Der direkte SMTP-Mailversand ist in KanuControl nicht aktiviert.");
+        }
+        JavaMailSender sender = mailSenders.getIfAvailable();
+        if (sender == null) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                    "Der SMTP-Mailversand ist nicht verfügbar. Bitte die Serverkonfiguration prüfen.");
+        }
+
+        String recipient = mail.getEmpfaenger();
+        if (smtpConfig.isTestMode()) {
+            try {
+                recipient = smtpConfig.requireTestRecipient();
+            } catch (IllegalStateException ex) {
+                throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage());
+            }
+        }
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(smtpConfig.getFrom().trim());
+        message.setTo(recipient);
+        message.setSubject((smtpConfig.isTestMode() ? "[TEST] " : "") + mail.getBetreff());
+        message.setText(mail.getText());
+        if (mail.getReplyTo() != null && !mail.getReplyTo().isBlank()) {
+            message.setReplyTo(mail.getReplyTo().trim());
+        }
+        try {
+            sender.send(message);
+            log.info("KC-SMTP hat eine Buchungsstatusmail angenommen (Status {}).", neuerStatus);
+        } catch (MailException ex) {
+            log.warn("SMTP-Versand einer Buchungsstatusmail fehlgeschlagen.", ex);
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY,
+                    "Die Statusmail konnte nicht an den SMTP-Server übergeben werden. Der Buchungsstatus wurde gespeichert.", ex);
+        }
+    }
+
+    private HomepageStatusMail erstelleMail(Buchung buchung, Buchungsstatus neuerStatus,
+                                             Buchungsstatus alterStatus) {
         String email = buchung.getMieter() == null ? null : buchung.getMieter().getEmail();
         if (email == null || !validator.validate(new Adresse(email)).isEmpty()) {
-            throw new IllegalArgumentException("Für die Benachrichtigung zur Homepage-Anfrage ist eine gültige E-Mail-Adresse des Mieters erforderlich.");
+            throw new IllegalArgumentException("Für die Statusmail ist eine gültige E-Mail-Adresse des Mieters erforderlich.");
         }
         HomepageStatusMail mail = new HomepageStatusMail();
         mail.setMietobjektId(buchung.getMietobjekt().getId()); mail.setBuchungId(buchung.getId());
@@ -70,7 +128,7 @@ public class HomepageStatusMailService {
             }
             case ABRECHENBAR -> {
                 mail.setBetreff("Buchung " + nummer + " zur Abrechnung vorgesehen");
-                entscheidung = buchung.getStatus() == Buchungsstatus.ABGESCHLOSSEN
+                entscheidung = alterStatus == Buchungsstatus.ABGESCHLOSSEN
                         ? "die Abrechnung deiner Buchung für " + objekt + " " + zeitraum + " wurde erneut geöffnet."
                         : bezug + " ist jetzt zur Abrechnung vorgesehen. Die Abrechnung ist noch nicht abgeschlossen.";
             }
@@ -82,7 +140,7 @@ public class HomepageStatusMailService {
         }
         mail.setText(anrede + "\n\n" + entscheidung + "\n\nBuchungsnummer: " + nummer + "\n\nViele Grüße\nDie Vermietung\n");
         mail.setCreatedAt(Instant.now());
-        mails.save(mail);
+        return mail;
     }
 
     private void pruefeZugang(Long objektId, String clientId) {

@@ -14,7 +14,6 @@ public class PersonRefDTO {
     private String hauptvereinAbk;
 
     private Sex sex;
-
     private boolean verwendetInFahrtabschnitten;
 
     private DataStatus dataStatus;

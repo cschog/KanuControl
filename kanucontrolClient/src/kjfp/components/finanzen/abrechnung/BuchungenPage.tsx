@@ -323,6 +323,10 @@ export default function BuchungenPage({ veranstaltungId }: Props) {
         eigenanteil={abrechnung.finanz.saldo}
         kjfpZuschuss={abrechnung.finanz.kjfpZuschuss}
       />
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        KJFP-Anteil: Kosten <Money value={abrechnung.finanz.kjfpKosten ?? 0} /> · Einnahmen <Money value={abrechnung.finanz.kjfpEinnahmen ?? 0} />
+        {"  |  "}Übrige Anteile: Kosten <Money value={abrechnung.finanz.sonstigeKosten ?? 0} /> · Einnahmen <Money value={abrechnung.finanz.sonstigeEinnahmen ?? 0} />
+      </Typography>
       <Stack
         direction={{ xs: "column", sm: "row" }}
         justifyContent="space-between"

@@ -1,9 +1,9 @@
 package com.kcserver.veranstaltung;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kcserver.kjfp.dto.teilnehmer.TeilnehmerBulkDeleteDTO;
-import com.kcserver.kjfp.dto.veranstaltung.VeranstaltungCreateDTO;
-import com.kcserver.kjfp.dto.veranstaltung.VeranstaltungUpdateDTO;
+import com.kcserver.core.dto.teilnehmer.TeilnehmerBulkDeleteDTO;
+import com.kcserver.core.dto.veranstaltung.VeranstaltungCreateDTO;
+import com.kcserver.core.dto.veranstaltung.VeranstaltungUpdateDTO;
 import com.kcserver.kjfp.enumtype.VeranstaltungTyp;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
 import com.kcserver.support.api.PersonTestFactory;

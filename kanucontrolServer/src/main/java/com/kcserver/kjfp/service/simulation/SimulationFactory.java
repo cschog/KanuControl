@@ -2,7 +2,7 @@ package com.kcserver.kjfp.service.simulation;
 
 import com.kcserver.kjfp.dto.simulation.PlanungsSimulation;
 import com.kcserver.kjfp.dto.simulation.VeranstaltungsInfo;
-import com.kcserver.kjfp.entity.Veranstaltung;
+import com.kcserver.core.entity.Veranstaltung;
 import com.kcserver.kjfp.mapper.VeranstaltungsInfoMapper;
 import com.kcserver.kjfp.service.beitrag.BeitragsregelService;
 import lombok.RequiredArgsConstructor;

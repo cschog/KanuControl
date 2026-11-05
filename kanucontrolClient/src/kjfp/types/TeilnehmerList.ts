@@ -6,6 +6,7 @@ export interface TeilnehmerList {
   personId: number;
 
   rolle?: "L" | "M" | null;
+  kjfpZugeordnet?: boolean;
 
   alterBeiBeginn?: number;
 

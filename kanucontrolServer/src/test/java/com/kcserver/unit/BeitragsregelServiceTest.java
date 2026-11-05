@@ -2,7 +2,7 @@ package com.kcserver.unit;
 
 import com.kcserver.kjfp.entity.beitraege.Beitragsregel;
 import com.kcserver.kjfp.entity.beitraege.Beitragsstruktur;
-import com.kcserver.kjfp.enumtype.TeilnehmerRolle;
+import com.kcserver.core.enumtype.TeilnehmerRolle;
 import com.kcserver.kjfp.service.beitrag.BeitragsregelService;
 import com.kcserver.kjfp.service.beitrag.BeitragsstrukturService;
 import org.junit.jupiter.api.Test;

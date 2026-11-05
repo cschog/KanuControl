@@ -1,6 +1,6 @@
 package com.kcserver.kjfp.dto.zahlungsnachweis;
 
-import com.kcserver.kjfp.dto.teilnehmer.TeilnehmerKurzDTO;
+import com.kcserver.core.dto.teilnehmer.TeilnehmerKurzDTO;
 import com.kcserver.kjfp.enumtype.Zahlungsweg;
 import lombok.Data;
 

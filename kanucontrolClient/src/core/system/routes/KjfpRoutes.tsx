@@ -11,6 +11,8 @@ import AusgabeReisekosten from "@/kjfp/components/pdfAusgaben/AusgabeReisekosten
 import FinanzBereichMenue from "@/kjfp/components/finanzen/FinanzBereichMenue";
 import FinanzRoute from "@/kjfp/components/finanzen/FinanzRoute";
 import ReisekostenDetailPage from "@/kjfp/components/finanzen/reisekosten/ReisekostenDetailPage";
+import FahrtenPage from "@/kjfp/components/fahrten/FahrtenPage";
+import FahrtenStartPage from "@/kjfp/components/fahrten/FahrtenStartPage";
 
 const KjfpRoutes: RouteObject[] = [
   // =====================================================
@@ -35,6 +37,22 @@ const KjfpRoutes: RouteObject[] = [
   {
     path: "/teilnehmer",
     element: <TeilnehmerScreen />,
+  },
+  {
+    path: "/fahrten",
+    element: <FahrtenStartPage />,
+  },
+  {
+    path: "/fahrten/kanus",
+    element: <FahrtenPage />,
+  },
+  {
+    path: "/fahrten/gewaesser",
+    element: <FahrtenPage />,
+  },
+  {
+    path: "/fahrten/liste",
+    element: <FahrtenPage />,
   },
 
   {

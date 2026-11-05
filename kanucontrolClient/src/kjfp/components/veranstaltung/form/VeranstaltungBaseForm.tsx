@@ -1,5 +1,5 @@
 import React from "react";
-import { MenuItem, TextField } from "@mui/material";
+import { Checkbox, FormControlLabel, MenuItem, TextField } from "@mui/material";
 
 import { RefAutocomplete } from "@/core/components/common/RefAutocomplete";
 
@@ -75,8 +75,12 @@ export const VeranstaltungBaseForm: React.FC<Props> = ({
         onChange={(v) => onChange("name", v)}
       />
 
-      {/* ================= TYP ================= */}
+      <FormControlLabel label="KJFP-Förderverwaltung aktiv" control={<Checkbox checked={form.kjfpAktiv} disabled={!editMode} onChange={(e) => onChange("kjfpAktiv", e.target.checked)} />} />
+      <FormControlLabel label="Fahrtenverwaltung aktiv" control={<Checkbox checked={form.fahrtenAktiv} disabled={!editMode} onChange={(e) => onChange("fahrtenAktiv", e.target.checked)} />} />
+      <FormFeld label="Beschreibung" value={form.beschreibung ?? ""} onChange={(v) => onChange("beschreibung", v || undefined)} disabled={!editMode} />
 
+      {/* ================= TYP ================= */}
+      {form.kjfpAktiv && <>
       <TextField
         select
         fullWidth
@@ -100,6 +104,7 @@ export const VeranstaltungBaseForm: React.FC<Props> = ({
         stichtag={form.beginnDatum}
         onChange={(v) => onChange("leiter", v)}
       />
+      </>}
 
       {/* ================= VEREIN ================= */}
 
@@ -127,12 +132,12 @@ export const VeranstaltungBaseForm: React.FC<Props> = ({
         }}
       />
 
-      <FormFeldTimePicker
+      {form.kjfpAktiv && <FormFeldTimePicker
         label="Beginn Zeit"
-        value={form.beginnZeit}
+        value={form.beginnZeit ?? ""}
         disabled={!editMode}
         onChange={(v) => onChange("beginnZeit", v ?? "")}
-      />
+      />}
 
       {/* ================= ENDE ================= */}
 
@@ -143,18 +148,18 @@ export const VeranstaltungBaseForm: React.FC<Props> = ({
         onChange={(v) => onChange("endeDatum", v ?? "")}
       />
 
-      <FormFeldTimePicker
+      {form.kjfpAktiv && <FormFeldTimePicker
         label="Ende Zeit"
-        value={form.endeZeit}
+        value={form.endeZeit ?? ""}
         disabled={!editMode}
         onChange={(v) => onChange("endeZeit", v ?? "")}
-        error={form.beginnDatum === form.endeDatum && form.endeZeit < form.beginnZeit}
+        error={!!form.beginnZeit && !!form.endeZeit && form.beginnDatum === form.endeDatum && form.endeZeit < form.beginnZeit}
         helperText={
-          form.beginnDatum === form.endeDatum && form.endeZeit < form.beginnZeit
+          !!form.beginnZeit && !!form.endeZeit && form.beginnDatum === form.endeDatum && form.endeZeit < form.beginnZeit
             ? "Ende darf nicht vor Beginn liegen"
             : undefined
         }
-      />
+      />}
 
       {/* =====================================================
          DETAIL MODE

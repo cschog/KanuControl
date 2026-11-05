@@ -16,6 +16,12 @@ Für Vereine, Personen, Veranstaltungen, Teilnehmer, Förderung, Simulation, Pla
 
 Für Mieter, Mietobjekte und Mietbereiche, Buchungen, Mietpreise, Rabatte, Verbrauchskosten, Anzahlung, Kaution, Sperrzeiten, Homepage-Anbindung und Airbnb-Kalenderexport.
 
+## Fahrten
+
+[Bedienungsanleitung Fahrten öffnen](/info/bedienungsanleitung-fahrten.md)
+
+Für Treffen, Tages- und Mehrtagesfahrten, Training, gemeinsame Personen und Veranstaltungen, Etappen und Kilometer, Boote, Lizenzen, Übernachtung, Teilnehmerbeiträge und Belege.
+
 ## Homepage einrichten
 
 [Anleitung zur Homepage-Anbindung öffnen](/info/homepage-anbindung.md)
@@ -26,7 +32,7 @@ Für die Verbindung von KC mit dem WordPress-Anfrageformular und dem Bootshauska
 
 - Über die Modulauswahl wechselst du zwischen den freigeschalteten Bereichen.
 - Im Kopfbereich siehst du den aktiven Verein und je nach Modul die Veranstaltung oder das Mietobjekt.
-- Das Fragezeichen öffnet **Hilfe & Info**. Dort sind beide Bedienungsanleitungen direkt erreichbar.
+- Das Fragezeichen öffnet **Hilfe & Info**. Dort sind die Anleitungen für KJFP, Vermietung und Fahrten direkt erreichbar.
 - Links zwischen den Anleitungen öffnen die passende Hilfe in diesem Fenster. Über **Hilfeübersicht** gelangst du wieder hierher.
 - Die Schaltfläche **Schließen** oder die Escape-Taste schließt die Hilfe.
 

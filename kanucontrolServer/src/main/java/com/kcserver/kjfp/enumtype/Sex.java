@@ -1,5 +1,7 @@
 package com.kcserver.kjfp.enumtype;
 
+import com.kcserver.core.enumtype.CodeEnum;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 

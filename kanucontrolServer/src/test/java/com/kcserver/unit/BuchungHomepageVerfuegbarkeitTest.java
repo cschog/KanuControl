@@ -126,10 +126,10 @@ class BuchungHomepageVerfuegbarkeitTest {
     private void pruefeZeiten(LocalDateTime von, LocalDateTime bis, boolean unbefristet) {
         org.springframework.test.util.ReflectionTestUtils.invokeMethod(service,"pruefeBuchungszeiten",eg.getMietobjekt(),von,bis,unbefristet);
     }
-    @Test void manuelleBuchungszeitenErfordernEineUebernachtung() {
+    @Test void tagesveranstaltungUndUebernachtungSindErlaubt() {
         LocalDateTime von=LocalDate.of(2027,7,10).atTime(8,0);
-        var error=assertThrows(IllegalArgumentException.class,()->pruefeZeiten(von,von.plusHours(10),false));
-        assertTrue(error.getMessage().contains("eine Übernachtung"));
+        assertDoesNotThrow(()->pruefeZeiten(von,von.plusHours(10),false));
+        assertThrows(IllegalArgumentException.class,()->pruefeZeiten(von,von,false));
         assertDoesNotThrow(()->pruefeZeiten(von,von.toLocalDate().plusDays(1).atTime(7,0),false));
     }
     @Test void uebernachtungIstKalendertagwechselUndKeine24StundenFrist() {

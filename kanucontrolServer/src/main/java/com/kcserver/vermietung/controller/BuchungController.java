@@ -98,7 +98,7 @@ public class BuchungController {
             @RequestBody @Valid BuchungsstatusRequest request
     ) {
         return new ApiResponse<>(
-                buchungService.aendereStatus(id, request.status(), request.ablesungenBestaetigt()),
+                buchungService.aendereStatus(id, request.status(), request.ablesungenBestaetigt(), request.sendEmail()),
                 List.of()
         );
     }
@@ -106,7 +106,8 @@ public class BuchungController {
     public record BuchungsstatusRequest(
             @jakarta.validation.constraints.NotNull
             Buchungsstatus status,
-            List<@Valid @jakarta.validation.constraints.NotNull AblesungBestaetigungDTO> ablesungenBestaetigt
+            List<@Valid @jakarta.validation.constraints.NotNull AblesungBestaetigungDTO> ablesungenBestaetigt,
+            boolean sendEmail
     ) {
     }
 

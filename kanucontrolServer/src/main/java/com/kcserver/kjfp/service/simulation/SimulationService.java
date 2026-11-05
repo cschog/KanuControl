@@ -2,13 +2,13 @@ package com.kcserver.kjfp.service.simulation;
 
 import com.kcserver.kjfp.dto.simulation.PlanungsSimulation;
 import com.kcserver.kjfp.entity.planung.Planung;
-import com.kcserver.kjfp.entity.Veranstaltung;
+import com.kcserver.core.entity.Veranstaltung;
 import com.kcserver.kjfp.enumtype.PlanungsStatus;
 import com.kcserver.core.exception.ErrorMessages;
 import com.kcserver.kjfp.exception.SimulationVoraussetzungenException;
 import com.kcserver.kjfp.mapper.PlanungSimulationMapper;
 import com.kcserver.kjfp.repository.PlanungRepository;
-import com.kcserver.kjfp.repository.VeranstaltungRepository;
+import com.kcserver.core.repository.VeranstaltungRepository;
 import com.kcserver.kjfp.service.planung.PlanungAutomatikService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

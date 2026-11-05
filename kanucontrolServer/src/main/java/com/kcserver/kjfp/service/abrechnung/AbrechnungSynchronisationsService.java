@@ -1,8 +1,8 @@
 package com.kcserver.kjfp.service.abrechnung;
 
 import com.kcserver.kjfp.entity.FinanzGruppe;
-import com.kcserver.kjfp.entity.Teilnehmer;
-import com.kcserver.kjfp.entity.Veranstaltung;
+import com.kcserver.core.entity.Teilnehmer;
+import com.kcserver.core.entity.Veranstaltung;
 import com.kcserver.kjfp.entity.abrechnung.Abrechnung;
 import com.kcserver.kjfp.entity.abrechnung.AbrechnungBeleg;
 import com.kcserver.kjfp.entity.abrechnung.AbrechnungBuchung;
@@ -11,8 +11,9 @@ import com.kcserver.kjfp.enumtype.FinanzKategorie;
 import com.kcserver.core.exception.ErrorMessages;
 import com.kcserver.kjfp.repository.finanz.FinanzGruppeRepository;
 import com.kcserver.kjfp.repository.abrechnung.AbrechnungRepository;
-import com.kcserver.kjfp.repository.TeilnehmerRepository;
+import com.kcserver.core.repository.TeilnehmerRepository;
 import com.kcserver.kjfp.repository.zahlungsnachweis.ZahlungsnachweisRepository;
+import com.kcserver.kjfp.repository.zahlungsnachweis.ZahlungsPositionRepository;
 import com.kcserver.kjfp.service.FoerderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -34,6 +35,7 @@ public class AbrechnungSynchronisationsService {
     private final FoerderService foerderService;
     private final FinanzGruppeRepository finanzGruppeRepository;
     private final ZahlungsnachweisRepository zahlungsnachweisRepository;
+    private final ZahlungsPositionRepository zahlungsPositionRepository;
 
     public void synchronisieren(Long veranstaltungId) {
 
@@ -78,7 +80,7 @@ public class AbrechnungSynchronisationsService {
         );
 
         List<Teilnehmer> teilnehmer =
-                teilnehmerRepository.findAllWithPerson(
+                teilnehmerRepository.findAllKjfpWithPerson(
                         abrechnung.getVeranstaltung().getId()
                 );
 
@@ -112,6 +114,7 @@ public class AbrechnungSynchronisationsService {
         buchung.setKategorie(FinanzKategorie.KJFP_ZUSCHUSS);
         buchung.setHerkunft(BuchungsHerkunft.KJFP);
         buchung.setBetrag(betrag);
+        buchung.setKjfpBetrag(betrag);
 
         buchung.setBeschreibung(
                 "KJFP-Zuschuss " + veranstaltung.getName()
@@ -162,6 +165,7 @@ public class AbrechnungSynchronisationsService {
                         .sumBetragByVeranstaltung(
                                 abrechnung.getVeranstaltung().getId()
                         );
+        BigDecimal kjfpBetrag = zahlungsPositionRepository.sumKjfpBetragByVeranstaltung(abrechnung.getVeranstaltung().getId());
 
         if (betrag.compareTo(BigDecimal.ZERO) <= 0) {
             return;
@@ -179,6 +183,7 @@ public class AbrechnungSynchronisationsService {
         );
 
         buchung.setBetrag(betrag);
+        buchung.setKjfpBetrag(kjfpBetrag.min(betrag).max(BigDecimal.ZERO));
 
         buchung.setBeschreibung(
                 "TN-Beiträge"

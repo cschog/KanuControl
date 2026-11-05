@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   Box,
@@ -9,6 +9,7 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
+  LinearProgress,
   Paper,
   Stack,
   Table,
@@ -65,7 +66,11 @@ function formatWert(value: number): string {
 
 export default function ZaehlerstaendeDialog({ open, zaehler, onClose }: Props) {
   const [zaehlerstaende, setZaehlerstaende] = useState<Zaehlerstand[]>([]);
+  const [loadedZaehlerId, setLoadedZaehlerId] = useState<number | null>(null);
   const [selectedZaehlerstand, setSelectedZaehlerstand] = useState<Zaehlerstand | null>(null);
+  const [focusedZaehlerstandId, setFocusedZaehlerstandId] = useState<number | null>(null);
+  const rowRefs = useRef(new Map<number, HTMLTableRowElement>());
+  const focusAfterLoadId = useRef<number | null>(null);
 
   const [standDialogOpen, setStandDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -74,6 +79,7 @@ export default function ZaehlerstaendeDialog({ open, zaehler, onClose }: Props) 
   const loadZaehlerstaende = useCallback(async () => {
     if (!zaehler) {
       setZaehlerstaende([]);
+      setLoadedZaehlerId(null);
       return;
     }
 
@@ -88,6 +94,7 @@ export default function ZaehlerstaendeDialog({ open, zaehler, onClose }: Props) 
       );
 
       setZaehlerstaende(sortiert);
+      setLoadedZaehlerId(zaehler.id);
     } catch (err) {
       console.error("Fehler beim Laden der Zählerstände:", err);
       setError("Die Zählerstände konnten nicht geladen werden.");
@@ -101,6 +108,22 @@ export default function ZaehlerstaendeDialog({ open, zaehler, onClose }: Props) 
       void loadZaehlerstaende();
     }
   }, [open, zaehler, loadZaehlerstaende]);
+
+  useEffect(() => {
+    const id = focusAfterLoadId.current;
+    if (id === null || standDialogOpen) return;
+
+    const row = rowRefs.current.get(id);
+    if (!row) return;
+
+    focusAfterLoadId.current = null;
+    setFocusedZaehlerstandId(id);
+    requestAnimationFrame(() => {
+      row.scrollIntoView({ block: "nearest" });
+      row.querySelector<HTMLButtonElement>('button[aria-label="Zählerstand bearbeiten"]')
+        ?.focus({ preventScroll: true });
+    });
+  }, [zaehlerstaende, standDialogOpen]);
 
   function handleCreate() {
     setSelectedZaehlerstand(null);
@@ -117,12 +140,11 @@ export default function ZaehlerstaendeDialog({ open, zaehler, onClose }: Props) 
       return;
     }
 
-    if (selectedZaehlerstand) {
-      await updateZaehlerstand(zaehler.id, selectedZaehlerstand.id, payload);
-    } else {
-      await createZaehlerstand(zaehler.id, payload);
-    }
+    const saved = selectedZaehlerstand
+      ? await updateZaehlerstand(zaehler.id, selectedZaehlerstand.id, payload)
+      : await createZaehlerstand(zaehler.id, payload);
 
+    focusAfterLoadId.current = saved.id;
     await loadZaehlerstaende();
   }
 
@@ -142,6 +164,8 @@ export default function ZaehlerstaendeDialog({ open, zaehler, onClose }: Props) 
   if (!zaehler) {
     return null;
   }
+
+  const zeigtAktuellenZaehler = loadedZaehlerId === zaehler.id;
 
   return (
     <>
@@ -174,11 +198,15 @@ export default function ZaehlerstaendeDialog({ open, zaehler, onClose }: Props) 
             </Alert>
           )}
 
-          {loading ? (
+          {loading && zeigtAktuellenZaehler && zaehlerstaende.length > 0 && (
+            <LinearProgress aria-label="Zählerstände werden aktualisiert" sx={{ mb: 1 }} />
+          )}
+
+          {!zeigtAktuellenZaehler && loading ? (
             <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
               <CircularProgress />
             </Box>
-          ) : zaehlerstaende.length === 0 ? (
+          ) : !zeigtAktuellenZaehler ? null : zaehlerstaende.length === 0 ? (
             <Alert severity="info">Für diesen Zähler wurden noch keine Ablesungen erfasst.</Alert>
           ) : (
             <TableContainer component={Paper} variant="outlined">
@@ -204,7 +232,15 @@ export default function ZaehlerstaendeDialog({ open, zaehler, onClose }: Props) 
                       : null;
 
                     return (
-                      <TableRow key={item.id} hover>
+                      <TableRow
+                        key={item.id}
+                        hover
+                        selected={focusedZaehlerstandId === item.id}
+                        ref={(row) => {
+                          if (row) rowRefs.current.set(item.id, row);
+                          else rowRefs.current.delete(item.id);
+                        }}
+                      >
                         <TableCell>{formatDatum(item.ablesedatum)}</TableCell>
 
                         <TableCell align="right">

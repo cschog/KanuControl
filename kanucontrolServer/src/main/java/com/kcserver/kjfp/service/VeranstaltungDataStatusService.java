@@ -4,9 +4,9 @@ import com.kcserver.core.dto.person.PersonDataStatusDTO;
 import com.kcserver.kjfp.dto.validation.DataFieldStatusDTO;
 import com.kcserver.kjfp.dto.validation.DataStatus;
 import com.kcserver.core.entity.Person;
-import com.kcserver.kjfp.entity.Teilnehmer;
-import com.kcserver.kjfp.entity.Veranstaltung;
-import com.kcserver.kjfp.repository.TeilnehmerRepository;
+import com.kcserver.core.entity.Teilnehmer;
+import com.kcserver.core.entity.Veranstaltung;
+import com.kcserver.core.repository.TeilnehmerRepository;
 import com.kcserver.core.service.person.PersonDataStatusService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -41,7 +41,7 @@ public class VeranstaltungDataStatusService {
         }
 
         List<Teilnehmer> teilnehmer =
-                teilnehmerRepository.findAllWithPerson(
+                teilnehmerRepository.findAllKjfpWithPerson(
                         veranstaltung.getId()
                 );
 

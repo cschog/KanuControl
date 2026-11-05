@@ -17,7 +17,6 @@ public class PersonSpecification {
         return (root, query, cb) -> {
 
 
-
             if (query != null && !Long.class.equals(query.getResultType())) {
                 query.distinct(true);
             }

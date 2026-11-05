@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+  <changeSet id="20261105-03-remove-geburtsdatum-geschaetzt" author="codex">
+    <preConditions onFail="MARK_RAN">
+      <columnExists tableName="person" columnName="geburtsdatum_geschaetzt"/>
+    </preConditions>
+    <dropColumn tableName="person" columnName="geburtsdatum_geschaetzt"/>
+    <rollback>
+      <addColumn tableName="person">
+        <column name="geburtsdatum_geschaetzt" type="boolean" defaultValueBoolean="false">
+          <constraints nullable="false"/>
+        </column>
+      </addColumn>
+    </rollback>
+  </changeSet>
+</databaseChangeLog>

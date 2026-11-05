@@ -14,6 +14,8 @@ import org.springframework.data.repository.query.Param;
 public interface AbrechnungBuchungRepository
         extends JpaRepository<AbrechnungBuchung, Long> {
 
+    boolean existsByTeilnehmer_Id(Long teilnehmerId);
+
     @EntityGraph(attributePaths = {
             "beleg",
             "beleg.finanzGruppe"

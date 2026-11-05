@@ -11,6 +11,9 @@ export interface VeranstaltungDetail {
 
   name: string;
   typ: VeranstaltungTyp;
+  kjfpAktiv: boolean;
+  fahrtenAktiv: boolean;
+  beschreibung?: string;
 
   unterkunftsart?: UnterkunftsartRef;
   verpflegungsmodell?: VerpflegungsmodellRef;
@@ -25,7 +28,7 @@ export interface VeranstaltungDetail {
   endeZeit: string;
 
   verein: VereinRef;
-  leiter: PersonRef;
+  leiter?: PersonRef;
 
   beitragsstrukturId?: number;
   beitragsstrukturName?: string;

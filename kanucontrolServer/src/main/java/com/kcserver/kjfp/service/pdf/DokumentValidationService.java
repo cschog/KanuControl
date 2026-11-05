@@ -1,12 +1,12 @@
 package com.kcserver.kjfp.service.pdf;
 
 import com.kcserver.kjfp.entity.planung.Planung;
-import com.kcserver.kjfp.entity.Teilnehmer;
-import com.kcserver.kjfp.entity.Veranstaltung;
+import com.kcserver.core.entity.Teilnehmer;
+import com.kcserver.core.entity.Veranstaltung;
 import com.kcserver.kjfp.enumtype.PdfDokumentTyp;
 import com.kcserver.kjfp.repository.PlanungRepository;
-import com.kcserver.kjfp.repository.TeilnehmerRepository;
-import com.kcserver.kjfp.repository.VeranstaltungRepository;
+import com.kcserver.core.repository.TeilnehmerRepository;
+import com.kcserver.core.repository.VeranstaltungRepository;
 import com.kcserver.kjfp.service.FoerderService;
 import com.kcserver.kjfp.service.VeranstaltungDataStatusService;
 import com.kcserver.core.validation.ValidationResult;
@@ -55,7 +55,7 @@ public class DokumentValidationService {
 
         List<Teilnehmer> teilnehmer =
                 teilnehmerRepository
-                        .findAllWithPerson(veranstaltungId);
+                        .findAllKjfpWithPerson(veranstaltungId);
 
         ValidationResult result = switch (dokumentTyp) {
 

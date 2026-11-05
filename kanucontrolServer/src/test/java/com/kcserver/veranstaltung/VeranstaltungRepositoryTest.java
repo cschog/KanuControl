@@ -1,7 +1,7 @@
 package com.kcserver.veranstaltung;
 
-import com.kcserver.kjfp.entity.Veranstaltung;
-import com.kcserver.kjfp.repository.VeranstaltungRepository;
+import com.kcserver.core.entity.Veranstaltung;
+import com.kcserver.core.repository.VeranstaltungRepository;
 import com.kcserver.support.api.PersonTestFactory;
 import com.kcserver.support.api.VereinTestFactory;
 import com.kcserver.support.api.VeranstaltungTestFactory;
@@ -46,7 +46,6 @@ class VeranstaltungRepositoryTest extends AbstractTenantIntegrationTest {
                         .withGeburtsdatum(java.time.LocalDate.of(1990, 1, 1))
         );
     }
-
 
 
     @Test

@@ -3,6 +3,7 @@ export type InfoPage =
   | "help"
   | "help-kjfp"
   | "help-vermietung"
+  | "help-fahrten"
   | "homepage"
   | "privacy"
   | "imprint"

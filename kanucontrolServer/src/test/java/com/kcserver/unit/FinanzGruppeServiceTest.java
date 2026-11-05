@@ -4,7 +4,7 @@ import com.kcserver.kjfp.dto.abrechnung.AbrechnungBelegCreateDTO;
 import com.kcserver.kjfp.dto.abrechnung.AbrechnungBelegDTO;
 import com.kcserver.kjfp.dto.abrechnung.AbrechnungBuchungCreateDTO;
 import com.kcserver.kjfp.entity.FinanzGruppe;
-import com.kcserver.kjfp.entity.Teilnehmer;
+import com.kcserver.core.entity.Teilnehmer;
 import com.kcserver.kjfp.enumtype.FinanzKategorie;
 import com.kcserver.kjfp.service.abrechnung.AbrechnungBelegService;
 import com.kcserver.integration.AbstractFinanzIntegrationTest;

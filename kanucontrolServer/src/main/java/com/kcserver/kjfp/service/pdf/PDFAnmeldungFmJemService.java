@@ -2,7 +2,7 @@ package com.kcserver.kjfp.service.pdf;
 
 import com.kcserver.kjfp.dto.validation.DataStatus;
 import com.kcserver.kjfp.dto.validation.VereinDataStatusDTO;
-import com.kcserver.kjfp.entity.Veranstaltung;
+import com.kcserver.core.entity.Veranstaltung;
 import com.kcserver.core.exception.ErrorMessages;
 import com.kcserver.kjfp.service.VereinDataStatusService;
 import lombok.RequiredArgsConstructor;

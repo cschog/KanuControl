@@ -1,5 +1,7 @@
 package com.kcserver.kjfp.dto.teilnehmer;
 
+import com.kcserver.core.dto.teilnehmer.TeilnehmerListDTO;
+
 import com.kcserver.kjfp.dto.zahlungsnachweis.ZahlungsnachweisListDTO;
 import lombok.Data;
 

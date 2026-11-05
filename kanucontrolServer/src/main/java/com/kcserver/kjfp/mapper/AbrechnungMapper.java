@@ -104,6 +104,7 @@ public class AbrechnungMapper {
         dto.setId(pos.getId());
         dto.setKategorie(pos.getKategorie());
         dto.setBetrag(pos.getBetrag());
+        dto.setKjfpBetrag(pos.getKjfpBetrag());
         dto.setBeschreibung(pos.getBeschreibung());
         dto.setHerkunft(pos.getHerkunft());
 

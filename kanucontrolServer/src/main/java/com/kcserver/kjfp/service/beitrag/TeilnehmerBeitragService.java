@@ -2,8 +2,8 @@ package com.kcserver.kjfp.service.beitrag;
 
 import com.kcserver.kjfp.entity.beitraege.Beitragsregel;
 import com.kcserver.kjfp.entity.beitraege.Beitragsstruktur;
-import com.kcserver.kjfp.entity.Teilnehmer;
-import com.kcserver.kjfp.entity.Veranstaltung;
+import com.kcserver.core.entity.Teilnehmer;
+import com.kcserver.core.entity.Veranstaltung;
 import com.kcserver.kjfp.service.AltersService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

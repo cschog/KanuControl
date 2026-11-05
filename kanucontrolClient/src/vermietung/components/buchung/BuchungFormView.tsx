@@ -20,13 +20,13 @@ interface Props {
   onEdit: () => void;
   onCancelEdit: () => void;
   onSave: (payload: BuchungSave) => Promise<void>;
-  onReopen: () => Promise<void>;
+  onReopen: (sendEmail: boolean) => Promise<void>;
   onDelete: () => void;
-  onReserve: () => void;
-  onConfirm: () => void;
-  onReject: () => void;
-  onCancelBooking: () => void;
-  onComplete: () => void;
+  onReserve: (sendEmail: boolean) => Promise<void> | void;
+  onConfirm: (sendEmail: boolean) => Promise<void> | void;
+  onReject: (sendEmail: boolean) => Promise<void> | void;
+  onCancelBooking: (sendEmail: boolean) => Promise<void> | void;
+  onComplete: (sendEmail: boolean) => Promise<void> | void;
   onBack: () => void;
   onOpenFinanzen: () => void;
 
@@ -160,6 +160,7 @@ export const BuchungFormView: React.FC<Props> = ({
       <BuchungActionBar
         status={buchung?.status ?? "ANFRAGE"}
         editMode={editMode}
+        notifyByEmail={buchung !== null}
         onEdit={onEdit}
         onCancelEdit={() => {
           resetForm();

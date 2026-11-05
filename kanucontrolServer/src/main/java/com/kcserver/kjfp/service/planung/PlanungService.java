@@ -7,7 +7,7 @@ import com.kcserver.core.exception.ErrorMessages;
 import com.kcserver.kjfp.service.finanz.FinanzService;
 import com.kcserver.kjfp.mapper.PlanungMapper;
 import com.kcserver.kjfp.repository.PlanungRepository;
-import com.kcserver.kjfp.repository.TeilnehmerRepository;
+import com.kcserver.core.repository.TeilnehmerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;

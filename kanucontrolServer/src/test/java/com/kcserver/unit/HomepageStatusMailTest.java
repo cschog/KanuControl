@@ -9,6 +9,9 @@ import jakarta.validation.Validation;
 import jakarta.validation.ValidatorFactory;
 import org.junit.jupiter.api.*;
 import org.mockito.ArgumentCaptor;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.web.server.ResponseStatusException;
 import java.time.*;
 import java.util.*;
@@ -19,11 +22,17 @@ class HomepageStatusMailTest {
     private ValidatorFactory factory;
     private HomepageStatusMailRepository mails;
     private HomepageAnbindungRepository configs;
+    private JavaMailSender sender;
     private HomepageStatusMailService service;
     private Buchung buchung;
+    private com.kcserver.vermietung.config.SmtpMailProperties smtp;
     @BeforeEach void setup() {
         factory=Validation.buildDefaultValidatorFactory();mails=mock(HomepageStatusMailRepository.class);
-        configs=mock(HomepageAnbindungRepository.class);service=new HomepageStatusMailService(mails,configs,factory.getValidator());
+        configs=mock(HomepageAnbindungRepository.class);sender=mock(JavaMailSender.class);
+        @SuppressWarnings("unchecked") ObjectProvider<JavaMailSender> senders=mock(ObjectProvider.class);
+        when(senders.getIfAvailable()).thenReturn(sender);
+        smtp=new com.kcserver.vermietung.config.SmtpMailProperties();smtp.setEnabled(true);smtp.setFrom("vermietung@example.org");
+        service=new HomepageStatusMailService(mails,configs,factory.getValidator(),senders,smtp);
         buchung=new Buchung();buchung.setId(1L);buchung.setBuchungsjahr(2027);buchung.setLaufendeNummer(1);
         buchung.setHerkunft("HOMEPAGE");buchung.setAnreise(LocalDateTime.of(2027,6,10,16,0));buchung.setAbreise(LocalDateTime.of(2027,6,12,14,0));
         Person person=new Person();person.setVorname("Erika");person.setEmail("erika@example.org");buchung.setMieter(person);
@@ -46,6 +55,77 @@ class HomepageStatusMailTest {
             assertTrue(m.getText().contains("Bootshaus"));assertTrue(m.getText().contains(keywords.get(Buchungsstatus.valueOf(m.getStatus()))));
             assertNotNull(m.getCreatedAt());assertNull(m.getQuittiertAm());
         }
+    }
+    @Test void direkterVersandNutztStatusvorlageUndMieteradresse() {
+        buchung.setHerkunft("DIREKT");
+        // In der echten Statusaktion wird vor dem SMTP-Aufruf bereits committed.
+        buchung.setStatus(Buchungsstatus.BESTAETIGT);
+        freigabe();service.senden(buchung,Buchungsstatus.BESTAETIGT,Buchungsstatus.ANFRAGE);
+        var captor=ArgumentCaptor.forClass(SimpleMailMessage.class);verify(sender).send(captor.capture());
+        assertArrayEquals(new String[]{"erika@example.org"},captor.getValue().getTo());
+        assertEquals("vermietung@example.org",captor.getValue().getFrom());
+        assertEquals("bootshaus@example.org",captor.getValue().getReplyTo());
+        assertTrue(captor.getValue().getSubject().contains("2027-001"));
+        assertTrue(captor.getValue().getText().contains("10.06.2027"));
+        assertTrue(captor.getValue().getText().contains("Bootshaus"));
+        verifyNoInteractions(mails);
+    }
+    @Test void testmodusLeitetAlleStatusmailsAusschliesslichAnTestadresseUm() {
+        smtp.setTestMode(true);smtp.setTestRecipient("  test@example.org  ");
+        for (Buchungsstatus status : Buchungsstatus.values()) service.senden(buchung,status,Buchungsstatus.ANFRAGE);
+        var captor=ArgumentCaptor.forClass(SimpleMailMessage.class);
+        verify(sender,times(Buchungsstatus.values().length)).send(captor.capture());
+        for (SimpleMailMessage message : captor.getAllValues()) {
+            assertArrayEquals(new String[]{"test@example.org"},message.getTo());
+            assertNull(message.getCc());assertNull(message.getBcc());
+            assertTrue(message.getSubject().startsWith("[TEST] "));
+            assertTrue(message.getText().contains("Bootshaus"));
+        }
+        assertEquals("erika@example.org",buchung.getMieter().getEmail());
+    }
+    @Test void testadresseWirdOhneTestmodusIgnoriert() {
+        smtp.setTestRecipient("test@example.org");
+        service.senden(buchung,Buchungsstatus.BESTAETIGT,Buchungsstatus.ANFRAGE);
+        var captor=ArgumentCaptor.forClass(SimpleMailMessage.class);verify(sender).send(captor.capture());
+        assertArrayEquals(new String[]{"erika@example.org"},captor.getValue().getTo());
+        assertFalse(captor.getValue().getSubject().startsWith("[TEST]"));
+    }
+    @Test void ungueltigeTestadresseVerhindertVersandUndSmtpInitialisierung() {
+        smtp.setTestMode(true);smtp.setHost("smtp.example.org");
+        for (String address : Arrays.asList(null,"","  ","invalid","a@example.org,b@example.org",
+                "Name <a@example.org>","a@example.org\r\nBcc: b@example.org","group:a@example.org;")) {
+            smtp.setTestRecipient(address);
+            var error=assertThrows(ResponseStatusException.class,
+                    ()->service.senden(buchung,Buchungsstatus.BESTAETIGT,Buchungsstatus.ANFRAGE));
+            assertEquals(503,error.getStatusCode().value());
+            assertThrows(IllegalStateException.class,
+                    ()->new com.kcserver.vermietung.config.SmtpMailConfiguration().kcJavaMailSender(smtp));
+        }
+        verifyNoInteractions(sender,mails);
+    }
+    @Test void gueltigeTestadresseErlaubtSmtpInitialisierung() {
+        smtp.setTestMode(true);smtp.setHost("smtp.example.org");smtp.setTestRecipient("test@example.org");
+        assertNotNull(new com.kcserver.vermietung.config.SmtpMailConfiguration().kcJavaMailSender(smtp));
+    }
+    @Test void versandOhneAktivierteSmtpKonfigurationWirdVerstaendlichAbgewiesen() {
+        var smtp=new com.kcserver.vermietung.config.SmtpMailProperties();
+        @SuppressWarnings("unchecked") ObjectProvider<JavaMailSender> senders=mock(ObjectProvider.class);
+        var unconfigured=new HomepageStatusMailService(mails,configs,factory.getValidator(),senders,smtp);
+        var error=assertThrows(ResponseStatusException.class,()->unconfigured.senden(buchung,Buchungsstatus.BESTAETIGT,Buchungsstatus.ANFRAGE));
+        assertTrue(error.getReason().contains("nicht aktiviert"));
+        verifyNoInteractions(sender,mails);
+    }
+    @Test void smtpFehlerWirdAnDenAufruferZurueckgegeben() {
+        freigabe();doThrow(new org.springframework.mail.MailSendException("offline")).when(sender).send(any(SimpleMailMessage.class));
+        var error=assertThrows(ResponseStatusException.class,()->service.senden(buchung,Buchungsstatus.BESTAETIGT,Buchungsstatus.ANFRAGE));
+        assertEquals(502,error.getStatusCode().value());
+        assertTrue(error.getReason().contains("Der Buchungsstatus wurde gespeichert"));
+    }
+    @Test void wiedereroeffnungsmailVerwendetDenAltenAbrechnungsstatus() {
+        buchung.setStatus(Buchungsstatus.ABRECHENBAR);
+        service.senden(buchung,Buchungsstatus.ABRECHENBAR,Buchungsstatus.ABGESCHLOSSEN);
+        var captor=ArgumentCaptor.forClass(SimpleMailMessage.class);verify(sender).send(captor.capture());
+        assertTrue(captor.getValue().getText().contains("erneut geöffnet"));
     }
     @Test void reservierungIstNochKeineEndgueltigeBestaetigung() {
         service.vormerken(buchung,Buchungsstatus.RESERVIERT);

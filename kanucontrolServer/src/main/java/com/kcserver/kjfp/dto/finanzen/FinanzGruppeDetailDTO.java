@@ -1,6 +1,6 @@
 package com.kcserver.kjfp.dto.finanzen;
 
-import com.kcserver.kjfp.dto.teilnehmer.TeilnehmerKurzDTO;
+import com.kcserver.core.dto.teilnehmer.TeilnehmerKurzDTO;
 import com.kcserver.kjfp.enumtype.FinanzgruppeTyp;
 
 import java.util.List;

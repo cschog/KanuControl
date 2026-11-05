@@ -28,6 +28,7 @@ public class JpaMultiTenantConfig {
                 "com.kcserver.core.entity",
                 "com.kcserver.core.audit.entity",
                 "com.kcserver.kjfp.entity",
+                "com.kcserver.fahrten.entity",
                 "com.kcserver.vermietung.entity"
         );
 

@@ -1,7 +1,7 @@
 package com.kcserver.kjfp.entity.beitraege;
 
-import com.kcserver.kjfp.enumtype.TeilnehmerRolle;
-import com.kcserver.kjfp.converter.TeilnehmerRolleConverter;
+import com.kcserver.core.enumtype.TeilnehmerRolle;
+import com.kcserver.core.converter.TeilnehmerRolleConverter;
 import jakarta.persistence.*;
 import com.kcserver.core.audit.Auditable;
 import lombok.Getter;

@@ -1,9 +1,9 @@
 package com.kcserver.teilnehmer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kcserver.kjfp.enumtype.TeilnehmerRolle;
+import com.kcserver.core.enumtype.TeilnehmerRolle;
 import com.kcserver.support.tenant.AbstractTenantIntegrationTest;
-import com.kcserver.kjfp.repository.TeilnehmerRepository;
+import com.kcserver.core.repository.TeilnehmerRepository;
 import com.kcserver.support.api.PersonTestFactory;
 import com.kcserver.support.api.VeranstaltungTestFactory;
 import com.kcserver.support.api.VereinTestFactory;

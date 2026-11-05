@@ -2,8 +2,8 @@ package com.kcserver.kjfp.service.finanz;
 
 import com.kcserver.kjfp.dto.finanzen.FinanzausgleichDTO;
 import com.kcserver.kjfp.entity.FinanzGruppe;
-import com.kcserver.kjfp.entity.Teilnehmer;
-import com.kcserver.kjfp.entity.Veranstaltung;
+import com.kcserver.core.entity.Teilnehmer;
+import com.kcserver.core.entity.Veranstaltung;
 import com.kcserver.kjfp.repository.finanz.FinanzGruppeRepository;
 import com.kcserver.kjfp.repository.abrechnung.AbrechnungBuchungRepository;
 import com.kcserver.kjfp.repository.zahlungsnachweis.ZahlungsnachweisRepository;
@@ -19,7 +19,7 @@ import com.kcserver.kjfp.dto.finanzen.FinanzausgleichPruefungDTO;
 import com.kcserver.kjfp.enumtype.FinanzausgleichBeitragsstatus;
 import com.kcserver.kjfp.enumtype.FinanzausgleichGesamtstatus;
 import com.kcserver.kjfp.enumtype.Zahlungsweg;
-import com.kcserver.kjfp.repository.TeilnehmerRepository;
+import com.kcserver.core.repository.TeilnehmerRepository;
 
 import java.math.BigDecimal;
 import java.util.HashMap;

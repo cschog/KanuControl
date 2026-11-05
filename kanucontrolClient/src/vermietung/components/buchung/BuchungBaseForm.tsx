@@ -504,6 +504,12 @@ export const BuchungBaseForm: React.FC<Props> = ({
             />
           </Box>
         )}
+        {!form.unbefristet && form.anreise && form.abreise && form.abreise <= form.anreise && (
+          <Alert severity="info" sx={{ gridColumn: "1 / -1" }}>
+            Die Abreise muss zeitlich nach der Anreise liegen. Für eine Tagesveranstaltung am selben Tag
+            stelle bitte die Abreiseuhrzeit später als die Anreiseuhrzeit ein.
+          </Alert>
+        )}
 
         <Typography variant="h6">Teilnehmer</Typography>
         <Typography variant="body2" color="text.secondary">

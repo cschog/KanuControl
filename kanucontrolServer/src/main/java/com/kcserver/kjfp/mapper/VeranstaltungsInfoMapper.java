@@ -1,7 +1,7 @@
 package com.kcserver.kjfp.mapper;
 
 import com.kcserver.kjfp.dto.simulation.VeranstaltungsInfo;
-import com.kcserver.kjfp.entity.Veranstaltung;
+import com.kcserver.core.entity.Veranstaltung;
 import com.kcserver.kjfp.service.veranstaltung.VeranstaltungBerechnungsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

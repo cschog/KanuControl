@@ -1,6 +1,6 @@
 package com.kcserver.service;
 
-import com.kcserver.kjfp.entity.Veranstaltung;
+import com.kcserver.core.entity.Veranstaltung;
 import com.kcserver.kjfp.service.veranstaltung.VeranstaltungBerechnungsService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -72,7 +72,6 @@ class VeranstaltungBerechnungsServiceTest {
                 service.ermittleNaechte(v)
         );
     }
-
 
 
     @Test

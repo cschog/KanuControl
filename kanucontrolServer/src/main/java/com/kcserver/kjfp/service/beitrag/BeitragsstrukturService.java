@@ -5,7 +5,7 @@ import com.kcserver.kjfp.dto.beitrag.BeitragsstrukturDTO;
 import com.kcserver.kjfp.dto.beitrag.BeitragsstrukturUpdateDTO;
 import com.kcserver.kjfp.entity.beitraege.Beitragsregel;
 import com.kcserver.kjfp.entity.beitraege.Beitragsstruktur;
-import com.kcserver.kjfp.enumtype.TeilnehmerRolle;
+import com.kcserver.core.enumtype.TeilnehmerRolle;
 import com.kcserver.core.exception.ErrorMessages;
 import com.kcserver.kjfp.mapper.BeitragsstrukturMapper;
 import com.kcserver.kjfp.repository.beitrag.BeitragsregelRepository;
@@ -58,7 +58,6 @@ public class BeitragsstrukturService {
             Long id,
             BeitragsstrukturUpdateDTO dto
     ) {
-
 
 
         Beitragsstruktur struktur =

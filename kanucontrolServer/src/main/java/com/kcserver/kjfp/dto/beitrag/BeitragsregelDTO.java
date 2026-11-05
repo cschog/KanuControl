@@ -1,6 +1,6 @@
 package com.kcserver.kjfp.dto.beitrag;
 
-import com.kcserver.kjfp.enumtype.TeilnehmerRolle;
+import com.kcserver.core.enumtype.TeilnehmerRolle;
 import lombok.Data;
 
 import java.math.BigDecimal;

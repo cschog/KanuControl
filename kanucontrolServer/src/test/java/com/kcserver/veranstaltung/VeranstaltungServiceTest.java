@@ -1,18 +1,18 @@
 package com.kcserver.veranstaltung;
 
-import com.kcserver.kjfp.dto.veranstaltung.VeranstaltungDetailDTO;
-import com.kcserver.kjfp.dto.veranstaltung.VeranstaltungFilterDTO;
-import com.kcserver.kjfp.dto.veranstaltung.VeranstaltungListDTO;
+import com.kcserver.core.dto.veranstaltung.VeranstaltungDetailDTO;
+import com.kcserver.core.dto.veranstaltung.VeranstaltungFilterDTO;
+import com.kcserver.core.dto.veranstaltung.VeranstaltungListDTO;
 import com.kcserver.core.entity.Person;
-import com.kcserver.kjfp.entity.Teilnehmer;
-import com.kcserver.kjfp.entity.Veranstaltung;
+import com.kcserver.core.entity.Teilnehmer;
+import com.kcserver.core.entity.Veranstaltung;
 import com.kcserver.core.entity.Verein;
 import com.kcserver.kjfp.enumtype.VeranstaltungTyp;
 import com.kcserver.kjfp.repository.PersonRepository;
-import com.kcserver.kjfp.repository.TeilnehmerRepository;
-import com.kcserver.kjfp.repository.VeranstaltungRepository;
+import com.kcserver.core.repository.TeilnehmerRepository;
+import com.kcserver.core.repository.VeranstaltungRepository;
 import com.kcserver.core.repository.VereinRepository;
-import com.kcserver.kjfp.service.veranstaltung.VeranstaltungService;
+import com.kcserver.core.service.veranstaltung.VeranstaltungService;
 import com.kcserver.support.builder.PersonBuilder;
 import com.kcserver.support.builder.VeranstaltungBuilder;
 import com.kcserver.support.builder.VeranstaltungCreateDTOBuilder;

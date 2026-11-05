@@ -1,6 +1,6 @@
 package com.kcserver.core.converter;
 
-import com.kcserver.kjfp.enumtype.CodeEnum;
+import com.kcserver.core.enumtype.CodeEnum;
 import jakarta.persistence.AttributeConverter;
 
 public abstract class AbstractCodeEnumConverter<

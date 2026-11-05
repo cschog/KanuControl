@@ -3,8 +3,8 @@ package com.kcserver.kjfp.service;
 import com.kcserver.kjfp.config.FoerderConfig;
 import com.kcserver.kjfp.entity.Foerdersatz;
 import com.kcserver.kjfp.entity.KikZuschlag;
-import com.kcserver.kjfp.entity.Teilnehmer;
-import com.kcserver.kjfp.entity.Veranstaltung;
+import com.kcserver.core.entity.Teilnehmer;
+import com.kcserver.core.entity.Veranstaltung;
 import com.kcserver.kjfp.entity.planung.Planung;
 import com.kcserver.kjfp.enumtype.VeranstaltungTyp;
 import com.kcserver.kjfp.dto.simulation.PlanungsSimulation;
@@ -64,6 +64,10 @@ public class FoerderService {
                 teilnehmer.getPerson() != null
                         ? teilnehmer.getPerson().getGeburtsdatum()
                         : null;
+
+        if (teilnehmer.getPerson() == null) {
+            return false;
+        }
 
         if (geburt == null) {
             return false;

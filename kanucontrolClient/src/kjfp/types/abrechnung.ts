@@ -25,6 +25,7 @@ export interface AbrechnungBeleg {
 export interface Buchung extends WithId {
   kategorie: FinanzKategorie;
   betrag: number;
+  kjfpBetrag?: number | null;
   beschreibung?: string;
   herkunft: BuchungsHerkunft;
 }
@@ -32,6 +33,7 @@ export interface Buchung extends WithId {
 export interface BuchungCreate {
   kategorie: FinanzKategorie;
   betrag: number;
+  kjfpBetrag?: number;
   beschreibung?: string;
 }
 
@@ -53,6 +55,10 @@ export interface FinanzSummary {
   empfohlenerTeilnehmerBeitrag: number;
   fahrkosten: number;
   teilnehmerbeitrag: number;
+  kjfpKosten?: number;
+  kjfpEinnahmen?: number;
+  sonstigeKosten?: number;
+  sonstigeEinnahmen?: number;
 }
 
 export interface BelegCreate {

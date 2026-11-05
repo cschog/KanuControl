@@ -5,10 +5,12 @@ import { TeilnehmerList } from "@/kjfp/types/TeilnehmerList";
 
 interface Props {
   onRoleClick: (current: "L" | "M" | null, personId: number) => void;
+  showKjfpAssignment?: boolean;
+  onKjfpToggle?: (row: TeilnehmerList) => void;
 }
 
-export function teilnehmerAssignedColumns({ onRoleClick }: Props): ColumnDef<TeilnehmerList>[] {
-  return [
+export function teilnehmerAssignedColumns({ onRoleClick, showKjfpAssignment = false, onKjfpToggle }: Props): ColumnDef<TeilnehmerList>[] {
+  const columns: ColumnDef<TeilnehmerList>[] = [
     {
       id: "fullname",
       header: "Name",
@@ -97,4 +99,19 @@ export function teilnehmerAssignedColumns({ onRoleClick }: Props): ColumnDef<Tei
       },
     },
   ];
+  if (showKjfpAssignment) columns.splice(1, 0, {
+    id: "kjfpZugeordnet",
+    header: "Förderbereich",
+    cell: ({ row }) => (
+      <Chip
+        size="small"
+        label={row.original.kjfpZugeordnet ? "KJFP" : "Allgemein"}
+        color={row.original.kjfpZugeordnet ? "primary" : "default"}
+        variant={row.original.kjfpZugeordnet ? "filled" : "outlined"}
+        onClick={() => onKjfpToggle?.(row.original)}
+        clickable={!!onKjfpToggle}
+      />
+    ),
+  });
+  return columns;
 }

@@ -1,4 +1,5 @@
 // src/vermietung/context/VermietungProvider.tsx
+import { hasRole, isAdmin } from "@/core/auth/useTenant";
 import React, { useCallback, useEffect, useState } from "react";
 
 import { getMietobjekte } from "@/vermietung/api/mietobjektApi";
@@ -15,7 +16,9 @@ export const VermietungProvider: React.FC<Props> = ({ children }) => {
 
   const [loading, setLoading] = useState(true);
 
+  const darfLesen = isAdmin() || hasRole("VERMIETUNG");
   const reload = useCallback(async () => {
+    if (!darfLesen) { setMietobjekt(null); setLoading(false); return; }
     try {
       setLoading(true);
 
@@ -30,7 +33,7 @@ export const VermietungProvider: React.FC<Props> = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [darfLesen]);
 
   useEffect(() => {
     void reload();

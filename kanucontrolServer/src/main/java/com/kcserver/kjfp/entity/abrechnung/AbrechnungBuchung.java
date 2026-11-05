@@ -1,7 +1,7 @@
 package com.kcserver.kjfp.entity.abrechnung;
 
 import com.kcserver.kjfp.entity.fahrkosten.Reisekostenabrechnung;
-import com.kcserver.kjfp.entity.Teilnehmer;
+import com.kcserver.core.entity.Teilnehmer;
 import com.kcserver.kjfp.enumtype.BuchungsHerkunft;
 import com.kcserver.kjfp.enumtype.FinanzKategorie;
 import com.kcserver.kjfp.service.finanz.FinanzPosition;
@@ -43,6 +43,10 @@ public class AbrechnungBuchung implements FinanzPosition {
 
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal betrag;
+
+    /** Null preserves legacy KJFP allocation semantics for closed/historical accounts. */
+    @Column(name="kjfp_betrag", precision=12, scale=2)
+    private BigDecimal kjfpBetrag;
 
     @Column(length = 1000)
     private String beschreibung;

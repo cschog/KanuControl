@@ -27,6 +27,7 @@ public class AbrechnungBeleg extends Auditable {
        BASIS
        ========================================================= */
 
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

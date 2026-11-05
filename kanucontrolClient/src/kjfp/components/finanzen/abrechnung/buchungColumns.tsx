@@ -72,6 +72,13 @@ export const buchungColumns = ({ onEdit, onDelete }: Props): ColumnDef<Buchung>[
   },
 
   {
+    accessorKey: "kjfpBetrag",
+    header: "KJFP-Anteil",
+    size: 115,
+    meta: { align: "right" },
+    cell: ({ row }) => <Box sx={{ textAlign: "right", width: "100%" }}><Money value={row.original.kjfpBetrag ?? row.original.betrag} /></Box>,
+  },
+  {
     id: "actions",
 
     header: "",

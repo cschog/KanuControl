@@ -12,13 +12,16 @@ export interface VeranstaltungFormModel {
   /* ================= Stammdaten ================= */
 
   name: string;
-  typ: VeranstaltungTyp;
+  typ?: VeranstaltungTyp;
+  kjfpAktiv: boolean;
+  fahrtenAktiv: boolean;
+  beschreibung?: string;
 
   beginnDatum: string;
-  beginnZeit: string;
+  beginnZeit?: string;
 
   endeDatum: string;
-  endeZeit: string;
+  endeZeit?: string;
 
   verein?: VereinRef;
   leiter?: PersonRef;

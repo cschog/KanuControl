@@ -20,6 +20,10 @@ import com.kcserver.vermietung.repository.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.*;
 import java.math.BigDecimal;
@@ -31,8 +35,10 @@ import java.util.*;
 @Transactional
 public class BuchungService {
 
+    private record StatusAenderung(BuchungDTO buchung, Buchungsstatus alterStatus) {}
+
     private final BuchungRepository buchungRepository;
-    private final HomepageStatusMailService homepageStatusMailService;
+    private final HomepageStatusMailService statusMailService;
     private final MieterRepository mieterRepository;
     private final BuchungsnummerCounterRepository
             buchungsnummerCounterRepository;
@@ -50,6 +56,7 @@ public class BuchungService {
             buchungVerbrauchskostenRepository;
     private final BuchungFinanzbewegungRepository
             buchungFinanzbewegungRepository;
+    private TransactionTemplate statusTransaction;
 
     private static final LocalDateTime UNBEFRISTET_BIS =
             LocalDateTime.of(3000, 12, 31, 14, 0);
@@ -69,10 +76,10 @@ public class BuchungService {
             VerbrauchsabrechnungService verbrauchsabrechnungService,
             BuchungVerbrauchskostenRepository buchungVerbrauchskostenRepository,
             BuchungFinanzbewegungRepository buchungFinanzbewegungRepository,
-            HomepageStatusMailService homepageStatusMailService
+            HomepageStatusMailService statusMailService
     ) {
         this.buchungRepository = buchungRepository;
-        this.homepageStatusMailService = homepageStatusMailService;
+        this.statusMailService = statusMailService;
         this.mieterRepository = mieterRepository;
         this.buchungsnummerCounterRepository =
                 buchungsnummerCounterRepository;
@@ -89,6 +96,12 @@ public class BuchungService {
                 buchungVerbrauchskostenRepository;
         this.buchungFinanzbewegungRepository =
                 buchungFinanzbewegungRepository;
+    }
+
+    @Autowired
+    public void configureStatusTransaction(PlatformTransactionManager transactionManager) {
+        statusTransaction = new TransactionTemplate(transactionManager);
+        statusTransaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
     }
 
     @Transactional(readOnly = true)
@@ -119,23 +132,12 @@ public class BuchungService {
                 && buchung.getAbreise().getYear() < 2999
                 && !buchung.getAbreise().isAfter(LocalDateTime.now())) {
 
-            homepageStatusMailService.vormerken(buchung, Buchungsstatus.ABRECHENBAR);
             buchung.setStatus(Buchungsstatus.ABRECHENBAR);
 
             buchung = buchungRepository.save(buchung);
         }
 
-        // Erst nach der Statusprüfung das DTO erstellen.
-        BuchungDTO dto = toDTO(buchung);
-
-        // Vorschau nur bei abrechenbaren Buchungen berechnen.
-        if (buchung.getStatus() == Buchungsstatus.ABRECHENBAR) {
-            dto.setVerbrauchskostenVorschau(
-                    verbrauchsabrechnungService.berechneVorschau(buchung)
-            );
-        }
-
-        return dto;
+        return toDetailDTO(buchung);
     }
 
     /** Gemeinsame Objektsperre für Sperrzeiten und neue Homepage-Anfragen. */
@@ -270,7 +272,7 @@ public class BuchungService {
             buchung.setBemerkung(dto.getBemerkung());
             buchung.setBewertung(dto.getBewertung());
 
-            return toDTO(buchungRepository.save(buchung));
+            return toDetailDTO(buchungRepository.save(buchung));
         }
 
         boolean rabattAuswahlUnveraendert =
@@ -375,7 +377,7 @@ public class BuchungService {
 
         buchungRepository.flush();
 
-        return toDTO(buchung);
+        return toDetailDTO(buchung);
     }
 
     private void pruefeBuchungszeiten(
@@ -422,11 +424,6 @@ public class BuchungService {
             );
         }
 
-        if (!abreise.toLocalDate().isAfter(anreise.toLocalDate())) {
-            throw new IllegalArgumentException(
-                    "Der Mindestaufenthalt beträgt eine Übernachtung. Die Abreise muss frühestens am Folgetag liegen."
-            );
-        }
     }
 
     private boolean sindBuchungsdatenUnveraendert(
@@ -655,6 +652,21 @@ public class BuchungService {
                 );
     }
 
+    /**
+     * Liefert das Detail-DTO einschließlich der aktuellen Vorschau, wenn die
+     * Buchung abrechenbar ist. So verhalten sich GET, PUT und Statuswechsel
+     * hinsichtlich der Verbrauchskosten gleich.
+     */
+    private BuchungDTO toDetailDTO(Buchung buchung) {
+        BuchungDTO dto = toDTO(buchung);
+        if (buchung.getStatus() == Buchungsstatus.ABRECHENBAR) {
+            dto.setVerbrauchskostenVorschau(
+                    verbrauchsabrechnungService.berechneVorschau(buchung)
+            );
+        }
+        return dto;
+    }
+
     private BuchungDTO toDTO(Buchung buchung) {
 
         BuchungDTO dto = new BuchungDTO();
@@ -843,7 +855,6 @@ public class BuchungService {
                 continue;
             }
 
-            homepageStatusMailService.vormerken(buchung, Buchungsstatus.ABRECHENBAR);
             buchung.setStatus(Buchungsstatus.ABRECHENBAR);
             anzahl++;
         }
@@ -859,11 +870,35 @@ public class BuchungService {
             Long id,
             Buchungsstatus neuerStatus
     ) {
-        return aendereStatus(id, neuerStatus, List.of());
+        return aendereStatus(id, neuerStatus, List.of(), false);
     }
 
     public BuchungDTO aendereStatus(Long id, Buchungsstatus neuerStatus,
                                     List<AblesungBestaetigungDTO> bestaetigungen) {
+        return aendereStatus(id, neuerStatus, bestaetigungen, false);
+    }
+
+    public BuchungDTO aendereStatus(Long id, Buchungsstatus neuerStatus,
+                                    List<AblesungBestaetigungDTO> bestaetigungen,
+                                    boolean sendEmail) {
+        StatusAenderung aenderung = executeStatusTransaction(
+                () -> aendereStatusPersistiert(id, neuerStatus, bestaetigungen));
+
+        if (sendEmail) {
+            Buchung persisted = buchungRepository.findLockedById(id)
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            String.format(Locale.GERMAN, ErrorMessages.BUCHUNG_NOT_FOUND, id)));
+            statusMailService.senden(persisted, neuerStatus, aenderung.alterStatus());
+        }
+        return aenderung.buchung();
+    }
+
+    private StatusAenderung executeStatusTransaction(java.util.function.Supplier<StatusAenderung> update) {
+        return statusTransaction == null ? update.get() : statusTransaction.execute(status -> update.get());
+    }
+
+    private StatusAenderung aendereStatusPersistiert(Long id, Buchungsstatus neuerStatus,
+                                                      List<AblesungBestaetigungDTO> bestaetigungen) {
         Buchung buchung = buchungRepository.findLockedById(id)
                 .orElseThrow(() ->
                         new IllegalArgumentException(
@@ -912,11 +947,9 @@ public class BuchungService {
             }
         }
 
-        homepageStatusMailService.vormerken(buchung, neuerStatus);
-
         buchung.setStatus(neuerStatus);
 
-        return toDTO(buchungRepository.save(buchung));
+        return new StatusAenderung(toDetailDTO(buchungRepository.save(buchung)), alterStatus);
     }
 
     private void pruefeKautionsabschluss(Buchung buchung) {
@@ -1393,8 +1426,8 @@ public class BuchungService {
             throw new IllegalArgumentException("Das Mietobjekt ist online nicht buchbar.");
         }
         if (anreise == null || abreise == null || anreise.isBefore(LocalDate.now(ZoneId.of("Europe/Berlin")))
-                || !abreise.isAfter(anreise) || positionen == null || positionen.isEmpty()) {
-            throw new IllegalArgumentException("Bitte einen zukünftigen Zeitraum mit mindestens einer Übernachtung und Mietbereiche auswählen.");
+                || abreise.isBefore(anreise) || positionen == null || positionen.isEmpty()) {
+            throw new IllegalArgumentException("Bitte einen zukünftigen Zeitraum mit Abreise nach Anreise und Mietbereiche auswählen.");
         }
         Buchung pruefung = new Buchung();
         pruefung.setMietobjekt(objekt);

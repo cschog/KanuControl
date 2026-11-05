@@ -1,7 +1,7 @@
 package com.kcserver.core.util;
 
-import com.kcserver.kjfp.dto.veranstaltung.VeranstaltungDetailDTO;
-import com.kcserver.kjfp.entity.Veranstaltung;
+import com.kcserver.core.dto.veranstaltung.VeranstaltungDetailDTO;
+import com.kcserver.core.entity.Veranstaltung;
 import com.kcserver.kjfp.enumtype.PdfDokumentTyp;
 
 import java.time.LocalDate;

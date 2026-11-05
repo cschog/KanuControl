@@ -2,7 +2,7 @@ package com.kcserver.unit;
 
 import com.kcserver.kjfp.entity.planung.Planung;
 import com.kcserver.kjfp.entity.planung.PlanungPosition;
-import com.kcserver.kjfp.entity.Veranstaltung;
+import com.kcserver.core.entity.Veranstaltung;
 import com.kcserver.kjfp.enumtype.FinanzKategorie;
 import com.kcserver.kjfp.service.planung.PlanungBerechnungService;
 import com.kcserver.kjfp.service.planung.PlanungAutomatikService;

@@ -1,10 +1,10 @@
 package com.kcserver.kjfp.service.pdf;
 
-import com.kcserver.kjfp.dto.teilnehmer.TeilnehmerDetailDTO;
-import com.kcserver.kjfp.dto.veranstaltung.VeranstaltungDetailDTO;
+import com.kcserver.core.dto.teilnehmer.TeilnehmerDetailDTO;
+import com.kcserver.core.dto.veranstaltung.VeranstaltungDetailDTO;
 import com.kcserver.kjfp.enumtype.PdfDokumentTyp;
-import com.kcserver.kjfp.service.TeilnehmerService;
-import com.kcserver.kjfp.service.veranstaltung.VeranstaltungService;
+import com.kcserver.core.service.TeilnehmerService;
+import com.kcserver.core.service.veranstaltung.VeranstaltungService;
 import com.kcserver.core.validation.ValidationMessage;
 import com.kcserver.core.validation.ValidationResult;
 import lombok.RequiredArgsConstructor;

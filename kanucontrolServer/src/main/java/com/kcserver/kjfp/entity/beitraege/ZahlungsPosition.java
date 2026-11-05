@@ -1,6 +1,6 @@
 package com.kcserver.kjfp.entity.beitraege;
 
-import com.kcserver.kjfp.entity.Teilnehmer;
+import com.kcserver.core.entity.Teilnehmer;
 import jakarta.persistence.*;
 import com.kcserver.core.audit.Auditable;
 import lombok.Getter;

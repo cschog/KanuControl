@@ -149,7 +149,9 @@ Vor der öffentlichen Freigabe die in KC erfassten Belegungen prüfen, den Formu
 
 WordPress versendet Mails über seine vorhandene Mailkonfiguration. Das Anfrage-Plugin richtet selbst keinen SMTP-Server ein. Die Mail- bzw. SMTP-Einstellungen stammen vom jeweiligen Hostinganbieter.
 
-Nach erfolgreicher KC-Übernahme werden die gewünschten Eingangsbestätigungen angestoßen. Statusänderungen von Homepage-Buchungen erzeugen zusätzlich dauerhafte Mailaufträge in KC; WordPress holt sie mit dem technischen Zugang ab. Der Schalter für die erste Eingangsbestätigung schaltet diese Statusnachrichten nicht aus.
+Nach erfolgreicher KC-Übernahme werden die gewünschten Eingangsbestätigungen weiterhin von WordPress angestoßen. Statusmails nach einer Änderung in KC versendet der KC-Server direkt über seine SMTP-Konfiguration. WordPress holt keine Statusmail-Aufträge mehr ab. Der Schalter für die erste Eingangsbestätigung schaltet diese Statusnachrichten nicht aus.
+
+Die SMTP-Konfiguration des KC-Backends erfolgt über `KC_SMTP_ENABLED`, `KC_SMTP_HOST`, `KC_SMTP_PORT`, `KC_SMTP_USERNAME`, `KC_SMTP_PASSWORD`, `KC_SMTP_FROM`, `KC_SMTP_STARTTLS` und `KC_SMTP_SSL`; Details stehen in [`docs/infrastructure.md`](../../../docs/infrastructure.md). Die Zugangsdaten werden nur in der Serverumgebung hinterlegt. Die Mailstatus-Spalten in der nachfolgenden WordPress-Tabelle beziehen sich ausschließlich auf die Eingangsbestätigungen und Verwaltungsbenachrichtigungen der Formularanfrage.
 
 Bei einer fehlenden oder ungültigen Mieter-E-Mail kann ein Statuswechsel mit Mailauftrag abgewiesen werden. Korrigiere zuerst die Kontaktadresse in KC. Bereits erzeugte Aufträge beziehen sich auf den Zustand beim Statuswechsel.
 
@@ -294,16 +296,18 @@ Die Anfrage-ID muss pro neuem fachlichem Vorgang neu als UUID erzeugt und bei je
 
 Eine erfolgreiche Antwort enthält `buchungId`, `buchungsnummer`, `status` mit dem Wert ANFRAGE sowie `gastBestaetigung`, `verwaltungsBenachrichtigung`, `empfaengerEmail` und `mietumfang`. Die internen Versandangaben sind ausschließlich für den authentifizierten Homepage-Server bestimmt. Eigene Adapter dürfen insbesondere `empfaengerEmail` nicht unkontrolliert an Gäste ausgeben.
 
-Die KC-Schnittstelle selbst versendet keine E-Mails. Ein eigener Adapter muss dies nach erfolgreicher Übernahme gemäß den zurückgegebenen Vorgaben erledigen und ausstehende Nachrichten getrennt verwalten. WordPress übernimmt diese Aufgabe mit der eingebauten Warteschlange.
+Eingangsbestätigungen nach dem Absenden einer Anfrage bleiben Aufgabe des Homepage-Adapters; die KC-Antwort enthält dafür die Versandvorgaben. Statusänderungen, die später in KC vorgenommen werden, versendet dagegen KC direkt über seine SMTP-Konfiguration.
 
-### Statusnachrichten abholen und quittieren
+### Legacy-API für frühere Statusnachrichten
+
+Die folgenden API-Endpunkte bleiben für ältere Integrationsclients verfügbar. Die ausgelieferte WordPress-Erweiterung fragt diese Statusnachrichten nicht mehr ab; neue Statusmails versendet KC direkt über SMTP.
 
 ```text
 GET /api/integrationen/homepage/objekte/{mietobjektId}/nachrichten
 POST /api/integrationen/homepage/objekte/{mietobjektId}/nachrichten/{nachrichtId}/quittieren
 ```
 
-Beide Aufrufe benötigen den bestehenden technischen Zugang mit Rolle HOMEPAGE_INTEGRATION, korrektem Mandanten, freigeschaltetem Mietobjekt und passender Client-ID. Der Abruf liefert im Feld `data` höchstens 20 offene Nachrichten, nach Entstehung sortiert. Er bleibt auch möglich, wenn das Mietobjekt inzwischen nicht mehr buchbar ist; die Anbindung muss weiterhin freigeschaltet sein.
+Beide Aufrufe benötigen den bestehenden technischen Zugang mit Rolle HOMEPAGE_INTEGRATION, korrektem Mandanten, freigeschaltetem Mietobjekt und passender Client-ID. Für alte, vor der SMTP-Umstellung eingereihte Nachrichten liefert der Abruf höchstens 20 offene Nachrichten in Erstellungsreihenfolge.
 
 Jede Nachricht enthält `id` als UUID, `buchungsnummer`, `status`, `empfaenger`, `replyTo`, `betreff`, `text` und `createdAt`. Diese Daten sind ausschließlich für den Homepage-Server bestimmt und dürfen nicht öffentlich im Formular angezeigt werden.
 

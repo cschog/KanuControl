@@ -1,3 +1,4 @@
+import { hasRole, isAdmin } from "@/core/auth/useTenant";
 import React, { useCallback, useEffect, useState } from "react";
 import apiClient from "@/core/api/client/apiClient";
 import { getActiveVeranstaltung } from "@/kjfp/api/services/veranstaltungApi";
@@ -17,7 +18,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const schemaRes = await apiClient.get<string>("/active-schema");
       setSchema(schemaRes.data);
 
-      const v = await getActiveVeranstaltung();
+      const v = isAdmin() || hasRole("KJFP") ? await getActiveVeranstaltung() : null;
       setActive(v);
     } catch {
       setActive(null);

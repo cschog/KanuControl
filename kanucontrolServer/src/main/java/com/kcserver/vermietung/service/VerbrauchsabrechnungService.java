@@ -82,18 +82,18 @@ public class VerbrauchsabrechnungService {
 
         if (!buchung.getAbreise().isAfter(buchung.getAnreise())) {
             throw new IllegalArgumentException(
-                    "Das Abreisedatum muss nach dem Anreisedatum liegen."
+                    "Der Abreisezeitpunkt muss nach dem Anreisezeitpunkt liegen."
             );
         }
         LocalDateTime anreiseZeitpunkt = buchung.getAnreise();
         LocalDateTime abreiseZeitpunkt = buchung.getAbreise();
 
-        int abrechnungstage = Math.toIntExact(
+        int abrechnungstage = Math.max(1, Math.toIntExact(
                 ChronoUnit.DAYS.between(
                         buchung.getAnreise().toLocalDate(),
                         buchung.getAbreise().toLocalDate()
                 )
-        );
+        ));
 
         List<Verbrauchskosten> konfigurationen =
                 verbrauchskostenRepository
@@ -286,12 +286,12 @@ public class VerbrauchsabrechnungService {
         LocalDateTime anreiseZeitpunkt = buchung.getAnreise();
         LocalDateTime abreiseZeitpunkt = buchung.getAbreise();
 
-        int abrechnungstage = Math.toIntExact(
+        int abrechnungstage = Math.max(1, Math.toIntExact(
                 ChronoUnit.DAYS.between(
                         buchung.getAnreise().toLocalDate(),
                         buchung.getAbreise().toLocalDate()
                 )
-        );
+        ));
 
         List<Verbrauchskosten> konfigurationen =
                 verbrauchskostenRepository
@@ -441,17 +441,9 @@ public class VerbrauchsabrechnungService {
                                 zaehler.getId()
                         );
 
-        Zaehlerstand anfang = findeNaechstenStand(
-                staende,
-                anreiseZeitpunkt,
-                zaehler.getBezeichnung()
-        );
-
-        Zaehlerstand ende = findeNaechstenStand(
-                staende,
-                abreiseZeitpunkt,
-                zaehler.getBezeichnung()
-        );
+        Ablesepaar paar = findeAblesepaar(staende, anreiseZeitpunkt, abreiseZeitpunkt, zaehler.getBezeichnung());
+        Zaehlerstand anfang = paar.anfang();
+        Zaehlerstand ende = paar.ende();
 
         if (anfang.getId().equals(ende.getId())) {
             throw new IllegalArgumentException(
@@ -507,7 +499,7 @@ public class VerbrauchsabrechnungService {
                 null,
                 kosten,
                 !bestaetigungNoetig,
-                bestaetigungNoetig ? "Nächstliegende Ablesungen: mehr als 24 Stunden Abstand. Verwendung beim Abschluss bestätigen." : null,
+                bestaetigungNoetig ? "Ablesungen mit mehr als 24 Stunden Abstand: Das Messintervall enthält auch Zeiten außerhalb der Buchung. Verwendung beim Abschluss bestätigen." : null,
                 bestaetigungNoetig
         );
     }
@@ -614,17 +606,9 @@ public class VerbrauchsabrechnungService {
 
         String bezeichnung = ausgewaehlterZaehler.getBezeichnung();
 
-        Zaehlerstand anfang = findeNaechstenStand(
-                staende,
-                anreiseZeitpunkt,
-                bezeichnung
-        );
-
-        Zaehlerstand ende = findeNaechstenStand(
-                staende,
-                abreiseZeitpunkt,
-                bezeichnung
-        );
+        Ablesepaar paar = findeAblesepaar(staende, anreiseZeitpunkt, abreiseZeitpunkt, bezeichnung);
+        Zaehlerstand anfang = paar.anfang();
+        Zaehlerstand ende = paar.ende();
 
         if (anfang.getId().equals(ende.getId())) {
             throw new IllegalArgumentException(
@@ -680,6 +664,36 @@ public class VerbrauchsabrechnungService {
         snapshot.setAnfangsablesung(anfang.getAblesedatum());
         snapshot.setEndablesung(ende.getAblesedatum());
         snapshot.setKosten(kosten);
+    }
+
+    private record Ablesepaar(Zaehlerstand anfang, Zaehlerstand ende) {}
+
+    private Ablesepaar findeAblesepaar(List<Zaehlerstand> staende,
+                                      LocalDateTime anreise, LocalDateTime abreise,
+                                      String bezeichnung) {
+        Zaehlerstand anfang = findeNaechstenStand(staende, anreise, bezeichnung);
+        Zaehlerstand ende = findeNaechstenStand(staende, abreise, bezeichnung);
+        if (anfang.getAblesedatum().isBefore(ende.getAblesedatum())) {
+            return new Ablesepaar(anfang, ende);
+        }
+
+        // Bei derselben nächstliegenden Ablesung die besser passende Buchungsgrenze
+        // beibehalten und für die andere Grenze eine zeitlich getrennte Ablesung suchen.
+        LocalDateTime gemeinsam = anfang.getAblesedatum();
+        List<Zaehlerstand> davor = staende.stream()
+                .filter(s -> s.getAblesedatum().isBefore(gemeinsam)).toList();
+        List<Zaehlerstand> danach = staende.stream()
+                .filter(s -> s.getAblesedatum().isAfter(gemeinsam)).toList();
+        boolean endeBeibehalten = Duration.between(abreise, gemeinsam).abs()
+                .compareTo(Duration.between(anreise, gemeinsam).abs()) <= 0;
+        if (!davor.isEmpty() && (endeBeibehalten || danach.isEmpty())) {
+            return new Ablesepaar(findeNaechstenStand(davor, anreise, bezeichnung), ende);
+        }
+        if (!danach.isEmpty()) {
+            return new Ablesepaar(anfang, findeNaechstenStand(danach, abreise, bezeichnung));
+        }
+        // Nur eine Ablesung bzw. mehrere am selben Zeitpunkt: weiterhin nicht abrechenbar.
+        return new Ablesepaar(anfang, ende);
     }
 
     private boolean abweichend(Zaehlerstand stand, LocalDateTime soll) {

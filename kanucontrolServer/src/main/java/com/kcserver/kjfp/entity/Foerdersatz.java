@@ -1,5 +1,7 @@
 package com.kcserver.kjfp.entity;
 
+import com.kcserver.core.entity.Teilnehmer;
+
 import com.kcserver.kjfp.enumtype.VeranstaltungTyp;
 import jakarta.persistence.*;
 import lombok.Getter;

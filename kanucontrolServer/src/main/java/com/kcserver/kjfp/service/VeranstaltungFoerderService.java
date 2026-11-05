@@ -1,11 +1,11 @@
 package com.kcserver.kjfp.service;
 
-import com.kcserver.kjfp.entity.Teilnehmer;
-import com.kcserver.kjfp.entity.Veranstaltung;
+import com.kcserver.core.entity.Teilnehmer;
+import com.kcserver.core.entity.Veranstaltung;
 import com.kcserver.core.exception.BusinessRuleViolationException;
 import com.kcserver.core.exception.ErrorMessages;
-import com.kcserver.kjfp.repository.TeilnehmerRepository;
-import com.kcserver.kjfp.repository.VeranstaltungRepository;
+import com.kcserver.core.repository.TeilnehmerRepository;
+import com.kcserver.core.repository.VeranstaltungRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -47,7 +47,7 @@ public class VeranstaltungFoerderService {
 
         List<Teilnehmer> teilnehmer =
                 teilnehmerRepository
-                        .findAllWithPerson(veranstaltungId);
+                        .findAllKjfpWithPerson(veranstaltungId);
 
         // Pflichtfeldprüfung
 

@@ -762,7 +762,7 @@ public final class ErrorMessages {
                     + "wenn ein tatsächliches Abreisedatum eingetragen wurde.";
 
     public static final String VERBRAUCHSABRECHNUNG_ABREISE_INVALID =
-            "Das Abreisedatum muss nach dem Anreisedatum liegen.";
+            "Der Abreisezeitpunkt muss nach dem Anreisezeitpunkt liegen.";
 
     public static final String VERBRAUCHSABRECHNUNG_ZAEHLER_NICHT_ZUGEORDNET =
             "Kein aktiver Zähler für %s ist einem gebuchten Mietbereich zugeordnet.";

@@ -2,7 +2,7 @@ package com.kcserver.kjfp.entity.beitraege;
 
 import com.kcserver.kjfp.entity.Dokument;
 import com.kcserver.kjfp.entity.FinanzGruppe;
-import com.kcserver.kjfp.entity.Veranstaltung;
+import com.kcserver.core.entity.Veranstaltung;
 import com.kcserver.kjfp.enumtype.Zahlungsweg;
 import jakarta.persistence.*;
 import com.kcserver.core.audit.Auditable;
@@ -19,6 +19,7 @@ import java.math.BigDecimal;
 @Entity
 @Table(name = "zahlungsnachweis")
 public class Zahlungsnachweis extends Auditable {
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

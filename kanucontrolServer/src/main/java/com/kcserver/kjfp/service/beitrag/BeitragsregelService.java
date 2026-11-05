@@ -2,7 +2,7 @@ package com.kcserver.kjfp.service.beitrag;
 
 import com.kcserver.kjfp.entity.beitraege.Beitragsregel;
 import com.kcserver.kjfp.entity.beitraege.Beitragsstruktur;
-import com.kcserver.kjfp.enumtype.TeilnehmerRolle;
+import com.kcserver.core.enumtype.TeilnehmerRolle;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

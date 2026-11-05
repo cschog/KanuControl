@@ -26,9 +26,8 @@ public class FinanzDashboardService {
     public FinanzDashboardDTO get(int jahr) {
         validateYear(jahr);
         LocalDate heute=LocalDate.now(ZoneId.of("Europe/Berlin"));
-        LocalDate stand=heute.isAfter(LocalDate.of(jahr,12,31)) ? LocalDate.of(jahr,12,31) : heute;
-        var moves=bewegungen.findForDashboard(stand);
-        var bookings=buchungen.findForFinanceDashboard(LocalDate.of(jahr,1,1).atStartOfDay(),LocalDate.of(jahr+1,1,1).atStartOfDay());
+        var moves=bewegungen.findForDashboard(heute);
+        var bookings=buchungen.findForFinanceDashboard(LocalDate.of(jahr-1,1,1).atStartOfDay(),LocalDate.of(jahr+1,1,1).atStartOfDay());
         var ids=bookings.stream().map(Buchung::getId).toList();
         var costs=ids.isEmpty() ? List.<BuchungVerbrauchskosten>of() : verbrauch.findByBuchungIdIn(ids);
         BigDecimal grenze=einstellungen.findById(jahr).map(FinanzDashboardJahr::getUmsatzgrenze).orElse(new BigDecimal("25000.00"));
@@ -50,25 +49,50 @@ public class FinanzDashboardService {
     }
     public static FinanzDashboardDTO calculate(int jahr, LocalDate heute, BigDecimal grenze,
             List<BuchungFinanzbewegung> moves, List<Buchung> bookings, List<BuchungVerbrauchskosten> costs) {
-        LocalDate stand=heute.isAfter(LocalDate.of(jahr,12,31)) ? LocalDate.of(jahr,12,31) : heute;
+        LocalDate stand=heute;
         BigDecimal[] monat=new BigDecimal[12], vorher=new BigDecimal[12]; Arrays.fill(monat,BigDecimal.ZERO); Arrays.fill(vorher,BigDecimal.ZERO);
         Map<Long,BigDecimal> bezahlt=new HashMap<>(), verbrauchBezahlt=new HashMap<>(), jahreswerte=new HashMap<>(), offen=new HashMap<>();
         Map<Long,Buchung> details=new HashMap<>(); Map<String,BigDecimal> quellen=new TreeMap<>();
         for(var move:moves) {
             if(move.getDatum().isAfter(stand)) continue;
             BigDecimal value=revenue(move); var booking=move.getBuchung();
+            if (booking.getAnreise() == null) continue;
             if(move.getKategorie()==Finanzkategorie.MIETE || move.getKategorie()==Finanzkategorie.ANZAHLUNG)
                 bezahlt.merge(booking.getId(),value,BigDecimal::add);
             if(move.getKategorie()==Finanzkategorie.VERBRAUCHSKOSTEN)
                 verbrauchBezahlt.merge(booking.getId(),value,BigDecimal::add);
-            if(move.getDatum().getYear()==jahr-1) vorher[move.getDatum().getMonthValue()-1]=vorher[move.getDatum().getMonthValue()-1].add(value);
-            if(move.getDatum().getYear()!=jahr || value.signum()==0) continue;
-            int m=move.getDatum().getMonthValue()-1; monat[m]=monat[m].add(value);
+            // Bei abgeschlossenen Buchungen zählt der finale Buchungsbetrag
+            // unten als Umsatz. Zahlungsvorgänge dienen hier nur zum Ermitteln
+            // des offenen Saldos und dürfen nicht zusätzlich Umsatz erzeugen.
+            if (booking.getStatus() == Buchungsstatus.ABGESCHLOSSEN) continue;
+            int mietjahr=booking.getAnreise().getYear();
+            int mietmonat=booking.getAnreise().getMonthValue()-1;
+            if(mietjahr==jahr-1) vorher[mietmonat]=vorher[mietmonat].add(value);
+            if(mietjahr!=jahr || value.signum()==0) continue;
+            monat[mietmonat]=monat[mietmonat].add(value);
             jahreswerte.merge(booking.getId(),value,BigDecimal::add); details.put(booking.getId(),booking);
             quellen.merge(booking.getBuchungsquelle().name(),value,BigDecimal::add);
         }
         var snapshots=costs.stream().collect(Collectors.groupingBy(c->c.getBuchung().getId(),Collectors.reducing(BigDecimal.ZERO,BuchungVerbrauchskosten::getKosten,BigDecimal::add)));
+        for (var booking : bookings) {
+            if (booking.getStatus() != Buchungsstatus.ABGESCHLOSSEN || booking.getAnreise() == null) continue;
+            int mietjahr=booking.getAnreise().getYear();
+            if (mietjahr != jahr && mietjahr != jahr-1) continue;
+            BigDecimal rent=booking.getMietbereiche().stream().map(BuchungPreiskalkulation::preis).reduce(BigDecimal.ZERO,BigDecimal::add)
+                    .subtract(BuchungPreiskalkulation.rabatt(booking)).max(BigDecimal.ZERO);
+            BigDecimal finalAmount=rent.add(snapshots.getOrDefault(booking.getId(),BigDecimal.ZERO));
+            int month=booking.getAnreise().getMonthValue()-1;
+            if (mietjahr == jahr-1) {
+                vorher[month]=vorher[month].add(finalAmount);
+            } else {
+                monat[month]=monat[month].add(finalAmount);
+                jahreswerte.merge(booking.getId(),finalAmount,BigDecimal::add);
+                details.put(booking.getId(),booking);
+                quellen.merge(booking.getBuchungsquelle().name(),finalAmount,BigDecimal::add);
+            }
+        }
         int unbefristet=0;
+        BigDecimal forecastOpen=BigDecimal.ZERO;
         for(var booking:bookings) {
             if(booking.getAnreise()==null || booking.getAnreise().getYear()!=jahr ||
                 !Set.of(Buchungsstatus.RESERVIERT,Buchungsstatus.BESTAETIGT,Buchungsstatus.ABRECHENBAR,Buchungsstatus.ABGESCHLOSSEN).contains(booking.getStatus())) continue;
@@ -78,13 +102,17 @@ public class FinanzDashboardService {
             BigDecimal due=rent.subtract(bezahlt.getOrDefault(booking.getId(),BigDecimal.ZERO)).max(BigDecimal.ZERO)
                     .add(snapshots.getOrDefault(booking.getId(),BigDecimal.ZERO)
                         .subtract(verbrauchBezahlt.getOrDefault(booking.getId(),BigDecimal.ZERO)).max(BigDecimal.ZERO));
-            if(due.signum()>0) {offen.put(booking.getId(),due); details.put(booking.getId(),booking);}
+            if(due.signum()>0) {
+                offen.put(booking.getId(),due);
+                details.put(booking.getId(),booking);
+                if (booking.getStatus() != Buchungsstatus.ABGESCHLOSSEN) forecastOpen=forecastOpen.add(due);
+            }
         }
         BigDecimal sum=Arrays.stream(monat).reduce(BigDecimal.ZERO,BigDecimal::add);
         BigDecimal prior=Arrays.stream(vorher).reduce(BigDecimal.ZERO,BigDecimal::add);
         BigDecimal planned=offen.values().stream().reduce(BigDecimal.ZERO,BigDecimal::add);
         // Für abgeschlossene Jahre keine noch offenen Forderungen als Jahresprognose ausgeben.
-        BigDecimal booked=jahr<heute.getYear() ? sum : sum.add(planned);
+        BigDecimal booked=jahr<heute.getYear() ? sum : sum.add(forecastOpen);
         BigDecimal trend=jahr==heute.getYear() ? sum.max(BigDecimal.ZERO).multiply(BigDecimal.valueOf(heute.lengthOfYear()))
                 .divide(BigDecimal.valueOf(heute.getDayOfYear()),2,RoundingMode.HALF_UP) : null;
         BigDecimal forecast=trend==null ? booked : booked.max(trend);

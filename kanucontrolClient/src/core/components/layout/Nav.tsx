@@ -49,6 +49,7 @@ const Navigation = () => {
     location.pathname.startsWith("/verwaltung") ||
     location.pathname.startsWith("/ausgabeReisekosten");
   
+  const isFahrtenContext = location.pathname.startsWith("/fahrten");
   const isVermietungContext = location.pathname.startsWith("/vermietung");
 
   const showVermietungContext = isVermietungContext;
@@ -324,6 +325,7 @@ const Navigation = () => {
               )}
             </Box>
           )}
+          {isFahrtenContext && <Box sx={{ mt: isMobile ? 0.5 : 0, ml: isMobile ? 0 : "74px" }}><Typography variant="subtitle1">{schema} · Fahrten</Typography></Box>}
           {showVermietungContext && (
             <Box
               sx={{
