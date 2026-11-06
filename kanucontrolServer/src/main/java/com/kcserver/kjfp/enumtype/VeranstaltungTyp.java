@@ -6,7 +6,10 @@ import lombok.Getter;
 public enum VeranstaltungTyp {
 
     JEM(true, 6, 20),
-    FM(true, 6, 20);
+    FM(true, 6, 20),
+
+    // Bereits gespeicherte Sportveranstaltungen bleiben lesbar, ohne KJFP-Förderung.
+    SPORT(false, null, null);
 
     // BM(false, null, null),
     // GV(false, null, null);

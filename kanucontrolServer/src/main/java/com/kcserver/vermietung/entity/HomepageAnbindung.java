@@ -55,6 +55,12 @@ public class HomepageAnbindung extends Auditable {
     @Column(name = "teilnehmer_pflicht", nullable = false)
     private boolean teilnehmerPflicht = true;
 
+    @Column(name = "hausmeister_email", length = 254)
+    private String hausmeisterEmail;
+
+    @Column(name = "hausmeister_letzte_woche")
+    private java.time.LocalDate hausmeisterLetzteWoche;
+
     @ElementCollection
     @CollectionTable(name = "homepage_anbindung_mietbereich",
             joinColumns = @JoinColumn(name = "mietobjekt_id"))

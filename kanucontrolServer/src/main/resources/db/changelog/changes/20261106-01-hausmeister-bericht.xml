@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+ <changeSet id="20261106-01-hausmeister-bericht" author="codex">
+  <addColumn tableName="homepage_anbindung">
+   <column name="hausmeister_email" type="VARCHAR(254)"/>
+   <column name="hausmeister_letzte_woche" type="DATE"/>
+  </addColumn>
+  <rollback><dropColumn tableName="homepage_anbindung" columnName="hausmeister_email"/><dropColumn tableName="homepage_anbindung" columnName="hausmeister_letzte_woche"/></rollback>
+ </changeSet>
+</databaseChangeLog>

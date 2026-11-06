@@ -1,6 +1,10 @@
 import apiClient from "@/core/api/client/apiClient";
 import type { HomepageAnbindung } from "@/vermietung/types/HomepageAnbindung";
 
+export async function sendHausmeisterTest(id: number): Promise<void> {
+  await apiClient.post(`/vermietung/objekte/${id}/homepage-anbindung/hausmeister-test`);
+}
+
 const url = (id: number) => `/vermietung/objekte/${id}/homepage-anbindung`;
 
 export async function getHomepageAnbindung(id: number): Promise<HomepageAnbindung> {

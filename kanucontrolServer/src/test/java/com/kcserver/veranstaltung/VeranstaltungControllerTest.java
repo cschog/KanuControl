@@ -86,6 +86,24 @@ class VeranstaltungControllerTest extends AbstractTenantIntegrationTest {
        ========================================================= */
 
     @Test
+    void shouldReadStoredSportVeranstaltungWithoutServerError() throws Exception {
+        // Historischen Datenbankwert verwenden, damit die JPA-Enum-Konvertierung
+        // beim Listen- und Detailaufruf tatsächlich geprüft wird.
+        jdbcTemplate.update("UPDATE veranstaltung SET typ = 'SPORT'");
+        Long id = jdbcTemplate.queryForObject("SELECT id FROM veranstaltung", Long.class);
+
+        mockMvc.perform(get("/api/veranstaltungen"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content[0].typ").value("SPORT"));
+
+        mockMvc.perform(get("/api/veranstaltungen/{id}", id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.typ").value("SPORT"));
+
+        assertThat(VeranstaltungTyp.SPORT.isFoerderfaehig()).isFalse();
+    }
+
+    @Test
     void shouldFilterByName() throws Exception {
 
         mockMvc.perform(get("/api/veranstaltungen")

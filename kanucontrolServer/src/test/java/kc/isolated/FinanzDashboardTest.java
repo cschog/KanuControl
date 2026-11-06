@@ -33,14 +33,30 @@ class FinanzDashboardTest {
     }
     void amount(String expected,BigDecimal value){assertEquals(0,new BigDecimal(expected).compareTo(value));}
 
-    @Test void umsatzFolgtZahlungsdatumAuchBeiStorniertenUndJahresfremdenBuchungen() {
-        var b=booking(1,2027,Buchungsstatus.STORNIERT,"1000");
+    @Test void umsatzFolgtMietbeginnAuchBeiStorniertenUndJahresfremdenZahlungen() {
+        var b=booking(1,2026,Buchungsstatus.STORNIERT,"1000");
+        var prior=booking(2,2025,Buchungsstatus.BESTAETIGT,"1000");
+        var future=booking(3,2027,Buchungsstatus.BESTAETIGT,"1000");
         var d=calc(List.of(move(b,"2025-12-30",Finanzkategorie.ANZAHLUNG,Finanzbewegungsart.EINGANG,"300"),
             move(b,"2026-01-02",Finanzkategorie.MIETE,Finanzbewegungsart.EINGANG,"500"),
             move(b,"2026-02-01",Finanzkategorie.MIETE,Finanzbewegungsart.RUECKZAHLUNG,"100"),
-            move(b,"2026-12-01",Finanzkategorie.MIETE,Finanzbewegungsart.EINGANG,"900")),List.of());
-        amount("400",d.umsatz());amount("300",d.vorjahresumsatz());amount("400",d.buchungen().getFirst().umsatz());
-        amount("500",d.monate().get(0).umsatz());amount("-100",d.monate().get(1).umsatz());amount("24600",d.verbleibend());
+            move(b,"2026-12-01",Finanzkategorie.MIETE,Finanzbewegungsart.EINGANG,"900"),
+            move(prior,"2026-01-03",Finanzkategorie.MIETE,Finanzbewegungsart.EINGANG,"200"),
+            move(future,"2026-01-04",Finanzkategorie.MIETE,Finanzbewegungsart.EINGANG,"400")),List.of());
+        amount("700",d.umsatz());amount("200",d.vorjahresumsatz());
+        assertEquals(1,d.buchungen().size());amount("700",d.buchungen().getFirst().umsatz());
+        amount("0",d.monate().get(0).umsatz());amount("0",d.monate().get(1).umsatz());
+        amount("700",d.monate().get(7).umsatz());amount("200",d.monate().get(7).vorjahrKumuliert());
+        amount("24300",d.verbleibend());
+    }
+    @Test void abgeschlosseneBuchungZaehltEndbetragOhneZahlungenUndOffeneBetraegeDoppeltZuZaehlen() {
+        var b=booking(1,2026,Buchungsstatus.ABGESCHLOSSEN,"1000");
+        var cost=new BuchungVerbrauchskosten();cost.setBuchung(b);cost.setKosten(new BigDecimal("40"));
+        var d=FinanzDashboardService.calculate(2026,today,limit,
+            List.of(move(b,"2025-12-01",Finanzkategorie.ANZAHLUNG,Finanzbewegungsart.EINGANG,"200")),
+            List.of(b),List.of(cost));
+        amount("1040",d.umsatz());amount("840",d.geplantOffen());amount("1040",d.buchungsprognose());
+        amount("1040",d.monate().get(7).umsatz());amount("1040",d.buchungen().getFirst().umsatz());
     }
     @Test void kautionIstKeinUmsatzUndVerrechnungZaehltNurEinmal() {
         var b=booking(1,2026,Buchungsstatus.BESTAETIGT,"1000");
@@ -55,7 +71,7 @@ class FinanzDashboardTest {
         var d=calc(List.of(move(b,"2025-12-01",Finanzkategorie.ANZAHLUNG,Finanzbewegungsart.EINGANG,"200"),
             move(b,"2026-02-01",Finanzkategorie.ANZAHLUNG,Finanzbewegungsart.EINGANG,"300")),
             List.of(b,booking(2,2026,Buchungsstatus.ANFRAGE,"9000"),booking(3,2026,Buchungsstatus.STORNIERT,"9000"),booking(4,2027,Buchungsstatus.BESTAETIGT,"9000")));
-        amount("300",d.umsatz());amount("500",d.geplantOffen());amount("800",d.buchungsprognose());amount("800",d.prognose());
+        amount("500",d.umsatz());amount("500",d.geplantOffen());amount("1000",d.buchungsprognose());amount("1002.75",d.prognose());
     }
     @Test void rabattUndAbgerechneterVerbrauchWerdenInPlanungBeruecksichtigt() {
         var b=booking(1,2026,Buchungsstatus.BESTAETIGT,"1000");b.setRabattart(Rabattart.INDIVIDUELL);

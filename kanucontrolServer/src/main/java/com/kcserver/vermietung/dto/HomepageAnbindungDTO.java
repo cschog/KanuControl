@@ -31,6 +31,9 @@ public class HomepageAnbindungDTO {
     @Email @Size(max = 254)
     private String empfaengerEmail;
 
+    @Email @Size(max = 254)
+    private String hausmeisterEmail;
+
     private boolean gastBestaetigung = true;
     private boolean verwaltungsBenachrichtigung;
     private boolean teilnehmerPflicht = true;

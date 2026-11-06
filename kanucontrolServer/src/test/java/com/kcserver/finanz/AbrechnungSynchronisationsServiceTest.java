@@ -12,6 +12,7 @@ import com.kcserver.kjfp.repository.finanz.FinanzGruppeRepository;
 import com.kcserver.core.repository.TeilnehmerRepository;
 import com.kcserver.kjfp.repository.abrechnung.AbrechnungRepository;
 import com.kcserver.kjfp.repository.zahlungsnachweis.ZahlungsnachweisRepository;
+import com.kcserver.kjfp.repository.zahlungsnachweis.ZahlungsPositionRepository;
 import com.kcserver.kjfp.service.FoerderService;
 import com.kcserver.kjfp.service.abrechnung.AbrechnungBelegService;
 import com.kcserver.kjfp.service.abrechnung.AbrechnungSynchronisationsService;
@@ -49,6 +50,9 @@ class AbrechnungSynchronisationsServiceTest {
 
     @Mock
     private ZahlungsnachweisRepository zahlungsnachweisRepository;
+
+    @Mock
+    private ZahlungsPositionRepository zahlungsPositionRepository;
 
     @InjectMocks
     private AbrechnungSynchronisationsService service;
@@ -165,6 +169,9 @@ class AbrechnungSynchronisationsServiceTest {
         // Teilnehmer für KJFP
         // ---------------------------------------------------------
 
+        when(zahlungsPositionRepository.sumKjfpBetragByVeranstaltung(1L))
+                .thenReturn(new BigDecimal("60.00"));
+
         Teilnehmer t1 =
                 new Teilnehmer();
 
@@ -172,7 +179,7 @@ class AbrechnungSynchronisationsServiceTest {
                 new Teilnehmer();
 
         when(
-                teilnehmerRepository.findAllWithPerson(1L)
+                teilnehmerRepository.findAllKjfpWithPerson(1L)
         )
                 .thenReturn(
                         List.of(t1, t2)
@@ -226,6 +233,9 @@ class AbrechnungSynchronisationsServiceTest {
                 .isEqualByComparingTo(
                         "100.00"
                 );
+
+        assertThat(buchung.getKjfpBetrag()).isEqualByComparingTo("60.00");
+        verify(foerderService).berechneKjfpZuschuss(veranstaltung, List.of(t1, t2), true);
 
         assertThat(buchung.getBeschreibung())
                 .isEqualTo(

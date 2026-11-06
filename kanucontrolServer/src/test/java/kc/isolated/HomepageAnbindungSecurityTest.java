@@ -30,8 +30,9 @@ class HomepageAnbindungSecurityTest {
             return new com.kcserver.vermietung.controller.HomepageNachrichtenController(service);
         }
         @Bean HomepageAnbindungService service() { return mock(HomepageAnbindungService.class); }
-        @Bean HomepageAnbindungController controller(HomepageAnbindungService service) {
-            return new HomepageAnbindungController(service);
+        @Bean com.kcserver.vermietung.service.HausmeisterBerichtService berichte() { return mock(com.kcserver.vermietung.service.HausmeisterBerichtService.class); }
+        @Bean HomepageAnbindungController controller(HomepageAnbindungService service, com.kcserver.vermietung.service.HausmeisterBerichtService berichte) {
+            return new HomepageAnbindungController(service, berichte);
         }
     }
     private AnnotationConfigApplicationContext context;
@@ -74,6 +75,15 @@ class HomepageAnbindungSecurityTest {
         role("HOMEPAGE_INTEGRATION");assertDoesNotThrow(()->controller.offen(7L,jwt));
         var id=java.util.UUID.randomUUID();assertDoesNotThrow(()->controller.quittieren(7L,id,jwt));
         verify(context.getBean(com.kcserver.vermietung.service.HomepageStatusMailService.class)).quittieren(7L,"ekc-homepage",id.toString());
+    }
+    @Test void testversandBenoetigtAdminRolle() {
+        role("VERMIETUNG");
+        assertThrows(AccessDeniedException.class, () -> controller.test(7L));
+        role("HOMEPAGE_INTEGRATION");
+        assertThrows(AccessDeniedException.class, () -> controller.test(7L));
+        role("ADMIN");
+        assertDoesNotThrow(() -> controller.test(7L));
+        verify(context.getBean(com.kcserver.vermietung.service.HausmeisterBerichtService.class)).testSenden(7L);
     }
     @Test void fremdeModulrolleHatKeinenZugriff() {
         role("KJFP");

@@ -14,6 +14,15 @@ import org.springframework.web.bind.annotation.*;
 public class HomepageAnbindungController {
     private final HomepageAnbindungService service;
 
+    private final com.kcserver.vermietung.service.HausmeisterBerichtService berichte;
+
+    @PostMapping("/hausmeister-test")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<String> test(@PathVariable Long mietobjektId) {
+        berichte.testSenden(mietobjektId);
+        return ApiResponse.of("Testbericht an den Mailserver übergeben.");
+    }
+
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'VERMIETUNG')")
     public ApiResponse<HomepageAnbindungDTO> get(@PathVariable Long mietobjektId) {

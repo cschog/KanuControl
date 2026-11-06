@@ -10,7 +10,7 @@ import { getApiErrorMessage } from "@/kjfp/api/utils/apiError";
 import { InfoDialog } from "@/kjfp/components/info/InfoDialog";
 import { getMietobjekte } from "@/vermietung/api/mietobjektApi";
 import { getMietbereiche } from "@/vermietung/api/mietbereichApi";
-import { getHomepageAnbindung, saveHomepageAnbindung } from "@/vermietung/api/homepageAnbindungApi";
+import { getHomepageAnbindung, saveHomepageAnbindung, sendHausmeisterTest } from "@/vermietung/api/homepageAnbindungApi";
 import { useVermietungContext } from "@/vermietung/context/VermietungContext";
 import type { HomepageAnbindung } from "@/vermietung/types/HomepageAnbindung";
 import type { Mietobjekt } from "@/vermietung/types/Mietobjekt";
@@ -21,6 +21,9 @@ function Einstellungen({ mietobjektId }: { mietobjektId: number }) {
   const [bereiche, setBereiche] = useState<Mietbereich[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [testMessage, setTestMessage] = useState<string | null>(null);
+  const [testing, setTesting] = useState(false);
+  const [dirty, setDirty] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -37,6 +40,7 @@ function Einstellungen({ mietobjektId }: { mietobjektId: number }) {
       .then(([config, items]) => {
         if (cancelled) return;
         setForm(config);
+        setDirty(false);
         setBereiche(items);
       })
       .catch((err: unknown) => {
@@ -56,6 +60,8 @@ function Einstellungen({ mietobjektId }: { mietobjektId: number }) {
   function change<K extends keyof HomepageAnbindung>(key: K, value: HomepageAnbindung[K]) {
     setForm((current) => current ? { ...current, [key]: value } : current);
     setSuccess(false);
+    setDirty(true);
+    setTestMessage(null);
     setError(null);
     setFieldErrors((current) => { const next = { ...current }; delete next[key]; return next; });
   }
@@ -86,6 +92,7 @@ function Einstellungen({ mietobjektId }: { mietobjektId: number }) {
     try {
       setForm(await saveHomepageAnbindung(mietobjektId, form));
       setSuccess(true);
+      setDirty(false);
     } catch (err: unknown) {
       const details = isAxiosError(err) ? err.response?.data?.fieldErrors : null;
       if (details && typeof details === "object") {
@@ -153,6 +160,26 @@ function Einstellungen({ mietobjektId }: { mietobjektId: number }) {
           slotProps={{ htmlInput: { maxLength: 254 } }}
           helperText={fieldErrors.empfaengerEmail ?? "Vereinsspezifische Adresse für den Versand über das WordPress-Plugin."}
           onChange={(e) => change("empfaengerEmail", e.target.value || null)} />
+        <Typography variant="h6">Hausmeister-Wochenbericht</Typography>
+        <Typography variant="body2" color="text.secondary">
+          KanuControl sendet sonntags ab 15:00 Uhr (Europe/Berlin) die reservierten,
+          bestätigten und stornierten Buchungen der nächsten vier Wochen mit Mieternamen
+          und Telefonnummern. Auch bereits laufende Aufenthalte werden berücksichtigt.
+        </Typography>
+        <TextField name="hausmeisterEmail" label="E-Mail-Empfänger des Hausmeister-Wochenberichts"
+          type="email" value={form.hausmeisterEmail ?? ""} disabled={!editable}
+          error={!!fieldErrors.hausmeisterEmail} slotProps={{ htmlInput: { maxLength: 254 } }}
+          helperText={fieldErrors.hausmeisterEmail ?? "Leer lassen, um den Wochenbericht zu deaktivieren. Zum Testen zunächst die eigene Adresse speichern."}
+          onChange={(e) => change("hausmeisterEmail", e.target.value || null)} />
+        {isAdmin() && <Button disabled={saving || testing || dirty || !form.hausmeisterEmail}
+          onClick={async () => {
+            setTesting(true); setTestMessage(null); setError(null);
+            try { await sendHausmeisterTest(mietobjektId); setTestMessage("Testbericht an den SMTP-Server übergeben. Im SMTP-Testmodus gilt dessen Testempfänger."); }
+            catch (err: unknown) { setError(getApiErrorMessage(err, "Der Testbericht konnte nicht gesendet werden.")); }
+            finally { setTesting(false); }
+          }}>{testing ? "Testbericht wird gesendet …" : "Testbericht an gespeicherte Adresse senden"}</Button>}
+        {dirty && <Typography variant="body2">Bitte Änderungen vor dem Testversand speichern.</Typography>}
+        {testMessage && <Alert severity="success">{testMessage}</Alert>}
         {isAdmin() && <Box><Button type="submit" variant="contained" startIcon={<SaveIcon />} disabled={saving}>
           {saving ? "Wird gespeichert …" : "Einstellungen speichern"}
         </Button></Box>}

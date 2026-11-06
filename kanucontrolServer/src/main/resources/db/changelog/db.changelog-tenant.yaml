@@ -269,3 +269,6 @@ databaseChangeLog:
       file: db/changelog/changes/20261105-02-fahrten.xml
   - include:
       file: db/changelog/changes/20261105-03-remove-geburtsdatum-geschaetzt.xml
+
+  - include:
+      file: db/changelog/changes/20261106-01-hausmeister-bericht.xml
