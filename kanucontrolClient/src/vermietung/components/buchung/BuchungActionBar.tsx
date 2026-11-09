@@ -1,6 +1,7 @@
 // src/vermietung/components/anmeldung/BuchungActionBar.tsx
 
 import {
+  Alert,
   Box,
   Button,
   Dialog,
@@ -9,6 +10,8 @@ import {
   DialogContentText,
   DialogActions,
 } from "@mui/material";
+import StatusMailVorschauDialog from "./StatusMailVorschauDialog";
+import ReservierungsbestaetigungDialog from "./ReservierungsbestaetigungDialog";
 import { useRef, useState } from "react";
 
 import EditIcon from "@mui/icons-material/Edit";
@@ -23,20 +26,26 @@ import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import type { Buchungsstatus } from "@/vermietung/enums/Buchungsstatus";
 
 interface Props {
+  buchungId?: number;
+  direktbuchung?: boolean;
+  reservierungMailGesendetAm?: string | null;
+  reservierungMailFehler?: string | null;
+  onRefresh?: () => Promise<void>;
   status: Buchungsstatus;
   editMode: boolean;
   notifyByEmail?: boolean;
+  abschlussErforderlich?: boolean;
 
   onEdit: () => void;
   onCancelEdit: () => void;
-  onReopen: (sendEmail: boolean) => Promise<void>;
+  onReopen: (sendEmail: boolean, fingerprint?: string) => Promise<void>;
   onSave: () => void;
 
-  onReserve: (sendEmail: boolean) => Promise<void> | void;
-  onConfirm: (sendEmail: boolean) => Promise<void> | void;
-  onReject: (sendEmail: boolean) => Promise<void> | void;
-  onCancelBooking: (sendEmail: boolean) => Promise<void> | void;
-  onComplete: (sendEmail: boolean) => Promise<void> | void;
+  onReserve: (sendEmail: boolean, fingerprint?: string) => Promise<void> | void;
+  onConfirm: (sendEmail: boolean, fingerprint?: string) => Promise<void> | void;
+  onReject: (sendEmail: boolean, fingerprint?: string) => Promise<void> | void;
+  onCancelBooking: (sendEmail: boolean, fingerprint?: string) => Promise<void> | void;
+  onComplete: (sendEmail: boolean, fingerprint?: string) => Promise<void> | void;
 
   onDelete: () => void;
 
@@ -44,9 +53,11 @@ interface Props {
 }
 
 export const BuchungActionBar: React.FC<Props> = ({
+  buchungId, direktbuchung = false, reservierungMailGesendetAm, reservierungMailFehler, onRefresh,
   status,
   editMode,
   notifyByEmail = false,
+  abschlussErforderlich = false,
   onEdit,
   onCancelEdit,
   onSave,
@@ -59,6 +70,7 @@ export const BuchungActionBar: React.FC<Props> = ({
   onDelete,
   disableDelete,
 }) => {
+  const [vorschauOpen, setVorschauOpen] = useState(false);
   const [emailDecisionStatus, setEmailDecisionStatus] = useState<Buchungsstatus | null>(null);
   const [busy, setBusy] = useState(false);
   const busyRef = useRef(false);
@@ -113,14 +125,14 @@ export const BuchungActionBar: React.FC<Props> = ({
   };
 
   const requestStatus = (target: Buchungsstatus, openExisting: () => void) => {
-    if (notifyByEmail) setEmailDecisionStatus(target);
+    if (target === "RESERVIERT" && direktbuchung && buchungId) setVorschauOpen(true);
+    else if (notifyByEmail) setEmailDecisionStatus(target);
     else openExisting();
   };
 
-  const confirmEmailDecision = async (sendEmail: boolean) => {
+  const confirmEmailDecision = async (sendEmail: boolean, fingerprint?: string) => {
     if (!emailDecisionStatus || busy) return;
     const target = emailDecisionStatus;
-    setEmailDecisionStatus(null);
     const action = target === "RESERVIERT" ? onReserve
       : target === "BESTAETIGT" ? onConfirm
       : target === "ABGELEHNT" ? onReject
@@ -128,16 +140,8 @@ export const BuchungActionBar: React.FC<Props> = ({
       : target === "ABGESCHLOSSEN" ? onComplete
       : target === "ABRECHENBAR" ? onReopen
       : null;
-    if (action) await perform(() => action(sendEmail));
-  };
-
-  const statusLabel: Partial<Record<Buchungsstatus, string>> = {
-    RESERVIERT: "Reserviert", BESTAETIGT: "Bestätigt", ABGELEHNT: "Abgelehnt",
-    STORNIERT: "Storniert", ABGESCHLOSSEN: "Abgeschlossen", ABRECHENBAR: "Abrechenbar",
-  };
-  const statusAction: Partial<Record<Buchungsstatus, string>> = {
-    RESERVIERT: "Reservieren", BESTAETIGT: "Bestätigen", ABGELEHNT: "Ablehnen",
-    STORNIERT: "Stornieren", ABGESCHLOSSEN: "Abschließen", ABRECHENBAR: "Wieder öffnen",
+    if (action) await perform(() => action(sendEmail, fingerprint));
+    setEmailDecisionStatus(null);
   };
 
   return (
@@ -255,17 +259,15 @@ export const BuchungActionBar: React.FC<Props> = ({
               </>
             )}
 
+            {status === "ABGESCHLOSSEN" && <>
+              {abschlussErforderlich && <Button disabled={busy} color="success" variant="contained" onClick={()=>requestStatus("ABGESCHLOSSEN",()=>setCompleteDialogOpen(true))}>Erneut abschließen</Button>}
+              <Button disabled={busy} onClick={()=>requestStatus("ABRECHENBAR",()=>setReopenDialogOpen(true))}>Wieder öffnen</Button>
+            </>}
             <Button
               variant="contained"
               startIcon={<EditIcon />}
               disabled={busy}
-              onClick={() => {
-                if (status === "ABGESCHLOSSEN") {
-                  requestStatus("ABRECHENBAR", () => setReopenDialogOpen(true));
-                } else {
-                  onEdit();
-                }
-              }}
+              onClick={onEdit}
             >
               Bearbeiten
             </Button>
@@ -292,6 +294,18 @@ export const BuchungActionBar: React.FC<Props> = ({
           Löschen
         </Button>
       </Box>
+
+      {!editMode && status === "RESERVIERT" && direktbuchung && buchungId && <Box sx={{ width: "100%" }}>
+        {reservierungMailFehler && <Alert severity="error" sx={{ mb: 1 }}>{reservierungMailFehler}</Alert>}
+        {reservierungMailGesendetAm && <Alert severity="success" sx={{ mb: 1 }}>Reservierungsbestätigung am {new Date(reservierungMailGesendetAm).toLocaleString("de-DE")} an SMTP übergeben.</Alert>}
+        <Button disabled={busy} onClick={() => setVorschauOpen(true)}>
+          {reservierungMailGesendetAm ? "Aktuelle Bestätigung ansehen" : reservierungMailFehler ? "Bestätigung prüfen und Versand wiederholen" : "Bestätigung prüfen und senden"}
+        </Button>
+      </Box>}
+      {vorschauOpen && buchungId && <ReservierungsbestaetigungDialog
+        key={buchungId} id={buchungId} reserviert={status === "RESERVIERT"} gesendetAm={reservierungMailGesendetAm}
+        onClose={() => setVorschauOpen(false)} onReserve={sendEmail => perform(() => onReserve(sendEmail))} onRefresh={onRefresh}
+      />}
 
       {/* Abgeschlossene Buchung wieder öffnen */}
       <Dialog open={reopenDialogOpen} onClose={() => setReopenDialogOpen(false)}>
@@ -447,24 +461,10 @@ export const BuchungActionBar: React.FC<Props> = ({
         </DialogActions>
       </Dialog>
 
-      <Dialog open={emailDecisionStatus !== null} onClose={() => { if (!busy) setEmailDecisionStatus(null); }}>
-        <DialogTitle>{emailDecisionStatus ? `Buchung ${statusAction[emailDecisionStatus]?.toLowerCase() ?? "ändern"}` : "Buchungsstatus ändern"}</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Die Buchung wird auf „{emailDecisionStatus ? statusLabel[emailDecisionStatus] : ""}“ gesetzt.
-            Soll der Mieter per E-Mail über diese Änderung informiert werden?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions sx={{ flexWrap: "wrap" }}>
-          <Button disabled={busy} onClick={() => setEmailDecisionStatus(null)}>Abbrechen</Button>
-          <Button disabled={busy} onClick={() => void confirmEmailDecision(false)}>
-            {emailDecisionStatus ? `${statusAction[emailDecisionStatus]} ohne E-Mail` : "Ohne E-Mail fortfahren"}
-          </Button>
-          <Button autoFocus disabled={busy} color="primary" variant="contained" onClick={() => void confirmEmailDecision(true)}>
-            {emailDecisionStatus ? `${statusAction[emailDecisionStatus]} und E-Mail senden` : "Bestätigen und E-Mail senden"}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {emailDecisionStatus && buchungId && <StatusMailVorschauDialog
+        key={`${buchungId}-${emailDecisionStatus}`} id={buchungId} status={emailDecisionStatus}
+        onClose={() => { if (!busy) setEmailDecisionStatus(null); }} onDecision={confirmEmailDecision}
+      />}
 
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
         <DialogTitle>Buchung löschen?</DialogTitle>

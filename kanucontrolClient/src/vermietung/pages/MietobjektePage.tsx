@@ -134,6 +134,7 @@ async function handleSave(payload: MietobjektSave) {
     const updated = await updateMietobjekt(selectedId, payload);
 
     await loadMietobjekte(false);
+    await reloadVermietung();
 
     const refreshed = await getMietobjekt(updated.id);
 
@@ -287,7 +288,7 @@ async function handleSave(payload: MietobjektSave) {
           mietobjekt={selectedMietobjekt}
           editMode={editMode}
           onEdit={() => setEditMode(true)}
-          onCancelEdit={() => setEditMode(false)}
+          onCancelEdit={handleCancelEdit}
           onSave={handleSave}
           onDelete={handleDelete}
           onBack={() => setSelectedId(null)}

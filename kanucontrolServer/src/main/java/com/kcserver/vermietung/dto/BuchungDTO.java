@@ -17,9 +17,19 @@ import java.util.List;
 @AllArgsConstructor
 public class BuchungDTO {
 
+    @jakarta.validation.Valid @jakarta.validation.constraints.Size(max=500)
+    private List<EntschaedigungPositionDTO> entschaedigungen;
+    private Long abrechnungRevision;
+    private Long abschlussRevision;
+    private java.math.BigDecimal entschaedigungSumme;
     private Long id;
+    private java.time.Instant reservierungMailGesendetAm;
+    private String reservierungMailFehler;
     private String buchungsnummer;
     private Buchungsstatus status;
+
+    // Null preserves the selection when an older client updates a booking.
+    private com.kcserver.vermietung.enumtype.BankverbindungAuswahl bankverbindungAuswahl;
 
     private Instant createdAt;
 

@@ -16,12 +16,14 @@ import { useVermietungContext } from "@/vermietung/context/VermietungContext";
 import type { Buchungsquelle } from "@/vermietung/enums/Buchungsquelle";
 
 const createInitialForm = (buchungsquelle: Buchungsquelle = "DIREKT"): BuchungSave => ({
+  bankverbindungAuswahl: "PRIMAER",
   anreise: "",
   abreise: "",
   unbefristet: false,
   mietobjektId: 0,
   mietbereichIds: [],
   positionen: [],
+  entschaedigungen: [],
   mieterId: 0,
   veranstalterVereinId: undefined,
   status: "ANFRAGE",
@@ -54,6 +56,8 @@ export function useBuchungForm(
   initialZeitraum?: { anreiseDatum: string; abreiseDatum: string },
 ) {
   const { mietobjekt } = useVermietungContext();
+  const initialAnreiseDatum = initialZeitraum?.anreiseDatum;
+  const initialAbreiseDatum = initialZeitraum?.abreiseDatum;
 
   const [form, setForm] = useState<BuchungSave>(() => createInitialForm(neueBuchungsquelle));
 
@@ -71,6 +75,9 @@ export function useBuchungForm(
       }));
 
       setForm({
+        entschaedigungen: buchung.entschaedigungen ?? [],
+        abrechnungRevision: buchung.abrechnungRevision,
+        bankverbindungAuswahl: buchung.bankverbindungAuswahl ?? "PRIMAER",
         anreise: buchung.anreise,
         abreise: buchung.abreise,
         unbefristet: buchung.unbefristet,
@@ -113,14 +120,14 @@ export function useBuchungForm(
             anzahlungBetrag: 0,
           }
         : {}),
-      ...(initialZeitraum
+      ...(initialAnreiseDatum !== undefined && initialAbreiseDatum !== undefined
         ? {
-            anreise: datumMitZeit(initialZeitraum.anreiseDatum, mietobjekt?.anreisezeit),
-            abreise: datumMitZeit(initialZeitraum.abreiseDatum, mietobjekt?.abreisezeit),
+            anreise: datumMitZeit(initialAnreiseDatum, mietobjekt?.anreisezeit),
+            abreise: datumMitZeit(initialAbreiseDatum, mietobjekt?.abreisezeit),
           }
         : {}),
     }));
-  }, [buchung, mietobjekt?.id, neueBuchungsquelle, initialZeitraum?.anreiseDatum, initialZeitraum?.abreiseDatum]);
+  }, [buchung, mietobjekt?.id, mietobjekt?.anreisezeit, mietobjekt?.abreisezeit, neueBuchungsquelle, initialAnreiseDatum, initialAbreiseDatum]);
 
   const resetForm = () => {
     setMieter(mieterAusBuchung(buchung));
@@ -131,6 +138,9 @@ export function useBuchungForm(
       }));
 
       setForm({
+        entschaedigungen: buchung.entschaedigungen ?? [],
+        abrechnungRevision: buchung.abrechnungRevision,
+        bankverbindungAuswahl: buchung.bankverbindungAuswahl ?? "PRIMAER",
         anreise: buchung.anreise,
         abreise: buchung.abreise,
         unbefristet: buchung.unbefristet,

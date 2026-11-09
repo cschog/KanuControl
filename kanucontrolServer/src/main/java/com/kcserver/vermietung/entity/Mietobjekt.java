@@ -40,6 +40,25 @@ public class Mietobjekt extends Auditable {
 
     private String ort;
 
+    @Embedded
+    @AttributeOverrides({
+        @AttributeOverride(name = "kontoinhaber", column = @Column(name = "bank_primaer_kontoinhaber", length = 255)),
+        @AttributeOverride(name = "bankName", column = @Column(name = "bank_primaer_name", length = 255)),
+        @AttributeOverride(name = "iban", column = @Column(name = "bank_primaer_iban", length = 34)),
+        @AttributeOverride(name = "bic", column = @Column(name = "bank_primaer_bic", length = 11))
+    })
+    private Bankverbindung bankverbindungPrimaer;
+
+    @Embedded
+    @AttributeOverrides({
+        @AttributeOverride(name = "kontoinhaber", column = @Column(name = "bank_alternativ_kontoinhaber", length = 255)),
+        @AttributeOverride(name = "bankName", column = @Column(name = "bank_alternativ_name", length = 255)),
+        @AttributeOverride(name = "iban", column = @Column(name = "bank_alternativ_iban", length = 34)),
+        @AttributeOverride(name = "bic", column = @Column(name = "bank_alternativ_bic", length = 11))
+    })
+    private Bankverbindung bankverbindungAlternativ;
+
+
     @Convert(converter = CountryCodeConverter.class)
     @Column(name = "country_code", nullable = false, length = 2)
     private CountryCode countryCode = CountryCode.DE;

@@ -23,6 +23,12 @@ class HomepageAnbindungSecurityTest {
         @Bean com.kcserver.vermietung.controller.HomepageIntegrationController integrationController(com.kcserver.vermietung.service.HomepageIntegrationService service) {
             return new com.kcserver.vermietung.controller.HomepageIntegrationController(service);
         }
+        @Bean com.kcserver.vermietung.service.VorlagenService vorlagenService() {
+            return mock(com.kcserver.vermietung.service.VorlagenService.class);
+        }
+        @Bean com.kcserver.vermietung.service.ReservierungsbestaetigungPdf reservierungsPdf() {
+            return mock(com.kcserver.vermietung.service.ReservierungsbestaetigungPdf.class);
+        }
         @Bean com.kcserver.vermietung.service.HomepageStatusMailService statusService() {
             return mock(com.kcserver.vermietung.service.HomepageStatusMailService.class);
         }
@@ -84,6 +90,14 @@ class HomepageAnbindungSecurityTest {
         role("ADMIN");
         assertDoesNotThrow(() -> controller.test(7L));
         verify(context.getBean(com.kcserver.vermietung.service.HausmeisterBerichtService.class)).testSenden(7L);
+    }
+    @Test void berichtStatusIstNurFuerVerwaltungsrollenLesbar() {
+        role("VERMIETUNG");
+        assertDoesNotThrow(() -> controller.berichtStatus(7L));
+        role("ADMIN");
+        assertDoesNotThrow(() -> controller.berichtStatus(7L));
+        role("HOMEPAGE_INTEGRATION");
+        assertThrows(AccessDeniedException.class, () -> controller.berichtStatus(7L));
     }
     @Test void fremdeModulrolleHatKeinenZugriff() {
         role("KJFP");

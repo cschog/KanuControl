@@ -33,6 +33,12 @@ public class MietobjektDTO {
     @Size(max = 255)
     private String ort;
 
+    @jakarta.validation.Valid
+    private com.kcserver.vermietung.entity.Bankverbindung bankverbindungPrimaer;
+
+    @jakarta.validation.Valid
+    private com.kcserver.vermietung.entity.Bankverbindung bankverbindungAlternativ;
+
     private CountryCode countryCode = CountryCode.DE;
 
     private LocalTime anreisezeit;

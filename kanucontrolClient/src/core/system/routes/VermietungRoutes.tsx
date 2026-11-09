@@ -1,14 +1,14 @@
+import { lazy } from "react";
 import type { RouteObject } from "react-router-dom";
 
-import VermietungStartPage from "@/vermietung/pages/VermietungStart";
-import MietobjektePage from "@/vermietung/pages/MietobjektePage";
-import BuchungenView from "@/vermietung/pages/BuchungenView";
-import VerwaltungPage from "@/vermietung/pages/VerwaltungPage";
-import MieterPage from "@/vermietung/pages/MieterPage";
-import AbrechnungPage from "@/vermietung/pages/AbrechnungPage";
-import FinanzDashboardPage from "@/vermietung/pages/FinanzDashboardPage";
-
-import VerbrauchDashboardPage from "@/vermietung/pages/VerbrauchDashboardPage";
+const VermietungStartPage = lazy(() => import("@/vermietung/pages/VermietungStart"));
+const MietobjektePage = lazy(() => import("@/vermietung/pages/MietobjektePage"));
+const BuchungenView = lazy(() => import("@/vermietung/pages/BuchungenView"));
+const VerwaltungPage = lazy(() => import("@/vermietung/pages/VerwaltungPage"));
+const MieterPage = lazy(() => import("@/vermietung/pages/MieterPage"));
+const AbrechnungPage = lazy(() => import("@/vermietung/pages/AbrechnungPage"));
+const FinanzDashboardPage = lazy(() => import("@/vermietung/pages/FinanzDashboardPage"));
+const VerbrauchDashboardPage = lazy(() => import("@/vermietung/pages/VerbrauchDashboardPage"));
 
 const VermietungRoutes: RouteObject[] = [
   {

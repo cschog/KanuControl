@@ -37,6 +37,8 @@ public interface BuchungRepository extends JpaRepository<Buchung, Long> {
     List<Buchung> findByMietobjektIdAndStatusInAndAnreiseLessThanAndAbreiseGreaterThan(
             Long mietobjektId, Collection<Buchungsstatus> status, LocalDateTime bis, LocalDateTime von);
 
+    boolean existsByBuchungsnummerAndIdNot(String buchungsnummer, Long id);
+
     // mieter verweist auf Person, nicht auf den Mieterstammsatz. Alle Status zählen.
     boolean existsByMieterId(Long personId);
 

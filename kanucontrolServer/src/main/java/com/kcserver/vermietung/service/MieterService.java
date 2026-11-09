@@ -8,7 +8,7 @@ import com.kcserver.kjfp.repository.PersonRepository;
 import com.kcserver.vermietung.dto.MieterDTO;
 import com.kcserver.vermietung.dto.MieterSaveDTO;
 import com.kcserver.vermietung.entity.Mieter;
-import com.kcserver.vermietung.enumtype.Buchungsquelle;
+import com.kcserver.vermietung.entity.Buchung;
 import com.kcserver.vermietung.repository.BuchungRepository;
 import com.kcserver.vermietung.repository.MieterRepository;
 import jakarta.transaction.Transactional;
@@ -34,21 +34,22 @@ public class MieterService {
     }
 
     public List<MieterDTO> getAll() {
-        Map<Long, List<Buchungsquelle>> kanaele = new HashMap<>();
-        buchungRepository.findAll().forEach(b -> kanaele
-                .computeIfAbsent(b.getMieter().getId(), ignored -> new ArrayList<>())
-                .add(b.getBuchungsquelle()));
+        Map<Long, List<Buchung>> buchungen = new HashMap<>();
+        buchungRepository.findAll().forEach(b -> buchungen
+                .computeIfAbsent(b.getMieter().getId(), ignored -> new ArrayList<>()).add(b));
         return mieterRepository.findAllByOrderByPersonNameAscPersonVornameAsc().stream()
-                .map(m -> toDto(m, kanaele.getOrDefault(m.getPerson().getId(), List.of())))
+                .map(m -> toDto(m, buchungen.getOrDefault(m.getPerson().getId(), List.of())))
                 .toList();
     }
 
     public MieterDTO get(Long id) {
         Mieter mieter = find(id);
-        List<Buchungsquelle> sources = buchungRepository.findAll().stream()
-                .filter(b -> b.getMieter().getId().equals(mieter.getPerson().getId()))
-                .map(b -> b.getBuchungsquelle()).toList();
-        return toDto(mieter, sources);
+        return toDto(mieter, buchungenFuer(mieter.getPerson().getId()));
+    }
+
+    private List<Buchung> buchungenFuer(Long personId) {
+        return buchungRepository.findAll().stream()
+                .filter(b -> b.getMieter().getId().equals(personId)).toList();
     }
 
     public PersonRefDTO getPersonRef(Long personId) {
@@ -82,7 +83,7 @@ public class MieterService {
         Mieter mieter = findLocked(id);
         apply(mieter.getPerson(), dto);
         if (dto.getAktiv() != null) mieter.setAktiv(dto.getAktiv());
-        return toDto(mieterRepository.save(mieter), get(id).getBuchungsquellen());
+        return toDto(mieterRepository.save(mieter), buchungenFuer(mieter.getPerson().getId()));
     }
 
     public void deactivate(Long id) {
@@ -131,7 +132,7 @@ public class MieterService {
         person.setBic(dto.getBic());
     }
 
-    private MieterDTO toDto(Mieter mieter, List<Buchungsquelle> sources) {
+    private MieterDTO toDto(Mieter mieter, List<Buchung> buchungen) {
         Person p = mieter.getPerson();
         MieterDTO dto = new MieterDTO();
         dto.setId(mieter.getId());
@@ -149,8 +150,11 @@ public class MieterService {
         dto.setIban(p.getIban());
         dto.setBic(p.getBic());
         dto.setAktiv(mieter.isAktiv());
-        dto.setBuchungsquellen(sources.stream().distinct().toList());
-        dto.setBuchungen(sources.size());
+        dto.setBuchungsquellen(buchungen.stream().map(Buchung::getBuchungsquelle).distinct().toList());
+        dto.setBuchungen(buchungen.size());
+        dto.setMietobjekte(buchungen.stream().map(Buchung::getMietobjekt).filter(Objects::nonNull)
+                .map(objekt -> objekt.getBezeichnung()).filter(name -> name != null && !name.isBlank())
+                .map(String::trim).distinct().sorted(String.CASE_INSENSITIVE_ORDER).toList());
         return dto;
     }
 }

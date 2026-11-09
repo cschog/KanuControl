@@ -1,5 +1,8 @@
+import type { Bankverbindung } from "./Bankverbindung";
 
 export interface Mietobjekt {
+  bankverbindungPrimaer?: Bankverbindung | null;
+  bankverbindungAlternativ?: Bankverbindung | null;
   id: number;
 
   bezeichnung: string;

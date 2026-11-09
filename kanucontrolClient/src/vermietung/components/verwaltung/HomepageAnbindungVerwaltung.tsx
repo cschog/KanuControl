@@ -10,7 +10,7 @@ import { getApiErrorMessage } from "@/kjfp/api/utils/apiError";
 import { InfoDialog } from "@/kjfp/components/info/InfoDialog";
 import { getMietobjekte } from "@/vermietung/api/mietobjektApi";
 import { getMietbereiche } from "@/vermietung/api/mietbereichApi";
-import { getHomepageAnbindung, saveHomepageAnbindung, sendHausmeisterTest } from "@/vermietung/api/homepageAnbindungApi";
+import { getHomepageAnbindung, saveHomepageAnbindung, sendHausmeisterTest, getHausmeisterBerichtStatus } from "@/vermietung/api/homepageAnbindungApi";
 import { useVermietungContext } from "@/vermietung/context/VermietungContext";
 import type { HomepageAnbindung } from "@/vermietung/types/HomepageAnbindung";
 import type { Mietobjekt } from "@/vermietung/types/Mietobjekt";
@@ -23,6 +23,7 @@ function Einstellungen({ mietobjektId }: { mietobjektId: number }) {
   const [saving, setSaving] = useState(false);
   const [testMessage, setTestMessage] = useState<string | null>(null);
   const [testing, setTesting] = useState(false);
+  const [berichtEnabled, setBerichtEnabled] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -34,12 +35,15 @@ function Einstellungen({ mietobjektId }: { mietobjektId: number }) {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setBerichtEnabled(false);
     setError(null);
     setSuccess(false);
-    Promise.all([getHomepageAnbindung(mietobjektId), getMietbereiche(mietobjektId)])
-      .then(([config, items]) => {
+    Promise.all([getHomepageAnbindung(mietobjektId), getMietbereiche(mietobjektId),
+      getHausmeisterBerichtStatus(mietobjektId).catch(() => null)])
+      .then(([config, items, bericht]) => {
         if (cancelled) return;
         setForm(config);
+        setBerichtEnabled(bericht?.enabled === true && bericht.environment === "PROD");
         setDirty(false);
         setBereiche(items);
       })
@@ -68,7 +72,7 @@ function Einstellungen({ mietobjektId }: { mietobjektId: number }) {
 
   async function save(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!form || !editable) return;
+    if (!form || !editable || !dirty) return;
     const invalid: Record<string, string> = {};
     // noValidate verhindert ein lautloses Blockieren vor onSubmit. Die HTML-Regeln
     // bleiben erhalten, ihre Meldungen werden sichtbar in der KC-Maske ausgegeben.
@@ -160,6 +164,15 @@ function Einstellungen({ mietobjektId }: { mietobjektId: number }) {
           slotProps={{ htmlInput: { maxLength: 254 } }}
           helperText={fieldErrors.empfaengerEmail ?? "Vereinsspezifische Adresse für den Versand über das WordPress-Plugin."}
           onChange={(e) => change("empfaengerEmail", e.target.value || null)} />
+        <Typography variant="h6">Antwortmails</Typography>
+        <TextField label="Testadresse für Antwortmails" type="email" value={form.antwortTestEmail ?? ""}
+          disabled={!editable} slotProps={{htmlInput:{maxLength:254}}}
+          helperText="Eingetragen: Antwortmails gehen an diese Testadresse. Leer: Versand an den Mieter. Der globale SMTP-Testmodus hat Vorrang."
+          onChange={e=>change("antwortTestEmail",e.target.value || null)}/>
+        <TextField label="CC-Adresse für Antwortmails (optional)" type="email" value={form.antwortCcEmail ?? ""}
+          disabled={!editable} slotProps={{htmlInput:{maxLength:254}}}
+          helperText="Zusätzlicher Empfänger. Im globalen SMTP-Testmodus wird CC unterdrückt."
+          onChange={e=>change("antwortCcEmail",e.target.value || null)}/>
         <Typography variant="h6">Hausmeister-Wochenbericht</Typography>
         <Typography variant="body2" color="text.secondary">
           KanuControl sendet sonntags ab 15:00 Uhr (Europe/Berlin) die reservierten,
@@ -171,16 +184,17 @@ function Einstellungen({ mietobjektId }: { mietobjektId: number }) {
           error={!!fieldErrors.hausmeisterEmail} slotProps={{ htmlInput: { maxLength: 254 } }}
           helperText={fieldErrors.hausmeisterEmail ?? "Leer lassen, um den Wochenbericht zu deaktivieren. Zum Testen zunächst die eigene Adresse speichern."}
           onChange={(e) => change("hausmeisterEmail", e.target.value || null)} />
-        {isAdmin() && <Button disabled={saving || testing || dirty || !form.hausmeisterEmail}
+        {!berichtEnabled && <Alert severity="info">Der Hausmeisterbericht ist gesperrt. Erzeugung und Versand sind nur in freigegebenem PROD möglich. In DEV und TEST ist auch der Testversand deaktiviert.</Alert>}
+        {isAdmin() && <Button disabled={!berichtEnabled || saving || testing || dirty || !form.hausmeisterEmail}
           onClick={async () => {
             setTesting(true); setTestMessage(null); setError(null);
-            try { await sendHausmeisterTest(mietobjektId); setTestMessage("Testbericht an den SMTP-Server übergeben. Im SMTP-Testmodus gilt dessen Testempfänger."); }
+            try { if (!berichtEnabled) return; await sendHausmeisterTest(mietobjektId); setTestMessage("Testbericht an den SMTP-Server übergeben. Im SMTP-Testmodus gilt dessen Testempfänger."); }
             catch (err: unknown) { setError(getApiErrorMessage(err, "Der Testbericht konnte nicht gesendet werden.")); }
             finally { setTesting(false); }
           }}>{testing ? "Testbericht wird gesendet …" : "Testbericht an gespeicherte Adresse senden"}</Button>}
         {dirty && <Typography variant="body2">Bitte Änderungen vor dem Testversand speichern.</Typography>}
         {testMessage && <Alert severity="success">{testMessage}</Alert>}
-        {isAdmin() && <Box><Button type="submit" variant="contained" startIcon={<SaveIcon />} disabled={saving}>
+        {isAdmin() && <Box><Button type="submit" variant="contained" startIcon={<SaveIcon />} disabled={saving || !dirty}>
           {saving ? "Wird gespeichert …" : "Einstellungen speichern"}
         </Button></Box>}
       </Stack>

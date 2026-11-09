@@ -13,6 +13,14 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class HausmeisterBerichtServiceTest {
+    private static com.kcserver.vermietung.config.HausmeisterBerichtFreigabe freigabe() {
+        var env = new org.springframework.mock.env.MockEnvironment()
+                .withProperty("kc.runtime-environment", "PROD")
+                .withProperty("app.environment", "PROD")
+                .withProperty("kc.hausmeisterbericht.enabled", "true");
+        env.setActiveProfiles("prod");
+        return new com.kcserver.vermietung.config.HausmeisterBerichtFreigabe(env);
+    }
     @Test void unvollstaendigeKontaktdatenUndHtmlZeichenWerdenSicherDargestellt() {
         Buchung b = new Buchung(); b.setId(1L); b.setBuchungsjahr(2026); b.setLaufendeNummer(1);
         b.setAnreise(LocalDateTime.of(2026,11,9,12,0)); b.setAbreise(b.getAnreise().plusDays(2));
@@ -30,7 +38,7 @@ class HausmeisterBerichtServiceTest {
     @Test void deaktivierterVersandOderBereitsGesendeteWocheErzeugenKeineMail() {
         var configs = mock(HomepageAnbindungRepository.class); var bookings = mock(BuchungRepository.class);
         ObjectProvider<JavaMailSender> sender = mock(ObjectProvider.class); var smtp = new SmtpMailProperties();
-        var service = new HausmeisterBerichtService(configs, bookings, sender, smtp);
+        var service = new HausmeisterBerichtService(configs, bookings, sender, smtp, freigabe());
         var day = LocalDate.of(2026,11,8);
         service.wocheSenden(1L, day);
         verifyNoInteractions(configs, bookings, sender);
@@ -54,7 +62,7 @@ class HausmeisterBerichtServiceTest {
         when(configs.lockById(7L)).thenReturn(java.util.Optional.of(config));
         when(bookings.findByMietobjektIdAndStatusInAndAnreiseLessThanAndAbreiseGreaterThan(any(), any(), any(), any()))
             .thenReturn(new java.util.ArrayList<>());
-        var service = new HausmeisterBerichtService(configs, bookings, provider, smtp);
+        var service = new HausmeisterBerichtService(configs, bookings, provider, smtp, freigabe());
         service.testSenden(7L);
         assertEquals("test@example.org", message.getAllRecipients()[0].toString());
         assertTrue(message.getSubject().startsWith("[TEST]"));

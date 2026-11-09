@@ -24,6 +24,7 @@ public class MieterDTO {
     private String iban;
     private String bic;
     private boolean aktiv;
+    private List<String> mietobjekte;
     private int buchungen;
     private List<Buchungsquelle> buchungsquellen;
 }

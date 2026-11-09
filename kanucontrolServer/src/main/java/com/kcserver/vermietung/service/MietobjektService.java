@@ -51,6 +51,8 @@ public class MietobjektService {
         objekt.setStrasse(dto.getStrasse());
         objekt.setPlz(dto.getPlz());
         objekt.setOrt(dto.getOrt());
+        objekt.setBankverbindungPrimaer(com.kcserver.vermietung.entity.Bankverbindung.normalisiert(dto.getBankverbindungPrimaer()));
+        objekt.setBankverbindungAlternativ(com.kcserver.vermietung.entity.Bankverbindung.normalisiert(dto.getBankverbindungAlternativ()));
         objekt.setCountryCode(dto.getCountryCode());
         objekt.setSortierung(dto.getSortierung());
         objekt.setAnreisezeit(dto.getAnreisezeit());
@@ -80,6 +82,8 @@ public class MietobjektService {
         objekt.setStrasse(dto.getStrasse());
         objekt.setPlz(dto.getPlz());
         objekt.setOrt(dto.getOrt());
+        objekt.setBankverbindungPrimaer(com.kcserver.vermietung.entity.Bankverbindung.normalisiert(dto.getBankverbindungPrimaer()));
+        objekt.setBankverbindungAlternativ(com.kcserver.vermietung.entity.Bankverbindung.normalisiert(dto.getBankverbindungAlternativ()));
         objekt.setCountryCode(dto.getCountryCode());
         objekt.setSortierung(dto.getSortierung());
         objekt.setAnreisezeit(dto.getAnreisezeit());
@@ -130,6 +134,8 @@ public class MietobjektService {
         dto.setStrasse(objekt.getStrasse());
         dto.setPlz(objekt.getPlz());
         dto.setOrt(objekt.getOrt());
+        dto.setBankverbindungPrimaer(objekt.getBankverbindungPrimaer());
+        dto.setBankverbindungAlternativ(objekt.getBankverbindungAlternativ());
         dto.setCountryCode(objekt.getCountryCode());
         dto.setSortierung(objekt.getSortierung());
         dto.setAnreisezeit(objekt.getAnreisezeit());

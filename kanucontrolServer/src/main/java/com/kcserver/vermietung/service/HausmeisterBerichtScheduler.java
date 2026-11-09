@@ -13,10 +13,12 @@ import java.time.*;
 public class HausmeisterBerichtScheduler {
     private final JdbcTemplate jdbc;
     private final HausmeisterBerichtService berichte;
+    private final com.kcserver.vermietung.config.HausmeisterBerichtFreigabe freigabe;
 
     // Wiederholung am Sonntagnachmittag ermöglicht Nachholung nach Neustart/SMTP-Ausfall.
     @Scheduled(cron = "0 */5 15-23 * * SUN", zone = "Europe/Berlin")
     public void senden() {
+        if (!freigabe.isEnabled()) return;
         var day = LocalDate.now(HausmeisterBerichtService.ZONE);
         var tenants = jdbc.queryForList("""
             select distinct table_schema from information_schema.tables

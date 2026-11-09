@@ -124,6 +124,7 @@ public class HomepageIntegrationService {
         kontakt.setVorname(dto.vorname()); kontakt.setName(dto.name()); kontakt.setEmail(dto.email());
         kontakt.setTelefon(dto.telefon()); kontakt.setStrasse(dto.strasse()); kontakt.setPlz(dto.plz());
         kontakt.setOrt(dto.ort()); kontakt.setCountryCode(dto.countryCode());
+        kontakt.setBankName(dto.bankName()); kontakt.setIban(dto.iban()); kontakt.setBic(dto.bic());
         MieterDTO mieter = mieterService.create(kontakt);
         buchung.setMieterId(mieter.getPersonId()); buchung.setMietobjektId(id);
         buchung.setBuchungsquelle(Buchungsquelle.DIREKT);

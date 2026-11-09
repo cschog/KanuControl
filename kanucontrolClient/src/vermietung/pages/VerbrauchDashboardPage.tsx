@@ -7,7 +7,8 @@ import { getVerbrauchDashboard } from "@/vermietung/api/verbrauchDashboardApi";
 import type { VerbrauchDashboard } from "@/vermietung/types/VerbrauchDashboard";
 import type { Mietobjekt } from "@/vermietung/types/Mietobjekt";
 import { getApiErrorMessage } from "@/kjfp/api/utils/apiError";
-import { MonatsDiagramm, KorrelationsDiagramm, BuchungsZeitstrahl, zahl, datum, monat } from "@/vermietung/components/VerbrauchDiagramme";
+import { MonatsDiagramm, KorrelationsDiagramm, BuchungsZeitstrahl } from "@/vermietung/components/VerbrauchDiagramme";
+import { zahl, datum, monat } from "@/vermietung/utils/verbrauchFormat";
 const art = (s: string) => ({ GAS: "Gas", WASSER: "Wasser", STROM: "Strom" })[s] ?? s;
 function Wert({ label, value, detail }: { label: string; value: string; detail: string }) { return <Paper variant="outlined" sx={{ p: 2 }}><Typography color="text.secondary">{label}</Typography><Typography variant="h5" sx={{ my: 1 }}>{value}</Typography><Typography variant="body2" color="text.secondary">{detail}</Typography></Paper>; }
 export default function VerbrauchDashboardPage() {

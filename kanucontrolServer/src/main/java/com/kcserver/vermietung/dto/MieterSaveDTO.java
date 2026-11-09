@@ -3,6 +3,7 @@ package com.kcserver.vermietung.dto;
 import com.kcserver.core.validation.ValidIban;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -10,9 +11,12 @@ import lombok.Setter;
 @Setter
 public class MieterSaveDTO {
     private Long personId;
-    @NotBlank private String name;
-    @NotBlank private String vorname;
-    @Email private String email;
+    @NotBlank(message="Bitte einen Nachnamen eingeben.")
+    @Size(min=2,max=100,message="Der Nachname muss zwischen 2 und 100 Zeichen lang sein.") private String name;
+    @NotBlank(message="Bitte einen Vornamen eingeben.")
+    @Size(min=2,max=100,message="Der Vorname muss zwischen 2 und 100 Zeichen lang sein.") private String vorname;
+    @Email(message="Bitte eine gültige E-Mail-Adresse eingeben oder das Feld leer lassen.")
+    @Size(max=255,message="Die E-Mail-Adresse darf höchstens 255 Zeichen enthalten.") private String email;
     private String telefon;
     private String telefonFestnetz;
     private String strasse;
@@ -20,7 +24,14 @@ public class MieterSaveDTO {
     private String ort;
     private String countryCode = "DE";
     private String bankName;
-    @ValidIban private String iban;
+    @ValidIban(message="Die IBAN ist ungültig. Bitte Länderkennung, Länge und Prüfziffer prüfen oder das Feld leer lassen.") private String iban;
     private String bic;
     private Boolean aktiv;
+    // Vor der Bean-Validierung normalisieren, nicht erst beim Speichern der Person.
+    public void setName(String value) { name=trim(value); }
+    public void setVorname(String value) { vorname=trim(value); }
+    public void setEmail(String value) { email=trim(value); }
+    public void setIban(String value) { iban=value==null?null:value.replaceAll("\\s+", "").toUpperCase(java.util.Locale.ROOT); }
+    private static String trim(String value) { return value==null?null:value.strip(); }
+
 }

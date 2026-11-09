@@ -8,6 +8,7 @@ import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
+  getSortedRowModel,
   RowSelectionState,
   SortingState,
   useReactTable,
@@ -50,6 +51,7 @@ interface GenericTableTanstackProps<T extends WithId> {
   emptyState?: React.ReactNode;
   detailPanel?: (row: T) => React.ReactNode;
   sorting?: SortingState;
+  manualSorting?: boolean;
   onSortingChange?: (sorting: SortingState) => void;
   onLoadMore?: () => void;
   hasMore?: boolean;
@@ -66,6 +68,7 @@ export function GenericTableTanstack<T extends WithId>({
   onRowSelectionChange,
   height,
   sorting = [],
+  manualSorting = true,
   onSortingChange,
   onLoadMore,
   hasMore = false,
@@ -178,7 +181,7 @@ export function GenericTableTanstack<T extends WithId>({
 
     onRowSelectionChange: setRowSelection,
 
-    manualSorting: true,
+    manualSorting,
 
     onSortingChange: (updater) => {
       const nextSorting = typeof updater === "function" ? updater(sorting) : updater;
@@ -187,6 +190,7 @@ export function GenericTableTanstack<T extends WithId>({
     },
 
     getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
   });
 
   React.useEffect(() => {
@@ -379,6 +383,7 @@ export function GenericTableTanstack<T extends WithId>({
                     return (
                       <TableCell
                         key={header.id}
+                        sortDirection={sorted || false}
                         align={
                           (header.column.columnDef.meta as { align?: string })?.align === "right"
                             ? "right"

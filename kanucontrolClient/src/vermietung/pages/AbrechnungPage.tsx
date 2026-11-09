@@ -54,20 +54,6 @@ function kautionEingegangen(row: BuchungFinanzen) {
     .filter((b) => b.kategorie === "KAUTION" && b.art === "EINGANG")
     .reduce((sum, b) => sum + b.betrag, 0);
 }
-function berechneGesamtsaldo(row: BuchungFinanzen) {
-  // Sum remaining obligations, then subtract credits from overpayments and refundable caution.
-  // The advance is part of total rent, so rentPaid allocates it only once.
-  const mietSollGesamt = soll(row, "ANZAHLUNG") + soll(row, "MIETE");
-  const mietUeberzahlung = Math.max(0, rentPaid(row) - mietSollGesamt);
-  const verbrauchsUeberzahlung = Math.max(0, paidFor(row, "VERBRAUCHSKOSTEN") - soll(row, "VERBRAUCHSKOSTEN"));
-  return offeneSumme(row, "ANZAHLUNG")
-    + offeneSumme(row, "MIETE")
-    + offeneSumme(row, "VERBRAUCHSKOSTEN")
-    + offeneSumme(row, "KAUTION")
-    - kautionZurueckzuzahlen(row)
-    - mietUeberzahlung
-    - verbrauchsUeberzahlung;
-}
 function kautionVerrechnet(row: BuchungFinanzen) {
   return row.bewegungen
     .filter((b) => b.kategorie === "KAUTION" && b.art === "VERRECHNUNG")
@@ -87,7 +73,7 @@ function soll(row: BuchungFinanzen, category: Finanzkategorie) {
   if (row.buchungsquelle === "AIRBNB" && (category === "KAUTION" || category === "ANZAHLUNG")) return 0;
   if (category === "ANZAHLUNG") return Math.min(row.anzahlungSoll, row.mieteSoll);
   if (category === "MIETE") return Math.max(0, row.mieteSoll - Math.min(row.anzahlungSoll, row.mieteSoll));
-  return ({ KAUTION: row.kautionSoll, VERBRAUCHSKOSTEN: row.verbrauchSoll })[category] || 0;
+  return ({ KAUTION: row.kautionSoll, VERBRAUCHSKOSTEN: row.nebenkostenSoll })[category] || 0;
 }
 function erfasst(row: BuchungFinanzen, category: Finanzkategorie) {
   if (category === "ANZAHLUNG") return Math.min(advanceSoll(row), rentPaid(row));
@@ -177,7 +163,7 @@ const AbrechnungPage = () => {
             <Stack direction="row" alignItems="center" spacing={2}>
               <Box sx={{textAlign:{xs:"left",md:"right"}}}>
                 <Typography variant="caption" color="text.secondary">Umsatz</Typography>
-                <Typography fontWeight={700}>{betragLabel(row.mieteSoll + row.verbrauchSoll)}</Typography>
+                <Typography fontWeight={700}>{betragLabel(row.abrechnungGesamt)}</Typography>
               </Box>
               <Chip label={statusText(row)} color={statusText(row) === "Abgerechnet" ? "success" : statusText(row) === "Angezahlt" ? "info" : "default"} />
             </Stack>
@@ -192,7 +178,7 @@ const AbrechnungPage = () => {
             }}>Buchung öffnen</Button>
           </Stack>
         {(() => {
-          const saldo = berechneGesamtsaldo(row);
+          const saldo = row.saldo;
           const abgerechnet = row.buchungsstatus === "ABGESCHLOSSEN";
           const saldoText = saldo > 0
             ? `Der Mieter muss noch ${betragLabel(saldo)} nachzahlen.`
@@ -248,6 +234,12 @@ const AbrechnungPage = () => {
             </Box>;
           })}
         </Stack>
+        {row.entschaedigungen.length > 0 && <Box sx={{mt:2}}>
+          <Typography variant="h6">Entschädigung</Typography>
+          {row.entschaedigungen.map((p,i)=><Typography key={p.id??i} sx={{overflowWrap:'anywhere'}}>{p.anzahl} × {p.bezeichnung} · {p.anlass==='VERLUST'?'Verlust':'Beschädigung'} · {betragLabel(p.einzelpreis)} = {betragLabel(p.gesamtbetrag??0)}</Typography>)}
+          <Typography fontWeight={600}>Entschädigung gesamt: {betragLabel(row.entschaedigungSoll)}</Typography>
+          <Typography variant="body2">Für Zahlung und Kautionsverrechnung im Soll der Verbrauchskosten enthalten.</Typography>
+        </Box>}
         {row.bewegungen.length > 0 && <Box sx={{mt:2}}><Typography variant="subtitle2">Bewegungen</Typography>{row.bewegungen.map((m)=><Typography key={m.id} variant="body2" color="text.secondary">{datumLabel(m.datum)} · {kategorien.find(k=>k.key===m.kategorie)?.label} · {bewegungsLabel(m)} {betragLabel(m.betrag)}{m.bemerkung ? ` · ${m.bemerkung}` : ""}</Typography>)}</Box>}
         </AccordionDetails></Accordion>)}
       {sortiert.length===0 && <Alert severity="info">Es gibt noch keine Buchungen.</Alert>}

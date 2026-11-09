@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+ <changeSet id="20261107-01-antwortmail-adressen" author="codex">
+  <addColumn tableName="homepage_anbindung"><column name="antwort_test_email" type="VARCHAR(254)"/><column name="antwort_cc_email" type="VARCHAR(254)"/></addColumn>
+  <rollback><dropColumn tableName="homepage_anbindung" columnName="antwort_test_email"/><dropColumn tableName="homepage_anbindung" columnName="antwort_cc_email"/></rollback>
+ </changeSet>
+</databaseChangeLog>

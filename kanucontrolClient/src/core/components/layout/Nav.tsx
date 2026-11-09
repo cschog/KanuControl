@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { lazy, Suspense, useEffect, useState } from "react";
 import packageJson from "../../../../package.json";
 import Popover from "@mui/material/Popover";
 import { getOnlineUsers } from "@/kjfp/api/services/sessionApi";
-import { InfoDialog } from "@/kjfp/components/info/InfoDialog";
 import { InfoMenuDialog } from "@/kjfp/components/info/InfoMenuDialog";
 import { ErrorDialog } from "@/core/components/common/ErrorDialog";
 import { getApiErrorMessage } from "@/kjfp/api/utils/apiError";
@@ -30,6 +29,8 @@ import apiClient from "@/core/api/client/apiClient";
 import { InfoPage } from "@/kjfp/api/enums/InfoPage";
 import { radius } from "@/core/theme/ui";
 import { useVermietungContext } from "@/vermietung/context/VermietungContext";
+
+const InfoDialog = lazy(() => import("@/kjfp/components/info/InfoDialog").then((module) => ({ default: module.InfoDialog })));
 
 const appEnv = import.meta.env.VITE_APP_ENV;
 
@@ -408,7 +409,11 @@ const Navigation = () => {
 
       <ErrorDialog open={!!error} message={error ?? ""} onClose={() => setError(null)} />
 
-      {infoPage && <InfoDialog open page={infoPage} onClose={() => setInfoPage(null)} />}
+      {infoPage && (
+        <Suspense fallback={<CircularProgress aria-label="Hilfe wird geladen" size={24} />}>
+          <InfoDialog open page={infoPage} onClose={() => setInfoPage(null)} />
+        </Suspense>
+      )}
     </AppBar>
   );
 };

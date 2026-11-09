@@ -16,8 +16,9 @@ export interface Mieter {
   iban?: string;
   bic?: string;
   aktiv: boolean;
+  mietobjekte?: string[];
   buchungen: number;
   buchungsquellen: Buchungsquelle[];
 }
 
-export type MieterSave = Omit<Mieter, "id" | "personId" | "buchungen" | "buchungsquellen"> & { personId?: number };
+export type MieterSave = Omit<Mieter, "id" | "personId" | "buchungen" | "buchungsquellen" | "mietobjekte"> & { personId?: number };

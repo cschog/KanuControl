@@ -1,8 +1,8 @@
-import { Box } from "@mui/material";
+import { Box, CircularProgress } from "@mui/material";
 import Navigation from "@/core/components/layout/Nav";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import BackFooter from "@/core/components/common/BackFooter";
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { VermietungProvider } from "@/vermietung/context/VermietungProvider";
 
 import { BackNavigationProvider } from "@/core/context/BackNavigationProvider";
@@ -102,7 +102,13 @@ function AppLayoutContent() {
                 : { xs: 2, md: 4 },
           }}
         >
-          <Outlet />
+          <Suspense fallback={
+            <Box role="status" sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+              <CircularProgress aria-label="Seite wird geladen" />
+            </Box>
+          }>
+            <Outlet />
+          </Suspense>
 
           {/* Mobiler Footer bei geöffneten Detail- und Editmasken */}
           {!isStartMenu && detailViewOpen && (

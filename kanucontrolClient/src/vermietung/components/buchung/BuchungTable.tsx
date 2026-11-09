@@ -31,6 +31,7 @@ export function BuchungTable({ data, selectedId, onSelect, sorting, onSortingCha
       columns={buchungColumnsTanstack}
       selectedRowId={selectedId}
       onSelectRow={(row) => onSelect(row ?? null)}
+      manualSorting={false}
       sorting={sorting}
       onSortingChange={onSortingChange}
       getRowBackgroundColor={(row) => (row.buchungsquelle === "AIRBNB" ? "#FFF3E0" : undefined)}

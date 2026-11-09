@@ -14,6 +14,7 @@ import {
   updateBuchung,
   deleteBuchung,
   aendereBuchungsstatus,
+  aendereBuchungsnummer,
 } from "@/vermietung/api/buchungApi";
 
 export function useBuchungen() {
@@ -23,11 +24,11 @@ export function useBuchungen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const changeStatus = useCallback(async (id: number, status: Buchungsstatus, ablesungenBestaetigt: AblesungBestaetigung[] = [], sendEmail = false) => {
+  const changeStatus = useCallback(async (id: number, status: Buchungsstatus, ablesungenBestaetigt: AblesungBestaetigung[] = [], sendEmail = false, fingerprint?: string) => {
     try {
       setError(null);
 
-      const updated = await aendereBuchungsstatus(id, status, ablesungenBestaetigt, sendEmail);
+      const updated = await aendereBuchungsstatus(id, status, ablesungenBestaetigt, sendEmail, fingerprint);
 
       setBuchungen((current) =>
         current.map((buchung) => (buchung.id === updated.id ? updated : buchung)),
@@ -45,6 +46,12 @@ export function useBuchungen() {
       }
       throw err;
     }
+  }, []);
+
+  const changeBuchungsnummer = useCallback(async (id: number, nummer: string, bisherigeNummer: string) => {
+    const result = await aendereBuchungsnummer(id, nummer, bisherigeNummer);
+    setBuchungen(current => current.map(b => b.id === result.id ? { ...b, buchungsnummer: result.buchungsnummer } : b));
+    return result;
   }, []);
 
   const loadBuchungen = useCallback(async () => {
@@ -137,6 +144,7 @@ export function useBuchungen() {
    create,
    update,
    changeStatus,
+   changeBuchungsnummer,
    remove,
    getById,
  };

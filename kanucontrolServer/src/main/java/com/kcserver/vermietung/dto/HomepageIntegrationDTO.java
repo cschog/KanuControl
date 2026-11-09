@@ -21,7 +21,16 @@ public final class HomepageIntegrationDTO {
             @Size(max = 500) String veranstalter, @Size(max = 3000) String bemerkung,
             @Min(0) Integer anzahlJugendliche, @Min(0) @Max(120) Integer jugendAlterVon,
             @Min(0) @Max(120) Integer jugendAlterBis, @Min(0) Integer anzahlErwachsene,
-            @NotNull @AssertTrue Boolean hausregelnAkzeptiert, @NotNull @AssertTrue Boolean datenschutzGelesen) {}
+            @NotNull @AssertTrue Boolean hausregelnAkzeptiert, @NotNull @AssertTrue Boolean datenschutzGelesen,
+            @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL) @Size(max=255) String bankName,
+            @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL) @Size(max=34) @com.kcserver.core.validation.ValidIban String iban,
+            @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL) @Pattern(regexp="[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?") String bic) {
+        public Anfrage {
+            bankName=optional(bankName);iban=bankCode(iban);bic=bankCode(bic);
+        }
+        private static String optional(String value) { return value==null || value.isBlank()?null:value.strip(); }
+        private static String bankCode(String value) { var text=optional(value);return text==null?null:text.replaceAll("\\s+", "").toUpperCase(java.util.Locale.ROOT); }
+    }
     public record Bereich(Long id, String bezeichnung, String beschreibung, int bestand,
             String mengeneinheit, String berechnungsart, BigDecimal einzelpreis, List<Long> erforderlicheIds) {}
     public record Katalog(Long konfigurationVersion, String bezeichnung, String mietobjekt,

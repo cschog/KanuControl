@@ -25,16 +25,22 @@ public class HausmeisterBerichtService {
     private final BuchungRepository buchungen;
     private final ObjectProvider<JavaMailSender> senders;
     private final SmtpMailProperties smtp;
+    private final com.kcserver.vermietung.config.HausmeisterBerichtFreigabe freigabe;
+
+    public java.util.Map<String, Object> status() {
+        return java.util.Map.of("enabled", freigabe.isEnabled(), "environment", freigabe.getEnvironment());
+    }
 
     @Transactional(readOnly = true)
     public List<Long> objektIds() {
+        if (!freigabe.isEnabled()) return List.of();
         return configs.findAll().stream().filter(c -> c.getHausmeisterEmail() != null
                 && !c.getHausmeisterEmail().isBlank()).map(HomepageAnbindung::getMietobjektId).toList();
     }
 
     @Transactional
     public void wocheSenden(Long id, LocalDate woche) {
-        if (!smtp.isEnabled()) return;
+        if (!freigabe.isEnabled() || !smtp.isEnabled()) return;
         var config = configs.lockById(id).orElse(null);
         if (config == null || config.getHausmeisterEmail() == null || config.getHausmeisterEmail().isBlank()
                 || woche.equals(config.getHausmeisterLetzteWoche())) return;
@@ -45,6 +51,7 @@ public class HausmeisterBerichtService {
 
     @Transactional
     public void testSenden(Long id) {
+        freigabe.requireEnabled();
         var config = configs.lockById(id).orElseThrow(() -> new ResponseStatusException(
                 HttpStatus.BAD_REQUEST, "Bitte die Hausmeister-Empfängeradresse zuerst speichern."));
         if (config.getHausmeisterEmail() == null || config.getHausmeisterEmail().isBlank())
@@ -53,6 +60,7 @@ public class HausmeisterBerichtService {
     }
 
     private void senden(HomepageAnbindung config, LocalDate von, boolean test) {
+        freigabe.requireEnabled();
         var sender = senders.getIfAvailable();
         if (!smtp.isEnabled() || sender == null)
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Der KC-SMTP-Versand ist nicht aktiviert.");

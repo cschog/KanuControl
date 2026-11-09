@@ -1,3 +1,5 @@
+import type { BankverbindungAuswahl } from "./Bankverbindung";
+import type { EntschaedigungPosition } from "./EntschaedigungPosition";
 import type { Buchungsstatus } from "@/vermietung/enums/Buchungsstatus";
 import type { Buchungsquelle } from "@/vermietung/enums/Buchungsquelle";
 import type { Rabattart } from "@/vermietung/enums/Rabattart";
@@ -9,6 +11,10 @@ export interface BuchungPositionSave {
 }
 
 export interface BuchungSave {
+  bankverbindungAuswahl?: BankverbindungAuswahl;
+  entschaedigungen?: EntschaedigungPosition[];
+  abrechnungRevision?: number;
+  abschlussRevision?: number;
   anreise: string;
   abreise: string;
 

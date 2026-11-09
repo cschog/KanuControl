@@ -9,6 +9,11 @@ export interface Finanzbewegung {
   bemerkung?: string | null;
 }
 export interface BuchungFinanzen {
+ entschaedigungen: import('./EntschaedigungPosition').EntschaedigungPosition[];
+ entschaedigungSoll: number;
+ nebenkostenSoll: number;
+ abrechnungGesamt: number;
+  saldo: number;
   buchungId: number;
   buchungsnummer: string;
   mieter: string;

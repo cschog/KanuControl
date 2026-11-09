@@ -11,6 +11,10 @@ import type { Mietbereich } from "@/vermietung/types/Mietbereich";
 
 function Einstellungen({ objektId }: { objektId: number }) {
   const [form, setForm] = useState<AirbnbExport | null>(null);
+  const gespeichert = useRef<AirbnbExport | null>(null);
+  const dirty = !!form && !!gespeichert.current && (form.aktiv !== gespeichert.current.aktiv
+    || form.mietbereichIds.length !== gespeichert.current.mietbereichIds.length
+    || form.mietbereichIds.some(id => !gespeichert.current?.mietbereichIds.includes(id)));
   const [bereiche, setBereiche] = useState<Mietbereich[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -23,7 +27,7 @@ function Einstellungen({ objektId }: { objektId: number }) {
     let cancelled = false;
     setLoading(true); setError(null); setSuccess(null);
     Promise.all([getAirbnbExport(objektId), getMietbereiche(objektId)])
-      .then(([config, items]) => { if (!cancelled) { setForm(config); setBereiche(items); } })
+      .then(([config, items]) => { if (!cancelled) { gespeichert.current = config; setForm(config); setBereiche(items); } })
       .catch((err: unknown) => { if (!cancelled) setError(getApiErrorMessage(err, "Der Airbnb-Export konnte nicht geladen werden.")); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
@@ -32,13 +36,14 @@ function Einstellungen({ objektId }: { objektId: number }) {
     setForm(current => current ? { ...current, ...values } : current); setError(null); setSuccess(null);
   }
   async function save(neuerLink: boolean) {
-    if (!form || busy) return;
+    if (!form || busy || (!neuerLink && !dirty)) return;
     if (form.aktiv && (form.mietbereichIds.length === 0 || form.mietbereichIds.some(id => !bereiche.some(b => b.id === id)))) {
       setError("Bitte die zum Inserat gehörenden Mietbereiche auswählen. Für das ganze Bootshaus: EG und OG."); return;
     }
     setBusy(true); setError(null); setSuccess(null);
     try {
       const result = await saveAirbnbExport(objektId, form, neuerLink);
+      gespeichert.current = result;
       setForm({ ...result, feedPfad: result.feedPfad ?? form.feedPfad });
       setSuccess(neuerLink ? "Export-Link erstellt. Bitte jetzt kopieren und bei Airbnb eintragen."
         : result.aktiv ? "Export-Einstellungen gespeichert." : "Export deaktiviert. Der vorhandene Link liefert einen leeren Kalender.");
@@ -71,7 +76,7 @@ function Einstellungen({ objektId }: { objektId: number }) {
         </Alert>}
         <Typography variant="body2">Exportiert werden reservierte und bestätigte Buchungen sowie Sperrzeiten des Mietobjekts. Anfragen sowie abgelehnte und stornierte Buchungen werden nicht exportiert. Der Feed enthält keine Namen oder internen Gründe.</Typography>
         <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
-          <Button variant="contained" disabled={busy} onClick={() => void save(false)}>Einstellungen speichern</Button>
+          <Button variant="contained" disabled={busy || !dirty} onClick={() => void save(false)}>Einstellungen speichern</Button>
           <Button variant="outlined" disabled={busy || !form.aktiv} onClick={() => {
             if (form.linkVorhanden) setConfirm(true); else void save(true);
           }}>{form.linkVorhanden ? "Neuen Link erzeugen" : "Export-Link erstellen"}</Button>

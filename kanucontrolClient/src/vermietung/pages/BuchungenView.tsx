@@ -3,7 +3,7 @@ import AblesungBestaetigungDialog from "@/vermietung/components/buchung/Ablesung
 
 import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { Box, Button, MenuItem, Tab, Tabs, TextField, Typography } from "@mui/material";
+import { Alert, Box, Button, MenuItem, Tab, Tabs, TextField, Typography } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { getBuchung } from "@/vermietung/api/buchungApi";
 
@@ -35,16 +35,21 @@ const BuchungenView = () => {
    create,
    update,
    changeStatus,
+   changeBuchungsnummer,
    remove,
  } = useBuchungen();
 
   const { mietobjekt } = useVermietungContext();
+  const [searchParams, setSearchParams] = useSearchParams();
+  // Buchung.mieterId refers to Person.id, not the separate Mieter entity ID.
+  const mieterParam = Number(searchParams.get("mieterId"));
+  const mieterIdFilter = Number.isSafeInteger(mieterParam) && mieterParam > 0 ? mieterParam : null;
 
   const [mietobjekte, setMietobjekte] = useState<Mietobjekt[]>([]);
   const [filterMietobjektId, setFilterMietobjektId] = useState<number | "">("");
-  const [filterInitialisiert, setFilterInitialisiert] = useState(false);
+  const [filterInitialisiert, setFilterInitialisiert] = useState(mieterIdFilter !== null);
   const [filterJahr, setFilterJahr] = useState<number | "">("");
-  const [buchungsanzeige, setBuchungsanzeige] = useState<"STANDARD" | "ALLE">("STANDARD");
+  const [buchungsanzeige, setBuchungsanzeige] = useState<"STANDARD" | "ALLE">(mieterIdFilter ? "ALLE" : "STANDARD");
   const [ansicht, setAnsicht] = useState<"LISTE" | "KALENDER">("LISTE");
 
   const [showForm, setShowForm] = useState(false);
@@ -54,6 +59,7 @@ const BuchungenView = () => {
   const [neueBuchungsquelle, setNeueBuchungsquelle] = useState<Buchungsquelle>("DIREKT");
   const [ablesungBestaetigung, setAblesungBestaetigung] = useState<Buchung | null>(null);
   const [abschlussSendEmail, setAbschlussSendEmail] = useState(false);
+  const [abschlussFingerprint, setAbschlussFingerprint] = useState<string | undefined>();
   const [abschlussAktiv, setAbschlussAktiv] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -61,7 +67,6 @@ const BuchungenView = () => {
  const { registerBackHandler, setDetailViewOpen } = useBackNavigation();
  const location = useLocation();
  const navigate = useNavigate();
- const [searchParams] = useSearchParams();
  const buchungIdAusUrl = Number(searchParams.get("buchungId"));
  const returnTo = (location.state as { returnTo?: string } | null)?.returnTo;
 
@@ -69,13 +74,13 @@ const BuchungenView = () => {
     try { setSelectedBuchung(await getBuchung(id)); } catch { /* retain the original error */ }
   };
 
-  const handleStatusChange = async (status: Buchungsstatus, sendEmail = false) => {
+  const handleStatusChange = async (status: Buchungsstatus, sendEmail = false, fingerprint?: string) => {
     if (!selectedBuchung) return;
 
     setSaveError(null);
 
     try {
-      const updated = await changeStatus(selectedBuchung.id, status, [], sendEmail);
+      const updated = await changeStatus(selectedBuchung.id, status, [], sendEmail, fingerprint);
       setSelectedBuchung(updated);
       // Die Status-API liefert nicht in jedem Fall die berechnete
       // Verbrauchskosten-Vorschau mit. Für die Detailansicht deshalb die
@@ -85,16 +90,17 @@ const BuchungenView = () => {
       console.error("Fehler beim Ändern des Buchungsstatus:", err);
       await refreshSelectedBuchung(selectedBuchung.id);
       setSaveError(getApiErrorMessage(err));
+      throw err;
     }
   };
-const handleReopen = async (sendEmail = false) => {
+const handleReopen = async (sendEmail = false, fingerprint?: string) => {
   if (!selectedBuchung) return;
 
   setSaveError(null);
 
   try {
     // Buchung wieder auf ABRECHENBAR setzen
-    const updated = await changeStatus(selectedBuchung.id, "ABRECHENBAR", [], sendEmail);
+    const updated = await changeStatus(selectedBuchung.id, "ABRECHENBAR", [], sendEmail, fingerprint);
 
     // Buchung erneut laden, damit auch die Verbrauchskosten-Vorschau
     // vom Backend berechnet und mitgeliefert wird.
@@ -106,19 +112,20 @@ const handleReopen = async (sendEmail = false) => {
     console.error("Fehler beim Wiederöffnen der Buchung:", err);
     await refreshSelectedBuchung(selectedBuchung.id);
     setSaveError(getApiErrorMessage(err));
+      throw err;
   }
 };
 
 
-  const handleReserve = (sendEmail: boolean) => handleStatusChange("RESERVIERT", sendEmail);
+  const handleReserve = (sendEmail: boolean, fingerprint?: string) => handleStatusChange("RESERVIERT", sendEmail, fingerprint);
 
-  const handleConfirm = (sendEmail: boolean) => handleStatusChange("BESTAETIGT", sendEmail);
+  const handleConfirm = (sendEmail: boolean, fingerprint?: string) => handleStatusChange("BESTAETIGT", sendEmail, fingerprint);
 
-  const handleReject = (sendEmail: boolean) => handleStatusChange("ABGELEHNT", sendEmail);
+  const handleReject = (sendEmail: boolean, fingerprint?: string) => handleStatusChange("ABGELEHNT", sendEmail, fingerprint);
 
-  const handleCancelBooking = (sendEmail: boolean) => handleStatusChange("STORNIERT", sendEmail);
+  const handleCancelBooking = (sendEmail: boolean, fingerprint?: string) => handleStatusChange("STORNIERT", sendEmail, fingerprint);
 
-  const abschliessen = async (buchung: Buchung, bestaetigt: boolean, sendEmail = false) => {
+  const abschliessen = async (buchung: Buchung, bestaetigt: boolean, sendEmail = false, fingerprint?: string) => {
     const ablesungen = bestaetigt ? buchung.verbrauchskostenVorschau
       .filter(k => k.bestaetigungErforderlich)
       .map(k => ({
@@ -126,15 +133,16 @@ const handleReopen = async (sendEmail = false) => {
         anfangsablesung: k.anfangsablesung!, endablesung: k.endablesung!,
         anfangsstand: k.anfangsstand!, endstand: k.endstand!,
       })) : [];
-    const updated = await changeStatus(buchung.id, "ABGESCHLOSSEN", ablesungen, sendEmail);
+    const updated = await changeStatus(buchung.id, "ABGESCHLOSSEN", ablesungen, sendEmail, fingerprint);
     setSelectedBuchung(updated);
     await refreshSelectedBuchung(updated.id);
   };
 
-  const handleComplete = async (sendEmail: boolean) => {
+  const handleComplete = async (sendEmail: boolean, fingerprint?: string) => {
     if (!selectedBuchung || abschlussAktiv) return;
     setAbschlussAktiv(true);
     setAbschlussSendEmail(sendEmail);
+    setAbschlussFingerprint(fingerprint);
     setSaveError(null);
     try {
       const aktuell = await getBuchung(selectedBuchung.id);
@@ -145,11 +153,12 @@ const handleReopen = async (sendEmail = false) => {
       } else if (vorschau.some(k => k.bestaetigungErforderlich)) {
         setAblesungBestaetigung(aktuell);
       } else {
-        await abschliessen(aktuell, false, sendEmail);
+        await abschliessen(aktuell, false, sendEmail, fingerprint);
       }
     } catch (err: unknown) {
       if (selectedBuchung) await refreshSelectedBuchung(selectedBuchung.id);
       setSaveError(getApiErrorMessage(err));
+      throw err;
     } finally {
       setAbschlussAktiv(false);
     }
@@ -160,13 +169,14 @@ const handleReopen = async (sendEmail = false) => {
     setAbschlussAktiv(true);
     setSaveError(null);
     try {
-      await abschliessen(ablesungBestaetigung, true, abschlussSendEmail);
+      await abschliessen(ablesungBestaetigung, true, abschlussSendEmail, abschlussFingerprint);
     } catch (err: unknown) {
       await refreshSelectedBuchung(ablesungBestaetigung.id);
       setSaveError(getApiErrorMessage(err));
     } finally {
       setAblesungBestaetigung(null);
       setAbschlussSendEmail(false);
+      setAbschlussFingerprint(undefined);
       setAbschlussAktiv(false);
     }
   };
@@ -327,7 +337,7 @@ const handleReopen = async (sendEmail = false) => {
   const gefilterteBuchungen = buchungen.filter((buchung) => {
     const passtZumMietobjekt = filterMietobjektId === "" || buchung.mietobjektId === filterMietobjektId;
     const istAusgeblendet = buchung.status === "ABGELEHNT" || buchung.status === "STORNIERT";
-    return passtZumMietobjekt && (buchungsanzeige === "ALLE" || !istAusgeblendet);
+    return (mieterIdFilter === null || buchung.mieterId === mieterIdFilter) && passtZumMietobjekt && (buchungsanzeige === "ALLE" || !istAusgeblendet);
   });
 
   // Später beginnende Buchungen stehen oben; fehlende/ungültige Termine kommen ans Ende.
@@ -355,7 +365,13 @@ if (showForm) {
         onEdit={() => setEditMode(true)}
         onCancelEdit={handleCancelEdit}
         onSave={handleSave}
+        onRefresh={async () => { if (selectedBuchung) await refreshSelectedBuchung(selectedBuchung.id); }}
         onReserve={handleReserve}
+        onBuchungsnummerChange={async nummer => {
+          if (!selectedBuchung) return;
+          const result = await changeBuchungsnummer(selectedBuchung.id, nummer, selectedBuchung.buchungsnummer);
+          setSelectedBuchung(current => current?.id === result.id ? { ...current, buchungsnummer: result.buchungsnummer } : current);
+        }}
         onConfirm={handleConfirm}
         onReopen={handleReopen}
         onReject={handleReject}
@@ -393,6 +409,12 @@ if (showForm) {
 
   return (
     <Box sx={{ p: 3 }}>
+      {mieterIdFilter !== null && <Alert severity="info" sx={{ mb: 2 }} action={<Button color="inherit" onClick={() => {
+        setSearchParams(current => { const next = new URLSearchParams(current); next.delete("mieterId"); return next; });
+      }}>Mieterfilter aufheben</Button>}>
+        {(() => { const b = buchungen.find(item => item.mieterId === mieterIdFilter);
+          return b ? `Buchungen von ${b.mieterVorname} ${b.mieterName}` : "Buchungen des ausgewählten Mieters"; })()}
+      </Alert>}
       {/* Header */}
       <Box
         sx={{

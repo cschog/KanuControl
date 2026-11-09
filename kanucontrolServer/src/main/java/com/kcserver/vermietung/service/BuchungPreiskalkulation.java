@@ -31,6 +31,11 @@ public final class BuchungPreiskalkulation {
                         .multiply(BigDecimal.valueOf(einheiten(position)));
         return rabatt.min(brutto).max(BigDecimal.ZERO).setScale(2, RoundingMode.HALF_UP);
     }
+    public static BigDecimal miete(Buchung buchung) {
+        BigDecimal brutto = buchung.getMietbereiche().stream().map(BuchungPreiskalkulation::preis)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        return brutto.subtract(rabatt(buchung).min(brutto)).max(BigDecimal.ZERO).setScale(2, RoundingMode.HALF_UP);
+    }
     public static BigDecimal rabatt(Buchung buchung) {
         BigDecimal brutto = buchung.getMietbereiche().stream().map(BuchungPreiskalkulation::preis).reduce(BigDecimal.ZERO, BigDecimal::add);
         if (buchung.getBuchungsquelle() == Buchungsquelle.AIRBNB || buchung.getRabattart() == Rabattart.KEIN_RABATT) return BigDecimal.ZERO.setScale(2);

@@ -57,6 +57,19 @@ export default defineConfig({
     },
   },
 
+  build: {
+    rollupOptions: {
+      output: {
+        // Keep the shared React runtime cacheable across page changes.
+        manualChunks(id) {
+          if (/[/\\]node_modules[/\\](react|react-dom|scheduler)[/\\]/.test(id)) {
+            return "react-vendor";
+          }
+        },
+      },
+    },
+  },
+
   server: {
     host: true,
     port: 5173,

@@ -1,5 +1,6 @@
 // src/vermietung/components/buchung/BuchungBaseForm.tsx
 
+import { BuchungBankverbindung } from "./BuchungBankverbindung";
 import React, { useEffect, useState } from "react";
 import { geldRunden, mietEinheiten } from "@/vermietung/utils/mietpreis";
 import { getPreis } from "@/vermietung/api/buchungApi";
@@ -366,6 +367,13 @@ export const BuchungBaseForm: React.FC<Props> = ({
         ) : (
           <Alert severity="info">Für Airbnb-Buchungen werden keine Anzahlung und keine Kaution erhoben.</Alert>
         )}
+
+        <BuchungBankverbindung
+          mietobjektId={form.mietobjektId}
+          value={form.bankverbindungAuswahl ?? "PRIMAER"}
+          disabled={!buchungsdatenEditierbar}
+          onChange={(value) => onChange("bankverbindungAuswahl", value)}
+        />
 
         <VereinAutocomplete
           label="Veranstalter"

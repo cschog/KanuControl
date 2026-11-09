@@ -6,6 +6,8 @@ export interface HomepageAnbindung {
   homepageUrl: string | null;
   datenschutzUrl: string | null;
   hausregelnUrl: string | null;
+  antwortTestEmail?: string | null;
+  antwortCcEmail?: string | null;
   hausmeisterEmail?: string | null;
   empfaengerEmail: string | null;
   gastBestaetigung: boolean;

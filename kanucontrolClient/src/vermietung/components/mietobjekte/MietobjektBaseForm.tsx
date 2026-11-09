@@ -1,5 +1,5 @@
 import React from "react";
-import { MenuItem, TextField } from "@mui/material";
+import { Box, MenuItem, TextField, Typography } from "@mui/material";
 
 import FormFeld from "@/core/components/common/FormFeld";
 import PostalCodeAutocomplete from "@/core/components/common/PostalCodeAutocomplete";
@@ -138,6 +138,25 @@ export const MietobjektBaseForm: React.FC<Props> = ({ form, editMode, onChange }
         <MenuItem value="ja">Ja</MenuItem>
         <MenuItem value="nein">Nein</MenuItem>
       </TextField>
+      <Box sx={{ gridColumn: "1 / -1", display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 2 }}>
+        {([
+          ["bankverbindungPrimaer", "Primäre Bankverbindung", "Primär"],
+          ["bankverbindungAlternativ", "Alternative Bankverbindung", "Alternativ"],
+        ] as const).map(([key, title, prefix]) => (
+          <Box key={key} sx={{ display: "grid", gap: 2, minWidth: 0 }}>
+            <Typography variant="h6">{title}</Typography>
+            {([
+              ["kontoinhaber", "Kontoinhaber", 255], ["bankName", "Bankname", 255],
+              ["iban", "IBAN", 64], ["bic", "BIC", 11],
+            ] as const).map(([field, label, maxLength]) => (
+              <TextField key={field} label={`${prefix}: ${label}`} fullWidth size="small"
+                disabled={!editMode} value={form[key]?.[field] ?? ""}
+                slotProps={{ htmlInput: { maxLength } }}
+                onChange={(event) => onChange(key, { ...form[key], [field]: event.target.value })} />
+            ))}
+          </Box>
+        ))}
+      </Box>
     </>
   );
 };

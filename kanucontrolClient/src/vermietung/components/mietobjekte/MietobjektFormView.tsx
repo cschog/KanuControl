@@ -40,10 +40,10 @@ export const MietobjektFormView: React.FC<Props> = ({
   disableDelete,
 }) => {
   const { form, update, buildSavePayload } = useMietobjektForm(mietobjekt);
-  const [view, setView] = useState<"details" | "mietbereiche">("mietbereiche");
+  const [view, setView] = useState<"details" | "mietbereiche">(mietobjekt?.id ? "mietbereiche" : "details");
 
   useEffect(() => {
-    setView("mietbereiche");
+    setView(mietobjekt?.id ? "mietbereiche" : "details");
   }, [mietobjekt?.id]);
 
   if (!mietobjekt || !form) {

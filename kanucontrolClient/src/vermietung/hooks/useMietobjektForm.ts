@@ -29,6 +29,8 @@ export function useMietobjektForm(mietobjekt: Mietobjekt | null) {
     }
 
     setForm({
+      bankverbindungPrimaer: mietobjekt.bankverbindungPrimaer ?? null,
+      bankverbindungAlternativ: mietobjekt.bankverbindungAlternativ ?? null,
       bezeichnung: mietobjekt.bezeichnung ?? "",
       beschreibung: mietobjekt.beschreibung ?? "",
       strasse: mietobjekt.strasse ?? "",

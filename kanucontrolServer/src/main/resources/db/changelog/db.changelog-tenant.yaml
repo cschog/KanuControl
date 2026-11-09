@@ -272,3 +272,30 @@ databaseChangeLog:
 
   - include:
       file: db/changelog/changes/20261106-01-hausmeister-bericht.xml
+
+  - include:
+      file: db/changelog/changes/20261107-01-antwortmail-adressen.xml
+
+  - include:
+      file: db/changelog/changes/20261107-02-entschaedigung-katalog.xml
+
+  - include:
+      file: db/changelog/changes/20261107-03-entschaedigung-positionen.xml
+
+  - include:
+      file: db/changelog/changes/20261107-04-vermietung-abrechnung.xml
+
+  - include:
+      file: db/changelog/changes/20261108-01-mietobjekt-bankverbindungen.xml
+
+  - include:
+      file: changes/20261108-02-reservierung-mail.xml
+      relativeToChangelogFile: true
+
+  - include:
+      file: changes/20261109-01-vorlagensystem.xml
+      relativeToChangelogFile: true
+
+  - include:
+      file: changes/20261109-02-buchungsnummer-text.xml
+      relativeToChangelogFile: true

@@ -35,7 +35,8 @@ import java.util.*;
 @Transactional
 public class BuchungService {
 
-    private record StatusAenderung(BuchungDTO buchung, Buchungsstatus alterStatus) {}
+    private record StatusAenderung(BuchungDTO buchung, Buchungsstatus alterStatus,
+            HomepageStatusMailService.ReservierungMail reservierung, HomepageStatusMailService.StatusMail statusMail) {}
 
     private final BuchungRepository buchungRepository;
     private final HomepageStatusMailService statusMailService;
@@ -57,6 +58,9 @@ public class BuchungService {
     private final BuchungFinanzbewegungRepository
             buchungFinanzbewegungRepository;
     private TransactionTemplate statusTransaction;
+    @Autowired private EntschaedigungPositionService entschaedigungPositionService;
+    @Autowired private ReservierungsversandService reservierungsversand;
+
 
     private static final LocalDateTime UNBEFRISTET_BIS =
             LocalDateTime.of(3000, 12, 31, 14, 0);
@@ -177,6 +181,7 @@ public class BuchungService {
                 ? Optional.ofNullable(dto.getAnzahlungBetrag()).orElse(BigDecimal.ZERO)
                 : BigDecimal.ZERO);
 
+        BuchungBankverbindung.waehlen(buchung, mietobjekt, dto.getBankverbindungAuswahl());
         buchung.setMietobjekt(mietobjekt);
         buchung.setVeranstalter(veranstalter);
         buchung.setBemerkung(dto.getBemerkung());
@@ -215,6 +220,7 @@ public class BuchungService {
 
         validiereMietbereichVoraussetzungen(buchung);
         berechneBuchungsrabatt(buchung, dto, false);
+        if(dto.getEntschaedigungen()!=null) entschaedigungPositionService.sync(buchung,dto.getEntschaedigungen());
 
         buchungRepository.flush();
 
@@ -227,7 +233,7 @@ public class BuchungService {
             throw new IllegalArgumentException("Bitte Teilnehmerzahlen und Altersspanne der Jugendlichen prüfen.");
         }
 
-        Buchung buchung = buchungRepository.findById(id)
+        Buchung buchung = buchungRepository.findLockedById(id)
                 .orElseThrow(() ->
                         new IllegalArgumentException(
                                 String.format(
@@ -255,6 +261,15 @@ public class BuchungService {
                     "Die Bewertung muss zwischen 1 und 5 liegen."
             );
         }
+
+        if(!Objects.equals(buchung.getMietobjekt().getId(),dto.getMietobjektId()) && !buchung.getEntschaedigungen().isEmpty())
+            throw new IllegalArgumentException("Vor dem Objektwechsel alle Entschädigungspositionen ausdrücklich entfernen und speichern.");
+        if(dto.getEntschaedigungen()!=null){
+            if(dto.getAbrechnungRevision()==null || dto.getAbrechnungRevision()!=buchung.getAbrechnungRevision())
+                throw new IllegalArgumentException("Buchung wurde geändert. Bitte neu laden.");
+            entschaedigungPositionService.sync(buchung,dto.getEntschaedigungen());
+        }
+        buchung.setAbrechnungRevision(buchung.getAbrechnungRevision()+1);
 
         // Stornierte und abgelehnte Buchungen dürfen ausschließlich
         // bei Bemerkung und Bewertung geändert werden.
@@ -327,6 +342,7 @@ public class BuchungService {
         buchung.setAnzahlungBetrag(buchung.getBuchungsquelle() == Buchungsquelle.DIREKT
                 ? Optional.ofNullable(dto.getAnzahlungBetrag()).orElse(BigDecimal.ZERO)
                 : BigDecimal.ZERO);
+        BuchungBankverbindung.waehlen(buchung, mietobjekt, dto.getBankverbindungAuswahl());
         buchung.setMietobjekt(mietobjekt);
         buchung.setVeranstalter(veranstalter);
 
@@ -430,6 +446,10 @@ public class BuchungService {
             Buchung buchung,
             BuchungDTO dto
     ) {
+        if (dto.getBankverbindungAuswahl() != null
+                && dto.getBankverbindungAuswahl() != buchung.getBankverbindungAuswahl()) {
+            return false;
+        }
         if (dto.getMieterId() == null
                 || !Objects.equals(buchung.getAnzahlJugendliche(), dto.getAnzahlJugendliche())
                 || !Objects.equals(buchung.getJugendAlterVon(), dto.getJugendAlterVon())
@@ -608,6 +628,7 @@ public class BuchungService {
 
         buchung.setBuchungsjahr(jahr);
         buchung.setLaufendeNummer(naechsteNummer);
+        buchung.setBuchungsnummer(String.format(Locale.ROOT, "%d-%03d", jahr, naechsteNummer));
     }
 
     private Person getMieter(Long mieterId) {
@@ -670,8 +691,15 @@ public class BuchungService {
     private BuchungDTO toDTO(Buchung buchung) {
 
         BuchungDTO dto = new BuchungDTO();
+        dto.setBankverbindungAuswahl(buchung.getBankverbindungAuswahl());
 
+        dto.setEntschaedigungen(EntschaedigungPositionService.rows(buchung));
+        dto.setEntschaedigungSumme(EntschaedigungPositionService.sum(buchung));
+        dto.setAbrechnungRevision(buchung.getAbrechnungRevision());
+        dto.setAbschlussRevision(buchung.getAbschlussRevision());
         dto.setId(buchung.getId());
+        dto.setReservierungMailGesendetAm(buchung.getReservierungMailGesendetAm());
+        dto.setReservierungMailFehler(buchung.getReservierungMailFehler());
 
         dto.setBuchungsnummer(
                 buchung.getBuchungsnummer()
@@ -881,14 +909,25 @@ public class BuchungService {
     public BuchungDTO aendereStatus(Long id, Buchungsstatus neuerStatus,
                                     List<AblesungBestaetigungDTO> bestaetigungen,
                                     boolean sendEmail) {
-        StatusAenderung aenderung = executeStatusTransaction(
-                () -> aendereStatusPersistiert(id, neuerStatus, bestaetigungen));
+        return aendereStatus(id, neuerStatus, bestaetigungen, sendEmail, null);
+    }
 
-        if (sendEmail) {
-            Buchung persisted = buchungRepository.findLockedById(id)
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            String.format(Locale.GERMAN, ErrorMessages.BUCHUNG_NOT_FOUND, id)));
-            statusMailService.senden(persisted, neuerStatus, aenderung.alterStatus());
+    public BuchungDTO aendereStatus(Long id, Buchungsstatus neuerStatus,
+                                    List<AblesungBestaetigungDTO> bestaetigungen, boolean sendEmail, String fingerprint) {
+        if(sendEmail && (fingerprint==null || fingerprint.isBlank()))
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.CONFLICT,
+                    "Bitte vor dem Statuswechsel die E-Mail-Vorschau öffnen und den Versand bestätigen.");
+        StatusAenderung aenderung = executeStatusTransaction(
+                () -> aendereStatusPersistiert(id, neuerStatus, bestaetigungen, sendEmail, fingerprint));
+
+        if (aenderung.reservierung() != null) {
+            String fehler = reservierungsversand.versenden(id, aenderung.reservierung());
+            if (fehler != null) throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.BAD_GATEWAY, fehler);
+            aenderung.buchung().setReservierungMailGesendetAm(java.time.Instant.now());
+            aenderung.buchung().setReservierungMailFehler(null);
+        } else if (aenderung.statusMail()!=null) {
+            statusMailService.statusSenden(aenderung.statusMail());
         }
         return aenderung.buchung();
     }
@@ -898,7 +937,7 @@ public class BuchungService {
     }
 
     private StatusAenderung aendereStatusPersistiert(Long id, Buchungsstatus neuerStatus,
-                                                      List<AblesungBestaetigungDTO> bestaetigungen) {
+                                                      List<AblesungBestaetigungDTO> bestaetigungen, boolean sendEmail, String fingerprint) {
         Buchung buchung = buchungRepository.findLockedById(id)
                 .orElseThrow(() ->
                         new IllegalArgumentException(
@@ -912,21 +951,10 @@ public class BuchungService {
 
         Buchungsstatus alterStatus = buchung.getStatus();
 
-        if (neuerStatus == null) {
-            throw new IllegalArgumentException(
-                    "Der neue Buchungsstatus darf nicht null sein."
-            );
-        }
-
-        if (!istStatusuebergangErlaubt(alterStatus, neuerStatus)) {
-            throw new IllegalArgumentException(
-                    "Der Statuswechsel von "
-                            + alterStatus
-                            + " nach "
-                            + neuerStatus
-                            + " ist nicht erlaubt."
-            );
-        }
+        pruefeStatuswechsel(buchung,neuerStatus);
+        HomepageStatusMailService.StatusMail statusMail=null;
+        if(sendEmail && !(neuerStatus==Buchungsstatus.RESERVIERT && buchung.getBuchungsquelle()==Buchungsquelle.DIREKT))
+            statusMail=statusMailService.statusVorbereiten(buchung,neuerStatus,alterStatus,fingerprint);
 
         if (neuerStatus == Buchungsstatus.RESERVIERT
                 || neuerStatus == Buchungsstatus.BESTAETIGT) {
@@ -947,9 +975,49 @@ public class BuchungService {
             }
         }
 
+        HomepageStatusMailService.ReservierungMail reservierung = null;
+        if (sendEmail && neuerStatus == Buchungsstatus.RESERVIERT && buchung.getBuchungsquelle() == Buchungsquelle.DIREKT) {
+            // Validate and build the immutable attachment from the locked booking BEFORE committing its status.
+            reservierung = fingerprint == null ? statusMailService.reservierungVorbereiten(buchung) : statusMailService.reservierungVorbereiten(buchung, fingerprint);
+            buchung.setReservierungMailFehler("Der Versand wurde angefordert, ist aber noch nicht bestätigt. Bei einem abgebrochenen Versand bitte vor Wiederholung den Postausgang prüfen.");
+        }
+        if(neuerStatus==Buchungsstatus.ABGESCHLOSSEN)buchung.setAbschlussRevision(buchung.getAbrechnungRevision());
         buchung.setStatus(neuerStatus);
 
-        return new StatusAenderung(toDetailDTO(buchungRepository.save(buchung)), alterStatus);
+        return new StatusAenderung(toDetailDTO(buchungRepository.save(buchung)), alterStatus, reservierung, statusMail);
+    }
+
+    @Transactional(readOnly=true)
+    public HomepageStatusMailService.StatusVorschau statusMailVorschau(Long id,Buchungsstatus neuerStatus) {
+        var buchung=buchungRepository.findById(id).orElseThrow(()->new org.springframework.web.server.ResponseStatusException(
+                org.springframework.http.HttpStatus.NOT_FOUND,"Buchung nicht gefunden."));
+        pruefeStatuswechsel(buchung,neuerStatus);
+        if(neuerStatus==Buchungsstatus.RESERVIERT && buchung.getBuchungsquelle()==Buchungsquelle.DIREKT)
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.CONFLICT,
+                    "Bitte die Vorschau der Reservierungsbestätigung mit PDF verwenden.");
+        return statusMailService.statusVorschau(buchung,neuerStatus,buchung.getStatus());
+    }
+
+    private void pruefeStatuswechsel(Buchung buchung,Buchungsstatus neuerStatus) {
+        Buchungsstatus alterStatus=buchung.getStatus();
+        if (neuerStatus == null) {
+            throw new IllegalArgumentException(
+                    "Der neue Buchungsstatus darf nicht null sein."
+            );
+        }
+
+        boolean erneuterAbschluss=alterStatus==Buchungsstatus.ABGESCHLOSSEN && neuerStatus==Buchungsstatus.ABGESCHLOSSEN
+                && buchung.getAbrechnungRevision()!=buchung.getAbschlussRevision();
+        if (!erneuterAbschluss && !istStatusuebergangErlaubt(alterStatus, neuerStatus)) {
+            throw new IllegalArgumentException(
+                    "Der Statuswechsel von "
+                            + alterStatus
+                            + " nach "
+                            + neuerStatus
+                            + " ist nicht erlaubt."
+            );
+        }
+
     }
 
     private void pruefeKautionsabschluss(Buchung buchung) {

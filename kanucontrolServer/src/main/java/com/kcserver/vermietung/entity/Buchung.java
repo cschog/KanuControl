@@ -26,11 +26,8 @@ import java.util.List;
         name = "buchung",
         uniqueConstraints = {
                 @UniqueConstraint(
-                        name = "uk_buchung_jahr_laufende_nummer",
-                        columnNames = {
-                                "buchungsjahr",
-                                "laufende_nummer"
-                        }
+                        name = "uk_buchung_buchungsnummer",
+                        columnNames = "buchungsnummer"
                 )
         }
 )
@@ -45,6 +42,9 @@ public class Buchung extends Auditable {
     @ToString.Include
     private Long id;
 
+    @Column(name = "buchungsnummer", nullable = false, length = 15)
+    private String buchungsnummer;
+
     @Column(name = "buchungsjahr", nullable = false)
     private Integer buchungsjahr;
 
@@ -58,6 +58,11 @@ public class Buchung extends Auditable {
     @Enumerated(EnumType.STRING)
     @Column(name = "buchungsquelle", nullable = false, length = 20)
     private Buchungsquelle buchungsquelle;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "bankverbindung_auswahl", nullable = false, length = 20)
+    private com.kcserver.vermietung.enumtype.BankverbindungAuswahl bankverbindungAuswahl =
+            com.kcserver.vermietung.enumtype.BankverbindungAuswahl.PRIMAER;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "rabattart", nullable = false, length = 20)
@@ -78,6 +83,12 @@ public class Buchung extends Auditable {
 
     @Column(name = "anzahlung_betrag", nullable = false, precision = 10, scale = 2)
     private BigDecimal anzahlungBetrag = BigDecimal.ZERO;
+
+    @Column(name = "reservierung_mail_gesendet_am")
+    private java.time.Instant reservierungMailGesendetAm;
+
+    @Column(name = "reservierung_mail_fehler", length = 2000)
+    private String reservierungMailFehler;
 
     @Column(name = "anreise", nullable = false)
     private LocalDateTime anreise;
@@ -128,8 +139,18 @@ public class Buchung extends Auditable {
     )
     private List<BuchungMietbereich> mietbereiche = new ArrayList<>();
 
-    @Transient
+    @OneToMany(mappedBy="buchung",cascade=CascadeType.ALL,orphanRemoval=true)
+    @OrderBy("sortierung ASC, id ASC")
+    private List<BuchungEntschaedigung> entschaedigungen = new ArrayList<>();
+    @Column(name="abrechnung_revision",nullable=false) private long abrechnungRevision;
+    @Column(name="abschluss_revision",nullable=false) private long abschlussRevision;
+    @PrePersist
+    private void initialisiereBuchungsnummer() {
+        if (buchungsnummer == null) buchungsnummer = getBuchungsnummer();
+    }
+
     public String getBuchungsnummer() {
+        if (buchungsnummer != null) return buchungsnummer;
         if (buchungsjahr == null || laufendeNummer == null) {
             return null;
         }

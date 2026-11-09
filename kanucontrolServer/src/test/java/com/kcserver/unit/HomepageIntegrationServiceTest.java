@@ -47,7 +47,7 @@ class HomepageIntegrationServiceTest {
     @AfterEach void close() { factory.close(); }
     private Anfrage request(UUID id, long version, String name) {
         return new Anfrage(id, version, auswahl, "Test", name, "gast@example.org", "0123456789",
-            "Teststraße 1", "12345", "Testort", "DE", "Schule", "Bitte prüfen", 8, 12, 16, 2, true, true);
+            "Teststraße 1", "12345", "Testort", "DE", "Schule", "Bitte prüfen", 8, 12, 16, 2, true, true, null, null, null);
     }
     @Test void deaktivierteOderFremdeAnbindungHatKeinenZugriff() {
         assertThrows(ResponseStatusException.class, () -> service.katalog(7L, "anderer-client"));
@@ -131,4 +131,33 @@ class HomepageIntegrationServiceTest {
         service.kalender(7L,"verein-homepage",new KalenderAuswahl("2027-07",10L));
         verify(buchungService).homepageKalender(config.getMietobjekt(),b,YearMonth.of(2027,7),Set.of(10L));
     }
+    @Test void bankverbindungWirdNormalisiertUndAmNeuenMieterGespeichert() throws Exception {
+        var data=(com.fasterxml.jackson.databind.node.ObjectNode)mapper.valueToTree(request(UUID.randomUUID(),2L,"Name"));
+        data.put("bankName"," Erika Musterfrau ");data.put("iban","de89 3704 0044 0532 0130 00");data.put("bic","cobadeffxxx");
+        var dto=mapper.treeToValue(data,Anfrage.class);
+        var mieter=new MieterDTO();mieter.setPersonId(55L);when(mieterService.create(any())).thenReturn(mieter);
+        var saved=new BuchungDTO();saved.setId(99L);saved.setBuchungsnummer("2026-042");when(buchungService.create(any())).thenReturn(saved);
+        when(buchungen.findById(99L)).thenReturn(Optional.of(new Buchung()));
+        service.anfrage(7L,"verein-homepage",dto);
+        var kontakt=ArgumentCaptor.forClass(com.kcserver.vermietung.dto.MieterSaveDTO.class);verify(mieterService).create(kontakt.capture());
+        assertEquals("Erika Musterfrau",kontakt.getValue().getBankName());assertEquals("DE89370400440532013000",kontakt.getValue().getIban());
+        assertEquals("COBADEFFXXX",kontakt.getValue().getBic());
+    }
+    @Test void ungueltigeBankangabenWerdenVorKontaktUndBuchungAbgewiesen() throws Exception {
+        for(var key:List.of("iban","bic")) {
+            var data=(com.fasterxml.jackson.databind.node.ObjectNode)mapper.valueToTree(request(UUID.randomUUID(),2L,"Name"));data.put(key,"ungueltig");
+            var dto=mapper.treeToValue(data,Anfrage.class);
+            assertThrows(IllegalArgumentException.class,()->service.anfrage(7L,"verein-homepage",dto));
+        }
+        verifyNoInteractions(mieterService,buchungService,anfragen);
+    }
+    @Test void alteAnfragenOhneBankangabenBehaltenIhrJsonUndDamitDenReplayHash() throws Exception {
+        var legacy=request(UUID.randomUUID(),2L,"Name");var json=mapper.writeValueAsString(legacy);
+        assertFalse(json.contains("bankName"));assertFalse(json.contains("iban"));assertFalse(json.contains("bic"));
+        assertEquals(legacy,mapper.readValue(json,Anfrage.class));
+        var data=(com.fasterxml.jackson.databind.node.ObjectNode)mapper.readTree(json);
+        data.put("bankName","");data.put("iban","");data.put("bic","");
+        assertEquals(json,mapper.writeValueAsString(mapper.treeToValue(data,Anfrage.class)));
+    }
+
 }

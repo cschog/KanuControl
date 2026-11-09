@@ -18,6 +18,7 @@ class BuchungStatusBenachrichtigungTest {
     private HomepageStatusMailService mails;
     private BuchungService service;
     private Buchung buchung;
+    private HomepageStatusMailService.StatusMail preparedStatus;
     @BeforeEach void setup() {
         repository=mock(BuchungRepository.class);mails=mock(HomepageStatusMailService.class);
         service=new BuchungService(repository,mock(MieterRepository.class),mock(BuchungsnummerCounterRepository.class),
@@ -25,18 +26,21 @@ class BuchungStatusBenachrichtigungTest {
             mock(MietobjektRepository.class),mock(MietbereichRepository.class),mock(MietpreisRepository.class),mock(MietbereichRabattRepository.class),
             mock(ZaehlerRepository.class),mock(ZaehlerstandRepository.class),mock(VerbrauchsabrechnungService.class),
             mock(BuchungVerbrauchskostenRepository.class),mock(BuchungFinanzbewegungRepository.class),mails);
+        preparedStatus=mock(HomepageStatusMailService.StatusMail.class);
+        when(mails.statusVorbereiten(any(),any(),any(),anyString())).thenReturn(preparedStatus);
         buchung=new Buchung();buchung.setId(1L);buchung.setHerkunft("DIREKT");
         Mietobjekt objekt=new Mietobjekt();objekt.setId(7L);buchung.setMietobjekt(objekt);buchung.setMieter(new com.kcserver.core.entity.Person());
         buchung.setAnreise(LocalDateTime.now().plusDays(5));buchung.setAbreise(LocalDateTime.now().plusDays(7));
         when(repository.findLockedById(1L)).thenReturn(Optional.of(buchung));when(repository.save(any())).thenAnswer(i->i.getArgument(0));
     }
     @Test void expliziteVersandentscheidungVormerktAuchFuerDirektInKcErstellteBuchungenEineMail() {
-        service.aendereStatus(1L,Buchungsstatus.RESERVIERT,List.of(),true);
-        service.aendereStatus(1L,Buchungsstatus.BESTAETIGT,List.of(),true);
-        service.aendereStatus(1L,Buchungsstatus.STORNIERT,List.of(),true);
-        verify(mails).senden(buchung,Buchungsstatus.RESERVIERT,Buchungsstatus.ANFRAGE);
-        verify(mails).senden(buchung,Buchungsstatus.BESTAETIGT,Buchungsstatus.RESERVIERT);
-        verify(mails).senden(buchung,Buchungsstatus.STORNIERT,Buchungsstatus.BESTAETIGT);
+        service.aendereStatus(1L,Buchungsstatus.RESERVIERT,List.of(),true,"geprueft");
+        service.aendereStatus(1L,Buchungsstatus.BESTAETIGT,List.of(),true,"geprueft");
+        service.aendereStatus(1L,Buchungsstatus.STORNIERT,List.of(),true,"geprueft");
+        verify(mails).statusVorbereiten(buchung,Buchungsstatus.RESERVIERT,Buchungsstatus.ANFRAGE,"geprueft");
+        verify(mails).statusVorbereiten(buchung,Buchungsstatus.BESTAETIGT,Buchungsstatus.RESERVIERT,"geprueft");
+        verify(mails).statusVorbereiten(buchung,Buchungsstatus.STORNIERT,Buchungsstatus.BESTAETIGT,"geprueft");
+        verify(mails,times(3)).statusSenden(preparedStatus);
         assertEquals(Buchungsstatus.STORNIERT,buchung.getStatus());
     }
     @Test void fehlendeVersandentscheidungSendetKeineMail() {
@@ -45,12 +49,12 @@ class BuchungStatusBenachrichtigungTest {
         verifyNoInteractions(mails);
     }
     @Test void wiederholterStatusErzeugtKeineZweiteMail() {
-        service.aendereStatus(1L,Buchungsstatus.RESERVIERT,List.of(),true);
-        assertThrows(IllegalArgumentException.class,()->service.aendereStatus(1L,Buchungsstatus.RESERVIERT,List.of(),true));
-        verify(mails,times(1)).senden(buchung,Buchungsstatus.RESERVIERT,Buchungsstatus.ANFRAGE);
+        service.aendereStatus(1L,Buchungsstatus.RESERVIERT,List.of(),true,"geprueft");
+        assertThrows(IllegalArgumentException.class,()->service.aendereStatus(1L,Buchungsstatus.RESERVIERT,List.of(),true,"geprueft"));
+        verify(mails,times(1)).statusVorbereiten(buchung,Buchungsstatus.RESERVIERT,Buchungsstatus.ANFRAGE,"geprueft");
     }
     @Test void ungueltigerUebergangSendetKeineMail() {
-        assertThrows(IllegalArgumentException.class,()->service.aendereStatus(1L,Buchungsstatus.ABGESCHLOSSEN,List.of(),true));verifyNoInteractions(mails);
+        assertThrows(IllegalArgumentException.class,()->service.aendereStatus(1L,Buchungsstatus.ABGESCHLOSSEN,List.of(),true,"geprueft"));verifyNoInteractions(mails);
     }
     @Test void versandfehlerLaesstDenBereitsGespeichertenStatusBestehen() {
         PlatformTransactionManager tx=mock(PlatformTransactionManager.class);
@@ -62,10 +66,48 @@ class BuchungStatusBenachrichtigungTest {
             assertTrue(committed.get(),"Status-Transaktion muss vor dem Mailversand committet sein");
             assertEquals(Buchungsstatus.RESERVIERT,buchung.getStatus());
             throw new IllegalStateException("Mail queue unavailable");
-        }).when(mails).senden(any(),eq(Buchungsstatus.RESERVIERT),eq(Buchungsstatus.ANFRAGE));
-        assertThrows(IllegalStateException.class,()->service.aendereStatus(1L,Buchungsstatus.RESERVIERT,List.of(),true));
+        }).when(mails).statusSenden(preparedStatus);
+        assertThrows(IllegalStateException.class,()->service.aendereStatus(1L,Buchungsstatus.RESERVIERT,List.of(),true,"geprueft"));
         assertEquals(Buchungsstatus.RESERVIERT,buchung.getStatus());
         assertTrue(committed.get());
+        verify(repository).save(buchung);
+    }
+    @Test void direktReservierungBereitetPdfVorCommitVorUndVersendetErstDanach() {
+        buchung.setBuchungsquelle(com.kcserver.vermietung.enumtype.Buchungsquelle.DIREKT);
+        var versand=mock(ReservierungsversandService.class);
+        org.springframework.test.util.ReflectionTestUtils.setField(service,"reservierungsversand",versand);
+        var vorbereitet=mock(HomepageStatusMailService.ReservierungMail.class);
+        PlatformTransactionManager tx=mock(PlatformTransactionManager.class);
+        when(tx.getTransaction(any())).thenReturn(new SimpleTransactionStatus());
+        var committed=new java.util.concurrent.atomic.AtomicBoolean();
+        doAnswer(i->{committed.set(true);return null;}).when(tx).commit(any());
+        service.configureStatusTransaction(tx);
+        when(mails.reservierungVorbereiten(buchung,"geprueft")).thenAnswer(i->{
+            assertFalse(committed.get());assertEquals(Buchungsstatus.ANFRAGE,buchung.getStatus());return vorbereitet;
+        });
+        when(versand.versenden(1L,vorbereitet)).thenAnswer(i->{
+            assertTrue(committed.get());assertEquals(Buchungsstatus.RESERVIERT,buchung.getStatus());return null;
+        });
+        var result=service.aendereStatus(1L,Buchungsstatus.RESERVIERT,List.of(),true,"geprueft");
+        assertNotNull(result.getReservierungMailGesendetAm());assertNull(result.getReservierungMailFehler());
+        verify(mails,never()).senden(any(),any(),any());verify(versand).versenden(1L,vorbereitet);
+    }
+    @Test void ungueltigesPdfVerhindertStatuswechselUndVersand() {
+        buchung.setBuchungsquelle(com.kcserver.vermietung.enumtype.Buchungsquelle.DIREKT);
+        when(mails.reservierungVorbereiten(buchung,"geprueft")).thenThrow(new IllegalArgumentException("Bankdaten fehlen"));
+        assertThrows(IllegalArgumentException.class,()->service.aendereStatus(1L,Buchungsstatus.RESERVIERT,List.of(),true,"geprueft"));
+        assertEquals(Buchungsstatus.ANFRAGE,buchung.getStatus());verify(repository,never()).save(any());
+        verify(mails,never()).senden(any(),any(),any());
+    }
+    @Test void direktReservierungsVersandfehlerMeldetGespeichertenStatus() {
+        buchung.setBuchungsquelle(com.kcserver.vermietung.enumtype.Buchungsquelle.DIREKT);
+        var versand=mock(ReservierungsversandService.class);
+        org.springframework.test.util.ReflectionTestUtils.setField(service,"reservierungsversand",versand);
+        var vorbereitet=mock(HomepageStatusMailService.ReservierungMail.class);
+        when(mails.reservierungVorbereiten(buchung,"geprueft")).thenReturn(vorbereitet);
+        when(versand.versenden(1L,vorbereitet)).thenReturn("Die Buchung ist reserviert. SMTP ist nicht erreichbar.");
+        var e=assertThrows(org.springframework.web.server.ResponseStatusException.class,()->service.aendereStatus(1L,Buchungsstatus.RESERVIERT,List.of(),true,"geprueft"));
+        assertEquals(502,e.getStatusCode().value());assertEquals(Buchungsstatus.RESERVIERT,buchung.getStatus());
         verify(repository).save(buchung);
     }
     @Test void automatischeUmstellungBeimLesenSendetOhneBenutzerentscheidungKeineMail() {
@@ -80,4 +122,26 @@ class BuchungStatusBenachrichtigungTest {
         assertEquals(1,service.aktualisiereAbrechenbareBuchungen());assertEquals(0,service.aktualisiereAbrechenbareBuchungen());
         verifyNoInteractions(mails);
     }
+    @Test void fehlendeVorschaufreigabeVerhindertDenStatuswechselVorJederAenderung() {
+        var error=assertThrows(org.springframework.web.server.ResponseStatusException.class,
+                ()->service.aendereStatus(1L,Buchungsstatus.RESERVIERT,List.of(),true));
+        assertEquals(409,error.getStatusCode().value());assertEquals(Buchungsstatus.ANFRAGE,buchung.getStatus());
+        verifyNoInteractions(repository,mails);
+    }
+    @Test void veralteteVorschauVerhindertStatusSpeichernUndVersand() {
+        when(mails.statusVorbereiten(any(),any(),any(),eq("veraltet"))).thenThrow(
+                new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.CONFLICT,"Vorschau veraltet"));
+        assertThrows(org.springframework.web.server.ResponseStatusException.class,
+                ()->service.aendereStatus(1L,Buchungsstatus.RESERVIERT,List.of(),true,"veraltet"));
+        assertEquals(Buchungsstatus.ANFRAGE,buchung.getStatus());verify(repository,never()).save(any());
+        verify(mails,never()).statusSenden(any());
+    }
+    @Test void statusVorschauLaesstDieBuchungUndDenVersandUnveraendert() {
+        when(repository.findById(1L)).thenReturn(Optional.of(buchung));
+        service.statusMailVorschau(1L,Buchungsstatus.RESERVIERT);
+        verify(repository,never()).save(any());verify(repository,never()).findLockedById(any());
+        verify(mails).statusVorschau(buchung,Buchungsstatus.RESERVIERT,Buchungsstatus.ANFRAGE);
+        verify(mails,never()).statusSenden(any());assertEquals(Buchungsstatus.ANFRAGE,buchung.getStatus());
+    }
+
 }

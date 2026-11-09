@@ -101,10 +101,10 @@ export default function MietbereichAbhaengigkeitenVerwaltung() {
       );
       setMietbereiche((aktuell) => aktuell.map((item) => item.id === bereich.id ? aktualisiert : item));
       setUrspruenglicheMietbereiche((aktuell) => aktuell.map((item) => item.id === bereich.id ? aktualisiert : item));
-      setSuccess(`Abhängigkeiten für „${bereich.bezeichnung}“ gespeichert.`);
+      setSuccess(`Mietbereichsregeln für „${bereich.bezeichnung}“ gespeichert.`);
     } catch (err) {
-      console.error("Abhängigkeiten konnten nicht gespeichert werden:", err);
-      setError(getApiErrorMessage(err, "Die Abhängigkeiten konnten nicht gespeichert werden."));
+      console.error("Mietbereichsregeln konnten nicht gespeichert werden:", err);
+      setError(getApiErrorMessage(err, "Die Mietbereichsregeln konnten nicht gespeichert werden."));
     } finally {
       setSavingId(null);
     }

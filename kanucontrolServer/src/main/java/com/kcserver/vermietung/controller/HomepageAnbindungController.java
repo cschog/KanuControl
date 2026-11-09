@@ -16,6 +16,12 @@ public class HomepageAnbindungController {
 
     private final com.kcserver.vermietung.service.HausmeisterBerichtService berichte;
 
+    @GetMapping("/hausmeister-status")
+    @PreAuthorize("hasAnyRole('ADMIN', 'VERMIETUNG')")
+    public ApiResponse<java.util.Map<String, Object>> berichtStatus(@PathVariable Long mietobjektId) {
+        return ApiResponse.of(berichte.status());
+    }
+
     @PostMapping("/hausmeister-test")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<String> test(@PathVariable Long mietobjektId) {

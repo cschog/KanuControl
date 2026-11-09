@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+    <changeSet id="20261109-02-buchungsnummer-text" author="codex">
+        <addColumn tableName="buchung"><column name="buchungsnummer" type="VARCHAR(15)"/></addColumn>
+        <!-- Bisherige Darstellung erhalten, auch bei laufenden Nummern ab 1000. -->
+        <sql>UPDATE buchung SET buchungsnummer = CAST(buchungsjahr AS VARCHAR) || '-' ||
+            CASE WHEN laufende_nummer &lt; 10 THEN '00' WHEN laufende_nummer &lt; 100 THEN '0' ELSE '' END || CAST(laufende_nummer AS VARCHAR)</sql>
+        <addNotNullConstraint tableName="buchung" columnName="buchungsnummer" columnDataType="VARCHAR(15)"/>
+        <addUniqueConstraint tableName="buchung" columnNames="buchungsnummer" constraintName="uk_buchung_buchungsnummer"/>
+        <dropUniqueConstraint tableName="buchung" constraintName="uk_buchung_jahr_laufende_nummer"/>
+        <createIndex tableName="buchung" indexName="ix_buchung_jahr_laufende_nummer"><column name="buchungsjahr"/><column name="laufende_nummer"/></createIndex>
+        <rollback>
+            <!-- Ein Rollback darf geänderte Schreibweisen niemals stillschweigend verlieren. -->
+            <sql>ALTER TABLE buchung ADD CONSTRAINT ck_buchungsnummer_rollback_format CHECK (buchungsnummer = CAST(buchungsjahr AS VARCHAR) || '-' ||
+                CASE WHEN laufende_nummer &lt; 10 THEN '00' WHEN laufende_nummer &lt; 100 THEN '0' ELSE '' END || CAST(laufende_nummer AS VARCHAR))</sql>
+            <addUniqueConstraint tableName="buchung" columnNames="buchungsjahr,laufende_nummer" constraintName="uk_buchung_jahr_laufende_nummer"/>
+            <dropIndex tableName="buchung" indexName="ix_buchung_jahr_laufende_nummer"/>
+            <dropUniqueConstraint tableName="buchung" constraintName="uk_buchung_buchungsnummer"/>
+            <sql>ALTER TABLE buchung DROP CONSTRAINT ck_buchungsnummer_rollback_format</sql>
+            <dropColumn tableName="buchung" columnName="buchungsnummer"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

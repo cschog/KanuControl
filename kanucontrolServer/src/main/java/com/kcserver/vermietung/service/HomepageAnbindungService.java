@@ -88,6 +88,8 @@ public class HomepageAnbindungService {
         entity.setHausregelnUrl(hausregelnUrl);
         entity.setEmpfaengerEmail(empfaengerEmail);
         entity.setHausmeisterEmail(trimToNull(dto.getHausmeisterEmail()));
+        entity.setAntwortTestEmail(trimToNull(dto.getAntwortTestEmail()));
+        entity.setAntwortCcEmail(trimToNull(dto.getAntwortCcEmail()));
         entity.setGastBestaetigung(dto.isGastBestaetigung());
         entity.setVerwaltungsBenachrichtigung(dto.isVerwaltungsBenachrichtigung());
         entity.setTeilnehmerPflicht(dto.isTeilnehmerPflicht());
@@ -129,6 +131,8 @@ public class HomepageAnbindungService {
         dto.setHausregelnUrl(entity.getHausregelnUrl());
         dto.setEmpfaengerEmail(entity.getEmpfaengerEmail());
         dto.setHausmeisterEmail(entity.getHausmeisterEmail());
+        dto.setAntwortTestEmail(entity.getAntwortTestEmail());
+        dto.setAntwortCcEmail(entity.getAntwortCcEmail());
         dto.setGastBestaetigung(entity.isGastBestaetigung());
         dto.setVerwaltungsBenachrichtigung(entity.isVerwaltungsBenachrichtigung());
         dto.setTeilnehmerPflicht(entity.isTeilnehmerPflicht());

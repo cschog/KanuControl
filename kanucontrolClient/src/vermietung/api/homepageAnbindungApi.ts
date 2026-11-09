@@ -14,3 +14,8 @@ export async function getHomepageAnbindung(id: number): Promise<HomepageAnbindun
 export async function saveHomepageAnbindung(id: number, data: HomepageAnbindung): Promise<HomepageAnbindung> {
   return (await apiClient.put<HomepageAnbindung>(url(id), data)).data;
 }
+
+export interface HausmeisterBerichtStatus { enabled: boolean; environment: string }
+export async function getHausmeisterBerichtStatus(id: number): Promise<HausmeisterBerichtStatus> {
+  return (await apiClient.get<HausmeisterBerichtStatus>(`${url(id)}/hausmeister-status`)).data;
+}

@@ -54,8 +54,13 @@ export async function deleteBuchung(id: number): Promise<void> {
   await apiClient.delete(`${baseUrl()}/${id}`);
 }
 
-export async function aendereBuchungsstatus(id: number, status: Buchungsstatus, ablesungenBestaetigt: AblesungBestaetigung[] = [], sendEmail = false): Promise<Buchung> {
-  const response = await apiClient.patch<Buchung>(`${baseUrl()}/${id}/status`, { status, ablesungenBestaetigt, sendEmail });
+export async function aendereBuchungsstatus(id: number, status: Buchungsstatus, ablesungenBestaetigt: AblesungBestaetigung[] = [], sendEmail = false, fingerprint?: string): Promise<Buchung> {
+  const response = await apiClient.patch<Buchung>(`${baseUrl()}/${id}/status`, { status, ablesungenBestaetigt, sendEmail, fingerprint });
 
   return response.data;
+}
+
+export interface BuchungsnummerAenderung { id: number; buchungsnummer: string }
+export async function aendereBuchungsnummer(id: number, buchungsnummer: string, bisherigeBuchungsnummer: string): Promise<BuchungsnummerAenderung> {
+  return (await apiClient.patch<BuchungsnummerAenderung>(`${baseUrl()}/${id}/buchungsnummer`, { buchungsnummer, bisherigeBuchungsnummer })).data;
 }

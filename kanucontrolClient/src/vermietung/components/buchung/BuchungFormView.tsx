@@ -1,3 +1,7 @@
+import BuchungsnummerAendern from "./BuchungsnummerAendern";
+import VorlagenVersandarchiv from "./VorlagenVersandarchiv";
+import Abrechnungsdokumente from "./Abrechnungsdokumente";
+import EntschaedigungEditor from "./EntschaedigungEditor";
 // src/vermietung/components/anmeldung/BuchungFormView.tsx
 
 import { Box, Button, Chip, Typography } from "@mui/material";
@@ -17,16 +21,18 @@ interface Props {
   initialZeitraum?: { anreiseDatum: string; abreiseDatum: string } | null;
   editMode: boolean;
 
+  onRefresh?: () => Promise<void>;
+  onBuchungsnummerChange?: (nummer: string) => Promise<void>;
   onEdit: () => void;
   onCancelEdit: () => void;
   onSave: (payload: BuchungSave) => Promise<void>;
-  onReopen: (sendEmail: boolean) => Promise<void>;
+  onReopen: (sendEmail: boolean, fingerprint?: string) => Promise<void>;
   onDelete: () => void;
-  onReserve: (sendEmail: boolean) => Promise<void> | void;
-  onConfirm: (sendEmail: boolean) => Promise<void> | void;
-  onReject: (sendEmail: boolean) => Promise<void> | void;
-  onCancelBooking: (sendEmail: boolean) => Promise<void> | void;
-  onComplete: (sendEmail: boolean) => Promise<void> | void;
+  onReserve: (sendEmail: boolean, fingerprint?: string) => Promise<void> | void;
+  onConfirm: (sendEmail: boolean, fingerprint?: string) => Promise<void> | void;
+  onReject: (sendEmail: boolean, fingerprint?: string) => Promise<void> | void;
+  onCancelBooking: (sendEmail: boolean, fingerprint?: string) => Promise<void> | void;
+  onComplete: (sendEmail: boolean, fingerprint?: string) => Promise<void> | void;
   onBack: () => void;
   onOpenFinanzen: () => void;
 
@@ -51,6 +57,8 @@ export const BuchungFormView: React.FC<Props> = ({
   buchung,
   initialZeitraum,
   editMode,
+  onRefresh,
+  onBuchungsnummerChange,
   onEdit,
   onCancelEdit,
   onSave,
@@ -112,6 +120,9 @@ export const BuchungFormView: React.FC<Props> = ({
         </Typography>
 
         <Chip label={status.label} color={status.color} />
+        {buchung && !editMode && onBuchungsnummerChange && <BuchungsnummerAendern
+          key={`${buchung.id}-${buchung.buchungsnummer}`} nummer={buchung.buchungsnummer} onSave={onBuchungsnummerChange}
+        />}
         {buchung?.herkunft === "HOMEPAGE" && <Chip label="Homepage-Anfrage" variant="outlined" />}
         {buchung && !editMode && buchung.status !== "ABGELEHNT" && buchung.status !== "STORNIERT" && (
           <Button variant="outlined" startIcon={<PaymentsIcon />} onClick={onOpenFinanzen}>
@@ -157,10 +168,19 @@ export const BuchungFormView: React.FC<Props> = ({
         />
       </Box>
 
+      <EntschaedigungEditor objektId={form.mietobjektId} rows={form.entschaedigungen ?? []} editable={editMode} onChange={rows=>update("entschaedigungen",rows)}/>
+      {buchung && !editMode && <Abrechnungsdokumente key={`${buchung.id}-${buchung.abrechnungRevision}-${buchung.abschlussRevision}`} id={buchung.id} ausstellbar={buchung.status === "ABGESCHLOSSEN" && buchung.abrechnungRevision === buchung.abschlussRevision}/>}
+      {buchung && !editMode && <VorlagenVersandarchiv key={`${buchung.id}-${buchung.reservierungMailGesendetAm}-${buchung.reservierungMailFehler}`} id={buchung.id} refresh={!!buchung.reservierungMailGesendetAm} />}
       <BuchungActionBar
+        buchungId={buchung?.id}
+        direktbuchung={buchung?.buchungsquelle === "DIREKT"}
+        reservierungMailGesendetAm={buchung?.reservierungMailGesendetAm}
+        reservierungMailFehler={buchung?.reservierungMailFehler}
+        onRefresh={onRefresh}
         status={buchung?.status ?? "ANFRAGE"}
         editMode={editMode}
         notifyByEmail={buchung !== null}
+        abschlussErforderlich={!!buchung && buchung.abrechnungRevision !== buchung.abschlussRevision}
         onEdit={onEdit}
         onCancelEdit={() => {
           resetForm();

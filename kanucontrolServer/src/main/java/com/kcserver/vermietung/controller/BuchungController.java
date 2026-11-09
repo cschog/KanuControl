@@ -92,13 +92,20 @@ public class BuchungController {
         );
     }
 
+    @GetMapping("/{id}/status/vorschau")
+    public org.springframework.http.ResponseEntity<ApiResponse<com.kcserver.vermietung.service.HomepageStatusMailService.StatusVorschau>> statusVorschau(
+            @PathVariable Long id,@RequestParam Buchungsstatus status) {
+        return org.springframework.http.ResponseEntity.ok().cacheControl(org.springframework.http.CacheControl.noStore())
+                .body(ApiResponse.of(buchungService.statusMailVorschau(id,status)));
+    }
+
     @PatchMapping("/{id}/status")
     public ApiResponse<BuchungDTO> aendereStatus(
             @PathVariable Long id,
             @RequestBody @Valid BuchungsstatusRequest request
     ) {
         return new ApiResponse<>(
-                buchungService.aendereStatus(id, request.status(), request.ablesungenBestaetigt(), request.sendEmail()),
+                buchungService.aendereStatus(id, request.status(), request.ablesungenBestaetigt(), request.sendEmail(), request.fingerprint()),
                 List.of()
         );
     }
@@ -107,7 +114,8 @@ public class BuchungController {
             @jakarta.validation.constraints.NotNull
             Buchungsstatus status,
             List<@Valid @jakarta.validation.constraints.NotNull AblesungBestaetigungDTO> ablesungenBestaetigt,
-            boolean sendEmail
+            boolean sendEmail,
+            String fingerprint
     ) {
     }
 

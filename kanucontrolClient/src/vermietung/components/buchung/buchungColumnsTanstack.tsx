@@ -3,14 +3,20 @@ import type { ColumnDef } from "@tanstack/react-table";
 import type { Buchung } from "@/vermietung/types/Buchung";
 import { formatGermanDate } from "@/core/utils/dateUtils";
 
+const textVergleich = new Intl.Collator("de", { numeric: true, sensitivity: "base" });
+
 export const buchungColumnsTanstack: ColumnDef<Buchung>[] = [
   {
     accessorKey: "buchungsnummer",
     header: "Buchungsnummer",
+    sortingFn: (a, b) => textVergleich.compare(a.original.buchungsnummer ?? "", b.original.buchungsnummer ?? "")
+      || (a.original.buchungsnummer ?? "").localeCompare(b.original.buchungsnummer ?? "", "de"),
   },
   {
     accessorKey: "mieterName",
     header: "Mieter",
+    sortingFn: (a, b) => textVergleich.compare(a.original.mieterName ?? "", b.original.mieterName ?? "")
+      || textVergleich.compare(a.original.mieterVorname ?? "", b.original.mieterVorname ?? ""),
     cell: ({ row }) => `${row.original.mieterVorname} ${row.original.mieterName}`,
   },
   {

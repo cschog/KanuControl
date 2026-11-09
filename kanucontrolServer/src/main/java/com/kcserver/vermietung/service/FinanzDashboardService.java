@@ -80,7 +80,7 @@ public class FinanzDashboardService {
             if (mietjahr != jahr && mietjahr != jahr-1) continue;
             BigDecimal rent=booking.getMietbereiche().stream().map(BuchungPreiskalkulation::preis).reduce(BigDecimal.ZERO,BigDecimal::add)
                     .subtract(BuchungPreiskalkulation.rabatt(booking)).max(BigDecimal.ZERO);
-            BigDecimal finalAmount=rent.add(snapshots.getOrDefault(booking.getId(),BigDecimal.ZERO));
+            BigDecimal finalAmount=rent.add(snapshots.getOrDefault(booking.getId(),BigDecimal.ZERO)).add(EntschaedigungPositionService.sum(booking));
             int month=booking.getAnreise().getMonthValue()-1;
             if (mietjahr == jahr-1) {
                 vorher[month]=vorher[month].add(finalAmount);
@@ -101,7 +101,7 @@ public class FinanzDashboardService {
                     .subtract(BuchungPreiskalkulation.rabatt(booking)).max(BigDecimal.ZERO);
             BigDecimal due=rent.subtract(bezahlt.getOrDefault(booking.getId(),BigDecimal.ZERO)).max(BigDecimal.ZERO)
                     .add(snapshots.getOrDefault(booking.getId(),BigDecimal.ZERO)
-                        .subtract(verbrauchBezahlt.getOrDefault(booking.getId(),BigDecimal.ZERO)).max(BigDecimal.ZERO));
+                        .add(EntschaedigungPositionService.sum(booking)).subtract(verbrauchBezahlt.getOrDefault(booking.getId(),BigDecimal.ZERO)).max(BigDecimal.ZERO));
             if(due.signum()>0) {
                 offen.put(booking.getId(),due);
                 details.put(booking.getId(),booking);

@@ -53,7 +53,7 @@ class BuchungsnummerAnreisejahrTest {
         verify(mieter).save(argThat(m->m.getPerson().getId().equals(1L)));
         var anderePerson=new com.kcserver.core.entity.Person(); anderePerson.setId(2L); anderePerson.setKjfpSichtbar(true);
         when(personen.findLockedById(2L)).thenReturn(Optional.of(anderePerson));
-        when(buchungen.findById(1L)).thenReturn(Optional.of(gespeichert));
+        when(buchungen.findLockedById(1L)).thenReturn(Optional.of(gespeichert));
         var dto=new BuchungDTO();dto.setMieterId(2L);dto.setMietobjektId(7L);
         dto.setAnreise(gespeichert.getAnreise());dto.setAbreise(gespeichert.getAbreise());dto.setPositionen(List.of());
         assertEquals(2L,service.update(1L,dto).getMieterId());
@@ -74,4 +74,12 @@ class BuchungsnummerAnreisejahrTest {
         when(personen.findLockedById(1L)).thenReturn(Optional.of(person));when(mieter.existsByPersonId(1L)).thenReturn(true);
         assertEquals("2027-001",neu(2027).getBuchungsnummer());
     }
+    @Test void automatischeVergabeFolgtAufManuellErhoehteNummer() {
+        neu(2027);
+        var b=new Buchung();b.setId(1L);b.setBuchungsjahr(2027);b.setLaufendeNummer(1);
+        when(buchungen.findLockedById(1L)).thenReturn(Optional.of(b));
+        new BuchungsnummerService(buchungen,counters).aendern(1L,"2027-099","2027-001");
+        assertEquals("2027-100",neu(2027).getBuchungsnummer());
+    }
+
 }

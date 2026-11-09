@@ -1,18 +1,18 @@
+import { lazy } from "react";
 import type { RouteObject } from "react-router-dom";
 
-import Vereine from "@/core/components/verein/VereineScreen";
-import Personen from "@/core/components/person/PersonenScreen";
-import Veranstaltungen from "@/kjfp/components/veranstaltung/VeranstaltungenScreen";
-import TeilnehmerScreen from "@/kjfp/components/teilnehmer/TeilnehmerScreen";
-import DokumenteScreen from "@/kjfp/components/dokumente/DokumenteScreen";
-import VerwaltungPage from "@/kjfp/components/verwaltung/VerwaltungPage";
-import AusgabeReisekosten from "@/kjfp/components/pdfAusgaben/AusgabeReisekosten";
-
-import FinanzBereichMenue from "@/kjfp/components/finanzen/FinanzBereichMenue";
-import FinanzRoute from "@/kjfp/components/finanzen/FinanzRoute";
-import ReisekostenDetailPage from "@/kjfp/components/finanzen/reisekosten/ReisekostenDetailPage";
-import FahrtenPage from "@/kjfp/components/fahrten/FahrtenPage";
-import FahrtenStartPage from "@/kjfp/components/fahrten/FahrtenStartPage";
+const Vereine = lazy(() => import("@/core/components/verein/VereineScreen"));
+const Personen = lazy(() => import("@/core/components/person/PersonenScreen"));
+const Veranstaltungen = lazy(() => import("@/kjfp/components/veranstaltung/VeranstaltungenScreen"));
+const TeilnehmerScreen = lazy(() => import("@/kjfp/components/teilnehmer/TeilnehmerScreen"));
+const DokumenteScreen = lazy(() => import("@/kjfp/components/dokumente/DokumenteScreen"));
+const VerwaltungPage = lazy(() => import("@/kjfp/components/verwaltung/VerwaltungPage"));
+const AusgabeReisekosten = lazy(() => import("@/kjfp/components/pdfAusgaben/AusgabeReisekosten"));
+const FinanzBereichMenue = lazy(() => import("@/kjfp/components/finanzen/FinanzBereichMenue"));
+const FinanzRoute = lazy(() => import("@/kjfp/components/finanzen/FinanzRoute"));
+const ReisekostenDetailPage = lazy(() => import("@/kjfp/components/finanzen/reisekosten/ReisekostenDetailPage"));
+const FahrtenPage = lazy(() => import("@/kjfp/components/fahrten/FahrtenPage"));
+const FahrtenStartPage = lazy(() => import("@/kjfp/components/fahrten/FahrtenStartPage"));
 
 const KjfpRoutes: RouteObject[] = [
   // =====================================================

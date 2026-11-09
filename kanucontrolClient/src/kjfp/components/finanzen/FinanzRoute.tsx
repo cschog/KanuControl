@@ -1,14 +1,15 @@
+import { lazy } from "react";
 import { Alert } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 
-import SimulationPage from "@/kjfp/components/simulation/SimulationPage";
-import PlanungPage from "@/kjfp/components/finanzen/planung/PlanungPage";
-import BuchungenPage from "@/kjfp/components/finanzen/abrechnung/BuchungenPage";
-import BeitraegePage from "@/kjfp/components/finanzen/beitraege/BeitraegePage";
-import ReisekostenPage from "@/kjfp/components/finanzen/reisekosten/ReisekostenPage";
-import KontoPage from "@/kjfp/components/finanzen/konto/KontoPage";
-import FinanzenDashboard from "@/kjfp/components/finanzen/FinanzenDashboard";
-import FinanzausgleichPage from "@/kjfp/components/finanzen/finanzausgleich/FinanzausgleichPage";
+const SimulationPage = lazy(() => import("@/kjfp/components/simulation/SimulationPage"));
+const PlanungPage = lazy(() => import("@/kjfp/components/finanzen/planung/PlanungPage"));
+const BuchungenPage = lazy(() => import("@/kjfp/components/finanzen/abrechnung/BuchungenPage"));
+const BeitraegePage = lazy(() => import("@/kjfp/components/finanzen/beitraege/BeitraegePage"));
+const ReisekostenPage = lazy(() => import("@/kjfp/components/finanzen/reisekosten/ReisekostenPage"));
+const KontoPage = lazy(() => import("@/kjfp/components/finanzen/konto/KontoPage"));
+const FinanzenDashboard = lazy(() => import("@/kjfp/components/finanzen/FinanzenDashboard"));
+const FinanzausgleichPage = lazy(() => import("@/kjfp/components/finanzen/finanzausgleich/FinanzausgleichPage"));
 
 // später:
 // import FinanzausgleichPage from "...";
