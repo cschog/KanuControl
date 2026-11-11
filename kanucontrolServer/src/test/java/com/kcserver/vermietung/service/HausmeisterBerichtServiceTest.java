@@ -28,10 +28,39 @@ class HausmeisterBerichtServiceTest {
         var person = new com.kcserver.core.entity.Person(); person.setName("<script>"); b.setMieter(person);
         var body = HausmeisterBerichtService.render("Bootshaus", LocalDate.of(2026,11,8), LocalDate.of(2026,12,6), List.of(b));
         assertTrue(body[0].contains("STORNIERT"));
-        assertTrue(body[0].contains("Telefon: Nicht hinterlegt"));
+        assertFalse(body[0].contains("Telefon:"));
+        assertFalse(body[1].contains("Telefon:"));
+        assertFalse(body[1].contains("tel:"));
         assertFalse(body[1].contains("<script>"));
         assertTrue(body[1].contains("&lt;script&gt;"));
         assertTrue(body[1].contains("09.11.2026 12:00"));
+    }
+
+    @Test void airbnbWirdMarkiertUndFehlendeTelefonnummernWerdenWeggelassen() {
+        var b = new Buchung(); b.setId(1L); b.setBuchungsjahr(2026); b.setLaufendeNummer(1);
+        b.setAnreise(LocalDateTime.of(2026,11,9,12,0)); b.setAbreise(b.getAnreise().plusDays(2));
+        b.setStatus(Buchungsstatus.BESTAETIGT);
+        var person = new com.kcserver.core.entity.Person(); person.setVorname("Erika"); person.setName("Mustermann");
+        b.setMieter(person);
+        for (var quelle : com.kcserver.vermietung.enumtype.Buchungsquelle.values()) {
+            b.setBuchungsquelle(quelle);
+            for (var telefon : new String[]{"", "   ", "+49 123 456"}) {
+                person.setTelefon(telefon); person.setTelefonFestnetz(null);
+                var body = HausmeisterBerichtService.render("Bootshaus", LocalDate.of(2026,11,8), LocalDate.of(2026,12,6), List.of(b));
+                for (var text : body) {
+                    assertEquals(quelle == com.kcserver.vermietung.enumtype.Buchungsquelle.AIRBNB, text.contains("Airbnb"));
+                    assertEquals(!telefon.isBlank(), text.contains("Telefon:"));
+                    assertFalse(text.contains("Nicht hinterlegt")); assertFalse(text.contains("DIREKT")); assertFalse(text.contains("Direkt"));
+                }
+            }
+        }
+        person.setTelefon(null); person.setTelefonFestnetz("02403 12345");
+        var body = HausmeisterBerichtService.render("Bootshaus", LocalDate.of(2026,11,8), LocalDate.of(2026,12,6), List.of(b));
+        assertTrue(body[0].contains("Telefon: 02403 12345"));
+        assertTrue(body[1].contains("href=\"tel:0240312345\""));
+        b.setMieter(null);
+        body = HausmeisterBerichtService.render("Bootshaus", LocalDate.of(2026,11,8), LocalDate.of(2026,12,6), List.of(b));
+        assertFalse(body[0].contains("Telefon:")); assertFalse(body[1].contains("Telefon:"));
     }
 
     @SuppressWarnings("unchecked")
@@ -63,7 +92,7 @@ class HausmeisterBerichtServiceTest {
         when(bookings.findByMietobjektIdAndStatusInAndAnreiseLessThanAndAbreiseGreaterThan(any(), any(), any(), any()))
             .thenReturn(new java.util.ArrayList<>());
         var service = new HausmeisterBerichtService(configs, bookings, provider, smtp, freigabe());
-        service.testSenden(7L);
+        service.manuellSenden(7L);
         assertEquals("test@example.org", message.getAllRecipients()[0].toString());
         assertTrue(message.getSubject().startsWith("[TEST]"));
         assertNull(config.getHausmeisterLetzteWoche());

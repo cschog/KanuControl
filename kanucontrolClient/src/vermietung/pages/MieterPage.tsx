@@ -18,10 +18,10 @@ import { useBackNavigation } from "@/core/context/BackNavigationContext";
 
 type MieterTextKey = Exclude<keyof MieterSave, "aktiv" | "personId">;
 
-const emptyForm: MieterSave = { name: "", vorname: "", email: "", telefon: "", telefonFestnetz: "", strasse: "", plz: "", ort: "", countryCode: "DE", bankName: "", iban: "", bic: "", aktiv: true };
+const emptyForm: MieterSave = { name: "", vorname: "", email: "", telefon: "", telefonFestnetz: "", strasse: "", plz: "", ort: "", countryCode: "DE", organisation: "", kontoinhaber: "", bankName: "", iban: "", bic: "", aktiv: true };
 
 function fromMieter(mieter: Mieter): MieterSave {
-  return { name: mieter.name, vorname: mieter.vorname, email: mieter.email ?? "", telefon: mieter.telefon ?? "", telefonFestnetz: mieter.telefonFestnetz ?? "", strasse: mieter.strasse ?? "", plz: mieter.plz ?? "", ort: mieter.ort ?? "", countryCode: mieter.countryCode ?? "DE", bankName: mieter.bankName ?? "", iban: mieter.iban ?? "", bic: mieter.bic ?? "", aktiv: mieter.aktiv };
+  return { name: mieter.name, vorname: mieter.vorname, email: mieter.email ?? "", telefon: mieter.telefon ?? "", telefonFestnetz: mieter.telefonFestnetz ?? "", strasse: mieter.strasse ?? "", plz: mieter.plz ?? "", ort: mieter.ort ?? "", countryCode: mieter.countryCode ?? "DE", organisation: mieter.organisation ?? "", kontoinhaber: mieter.kontoinhaber ?? "", bankName: mieter.bankName ?? "", iban: mieter.iban ?? "", bic: mieter.bic ?? "", aktiv: mieter.aktiv };
 }
 
 function MieterFehler({ text }: { text: string }) {
@@ -275,6 +275,8 @@ export default function MieterPage() {
                   plz: data.plz ?? "",
                   ort: data.ort ?? "",
                   countryCode: data.countryCode ?? "DE",
+                  organisation: data.organisation ?? "",
+                  kontoinhaber: data.kontoinhaber ?? "",
                   bankName: data.bankName ?? "",
                   iban: data.iban ?? "",
                   bic: data.bic ?? "",
@@ -284,6 +286,8 @@ export default function MieterPage() {
             <Typography variant="caption" color="text.secondary">Ohne Auswahl wird eine neue Person angelegt, die nur im Vermietungsbereich erscheint.</Typography>
           </Box>}
           <Grid container spacing={1.5}>
+            <Grid size={{ xs: 12 }}>{field("Organisation / Verein", "organisation")}</Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>{field("Kontoinhaber (falls abweichend)", "kontoinhaber")}</Grid>
             <Grid size={{ xs: 12, sm: 6 }}>{field("Vorname", "vorname", true)}</Grid>
             <Grid size={{ xs: 12, sm: 6 }}>{field("Nachname", "name", true)}</Grid>
             <Grid size={{ xs: 12, sm: 6 }}>{field("E-Mail", "email")}</Grid>
@@ -293,7 +297,7 @@ export default function MieterPage() {
             <Grid size={{ xs: 4 }}>{field("PLZ", "plz")}</Grid>
             <Grid size={{ xs: 8 }}>{field("Ort", "ort")}</Grid>
             <Grid size={{ xs: 12 }}><Typography variant="subtitle2" sx={{ mt: 1 }}>Bankverbindung für Kautionsrückzahlungen</Typography></Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>{field("Kontoinhaber", "bankName")}</Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>{field("Bankname", "bankName")}</Grid>
             <Grid size={{ xs: 12, sm: 6 }}>{field("IBAN", "iban")}</Grid>
             <Grid size={{ xs: 12, sm: 6 }}>{field("BIC", "bic")}</Grid>
             {!isNew && <Grid size={{ xs: 12 }}><FormControlLabel control={<Checkbox checked={form.aktiv} disabled={!edit || saving || deleting} onChange={(event) => setForm((current) => ({ ...current, aktiv: event.target.checked }))} />} label="Aktiver Mieter" /></Grid>}

@@ -99,7 +99,7 @@ class VorlagenVorschauTest {
     }
     @Test void httpVorschauOhneBuchungsIdLiestKeineBuchungUndWirdNichtGecacht() throws Exception {
         var buchungen=mock(BuchungRepository.class);var pdf=mock(ReservierungsbestaetigungPdf.class);var archiv=mock(VorlagenVersandRepository.class);
-        var controller=new VorlagenController(service,buchungen,pdf,archiv);
+        var controller=new VorlagenController(service,buchungen,pdf,archiv,mock(AbrechnungVorlagenService.class));
         var mvc=org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup(controller).build();
         mvc.perform(post("/api/vermietung/vorlagen/7/RESERVIERUNG/beispiel-vorschau").contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(new VorlagenController.BeispielEntwurf(entwurf,false,false))))
@@ -127,7 +127,7 @@ class VorlagenVorschauTest {
     @Test void multipartVorschauVerwendetUploadsUndSpeichertNichts() throws Exception {
         when(papier.findById(1L)).thenReturn(Optional.empty());
         var buchungen=mock(BuchungRepository.class);var pdf=mock(ReservierungsbestaetigungPdf.class);var archiv=mock(VorlagenVersandRepository.class);
-        var controller=new VorlagenController(service,buchungen,pdf,archiv);
+        var controller=new VorlagenController(service,buchungen,pdf,archiv,mock(AbrechnungVorlagenService.class));
         var mvc=org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup(controller).build();
         var asset=new org.springframework.mock.web.MockMultipartFile("pdf","Briefpapier.pdf","application/pdf",
                 getClass().getResourceAsStream("/pdf/Briefpapier_Bootshaus.pdf").readAllBytes());

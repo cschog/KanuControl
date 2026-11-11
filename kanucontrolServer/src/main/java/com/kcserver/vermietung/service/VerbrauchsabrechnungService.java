@@ -62,9 +62,18 @@ public class VerbrauchsabrechnungService {
 
     public void berechneUndSpeichere(Buchung buchung, List<AblesungBestaetigungDTO> bestaetigungen) {
 
-        if (buchung.getBuchungsquelle() == Buchungsquelle.AIRBNB) {
-            return;
-        }
+        var snapshots=berechneSnapshots(buchung,bestaetigungen);
+        if(buchung.getBuchungsquelle()==Buchungsquelle.AIRBNB)return;
+        buchungVerbrauchskostenRepository.deleteByBuchungId(buchung.getId());
+        buchungVerbrauchskostenRepository.flush();
+        buchungVerbrauchskostenRepository.saveAll(snapshots);
+        buchungVerbrauchskostenRepository.flush();
+    }
+
+    /** Same validated computation for preview and commit, without writes. */
+    @Transactional(readOnly=true)
+    public List<BuchungVerbrauchskosten> berechneSnapshots(Buchung buchung,List<AblesungBestaetigungDTO> bestaetigungen) {
+        if(buchung.getBuchungsquelle()==Buchungsquelle.AIRBNB)return List.of();
 
         if (buchung.getAnreise() == null || buchung.getAbreise() == null) {
             throw new IllegalArgumentException(
@@ -155,11 +164,7 @@ public class VerbrauchsabrechnungService {
             }
         }
 
-        buchungVerbrauchskostenRepository.deleteByBuchungId(buchung.getId());
-        buchungVerbrauchskostenRepository.flush();
-
-        buchungVerbrauchskostenRepository.saveAll(snapshots);
-        buchungVerbrauchskostenRepository.flush();
+        return List.copyOf(snapshots);
     }
 
     /**

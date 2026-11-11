@@ -3,6 +3,7 @@ package com.kcserver.vermietung.service;
 import com.kcserver.vermietung.config.SmtpMailProperties;
 import com.kcserver.vermietung.entity.*;
 import com.kcserver.vermietung.enumtype.Buchungsstatus;
+import com.kcserver.vermietung.enumtype.Buchungsquelle;
 import com.kcserver.vermietung.repository.*;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
@@ -50,8 +51,7 @@ public class HausmeisterBerichtService {
     }
 
     @Transactional
-    public void testSenden(Long id) {
-        freigabe.requireEnabled();
+    public void manuellSenden(Long id) {
         var config = configs.lockById(id).orElseThrow(() -> new ResponseStatusException(
                 HttpStatus.BAD_REQUEST, "Bitte die Hausmeister-Empfängeradresse zuerst speichern."));
         if (config.getHausmeisterEmail() == null || config.getHausmeisterEmail().isBlank())
@@ -59,8 +59,7 @@ public class HausmeisterBerichtService {
         senden(config, LocalDate.now(ZONE), true);
     }
 
-    private void senden(HomepageAnbindung config, LocalDate von, boolean test) {
-        freigabe.requireEnabled();
+    private void senden(HomepageAnbindung config, LocalDate von, boolean manuell) {
         var sender = senders.getIfAvailable();
         if (!smtp.isEnabled() || sender == null)
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Der KC-SMTP-Versand ist nicht aktiviert.");
@@ -76,7 +75,7 @@ public class HausmeisterBerichtService {
             var helper = new MimeMessageHelper(message, true, "UTF-8");
             helper.setFrom(smtp.getFrom().trim());
             helper.setTo(recipient.trim());
-            helper.setSubject((test || smtp.isTestMode() ? "[TEST] " : "") + "Hausmeister-Wochenbericht · " + objekt);
+            helper.setSubject((smtp.isTestMode() ? "[TEST] " : "") + (manuell ? "[MANUELL] " : "") + "Hausmeister-Wochenbericht · " + objekt);
             var body = render(objekt, von, bis, rows);
             helper.setText(body[0], body[1]);
             sender.send(message);
@@ -101,13 +100,20 @@ public class HausmeisterBerichtService {
             String label = switch (b.getStatus()) { case RESERVIERT -> "Reserviert"; case BESTAETIGT -> "Bestätigt"; case STORNIERT -> "STORNIERT"; default -> b.getStatus().name(); };
             String zeitraum = time.format(b.getAnreise()) + " bis " + (b.isUnbefristet() ? "unbefristet" : time.format(b.getAbreise()));
             String nummer = value(b.getBuchungsnummer());
-            plain.append(label).append(" · ").append(nummer).append('\n').append(zeitraum).append('\n').append(name).append("\nTelefon: ").append(phone.isBlank() ? "Nicht hinterlegt" : phone).append("\n\n");
+            String quelle = b.getBuchungsquelle() == Buchungsquelle.AIRBNB ? " · Airbnb" : "";
+            plain.append(label).append(" · ").append(nummer).append(quelle).append('\n').append(zeitraum).append('\n').append(name);
+            if (!phone.isBlank()) plain.append("\nTelefon: ").append(phone);
+            plain.append("\n\n");
             html.append("<div style=\"background:white;padding:16px;margin:16px 0;border:1px solid #ccd5d3;border-radius:8px;overflow-wrap:anywhere\"><strong>")
-                .append(esc(label)).append(" · ").append(esc(nummer)).append("</strong><p>").append(esc(zeitraum)).append("</p><p>").append(esc(name)).append("</p><p>Telefon: ");
-            String dial = phone.replaceAll("[^+0-9]", "");
-            if (dial.isBlank()) html.append("Nicht hinterlegt");
-            else html.append("<a style=\"color:#176a62\" href=\"tel:").append(esc(dial)).append("\">").append(esc(phone)).append("</a>");
-            html.append("</p></div>");
+                .append(esc(label)).append(" · ").append(esc(nummer)).append(quelle).append("</strong><p>").append(esc(zeitraum)).append("</p><p>").append(esc(name)).append("</p>");
+            if (!phone.isBlank()) {
+                html.append("<p>Telefon: ");
+                String dial = phone.replaceAll("[^+0-9]", "");
+                if (dial.isBlank()) html.append(esc(phone));
+                else html.append("<a style=\"color:#176a62\" href=\"tel:").append(esc(dial)).append("\">").append(esc(phone)).append("</a>");
+                html.append("</p>");
+            }
+            html.append("</div>");
         }
         String note = "Stand bei Erstellung. Stornierte Buchungen sind zur Information enthalten. Änderungen nach Erstellung sind noch nicht berücksichtigt.";
         plain.append(note); html.append("<p style=\"font-size:14px\">").append(note).append("</p></div></body></html>");

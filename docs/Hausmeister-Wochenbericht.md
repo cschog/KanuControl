@@ -3,9 +3,11 @@
 Unter Vermietung → Verwaltung → Homepage-Anbindung erscheint unter den bisherigen E-Mail-Einstellungen ein eigener Abschnitt „Hausmeister-Wochenbericht“. Die Empfängeradresse gilt für das ausgewählte Mietobjekt im aktuellen Mandanten. Leer bedeutet deaktiviert. Der Bericht ist unabhängig von der Freischaltung des WordPress-Zugangs.
 
 1. Zunächst die eigene Testadresse eintragen und „Einstellungen speichern“ klicken.
-2. „Testbericht an gespeicherte Adresse senden“ klicken. Nur ADMIN darf speichern und Tests versenden.
-3. Die vorhandene KC-SMTP-Konfiguration wird verwendet. Bei aktiviertem KC_SMTP_TEST_MODE wird ausschließlich KC_SMTP_TEST_RECIPIENT verwendet, auch wenn eine andere Adresse gespeichert ist. Ein Testbericht verändert den automatischen Wochenversand nicht.
-4. Nach erfolgreicher Prüfung die gewünschte Empfängeradresse speichern. Eine eingetragene Adresse aktiviert den automatischen Bericht.
+2. „Hausmeisterbericht jetzt senden“ klicken. Mit VERMIETUNG oder ADMIN kann der Bericht in DEV, TEST und PROD manuell versendet werden. Dafür muss KC-SMTP aktiviert sein; die Freigabe des automatischen Berichts ist nicht erforderlich.
+3. Die vorhandene KC-SMTP-Konfiguration wird verwendet. Bei aktiviertem KC_SMTP_TEST_MODE wird ausschließlich KC_SMTP_TEST_RECIPIENT verwendet, auch wenn eine andere Adresse gespeichert ist. Ein manueller Bericht umfasst die vier Wochen ab heute und verändert den automatischen Wochenversand nicht. Der Betreff enthält [MANUELL]; bei SMTP-Testumleitung zusätzlich [TEST].
+4. Nach erfolgreicher Prüfung die gewünschte Empfängeradresse speichern. Eine eingetragene Adresse wird vom automatischen Bericht nur bei gesonderter Freigabe in PROD verwendet.
+
+Der automatische Versand ist ausschließlich in PROD mit KC_ENVIRONMENT=PROD, app.environment=PROD, aktivem prod-Profil und KC_HAUSMEISTERBERICHT_ENABLED=true freigegeben. DEV und TEST versenden niemals automatisch.
 
 Automatisch ab Sonntag 15:00 Uhr Europe/Berlin, einschließlich Sommer-/Winterzeit. Bei Fehlern oder einem Neustart wird bis Sonntag 23:55 alle fünf Minuten erneut geprüft. Nach erfolgreicher SMTP-Übergabe merkt sich KC die Woche pro Mietobjekt; Datenbanksperren verhindern parallelen Versand durch mehrere Instanzen. SMTP-Annahme ist kein Zustellnachweis. Ein Prozessabbruch zwischen SMTP-Annahme und Datenbank-Commit kann eine Wiederholung verursachen. Nach einem vollständigen Ausfall am Sonntag wird kein veralteter Bericht am Montag nachgeholt.
 

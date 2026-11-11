@@ -11,7 +11,7 @@ import java.time.Instant;
 public class VermietungAbrechnungService {
  private final BuchungRepository buchungen;
  private final VermietungAbrechnungRepository dokumente;
- private final BuchungFinanzenService finanzen;
+ private final AbrechnungVorlagenService vorlagen;
  public record Dokument(Long id,int revision,Instant erstellt,String korrekturgrund){}
  public record Ausstellung(Long ersetztDokumentId,String korrekturgrund){}
  private Dokument dto(VermietungAbrechnung e){return new Dokument(e.getId(),e.getRevision(),e.getErstellt(),e.getKorrekturgrund());}
@@ -24,7 +24,7 @@ public class VermietungAbrechnungService {
   if(reason.length()>1000)throw new IllegalArgumentException("Korrekturgrund zu lang.");
   if(old.isEmpty()?request.ersetztDokumentId()!=null:!Objects.equals(old.getFirst().getId(),request.ersetztDokumentId())||reason.isBlank())throw new IllegalArgumentException("Korrektur benötigt das letzte Dokument und eine Begründung. Bitte neu laden.");
   var e=new VermietungAbrechnung();e.setBuchung(b);e.setRevision(old.isEmpty()?1:old.getFirst().getRevision()+1);e.setErstellt(Instant.now());e.setKorrekturgrund(reason);
-  e.setPdf(VermietungAbrechnungPdf.render(finanzen.toDto(b),e.getRevision()));return dto(dokumente.saveAndFlush(e));
+  e.setPdf(vorlagen.erstellen(b,e.getRevision(),null));return dto(dokumente.saveAndFlush(e));
  }
  @Transactional(readOnly=true) public byte[] pdf(Long id,Long dokumentId){return dokumente.findByIdAndBuchungId(dokumentId,id).orElseThrow(()->new IllegalArgumentException("Dokument nicht gefunden.")).getPdf();}
 }

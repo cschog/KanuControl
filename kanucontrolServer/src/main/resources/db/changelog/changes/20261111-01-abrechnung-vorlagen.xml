@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+ <changeSet id="20261111-01-abrechnung-vorlagen" author="codex">
+  <addColumn tableName="buchung"><column name="zahlungsvariante" type="VARCHAR(30)" defaultValue="ANZAHLUNG"><constraints nullable="false"/></column></addColumn>
+  <addColumn tableName="mietobjekt"><column name="kurzfristgrenze_tage" type="INT" defaultValueNumeric="42"><constraints nullable="false"/></column></addColumn>
+  <addColumn tableName="person"><column name="organisation" type="VARCHAR(255)"/><column name="kontoinhaber" type="VARCHAR(255)"/></addColumn>
+  <rollback><dropColumn tableName="person" columnName="kontoinhaber"/><dropColumn tableName="person" columnName="organisation"/><dropColumn tableName="mietobjekt" columnName="kurzfristgrenze_tage"/><dropColumn tableName="buchung" columnName="zahlungsvariante"/></rollback>
+ </changeSet>
+</databaseChangeLog>

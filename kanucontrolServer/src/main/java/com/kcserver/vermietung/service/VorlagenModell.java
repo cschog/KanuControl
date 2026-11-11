@@ -10,7 +10,9 @@ public final class VorlagenModell {
     private VorlagenModell() {}
     public enum Vorgang { RESERVIERUNG, BESTAETIGUNG, STORNIERUNG, ABLEHNUNG, ABRECHENBAR, ABGERECHNET }
     public enum Bedingung { IMMER, ANZAHLUNG_POSITIV, KAUTION_POSITIV, RESTMIETE_POSITIV,
-        OG_GEBUCHT, OG_NICHT_GEBUCHT, STORNO_UNTER_56_TAGEN, STORNO_AB_56_TAGEN }
+        OG_GEBUCHT, OG_NICHT_GEBUCHT, STORNO_UNTER_56_TAGEN, STORNO_AB_56_TAGEN,
+        ZAHLUNG_ANZAHLUNG, ZAHLUNG_BEI_ABRECHNUNG, ZAHLUNG_GESAMTMIETE_VORAUS,
+        RESTZAHLUNG_POSITIV, ERSTATTUNG_POSITIV, AUSGEGLICHEN, STORNO_ERSTATTUNG_POSITIV, STORNO_EINBEHALT_POSITIV, STORNO_OHNE_ZAHLUNG }
     public record Variante(Bedingung bedingung, String text) {}
     public record Block(String titel, String text, Bedingung bedingung, List<Variante> varianten) {}
     public record Vorlage(Long version, String betreff, String mailtext, List<Block> bloecke, String anrede) {
@@ -21,7 +23,8 @@ public final class VorlagenModell {
     }
     public record Briefpapier(Long version, String gruss, boolean pdfVorhanden, boolean bildVorhanden) {}
     public static final Set<String> FELDER = Set.of("buchungsnummer", "vorname", "nachname", "anreise", "abreise", "mietbetrag",
-        "anzahlung", "kaution", "restmiete", "zahlungsfrist", "briefdatum", "mietobjekt", "bank_name", "bank_iban", "bank_bic", "hausregeln_url");
+        "anzahlung", "kaution", "restmiete", "zahlungsfrist", "briefdatum", "mietobjekt", "bank_name", "bank_iban", "bank_bic", "hausregeln_url", "abrechnungssumme", "restzahlung", "erstattung", "saldo",
+        "organisation", "mieter_bank_name", "mieter_bank_iban", "mieter_bank_bic", "mieter_kontoinhaber", "stornodatum", "storno_gezahlter_betrag", "storno_bereits_erstattet", "storno_erstattung", "storno_einbehalt");
     private static final Pattern TOKEN = Pattern.compile("\\{\\{([a-z_]+)}}");
     public static ResponseStatusException fehler(String text) { return new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, text); }
     /** Multipart form fields can use CRLF even when the textarea contains LF. */

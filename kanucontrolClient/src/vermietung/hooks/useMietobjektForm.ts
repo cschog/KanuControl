@@ -4,6 +4,7 @@ import type { Mietobjekt } from "@/vermietung/types/Mietobjekt";
 import type { MietobjektSave } from "@/vermietung/types/MietobjektSave";
 
 const emptyForm: MietobjektSave = {
+  kurzfristgrenzeTage: 42,
   bezeichnung: "",
   beschreibung: "",
   strasse: "",
@@ -31,6 +32,7 @@ export function useMietobjektForm(mietobjekt: Mietobjekt | null) {
     setForm({
       bankverbindungPrimaer: mietobjekt.bankverbindungPrimaer ?? null,
       bankverbindungAlternativ: mietobjekt.bankverbindungAlternativ ?? null,
+      kurzfristgrenzeTage: mietobjekt.kurzfristgrenzeTage ?? 42,
       bezeichnung: mietobjekt.bezeichnung ?? "",
       beschreibung: mietobjekt.beschreibung ?? "",
       strasse: mietobjekt.strasse ?? "",

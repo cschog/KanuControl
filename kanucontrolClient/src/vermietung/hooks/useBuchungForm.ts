@@ -61,6 +61,7 @@ export function useBuchungForm(
 
   const [form, setForm] = useState<BuchungSave>(() => createInitialForm(neueBuchungsquelle));
 
+  const [zahlungsvarianteManuell, setZahlungsvarianteManuell] = useState(false);
   const [mieter, setMieter] = useState<PersonRef | undefined>();
   const [veranstalter, setVeranstalter] = useState<VereinRef | undefined>();
   const [mietbereiche, setMietbereiche] = useState<Mietbereich[]>([]);
@@ -77,6 +78,7 @@ export function useBuchungForm(
       setForm({
         entschaedigungen: buchung.entschaedigungen ?? [],
         abrechnungRevision: buchung.abrechnungRevision,
+        zahlungsvariante: buchung.zahlungsvariante ?? "ANZAHLUNG",
         bankverbindungAuswahl: buchung.bankverbindungAuswahl ?? "PRIMAER",
         anreise: buchung.anreise,
         abreise: buchung.abreise,
@@ -130,6 +132,7 @@ export function useBuchungForm(
   }, [buchung, mietobjekt?.id, mietobjekt?.anreisezeit, mietobjekt?.abreisezeit, neueBuchungsquelle, initialAnreiseDatum, initialAbreiseDatum]);
 
   const resetForm = () => {
+    setZahlungsvarianteManuell(false);
     setMieter(mieterAusBuchung(buchung));
     if (buchung) {
       const positionen: BuchungPositionSave[] = (buchung.positionen ?? []).map((position) => ({
@@ -140,6 +143,7 @@ export function useBuchungForm(
       setForm({
         entschaedigungen: buchung.entschaedigungen ?? [],
         abrechnungRevision: buchung.abrechnungRevision,
+        zahlungsvariante: buchung.zahlungsvariante ?? "ANZAHLUNG",
         bankverbindungAuswahl: buchung.bankverbindungAuswahl ?? "PRIMAER",
         anreise: buchung.anreise,
         abreise: buchung.abreise,
@@ -236,12 +240,28 @@ export function useBuchungForm(
     });
   }, [buchung, mietbereiche, form.buchungsquelle]);
 
+  useEffect(() => {
+    if (buchung || zahlungsvarianteManuell || form.buchungsquelle !== "DIREKT" || !form.anreise) return;
+    const heute = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Berlin" }).format(new Date());
+    const tage = (Date.parse(form.anreise.slice(0, 10)) - Date.parse(heute)) / 86400000;
+    const variante = tage < (mietobjekt?.kurzfristgrenzeTage ?? 42) && (mietobjekt?.kurzfristgrenzeTage ?? 42) > 0 ? "GESAMTMIETE_VORAUS" : "ANZAHLUNG";
+    setForm(current => current.zahlungsvariante === variante ? current : { ...current, zahlungsvariante: variante });
+  }, [buchung, zahlungsvarianteManuell, form.anreise, form.buchungsquelle, mietobjekt?.kurzfristgrenzeTage]);
+
   const update = <K extends keyof BuchungSave>(key: K, value: BuchungSave[K]) => {
+    if (key === "zahlungsvariante") setZahlungsvarianteManuell(true);
     setForm((current) => {
       const updated = {
         ...current,
         [key]: value,
       };
+
+      if (key === "anreise" && updated.anreise && updated.abreise && !updated.unbefristet
+          && updated.abreise.slice(0, 10) < updated.anreise.slice(0, 10)) {
+        // Beim Verschieben des Beginns ein bereits gewähltes Ende mitziehen.
+        // Die Abreiseuhrzeit bleibt erhalten; Tagesbuchungen prüfen beide Uhrzeiten.
+        updated.abreise = updated.anreise.slice(0, 10) + updated.abreise.slice(10);
+      }
 
       if (key === "mietbereichIds") {
         const ids = value as number[];
@@ -282,6 +302,7 @@ export function useBuchungForm(
 
     return {
       ...form,
+      anzahlungBetrag: (form.zahlungsvariante ?? "ANZAHLUNG") === "ANZAHLUNG" ? form.anzahlungBetrag : 0,
       mietbereichIds: form.positionen.map((position) => position.mietbereichId),
     };
   };

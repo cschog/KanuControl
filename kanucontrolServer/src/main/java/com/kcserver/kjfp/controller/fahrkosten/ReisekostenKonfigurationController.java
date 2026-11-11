@@ -14,7 +14,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/admin/reisekosten-konfiguration")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAnyRole('ADMIN', 'KJFP')")
 @RequiredArgsConstructor
 public class ReisekostenKonfigurationController {
 

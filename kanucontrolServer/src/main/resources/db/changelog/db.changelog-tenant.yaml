@@ -299,3 +299,15 @@ databaseChangeLog:
   - include:
       file: changes/20261109-02-buchungsnummer-text.xml
       relativeToChangelogFile: true
+
+  - include:
+      file: changes/20261110-01-vorlagenpakete.xml
+      relativeToChangelogFile: true
+
+  - include:
+      file: changes/20261111-01-abrechnung-vorlagen.xml
+      relativeToChangelogFile: true
+
+  - include:
+      file: changes/20261111-02-buchungsnachrichten.xml
+      relativeToChangelogFile: true

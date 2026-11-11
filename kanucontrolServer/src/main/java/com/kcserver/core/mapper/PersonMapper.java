@@ -55,6 +55,8 @@ public interface PersonMapper {
     MitgliedDetailDTO toMitgliedDetailDTO(Mitglied mitglied);
 
     /* WRITE */
+    @Mapping(target = "organisation", ignore = true)
+    @Mapping(target = "kontoinhaber", ignore = true)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "mitgliedschaften", ignore = true)
     @Mapping(target = "kjfpSichtbar", ignore = true)
@@ -63,6 +65,8 @@ public interface PersonMapper {
     @Mapping(target = "bic", source = "bic")
     Person toNewEntity(PersonSaveDTO dto);
 
+    @Mapping(target = "organisation", ignore = true)
+    @Mapping(target = "kontoinhaber", ignore = true)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "mitgliedschaften", ignore = true)
     @Mapping(target = "kjfpSichtbar", ignore = true)

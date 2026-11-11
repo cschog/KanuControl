@@ -1,5 +1,6 @@
 import type { AblesungBestaetigung } from "@/vermietung/types/VerbrauchskostenVorschau";
 import apiClient from "@/core/api/client/apiClient";
+import { isAxiosError } from "axios";
 
 import type { Buchung } from "@/vermietung/types/Buchung";
 import type { BuchungSave } from "@/vermietung/types/BuchungSave";
@@ -50,8 +51,15 @@ export async function updateBuchung(id: number, buchung: BuchungSave): Promise<B
   return response.data;
 }
 
-export async function deleteBuchung(id: number): Promise<void> {
-  await apiClient.delete(`${baseUrl()}/${id}`);
+export function brauchtAbrechnungsLoeschbestaetigung(error: unknown): boolean {
+  return isAxiosError(error) && error.response?.status === 409
+    && error.response.data?.error === "BUCHUNG_ABRECHNUNGEN_BESTAETIGEN";
+}
+
+export async function deleteBuchung(id: number, archivierteAbrechnungenBestaetigt = false): Promise<void> {
+  await apiClient.delete(`${baseUrl()}/${id}`, {
+    params: { archivierteAbrechnungenBestaetigt },
+  });
 }
 
 export async function aendereBuchungsstatus(id: number, status: Buchungsstatus, ablesungenBestaetigt: AblesungBestaetigung[] = [], sendEmail = false, fingerprint?: string): Promise<Buchung> {

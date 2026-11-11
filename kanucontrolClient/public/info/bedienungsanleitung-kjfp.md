@@ -723,17 +723,15 @@ Dazu gehören insbesondere:
 -   Unterkunftsarten
 -   Verpflegungsmodelle
 
-Zentrale Verwaltungsdaten wie Förder- und KiK-Daten sowie Postleitzahlen
-werden über die Administration gepflegt.
+Auch Fördersätze, KiK-Zuschläge und die Fahrkosten-Konfiguration werden hier gepflegt. Für alle fachlichen Funktionen genügt die Rolle KJFP; eine zusätzliche ADMIN-Rolle ist nicht erforderlich.
+
+Postleitzahlen und Audit-Funktionen bleiben in der Administration.
 
 ### 13.1 Administration
 
 Administratoren haben zusätzliche Bereiche zur Verfügung, unter anderem:
 
 -   Postleitzahlen
--   Fördersätze
--   KiK-Zuschläge
--   Reisekosten-Konfiguration
 -   Audit / Sitzungen
 -   Audit-Historie
 

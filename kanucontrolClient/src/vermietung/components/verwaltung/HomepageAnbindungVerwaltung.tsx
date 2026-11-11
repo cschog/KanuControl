@@ -5,12 +5,11 @@ import {
   MenuItem, Paper, Stack, TextField, Typography,
 } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
-import { isAdmin } from "@/core/auth/useTenant";
 import { getApiErrorMessage } from "@/kjfp/api/utils/apiError";
 import { InfoDialog } from "@/kjfp/components/info/InfoDialog";
 import { getMietobjekte } from "@/vermietung/api/mietobjektApi";
 import { getMietbereiche } from "@/vermietung/api/mietbereichApi";
-import { getHomepageAnbindung, saveHomepageAnbindung, sendHausmeisterTest, getHausmeisterBerichtStatus } from "@/vermietung/api/homepageAnbindungApi";
+import { getHomepageAnbindung, saveHomepageAnbindung, sendHausmeisterBericht, getHausmeisterBerichtStatus } from "@/vermietung/api/homepageAnbindungApi";
 import { useVermietungContext } from "@/vermietung/context/VermietungContext";
 import type { HomepageAnbindung } from "@/vermietung/types/HomepageAnbindung";
 import type { Mietobjekt } from "@/vermietung/types/Mietobjekt";
@@ -30,7 +29,7 @@ function Einstellungen({ mietobjektId }: { mietobjektId: number }) {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const errorRef = useRef<HTMLDivElement>(null);
   const [reload, setReload] = useState(0);
-  const editable = isAdmin() && !saving;
+  const editable = !saving;
 
   useEffect(() => {
     let cancelled = false;
@@ -115,7 +114,6 @@ function Einstellungen({ mietobjektId }: { mietobjektId: number }) {
     <Box><Button disabled={saving} onClick={() => setReload((value) => value + 1)}>Neu laden</Button></Box>
     {form && <Paper component="form" noValidate variant="outlined" sx={{ p: 2 }} onSubmit={save}>
       <Stack spacing={2}>
-        {!isAdmin() && <Alert severity="info">Du kannst die Einstellungen ansehen. Änderungen benötigen die Rolle ADMIN.</Alert>}
         <TextField name="bezeichnung" label="Bezeichnung der Anbindung" error={!!fieldErrors.bezeichnung} helperText={fieldErrors.bezeichnung} required value={form.bezeichnung} disabled={!editable}
           slotProps={{ htmlInput: { maxLength: 100 } }} onChange={(e) => change("bezeichnung", e.target.value)} />
         {([
@@ -175,28 +173,29 @@ function Einstellungen({ mietobjektId }: { mietobjektId: number }) {
           onChange={e=>change("antwortCcEmail",e.target.value || null)}/>
         <Typography variant="h6">Hausmeister-Wochenbericht</Typography>
         <Typography variant="body2" color="text.secondary">
-          KanuControl sendet sonntags ab 15:00 Uhr (Europe/Berlin) die reservierten,
+          KanuControl sendet in freigegebenem PROD sonntags ab 15:00 Uhr (Europe/Berlin) die reservierten,
           bestätigten und stornierten Buchungen der nächsten vier Wochen mit Mieternamen
           und Telefonnummern. Auch bereits laufende Aufenthalte werden berücksichtigt.
         </Typography>
         <TextField name="hausmeisterEmail" label="E-Mail-Empfänger des Hausmeister-Wochenberichts"
           type="email" value={form.hausmeisterEmail ?? ""} disabled={!editable}
           error={!!fieldErrors.hausmeisterEmail} slotProps={{ htmlInput: { maxLength: 254 } }}
-          helperText={fieldErrors.hausmeisterEmail ?? "Leer lassen, um den Wochenbericht zu deaktivieren. Zum Testen zunächst die eigene Adresse speichern."}
+          helperText={fieldErrors.hausmeisterEmail ?? "Empfänger für manuellen und automatischen Versand. Leer lassen, um den Wochenbericht zu deaktivieren. Zum Testen zunächst die eigene Adresse speichern."}
           onChange={(e) => change("hausmeisterEmail", e.target.value || null)} />
-        {!berichtEnabled && <Alert severity="info">Der Hausmeisterbericht ist gesperrt. Erzeugung und Versand sind nur in freigegebenem PROD möglich. In DEV und TEST ist auch der Testversand deaktiviert.</Alert>}
-        {isAdmin() && <Button disabled={!berichtEnabled || saving || testing || dirty || !form.hausmeisterEmail}
+        {!berichtEnabled && <Alert severity="info">Der automatische Versand ist deaktiviert. Manuelles Senden ist auch in DEV und TEST möglich, sofern KC-SMTP aktiviert ist.</Alert>}
+        <Typography variant="body2">Manuelles Senden erstellt den Bericht ab heute für die nächsten vier Wochen. Der automatische Sonntagsversand bleibt davon unabhängig. Im SMTP-Testmodus gilt der konfigurierte Testempfänger.</Typography>
+        <Button disabled={saving || testing || dirty || !form.hausmeisterEmail}
           onClick={async () => {
             setTesting(true); setTestMessage(null); setError(null);
-            try { if (!berichtEnabled) return; await sendHausmeisterTest(mietobjektId); setTestMessage("Testbericht an den SMTP-Server übergeben. Im SMTP-Testmodus gilt dessen Testempfänger."); }
-            catch (err: unknown) { setError(getApiErrorMessage(err, "Der Testbericht konnte nicht gesendet werden.")); }
+            try { await sendHausmeisterBericht(mietobjektId); setTestMessage("Hausmeisterbericht an den SMTP-Server übergeben. Im SMTP-Testmodus gilt dessen Testempfänger."); }
+            catch (err: unknown) { setError(getApiErrorMessage(err, "Der Hausmeisterbericht konnte nicht gesendet werden.")); }
             finally { setTesting(false); }
-          }}>{testing ? "Testbericht wird gesendet …" : "Testbericht an gespeicherte Adresse senden"}</Button>}
-        {dirty && <Typography variant="body2">Bitte Änderungen vor dem Testversand speichern.</Typography>}
+          }}>{testing ? "Bericht wird gesendet …" : "Hausmeisterbericht jetzt senden"}</Button>
+        {dirty && <Typography variant="body2">Bitte Änderungen vor dem manuellen Versand speichern.</Typography>}
         {testMessage && <Alert severity="success">{testMessage}</Alert>}
-        {isAdmin() && <Box><Button type="submit" variant="contained" startIcon={<SaveIcon />} disabled={saving || !dirty}>
+        <Box><Button type="submit" variant="contained" startIcon={<SaveIcon />} disabled={saving || !dirty}>
           {saving ? "Wird gespeichert …" : "Einstellungen speichern"}
-        </Button></Box>}
+        </Button></Box>
       </Stack>
     </Paper>}
   </Stack>;

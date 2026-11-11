@@ -22,7 +22,7 @@ import type { VereinRef } from "@/core/api/types/verein/VereinRef";
 import type { BuchungSave } from "@/vermietung/types/BuchungSave";
 import { useVermietungContext } from "@/vermietung/context/VermietungContext";
 
-import FormFeld from "@/core/components/common/FormFeld";
+import { FormFeldDatePicker } from "@/core/components/common/FormFeldDatePicker";
 import { PersonAutocomplete } from "@/core/components/person/PersonAutocomplete";
 import { VereinAutocomplete } from "@/core/components/verein/VereinAutocomplete";
 import type { VerbrauchskostenVorschau } from "@/vermietung/types/VerbrauchskostenVorschau";
@@ -340,7 +340,15 @@ export const BuchungBaseForm: React.FC<Props> = ({
           onChange={onMieterChange}
         />
 
-        {form.buchungsquelle === "DIREKT" ? (
+        {form.buchungsquelle === "DIREKT" && <TextField select label="Zahlungsvariante" fullWidth size="small"
+          value={form.zahlungsvariante ?? "ANZAHLUNG"} disabled={!buchungsdatenEditierbar}
+          helperText="Gespeicherte Auswahl bleibt bestehen. Kaution ist in allen Varianten optional."
+          onChange={e => onChange("zahlungsvariante", e.target.value as BuchungSave["zahlungsvariante"])}>
+          <MenuItem value="ANZAHLUNG">Anzahlung</MenuItem>
+          <MenuItem value="BEI_ABRECHNUNG">Zahlung bei Abrechnung</MenuItem>
+          <MenuItem value="GESAMTMIETE_VORAUS">Gesamtmiete im Voraus</MenuItem>
+        </TextField>}
+        {form.buchungsquelle === "DIREKT" && (form.zahlungsvariante ?? "ANZAHLUNG") === "ANZAHLUNG" ? (
           <TextField
             label="Anzahlung (€)"
             type="number"
@@ -368,6 +376,10 @@ export const BuchungBaseForm: React.FC<Props> = ({
           <Alert severity="info">Für Airbnb-Buchungen werden keine Anzahlung und keine Kaution erhoben.</Alert>
         )}
 
+        {buchungsstatus === "ANFRAGE" && form.buchungsquelle === "DIREKT" && form.zahlungsvariante !== "GESAMTMIETE_VORAUS" && form.anreise && (() => {
+          const heute = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Berlin" }).format(new Date());
+          return (Date.parse(form.anreise.slice(0, 10)) - Date.parse(heute)) / 86400000 < (mietobjekt?.kurzfristgrenzeTage ?? 42) && (mietobjekt?.kurzfristgrenzeTage ?? 42) > 0;
+        })() && <Alert severity="info" action={<button type="button" disabled={!buchungsdatenEditierbar} onClick={() => onChange("zahlungsvariante", "GESAMTMIETE_VORAUS")}>Übernehmen</button>}>Kurzfristige Anfrage: Gesamtmiete im Voraus empfohlen.</Alert>}
         <BuchungBankverbindung
           mietobjektId={form.mietobjektId}
           value={form.bankverbindungAuswahl ?? "PRIMAER"}
@@ -405,12 +417,11 @@ export const BuchungBaseForm: React.FC<Props> = ({
               {!form.unbefristet && " und Standard-Abreisezeit"} unter VERMIETUNG → Mietobjekte.
             </Alert>
           )}
-          <FormFeld
+          <FormFeldDatePicker
             label="Beginn"
-            type="date"
+            referenceDate={!form.unbefristet ? form.abreise?.slice(0, 10) || undefined : undefined}
             value={form.anreise?.slice(0, 10) ?? ""}
             disabled={!buchungsdatenEditierbar || (neueBuchung && (mietobjektLoading || !mietobjekt?.anreisezeit))}
-            slotProps={{ inputLabel: { shrink: true } }}
             onChange={(datum) => {
               if (!datum) {
                 onChange("anreise", "");
@@ -468,12 +479,12 @@ export const BuchungBaseForm: React.FC<Props> = ({
               gap: 2,
             }}
           >
-            <FormFeld
+            <FormFeldDatePicker
               label="Ende"
-              type="date"
+              minDate={form.anreise?.slice(0, 10) || undefined}
+              referenceDate={form.anreise?.slice(0, 10) || undefined}
               value={form.abreise?.slice(0, 10) ?? ""}
               disabled={!buchungsdatenEditierbar || (neueBuchung && (mietobjektLoading || !mietobjekt?.abreisezeit))}
-              slotProps={{ inputLabel: { shrink: true } }}
               onChange={(datum) => {
                 if (!datum) {
                   onChange("abreise", "");

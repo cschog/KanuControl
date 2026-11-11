@@ -90,6 +90,7 @@ function offeneSumme(row: BuchungFinanzen, category: Finanzkategorie) {
   return Math.max(0, soll(row, category) - credited);
 }
 function statusText(row: BuchungFinanzen) {
+  if (row.buchungsstatus === "STORNIERT") return "Storniert";
   if (row.buchungsstatus === "ABGESCHLOSSEN") return "Abgerechnet";
   const targets = kategorien.map((k) => soll(row, k.key)).filter((x) => x > 0);
   if (targets.length === 0) return row.buchungsstatus === "ANFRAGE" ? "Anfrage" : "Offen";
@@ -162,8 +163,8 @@ const AbrechnungPage = () => {
             </Box>
             <Stack direction="row" alignItems="center" spacing={2}>
               <Box sx={{textAlign:{xs:"left",md:"right"}}}>
-                <Typography variant="caption" color="text.secondary">Umsatz</Typography>
-                <Typography fontWeight={700}>{betragLabel(row.abrechnungGesamt)}</Typography>
+                <Typography variant="caption" color="text.secondary">{row.buchungsstatus === "STORNIERT" ? "Einbehalt" : "Umsatz"}</Typography>
+                <Typography fontWeight={700}>{betragLabel(row.buchungsstatus === "STORNIERT" ? row.stornoEinbehalt ?? 0 : row.abrechnungGesamt)}</Typography>
               </Box>
               <Chip label={statusText(row)} color={statusText(row) === "Abgerechnet" ? "success" : statusText(row) === "Angezahlt" ? "info" : "default"} />
             </Stack>
@@ -187,13 +188,16 @@ const AbrechnungPage = () => {
               : "Ausgeglichen.";
           return (
             <Alert severity={saldo > 0 ? "warning" : "success"} sx={{mb:2}}>
-              <Typography fontWeight={700}>{abgerechnet ? "Endsaldo" : "Vorläufiger Saldo"}</Typography>
+              <Typography fontWeight={700}>{row.buchungsstatus === "STORNIERT" ? "Stornosaldo" : abgerechnet ? "Endsaldo" : "Vorläufiger Saldo"}</Typography>
               <Typography>{saldoText}</Typography>
-              {!abgerechnet && <Typography variant="body2" color="text.secondary">Der Betrag kann sich bis zum Abschluss der Buchung noch ändern.</Typography>}
+              {!abgerechnet && row.buchungsstatus !== "STORNIERT" && <Typography variant="body2" color="text.secondary">Der Betrag kann sich bis zum Abschluss der Buchung noch ändern.</Typography>}
             </Alert>
           );
         })()}
-        <Stack spacing={1}>
+        {row.buchungsstatus === "STORNIERT" ? <Stack spacing={1}>
+          <Alert severity="info">Verbindlicher Einbehalt: {betragLabel(row.stornoEinbehalt ?? 0)}. Die Stornierungsnachricht bucht keine Überweisung. Tatsächlich ausgeführte Erstattungen hier erfassen.</Alert>
+          {kategorien.map(category => { const verfuegbar = paidFor(row, category.key); return verfuegbar > 0 ? <Stack key={category.key} direction="row" spacing={1} alignItems="center"><Typography>{category.label}: {betragLabel(verfuegbar)} verbleibend</Typography>{!(row.stornoEinbehalt ?? 0) && <Button onClick={() => openDialog(row, category.key, "RUECKZAHLUNG")}>Ausgeführte Rückzahlung erfassen</Button>}</Stack> : null; })}
+        </Stack> : <Stack spacing={1}>
           {kategorien.map((category) => {
             const due=soll(row,category.key);
             const paid=category.key === "KAUTION" ? kautionEingegangen(row) : erfasst(row,category.key);
@@ -201,15 +205,15 @@ const AbrechnungPage = () => {
             if (due===0 && paid===0 && !(category.key === "MIETE" && row.mietkosten.length > 0)) return null;
             return <Box key={category.key} sx={{display:"grid",gridTemplateColumns:{xs:"minmax(0,1fr) minmax(0,1fr)",md:"minmax(0,1.2fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 280px"},alignItems:"center",gap:1,borderTop:1,borderColor:"divider",pt:1}}>
               <Typography>{category.key === "MIETE" && advanceSoll(row) > 0 ? "Restmiete" : category.label}{(category.key==="ANZAHLUNG" || category.key==="KAUTION") && due>0 ? " · angefragt" : ""}</Typography>
-              <Box sx={{display:"flex",justifyContent:"space-between",alignItems:"baseline",gap:1,width:"100%",minWidth:0}}>
+              <Box sx={{display:"flex",justifyContent:"flex-start",alignItems:"baseline",flexWrap:"wrap",columnGap:1,rowGap:0,minWidth:0}}>
                 <Typography variant="body2">Soll:</Typography>
                 <Typography variant="body2" sx={{textAlign:"right",whiteSpace:"nowrap",fontVariantNumeric:"tabular-nums"}}>{betragLabel(due)}</Typography>
               </Box>
-              <Box sx={{display:"flex",justifyContent:"space-between",alignItems:"baseline",gap:1,width:"100%",minWidth:0}}>
-                <Typography variant="body2">{category.key === "KAUTION" ? "Eingegangen:" : "Erfasst:"}</Typography>
+              <Box sx={{display:"flex",justifyContent:"flex-start",alignItems:"baseline",flexWrap:"wrap",columnGap:1,rowGap:0,minWidth:0}}>
+                <Typography variant="body2">Eingang:</Typography>
                 <Typography variant="body2" sx={{textAlign:"right",whiteSpace:"nowrap",fontVariantNumeric:"tabular-nums"}}>{betragLabel(paid)}</Typography>
               </Box>
-              <Box sx={{display:"flex",justifyContent:"space-between",alignItems:"baseline",gap:1,width:"100%",minWidth:0}}>
+              <Box sx={{display:"flex",justifyContent:"flex-start",alignItems:"baseline",flexWrap:"wrap",columnGap:1,rowGap:0,minWidth:0}}>
                 <Typography variant="body2" fontWeight={600}>{category.key === "KAUTION" ? "Zurückzuzahlen:" : "Offen:"}</Typography>
                 <Typography variant="body2" fontWeight={600} sx={{textAlign:"right",whiteSpace:"nowrap",fontVariantNumeric:"tabular-nums"}}>{betragLabel(balance)}</Typography>
               </Box>
@@ -233,8 +237,8 @@ const AbrechnungPage = () => {
               </Box>}
             </Box>;
           })}
-        </Stack>
-        {row.entschaedigungen.length > 0 && <Box sx={{mt:2}}>
+        </Stack>}
+        {row.buchungsstatus !== "STORNIERT" && row.entschaedigungen.length > 0 && <Box sx={{mt:2}}>
           <Typography variant="h6">Entschädigung</Typography>
           {row.entschaedigungen.map((p,i)=><Typography key={p.id??i} sx={{overflowWrap:'anywhere'}}>{p.anzahl} × {p.bezeichnung} · {p.anlass==='VERLUST'?'Verlust':'Beschädigung'} · {betragLabel(p.einzelpreis)} = {betragLabel(p.gesamtbetrag??0)}</Typography>)}
           <Typography fontWeight={600}>Entschädigung gesamt: {betragLabel(row.entschaedigungSoll)}</Typography>

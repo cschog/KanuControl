@@ -5,10 +5,12 @@ interface Props {
   label: string;
   value?: string;
   disabled?: boolean;
+  minDate?: string;
+  referenceDate?: string;
   onChange: (value: string | undefined) => void;
 }
 
-export function FormFeldDatePicker({ label, value, disabled, onChange }: Props) {
+export function FormFeldDatePicker({ label, value, disabled, minDate, referenceDate, onChange }: Props) {
   const parsed = value ? dayjs(value) : null;
 
   return (
@@ -16,8 +18,10 @@ export function FormFeldDatePicker({ label, value, disabled, onChange }: Props) 
       label={label}
       value={parsed}
       disabled={disabled}
+      minDate={minDate ? dayjs(minDate) : undefined}
+      referenceDate={referenceDate ? dayjs(referenceDate) : undefined}
       format="DD.MM.YYYY"
-      onChange={(d: Dayjs | null) => onChange(d ? d.format("YYYY-MM-DD") : undefined)}
+      onChange={(d: Dayjs | null) => onChange(d?.isValid() ? d.format("YYYY-MM-DD") : undefined)}
       slotProps={{
         textField: {
           fullWidth: true,

@@ -88,8 +88,8 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
                 ));
 
         boolean kjfpAktiv = !Boolean.FALSE.equals(dto.getKjfpAktiv());
-        if (kjfpAktiv && (dto.getTyp() == null || dto.getLeiterId() == null || dto.getBeginnZeit() == null || dto.getEndeZeit() == null)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Für KJFP werden Veranstaltungsart, Leitung und Uhrzeiten benötigt.");
+        if (kjfpAktiv && (dto.getLeiterId() == null || dto.getBeginnZeit() == null || dto.getEndeZeit() == null)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Für KJFP werden eine Leitung sowie Beginn- und Endzeit benötigt. FM oder JEM wird aus der Veranstaltungsdauer ermittelt.");
         }
         Person leiter = dto.getLeiterId() == null ? null : personRepository.findById(dto.getLeiterId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, ErrorMessages.PERSON_NOT_FOUND));
@@ -639,14 +639,14 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
             v.setScope(dto.getScope());
         }
 
+        List<String> warnings = kjfpRegeln.savedKjfpWarnings(v);
+
         if (v.isKjfpAktiv()) {
             if (v.getTyp() == null || v.getLeiter() == null || v.getBeginnZeit() == null || v.getEndeZeit() == null) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Für KJFP werden Veranstaltungsart, Leitung und Uhrzeiten benötigt.");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Für KJFP werden eine Leitung sowie Beginn- und Endzeit benötigt. FM oder JEM wird aus der Veranstaltungsdauer ermittelt.");
             }
             kjfpRegeln.validateLeiterAge(v.getLeiter());
         }
-
-        List<String> warnings = kjfpRegeln.savedKjfpWarnings(v);
 
         Veranstaltung saved = veranstaltungRepository.save(v);
 

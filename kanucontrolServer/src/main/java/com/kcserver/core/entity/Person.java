@@ -79,6 +79,12 @@ public class Person extends Auditable {
        Bankdaten
        ========================= */
 
+    @Column(length=255)
+    private String organisation;
+
+    @Column(length=255)
+    private String kontoinhaber;
+
     @Column(name = "bank_name")
     private String bankName;
 

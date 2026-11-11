@@ -2,7 +2,7 @@ import { Box, CircularProgress } from "@mui/material";
 import Navigation from "@/core/components/layout/Nav";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import BackFooter from "@/core/components/common/BackFooter";
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import { VermietungProvider } from "@/vermietung/context/VermietungProvider";
 
 import { BackNavigationProvider } from "@/core/context/BackNavigationProvider";
@@ -12,12 +12,10 @@ function AppLayoutContent() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { handleBack, detailViewOpen } = useBackNavigation();
+  const { handleBack } = useBackNavigation();
 
   const contentRef = useRef<HTMLDivElement>(null);
 
-  const [floatingFooter, setFloatingFooter] = useState(false);
-  const [footerHeight, setFooterHeight] = useState(0);
 
   const isFahrten = location.pathname.startsWith("/fahrten");
   const modulStart = isFahrten ? "/fahrten" : location.pathname.startsWith("/vermietung") ? "/vermietung" : "/startmenue";
@@ -45,61 +43,33 @@ function AppLayoutContent() {
     /^\/veranstaltungen\/\d+\/finanzen\/durchfuehrung$/.test(location.pathname) ||
     /^\/veranstaltungen\/\d+\/finanzen\/auswertung$/.test(location.pathname);
 
-  /*
-   * Ermitteln, ob der Inhalt höher als der Viewport ist.
-   * Bei langen Listen wird der Footer schwebend angezeigt.
-   */
   useEffect(() => {
-    const checkContentHeight = () => {
-      const content = contentRef.current;
+    contentRef.current?.scrollTo({ top: 0, left: 0 });
+  }, [location.pathname]);
 
-      if (!content) {
-        return;
-      }
-
-      const rect = content.getBoundingClientRect();
-
-      setFloatingFooter(rect.bottom > window.innerHeight);
-    };
-
-    checkContentHeight();
-
-    window.addEventListener("resize", checkContentHeight);
-
-    const observer = new ResizeObserver(checkContentHeight);
-
-    if (contentRef.current) {
-      observer.observe(contentRef.current);
-    }
-
-    return () => {
-      window.removeEventListener("resize", checkContentHeight);
-      observer.disconnect();
-    };
-  }, [location.pathname, detailViewOpen]);
-
-  /*
-   * Mobile:
-   * - Detailansicht: Footer unter dem Inhalt
-   * - Sonstige Seiten: Footer schwebend, wenn der Inhalt lang ist
-   *
-   * Desktop:
-   * - Bisheriges Verhalten
-   */
   return (
     <VermietungProvider>
-      <Box>
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateRows: "auto minmax(0, 1fr) auto",
+          height: "100vh",
+          "@supports (height: 100dvh)": { height: "100dvh" },
+          overflow: "hidden",
+        }}
+      >
         <Navigation />
 
         <Box
+          component="main"
           ref={contentRef}
           sx={{
+            minHeight: 0,
+            minWidth: 0,
+            overflow: "auto",
             pt: { xs: 2, md: 4 },
             px: { xs: 2, md: 4 },
-            pb:
-              floatingFooter && !detailViewOpen
-                ? `calc(${footerHeight}px + 16px + env(safe-area-inset-bottom))`
-                : { xs: 2, md: 4 },
+            pb: { xs: 2, md: 4 },
           }}
         >
           <Suspense fallback={
@@ -109,87 +79,17 @@ function AppLayoutContent() {
           }>
             <Outlet />
           </Suspense>
-
-          {/* Mobiler Footer bei geöffneten Detail- und Editmasken */}
-          {!isStartMenu && detailViewOpen && (
-            <Box
-              sx={{
-                display: { xs: "block", md: "none" },
-                mt: 2,
-              }}
-            >
-              <BackFooter
-                floating={false}
-                onHeightChange={setFooterHeight}
-                actions={[
-                  ...(!hideBackButton
-                    ? [
-                        {
-                          label: "Zurück",
-                          onClick: () => handleBack(() => navigate(-1)),
-                        },
-                      ]
-                    : []),
-                  {
-                    label: modulZurueck,
-                    path: modulStart,
-                  },
-                ]}
-              />
-            </Box>
-          )}
         </Box>
 
-        {/* Footer für lange Listen und sonstige Seiten auf Mobile */}
-        {!isStartMenu && !detailViewOpen && (
-          <Box
-            sx={{
-              display: { xs: "block", md: "none" },
-            }}
-          >
-            <BackFooter
-              floating={floatingFooter}
-              onHeightChange={setFooterHeight}
-              actions={[
-                ...(!hideBackButton
-                  ? [
-                      {
-                        label: "Zurück",
-                        onClick: () => handleBack(() => navigate(-1)),
-                      },
-                    ]
-                  : []),
-                {
-                  label: modulZurueck,
-                  path: modulStart,
-                },
-              ]}
-            />
-          </Box>
-        )}
-
-        {/* Desktop-Footer */}
         {!isStartMenu && (
-          <Box sx={{ display: { xs: "none", md: "block" } }}>
-            <BackFooter
-              floating={floatingFooter}
-              onHeightChange={setFooterHeight}
-              actions={[
-                ...(!hideBackButton
-                  ? [
-                      {
-                        label: "Zurück",
-                        onClick: () => handleBack(() => navigate(-1)),
-                      },
-                    ]
-                  : []),
-                {
-                  label: modulZurueck,
-                  path: modulStart,
-                },
-              ]}
-            />
-          </Box>
+          <BackFooter
+            actions={[
+              ...(!hideBackButton
+                ? [{ label: "Zurück", onClick: () => handleBack(() => navigate(-1)) }]
+                : []),
+              { label: modulZurueck, path: modulStart },
+            ]}
+          />
         )}
       </Box>
     </VermietungProvider>

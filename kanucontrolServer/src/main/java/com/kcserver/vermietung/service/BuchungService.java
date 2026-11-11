@@ -60,6 +60,7 @@ public class BuchungService {
     private TransactionTemplate statusTransaction;
     @Autowired private EntschaedigungPositionService entschaedigungPositionService;
     @Autowired private ReservierungsversandService reservierungsversand;
+    @Autowired private BuchungLoeschService buchungLoeschService;
 
 
     private static final LocalDateTime UNBEFRISTET_BIS =
@@ -134,7 +135,7 @@ public class BuchungService {
         if (buchung.getStatus() == Buchungsstatus.BESTAETIGT
                 && buchung.getAbreise() != null
                 && buchung.getAbreise().getYear() < 2999
-                && !buchung.getAbreise().isAfter(LocalDateTime.now())) {
+                && !buchung.getAbreise().isAfter(LocalDateTime.now(java.time.ZoneId.of("Europe/Berlin")))) {
 
             buchung.setStatus(Buchungsstatus.ABRECHENBAR);
 
@@ -177,8 +178,10 @@ public class BuchungService {
         buchung.setKautionBetrag(buchung.getBuchungsquelle() == Buchungsquelle.DIREKT
                 ? Optional.ofNullable(dto.getKautionBetrag()).orElse(BigDecimal.ZERO)
                 : BigDecimal.ZERO);
+        buchung.setZahlungsvariante(dto.getZahlungsvariante()!=null ? dto.getZahlungsvariante()
+                : Zahlungsplan.vorschlag(dto.getAnreise(), mietobjekt.getKurzfristgrenzeTage(), java.time.LocalDate.now(java.time.ZoneId.of("Europe/Berlin"))));
         buchung.setAnzahlungBetrag(buchung.getBuchungsquelle() == Buchungsquelle.DIREKT
-                ? Optional.ofNullable(dto.getAnzahlungBetrag()).orElse(BigDecimal.ZERO)
+                ? (buchung.getZahlungsvariante()==com.kcserver.vermietung.enumtype.Zahlungsvariante.ANZAHLUNG ? Optional.ofNullable(dto.getAnzahlungBetrag()).orElse(BigDecimal.ZERO) : BigDecimal.ZERO)
                 : BigDecimal.ZERO);
 
         BuchungBankverbindung.waehlen(buchung, mietobjekt, dto.getBankverbindungAuswahl());
@@ -339,8 +342,9 @@ public class BuchungService {
             );
         }
         buchung.setKautionBetrag(neueKaution);
+        if(dto.getZahlungsvariante()!=null) buchung.setZahlungsvariante(dto.getZahlungsvariante());
         buchung.setAnzahlungBetrag(buchung.getBuchungsquelle() == Buchungsquelle.DIREKT
-                ? Optional.ofNullable(dto.getAnzahlungBetrag()).orElse(BigDecimal.ZERO)
+                ? (buchung.getZahlungsvariante()==com.kcserver.vermietung.enumtype.Zahlungsvariante.ANZAHLUNG ? Optional.ofNullable(dto.getAnzahlungBetrag()).orElse(BigDecimal.ZERO) : BigDecimal.ZERO)
                 : BigDecimal.ZERO);
         BuchungBankverbindung.waehlen(buchung, mietobjekt, dto.getBankverbindungAuswahl());
         buchung.setMietobjekt(mietobjekt);
@@ -540,19 +544,11 @@ public class BuchungService {
     }
 
     public void delete(Long id) {
+        delete(id, false);
+    }
 
-        Buchung buchung = buchungRepository.findById(id)
-                .orElseThrow(() ->
-                        new IllegalArgumentException(
-                                String.format(
-                                        java.util.Locale.GERMAN,
-                                        ErrorMessages.BUCHUNG_NOT_FOUND,
-                                        id
-                                )
-                        )
-                );
-
-        buchungRepository.delete(buchung);
+    public void delete(Long id, boolean archivierteAbrechnungenBestaetigt) {
+        buchungLoeschService.delete(id, archivierteAbrechnungenBestaetigt);
     }
 
     private List<Mietbereich> getMietbereiche(
@@ -675,12 +671,14 @@ public class BuchungService {
 
     /**
      * Liefert das Detail-DTO einschließlich der aktuellen Vorschau, wenn die
-     * Buchung abrechenbar ist. So verhalten sich GET, PUT und Statuswechsel
+     * Buchung abrechenbar oder abgeschlossen ist (Rechnungskorrektur).
+     * So verhalten sich GET, PUT und Statuswechsel
      * hinsichtlich der Verbrauchskosten gleich.
      */
     private BuchungDTO toDetailDTO(Buchung buchung) {
         BuchungDTO dto = toDTO(buchung);
-        if (buchung.getStatus() == Buchungsstatus.ABRECHENBAR) {
+        if (buchung.getStatus() == Buchungsstatus.ABRECHENBAR
+                || buchung.getStatus() == Buchungsstatus.ABGESCHLOSSEN) {
             dto.setVerbrauchskostenVorschau(
                     verbrauchsabrechnungService.berechneVorschau(buchung)
             );
@@ -706,12 +704,14 @@ public class BuchungService {
         );
 
         dto.setStatus(buchung.getStatus());
+        dto.setStornoDatum(buchung.getStornoDatum());dto.setStornoErstattung(buchung.getStornoErstattung());dto.setStornoEinbehalt(buchung.getStornoEinbehalt());
         dto.setBuchungsquelle(buchung.getBuchungsquelle());
         dto.setRabattart(buchung.getRabattart());
         dto.setRabattwertTyp(buchung.getRabattwertTyp());
         dto.setRabattwert(buchung.getRabattwert());
         dto.setRabattbetrag(BuchungPreiskalkulation.rabatt(buchung));
         dto.setKautionBetrag(buchung.getKautionBetrag());
+        dto.setZahlungsvariante(buchung.getZahlungsvariante());
         dto.setAnzahlungBetrag(buchung.getAnzahlungBetrag());
 
         dto.setAnreise(buchung.getAnreise());
@@ -866,7 +866,7 @@ public class BuchungService {
      * Unbefristete Buchungen werden nicht umgestellt.
      */
     public int aktualisiereAbrechenbareBuchungen() {
-        LocalDateTime jetzt = LocalDateTime.now();
+        LocalDateTime jetzt = LocalDateTime.now(java.time.ZoneId.of("Europe/Berlin"));
 
         List<Buchung> faelligeBuchungen =
                 buchungRepository.findByStatusAndAbreiseLessThanEqual(
@@ -936,6 +936,12 @@ public class BuchungService {
         return statusTransaction == null ? update.get() : statusTransaction.execute(status -> update.get());
     }
 
+    /** Called inside the message draft transaction; deliberately no nested REQUIRES_NEW/SMTP. */
+    @Transactional
+    public BuchungDTO anwendenGeprueft(Long id,Buchungsstatus ziel,List<AblesungBestaetigungDTO> bestaetigungen){
+        return aendereStatusPersistiert(id,ziel,bestaetigungen,false,null).buchung();
+    }
+
     private StatusAenderung aendereStatusPersistiert(Long id, Buchungsstatus neuerStatus,
                                                       List<AblesungBestaetigungDTO> bestaetigungen, boolean sendEmail, String fingerprint) {
         Buchung buchung = buchungRepository.findLockedById(id)
@@ -998,7 +1004,7 @@ public class BuchungService {
         return statusMailService.statusVorschau(buchung,neuerStatus,buchung.getStatus());
     }
 
-    private void pruefeStatuswechsel(Buchung buchung,Buchungsstatus neuerStatus) {
+    void pruefeStatuswechsel(Buchung buchung,Buchungsstatus neuerStatus) {
         Buchungsstatus alterStatus=buchung.getStatus();
         if (neuerStatus == null) {
             throw new IllegalArgumentException(
@@ -1020,7 +1026,7 @@ public class BuchungService {
 
     }
 
-    private void pruefeKautionsabschluss(Buchung buchung) {
+    void pruefeKautionsabschluss(Buchung buchung) {
         if (buchung.getBuchungsquelle() != Buchungsquelle.DIREKT) {
             return;
         }

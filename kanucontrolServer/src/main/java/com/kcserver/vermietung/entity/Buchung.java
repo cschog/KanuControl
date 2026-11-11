@@ -33,6 +33,10 @@ import java.util.List;
 )
 public class Buchung extends Auditable {
 
+    @Column(name="storno_datum") private java.time.LocalDate stornoDatum;
+    @Column(name="storno_erstattung",precision=12,scale=2) private BigDecimal stornoErstattung;
+    @Column(name="storno_einbehalt",nullable=false,precision=12,scale=2) private BigDecimal stornoEinbehalt=BigDecimal.ZERO;
+
     private static final LocalDateTime UNBEFRISTET_BIS =
             LocalDateTime.of(3000, 12, 31, 14, 0);
 
@@ -83,6 +87,10 @@ public class Buchung extends Auditable {
 
     @Column(name = "anzahlung_betrag", nullable = false, precision = 10, scale = 2)
     private BigDecimal anzahlungBetrag = BigDecimal.ZERO;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name="zahlungsvariante", nullable=false, length=30)
+    private com.kcserver.vermietung.enumtype.Zahlungsvariante zahlungsvariante = com.kcserver.vermietung.enumtype.Zahlungsvariante.ANZAHLUNG;
 
     @Column(name = "reservierung_mail_gesendet_am")
     private java.time.Instant reservierungMailGesendetAm;
@@ -137,6 +145,7 @@ public class Buchung extends Auditable {
             cascade = CascadeType.ALL,
             orphanRemoval = true
     )
+    @OrderBy("id ASC")
     private List<BuchungMietbereich> mietbereiche = new ArrayList<>();
 
     @OneToMany(mappedBy="buchung",cascade=CascadeType.ALL,orphanRemoval=true)

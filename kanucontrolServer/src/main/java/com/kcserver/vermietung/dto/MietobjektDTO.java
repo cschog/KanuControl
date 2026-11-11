@@ -14,6 +14,8 @@ import java.time.LocalTime;
 public class MietobjektDTO {
 
     private Long id;
+    @jakarta.validation.constraints.Min(0) @jakarta.validation.constraints.Max(365)
+    private Integer kurzfristgrenzeTage;
 
     @NotBlank
     @Size(max = 255)

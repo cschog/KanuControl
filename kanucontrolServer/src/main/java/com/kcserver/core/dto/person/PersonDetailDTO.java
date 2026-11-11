@@ -30,6 +30,8 @@ public class PersonDetailDTO
     private String plz;
     private String ort;
     private String countryCode;
+    private String organisation;
+    private String kontoinhaber;
     private String bankName;
     private String iban;
     private String bic;

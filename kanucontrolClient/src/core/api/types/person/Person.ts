@@ -48,6 +48,8 @@ export interface PersonDetail {
   ort?: string;
   countryCode?: CountryCode;
 
+  organisation?: string;
+  kontoinhaber?: string;
   bankName?: string;
   iban?: string;
   bic?: string;
@@ -79,6 +81,8 @@ export interface PersonSave {
 
   telefon?: string;
   telefonFestnetz?: string;
+  organisation?: string;
+  kontoinhaber?: string;
   bankName?: string;
   iban?: string;
   bic?: string;

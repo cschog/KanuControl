@@ -11,6 +11,7 @@ export interface BuchungPositionSave {
 }
 
 export interface BuchungSave {
+  zahlungsvariante?: "ANZAHLUNG" | "BEI_ABRECHNUNG" | "GESAMTMIETE_VORAUS";
   bankverbindungAuswahl?: BankverbindungAuswahl;
   entschaedigungen?: EntschaedigungPosition[];
   abrechnungRevision?: number;

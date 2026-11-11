@@ -52,11 +52,11 @@ class HomepageAnbindungSecurityTest {
         SecurityContextHolder.getContext().setAuthentication(
             new UsernamePasswordAuthenticationToken("test", "unused", List.of(new SimpleGrantedAuthority("ROLE_" + role))));
     }
-    @Test void vermietungDarfLesenAberNichtSchreiben() {
+    @Test void vermietungDarfLesenUndSchreiben() {
         role("VERMIETUNG");
         assertDoesNotThrow(() -> controller.get(7L));
-        assertThrows(AccessDeniedException.class, () -> controller.save(7L, new HomepageAnbindungDTO()));
-        verify(context.getBean(HomepageAnbindungService.class), never()).save(any(), any());
+        assertDoesNotThrow(() -> controller.save(7L, new HomepageAnbindungDTO()));
+        verify(context.getBean(HomepageAnbindungService.class)).save(eq(7L), any());
     }
     @Test void adminDarfSpeichern() {
         role("ADMIN");
@@ -82,14 +82,14 @@ class HomepageAnbindungSecurityTest {
         var id=java.util.UUID.randomUUID();assertDoesNotThrow(()->controller.quittieren(7L,id,jwt));
         verify(context.getBean(com.kcserver.vermietung.service.HomepageStatusMailService.class)).quittieren(7L,"ekc-homepage",id.toString());
     }
-    @Test void testversandBenoetigtAdminRolle() {
+    @Test void testversandErlaubtVermietungUndAdmin() {
         role("VERMIETUNG");
-        assertThrows(AccessDeniedException.class, () -> controller.test(7L));
+        assertDoesNotThrow(() -> controller.test(7L));
         role("HOMEPAGE_INTEGRATION");
         assertThrows(AccessDeniedException.class, () -> controller.test(7L));
         role("ADMIN");
         assertDoesNotThrow(() -> controller.test(7L));
-        verify(context.getBean(com.kcserver.vermietung.service.HausmeisterBerichtService.class)).testSenden(7L);
+        verify(context.getBean(com.kcserver.vermietung.service.HausmeisterBerichtService.class), times(2)).manuellSenden(7L);
     }
     @Test void berichtStatusIstNurFuerVerwaltungsrollenLesbar() {
         role("VERMIETUNG");

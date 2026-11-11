@@ -5,6 +5,7 @@ export interface Mietobjekt {
   bankverbindungAlternativ?: Bankverbindung | null;
   id: number;
 
+  kurzfristgrenzeTage?: number;
   bezeichnung: string;
   sortierung: number;
   beschreibung?: string;

@@ -11,6 +11,6 @@ import java.util.List;
 public class VermietungAbrechnungController {
  private final VermietungAbrechnungService service;
  @GetMapping public List<VermietungAbrechnungService.Dokument> list(@PathVariable Long id){return service.list(id);}
- @PostMapping public VermietungAbrechnungService.Dokument create(@PathVariable Long id,@RequestBody VermietungAbrechnungService.Ausstellung request){return service.create(id,request);}
+ @PostMapping public VermietungAbrechnungService.Dokument create(@PathVariable Long id,@RequestBody VermietungAbrechnungService.Ausstellung request){throw new org.springframework.web.server.ResponseStatusException(HttpStatus.CONFLICT,"Neue Rechnungen und Korrekturen bitte über die Nachrichtenvorschau vor dem Abschluss erstellen.");}
  @GetMapping("/{dokumentId}/pdf") public ResponseEntity<byte[]> pdf(@PathVariable Long id,@PathVariable Long dokumentId){return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).header(HttpHeaders.CONTENT_DISPOSITION,"attachment; filename=Abrechnung-"+id+"-"+dokumentId+".pdf").body(service.pdf(id,dokumentId));}
 }

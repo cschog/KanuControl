@@ -39,7 +39,8 @@ public class KjfpVeranstaltungRegeln {
     private List<String> adjustFmJemType(Veranstaltung veranstaltung) {
         List<String> warnings = new ArrayList<>();
 
-        if (veranstaltung.getTyp() != VeranstaltungTyp.FM
+        if (veranstaltung.getTyp() != null
+                && veranstaltung.getTyp() != VeranstaltungTyp.FM
                 && veranstaltung.getTyp() != VeranstaltungTyp.JEM) {
             return warnings;
         }

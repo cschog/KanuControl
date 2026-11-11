@@ -23,8 +23,7 @@ public class ReservierungsbestaetigungController {
     public record Pruefung(String fingerprint) {}
     @PostMapping("/reservieren")
     public ResponseEntity<Void> reservieren(@PathVariable Long id, @RequestBody Pruefung pruefung) {
-        buchungService.aendereStatus(id, Buchungsstatus.RESERVIERT, List.of(), true, pruefung.fingerprint());
-        return ResponseEntity.noContent().build();
+        throw new ResponseStatusException(HttpStatus.CONFLICT,"Bitte die neue Nachrichtenvorschau verwenden; sie unterstützt individuelle Texte und bearbeitete PDF-Anhänge.");
     }
 
     @GetMapping @Transactional(readOnly = true)
@@ -38,8 +37,6 @@ public class ReservierungsbestaetigungController {
 
     @PostMapping("/senden")
     public ResponseEntity<Void> senden(@PathVariable Long id, @RequestBody Pruefung pruefung) {
-        String fehler = versand.versenden(id, null, pruefung.fingerprint());
-        if (fehler != null) throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, fehler);
-        return ResponseEntity.noContent().build();
+        throw new ResponseStatusException(HttpStatus.CONFLICT,"Bitte den gespeicherten Nachrichtenentwurf prüfen und ausdrücklich erneut senden.");
     }
 }

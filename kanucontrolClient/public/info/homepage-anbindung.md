@@ -21,7 +21,7 @@ Die aktuellen Server-, Client- und Pluginstände müssen zusammen veröffentlich
 5. Die technische Client-ID eintragen und die Anbindung freischalten.
 6. Festlegen, ob Teilnehmerzahlen verpflichtend sind und ob Gast bzw. Verwaltung eine erste Eingangsbestätigung erhalten sollen. Bei Benachrichtigung der Verwaltung die Empfängeradresse pflegen.
 
-ADMIN kann die Einstellungen ändern. VERMIETUNG kann sie lesen. Freigaben, Preise und Anreise-/Abreisezeiten des Mietobjekts müssen zur tatsächlichen Vermietung passen.
+VERMIETUNG und ADMIN können die Einstellungen lesen und ändern sowie den Hausmeisterbericht manuell in DEV, TEST und PROD senden. Der Button „Hausmeisterbericht jetzt senden“ verwendet die gespeicherte Adresse und einen Zeitraum von vier Wochen ab heute. KC-SMTP muss aktiviert sein; der SMTP-Testmodus leitet weiterhin an den konfigurierten Testempfänger um. Nur der automatische Sonntagsversand ab 15:00 Uhr (Europe/Berlin) benötigt die gesonderte PROD-Freigabe. Manuelles Senden verändert den automatischen Versand nicht. Freigaben, Preise und Anreise-/Abreisezeiten des Mietobjekts müssen zur tatsächlichen Vermietung passen.
 
 Für den Bootshauskalender muss **Erdgeschoss mit Wiese** eindeutig freigegeben sein. Dieser Kalender ist fest auf das EG eingestellt; er bietet keine Mietbereichsauswahl. Das Anfrageformular kann weiterhin weitere freigegebene Räume und Extras anbieten.
 
@@ -303,7 +303,7 @@ GET /api/vermietung/objekte/{mietobjektId}/homepage-anbindung
 PUT /api/vermietung/objekte/{mietobjektId}/homepage-anbindung
 ```
 
-GET benötigt ADMIN oder VERMIETUNG, PUT benötigt ADMIN. Der technische Homepage-Zugang darf diese Endpunkte nicht benutzen. Neben den Links, Bereichs-IDs und Mailwünschen enthalten die Einstellungen `aktiv`, `technischerClientId` und `version`. Beim PUT wird das Objekt ohne Antwort-Umschlag gesendet. Die zuletzt gelesene Version muss unverändert übernommen werden; beim erstmaligen Anlegen ist sie `null`. Nach der Speicherung liefert KC eine Versionsnummer zurück.
+GET und PUT benötigen ADMIN oder VERMIETUNG. Der technische Homepage-Zugang darf diese Endpunkte nicht benutzen. Neben den Links, Bereichs-IDs und Mailwünschen enthalten die Einstellungen `aktiv`, `technischerClientId` und `version`. Beim PUT wird das Objekt ohne Antwort-Umschlag gesendet. Die zuletzt gelesene Version muss unverändert übernommen werden; beim erstmaligen Anlegen ist sie `null`. Nach der Speicherung liefert KC eine Versionsnummer zurück.
 
 ### Fehlerbehandlung für eigene Adapter
 

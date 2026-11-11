@@ -190,7 +190,7 @@ Der interne Grund bleibt in KC. Auf der Homepage und im Airbnb-Feed wird nur **G
 
 ## 11. Homepage-Anfragen und Bootshauskalender
 
-Die WordPress-Anbindung wird unter **Verwaltung → Homepage-Anbindung** konfiguriert. Zum Ändern dieser Einstellungen ist die Rolle ADMIN erforderlich; VERMIETUNG kann sie lesen.
+Die WordPress-Anbindung wird unter **Verwaltung → Homepage-Anbindung** konfiguriert. Mit der Rolle VERMIETUNG oder ADMIN können diese Einstellungen gelesen und geändert werden. Auch Dokumentvorlagen, PDF-Briefpapier und Abschluss sind mit dem normalen Vermietungszugriff bearbeitbar.
 
 Eine neue Homepage-Anfrage wird als **Anfrage** mit Kennzeichnung **Homepage-Anfrage** und Buchungsquelle **Direkt** übernommen. Prüfe Kontakt, Zeitraum, Mietbereiche, Preis, Teilnehmerzahlen sowie Anzahlung und Kaution, bevor du reservierst oder bestätigst.
 

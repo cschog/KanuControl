@@ -13,6 +13,7 @@ import {
   getBuchung,
   updateBuchung,
   deleteBuchung,
+  brauchtAbrechnungsLoeschbestaetigung,
   aendereBuchungsstatus,
   aendereBuchungsnummer,
 } from "@/vermietung/api/buchungApi";
@@ -108,18 +109,20 @@ export function useBuchungen() {
     }
   }, []);
 
-  const remove = useCallback(async (id: number) => {
+  const remove = useCallback(async (id: number, archivierteAbrechnungenBestaetigt = false) => {
     try {
       setError(null);
 
-      await deleteBuchung(id);
+      await deleteBuchung(id, archivierteAbrechnungenBestaetigt);
 
       setBuchungen((current) => current.filter((buchung) => buchung.id !== id));
 
       setSelectedId((current) => (current === id ? null : current));
     } catch (err) {
-      console.error("Fehler beim Löschen der Buchung:", err);
-      setError("Die Buchung konnte nicht gelöscht werden.");
+      if (!brauchtAbrechnungsLoeschbestaetigung(err)) {
+        console.error("Fehler beim Löschen der Buchung:", err);
+        setError(getApiErrorMessage(err));
+      }
       throw err;
     }
   }, []);

@@ -3,9 +3,9 @@ import AblesungBestaetigungDialog from "@/vermietung/components/buchung/Ablesung
 
 import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { Alert, Box, Button, MenuItem, Tab, Tabs, TextField, Typography } from "@mui/material";
+import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, MenuItem, Tab, Tabs, TextField, Typography } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import { getBuchung } from "@/vermietung/api/buchungApi";
+import { brauchtAbrechnungsLoeschbestaetigung, getBuchung } from "@/vermietung/api/buchungApi";
 
 import { ErrorDialog } from "@/core/components/common/ErrorDialog";
 import { getApiErrorMessage } from "@/kjfp/api/utils/apiError";
@@ -28,6 +28,7 @@ import Buchungskalender from "@/vermietung/components/buchung/Buchungskalender";
 const BuchungenView = () => {
  const {
    buchungen,
+   reload,
    selectedId,
    setSelectedId,
    sorting,
@@ -62,6 +63,8 @@ const BuchungenView = () => {
   const [abschlussFingerprint, setAbschlussFingerprint] = useState<string | undefined>();
   const [abschlussAktiv, setAbschlussAktiv] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [loeschbestaetigung, setLoeschbestaetigung] = useState<{ id: number; nummer: string; message: string } | null>(null);
+  const [loeschenAktiv, setLoeschenAktiv] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
  const { registerBackHandler, setDetailViewOpen } = useBackNavigation();
@@ -258,18 +261,34 @@ const handleReopen = async (sendEmail = false, fingerprint?: string) => {
     }
   };
 
-  const handleDelete = async () => {
-    if (!selectedBuchung) {
-      return;
+  const loeschen = async (buchung: { id: number; nummer: string }, bestaetigt = false) => {
+    if (loeschenAktiv) return;
+    setLoeschenAktiv(true);
+    setSaveError(null);
+    try {
+      await remove(buchung.id, bestaetigt);
+      setLoeschbestaetigung(null);
+      setSelectedBuchung(null);
+      setSelectedId(null);
+      setShowForm(false);
+      setEditMode(false);
+      setInitialZeitraum(null);
+    } catch (err: unknown) {
+      if (brauchtAbrechnungsLoeschbestaetigung(err)) {
+        setLoeschbestaetigung({ ...buchung, message: getApiErrorMessage(err) });
+      } else {
+        setLoeschbestaetigung(null);
+        setSaveError(getApiErrorMessage(err));
+      }
+    } finally {
+      setLoeschenAktiv(false);
     }
+  };
 
-    await remove(selectedBuchung.id);
-
-    setSelectedBuchung(null);
-    setSelectedId(null);
-    setShowForm(false);
-    setEditMode(false);
-    setInitialZeitraum(null);
+  const handleDelete = async () => {
+    if (selectedBuchung) {
+      await loeschen({ id: selectedBuchung.id, nummer: selectedBuchung.buchungsnummer });
+    }
   };
 
   const handleBack = useCallback(() => {
@@ -365,7 +384,7 @@ if (showForm) {
         onEdit={() => setEditMode(true)}
         onCancelEdit={handleCancelEdit}
         onSave={handleSave}
-        onRefresh={async () => { if (selectedBuchung) await refreshSelectedBuchung(selectedBuchung.id); }}
+        onRefresh={async () => { if (selectedBuchung) await refreshSelectedBuchung(selectedBuchung.id); await reload(); }}
         onReserve={handleReserve}
         onBuchungsnummerChange={async nummer => {
           if (!selectedBuchung) return;
@@ -388,8 +407,22 @@ if (showForm) {
             },
           });
         }}
-        disableDelete={!selectedBuchung}
+        disableDelete={!selectedBuchung || loeschenAktiv || !!loeschbestaetigung}
       />
+
+      <Dialog open={!!loeschbestaetigung} onClose={() => { if (!loeschenAktiv) setLoeschbestaetigung(null); }}
+        aria-labelledby="abrechnungen-loeschen-titel" aria-describedby="abrechnungen-loeschen-hinweis">
+        <DialogTitle id="abrechnungen-loeschen-titel">Buchung {loeschbestaetigung?.nummer} samt Abrechnungen löschen?</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="abrechnungen-loeschen-hinweis">{loeschbestaetigung?.message}</DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button disabled={loeschenAktiv} onClick={() => setLoeschbestaetigung(null)}>Abbrechen</Button>
+          <Button color="error" disabled={loeschenAktiv} onClick={() => { if (loeschbestaetigung) void loeschen(loeschbestaetigung, true); }}>
+            {loeschenAktiv ? "Wird gelöscht …" : "Buchung und alle Abrechnungen endgültig löschen"}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <AblesungBestaetigungDialog
         buchung={ablesungBestaetigung}

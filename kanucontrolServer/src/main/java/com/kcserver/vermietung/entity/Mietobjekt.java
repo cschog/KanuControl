@@ -27,6 +27,8 @@ public class Mietobjekt extends Auditable {
 
     @Column(nullable = false)
     private String bezeichnung;
+    @Column(name="kurzfristgrenze_tage", nullable=false)
+    private Integer kurzfristgrenzeTage = 42;
 
     @Column(name = "sortierung", nullable = false)
     private Integer sortierung = 0;

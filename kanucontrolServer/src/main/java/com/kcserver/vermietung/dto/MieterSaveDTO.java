@@ -23,6 +23,10 @@ public class MieterSaveDTO {
     private String plz;
     private String ort;
     private String countryCode = "DE";
+    @jakarta.validation.constraints.Size(max=255)
+    private String organisation;
+    @jakarta.validation.constraints.Size(max=255)
+    private String kontoinhaber;
     private String bankName;
     @ValidIban(message="Die IBAN ist ungültig. Bitte Länderkennung, Länge und Prüfziffer prüfen oder das Feld leer lassen.") private String iban;
     private String bic;

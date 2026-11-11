@@ -1,7 +1,8 @@
 import { Box, Button } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useRef, useState } from "react";
 
 interface Action {
   label: string;
@@ -15,37 +16,11 @@ interface Props {
   path?: string;
   onClick?: () => void;
   actions?: Action[];
-  floating?: boolean;
-  floatingOnMobile?: boolean;
-  onHeightChange?: (height: number) => void;
 }
 
-export default function BackFooter({
-  label,
-  path,
-  onClick,
-  actions,
-  floating = false,
-  floatingOnMobile = true,
-  onHeightChange,
-}: Props) {
+export default function BackFooter({ label, path, onClick, actions }: Props) {
   const navigate = useNavigate();
-
-  const footerRef = useRef<HTMLDivElement>(null);
-
-  const [bottomOffset, setBottomOffset] = useState(8);
-
-  const allActions: Action[] =
-    actions ??
-    (label
-      ? [
-          {
-            label,
-            path,
-            onClick,
-          },
-        ]
-      : []);
+  const allActions: Action[] = actions ?? (label ? [{ label, path, onClick }] : []);
 
   const handleAction = (action: Action) => {
     if (action.onClick) {
@@ -57,171 +32,67 @@ export default function BackFooter({
     }
   };
 
-  /*
-   * Höhe des Footers an AppLayout melden
-   */
-  useEffect(() => {
-    if (!floating || !footerRef.current || !onHeightChange) {
-      return;
-    }
-
-    const element = footerRef.current;
-
-    const updateHeight = () => {
-      onHeightChange(element.getBoundingClientRect().height);
-    };
-
-    updateHeight();
-
-    const observer = new ResizeObserver(updateHeight);
-    observer.observe(element);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [floating, onHeightChange]);
-
-  /*
-   * Prüfen, ob unten ein BottomActionBar sichtbar ist.
-   *
-   * Wenn ja, wird der BackFooter automatisch darüber positioniert.
-   */
-  useEffect(() => {
-    if (!floating) {
-      setBottomOffset(8);
-      return;
-    }
-
-    const updateBottomOffset = () => {
-      const actionBar = document.querySelector<HTMLElement>("[data-bottom-action-bar]");
-
-      if (!actionBar) {
-        setBottomOffset(8);
-        return;
-      }
-
-      const rect = actionBar.getBoundingClientRect();
-
-      const viewportHeight = window.innerHeight;
-
-      /*
-       * Wie weit reicht der BottomActionBar in den unteren
-       * Bereich des Viewports hinein?
-       */
-      const visibleHeight = Math.max(0, viewportHeight - rect.top);
-
-      /*
-       * Nur wenn der BottomActionBar tatsächlich unten
-       * sichtbar ist, gehen wir darüber.
-       */
-      if (rect.top < viewportHeight && visibleHeight > 0) {
-        setBottomOffset(visibleHeight + 8);
-      } else {
-        setBottomOffset(8);
-      }
-    };
-
-    updateBottomOffset();
-
-    window.addEventListener("resize", updateBottomOffset);
-    window.addEventListener("scroll", updateBottomOffset, {
-      passive: true,
-    });
-
-    const observer = new ResizeObserver(updateBottomOffset);
-
-    const actionBar = document.querySelector<HTMLElement>("[data-bottom-action-bar]");
-
-    if (actionBar) {
-      observer.observe(actionBar);
-    }
-
-    return () => {
-      window.removeEventListener("resize", updateBottomOffset);
-      window.removeEventListener("scroll", updateBottomOffset);
-      observer.disconnect();
-    };
-  }, [floating]);
+  if (allActions.length === 0) return null;
 
   return (
     <Box
-      ref={footerRef}
+      component="nav"
+      aria-label="Seitennavigation"
       sx={{
-        display: "flex",
-        justifyContent: "center",
-        mt: 2,
-        mb: 0.5,
-
-        ...(floating && {
-          position: {
-            xs: floatingOnMobile ? "fixed" : "static",
-            md: "fixed",
-          },
-
-          ...(floatingOnMobile
-            ? {
-                bottom: `${bottomOffset}px`,
-              }
-            : {
-                bottom: {
-                  xs: "auto",
-                  md: `${bottomOffset}px`,
-                },
-              }),
-
-          left: {
-            xs: floatingOnMobile ? "50%" : "auto",
-            md: "50%",
-          },
-
-          transform: {
-            xs: floatingOnMobile ? "translateX(-50%)" : "none",
-            md: "translateX(-50%)",
-          },
-
-          zIndex: 1100,
-
-          width: {
-            xs: floatingOnMobile ? "calc(100% - 32px)" : "100%",
-            md: "auto",
-          },
-        }),
+        flexShrink: 0,
+        borderTop: 1,
+        borderColor: "divider",
+        bgcolor: "background.paper",
+        boxShadow: "0 -4px 20px rgba(15, 23, 42, 0.04)",
+        px: { xs: 2, md: 4 },
+        pt: 1,
+        pb: "calc(8px + env(safe-area-inset-bottom, 0px))",
       }}
     >
       <Box
         sx={{
           display: "flex",
-          flexDirection: { xs: "column", md: "row" },
-          gap: 0.75,
-          px: 0.5,
-          py: 0.5,
-          bgcolor: "background.paper",
-          borderRadius: 2,
-          boxShadow: 3,
-
-          width: {
-            xs: "100%",
-            md: "auto",
-          },
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: 1,
+          width: "100%",
+          maxWidth: 1440,
+          mx: "auto",
         }}
       >
-        {allActions.map((action) => (
-          <Button
-            key={action.label}
-            variant="outlined"
-            startIcon={<ArrowBackIcon />}
-            onClick={() => handleAction(action)}
-            sx={{
-              width: {
-                xs: "100%",
-                md: 180,
-              },
-              minHeight: 36,
-            }}
-          >
-            {action.label}
-          </Button>
-        ))}
+        {allActions.map((action) => {
+          const isModuleLink = !!action.path && !action.back;
+          return (
+            <Button
+              key={action.label}
+              variant={isModuleLink ? "outlined" : "text"}
+              startIcon={isModuleLink ? <HomeOutlinedIcon /> : <ArrowBackIcon />}
+              onClick={() => handleAction(action)}
+              sx={(theme) => ({
+                minHeight: 44,
+                minWidth: 0,
+                maxWidth: "100%",
+                px: { xs: 1.5, sm: 2 },
+                py: 1,
+                borderRadius: 2,
+                textTransform: "none",
+                fontWeight: 600,
+                lineHeight: 1.4,
+                ...(isModuleLink && {
+                  ml: "auto",
+                  borderColor: alpha(theme.palette.primary.main, 0.2),
+                  bgcolor: alpha(theme.palette.primary.main, 0.04),
+                  "&:hover": {
+                    borderColor: alpha(theme.palette.primary.main, 0.45),
+                    bgcolor: alpha(theme.palette.primary.main, 0.09),
+                  },
+                }),
+              })}
+            >
+              {action.label}
+            </Button>
+          );
+        })}
       </Box>
     </Box>
   );

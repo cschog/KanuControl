@@ -3,6 +3,7 @@ import { Box, Typography } from "@mui/material";
 import { VeranstaltungBaseForm } from "./form/VeranstaltungBaseForm";
 import { VeranstaltungActionBar } from "./VeranstaltungActionBar";
 import { useVeranstaltungForm } from "./hook/useVeranstaltungForm";
+import { ErrorDialog } from "@/core/components/common/ErrorDialog";
 import ConfirmDeleteDialog from "@/core/components/common/ConfirmDeleteDialog";
 import { VeranstaltungDetail } from "@/kjfp/types/veranstaltung/VeranstaltungDetail";
 import { VeranstaltungSave } from "@/kjfp/types/veranstaltung/VeranstaltungSave";
@@ -45,8 +46,9 @@ export const VeranstaltungFormView: React.FC<Props> = ({
   disableEdit,
   disableDelete,
 }) => {
-  const { form, update, buildSavePayload } = useVeranstaltungForm(veranstaltung);
+  const { form, update, buildSavePayload, validationErrors } = useVeranstaltungForm(veranstaltung);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   if (!veranstaltung || !form) {
     return (
@@ -87,7 +89,11 @@ export const VeranstaltungFormView: React.FC<Props> = ({
         onCancelEdit={onCancelEdit}
         onSave={async () => {
           const payload = buildSavePayload();
-          if (payload) await onSave(payload);
+          if (!payload) {
+            setValidationError(validationErrors.join(" "));
+            return;
+          }
+          await onSave(payload);
         }}
         onDelete={() => setConfirmOpen(true)}
         onBack={onBack}
@@ -95,6 +101,8 @@ export const VeranstaltungFormView: React.FC<Props> = ({
         disableEdit={disableEdit}
         disableDelete={disableDelete}
       />
+
+      <ErrorDialog open={!!validationError} title="Veranstaltung noch nicht vollständig" message={validationError ?? ""} onClose={() => setValidationError(null)} />
 
       {/* ================= DELETE ================= */}
       <ConfirmDeleteDialog

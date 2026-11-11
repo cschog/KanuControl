@@ -12,6 +12,8 @@ export interface Mieter {
   plz?: string;
   ort?: string;
   countryCode?: string;
+  organisation?: string;
+  kontoinhaber?: string;
   bankName?: string;
   iban?: string;
   bic?: string;

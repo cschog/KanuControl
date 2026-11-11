@@ -14,6 +14,7 @@ export interface BuchungFinanzen {
  nebenkostenSoll: number;
  abrechnungGesamt: number;
   saldo: number;
+  stornoEinbehalt?: number;
   buchungId: number;
   buchungsnummer: string;
   mieter: string;

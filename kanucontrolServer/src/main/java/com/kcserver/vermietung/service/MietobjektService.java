@@ -46,6 +46,7 @@ public class MietobjektService {
 
         Mietobjekt objekt = new Mietobjekt();
 
+        if(dto.getKurzfristgrenzeTage()!=null) objekt.setKurzfristgrenzeTage(dto.getKurzfristgrenzeTage());
         objekt.setBezeichnung(dto.getBezeichnung());
         objekt.setBeschreibung(dto.getBeschreibung());
         objekt.setStrasse(dto.getStrasse());
@@ -77,6 +78,7 @@ public class MietobjektService {
                         ErrorMessages.MIETOBJEKT_NOT_FOUND
                 ));
 
+        if(dto.getKurzfristgrenzeTage()!=null) objekt.setKurzfristgrenzeTage(dto.getKurzfristgrenzeTage());
         objekt.setBezeichnung(dto.getBezeichnung());
         objekt.setBeschreibung(dto.getBeschreibung());
         objekt.setStrasse(dto.getStrasse());
@@ -129,6 +131,7 @@ public class MietobjektService {
         MietobjektDTO dto = new MietobjektDTO();
 
         dto.setId(objekt.getId());
+        dto.setKurzfristgrenzeTage(objekt.getKurzfristgrenzeTage());
         dto.setBezeichnung(objekt.getBezeichnung());
         dto.setBeschreibung(objekt.getBeschreibung());
         dto.setStrasse(objekt.getStrasse());

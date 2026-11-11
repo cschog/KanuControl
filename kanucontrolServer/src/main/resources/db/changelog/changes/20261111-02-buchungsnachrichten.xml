@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+ <changeSet id="20261111-02-buchungsnachrichten" author="codex">
+  <addColumn tableName="buchung"><column name="storno_datum" type="DATE"/><column name="storno_erstattung" type="DECIMAL(12,2)"/><column name="storno_einbehalt" type="DECIMAL(12,2)" defaultValueNumeric="0"><constraints nullable="false"/></column></addColumn>
+  <sql>
+   CREATE TABLE vermietung_nachrichtenentwurf (
+    id VARCHAR(36) PRIMARY KEY, version BIGINT NOT NULL, benutzer VARCHAR(255) NOT NULL, tenant VARCHAR(255) NOT NULL,
+    buchung_id BIGINT NOT NULL REFERENCES buchung(id) ON DELETE CASCADE, quelle VARCHAR(20) NOT NULL, ziel VARCHAR(20) NOT NULL,
+    datum DATE NOT NULL, ablauf TIMESTAMP WITH TIME ZONE NOT NULL, daten_hash VARCHAR(64) NOT NULL,
+    betreff VARCHAR(250) NOT NULL, mailtext TEXT NOT NULL, routing TEXT NOT NULL,
+    original_pdf BYTEA, pdf BYTEA, dateiname VARCHAR(180) NOT NULL, extern_am TIMESTAMP WITH TIME ZONE,
+    ohne_mail BOOLEAN NOT NULL, ausgefuehrt BOOLEAN NOT NULL, ablesungen TEXT NOT NULL, storno TEXT,
+    rechnung_revision INT, ersetzt_dokument_id BIGINT, korrekturgrund VARCHAR(1000) NOT NULL, versuch_id VARCHAR(36));
+   CREATE INDEX ix_nachrichtenentwurf_buchung ON vermietung_nachrichtenentwurf(buchung_id,benutzer,ablauf);
+  </sql>
+  <rollback><dropTable tableName="vermietung_nachrichtenentwurf"/><dropColumn tableName="buchung" columnName="storno_datum"/><dropColumn tableName="buchung" columnName="storno_erstattung"/><dropColumn tableName="buchung" columnName="storno_einbehalt"/></rollback>
+ </changeSet>
+</databaseChangeLog>

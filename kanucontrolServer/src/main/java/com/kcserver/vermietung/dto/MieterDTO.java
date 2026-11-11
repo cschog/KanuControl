@@ -20,6 +20,10 @@ public class MieterDTO {
     private String plz;
     private String ort;
     private String countryCode;
+    @jakarta.validation.constraints.Size(max=255)
+    private String organisation;
+    @jakarta.validation.constraints.Size(max=255)
+    private String kontoinhaber;
     private String bankName;
     private String iban;
     private String bic;

@@ -42,7 +42,7 @@ public final class BriefpapierPdf {
             for (var e:rects.entrySet()) if (!e.getKey().equals("textbereich") && area.toGeneralPath().intersects(e.getValue().toGeneralPath().getBounds2D())) throw fehler("textbereich überschneidet Feld "+e.getKey());
         } catch (IOException e) { throw fehler("PDF ist nicht lesbar: "+e.getMessage()); }
     }
-    private static void pruefeObjekt(COSBase b, Set<COSBase> seen, int[] count,int depth) {
+    static void pruefeObjekt(COSBase b, Set<COSBase> seen, int[] count,int depth) {
         if(depth>100)throw fehler("PDF ist zu tief verschachtelt.");
         if (b instanceof COSObject o) { pruefeObjekt(o.getObject(),seen,count,depth+1);return; }
         if (b==null || !seen.add(b)) return;
@@ -57,6 +57,14 @@ public final class BriefpapierPdf {
             if (action!=null && List.of("JavaScript","Launch","SubmitForm","ImportData","GoToR","GoToE","Rendition").contains(action)) throw fehler("PDF enthält eine unerlaubte Aktion.");
             for (COSBase child:d.getValues()) pruefeObjekt(child,seen,count,depth+1);
         } else if (b instanceof COSArray a) for (COSBase child:a) pruefeObjekt(child,seen,count,depth+1);
+    }
+    public static void pruefeAnhang(byte[] bytes){
+        if(bytes==null || bytes.length==0 || bytes.length>10_000_000)throw fehler("PDF-Anhang muss zwischen 1 Byte und 10 MB groß sein.");
+        try(var doc=org.apache.pdfbox.Loader.loadPDF(bytes)){
+            if(doc.isEncrypted() || doc.getNumberOfPages()<1 || doc.getNumberOfPages()>100)throw fehler("PDF muss unverschlüsselt sein und 1 bis 100 Seiten enthalten.");
+            pruefeObjekt(doc.getDocumentCatalog().getCOSObject(),Collections.newSetFromMap(new IdentityHashMap<>()),new int[]{0},0);
+            var out=new org.apache.pdfbox.text.PDFTextStripper();out.setEndPage(Math.min(2,doc.getNumberOfPages()));out.getText(doc);
+        }catch(IOException|IllegalArgumentException ex){throw fehler("PDF-Anhang ist nicht lesbar.");}
     }
     public static void pruefeBild(byte[] image) {
         if (image==null) return;
@@ -75,8 +83,21 @@ public final class BriefpapierPdf {
         try (var doc=Loader.loadPDF(geruest);var input=PDDocument.class.getResourceAsStream("/org/apache/pdfbox/resources/ttf/LiberationSans-Regular.ttf");var out=new ByteArrayOutputStream()) {
             var font=PDType0Font.load(doc,Objects.requireNonNull(input),false);var form=doc.getDocumentCatalog().getAcroForm();
             var area=form.getField("textbereich").getWidgets().getFirst().getRectangle();
+            // Organisation + contact need four address lines. Reuse the combined existing address area,
+            // without changing the stored letterhead contract or drawing outside its field bounds.
+            PDRectangle adresse=null;List<String> adresszeilen=List.of();
+            var adressfelder=Set.of("empfaenger_name","empfaenger_strasse","empfaenger_ort");
+            if(felder.getOrDefault("empfaenger_name", "").contains("\n")){
+                float left=Float.MAX_VALUE,bottom=Float.MAX_VALUE,right=0,top=0;
+                for(String key:adressfelder){var r=form.getField(key).getWidgets().getFirst().getRectangle();left=Math.min(left,r.getLowerLeftX());bottom=Math.min(bottom,r.getLowerLeftY());right=Math.max(right,r.getUpperRightX());top=Math.max(top,r.getUpperRightY());}
+                adresse=new PDRectangle(left,bottom,right-left,top-bottom);
+                for(var field:form.getFields())if(!adressfelder.contains(field.getFullyQualifiedName()) && adresse.toGeneralPath().intersects(field.getWidgets().getFirst().getRectangle().toGeneralPath().getBounds2D()))throw fehler("Der gemeinsame Empfängerbereich überschneidet ein anderes Feld.");
+                adresszeilen=wrap(felder.getOrDefault("empfaenger_name", "")+"\n"+felder.getOrDefault("empfaenger_strasse", "")+"\n"+felder.getOrDefault("empfaenger_ort", ""),font,10,adresse.getWidth()-4);
+                if(adresszeilen.size()*12>adresse.getHeight())throw fehler("Organisation und Anschrift passen nicht in den Empfängerbereich. Bitte Briefpapier-Feldflächen vergrößern.");
+            }
             for (var field:form.getFields()) {
                 var text=(PDTextField)field;String value=field.getFullyQualifiedName().equals("textbereich")?"":felder.getOrDefault(field.getFullyQualifiedName(),"");
+                if(adresse!=null && adressfelder.contains(field.getFullyQualifiedName()))value="";
                 var r=text.getWidgets().getFirst().getRectangle();float size=field.getFullyQualifiedName().startsWith("bank_")?8:field.getFullyQualifiedName().equals("briefdatum")?9.5f:10;
                 List<String> lines;
                 try { lines=wrap(value,font,size,r.getWidth()-4); }
@@ -96,6 +117,7 @@ public final class BriefpapierPdf {
             if(bild!=null){image=org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject.createFromByteArray(doc,bild,"Unterschrift");imageHeight=Math.min(45,120f*image.getHeight()/image.getWidth());}
             if(lines.size()*12+imageHeight>area.getHeight()) throw fehler("Textblöcke und Abschluss passen nicht auf Seite 1. Bitte Texte kürzen; das Hauptschreiben bleibt einseitig.");
             try(var stream=new PDPageContentStream(doc,doc.getPage(0),PDPageContentStream.AppendMode.APPEND,true,true)){
+                if(adresse!=null){float ay=adresse.getUpperRightY()-10;for(String line:adresszeilen){text(stream,font,line,adresse.getLowerLeftX()+2,ay,10);ay-=12;}}
                 float y=area.getUpperRightY()-10;
                 for(String line:lines){text(stream,font,line,area.getLowerLeftX(),y,10);links(doc.getPage(0),font,line,area.getLowerLeftX(),y);y-=12;}
                 if(image!=null)stream.drawImage(image,area.getLowerLeftX(),y-imageHeight, imageHeight*image.getWidth()/image.getHeight(),imageHeight);

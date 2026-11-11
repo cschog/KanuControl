@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+ <changeSet id="20261110-01-vorlagenpakete" author="codex">
+  <sql>
+   CREATE TABLE vermietung_vorlagenimport (
+    id VARCHAR(36) PRIMARY KEY, benutzer VARCHAR(255) NOT NULL, tenant VARCHAR(255) NOT NULL,
+    ablauf TIMESTAMP WITH TIME ZONE NOT NULL, paket BYTEA, paket_hash VARCHAR(64) NOT NULL,
+    plan TEXT, ziel_hash VARCHAR(64), geprueft BOOLEAN NOT NULL DEFAULT FALSE, uebernommen BOOLEAN NOT NULL DEFAULT FALSE
+   );
+   CREATE INDEX ix_vorlagenimport_ablauf ON vermietung_vorlagenimport(ablauf);
+  </sql>
+  <rollback><sql>DROP TABLE vermietung_vorlagenimport;</sql></rollback>
+ </changeSet>
+</databaseChangeLog>

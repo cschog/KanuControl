@@ -20,10 +20,14 @@ export interface BuchungPosition {
 }
 
 export interface Buchung {
+  zahlungsvariante?: "ANZAHLUNG" | "BEI_ABRECHNUNG" | "GESAMTMIETE_VORAUS";
   bankverbindungAuswahl?: BankverbindungAuswahl;
   entschaedigungen?: EntschaedigungPosition[];
   abrechnungRevision?: number;
   abschlussRevision?: number;
+  stornoDatum?: string | null;
+  stornoErstattung?: number | null;
+  stornoEinbehalt?: number | null;
   id: number;
   reservierungMailGesendetAm?: string | null;
   reservierungMailFehler?: string | null;

@@ -36,6 +36,25 @@ public final class BuchungPreiskalkulation {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         return brutto.subtract(rabatt(buchung).min(brutto)).max(BigDecimal.ZERO).setScale(2, RoundingMode.HALF_UP);
     }
+    /** Net amounts in booking order; preserves position-specific discounts. */
+    public static java.util.List<BigDecimal> nettoPositionen(Buchung b) {
+        var brutto=b.getMietbereiche().stream().map(BuchungPreiskalkulation::preis).toList();
+        boolean snapshots=b.getBuchungsquelle()!=Buchungsquelle.AIRBNB && b.getRabattart()!=Rabattart.KEIN_RABATT
+            && !(b.getRabattart()==Rabattart.INDIVIDUELL && b.getRabattwertTyp()==RabattwertTyp.ABSOLUT)
+            && b.getMietbereiche().stream().anyMatch(p->p.getRabattwertTyp()!=null);
+        if(snapshots)return b.getMietbereiche().stream().map(p->preis(p).subtract(positionsRabatt(p,p.getRabattwertTyp(),p.getRabattwert()))).toList();
+        return verteileRabatt(brutto,rabatt(b));
+    }
+    /** Allocate a global/legacy discount without losing cents or creating negative rows. */
+    public static java.util.List<BigDecimal> verteileRabatt(java.util.List<BigDecimal> brutto,BigDecimal rabatt) {
+        var restBrutto=brutto.stream().reduce(BigDecimal.ZERO,BigDecimal::add);
+        var restRabatt=rabatt.max(BigDecimal.ZERO).min(restBrutto);var result=new java.util.ArrayList<BigDecimal>();
+        for(var betrag:brutto){
+            var anteil=restBrutto.signum()==0?BigDecimal.ZERO:restRabatt.multiply(betrag).divide(restBrutto,2,RoundingMode.HALF_UP).min(betrag).min(restRabatt);
+            result.add(betrag.subtract(anteil));restBrutto=restBrutto.subtract(betrag);restRabatt=restRabatt.subtract(anteil);
+        }
+        return java.util.List.copyOf(result);
+    }
     public static BigDecimal rabatt(Buchung buchung) {
         BigDecimal brutto = buchung.getMietbereiche().stream().map(BuchungPreiskalkulation::preis).reduce(BigDecimal.ZERO, BigDecimal::add);
         if (buchung.getBuchungsquelle() == Buchungsquelle.AIRBNB || buchung.getRabattart() == Rabattart.KEIN_RABATT) return BigDecimal.ZERO.setScale(2);

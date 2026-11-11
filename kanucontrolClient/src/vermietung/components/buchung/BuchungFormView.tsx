@@ -168,10 +168,12 @@ export const BuchungFormView: React.FC<Props> = ({
         />
       </Box>
 
+      {buchung?.stornoDatum && <Typography sx={{ my: 2 }}>Storniert am {buchung.stornoDatum} · angekündigte Erstattung: {(buchung.stornoErstattung ?? 0).toLocaleString("de-DE", { style: "currency", currency: "EUR" })} · verbindlicher Einbehalt: {(buchung.stornoEinbehalt ?? 0).toLocaleString("de-DE", { style: "currency", currency: "EUR" })}. Tatsächliche Überweisungen werden separat in den Finanzen erfasst.</Typography>}
       <EntschaedigungEditor objektId={form.mietobjektId} rows={form.entschaedigungen ?? []} editable={editMode} onChange={rows=>update("entschaedigungen",rows)}/>
-      {buchung && !editMode && <Abrechnungsdokumente key={`${buchung.id}-${buchung.abrechnungRevision}-${buchung.abschlussRevision}`} id={buchung.id} ausstellbar={buchung.status === "ABGESCHLOSSEN" && buchung.abrechnungRevision === buchung.abschlussRevision}/>}
-      {buchung && !editMode && <VorlagenVersandarchiv key={`${buchung.id}-${buchung.reservierungMailGesendetAm}-${buchung.reservierungMailFehler}`} id={buchung.id} refresh={!!buchung.reservierungMailGesendetAm} />}
+      {buchung && !editMode && <Abrechnungsdokumente key={`${buchung.id}-${buchung.status}-${buchung.abrechnungRevision}-${buchung.abschlussRevision}`} id={buchung.id} ausstellbar={buchung.status === "ABGESCHLOSSEN" && buchung.abrechnungRevision === buchung.abschlussRevision}/>}
+      {buchung && !editMode && <VorlagenVersandarchiv key={`${buchung.id}-${buchung.status}-${buchung.abschlussRevision}-${buchung.reservierungMailGesendetAm}-${buchung.reservierungMailFehler}`} id={buchung.id} refresh={!!buchung.reservierungMailGesendetAm} />}
       <BuchungActionBar
+        buchung={buchung ?? undefined}
         buchungId={buchung?.id}
         direktbuchung={buchung?.buchungsquelle === "DIREKT"}
         reservierungMailGesendetAm={buchung?.reservierungMailGesendetAm}

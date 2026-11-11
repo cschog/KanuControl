@@ -11,7 +11,6 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mock.env.MockEnvironment;
-import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDate;
 import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
@@ -28,7 +27,7 @@ class HausmeisterUmgebungTest {
     @ParameterizedTest
     @CsvSource({"DEV,DEV,dev", "TEST,TEST,test", "DEV,PROD,prod", "TEST,PROD,prod", "UNKNOWN,PROD,prod", "PROD,TEST,prod", "PROD,DEV,prod"})
     @SuppressWarnings("unchecked")
-    void sperreGreiftVorJederAbfrageAuchMitEmpfaengerUndSmtpFreigabe(String runtime, String app, String profile) {
+    void automatikSperreGreiftVorJederAbfrageAuchMitEmpfaengerUndSmtpFreigabe(String runtime, String app, String profile) {
         var gate = policy(runtime, app, true, profile);
         var configs = mock(HomepageAnbindungRepository.class);
         var bookings = mock(BuchungRepository.class);
@@ -41,8 +40,6 @@ class HausmeisterUmgebungTest {
         new HausmeisterBerichtScheduler(jdbc, service, gate).senden();
         assertTrue(service.objektIds().isEmpty());
         service.wocheSenden(7L, LocalDate.of(2026, 11, 8));
-        var error = assertThrows(ResponseStatusException.class, () -> service.testSenden(7L));
-        assertEquals(403, error.getStatusCode().value());
         assertEquals(false, service.status().get("enabled"));
         verifyNoInteractions(jdbc, configs, bookings, mail);
     }
@@ -64,21 +61,30 @@ class HausmeisterUmgebungTest {
         assertEquals(java.time.LocalDateTime.of(2026,11,8,15,0),
                 cron.next(java.time.LocalDateTime.of(2026,11,7,23,59)));
     }
-    @Test void httpTestversandIstAuchMitGespeicherterAdresseInTestVerboten() throws Exception {
-        var configs = mock(HomepageAnbindungRepository.class);
-        var bookings = mock(BuchungRepository.class);
-        @SuppressWarnings("unchecked") ObjectProvider<JavaMailSender> mail = mock(ObjectProvider.class);
-        var saved = new HomepageAnbindung(); saved.setHausmeisterEmail("saved@example.org");
+    @ParameterizedTest
+    @CsvSource({"DEV,dev,true", "DEV,dev,false", "TEST,test,true", "TEST,test,false", "PROD,prod,false"})
+    void manuellerHttpVersandIstUnabhaengigVonAutomatikFreigabe(String umgebung,String profil,boolean testmodus) throws Exception {
+        var configs=mock(HomepageAnbindungRepository.class);var bookings=mock(BuchungRepository.class);
+        @SuppressWarnings("unchecked") ObjectProvider<JavaMailSender> mail=mock(ObjectProvider.class);
+        var sender=mock(JavaMailSender.class);var message=new jakarta.mail.internet.MimeMessage((jakarta.mail.Session)null);
+        when(mail.getIfAvailable()).thenReturn(sender);when(sender.createMimeMessage()).thenReturn(message);
+        var saved=new HomepageAnbindung();saved.setMietobjektId(7L);saved.setHausmeisterEmail("saved@example.org");
+        var objekt=new com.kcserver.vermietung.entity.Mietobjekt();objekt.setBezeichnung("Bootshaus");saved.setMietobjekt(objekt);
+        var letzteWoche=LocalDate.of(2026,11,1);saved.setHausmeisterLetzteWoche(letzteWoche);
         when(configs.lockById(7L)).thenReturn(Optional.of(saved));
-        var smtp = new SmtpMailProperties(); smtp.setEnabled(true);
-        var service = new HausmeisterBerichtService(configs, bookings, mail, smtp, policy("TEST", "PROD", true, "prod"));
-        var controller = new com.kcserver.vermietung.controller.HomepageAnbindungController(
-                mock(HomepageAnbindungService.class), service);
-        var mvc = org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup(controller).build();
-        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
-                .post("/api/vermietung/objekte/7/homepage-anbindung/hausmeister-test"))
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isForbidden());
-        verifyNoInteractions(configs, bookings, mail);
+        when(bookings.findByMietobjektIdAndStatusInAndAnreiseLessThanAndAbreiseGreaterThan(any(),any(),any(),any())).thenReturn(new java.util.ArrayList<>());
+        var smtp=new SmtpMailProperties();smtp.setEnabled(true);smtp.setFrom("kc@example.org");smtp.setTestMode(testmodus);smtp.setTestRecipient("test@example.org");
+        var service=new HausmeisterBerichtService(configs,bookings,mail,smtp,policy(umgebung,umgebung,false,profil));
+        var controller=new com.kcserver.vermietung.controller.HomepageAnbindungController(mock(HomepageAnbindungService.class),service);
+        var mvc=org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup(controller).build();
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/vermietung/objekte/7/homepage-anbindung/hausmeister-senden"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk());
+        assertEquals(testmodus?"test@example.org":"saved@example.org",message.getAllRecipients()[0].toString());
+        assertTrue(message.getSubject().contains("[MANUELL]"));assertEquals(testmodus,message.getSubject().contains("[TEST]"));verify(sender).send(message);
+        var heute=LocalDate.now(java.time.ZoneId.of("Europe/Berlin"));
+        verify(bookings).findByMietobjektIdAndStatusInAndAnreiseLessThanAndAbreiseGreaterThan(eq(7L),any(),eq(heute.plusWeeks(4).atStartOfDay()),eq(heute.atStartOfDay()));
+        assertEquals(letzteWoche,saved.getHausmeisterLetzteWoche());verify(configs,never()).saveAndFlush(any());
+        clearInvocations(configs,bookings,mail);service.wocheSenden(7L,heute);verifyNoInteractions(configs,bookings,mail);
     }
 
     @Test void echteProfilkonfigurationenBleibenOhneSeparateFreigabeGesperrt() {

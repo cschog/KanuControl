@@ -1,0 +1,37 @@
+package com.kcserver.vermietung.service;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.web.server.ResponseStatusException;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.io.*;
+import org.apache.commons.compress.archivers.zip.*;
+import static com.kcserver.vermietung.service.VorlagenModell.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+class VorlagenPaketTest {
+    static Vorlage vorlage(){return new Vorlage(17L,"Grüße {{vorname}} €","\n  Hallo {{vorname}},\n\nText €\n",List.of(new Block("Nur Editor","\n  Miete {{restmiete}} €\n\n",Bedingung.IMMER,List.of(new Variante(Bedingung.KAUTION_POSITIV,"Kaution {{kaution}} €"))),new Block("Leer","",Bedingung.OG_GEBUCHT,null)),"");}
+    static Vorlage vorlageMitVersion(Long version){var v=vorlage();return new Vorlage(version,v.betreff(),v.mailtext(),v.bloecke(),v.anrede());}
+    static VorlagenPaket.Manifest manifest(boolean paper){return new VorlagenPaket.Manifest("kanucontrol-vorlagen",1,"2026-11-10T10:00:00Z",new VorlagenPaket.Quelle("Synthetischer Verein"),paper?new VorlagenPaket.Papier("mandant/briefpapier.pdf","mandant/grussformel.md",null):null,List.of(new VorlagenPaket.Objekt("objekt-001","Bootshaus")),List.of(new VorlagenPaket.Eintrag("objekt-001",Vorgang.RESERVIERUNG,"vorlagen/objekt-001/RESERVIERUNG.md")));}
+    static byte[] paket(boolean papier)throws Exception {var files=new LinkedHashMap<String,byte[]>();files.put("vorlagen/objekt-001/RESERVIERUNG.md",VorlagenMarkdown.schreiben(vorlage()));if(papier){files.put("mandant/briefpapier.pdf",VorlagenPaketTest.class.getResourceAsStream("/pdf/Briefpapier_Bootshaus.pdf").readAllBytes());files.put("mandant/grussformel.md","Viele Grüße\nErika".getBytes(StandardCharsets.UTF_8));}return VorlagenPaket.schreiben(manifest(papier),files);}
+    @Test void verlustfreierTextcontainerUndExterneBearbeitung(){var v=vorlage();String s=new String(VorlagenMarkdown.schreiben(v),StandardCharsets.UTF_8);var parsed=VorlagenMarkdown.lesen(("\uFEFF"+s.replace("Text €","Extern geändert €").replace("\n","\r\n")).getBytes(StandardCharsets.UTF_8),"test.md");assertNull(parsed.version());assertEquals(v.anrede(),parsed.anrede());assertEquals(v.betreff(),parsed.betreff());assertEquals(v.mailtext().replace("Text €","Extern geändert €"),parsed.mailtext());assertEquals(v.bloecke(),parsed.bloecke());}
+    @Test void einzelneCrUndBedeutungsvolleLeerzeilen(){String s=new String(VorlagenMarkdown.schreiben(vorlage()),StandardCharsets.UTF_8);assertEquals(vorlage().bloecke(),VorlagenMarkdown.lesen(s.replace('\n','\r').getBytes(StandardCharsets.UTF_8),"cr.md").bloecke());}
+    @Test void defekteMarkerUndMetadatenWerdenAbgelehnt(){String s=new String(VorlagenMarkdown.schreiben(vorlage()),StandardCharsets.UTF_8);
+        for(String bad:List.of(s.replace("<!-- kc:block b1 -->","<!-- kc:block fehlt -->"),s.replace("<!-- kc:mailtext -->","<!-- kc:mailtext -->\n<!-- kc:mailtext -->"),s.replaceFirst("<!-- kc:end -->",""),s+"Unbekannter Rest",s.replace("\"formatVersion\" : 1","\"formatVersion\" : 2"),s.replace("\"formatVersion\" : 1","\"formatVersion\" : 1, \"formatVersion\":1"),s.replace("\"formatVersion\" : 1","\"formatVersion\" : 1.2"),s.replace("\"id\" : \"b2\"","\"id\" : \"b1\""),s.replace("KAUTION_POSITIV","UNBEKANNT"),s.replace("{{kaution}}","{{geheim}}"),s.replace("\"anrede\" : \"\"","\"anrede\" : \"\", \"neuesFeld\":true")))assertThrows(ResponseStatusException.class,()->VorlagenMarkdown.lesen(bad.getBytes(StandardCharsets.UTF_8),"kaputt.md"),bad);
+        assertThrows(ResponseStatusException.class,()->VorlagenMarkdown.lesen(new byte[]{(byte)0xc3,0x28},"utf8.md"));
+    }
+    @Test void binaerUndGrussBleibenErhalten()throws Exception{var p=VorlagenPaket.lesen(paket(true));assertArrayEquals(getClass().getResourceAsStream("/pdf/Briefpapier_Bootshaus.pdf").readAllBytes(),p.pdf());assertEquals("Viele Grüße\nErika",p.gruss());assertNull(p.bild());assertEquals(vorlage().bloecke(),p.vorlagen().get("objekt-001/RESERVIERUNG").bloecke());assertNull(VorlagenPaket.lesen(paket(false)).pdf());}
+    @Test void leereKonfiguration(){var m=new VorlagenPaket.Manifest("kanucontrol-vorlagen",1,"2026-11-10T10:00:00Z",new VorlagenPaket.Quelle("Leer"),null,List.of(),List.of());var p=VorlagenPaket.lesen(VorlagenPaket.schreiben(m,Map.of()));assertTrue(p.vorlagen().isEmpty());assertNull(p.pdf());}
+    static byte[] zip(List<String> names,List<byte[]> content,boolean symlink)throws Exception{var out=new ByteArrayOutputStream();try(var zip=new ZipArchiveOutputStream(out)){for(int i=0;i<names.size();i++){var e=new ZipArchiveEntry(names.get(i));if(symlink)e.setUnixMode(0120777);zip.putArchiveEntry(e);zip.write(content.get(i));zip.closeArchiveEntry();}}return out.toByteArray();}
+    @Test void unsichereArchiveWerdenVerworfen()throws Exception{for(String name:List.of("/absolut","../a","a/../b","C:/x","a\\b","a//b","a/./b","datei.zip")){byte[] z=zip(List.of(name),List.of(new byte[]{1}),false);assertThrows(ResponseStatusException.class,()->VorlagenPaket.lesen(z),name);}assertThrows(ResponseStatusException.class,()->VorlagenPaket.lesen(zip(List.of("x","X"),List.of(new byte[]{1},new byte[]{2}),false)));assertThrows(ResponseStatusException.class,()->VorlagenPaket.lesen(zip(List.of("link"),List.of(new byte[]{1}),true)));}
+    @Test void groessenlimitWirdAufEchtGeleseneBytesAngewendet()throws Exception{byte[] z=zip(List.of("manifest.json"),List.of(new byte[VorlagenPaket.TEXT_MAX+1]),false);var e=assertThrows(ResponseStatusException.class,()->VorlagenPaket.lesen(z));assertEquals(413,e.getStatusCode().value());}
+    @Test void unbekannteNutzdateiUndDefektesPdf()throws Exception{var files=new LinkedHashMap<String,byte[]>();files.put("vorlagen/objekt-001/RESERVIERUNG.md",VorlagenMarkdown.schreiben(vorlage()));files.put("sql.sql",new byte[]{1});assertThrows(ResponseStatusException.class,()->VorlagenPaket.lesen(VorlagenPaket.schreiben(manifest(false),files)));files.remove("sql.sql");files.put("mandant/briefpapier.pdf",new byte[]{1});files.put("mandant/grussformel.md",new byte[]{1});assertThrows(ResponseStatusException.class,()->VorlagenPaket.lesen(VorlagenPaket.schreiben(manifest(true),files)));}
+    @Test void bildabschlussUndBildbytes()throws Exception{
+        var image=new java.awt.image.BufferedImage(20,10,java.awt.image.BufferedImage.TYPE_INT_RGB);var out=new ByteArrayOutputStream();javax.imageio.ImageIO.write(image,"png",out);
+        var m=manifest(true);var withImage=new VorlagenPaket.Manifest(m.format(),1,m.exportiertAm(),m.quelle(),new VorlagenPaket.Papier("mandant/briefpapier.pdf","mandant/grussformel.md","mandant/unterschrift.png"),m.mietobjekte(),m.vorlagen());
+        var files=new LinkedHashMap<String,byte[]>();files.put("vorlagen/objekt-001/RESERVIERUNG.md",VorlagenMarkdown.schreiben(vorlage()));files.put("mandant/briefpapier.pdf",getClass().getResourceAsStream("/pdf/Briefpapier_Bootshaus.pdf").readAllBytes());files.put("mandant/grussformel.md",new byte[0]);files.put("mandant/unterschrift.png",out.toByteArray());
+        var p=VorlagenPaket.lesen(VorlagenPaket.schreiben(withImage,files));assertEquals("",p.gruss());assertArrayEquals(out.toByteArray(),p.bild());
+    }
+    @Test void synthetischesBeispielpaketIstLesbar()throws Exception{var p=VorlagenPaket.lesen(getClass().getResourceAsStream("/vorlagenpakete/beispiel-ohne-briefpapier.zip").readAllBytes());assertNull(p.pdf());assertEquals(2,p.vorlagen().size());}
+
+}

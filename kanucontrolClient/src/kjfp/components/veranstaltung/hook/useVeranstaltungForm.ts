@@ -12,7 +12,7 @@ function emptyVeranstaltung(): VeranstaltungFormModel {
 
   return {
     name: "",
-    typ: VeranstaltungTyp.JEM,
+    typ: VeranstaltungTyp.FM,
     kjfpAktiv: true,
     fahrtenAktiv: false,
 
@@ -37,6 +37,21 @@ function emptyVeranstaltung(): VeranstaltungFormModel {
   };
 }
 
+function tage(form: VeranstaltungFormModel): number | null {
+  const parse = (value: string) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+    const timestamp = Date.parse(`${value}T00:00:00Z`);
+    return Number.isFinite(timestamp) && new Date(timestamp).toISOString().slice(0, 10) === value ? timestamp : null;
+  };
+  const beginn = parse(form.beginnDatum), ende = parse(form.endeDatum);
+  return beginn === null || ende === null || ende < beginn ? null : (ende - beginn) / 86_400_000 + 1;
+}
+
+function mitAutomatischemTyp(form: VeranstaltungFormModel): VeranstaltungFormModel {
+  const dauer = tage(form);
+  return form.kjfpAktiv ? { ...form, typ: dauer === null ? undefined : dauer <= 4 ? VeranstaltungTyp.FM : VeranstaltungTyp.JEM } : form;
+}
+
 /* =========================================================
    HOOK
    ========================================================= */
@@ -54,7 +69,7 @@ export function useVeranstaltungForm(initial: VeranstaltungFormModel | null) {
       return;
     }
 
-    setForm({
+    setForm(mitAutomatischemTyp({
       ...initial,
 
       /* ===== Null → Default ===== */
@@ -66,7 +81,7 @@ export function useVeranstaltungForm(initial: VeranstaltungFormModel | null) {
       unterkunftsart: initial.unterkunftsart,
       verpflegungsmodell: initial.verpflegungsmodell,
       beitragsstrukturId: initial.beitragsstrukturId ?? undefined,
-    });
+    }));
   }, [initial]);
 
   /* =========================
@@ -74,10 +89,10 @@ export function useVeranstaltungForm(initial: VeranstaltungFormModel | null) {
      ========================= */
 
   const reset = (data?: Partial<VeranstaltungFormModel>) => {
-    setForm({
+    setForm(mitAutomatischemTyp({
       ...emptyVeranstaltung(),
       ...data,
-    });
+    }));
   };
 
   /* =========================
@@ -88,7 +103,7 @@ export function useVeranstaltungForm(initial: VeranstaltungFormModel | null) {
     key: K,
     value: VeranstaltungFormModel[K],
   ) => {
-    setForm((f) => (f ? { ...f, [key]: value } : f));
+    setForm((f) => (f ? mitAutomatischemTyp({ ...f, [key]: value }) : f));
   };
 
   /* =========================
@@ -98,14 +113,7 @@ export function useVeranstaltungForm(initial: VeranstaltungFormModel | null) {
   const buildSavePayload = (): VeranstaltungSave | null => {
     if (!form) return null;
 
-    if (
-      !form.beginnDatum ||
-      !form.endeDatum ||
-      !form.verein ||
-      (form.kjfpAktiv && (!form.typ || !form.beginnZeit || !form.endeZeit || !form.leiter))
-    ) {
-      return null;
-    }
+    if (validationErrors.length > 0 || !form.verein) return null;
 
     return {
       id: form.id,
@@ -136,36 +144,24 @@ export function useVeranstaltungForm(initial: VeranstaltungFormModel | null) {
     };
   };
 
-  /* =========================
-     VALIDATION (MINIMAL)
-     ========================= */
-
-  /* =========================
-     VALIDATION
-     ========================= */
-
-  const isEndTimeValid = (() => {
-    if (!form || !form.beginnDatum || !form.endeDatum || !form.beginnZeit || !form.endeZeit) {
-      return true;
+  const dauer = form ? tage(form) : null;
+  const isEndTimeValid = !form?.kjfpAktiv || !form.beginnZeit || !form.endeZeit
+    || form.beginnDatum !== form.endeDatum || form.endeZeit >= form.beginnZeit;
+  const validationErrors: string[] = [];
+  if (form) {
+    if (form.name.trim().length < 2) validationErrors.push("Bitte eine Bezeichnung mit mindestens zwei Zeichen eingeben.");
+    if (!form.beginnDatum) validationErrors.push("Bitte das Beginndatum eingeben.");
+    if (!form.endeDatum) validationErrors.push("Bitte das Enddatum eingeben.");
+    if (form.beginnDatum && form.endeDatum && dauer === null) validationErrors.push("Bitte gültige Datumsangaben eingeben; das Ende darf nicht vor dem Beginn liegen.");
+    if (!form.verein) validationErrors.push("Bitte einen Verein auswählen.");
+    if (form.kjfpAktiv) {
+      if (!form.leiter) validationErrors.push("Für KJFP bitte eine Leitung auswählen.");
+      if (!form.beginnZeit) validationErrors.push("Für KJFP bitte die Beginnzeit eingeben.");
+      if (!form.endeZeit) validationErrors.push("Für KJFP bitte die Endzeit eingeben.");
     }
-
-    // Unterschiedliche Tage -> erlaubt
-    if (form.beginnDatum !== form.endeDatum) {
-      return true;
-    }
-
-    // Gleicher Tag -> Ende >= Beginn
-    return form.endeZeit >= form.beginnZeit;
-  })();
-
-  const isValid =
-    !!form &&
-    form.name.trim().length >= 2 &&
-    !!form.beginnDatum &&
-    !!form.endeDatum &&
-    !!form.verein &&
-    (!form.kjfpAktiv || (!!form.typ && !!form.leiter && !!form.beginnZeit && !!form.endeZeit)) &&
-    isEndTimeValid;
+    if (!isEndTimeValid) validationErrors.push("Die Endzeit darf nicht vor der Beginnzeit liegen.");
+  }
+  const isValid = !!form && validationErrors.length === 0;
 
   /* =========================
      EXPORT
@@ -178,5 +174,6 @@ export function useVeranstaltungForm(initial: VeranstaltungFormModel | null) {
     buildSavePayload,
     isValid,
     isEndTimeValid,
+    validationErrors,
   };
 }

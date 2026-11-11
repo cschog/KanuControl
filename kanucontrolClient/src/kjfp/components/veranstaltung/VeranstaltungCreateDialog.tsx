@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Box } from "@mui/material";
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Box, Alert } from "@mui/material";
 
 import { VeranstaltungBaseForm } from "@/kjfp/components/veranstaltung/form/VeranstaltungBaseForm";
 import { useVeranstaltungForm } from "@/kjfp/components/veranstaltung/hook/useVeranstaltungForm";
@@ -28,7 +28,7 @@ export const VeranstaltungCreateDialog: React.FC<Props> = ({
   beitragsstrukturen,
   initialData,
 }) => {
-  const { form, update, reset, buildSavePayload, isValid } = useVeranstaltungForm(null);
+  const { form, update, reset, buildSavePayload, isValid, validationErrors } = useVeranstaltungForm(null);
 
   // Dialog öffnen → Form reset
   useEffect(() => {
@@ -63,6 +63,8 @@ export const VeranstaltungCreateDialog: React.FC<Props> = ({
           />
         </Box>
       </DialogContent>
+
+      {!isValid && <Alert severity="info" sx={{ mx: 3, mt: 2 }}>{validationErrors.join(" ")}</Alert>}
 
       <DialogActions>
         <Button onClick={onClose}>Abbrechen</Button>

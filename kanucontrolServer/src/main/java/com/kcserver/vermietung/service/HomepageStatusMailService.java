@@ -128,6 +128,28 @@ public class HomepageStatusMailService {
         return new StatusVorschau(from,ziel.empfaenger(),ziel.cc(),reply,betreff,mail.getText(),ziel.test(),fingerprint);
     }
 
+    /** Shared routing and MIME construction for all modular booking messages. */
+    public StatusVorschau nachrichtVorschau(Buchung b,String betreff,String text){
+        String email=b.getMieter()==null?null:b.getMieter().getEmail();
+        if(email==null || !validator.validate(new Adresse(email)).isEmpty())throw new IllegalArgumentException("Eine gültige E-Mail-Adresse des Mieters ist erforderlich.");
+        var ziel=routing(b,email.strip());var config=anbindungen.findById(b.getMietobjekt().getId()).orElse(null);
+        String from=smtpConfig.getFrom()==null?"":smtpConfig.getFrom().strip();
+        String reply=config==null?null:config.getEmpfaengerEmail();
+        return new StatusVorschau(from,ziel.empfaenger(),ziel.cc(),reply,(ziel.test()&&!betreff.startsWith("[TEST] ")?"[TEST] ":"")+betreff,text,ziel.test(),null);
+    }
+    public ReservierungMail nachrichtVorbereiten(StatusVorschau v,byte[] pdf,String dateiname,String metadaten){
+        if(!smtpConfig.isEnabled())throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,"Der SMTP-Mailversand ist nicht aktiviert.");
+        var sender=mailSenders.getIfAvailable();if(sender==null)throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,"SMTP ist nicht verfügbar.");
+        try{
+            var message=sender.createMimeMessage();var helper=new org.springframework.mail.javamail.MimeMessageHelper(message,true,"UTF-8");
+            helper.setFrom(v.absender());helper.setTo(v.empfaenger());if(v.cc()!=null)helper.setCc(v.cc());
+            if(v.replyTo()!=null && !v.replyTo().isBlank())helper.setReplyTo(v.replyTo());
+            helper.setSubject(v.betreff());helper.setText(v.text(),false);
+            if(pdf!=null)helper.addAttachment(dateiname,new org.springframework.core.io.ByteArrayResource(pdf),"application/pdf");
+            return new ReservierungMail(sender,message,pdf,metadaten);
+        }catch(jakarta.mail.MessagingException e){throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,"Die Nachricht konnte nicht vorbereitet werden. Bitte Mailadressen prüfen.",e);}
+    }
+
     /** Build once while the booking is locked; send these exact contents after commit. */
     public StatusMail statusVorbereiten(Buchung buchung,Buchungsstatus neuerStatus,Buchungsstatus alterStatus,String fingerprint) {
         var v=statusVorschau(buchung,neuerStatus,alterStatus);

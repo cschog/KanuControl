@@ -1,6 +1,9 @@
 package com.kcserver.vermietung.controller;
 
 import com.kcserver.api.response.ApiResponse;
+import com.kcserver.core.exception.ApiError;
+import com.kcserver.vermietung.exception.BuchungLoeschbestaetigungException;
+import org.springframework.http.ResponseEntity;
 import com.kcserver.vermietung.dto.BuchungDTO;
 import com.kcserver.vermietung.dto.AblesungBestaetigungDTO;
 import com.kcserver.vermietung.enumtype.Buchungsstatus;
@@ -104,8 +107,9 @@ public class BuchungController {
             @PathVariable Long id,
             @RequestBody @Valid BuchungsstatusRequest request
     ) {
+        if(request.status()!=Buchungsstatus.ABRECHENBAR)throw new org.springframework.web.server.ResponseStatusException(HttpStatus.CONFLICT,"Bitte die neue Nachrichtenvorschau vor der Statusaktion verwenden.");
         return new ApiResponse<>(
-                buchungService.aendereStatus(id, request.status(), request.ablesungenBestaetigt(), request.sendEmail(), request.fingerprint()),
+                buchungService.aendereStatus(id, request.status(), request.ablesungenBestaetigt(), false, null),
                 List.of()
         );
     }
@@ -122,9 +126,15 @@ public class BuchungController {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(
-            @PathVariable Long id
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "false") boolean archivierteAbrechnungenBestaetigt
     ) {
+        buchungService.delete(id, archivierteAbrechnungenBestaetigt);
+    }
 
-        buchungService.delete(id);
+    @ExceptionHandler(BuchungLoeschbestaetigungException.class)
+    public ResponseEntity<ApiError> handleLoeschbestaetigung(BuchungLoeschbestaetigungException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiError.simple(
+                HttpStatus.CONFLICT.value(), BuchungLoeschbestaetigungException.CODE, ex.getMessage()));
     }
 }

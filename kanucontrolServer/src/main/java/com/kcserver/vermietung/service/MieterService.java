@@ -127,6 +127,8 @@ public class MieterService {
         person.setPlz(dto.getPlz());
         person.setOrt(dto.getOrt());
         person.setCountryCode(dto.getCountryCode() == null || dto.getCountryCode().isBlank() ? CountryCode.DE : CountryCode.valueOf(dto.getCountryCode()));
+        person.setOrganisation(dto.getOrganisation());
+        person.setKontoinhaber(dto.getKontoinhaber());
         person.setBankName(dto.getBankName());
         person.setIban(dto.getIban());
         person.setBic(dto.getBic());
@@ -146,6 +148,8 @@ public class MieterService {
         dto.setPlz(p.getPlz());
         dto.setOrt(p.getOrt());
         dto.setCountryCode(p.getCountryCode() == null ? "DE" : p.getCountryCode().name());
+        dto.setOrganisation(p.getOrganisation());
+        dto.setKontoinhaber(p.getKontoinhaber());
         dto.setBankName(p.getBankName());
         dto.setIban(p.getIban());
         dto.setBic(p.getBic());

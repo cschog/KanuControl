@@ -25,6 +25,11 @@ export const MietobjektBaseForm: React.FC<Props> = ({ form, editMode, onChange }
         onChange={(v) => onChange("bezeichnung", v)}
       />
 
+      <TextField label="Kurzfristige Buchung: weniger als Tage" type="number" size="small" fullWidth
+        value={form.kurzfristgrenzeTage ?? 42} disabled={!editMode}
+        helperText="Schlägt bei der Beantwortung die Gesamtmiete im Voraus vor. 0 deaktiviert den Vorschlag."
+        slotProps={{ htmlInput: { min: 0, max: 365, step: 1 } }}
+        onChange={e => onChange("kurzfristgrenzeTage", Math.min(365, Math.max(0, Math.trunc(Number(e.target.value) || 0))))} />
       <FormFeld
         label="Beschreibung"
         value={form.beschreibung}

@@ -3,6 +3,7 @@ import type { Bankverbindung } from "./Bankverbindung";
 export interface MietobjektSave {
   bankverbindungPrimaer?: Bankverbindung | null;
   bankverbindungAlternativ?: Bankverbindung | null;
+  kurzfristgrenzeTage?: number;
   bezeichnung: string;
   beschreibung: string;
   strasse: string;

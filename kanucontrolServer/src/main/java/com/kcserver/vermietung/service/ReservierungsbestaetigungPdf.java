@@ -72,13 +72,13 @@ public class ReservierungsbestaetigungPdf {
                 throw invalid("Ein gebuchter Mietbereich enthält unvollständige Preisangaben.");
         }
         BigDecimal miete = BuchungPreiskalkulation.miete(b);
-        BigDecimal anzahlung = amount(b.getAnzahlungBetrag(), "Anzahlung");
+        BigDecimal anzahlung = amount(Zahlungsplan.anzahlung(b), "Anzahlung");
         BigDecimal kaution = amount(b.getKautionBetrag(), "Kaution");
         if (anzahlung.compareTo(miete) > 0) throw invalid("Die vereinbarte Anzahlung übersteigt den Mietbetrag. Bitte den Zahlungsplan korrigieren.");
         String tarif = b.getRabattart() == Rabattart.VEREIN ? " für dich als EKC-Mitglied"
                 : b.getRabattart() == Rabattart.VERBAND ? " für dich als DKV-Mitglied" : "";
         var f = new LinkedHashMap<String, String>();
-        f.put("empfaenger_name", required(p.getVorname(), "Vorname des Mieters") + " " + required(p.getName(), "Nachname des Mieters"));
+        f.put("empfaenger_name", (p.getOrganisation()==null || p.getOrganisation().isBlank()?"":p.getOrganisation().strip()+"\n") + required(p.getVorname(), "Vorname des Mieters") + " " + required(p.getName(), "Nachname des Mieters"));
         f.put("empfaenger_strasse", required(p.getStrasse(), "Straße des Mieters"));
         f.put("empfaenger_ort", required(p.getPlz(), "Postleitzahl des Mieters") + " " + required(p.getOrt(), "Wohnort des Mieters")
                 + (p.getCountryCode() == null || "DE".equals(p.getCountryCode().name()) ? "" : "\n" + p.getCountryCode().name()));
@@ -101,7 +101,7 @@ public class ReservierungsbestaetigungPdf {
         return new Inhalt(Collections.unmodifiableMap(f), ogGebucht, url);
     }
 
-    private static boolean enthaeltOg(Mietbereich bereich, Set<Long> besucht) {
+    static boolean enthaeltOg(Mietbereich bereich, Set<Long> besucht) {
         if (bereich == null || bereich.getId() == null || !besucht.add(bereich.getId())) return false;
         return bereich.getId() == OG_ID || bereich.getBelegteMietbereiche().stream().anyMatch(b -> enthaeltOg(b, besucht));
     }

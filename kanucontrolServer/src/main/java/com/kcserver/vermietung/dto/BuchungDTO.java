@@ -22,6 +22,10 @@ public class BuchungDTO {
     private Long abrechnungRevision;
     private Long abschlussRevision;
     private java.math.BigDecimal entschaedigungSumme;
+    private com.kcserver.vermietung.enumtype.Zahlungsvariante zahlungsvariante;
+    private java.time.LocalDate stornoDatum;
+    private java.math.BigDecimal stornoErstattung;
+    private java.math.BigDecimal stornoEinbehalt;
     private Long id;
     private java.time.Instant reservierungMailGesendetAm;
     private String reservierungMailFehler;

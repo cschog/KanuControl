@@ -9,7 +9,6 @@ import { getUnterkunftsartRefs } from "@/kjfp/api/services/unterkunftsartApi";
 import { getVerpflegungsmodellRefs } from "@/kjfp/api/services/verpflegungsmodellApi";
 
 import { VeranstaltungFormModel } from "@/kjfp/types/veranstaltung/VeranstaltungFormModel";
-import { VeranstaltungTyp } from "@/kjfp/api/enums/VeranstaltungTyp";
 
 import { UnterkunftsartRef } from "@/kjfp/types/unterkunft/UnterkunftsartRef";
 import { VerpflegungsmodellRef } from "@/kjfp/types/verpflegung/VerpflegungsmodellRef";
@@ -82,17 +81,13 @@ export const VeranstaltungBaseForm: React.FC<Props> = ({
       {/* ================= TYP ================= */}
       {form.kjfpAktiv && <>
       <TextField
-        select
         fullWidth
         size="small"
-        label="Typ"
+        label="Veranstaltungsart"
         value={form.typ ?? ""}
-        disabled={!editMode}
-        onChange={(e) => onChange("typ", e.target.value as VeranstaltungTyp)}
-      >
-        <MenuItem value={VeranstaltungTyp.JEM}>JEM</MenuItem>
-        <MenuItem value={VeranstaltungTyp.FM}>FM</MenuItem>
-      </TextField>
+        slotProps={{ input: { readOnly: true } }}
+        helperText="Automatisch nach Kalendertagen: 1–4 Tage FM, ab 5 Tagen JEM (An- und Abreisetag zählen mit)."
+      />
 
       {/* ================= LEITUNG ================= */}
 

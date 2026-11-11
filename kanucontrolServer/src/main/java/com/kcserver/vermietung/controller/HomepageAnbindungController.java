@@ -22,10 +22,10 @@ public class HomepageAnbindungController {
         return ApiResponse.of(berichte.status());
     }
 
-    @PostMapping("/hausmeister-test")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping({"/hausmeister-senden", "/hausmeister-test"})
+    @PreAuthorize("hasAnyRole('ADMIN', 'VERMIETUNG')")
     public ApiResponse<String> test(@PathVariable Long mietobjektId) {
-        berichte.testSenden(mietobjektId);
+        berichte.manuellSenden(mietobjektId);
         return ApiResponse.of("Testbericht an den Mailserver übergeben.");
     }
 
@@ -36,7 +36,7 @@ public class HomepageAnbindungController {
     }
 
     @PutMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'VERMIETUNG')")
     public ApiResponse<HomepageAnbindungDTO> save(@PathVariable Long mietobjektId,
             @Valid @RequestBody HomepageAnbindungDTO dto) {
         return ApiResponse.of(service.save(mietobjektId, dto));
