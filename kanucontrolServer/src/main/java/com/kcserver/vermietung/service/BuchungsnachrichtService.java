@@ -41,7 +41,41 @@ public class BuchungsnachrichtService {
         entwuerfe=e;buchungen=b;buchungsservice=bs;finanzen=f;verbrauch=v;vorlagen=vs;papier=p;rechnung=r;rechnungen=rr;
         mails=m;archiv=a;archivstatus=as;daten=d;mapper=om;tx=new TransactionTemplate(tm);
     }
-    public record Start(@jakarta.validation.constraints.NotNull Buchungsstatus ziel,List<@jakarta.validation.Valid @jakarta.validation.constraints.NotNull AblesungBestaetigungDTO> ablesungen,String korrekturgrund) {}
+    public record Vorschau(Buchungsstatus ziel,String empfaenger,String betreff,String mailtext,byte[] pdf,String dateiname,List<String> hinweise) {}
+    /** Independent content preview: no routing, status change, finance writes, invoice or send archive. */
+    public Vorschau vorschau(Long id,Start request){user();return tx.execute(status->{
+        if(request==null||request.ziel()==null)throw fehler("Dokumentvorgang fehlt.");
+        var b=buchung(id);var ziel=request.ziel();var vorgang=BuchungsnachrichtDaten.vorgang(ziel);
+        if(BuchungsnachrichtDaten.ohneMail(b.getStatus(),ziel))throw fehler("Für diesen Statuswechsel ist keine E-Mail oder PDF vorgesehen.");
+        var hints=new ArrayList<String>();
+        hints.add("Unverbindliche Vorschau des aktuellen Buchungsstands. Vor Abschluss und Versand werden Voraussetzungen und Empfänger erneut geprüft.");
+        var f=finanzen.toDto(b);VorlagenService.Ergebnis result;
+        if(ziel==Buchungsstatus.ABGESCHLOSSEN){
+            var readings=verbrauch.berechneVorschau(b);
+            var bestaetigungen=new ArrayList<AblesungBestaetigungDTO>();
+            for(var v:readings){
+                if(!v.erfolgreich()&&!v.bestaetigungErforderlich())throw fehler("Für die PDF-Vorschau fehlen Verbrauchswerte: "+v.bezeichnung()+". "+Objects.toString(v.hinweis(),""));
+                if(v.bestaetigungErforderlich()){
+                    hints.add(v.bezeichnung()+": Ablesungen liegen mehr als 24 Stunden vom Termin entfernt. Für den Abschluss ist eine ausdrückliche Bestätigung erforderlich.");
+                    bestaetigungen.add(new AblesungBestaetigungDTO(v.zaehlerId(),b.getAnreise(),b.getAbreise(),v.anfangsablesung(),v.endablesung(),v.anfangsstand(),v.endstand()));
+                }
+            }
+            var sn=verbrauch.berechneSnapshots(b,bestaetigungen);f=finanzen.toDto(b,sn);
+            var old=rechnungen.findByBuchungIdOrderByRevisionDesc(id);int revision=old.isEmpty()?1:old.getFirst().getRevision()+1;
+            result=rechnung.entwurf(b,revision,null,f,sn,heute(),false);
+            hints.add("Die Rechnung berücksichtigt bisher gebuchte Zahlungen und Verrechnungen. Eine noch offene Kaution wird hier nicht automatisch verrechnet.");
+        }else{
+            var extra=new HashMap<String,String>();var wahr=EnumSet.noneOf(Bedingung.class);Abrechnungsbereich tabelle=null;
+            if(ziel==Buchungsstatus.STORNIERT){var st=Stornoberechnung.berechnen(heute(),b.getAnreise().toLocalDate(),f.bewegungen());extra.putAll(daten.stornoDaten(b,st));
+                wahr.add(st.erstattung().signum()>0?Bedingung.STORNO_ERSTATTUNG_POSITIV:st.einbehalt().signum()>0?Bedingung.STORNO_EINBEHALT_POSITIV:Bedingung.STORNO_OHNE_ZAHLUNG);tabelle=daten.stornoTabelle(st,f.bewegungen());}
+            result=vorlagen.erstellenVorgang(b,daten.basis(b,heute()),null,vorgang,extra,wahr,tabelle);
+        }
+        String email=b.getMieter()==null?null:b.getMieter().getEmail();
+        return new Vorschau(ziel,email,result.betreff(),result.mailtext(),result.pdf(),"Vorschau_"+b.getBuchungsnummer()+"_"+vorgang+".pdf",List.copyOf(hints));
+    });}
+    public record Start(@jakarta.validation.constraints.NotNull Buchungsstatus ziel,List<@jakarta.validation.Valid @jakarta.validation.constraints.NotNull AblesungBestaetigungDTO> ablesungen,String korrekturgrund,Boolean sendEmail) {
+        public Start(Buchungsstatus ziel,List<AblesungBestaetigungDTO> ablesungen,String korrekturgrund){this(ziel,ablesungen,korrekturgrund,null);}
+    }
     public record Aenderung(Long version,String betreff,String mailtext,boolean originalWiederherstellen) {}
     public record Freigabe(String fingerprint,boolean wiederholung) {}
     public record Ansicht(String id,Long version,Buchungsstatus quelle,Buchungsstatus ziel,String vorgang,boolean ohneMail,
@@ -69,12 +103,13 @@ public class BuchungsnachrichtService {
             b.getZahlungsvariante(),b.getBankverbindungAuswahl(),b.getAnreise(),b.getAbreise(),b.getStornoDatum(),b.getStornoErstattung(),b.getStornoEinbehalt(),f,
             Arrays.asList(p.getId(),p.getVorname(),p.getName(),p.getOrganisation(),p.getStrasse(),p.getPlz(),p.getOrt(),p.getCountryCode(),p.getEmail(),p.getIban(),p.getBankName(),p.getBic(),p.getKontoinhaber()),
             b.getMietobjekt().getBezeichnung(),b.getMietobjekt().getBankverbindungPrimaer(),b.getMietobjekt().getBankverbindungAlternativ());
-        if(!e.isOhneMail()){
+        if(!e.isOhneMail() || e.getZiel()==Buchungsstatus.ABGESCHLOSSEN){
             values.add(vorlagen.vorlage(b.getMietobjekt().getId(),BuchungsnachrichtDaten.vorgang(e.getZiel())));
             var papierstand=papier.findById(1L).orElseThrow(()->fehler("Bitte Briefpapier einrichten."));
             values.add(Arrays.asList(papierstand.getVersion(),hash(papierstand.getPdf()),papierstand.getBild()==null?null:hash(papierstand.getBild()),papierstand.getGruss()));
-            values.add(mails.nachrichtVorschau(b,"", ""));values.add(daten.basis(b,e.getDatum()));
+            if(!e.isOhneMail())values.add(mails.nachrichtVorschau(b,"", ""));values.add(daten.basis(b,e.getDatum()));
         }
+        if(b.getVeranstalter()!=null){var v=b.getVeranstalter();values.add(Arrays.asList(v.getId(),v.getName(),v.getStrasse(),v.getPlz(),v.getOrt(),v.getCountryCode()));}
         if(snapshots!=null)for(var v:snapshots)values.add(Arrays.asList(v.getVerbrauchskostenId(),v.getZaehlerId(),v.getBezeichnung(),v.getPreis(),v.getKosten(),v.getAnfangsstand(),v.getEndstand(),v.getAnfangsablesung(),v.getEndablesung(),v.getMengeneinheit(),v.getAbrechnungstage()));
         return VorlagenService.hash(json(values));
     }
@@ -88,7 +123,7 @@ public class BuchungsnachrichtService {
         var f=finanzen.toDto(b);BuchungsnachrichtDaten.zahlungsplanPruefen(b,request.ziel(),f.bewegungen());
         var e=new BuchungsnachrichtEntwurf();e.setBenutzer(user());e.setTenant(TenantContext.getCurrentTenant());e.setBuchungId(id);
         e.setQuelle(b.getStatus());e.setZiel(request.ziel());e.setDatum(heute());e.setAblauf(Instant.now().plusSeconds(1800));
-        e.setOhneMail(BuchungsnachrichtDaten.ohneMail(b.getStatus(),request.ziel()));e.setAblesungen(json(request.ablesungen()==null?List.of():request.ablesungen()));
+        e.setOhneMail(BuchungsnachrichtDaten.ohneMail(b.getStatus(),request.ziel()) || (request.ziel()==Buchungsstatus.ABGESCHLOSSEN && Boolean.FALSE.equals(request.sendEmail())));e.setAblesungen(json(request.ablesungen()==null?List.of():request.ablesungen()));
         e.setDateiname("Buchung_"+id+"_"+BuchungsnachrichtDaten.vorgang(request.ziel())+".pdf");
         var sn=snapshots(b,e);
         if(request.ziel()==Buchungsstatus.ABGESCHLOSSEN){
@@ -98,7 +133,7 @@ public class BuchungsnachrichtService {
             if(grund.length()>1000 || !old.isEmpty() && grund.isBlank())throw fehler("Eine Rechnungskorrektur benötigt eine Begründung (maximal 1000 Zeichen).");e.setKorrekturgrund(grund);
         }
         e.setRouting(json(e.isOhneMail()?null:mails.nachrichtVorschau(b,"","")));
-        if(!e.isOhneMail()){
+        if(!e.isOhneMail() || e.getZiel()==Buchungsstatus.ABGESCHLOSSEN){
             VorlagenService.Ergebnis result;
             if(e.getZiel()==Buchungsstatus.ABGESCHLOSSEN)result=rechnung.entwurf(b,e.getRechnungRevision(),null,finanzen.toDto(b,sn),sn,e.getDatum());
             else {
@@ -120,12 +155,12 @@ public class BuchungsnachrichtService {
     public List<Kurz> liste(Long id){user();return tx.execute(status->entwuerfe.findByBuchungIdAndBenutzerAndTenantOrderByAblaufDesc(id,user(),TenantContext.getCurrentTenant()).stream().filter(e->e.isAusgefuehrt() || e.getAblauf().isAfter(Instant.now())).map(e->new Kurz(e.getId(),e.getZiel(),e.isAusgefuehrt(),e.getVersuchId()==null?null:archiv.findById(e.getVersuchId()).map(VorlagenVersand::getErgebnis).orElse(null),e.getAblauf())).toList());}
     public Ansicht aendern(Long b,String id,Aenderung a){user();return tx.execute(status->{var e=entwurf(b,id);offen(e);aktuell(buchung(b),e,snapshots(buchung(b),e));
         if(a==null || !Objects.equals(a.version(),e.getVersion()))throw konflikt("Entwurf wurde geändert. Bitte neu laden.");
-        pruefeMail(a.betreff(),a.mailtext());if(!e.isOhneMail()){e.setBetreff(a.betreff().strip());e.setMailtext(normalisieren(a.mailtext()));}
-        if(a.originalWiederherstellen() && !e.isOhneMail()){e.setPdf(e.getOriginalPdf().clone());e.setExternAm(null);e.setDateiname("Buchung_"+b+"_"+BuchungsnachrichtDaten.vorgang(e.getZiel())+".pdf");}
+        if(!e.isOhneMail())pruefeMail(a.betreff(),a.mailtext());if(!e.isOhneMail()){e.setBetreff(a.betreff().strip());e.setMailtext(normalisieren(a.mailtext()));}
+        if(a.originalWiederherstellen() && e.getOriginalPdf()!=null){e.setPdf(e.getOriginalPdf().clone());e.setExternAm(null);e.setDateiname("Buchung_"+b+"_"+BuchungsnachrichtDaten.vorgang(e.getZiel())+".pdf");}
         entwuerfe.saveAndFlush(e);return ansicht(e);
     });}
     public Ansicht hochladen(Long b,String id,Long version,byte[] pdf,String name){user();BriefpapierPdf.pruefeAnhang(pdf);return tx.execute(status->{var e=entwurf(b,id);offen(e);aktuell(buchung(b),e,snapshots(buchung(b),e));
-        if(e.isOhneMail())throw fehler("Diese Aktion versendet keinen Anhang.");if(!Objects.equals(version,e.getVersion()))throw konflikt("Entwurf wurde geändert. Bitte neu laden.");
+        if(e.getOriginalPdf()==null)throw fehler("Für diese Aktion ist kein PDF vorgesehen.");if(!Objects.equals(version,e.getVersion()))throw konflikt("Entwurf wurde geändert. Bitte neu laden.");
         String filename=Objects.toString(name,"Bearbeitet.pdf").replaceAll("[^\\p{L}\\p{N}_. -]","_");if(filename.length()>160)filename=filename.substring(0,160);if(!filename.toLowerCase(Locale.ROOT).endsWith(".pdf"))filename+=".pdf";
         e.setDateiname(filename);e.setPdf(pdf.clone());e.setExternAm(Instant.now());entwuerfe.saveAndFlush(e);return ansicht(e);
     });}

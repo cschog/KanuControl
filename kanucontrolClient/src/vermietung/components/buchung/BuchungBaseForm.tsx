@@ -1,7 +1,7 @@
 // src/vermietung/components/buchung/BuchungBaseForm.tsx
 
 import { BuchungBankverbindung } from "./BuchungBankverbindung";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { geldRunden, mietEinheiten } from "@/vermietung/utils/mietpreis";
 import { getPreis } from "@/vermietung/api/buchungApi";
 import type { Buchungsquelle } from "@/vermietung/enums/Buchungsquelle";
@@ -64,6 +64,8 @@ function useMietbereichPreise(
   const [preise, setPreise] = useState<Record<number, number>>({});
   const [ladefehler, setLadefehler] = useState<Record<number, boolean>>({});
 
+  useEffect(() => { setPreise({}); setLadefehler({}); }, [buchungsquelle, stichtag]);
+
   const mietbereichIdsKey = [...new Set(mietbereichIds)].sort((a, b) => a - b).join(",");
 
   useEffect(() => {
@@ -73,7 +75,7 @@ function useMietbereichPreise(
 
     const gespeicherteIds = new Set(buchungspositionen.map((position) => position.mietbereichId));
 
-    const fehlendeIds = ids.filter((id) => !gespeicherteIds.has(id) && preise[id] === undefined);
+    const fehlendeIds = ids.filter((id) => !gespeicherteIds.has(id) && preise[id] === undefined && !ladefehler[id]);
 
     if (fehlendeIds.length === 0) {
       return () => {
@@ -122,7 +124,7 @@ function useMietbereichPreise(
     return () => {
       cancelled = true;
     };
-  }, [mietbereichIdsKey, buchungspositionen, buchungsquelle, stichtag, preise]);
+  }, [mietbereichIdsKey, buchungspositionen, buchungsquelle, stichtag, preise, ladefehler]);
 
   return { preise, ladefehler };
 }
@@ -183,25 +185,28 @@ export const BuchungBaseForm: React.FC<Props> = ({
     ? bereich.erforderlicheMietbereichIdsDirekt ?? bereich.erforderlicheMietbereichIds ?? []
     : bereich.erforderlicheMietbereichIdsAirbnb ?? [];
 
-  const stichtag = createdAt ? createdAt.slice(0, 10) : new Date().toLocaleDateString("sv-SE");
+  const heute = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Berlin" }).format(new Date());
+  const stichtag = form.mietpreiseNeuBerechnen ? form.mietpreisStichtag || heute : createdAt ? createdAt.slice(0, 10) : heute;
+  const preispositionen = useMemo(() => form.mietpreiseNeuBerechnen ? [] : buchungspositionen, [form.mietpreiseNeuBerechnen, buchungspositionen]);
+  const bisherigerMietpreis = buchungspositionen.reduce((summe, p) => summe + geldRunden((p.vereinbarterPreis ?? 0) * p.anzahl * mietEinheiten(p.berechnungsart, form.anreise, form.abreise, form.unbefristet)), 0);
 
   const { mietobjekt, loading: mietobjektLoading } = useVermietungContext();
 
   const { preise: geladenePreise, ladefehler } = useMietbereichPreise(
     form.positionen.map((position) => position.mietbereichId),
-    buchungspositionen,
+    preispositionen,
     buchungsquelle,
     stichtag,
   );
 
   const einheitenFuer = (mietbereichId: number) => mietEinheiten(
-    buchungspositionen.find((p) => p.mietbereichId === mietbereichId)?.berechnungsart
+    preispositionen.find((p) => p.mietbereichId === mietbereichId)?.berechnungsart
       ?? mietbereiche.find((p) => p.id === mietbereichId)?.berechnungsart,
     form.anreise, form.abreise, form.unbefristet,
   );
 
   const gesamtpreis = form.positionen.reduce<number>((summe, position) => {
-    const buchungsposition = buchungspositionen.find(
+    const buchungsposition = preispositionen.find(
       (item) => item.mietbereichId === position.mietbereichId,
     );
 
@@ -215,7 +220,7 @@ export const BuchungBaseForm: React.FC<Props> = ({
   }, 0);
 
   const gesamtpreisVollstaendig = form.positionen.every((position) => {
-    const buchungsposition = buchungspositionen.find(
+    const buchungsposition = preispositionen.find(
       (item) => item.mietbereichId === position.mietbereichId,
     );
 
@@ -232,7 +237,7 @@ export const BuchungBaseForm: React.FC<Props> = ({
     }
 
     return form.positionen.reduce((summe, position) => {
-      const areaPrice = buchungspositionen.find((item) => item.mietbereichId === position.mietbereichId)?.vereinbarterPreis
+      const areaPrice = preispositionen.find((item) => item.mietbereichId === position.mietbereichId)?.vereinbarterPreis
         ?? geladenePreise[position.mietbereichId];
       if (areaPrice === undefined || ladefehler[position.mietbereichId]) return summe;
 
@@ -340,6 +345,19 @@ export const BuchungBaseForm: React.FC<Props> = ({
           onChange={onMieterChange}
         />
 
+        <VereinAutocomplete
+          label="Veranstalter"
+          veranstalter
+          value={veranstalter}
+          disabled={!buchungsdatenEditierbar}
+          onChange={onVeranstalterChange}
+        />
+        {veranstalter && <Alert severity="info">
+          Rechnung an: {veranstalter.name}<br />
+          Ansprechpartner: {[mieter?.vorname, mieter?.name].filter(Boolean).join(" ")}
+        </Alert>}
+
+
         {form.buchungsquelle === "DIREKT" && <TextField select label="Zahlungsvariante" fullWidth size="small"
           value={form.zahlungsvariante ?? "ANZAHLUNG"} disabled={!buchungsdatenEditierbar}
           helperText="Gespeicherte Auswahl bleibt bestehen. Kaution ist in allen Varianten optional."
@@ -387,12 +405,6 @@ export const BuchungBaseForm: React.FC<Props> = ({
           onChange={(value) => onChange("bankverbindungAuswahl", value)}
         />
 
-        <VereinAutocomplete
-          label="Veranstalter"
-          value={veranstalter}
-          disabled={!buchungsdatenEditierbar}
-          onChange={onVeranstalterChange}
-        />
 
         <Box
           sx={{
@@ -711,6 +723,16 @@ export const BuchungBaseForm: React.FC<Props> = ({
             Mietbereiche / Positionen
           </Typography>
 
+          {!neueBuchung && buchungsdatenEditierbar && <Box sx={{ mb: 2 }}>
+            <FormControlLabel label="Mietpreise aus Katalog neu übernehmen" control={<Checkbox checked={!!form.mietpreiseNeuBerechnen} onChange={e => onChange("mietpreiseNeuBerechnen", e.target.checked)} />} />
+            {form.mietpreiseNeuBerechnen && <Box sx={{ display: "grid", gap: 1 }}>
+              <TextField label="Preisstand (Stichtag)" type="date" size="small" value={form.mietpreisStichtag ?? heute} error={form.mietpreisStichtag === ""} helperText={form.mietpreisStichtag === "" ? "Bitte einen Preisstand für die Neuberechnung wählen." : "Verwendet wird der am Stichtag gültige Preis des Mietpreiskatalogs."} onChange={e => onChange("mietpreisStichtag", e.target.value)} slotProps={{ inputLabel: { shrink: true } }} />
+              <Alert severity="warning">Beim Speichern werden Einzelpreis und Berechnungsart aller gewählten Mietpositionen aus dem Katalog zu diesem Stichtag übernommen. Die gewählte Rabattregel bleibt erhalten. Ohne Speichern bleibt der bisherige Mietpreis bestehen.</Alert>
+              <Typography variant="body2">Bisherige Preisbasis vor Rabatt: {formatPreis(bisherigerMietpreis)} · Vorschau aus Katalog: {gesamtpreisVollstaendig ? formatPreis(gesamtpreis) : "Preise werden ermittelt …"}</Typography>
+              {form.positionen.some(p => ladefehler[p.mietbereichId]) && <Alert severity="error">Für mindestens eine gewählte Position fehlt ein gültiger Katalogpreis am Stichtag. Bitte Preisstand oder Mietpreiskatalog prüfen.</Alert>}
+            </Box>}
+          </Box>}
+
           {voraussetzungsFehler && <Alert severity="error" sx={{ mb: 1.5 }}>{voraussetzungsFehler}</Alert>}
 
           {gefilterteMietbereiche.length === 0 ? (
@@ -840,7 +862,7 @@ export const BuchungBaseForm: React.FC<Props> = ({
                         )}
 
                         {(() => {
-                          const buchungsposition = buchungspositionen.find(
+                          const buchungsposition = preispositionen.find(
                             (item) => item.mietbereichId === mietbereich.id,
                           );
 

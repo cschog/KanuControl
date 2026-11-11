@@ -38,6 +38,7 @@ public interface VereinMapper {
     @Mapping(target = "schutzkonzept", source = "schutzkonzept")
     @Mapping(target = "countryCode", source = "countryCode")
     @Mapping(target = "mitglieder", ignore = true)
+    @Mapping(target = "kjfpVerein", ignore = true)
     @Mapping(target = "hausverein", ignore = true)
     Verein toEntity(VereinDTO dto);
 
@@ -55,6 +56,7 @@ public interface VereinMapper {
     @Mapping(target = "schutzkonzept", source = "schutzkonzept")
     @Mapping(target = "countryCode", source = "countryCode")
     @Mapping(target = "mitglieder", ignore = true)
+    @Mapping(target = "kjfpVerein", ignore = true)
     @Mapping(target = "hausverein", ignore = true)
     void updateFromDTO(VereinDTO dto, @MappingTarget Verein verein);
 

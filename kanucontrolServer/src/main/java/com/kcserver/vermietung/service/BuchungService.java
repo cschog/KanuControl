@@ -232,6 +232,9 @@ public class BuchungService {
 
     public BuchungDTO update(Long id, BuchungDTO dto) {
 
+        if (dto.isMietpreiseNeuBerechnen() && dto.getMietpreisStichtag() == null) {
+            throw new IllegalArgumentException("Bitte den Preisstand für die Neuberechnung aus dem Mietpreiskatalog auswählen.");
+        }
         if (!dto.isTeilnehmerdatenGueltig()) {
             throw new IllegalArgumentException("Bitte Teilnehmerzahlen und Altersspanne der Jugendlichen prüfen.");
         }
@@ -279,6 +282,9 @@ public class BuchungService {
         if (buchung.getStatus() == Buchungsstatus.STORNIERT
                 || buchung.getStatus() == Buchungsstatus.ABGELEHNT) {
 
+            if (dto.isMietpreiseNeuBerechnen()) {
+                throw new IllegalArgumentException("Bei stornierten oder abgelehnten Buchungen können Mietpreise nicht neu übernommen werden.");
+            }
             if (!sindBuchungsdatenUnveraendert(buchung, dto)) {
                 throw new IllegalArgumentException(
                         "Bei stornierten oder abgelehnten Buchungen "
@@ -787,6 +793,13 @@ public class BuchungService {
                 buchung.getMieter().getName()
         );
 
+        if (buchung.getVeranstalter() != null) {
+            var v = buchung.getVeranstalter();
+            var ref = new com.kcserver.core.dto.verein.VereinRefDTO();
+            ref.setId(v.getId()); ref.setName(v.getName()); ref.setAbk(v.getAbk()); ref.setOrt(v.getOrt());
+            ref.setCountryCode(v.getCountryCode().name());
+            dto.setVeranstalter(ref);
+        }
         dto.setVeranstalterVereinId(
                 buchung.getVeranstalter() != null
                         ? buchung.getVeranstalter().getId()
@@ -1226,17 +1239,20 @@ public class BuchungService {
                     bestehendePositionen.get(mietbereichId);
 
             if (zuordnung != null) {
-                // Bestehende Position: Snapshot nicht verändern.
                 zuordnung.setAnzahl(position.getAnzahl());
+                // Importierte/vereinbarte Preise bleiben standardmäßig erhalten.
+                if (dto.isMietpreiseNeuBerechnen()) {
+                    Mietpreis katalogpreis = ermittleMietpreis(mietbereich, buchungsquelle, dto.getMietpreisStichtag());
+                    zuordnung.setVereinbarterPreis(katalogpreis.getPreis());
+                    zuordnung.setBerechnungsart(mietbereich.getBerechnungsart());
+                }
                 continue;
             }
 
             // Neue Position: gültigen Preis ermitteln.
-            Mietpreis mietpreis = ermittleMietpreis(
-                    buchung,
-                    mietbereich,
-                    buchungsquelle
-            );
+            Mietpreis mietpreis = dto.isMietpreiseNeuBerechnen()
+                    ? ermittleMietpreis(mietbereich, buchungsquelle, dto.getMietpreisStichtag())
+                    : ermittleMietpreis(buchung, mietbereich, buchungsquelle);
 
             zuordnung = new BuchungMietbereich();
 
@@ -1728,6 +1744,10 @@ public class BuchungService {
                 .atZone(ZoneId.of("Europe/Berlin"))
                 .toLocalDate();
 
+        return ermittleMietpreis(mietbereich, buchungsquelle, stichtag);
+    }
+
+    private Mietpreis ermittleMietpreis(Mietbereich mietbereich, Buchungsquelle buchungsquelle, LocalDate stichtag) {
         return mietpreisRepository
                 .findFirstByMietbereichIdAndBuchungsquelleAndGueltigAbLessThanEqualOrderByGueltigAbDesc(
                         mietbereich.getId(),

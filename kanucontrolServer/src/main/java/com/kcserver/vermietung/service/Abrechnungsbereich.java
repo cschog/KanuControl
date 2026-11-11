@@ -48,7 +48,7 @@ public record Abrechnungsbereich(List<Zeile> zeilen) {
   z.add(new Zeile("Abrechnung - Revision "+revision,"","",""));
   for(var p:f.mietkosten()){
    if(p.anzahl()==null || p.anzahl()<=0 || p.gesamtbetrag().signum()==0)continue;
-   z.add(new Zeile((++nr)+". "+p.bezeichnung(),p.anzahl()+" × "+p.abrechnungseinheiten()+("TAG".equals(p.berechnungsart())?" Tage":""),geld(p.einzelpreis()),geld(p.gesamtbetrag())));
+   z.add(new Zeile((++nr)+". "+p.bezeichnung(),(p.anzahl()==1?"":p.anzahl()+" × ")+p.abrechnungseinheiten()+("TAG".equals(p.berechnungsart())?(Long.valueOf(1).equals(p.abrechnungseinheiten())?" Tag":" Tage"):""),geld(p.einzelpreis()),geld(p.gesamtbetrag())));
   }
   for(var row:rabatt.zeilen())z.add(new Zeile(row.text(),"","",geld(row.betrag().negate())));
   for(var p:verbrauch){
@@ -63,7 +63,9 @@ public record Abrechnungsbereich(List<Zeile> zeilen) {
   z.add(new Zeile("Abrechnungssumme","","",geld(f.abrechnungGesamt())));
   var netto=BigDecimal.ZERO;
   for(var p:f.bewegungen()) {
-   if(p.betrag().signum()==0)continue;
+   // Die interne Umbuchung Kaution -> Nebenkosten ist kein weiterer Geldfluss.
+   // In der Rechnung genügt der bereits ausgewiesene Kautionseingang.
+   if(p.betrag().signum()==0 || p.art()==com.kcserver.vermietung.enumtype.Finanzbewegungsart.VERRECHNUNG)continue;
    var wert=switch(p.art()) {
     case EINGANG -> p.betrag().negate();
     case RUECKZAHLUNG -> p.betrag();

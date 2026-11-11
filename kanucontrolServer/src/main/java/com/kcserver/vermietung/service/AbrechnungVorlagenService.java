@@ -23,6 +23,10 @@ public class AbrechnungVorlagenService {
  }
  public VorlagenService.Ergebnis entwurf(Buchung b,int revision,Vorlage entwurf,com.kcserver.vermietung.dto.BuchungFinanzenDTO f,
           List<com.kcserver.vermietung.entity.BuchungVerbrauchskosten> snapshots,LocalDate heute) {
+  return entwurf(b,revision,entwurf,f,snapshots,heute,true);
+ }
+ public VorlagenService.Ergebnis entwurf(Buchung b,int revision,Vorlage entwurf,com.kcserver.vermietung.dto.BuchungFinanzenDTO f,
+          List<com.kcserver.vermietung.entity.BuchungVerbrauchskosten> snapshots,LocalDate heute,boolean pruefeErstattungskonto) {
   VorlagenService.tenant();
   var p=papier.findById(1L).orElseThrow(()->fehler("Bitte Mandanten-Briefpapier einrichten."));
   var v=normalisieren(entwurf!=null?entwurf:vorlagen.vorlage(b.getMietobjekt().getId(),Vorgang.ABGERECHNET));
@@ -30,7 +34,7 @@ public class AbrechnungVorlagenService {
   var person=b.getMieter();var date=DateTimeFormatter.ofPattern("dd.MM.yyyy");
   var d=new HashMap<String,String>();
   d.put("buchungsnummer",b.getBuchungsnummer());d.put("vorname",person.getVorname());d.put("nachname",person.getName());
-  d.put("organisation",Objects.toString(person.getOrganisation(),""));
+  d.put("organisation",Buchungsadressat.organisation(b));
   d.put("anreise",date.format(b.getAnreise()));d.put("abreise",date.format(b.getAbreise()));d.put("mietobjekt",b.getMietobjekt().getBezeichnung());
   d.put("briefdatum",date.format(heute));
   d.put("mietbetrag",geld(f.mieteSoll()));d.put("anzahlung",geld(Zahlungsplan.anzahlung(b)));d.put("restmiete",geld(Zahlungsplan.restmiete(b)));d.put("kaution",geld(f.kautionSoll()));
@@ -44,15 +48,14 @@ public class AbrechnungVorlagenService {
   d.put("mieter_kontoinhaber",person.getKontoinhaber()==null||person.getKontoinhaber().isBlank()?(person.getVorname()+" "+person.getName()).strip():person.getKontoinhaber());
   var wahr=EnumSet.of(Bedingung.IMMER,Bedingung.valueOf("ZAHLUNG_"+b.getZahlungsvariante().name()),f.saldo().signum()<0?Bedingung.ERSTATTUNG_POSITIV:f.saldo().signum()>0?Bedingung.RESTZAHLUNG_POSITIV:Bedingung.AUSGEGLICHEN);
   if(f.kautionSoll().signum()>0)wahr.add(Bedingung.KAUTION_POSITIV);
-  if(f.saldo().signum()<0 && d.get("mieter_bank_iban").isBlank())throw fehler("Für eine Rückerstattung bitte die IBAN des Mieters hinterlegen.");
+  if(pruefeErstattungskonto && f.saldo().signum()<0 && d.get("mieter_bank_iban").isBlank())throw fehler("Für eine Rückerstattung bitte die IBAN des Mieters hinterlegen.");
   var felder=new HashMap<String,String>();
-  felder.put("empfaenger_name",(d.get("organisation").isBlank()?"":d.get("organisation")+"\n")+person.getVorname()+" "+person.getName());
-  felder.put("empfaenger_strasse",Objects.toString(person.getStrasse(),""));felder.put("empfaenger_ort",Objects.toString(person.getPlz(),"")+" "+Objects.toString(person.getOrt(),"")+(person.getCountryCode()!=null&&!person.getCountryCode().name().equals("DE")?"\n"+person.getCountryCode().name():""));
+  felder.putAll(Buchungsadressat.felder(b));
   felder.put("briefdatum",d.get("briefdatum"));felder.put("buchungsnummer",b.getBuchungsnummer());felder.put("anrede",ersetzen(v.anrede(),d));
   // These fields always identify the club account; never overwrite them with the tenant's account.
   for(String key:List.of("bank_name","bank_iban","bank_bic"))felder.put(key,d.get(key));
   byte[] bytes=AbrechnungBriefLayout.render(p.getPdf(),felder,texte(v,d,wahr),ersetzen(p.getGruss(),d),p.getBild(),b.getBuchungsnummer(),Abrechnungsbereich.aus(f,snapshots,revision,b));
-  String meta=d.toString()+v.toString()+p.getVersion()+Abrechnungsbereich.aus(f,snapshots,revision,b);
+  String meta=felder.toString()+d.toString()+v.toString()+p.getVersion()+Abrechnungsbereich.aus(f,snapshots,revision,b);
   return new VorlagenService.Ergebnis(bytes,ersetzen(v.betreff(),d),ersetzen(v.mailtext(),d),VorlagenService.hash(meta),meta);
  }
  private static String geld(BigDecimal n){var f=java.text.NumberFormat.getNumberInstance(Locale.GERMANY);f.setMinimumFractionDigits(2);f.setMaximumFractionDigits(2);return f.format(n);}

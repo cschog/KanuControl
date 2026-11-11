@@ -10,3 +10,12 @@ export async function erfasseFinanzbewegung(buchungId: number, data: {
   const response = await apiClient.post<BuchungFinanzen>(`/vermietung/finanzen/${buchungId}/bewegungen`, data);
   return response.data;
 }
+
+export async function getBuchungFinanzenById(id: number): Promise<BuchungFinanzen> {
+  return (await apiClient.get<BuchungFinanzen>(`/vermietung/finanzen/${id}`)).data;
+}
+export async function verrechneAbschlussKaution(id: number, data: {
+  betrag: number; datum: string; ablesungen: import("@/vermietung/types/VerbrauchskostenVorschau").AblesungBestaetigung[];
+}): Promise<BuchungFinanzen> {
+  return (await apiClient.post<BuchungFinanzen>(`/vermietung/finanzen/${id}/kautionsverrechnung`, data)).data;
+}

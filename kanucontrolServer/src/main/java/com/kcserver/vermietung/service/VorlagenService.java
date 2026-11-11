@@ -102,7 +102,7 @@ public class VorlagenService {
         LocalDate heute=LocalDate.parse(f.get("briefdatum"),datum);
         wahr.add(b.getAnreise().toLocalDate().isBefore(heute.plusWeeks(8))?Bedingung.STORNO_UNTER_56_TAGEN:Bedingung.STORNO_AB_56_TAGEN);
         wahr.add(Bedingung.valueOf("ZAHLUNG_"+b.getZahlungsvariante().name()));
-        d.put("organisation",Objects.toString(b.getMieter().getOrganisation(), ""));
+        d.put("organisation",Buchungsadressat.organisation(b));
         if(vorgang==Vorgang.BESTAETIGUNG || b.getBuchungsquelle()==com.kcserver.vermietung.enumtype.Buchungsquelle.AIRBNB){wahr.remove(Bedingung.ANZAHLUNG_POSITIV);wahr.remove(Bedingung.RESTMIETE_POSITIV);wahr.remove(Bedingung.KAUTION_POSITIV);wahr.remove(Bedingung.ZAHLUNG_GESAMTMIETE_VORAUS);}
         if(miete.signum()==0)wahr.remove(Bedingung.ZAHLUNG_GESAMTMIETE_VORAUS);
         d.putAll(extra);wahr.addAll(bedingungen);

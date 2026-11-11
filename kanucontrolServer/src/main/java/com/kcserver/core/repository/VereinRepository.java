@@ -31,7 +31,7 @@ public interface VereinRepository
     @Query("""
         SELECT v
         FROM Verein v
-        WHERE (
+        WHERE v.kjfpVerein = true AND (
             :search IS NULL
             OR :search = ''
             OR LOWER(v.name) LIKE LOWER(CONCAT('%', :search, '%'))

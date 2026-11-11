@@ -46,11 +46,14 @@ const BuchungenView = () => {
   const mieterParam = Number(searchParams.get("mieterId"));
   const mieterIdFilter = Number.isSafeInteger(mieterParam) && mieterParam > 0 ? mieterParam : null;
 
+  const veranstalterParam = Number(searchParams.get("veranstalterId"));
+  const veranstalterIdFilter = Number.isSafeInteger(veranstalterParam) && veranstalterParam > 0 ? veranstalterParam : null;
+
   const [mietobjekte, setMietobjekte] = useState<Mietobjekt[]>([]);
   const [filterMietobjektId, setFilterMietobjektId] = useState<number | "">("");
-  const [filterInitialisiert, setFilterInitialisiert] = useState(mieterIdFilter !== null);
+  const [filterInitialisiert, setFilterInitialisiert] = useState(mieterIdFilter !== null || veranstalterIdFilter !== null);
   const [filterJahr, setFilterJahr] = useState<number | "">("");
-  const [buchungsanzeige, setBuchungsanzeige] = useState<"STANDARD" | "ALLE">(mieterIdFilter ? "ALLE" : "STANDARD");
+  const [buchungsanzeige, setBuchungsanzeige] = useState<"STANDARD" | "ALLE">(mieterIdFilter || veranstalterIdFilter ? "ALLE" : "STANDARD");
   const [ansicht, setAnsicht] = useState<"LISTE" | "KALENDER">("LISTE");
 
   const [showForm, setShowForm] = useState(false);
@@ -356,7 +359,7 @@ const handleReopen = async (sendEmail = false, fingerprint?: string) => {
   const gefilterteBuchungen = buchungen.filter((buchung) => {
     const passtZumMietobjekt = filterMietobjektId === "" || buchung.mietobjektId === filterMietobjektId;
     const istAusgeblendet = buchung.status === "ABGELEHNT" || buchung.status === "STORNIERT";
-    return (mieterIdFilter === null || buchung.mieterId === mieterIdFilter) && passtZumMietobjekt && (buchungsanzeige === "ALLE" || !istAusgeblendet);
+    return (mieterIdFilter === null || buchung.mieterId === mieterIdFilter) && (veranstalterIdFilter === null || buchung.veranstalterVereinId === veranstalterIdFilter) && passtZumMietobjekt && (buchungsanzeige === "ALLE" || !istAusgeblendet);
   });
 
   // Später beginnende Buchungen stehen oben; fehlende/ungültige Termine kommen ans Ende.
@@ -447,6 +450,12 @@ if (showForm) {
       }}>Mieterfilter aufheben</Button>}>
         {(() => { const b = buchungen.find(item => item.mieterId === mieterIdFilter);
           return b ? `Buchungen von ${b.mieterVorname} ${b.mieterName}` : "Buchungen des ausgewählten Mieters"; })()}
+      </Alert>}
+      {veranstalterIdFilter !== null && <Alert severity="info" sx={{ mb: 2 }} action={<Button color="inherit" onClick={() => {
+        setSearchParams(current => { const next = new URLSearchParams(current); next.delete("veranstalterId"); return next; });
+      }}>Veranstalterfilter aufheben</Button>}>
+        {(() => { const b = buchungen.find(item => item.veranstalterVereinId === veranstalterIdFilter);
+          return b?.veranstalter ? `Buchungen von ${b.veranstalter.name}` : "Buchungen des ausgewählten Veranstalters"; })()}
       </Alert>}
       {/* Header */}
       <Box

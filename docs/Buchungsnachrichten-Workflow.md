@@ -12,6 +12,10 @@ Die Beispieltexte sind Entwürfe, keine automatische Migration vorhandener indiv
 
 ## Bedienung
 
+Der eigene Button „Vorschau“ öffnet E-Mail und PDF für den ausgewählten Dokumentvorgang unabhängig vom tatsächlichen Statuswechsel. Eine Mieter-E-Mail-Adresse, Versandkonfiguration und vollständige Kautionsabwicklung sind dafür nicht erforderlich. Die Vorschau liest den gespeicherten Buchungsstand und schreibt weder Nachrichtenentwürfe noch Rechnungs-/Versandarchive, Status- oder Finanzdaten. Entfernte Ablesungen werden nur für diese Ansicht verwendet und als Hinweis markiert; beim wirklichen Abschluss bleibt die ausdrückliche Bestätigung erforderlich. Für eine Rechnungsvorschau müssen die benötigten Verbrauchswerte vorhanden sein.
+
+Im Vorschau-Dialog lassen sich Betreff und E-Mail-Text direkt in den Feldern bearbeiten. Diese Textänderungen werden dort nicht gespeichert; Schließen oder erneutes Laden verwirft sie. Für den Versand die Texte im regulären Statusdialog mit „Individuelle Texte übernehmen und neu prüfen“ speichern. PDF-Dateien können separat exportiert, extern bearbeitet und wieder zur Ansicht importiert werden. Die PDF-Bearbeitung bleibt bis zum Schließen im Dialog; zum Aufbewahren das PDF exportieren. Zum späteren Versand das bearbeitete PDF im regulären Statusdialog importieren und dort die aktuelle Nachricht bestätigen. Bei Statuswechseln ohne Nachricht, insbesondere reserviert → bestätigt, wird keine eigene Mail-/PDF-Vorschau angeboten.
+
 Die Buchungsansicht bietet nun „Reservierung prüfen“, „Bestätigung prüfen“, „Ablehnung prüfen“, „Stornierung prüfen“ beziehungsweise „Abschluss und Nachricht prüfen“ an. Der Dialog erstellt einen gespeicherten Entwurf. Das verändert weder Status noch Finanzbewegungen.
 
 Empfänger und Testumleitung, Betreff, Mailtext und vollständiges PDF prüfen. Individuelle Textänderungen mit „Individuelle Texte übernehmen und neu prüfen“ speichern; sie gelten nur für diesen Entwurf. Nach jeder Änderung oder einem PDF-Upload muss die aktuelle Nachricht erneut bestätigt werden. Erst die abschließende Aktion ändert den Status und versendet gegebenenfalls die Nachricht.
@@ -22,7 +26,7 @@ Empfänger und Testumleitung, Betreff, Mailtext und vollständiges PDF prüfen. 
 - Reserviert → bestätigt: geforderte Anzahlung genügt; keine Mail. Bei Gesamtvorauszahlung werden Gesamtmiete und geforderte Kaution geprüft.
 - Reserviert/bestätigt → storniert: Stornonachricht und konkrete Abwicklung.
 - Bestätigt nach Mietende → abrechenbar: automatisch und ohne Nachricht.
-- Abrechenbar → abgeschlossen: Rechnung und Mail vor Abschluss prüfen; dann ausdrücklich abschließen und senden.
+- Abrechenbar → abgeschlossen: Unter „Mailversand beim Abschluss“ mit oder ohne Mailversand wählen. Die Rechnung in beiden Fällen prüfen und ausdrücklich abschließen; mit Mail wird sie anschließend versandt, ohne Mail ausschließlich archiviert.
 
 Die bestehende Kautionsabschlussprüfung und die Bestätigung abweichender Zählerablesungen bleiben maßgeblich. Bei einer Rechnungskorrektur die Buchung wieder öffnen, erforderliche Datenänderungen speichern und mit Korrekturgrund erneut abschließen. Eine zusätzliche unkontrollierte PDF-Ausstellung über die alte Oberfläche gibt es nicht mehr. Alte API-Schreibpfade für Statusaktionen und Reservierungsversand verweisen mit Konfliktmeldung auf den neuen Entwurfspfad; Wiederöffnen ohne Versand bleibt möglich.
 
@@ -61,3 +65,5 @@ Die Vorlagenverwaltung erlaubt die Auswahl der drei Zahlungsvarianten, der drei 
 Gezielte Tests decken 55/56/57 Tage, Teilrückzahlungen, Verrechnungen, Bestätigung nach Anzahlung, stille Statusaktionen, Stornosaldo, benutzer-/mandantengebundene Entwürfe, veraltete Daten, Tageswechsel, PDF-Upload/Wiederherstellung, exakte MIME-/Archivbytes, Rechnungsausstellung und Versandwiederholung ab. Die Migration wird in isolierten H2-Schemas einschließlich Rollback geprüft. Dies ersetzt keinen vollständigen PostgreSQL-/Keycloak-/SMTP-End-to-End-Test.
 
 Die Bedienoberfläche wird per Produktionsbuild und gezieltem ESLint sowie im Browser bei Desktop- und Mobilgröße mit simulierten APIs geprüft. Erzeugte PDF-Beispiele werden gerendert und visuell kontrolliert. Keine Änderungen an produktiven Daten oder SMTP-Empfängern im Rahmen dieser Entwicklung.
+
+Beim Abschluss ohne Mailversand werden weder Mieter-E-Mail-Adresse noch SMTP-Konfiguration benötigt. Kautionsabwicklung, Verbrauchsfreigabe, Korrekturgrund und Prüfung des aktuellen Datenstands bleiben erforderlich. Die Rechnung kann auch ohne Mail heruntergeladen, extern bearbeitet und wieder importiert werden; beim Abschluss wird die geprüfte PDF-Fassung archiviert. Die Auswahl der Versandart wird im Nachrichtenentwurf gespeichert.

@@ -62,7 +62,7 @@ public class MitgliedService {
                         HttpStatus.NOT_FOUND, ErrorMessages.PERSON_NOT_FOUND
                 ));
 
-        Verein verein = vereinRepository.findById(dto.getVereinId())
+        Verein verein = vereinRepository.findById(dto.getVereinId()).filter(Verein::isKjfpVerein)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, ErrorMessages.VEREIN_NOT_FOUND
                 ));
@@ -200,7 +200,7 @@ public class MitgliedService {
                         .orElseThrow()
         );
         mitglied.setVerein(
-                vereinRepository.findById(vereinId)
+                vereinRepository.findById(vereinId).filter(Verein::isKjfpVerein)
                         .orElseThrow()
         );
 

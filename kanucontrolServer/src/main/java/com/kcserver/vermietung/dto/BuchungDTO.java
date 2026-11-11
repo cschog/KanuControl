@@ -60,6 +60,7 @@ public class BuchungDTO {
     private Long mieterId;
 
     private Long veranstalterVereinId;
+    private com.kcserver.core.dto.verein.VereinRefDTO veranstalter;
 
     /**
      * Interne Bemerkungen zur Buchung bzw. zum Mieter.
@@ -99,6 +100,10 @@ public class BuchungDTO {
                 && jugendAlterVon >= 0 && jugendAlterVon <= jugendAlterBis
                 && jugendAlterBis <= 120;
     }
+
+    // Opt-in für die erneute Übernahme von Preis und Berechnungsart aus dem Katalog.
+    private boolean mietpreiseNeuBerechnen;
+    private java.time.LocalDate mietpreisStichtag;
 
     private String herkunft;
 

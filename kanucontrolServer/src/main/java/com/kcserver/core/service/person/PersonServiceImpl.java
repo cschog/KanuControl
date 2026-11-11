@@ -401,7 +401,7 @@ public class PersonServiceImpl implements PersonService {
 
             for (MitgliedSaveDTO m : dto.getMitgliedschaften()) {
 
-                Verein verein = vereinRepository.findById(m.getVereinId())
+                Verein verein = vereinRepository.findById(m.getVereinId()).filter(Verein::isKjfpVerein)
                         .orElseThrow(() -> new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
                                 ErrorMessages.VEREIN_NOT_FOUND
@@ -708,7 +708,7 @@ public class PersonServiceImpl implements PersonService {
                     .filter(m -> m.getVerein().getId().equals(dto.getVereinId()))
                     .findFirst()
                     .orElseGet(() -> {
-                        Verein verein = vereinRepository.findById(dto.getVereinId())
+                        Verein verein = vereinRepository.findById(dto.getVereinId()).filter(Verein::isKjfpVerein)
                                 .orElseThrow(() -> new ResponseStatusException(
                                         HttpStatus.NOT_FOUND,
                                         ErrorMessages.VEREIN_NOT_FOUND

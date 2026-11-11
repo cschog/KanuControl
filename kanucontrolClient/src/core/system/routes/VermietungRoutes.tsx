@@ -5,12 +5,14 @@ const VermietungStartPage = lazy(() => import("@/vermietung/pages/VermietungStar
 const MietobjektePage = lazy(() => import("@/vermietung/pages/MietobjektePage"));
 const BuchungenView = lazy(() => import("@/vermietung/pages/BuchungenView"));
 const VerwaltungPage = lazy(() => import("@/vermietung/pages/VerwaltungPage"));
+const VeranstalterPage = lazy(() => import("@/vermietung/pages/VeranstalterPage"));
 const MieterPage = lazy(() => import("@/vermietung/pages/MieterPage"));
 const AbrechnungPage = lazy(() => import("@/vermietung/pages/AbrechnungPage"));
 const FinanzDashboardPage = lazy(() => import("@/vermietung/pages/FinanzDashboardPage"));
 const VerbrauchDashboardPage = lazy(() => import("@/vermietung/pages/VerbrauchDashboardPage"));
 
 const VermietungRoutes: RouteObject[] = [
+  { path: "/vermietung/veranstalter", element: <VeranstalterPage /> },
   {
     path: "/vermietung",
     element: <VermietungStartPage />,

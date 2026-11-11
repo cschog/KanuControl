@@ -81,7 +81,7 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
         // 1. Zuerst alle Voraussetzungen prüfen
         // =========================================================
 
-        Verein verein = vereinRepository.findById(dto.getVereinId())
+        Verein verein = vereinRepository.findById(dto.getVereinId()).filter(Verein::isKjfpVerein)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         ErrorMessages.VEREIN_NOT_FOUND
@@ -512,7 +512,7 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
 
         if (dto.getVereinId() != null) {
 
-            Verein verein = vereinRepository.findById(dto.getVereinId())
+            Verein verein = vereinRepository.findById(dto.getVereinId()).filter(Verein::isKjfpVerein)
                     .orElseThrow(() -> new ResponseStatusException(
                             HttpStatus.NOT_FOUND, ErrorMessages.VEREIN_NOT_FOUND
                     ));

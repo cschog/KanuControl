@@ -14,6 +14,7 @@ public class BuchungsnachrichtController {
  private final BuchungsnachrichtService service;
  private <T> ResponseEntity<ApiResponse<T>> ok(T value){return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(new ApiResponse<>(value,List.of()));}
  @PostMapping public ResponseEntity<ApiResponse<BuchungsnachrichtService.Ansicht>> erstellen(@PathVariable Long buchung,@RequestBody @jakarta.validation.Valid BuchungsnachrichtService.Start request){return ok(service.erstellen(buchung,request));}
+ @PostMapping("/vorschau") public ResponseEntity<ApiResponse<BuchungsnachrichtService.Vorschau>> vorschau(@PathVariable Long buchung,@RequestBody @jakarta.validation.Valid BuchungsnachrichtService.Start request){return ok(service.vorschau(buchung,request));}
  @GetMapping public ResponseEntity<ApiResponse<List<BuchungsnachrichtService.Kurz>>> liste(@PathVariable Long buchung){return ok(service.liste(buchung));}
  @GetMapping("/{id}") public ResponseEntity<ApiResponse<BuchungsnachrichtService.Ansicht>> lesen(@PathVariable Long buchung,@PathVariable String id){return ok(service.lesen(buchung,id));}
  @PutMapping("/{id}") public ResponseEntity<ApiResponse<BuchungsnachrichtService.Ansicht>> aendern(@PathVariable Long buchung,@PathVariable String id,@RequestBody BuchungsnachrichtService.Aenderung request){return ok(service.aendern(buchung,id,request));}

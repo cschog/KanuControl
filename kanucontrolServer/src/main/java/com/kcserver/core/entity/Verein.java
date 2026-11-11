@@ -39,6 +39,9 @@ public class Verein extends Auditable {
     @Column(nullable = false)
     private boolean hausverein = false;
 
+    @Column(name = "kjfp_verein", nullable = false)
+    private boolean kjfpVerein = true;
+
     private String strasse;
     private String plz;
     private String ort;

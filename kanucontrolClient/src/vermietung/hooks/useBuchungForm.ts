@@ -69,6 +69,7 @@ export function useBuchungForm(
 
   useEffect(() => {
     setMieter(mieterAusBuchung(buchung));
+    setVeranstalter(buchung?.veranstalter);
     if (buchung) {
       const positionen: BuchungPositionSave[] = (buchung.positionen ?? []).map((position) => ({
         mietbereichId: position.mietbereichId,
@@ -134,6 +135,7 @@ export function useBuchungForm(
   const resetForm = () => {
     setZahlungsvarianteManuell(false);
     setMieter(mieterAusBuchung(buchung));
+    setVeranstalter(buchung?.veranstalter);
     if (buchung) {
       const positionen: BuchungPositionSave[] = (buchung.positionen ?? []).map((position) => ({
         mietbereichId: position.mietbereichId,
@@ -256,6 +258,10 @@ export function useBuchungForm(
         [key]: value,
       };
 
+      if (key === "mietpreiseNeuBerechnen" && value === true && !updated.mietpreisStichtag) {
+        updated.mietpreisStichtag = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Berlin" }).format(new Date());
+      }
+
       if (key === "anreise" && updated.anreise && updated.abreise && !updated.unbefristet
           && updated.abreise.slice(0, 10) < updated.anreise.slice(0, 10)) {
         // Beim Verschieben des Beginns ein bereits gewähltes Ende mitziehen.
@@ -293,7 +299,7 @@ export function useBuchungForm(
   };
 
   const buildSavePayload = (): BuchungSave | null => {
-    if (!form.anreise) return null;
+    if (!form.anreise || (form.mietpreiseNeuBerechnen && !form.mietpreisStichtag)) return null;
 
     if (!form.unbefristet) {
       if (!form.abreise) return null;

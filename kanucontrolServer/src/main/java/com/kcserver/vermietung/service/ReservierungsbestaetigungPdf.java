@@ -78,10 +78,7 @@ public class ReservierungsbestaetigungPdf {
         String tarif = b.getRabattart() == Rabattart.VEREIN ? " für dich als EKC-Mitglied"
                 : b.getRabattart() == Rabattart.VERBAND ? " für dich als DKV-Mitglied" : "";
         var f = new LinkedHashMap<String, String>();
-        f.put("empfaenger_name", (p.getOrganisation()==null || p.getOrganisation().isBlank()?"":p.getOrganisation().strip()+"\n") + required(p.getVorname(), "Vorname des Mieters") + " " + required(p.getName(), "Nachname des Mieters"));
-        f.put("empfaenger_strasse", required(p.getStrasse(), "Straße des Mieters"));
-        f.put("empfaenger_ort", required(p.getPlz(), "Postleitzahl des Mieters") + " " + required(p.getOrt(), "Wohnort des Mieters")
-                + (p.getCountryCode() == null || "DE".equals(p.getCountryCode().name()) ? "" : "\n" + p.getCountryCode().name()));
+        f.putAll(Buchungsadressat.felder(b));
         f.put("briefdatum", datum.format(heute));
         f.put("buchungsnummer", required(b.getBuchungsnummer(), "Buchungsnummer"));
         f.put("anrede", "Hallo " + p.getVorname().trim() + ",");

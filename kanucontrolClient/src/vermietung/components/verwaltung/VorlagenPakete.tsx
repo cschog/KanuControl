@@ -27,6 +27,7 @@ function Pdf({ value }: { value: string }) {
 export default function VorlagenPakete({ objekte, ungespeichert, briefpapierVorhanden, onImported }: { objekte: Mietobjekt[]; ungespeichert: boolean; briefpapierVorhanden?: boolean; onImported: () => void }) {
   const [open, setOpen] = useState(false), [busy, setBusy] = useState(false), [error, setError] = useState(""), [success, setSuccess] = useState("");
   const lock = useRef(false);
+  const paperPreviewRef = useRef<HTMLDivElement>(null);
   const [draft, setDraft] = useState<Ansicht | null>(null), [plan, setPlan] = useState<Plan | null>(null), [saved, setSaved] = useState(false);
   const [preview, setPreview] = useState<Vorschau | null>(null), [selected, setSelected] = useState("0"), [reviewed, setReviewed] = useState<string[]>([]), [paperReviewed, setPaperReviewed] = useState(false);
   async function run(fn: () => Promise<void>) { if (lock.current) return; lock.current = true; setBusy(true); setError(""); try { await fn(); } catch (e) { setError(getApiErrorMessage(e)); } finally { lock.current = false; setBusy(false); } }
@@ -88,19 +89,25 @@ export default function VorlagenPakete({ objekte, ungespeichert, briefpapierVorh
             {preview.status.filter(s => !s.erfolgreich).map(s => <Alert severity="warning" key={s.schluessel}>{s.schluessel}: Keine erfolgreiche visuelle Prüfung: {s.ursache}
               <FormControlLabel label="Fehlende Prüfbarkeit geklärt: diese Vorlage ausdrücklich ohne erfolgreiche Layoutprüfung verwalten. Vor Versand ist eine erfolgreiche Buchungsvorschau erforderlich." control={<Checkbox checked={plan.ohneLayoutFreigabe?.includes(s.schluessel) ?? false} onChange={e => { setPlan({ ...plan, ohneLayoutFreigabe: e.target.checked ? [...(plan.ohneLayoutFreigabe ?? []), s.schluessel] : (plan.ohneLayoutFreigabe ?? []).filter(k => k !== s.schluessel) }); setSaved(false); }} />} />
             </Alert>)}
-            {preview.briefpapier && <><Pdf value={preview.briefpapier} /><FormControlLabel label="Gemeinsames Briefpapier und Abschluss geprüft" control={<Checkbox checked={paperReviewed} onChange={e => setPaperReviewed(e.target.checked)} />} /></>}
+            {preview.briefpapier && <Box ref={paperPreviewRef}><Typography variant="h6">Gemeinsames Briefpapier und Abschluss</Typography><Pdf value={preview.briefpapier} /></Box>}
             {preview.vorlagen.length > 0 && <TextField select label={`Vorlagenprüfung (${reviewed.length}/${preview.vorlagen.length})`} value={selected} onChange={e => setSelected(e.target.value)}>{preview.vorlagen.map((p, i) => <MenuItem key={i} value={String(i)}>{reviewed.includes(String(i)) ? "✓ " : ""}{vorschauName(p.schluessel)} · {p.schluessel}: {p.szenario}</MenuItem>)}</TextField>}
             {current && <><Typography variant="h6">{vorschauName(current.schluessel)}</Typography><Typography>Betreff: {current.betreff}</Typography><Typography sx={{ whiteSpace: "pre-wrap" }}>{current.text}</Typography><Pdf key={selected} value={current.pdf} /><FormControlLabel label="Diese PDF- und E-Mail-Vorschau geprüft" control={<Checkbox checked={reviewed.includes(selected)} onChange={e => setReviewed(r => e.target.checked ? [...r, selected] : r.filter(i => i !== selected))} />} /></>}
           </>}
         </>}
       </Stack></DialogContent>
-      <DialogActions sx={{ flexDirection: "column", alignItems: "stretch", gap: 1, px: 3, pb: 2, borderTop: 1, borderColor: "divider", flexShrink: 0 }}>
+      <DialogActions sx={{ flexDirection: "column", alignItems: "stretch", gap: 1, px: 3, pb: 2, borderTop: 1, borderColor: "divider", flexShrink: 0, maxHeight: "55dvh", overflowY: "auto" }}>
         {error && <Alert severity="error">{error}</Alert>}
         {draft && <Typography variant="body2" role="status">{!saved
           ? "Nächster Schritt: Auswahl prüfen. Noch nicht vorhandene Vorlagen mit „Neu anlegen“ importieren."
           : !preview ? "Nächster Schritt: PDF-Vorschauen erstellen."
-            : !allReviewed ? `Bitte die PDF- und E-Mail-Vorschauen prüfen und bestätigen (${reviewed.length}/${preview.vorlagen.length}).`
+            : preview.status.some(s => !s.erfolgreich && !s.ausdruecklichFreigegeben) ? "Noch offen: Fehlgeschlagene Layoutprüfungen klären und die Auswahl erneut prüfen."
+            : reviewed.length < preview.vorlagen.length ? `Bitte die PDF- und E-Mail-Vorschauen prüfen und bestätigen (${reviewed.length}/${preview.vorlagen.length}).`
+            : preview.briefpapier && !paperReviewed ? `Alle ${preview.vorlagen.length} Vorlagen geprüft. Noch offen: Gemeinsames Briefpapier und Abschluss prüfen und unten bestätigen.`
               : "Alle Prüfungen abgeschlossen. Die ausgewählte Konfiguration kann jetzt übernommen werden."}</Typography>}
+        {preview?.briefpapier && <Stack direction={{ xs: "column", sm: "row" }} alignItems={{ xs: "stretch", sm: "center" }} gap={1}>
+          <FormControlLabel sx={{ flex: 1, m: 0 }} label="Gemeinsames Briefpapier und Abschluss geprüft" control={<Checkbox checked={paperReviewed} disabled={busy} onChange={e => setPaperReviewed(e.target.checked)} />} />
+          <Button disabled={busy} onClick={() => paperPreviewRef.current?.scrollIntoView({ block: "start" })}>Briefpapier-Vorschau anzeigen</Button>
+        </Stack>}
         {current && preview && <Stack direction="row" useFlexGap flexWrap="wrap" alignItems="center" gap={1}>
           <Button disabled={busy || Number(selected) <= 0} onClick={() => setSelected(String(Number(selected) - 1))}>Vorherige Vorschau</Button>
           <Typography variant="body2" sx={{ flex: 1 }}>Vorschau {Number(selected) + 1} von {preview.vorlagen.length}: {vorschauName(current.schluessel)} · {current.szenario}</Typography>

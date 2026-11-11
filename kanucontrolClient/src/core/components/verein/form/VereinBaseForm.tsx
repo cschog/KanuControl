@@ -14,6 +14,7 @@ interface Props {
   mode: "create" | "edit";
   onChange: <K extends keyof Verein>(key: K, value: Verein[K]) => void;
   fieldStatus?: Record<string, DataFieldStatus>;
+  veranstalter?: boolean;
 }
 
 export const VereinBaseForm: React.FC<Props> = ({
@@ -22,8 +23,9 @@ export const VereinBaseForm: React.FC<Props> = ({
   mode,
   onChange,
   fieldStatus,
+  veranstalter = false,
 }) => {
-  const showExtended = mode === "edit";
+  const showExtended = veranstalter || mode === "edit";
   const getStatus = (field: string) => {
     const status = fieldStatus?.[field];
 
@@ -48,7 +50,7 @@ export const VereinBaseForm: React.FC<Props> = ({
       />
 
       <FormFeld
-        label="Vereinsname"
+        label={veranstalter ? "Veranstaltername" : "Vereinsname"}
         value={form.name}
         onChange={(v) => onChange("name", v)}
         disabled={!editMode}
@@ -103,13 +105,13 @@ export const VereinBaseForm: React.FC<Props> = ({
             dataStatusMessage={fieldStatus?.["strasse"]?.message}
           />
 
-          <FormFeld
+          {!veranstalter && <FormFeld
             label="Telefon"
             value={form.telefon ?? ""}
             onChange={(v) => onChange("telefon", v)}
             disabled={!editMode}
             {...getStatus("telefon")}
-          />
+          />}
 
           <FormFeld
             label="Bank"
@@ -140,12 +142,14 @@ export const VereinBaseForm: React.FC<Props> = ({
 
           <PersonAutocomplete
             label="Kontoinhaber"
+            vermietung={veranstalter}
             value={form.kontoinhaber}
             disabled={!editMode}
             {...getStatus("kontoinhaber")}
             onChange={(person) => onChange("kontoinhaber", person)}
           />
 
+          {!veranstalter && <>
           <FormFeldDate
             label="Schutzkonzept"
             value={form.schutzkonzept ?? ""}
@@ -167,6 +171,7 @@ export const VereinBaseForm: React.FC<Props> = ({
             onChange={(v) => onChange("kikZertifiziertBis", v || undefined)}
             disabled={!editMode}
           />
+          </>}
         </>
       )}
     </>

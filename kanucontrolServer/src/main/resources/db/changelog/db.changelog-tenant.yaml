@@ -311,3 +311,7 @@ databaseChangeLog:
   - include:
       file: changes/20261111-02-buchungsnachrichten.xml
       relativeToChangelogFile: true
+
+  - include:
+      file: changes/20261111-03-veranstalter.xml
+      relativeToChangelogFile: true

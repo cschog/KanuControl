@@ -42,6 +42,20 @@ public interface BuchungRepository extends JpaRepository<Buchung, Long> {
     // mieter verweist auf Person, nicht auf den Mieterstammsatz. Alle Status zählen.
     boolean existsByMieterId(Long personId);
 
+    long countByVeranstalterId(Long veranstalterId);
+
+    interface VeranstalterBuchungszahl {
+        Long getVeranstalterId();
+        long getAnzahl();
+    }
+
+    // Counts all statuses and rental objects in the current tenant in a single query.
+    @org.springframework.data.jpa.repository.Query("""
+        select b.veranstalter.id as veranstalterId, count(b) as anzahl
+        from Buchung b where b.veranstalter is not null group by b.veranstalter.id
+        """)
+    List<VeranstalterBuchungszahl> countNachVeranstalter();
+
     Optional<Buchung> findTopByBuchungsjahrOrderByLaufendeNummerDesc(
             Integer buchungsjahr
     );

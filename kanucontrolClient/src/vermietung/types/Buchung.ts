@@ -54,6 +54,7 @@ export interface Buchung {
   mieterName: string;
 
   veranstalterVereinId?: number;
+  veranstalter?: import("@/core/api/types/verein/VereinRef").VereinRef;
 
   anzahlJugendliche?: number | null;
   jugendAlterVon?: number | null;

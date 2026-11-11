@@ -62,7 +62,7 @@ public class VereinService {
     @Transactional(readOnly = true)
     public List<VereinDTO> getAll() {
 
-        List<Verein> vereine = vereinRepository.findAll();
+        List<Verein> vereine = vereinRepository.findAll((root, query, cb) -> cb.isTrue(root.get("kjfpVerein")));
 
         if (vereine.isEmpty()) {
             return List.of();
@@ -96,7 +96,7 @@ public class VereinService {
 
     @Transactional(readOnly = true)
     public VereinDTO getById(Long id) {
-        Verein verein = vereinRepository.findById(id)
+        Verein verein = vereinRepository.findById(id).filter(Verein::isKjfpVerein)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, ErrorMessages.VEREIN_NOT_FOUND
                 ));
@@ -135,7 +135,7 @@ public class VereinService {
 
     private Specification<Verein> buildSpec(String name, String abk) {
 
-        Specification<Verein> spec = (root, query, cb) -> cb.conjunction();
+        Specification<Verein> spec = (root, query, cb) -> cb.isTrue(root.get("kjfpVerein"));
 
         if (name != null && !name.isBlank()) {
             spec = spec.and((root, query, cb) ->
@@ -215,7 +215,7 @@ public class VereinService {
 
         normalize(dto);
 
-        Verein verein = vereinRepository.findById(id)
+        Verein verein = vereinRepository.findById(id).filter(Verein::isKjfpVerein)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, ErrorMessages.VEREIN_NOT_FOUND
                 ));
@@ -289,7 +289,7 @@ public class VereinService {
     }
 
     private Verein getVereinOrThrow(Long id) {
-        return vereinRepository.findById(id)
+        return vereinRepository.findById(id).filter(Verein::isKjfpVerein)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         ErrorMessages.VEREIN_NOT_FOUND

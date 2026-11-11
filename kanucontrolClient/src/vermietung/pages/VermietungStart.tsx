@@ -12,6 +12,9 @@ const VermietungStart = () => {
     <Box sx={{ p: 3 }}>
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+          <ModuleButton label="Veranstalter" moduleType={moduleTypeMap.mieter} onClick={() => navigate("/vermietung/veranstalter")} />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <ModuleButton
             label="Mieter"
             moduleType={moduleTypeMap.mieter}

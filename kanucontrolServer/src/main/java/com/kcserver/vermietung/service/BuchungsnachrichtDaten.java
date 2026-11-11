@@ -38,8 +38,7 @@ public class BuchungsnachrichtDaten {
     private static BigDecimal bezahlt(List<FinanzbewegungDTO> m,Set<Finanzkategorie> k){return m.stream().filter(x->k.contains(x.kategorie())).map(x->switch(x.art()){case EINGANG->x.betrag();case RUECKZAHLUNG->x.betrag().negate();case VERRECHNUNG->BigDecimal.ZERO;}).reduce(BigDecimal.ZERO,BigDecimal::add);}
     public ReservierungsbestaetigungPdf.Inhalt basis(Buchung b,LocalDate heute){
         var p=b.getMieter();var d=new LinkedHashMap<String,String>();
-        d.put("empfaenger_name",(leer(p.getOrganisation()).isBlank()?"":p.getOrganisation()+"\n")+p.getVorname()+" "+p.getName());
-        d.put("empfaenger_strasse",pflicht(p.getStrasse(),"Straße"));d.put("empfaenger_ort",pflicht(p.getPlz(),"Postleitzahl")+" "+pflicht(p.getOrt(),"Ort")+(p.getCountryCode()!=null && !p.getCountryCode().name().equals("DE")?"\n"+p.getCountryCode().name():""));
+        d.putAll(Buchungsadressat.felder(b));
         d.put("briefdatum",heute.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));d.put("buchungsnummer",b.getBuchungsnummer());d.put("anrede","Hallo "+p.getVorname()+",");
         var bank=b.getBankverbindungAuswahl()==BankverbindungAuswahl.ALTERNATIV?b.getMietobjekt().getBankverbindungAlternativ():b.getMietobjekt().getBankverbindungPrimaer();
         d.put("bank_name",bank==null?"":"Bank: "+leer(bank.getBankName()));d.put("bank_iban",bank==null?"":"IBAN: "+leer(bank.getIban()));d.put("bank_bic",bank==null?"":"BIC: "+leer(bank.getBic()));
