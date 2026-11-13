@@ -357,9 +357,9 @@ export default function RabatteVerwaltung() {
                              />
 
                              <Box>
-                               <Tooltip title="Rabatt bearbeiten">
+                               <Tooltip title="Rabatt ändern">
                                  <IconButton
-                                   aria-label="Rabatt bearbeiten"
+                                   aria-label="Rabatt ändern"
                                    onClick={() => handleEdit(bereich, rabatt)}
                                  >
                                    <EditIcon />
@@ -455,7 +455,7 @@ export default function RabatteVerwaltung() {
                        </TableCell>
 
                        <TableCell align="right">
-                         <Tooltip title="Rabatt bearbeiten">
+                         <Tooltip title="Rabatt ändern">
                            <IconButton size="small" onClick={() => handleEdit(bereich, rabatt)}>
                              <EditIcon fontSize="small" />
                            </IconButton>

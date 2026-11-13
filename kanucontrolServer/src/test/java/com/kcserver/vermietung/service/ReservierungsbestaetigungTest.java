@@ -91,7 +91,7 @@ class ReservierungsbestaetigungTest {
     @Test void unvollstaendigeWerteUndAirbnbWerdenAbgewiesenAberNullbetraegeErlaubt() {
         b.setAnzahlungBetrag(BigDecimal.ZERO);b.setKautionBetrag(BigDecimal.ZERO);assertNotNull(pdf.inhalt(b,LocalDate.now()));
         b.setAnzahlungBetrag(null);assertThrows(ResponseStatusException.class,()->pdf.erstellen(b));
-        b.setAnzahlungBetrag(BigDecimal.ZERO);b.getMieter().setStrasse(null);assertThrows(ResponseStatusException.class,()->pdf.erstellen(b));
+        b.setAnzahlungBetrag(BigDecimal.ZERO);b.getMieter().setStrasse(null);b.getMieter().setPlz(null);b.getMieter().setOrt(null);assertNotNull(pdf.erstellen(b));
         b.getMieter().setStrasse("Weg 1");b.setBuchungsquelle(Buchungsquelle.AIRBNB);assertThrows(ResponseStatusException.class,()->pdf.erstellen(b));
     }
     @Test void hausregelnMuessenEineKonfigurierteWebadresseSein() {

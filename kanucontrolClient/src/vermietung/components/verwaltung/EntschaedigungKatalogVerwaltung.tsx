@@ -70,7 +70,7 @@ function Katalog({ objektId, onEditing }: { objektId: number; onEditing: (editin
           <Typography variant="body2">{geld.format(row.einzelpreis)} pro Stück · Sortierung {row.sortierung}</Typography>
         </Box>
         <Chip label={row.aktiv ? "Aktiv" : "Inaktiv"} color={row.aktiv ? "success" : "default"} size="small" />
-        <Button onClick={() => edit(row)} aria-label={`${row.bezeichnung} bearbeiten`}>Bearbeiten</Button>
+        <Button onClick={() => edit(row)} aria-label={`${row.bezeichnung} ändern`}>Ändern</Button>
       </Stack>
     </Paper>)}
     <Dialog open={open} onClose={close} fullWidth maxWidth="sm">

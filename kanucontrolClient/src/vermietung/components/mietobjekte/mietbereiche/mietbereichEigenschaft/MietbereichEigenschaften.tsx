@@ -295,7 +295,7 @@ function EigenschaftForm({
       >
         {!editMode && onEdit && (
           <Button variant="outlined" onClick={onEdit}>
-            Bearbeiten
+            Ändern
           </Button>
         )}
 

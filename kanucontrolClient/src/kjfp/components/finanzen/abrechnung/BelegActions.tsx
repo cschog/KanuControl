@@ -29,7 +29,7 @@ export default function BelegActions({
 
   return (
     <Stack direction="row" spacing={0.5} justifyContent="flex-end">
-      <Tooltip title="Beleg bearbeiten">
+      <Tooltip title="Beleg ändern">
         <IconButton
           size="small"
           color="primary"

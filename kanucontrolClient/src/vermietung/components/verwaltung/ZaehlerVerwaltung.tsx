@@ -211,7 +211,7 @@ export default function ZaehlerVerwaltung() {
                   startIcon={<EditIcon />}
                   onClick={() => handleEdit(item)}
                 >
-                  Bearbeiten
+                  Ändern
                 </Button>
               </Stack>
             </Paper>
@@ -265,7 +265,7 @@ export default function ZaehlerVerwaltung() {
                         startIcon={<EditIcon />}
                         onClick={() => handleEdit(item)}
                       >
-                        Bearbeiten
+                        Ändern
                       </Button>
                     </Stack>
                   </TableCell>

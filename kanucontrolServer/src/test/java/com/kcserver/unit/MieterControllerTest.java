@@ -32,11 +32,28 @@ class MieterControllerTest {
         verify(service).create(argThat(dto->dto.getName().equals("Adler") && dto.getVorname().equals("Anna")
                 && dto.getEmail().equals("anna@example.org") && dto.getIban().equals("DE89370400440532013000")));
     }
-    @Test void optionaleEmailUndIbanDuerfenLeerBleiben() throws Exception {
+    @Test void postalischeAdresseUndIbanSindMitGueltigerEmailOptional() throws Exception {
         mvc.perform(post("/api/vermietung/mieter").contentType(org.springframework.http.MediaType.APPLICATION_JSON)
-                .content("{\"name\":\"Adler\",\"vorname\":\"Anna\",\"email\":\"\",\"iban\":\"\"}"))
+                .content("{\"name\":\"Adler\",\"vorname\":\"Anna\",\"email\":\"anna@example.org\",\"iban\":\"\"}"))
                 .andExpect(status().isCreated());
         verify(service).create(any());
+    }
+
+    @Test void fehlendeLeereUndUngueltigeEmailWerdenBeiAnlageUndAenderungAbgewiesen() throws Exception {
+        for(String email: new String[]{"null", "\"\"", "\"   \"", "\"keine-mail\""}) {
+            String body="{\"name\":\"Adler\",\"vorname\":\"Anna\",\"email\":"+email+"}";
+            mvc.perform(post("/api/vermietung/mieter").contentType(org.springframework.http.MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.fieldErrors.email").exists());
+            mvc.perform(put("/api/vermietung/mieter/5").contentType(org.springframework.http.MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.fieldErrors.email").exists());
+        }
+        verifyNoInteractions(service);
+    }
+    @Test void aenderungOhnePostalischeAdresseMitEmailIstErlaubt() throws Exception {
+        mvc.perform(put("/api/vermietung/mieter/5").contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+            .content("{\"name\":\"Adler\",\"vorname\":\"Anna\",\"email\":\"anna@example.org\"}"))
+            .andExpect(status().isOk());
+        verify(service).update(eq(5L),argThat(d->d.getStrasse()==null && d.getPlz()==null && d.getOrt()==null && d.getEmail().equals("anna@example.org")));
     }
 
 }

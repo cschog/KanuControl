@@ -71,4 +71,15 @@ class BuchungsadressatTest {
         } finally { com.kcserver.core.tenancy.TenantContext.clear(); }
     }
 
+    @Test void mieterOhnePostalischeAdresseBleibtGueltigerDokumentadressat() throws Exception {
+        var p=b.getMieter();p.setStrasse(null);p.setPlz(null);p.setOrt(null);p.setCountryCode(CountryCode.AT);
+        var felder=Buchungsadressat.felder(b);assertEquals("Jürgen Müller",felder.get("empfaenger_name"));
+        assertEquals("",felder.get("empfaenger_strasse"));assertEquals("",felder.get("empfaenger_ort"));
+        var bytes=BriefpapierPdf.render(VorlagensystemTest.geruest(),felder,List.of("Bestätigung"),"Gruß",null,List.of(),b.getBuchungsnummer());
+        try(var pdf=org.apache.pdfbox.Loader.loadPDF(bytes)){
+            String text=new org.apache.pdfbox.text.PDFTextStripper().getText(pdf);assertTrue(text.contains("Jürgen Müller"));assertFalse(text.contains("null"));
+        }
+        p.setOrt("Wien");assertEquals("Wien\nAT",Buchungsadressat.felder(b).get("empfaenger_ort"));
+    }
+
 }

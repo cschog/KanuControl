@@ -18,8 +18,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class VeranstalterServiceTest {
     VereinRepository repo;
     VeranstalterService service;
+    com.kcserver.core.repository.MitgliedRepository mitglieder;
+    com.kcserver.core.repository.VeranstaltungRepository veranstaltungen;
     com.kcserver.vermietung.repository.BuchungRepository buchungen;
-    @BeforeEach void setup(){repo=mock(VereinRepository.class);buchungen=mock(com.kcserver.vermietung.repository.BuchungRepository.class);service=new VeranstalterService(repo,mock(PersonRepository.class),buchungen);TenantContext.setCurrentTenant("test");when(repo.save(any())).thenAnswer(i->i.getArgument(0));}
+    @BeforeEach void setup(){repo=mock(VereinRepository.class);buchungen=mock(com.kcserver.vermietung.repository.BuchungRepository.class);mitglieder=mock(com.kcserver.core.repository.MitgliedRepository.class);veranstaltungen=mock(com.kcserver.core.repository.VeranstaltungRepository.class);service=new VeranstalterService(repo,mock(PersonRepository.class),mitglieder,veranstaltungen,buchungen);TenantContext.setCurrentTenant("test");when(repo.save(any())).thenAnswer(i->i.getArgument(0));}
     @AfterEach void cleanup(){TenantContext.clear();}
     @Test void apiUpdateErhaeltAlleAusgeblendetenFelderUndGemeinsameIdentitaet() throws Exception {
         var v=new Verein();v.setId(7L);v.setName("Verein");v.setAbk("V");v.setTelefon("12345");v.setHausverein(true);
@@ -64,6 +66,47 @@ class VeranstalterServiceTest {
             .andExpect(jsonPath("$.data[1].name").value("Schule"))
             .andExpect(jsonPath("$.data[1].buchungen").value(3));
         verify(buchungen).countNachVeranstalter();verify(buchungen,never()).countByVeranstalterId(anyLong());
+    }
+
+    private Verein loeschbarerVeranstalter() {
+        var verein = new Verein(); verein.setId(7L); verein.setName("Schule"); verein.setKjfpVerein(false);
+        when(repo.findLockedById(7L)).thenReturn(Optional.of(verein));
+        return verein;
+    }
+    @Test void loeschtOhneBuchungUeberApi() throws Exception {
+        var verein = loeschbarerVeranstalter();
+        var mvc = MockMvcBuilders.standaloneSetup(new VeranstalterController(service)).build();
+        mvc.perform(delete("/api/vermietung/veranstalter/7")).andExpect(status().isNoContent());
+        verify(repo).delete(same(verein)); verify(repo).flush();
+    }
+    @Test void buchungVerhindertLoeschenAuchBeiVeraltetemClient() {
+        loeschbarerVeranstalter(); when(buchungen.countByVeranstalterId(7L)).thenReturn(1L);
+        var ex = assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> service.loeschen(7L));
+        assertEquals(409, ex.getStatusCode().value()); verify(repo,never()).delete(any(Verein.class));
+    }
+    @Test void mitgliederWerdenNichtKaskadierendGeloescht() {
+        loeschbarerVeranstalter(); when(mitglieder.existsByVereinId(7L)).thenReturn(true);
+        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> service.loeschen(7L));
+        verify(repo,never()).delete(any(Verein.class));
+    }
+    @Test void kjfpVeranstaltungenVerhindernLoeschen() {
+        loeschbarerVeranstalter(); when(veranstaltungen.existsByVereinId(7L)).thenReturn(true);
+        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> service.loeschen(7L));
+        verify(repo,never()).delete(any(Verein.class));
+    }
+    @Test void fehlenderVeranstalterLiefert404() {
+        var ex = assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> service.loeschen(99L));
+        assertEquals(404, ex.getStatusCode().value()); verify(repo,never()).delete(any(Verein.class));
+    }
+    @Test void loeschenOhneMandantBeruehrtKeineDaten() {
+        TenantContext.clear();
+        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> service.loeschen(7L));
+        verifyNoInteractions(repo, buchungen, mitglieder, veranstaltungen);
+    }
+    @Test void weitereVerknuepfungLiefertVerstaendlichenKonflikt() {
+        loeschbarerVeranstalter(); doThrow(new org.springframework.dao.DataIntegrityViolationException("foreign key")).when(repo).flush();
+        var ex = assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> service.loeschen(7L));
+        assertEquals(409, ex.getStatusCode().value()); assertTrue(ex.getReason().contains("anderen Daten"));
     }
 
 }

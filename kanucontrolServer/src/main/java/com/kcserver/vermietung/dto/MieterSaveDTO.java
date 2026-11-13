@@ -15,7 +15,8 @@ public class MieterSaveDTO {
     @Size(min=2,max=100,message="Der Nachname muss zwischen 2 und 100 Zeichen lang sein.") private String name;
     @NotBlank(message="Bitte einen Vornamen eingeben.")
     @Size(min=2,max=100,message="Der Vorname muss zwischen 2 und 100 Zeichen lang sein.") private String vorname;
-    @Email(message="Bitte eine gültige E-Mail-Adresse eingeben oder das Feld leer lassen.")
+    @NotBlank(message="Bitte eine E-Mail-Adresse eingeben.")
+    @Email(message="Bitte eine gültige E-Mail-Adresse eingeben.")
     @Size(max=255,message="Die E-Mail-Adresse darf höchstens 255 Zeichen enthalten.") private String email;
     private String telefon;
     private String telefonFestnetz;

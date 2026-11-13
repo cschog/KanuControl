@@ -120,7 +120,7 @@ export default function ZaehlerstaendeDialog({ open, zaehler, onClose }: Props) 
     setFocusedZaehlerstandId(id);
     requestAnimationFrame(() => {
       row.scrollIntoView({ block: "nearest" });
-      row.querySelector<HTMLButtonElement>('button[aria-label="Zählerstand bearbeiten"]')
+      row.querySelector<HTMLButtonElement>('button[aria-label="Zählerstand ändern"]')
         ?.focus({ preventScroll: true });
     });
   }, [zaehlerstaende, standDialogOpen]);
@@ -268,9 +268,9 @@ export default function ZaehlerstaendeDialog({ open, zaehler, onClose }: Props) 
                         <TableCell>{item.bemerkung || "–"}</TableCell>
 
                         <TableCell align="right">
-                          <Tooltip title="Zählerstand bearbeiten">
+                          <Tooltip title="Zählerstand ändern">
                             <IconButton
-                              aria-label="Zählerstand bearbeiten"
+                              aria-label="Zählerstand ändern"
                               onClick={() => handleEdit(item)}
                               size="small"
                             >

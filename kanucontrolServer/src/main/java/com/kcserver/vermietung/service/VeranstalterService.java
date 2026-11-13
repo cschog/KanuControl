@@ -18,6 +18,8 @@ import java.util.Locale;
 public class VeranstalterService {
     private final VereinRepository vereine;
     private final PersonRepository personen;
+    private final com.kcserver.core.repository.MitgliedRepository mitglieder;
+    private final com.kcserver.core.repository.VeranstaltungRepository veranstaltungen;
     private final com.kcserver.vermietung.repository.BuchungRepository buchungen;
 
     @Transactional(readOnly=true)
@@ -53,6 +55,29 @@ public class VeranstalterService {
         // Deliberate whitelist: telephone, protection concept, KiK, house club and KJFP usage survive unchanged.
         return dtoMitBuchungen(vereine.save(v));
     }
+    public void loeschen(Long id) {
+        VorlagenService.tenant();
+        Verein verein = vereine.findLockedById(id).orElseThrow(() ->
+            new ResponseStatusException(HttpStatus.NOT_FOUND, "Veranstalter nicht gefunden."));
+        // Alle Buchungen berücksichtigen, einschließlich stornierter und abgeschlossener.
+        if (buchungen.countByVeranstalterId(id) > 0) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "Der Veranstalter kann nicht gelöscht werden, solange ihm Buchungen zugeordnet sind.");
+        }
+        // Veranstalter und KJFP-Verein verwenden dieselbe Identität. Keine abhängigen Daten kaskadierend löschen.
+        if (mitglieder.existsByVereinId(id) || veranstaltungen.existsByVereinId(id)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "Der Veranstalter wird noch als Verein mit Mitgliedern oder KJFP-Veranstaltungen verwendet und kann nicht gelöscht werden.");
+        }
+        try {
+            vereine.delete(verein);
+            vereine.flush();
+        } catch (org.springframework.dao.DataIntegrityViolationException ex) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "Der Veranstalter wird noch von anderen Daten verwendet und kann nicht gelöscht werden.", ex);
+        }
+    }
+
     private Verein organisation(Long id) {
         return vereine.findById(id).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Veranstalter nicht gefunden."));
     }

@@ -20,6 +20,10 @@ public interface VereinRepository
        BUSINESS CHECKS
        ========================================================= */
 
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @Query("select v from Verein v where v.id = :id")
+    Optional<Verein> findLockedById(@Param("id") Long id);
+
     boolean existsByAbkAndName(String abk, String name);
 
     Optional<Verein> findByAbkAndName(String abk, String name);

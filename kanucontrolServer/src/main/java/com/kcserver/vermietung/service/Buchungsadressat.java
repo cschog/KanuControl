@@ -15,13 +15,15 @@ public final class Buchungsadressat {
         String person=PersonName.givenFirst(pflicht(p.getName(),"Nachname des Mieters"), pflicht(p.getVorname(),"Vorname des Mieters"));
         var v=b.getVeranstalter();
         String organisation=v==null?leer(p.getOrganisation()):pflicht(v.getName(),"Veranstaltername");
-        String typ=v==null?"Mieters":"Veranstalters";
-        String strasse=pflicht(v==null?p.getStrasse():v.getStrasse(),"Straße des "+typ);
-        String plz=pflicht(v==null?p.getPlz():v.getPlz(),"Postleitzahl des "+typ);
-        String ort=pflicht(v==null?p.getOrt():v.getOrt(),"Ort des "+typ);
+        String strasse=v==null?leer(p.getStrasse()):pflicht(v.getStrasse(),"Straße des Veranstalters");
+        String plz=v==null?leer(p.getPlz()):pflicht(v.getPlz(),"Postleitzahl des Veranstalters");
+        String ort=v==null?leer(p.getOrt()):pflicht(v.getOrt(),"Ort des Veranstalters");
         CountryCode land=v==null?p.getCountryCode():v.getCountryCode();
+        String ortszeile=(plz+" "+ort).strip();
+        if(land!=null && land!=CountryCode.DE && (!strasse.isBlank() || !ortszeile.isBlank()))
+            ortszeile+=(ortszeile.isBlank()?"":"\n")+land.name();
         return Map.of("empfaenger_name",(organisation.isBlank()?"":organisation+"\n")+person,
-            "empfaenger_strasse",strasse,"empfaenger_ort",plz+" "+ort+(land==null||land==CountryCode.DE?"":"\n"+land.name()));
+            "empfaenger_strasse",strasse,"empfaenger_ort",ortszeile);
     }
     public static String organisation(Buchung b) {return b.getVeranstalter()==null?leer(b.getMieter().getOrganisation()):leer(b.getVeranstalter().getName());}
     private static String leer(String s){return s==null?"":s.strip().replaceAll("[\\p{Cntrl}]"," ");}

@@ -1,3 +1,5 @@
+import { COUNTRIES } from "@/kjfp/api/enums/CountryCode";
+import PostalCodeAutocomplete from "@/core/components/common/PostalCodeAutocomplete";
 import { formatPersonName } from "@/core/utils/personName";
 import { isAxiosError } from "axios";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -146,6 +148,8 @@ export default function MieterPage() {
       const errors: Record<string, string> = {};
       if (payload.name.length < 2 || payload.name.length > 100) errors.name = "Der Nachname muss zwischen 2 und 100 Zeichen lang sein.";
       if (payload.vorname.length < 2 || payload.vorname.length > 100) errors.vorname = "Der Vorname muss zwischen 2 und 100 Zeichen lang sein.";
+      if (!payload.email) errors.email = "Bitte eine E-Mail-Adresse eingeben.";
+      else if (payload.email.length > 255 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email)) errors.email = "Bitte eine gültige E-Mail-Adresse eingeben.";
       if (Object.keys(errors).length) { setFieldErrors(errors); setError("Bitte die markierten Angaben prüfen."); return; }
       const saved = isNew ? await createMieter(payload) : selected ? await updateMieter(selected.id, payload) : null;
       if (!saved) return;
@@ -291,12 +295,32 @@ export default function MieterPage() {
             <Grid size={{ xs: 12, sm: 6 }}>{field("Kontoinhaber (falls abweichend)", "kontoinhaber")}</Grid>
             <Grid size={{ xs: 12, sm: 6 }}>{field("Vorname", "vorname", true)}</Grid>
             <Grid size={{ xs: 12, sm: 6 }}>{field("Nachname", "name", true)}</Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>{field("E-Mail", "email")}</Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>{field("E-Mail", "email", true)}</Grid>
             <Grid size={{ xs: 12, sm: 6 }}>{field("Telefon", "telefon")}</Grid>
             <Grid size={{ xs: 12, sm: 6 }}>{field("Festnetz", "telefonFestnetz")}</Grid>
+            <Grid size={{ xs: 12 }}><Typography variant="body2" color="text.secondary">Die postalische Adresse ist optional. Eine gültige E-Mail-Adresse ist erforderlich.</Typography></Grid>
             <Grid size={{ xs: 12 }}>{field("Straße und Hausnummer", "strasse")}</Grid>
-            <Grid size={{ xs: 4 }}>{field("PLZ", "plz")}</Grid>
-            <Grid size={{ xs: 8 }}>{field("Ort", "ort")}</Grid>
+            <Grid size={{ xs: 12 }}><TextField
+              select label="Land" value={form.countryCode ?? "DE"}
+              disabled={!edit || saving || deleting} fullWidth size="small"
+              error={!!fieldErrors.countryCode} helperText={fieldErrors.countryCode}
+              onChange={event => {
+                setForm(current => ({ ...current, countryCode: event.target.value }));
+                setFieldErrors(current => { const next = { ...current }; delete next.countryCode; return next; });
+              }}
+            >
+              {COUNTRIES.map(country => <MenuItem key={country.code} value={country.code}>{country.label}</MenuItem>)}
+            </TextField></Grid>
+            <Grid size={{ xs: 12, sm: 6 }}><PostalCodeAutocomplete
+              countryCode={form.countryCode ?? "DE"} postalCode={form.plz}
+              disabled={!edit || saving || deleting}
+              onSelect={item => {
+                setForm(current => ({ ...current, plz: item.postalCode, ort: item.city }));
+                setFieldErrors(current => { const next = { ...current }; delete next.plz; delete next.ort; return next; });
+              }}
+              onClear={() => setForm(current => ({ ...current, plz: "", ort: "" }))}
+            /></Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>{field("Ort", "ort")}</Grid>
             <Grid size={{ xs: 12 }}><Typography variant="subtitle2" sx={{ mt: 1 }}>Bankverbindung für Kautionsrückzahlungen</Typography></Grid>
             <Grid size={{ xs: 12, sm: 6 }}>{field("Bankname", "bankName")}</Grid>
             <Grid size={{ xs: 12, sm: 6 }}>{field("IBAN", "iban")}</Grid>

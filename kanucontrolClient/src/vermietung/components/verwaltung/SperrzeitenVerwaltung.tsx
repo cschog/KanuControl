@@ -98,7 +98,7 @@ function Verwaltung({ objektId }: { objektId: number }) {
             : `${dayjs(item.von).format("DD.MM.YYYY HH:mm")} bis ${dayjs(item.bis).format("DD.MM.YYYY HH:mm")} Uhr`}</Typography>
           <Typography sx={{ overflowWrap: "anywhere" }}>{item.grund}</Typography>
           <Stack direction="row" spacing={1}>
-            <Button disabled={busy} onClick={() => edit(item)}>Bearbeiten</Button>
+            <Button disabled={busy} onClick={() => edit(item)}>Ändern</Button>
             <Button color="error" disabled={busy} onClick={() => setRemove(item)}>Sperre aufheben</Button>
           </Stack>
         </Stack>

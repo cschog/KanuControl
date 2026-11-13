@@ -107,24 +107,32 @@ class VeranstalterSecurityTest {
         verifyNoInteractions(service);
     }
 
+    @Test
+    void delete_withoutJwt_returns401() throws Exception {
+        mockMvc.perform(delete("/api/vermietung/veranstalter/1")).andExpect(status().isUnauthorized());
+        verifyNoInteractions(service);
+    }
+
     private List<MockHttpServletRequestBuilder> requests() throws Exception {
         VeranstalterDTO dto = new VeranstalterDTO();
         dto.setName("Test Verein"); dto.setAbk("TV"); dto.setCountryCode("DE");
         String body = objectMapper.writeValueAsString(dto);
         return List.of(get("/api/vermietung/veranstalter"), get("/api/vermietung/veranstalter/{id}", 1L),
                 post("/api/vermietung/veranstalter").contentType(MediaType.APPLICATION_JSON).content(body),
-                put("/api/vermietung/veranstalter/{id}", 1L).contentType(MediaType.APPLICATION_JSON).content(body));
+                put("/api/vermietung/veranstalter/{id}", 1L).contentType(MediaType.APPLICATION_JSON).content(body),
+                delete("/api/vermietung/veranstalter/{id}", 1L));
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"ADMIN", "VERMIETUNG"})
     void berechtigteRollenErreichenAlleAktionen(String role) throws Exception {
-        int[] expected = {200, 200, 201, 200};
+        int[] expected = {200, 200, 201, 200, 204};
         var requests = requests();
         for (int i = 0; i < requests.size(); i++) {
             mockMvc.perform(requests.get(i).with(jwt().authorities(new SimpleGrantedAuthority("ROLE_" + role))))
                     .andExpect(status().is(expected[i]));
         }
+        verify(service).loeschen(1L);
         verify(service).suchen(null);
         verify(service).lesen(1L);
         verify(service).speichern(isNull(), any());

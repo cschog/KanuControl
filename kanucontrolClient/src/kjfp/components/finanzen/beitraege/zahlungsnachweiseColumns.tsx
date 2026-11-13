@@ -78,7 +78,7 @@ export const zahlungsnachweiseColumns = ({
     enableSorting: false,
     cell: ({ row }) => (
       <Stack direction="row" spacing={0.5}>
-        <Tooltip title="Bearbeiten">
+        <Tooltip title="Ändern">
           <IconButton size="small" onClick={() => onEdit(row.original.id)}>
             <EditIcon fontSize="small" />
           </IconButton>

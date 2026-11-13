@@ -12,6 +12,7 @@ type Props = {
   postalCode?: string;
 
   onSelect: (item: PostalCodeLookupResponse) => void;
+  onClear?: () => void;
 
   disabled?: boolean;
 
@@ -23,6 +24,7 @@ export default function PostalCodeAutocomplete({
   countryCode,
   postalCode,
   onSelect,
+  onClear,
   disabled,
   dataStatus,
   dataStatusMessage,
@@ -95,6 +97,10 @@ export default function PostalCodeAutocomplete({
       onInputChange={(_, value, reason) => {
         if (reason === "input") {
           setInputValue(value);
+        } else if (reason === "clear" && onClear) {
+          setInputValue("");
+          setOptions([]);
+          onClear();
         }
       }}
       renderInput={(params) => (

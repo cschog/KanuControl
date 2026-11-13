@@ -262,7 +262,7 @@ export default function MietpreiseVerwaltung() {
                     </Box>
 
                     <IconButton
-                      aria-label={`${label} ${preis ? "bearbeiten" : "anlegen"}`}
+                      aria-label={`${label} ${preis ? "ändern" : "anlegen"}`}
                       onClick={() => (preis ? handleEdit(preis) : handleNew(bereich, quelle))}
                     >
                       {preis ? <EditIcon /> : <AddIcon />}
@@ -329,7 +329,7 @@ export default function MietpreiseVerwaltung() {
                             {formatPreis(direktPreis)}
 
                             <Tooltip
-                              title={direktPreis ? "Direktpreis bearbeiten" : "Direktpreis anlegen"}
+                              title={direktPreis ? "Direktpreis ändern" : "Direktpreis anlegen"}
                             >
                               <IconButton
                                 size="small"
@@ -362,7 +362,7 @@ export default function MietpreiseVerwaltung() {
 
                             <Tooltip
                               title={
-                                airbnbPreis ? "Airbnb-Preis bearbeiten" : "Airbnb-Preis anlegen"
+                                airbnbPreis ? "Airbnb-Preis ändern" : "Airbnb-Preis anlegen"
                               }
                             >
                               <IconButton

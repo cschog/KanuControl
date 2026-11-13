@@ -299,7 +299,7 @@ export default function VerbrauchskostenVerwaltung() {
                       startIcon={<EditIcon />}
                       onClick={() => handleEdit(item)}
                     >
-                      Bearbeiten
+                      Ändern
                     </Button>
                   </Box>
                 </Paper>
@@ -345,7 +345,7 @@ export default function VerbrauchskostenVerwaltung() {
                       </TableCell>
 
                       <TableCell align="right">
-                        <Tooltip title="Verbrauchskosten bearbeiten">
+                        <Tooltip title="Verbrauchskosten ändern">
                           <IconButton size="small" onClick={() => handleEdit(item)}>
                             <EditIcon fontSize="small" />
                           </IconButton>

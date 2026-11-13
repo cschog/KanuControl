@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Accordion, AccordionDetails, AccordionSummary, Alert, Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField, Typography } from "@mui/material";
+import { Accordion, AccordionDetails, AccordionSummary, Alert, Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField, Typography, Checkbox, FormControlLabel, MenuItem } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -91,6 +91,7 @@ function offeneSumme(row: BuchungFinanzen, category: Finanzkategorie) {
 }
 function statusText(row: BuchungFinanzen) {
   if (row.buchungsstatus === "STORNIERT") return "Storniert";
+  if (row.buchungsstatus === "ABRECHENBAR") return "Abrechenbar";
   if (row.buchungsstatus === "ABGESCHLOSSEN") return "Abgerechnet";
   const targets = kategorien.map((k) => soll(row, k.key)).filter((x) => x > 0);
   if (targets.length === 0) return row.buchungsstatus === "ANFRAGE" ? "Anfrage" : "Offen";
@@ -100,11 +101,25 @@ function statusText(row: BuchungFinanzen) {
   if (totalPaid + 0.005 < totalDue) return "Angezahlt";
   return "Bezahlt";
 }
+const aktuellesJahr = () => new Intl.DateTimeFormat("de-DE", { year: "numeric", timeZone: "Europe/Berlin" }).format(new Date());
+const buchungsjahr = (row: BuchungFinanzen) => row.anreise?.match(/^(\d{4})-/)?.[1];
+
 const AbrechnungPage = () => {
   const [rows, setRows] = useState<BuchungFinanzen[]>([]);
   const location = useLocation();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const jahrParameter = searchParams.get("jahr");
+  const jahr = jahrParameter === "ALLE" || /^\d{4}$/.test(jahrParameter ?? "") ? jahrParameter! : aktuellesJahr();
+  const nurOffenerSaldo = searchParams.get("saldo") === "offen";
+  const nurAbrechenbar = searchParams.get("status") === "ABRECHENBAR";
+  const setFilter = (key: string, value: string | null) => {
+    setSearchParams(current => {
+      const next = new URLSearchParams(current);
+      if (value === null) next.delete(key); else next.set(key, value);
+      return next;
+    }, { replace: true });
+  };
   const markierteBuchungId = Number(searchParams.get("buchungId"));
   const navigationState = location.state as { returnTo?: string; returnToState?: unknown } | null;
   const [dialog, setDialog] = useState<{ row: BuchungFinanzen; category: Finanzkategorie } | null>(null);
@@ -115,13 +130,22 @@ const AbrechnungPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
   const laden = async () => setRows(await getBuchungFinanzen());
-  useEffect(() => { void laden().catch((e: unknown) => setError(getApiErrorMessage(e))); }, []);
-  const sortiert = useMemo(() => [...rows].sort((a,b) => (b.anreise ?? "").localeCompare(a.anreise ?? "")), [rows]);
+  useEffect(() => { void laden().catch((e: unknown) => setError(getApiErrorMessage(e))).finally(() => setLoading(false)); }, []);
+  const jahre = useMemo(() => [...new Set([aktuellesJahr(), ...(jahr !== "ALLE" ? [jahr] : []),
+    ...rows.map(buchungsjahr).filter((value): value is string => !!value)])].sort((a,b) => b.localeCompare(a)), [rows, jahr]);
+  const sortiert = useMemo(() => rows.filter(row =>
+    (jahr === "ALLE" || buchungsjahr(row) === jahr) &&
+    (!nurOffenerSaldo || Math.round(Math.abs(row.saldo) * 100) > 0) &&
+    (!nurAbrechenbar || row.buchungsstatus === "ABRECHENBAR")
+  ).sort((a,b) => (b.anreise ?? "").localeCompare(a.anreise ?? "")), [rows, jahr, nurOffenerSaldo, nurAbrechenbar]);
+  const markierteBuchungAusgeblendet = rows.some(row => row.buchungId === markierteBuchungId) &&
+    !sortiert.some(row => row.buchungId === markierteBuchungId);
   useEffect(() => {
-    if (!Number.isFinite(markierteBuchungId) || markierteBuchungId <= 0 || rows.length === 0) return;
+    if (!Number.isFinite(markierteBuchungId) || markierteBuchungId <= 0 || sortiert.length === 0) return;
     document.getElementById(`finanz-buchung-${markierteBuchungId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, [markierteBuchungId, rows.length]);
+  }, [markierteBuchungId, sortiert]);
   const openDialog = (row: BuchungFinanzen, category: Finanzkategorie, type: Finanzbewegungsart) => {
     const vorschlag = type === "VERRECHNUNG" && row.verbrauchVorschauVollstaendig
       ? Math.min(Math.max(0, paidFor(row, "KAUTION")), Math.max(0, offeneSumme(row, "VERBRAUCHSKOSTEN")))
@@ -153,8 +177,36 @@ const AbrechnungPage = () => {
       )}
     </Stack>
     <Typography color="text.secondary" sx={{ mb: 2 }}>Zahlungseingänge, Rückzahlungen und offene Beträge je Buchung. Anzahlung und Kaution werden bei bestätigten Direktbuchungen als angefragt ausgewiesen.</Typography>
+    <Stack direction={{ xs: "column", md: "row" }} spacing={2} alignItems={{ xs: "stretch", md: "center" }} sx={{ mb: 2 }}>
+      <TextField select size="small" label="Jahr (Mietbeginn)" value={jahr}
+        onChange={event => setFilter("jahr", event.target.value)} sx={{ minWidth: { md: 200 } }}>
+        <MenuItem value="ALLE">Alle Jahre</MenuItem>
+        {jahre.map(value => <MenuItem key={value} value={value}>{value}</MenuItem>)}
+      </TextField>
+      <FormControlLabel control={<Checkbox checked={nurOffenerSaldo}
+        onChange={(_, checked) => setFilter("saldo", checked ? "offen" : null)} />} label="Nur nicht ausgeglichener Saldo" />
+      <FormControlLabel control={<Checkbox checked={nurAbrechenbar}
+        onChange={(_, checked) => setFilter("status", checked ? "ABRECHENBAR" : null)} />} label="Nur abrechenbare Buchungen" />
+    </Stack>
+    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+      {loading ? "Abrechnungen werden geladen …" : `${sortiert.length} von ${rows.length} Buchungen`}
+      {nurOffenerSaldo && " · Einschließlich offener Rückzahlungen (negativer Saldo)."}
+    </Typography>
+    {markierteBuchungAusgeblendet && <Alert severity="info" sx={{ mb: 2 }} action={<Button onClick={() => {
+      setSearchParams(current => {
+        const next = new URLSearchParams(current);
+        next.set("jahr", buchungsjahr(rows.find(row => row.buchungId === markierteBuchungId)!) ?? "ALLE");
+        next.delete("saldo"); next.delete("status");
+        return next;
+      }, { replace: true });
+    }}>Buchung anzeigen</Button>}>Die aufgerufene Buchung ist durch die aktuellen Filter ausgeblendet.</Alert>}
     <Stack spacing={2}>
-      {sortiert.map((row) => <Accordion id={`finanz-buchung-${row.buchungId}`} key={row.buchungId} defaultExpanded={row.buchungId === markierteBuchungId} sx={{border: 1, borderColor: row.buchungId === markierteBuchungId ? "primary.main" : "divider", borderWidth: row.buchungId === markierteBuchungId ? 2 : 1, borderRadius: "4px !important", "&:before": {display: "none"}}}>
+      {sortiert.map((row) => <Accordion id={`finanz-buchung-${row.buchungId}`} key={row.buchungId} defaultExpanded={row.buchungId === markierteBuchungId} sx={{backgroundColor: row.buchungsquelle === "AIRBNB" ? "#FFF3E0" : undefined,
+        ...(row.buchungsquelle === "AIRBNB" ? {
+          "& .MuiAccordionSummary-root, & .MuiAccordionSummary-root:hover, & .MuiAccordionSummary-root.Mui-expanded": {
+            backgroundColor: "#FFF3E0",
+          },
+        } : {}), border: 1, borderColor: row.buchungId === markierteBuchungId ? "primary.main" : "divider", borderWidth: row.buchungId === markierteBuchungId ? 2 : 1, borderRadius: "4px !important", "&:before": {display: "none"}}}>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Stack direction={{xs:"column",md:"row"}} justifyContent="space-between" alignItems={{xs:"flex-start",md:"center"}} spacing={1} sx={{width:"100%",pr:1}}>
             <Box>
@@ -246,7 +298,7 @@ const AbrechnungPage = () => {
         </Box>}
         {row.bewegungen.length > 0 && <Box sx={{mt:2}}><Typography variant="subtitle2">Bewegungen</Typography>{row.bewegungen.map((m)=><Typography key={m.id} variant="body2" color="text.secondary">{datumLabel(m.datum)} · {kategorien.find(k=>k.key===m.kategorie)?.label} · {bewegungsLabel(m)} {betragLabel(m.betrag)}{m.bemerkung ? ` · ${m.bemerkung}` : ""}</Typography>)}</Box>}
         </AccordionDetails></Accordion>)}
-      {sortiert.length===0 && <Alert severity="info">Es gibt noch keine Buchungen.</Alert>}
+      {!loading && !error && sortiert.length === 0 && <Alert severity="info">{rows.length === 0 ? "Es gibt noch keine Buchungen." : "Keine Buchungen für die gewählten Filter gefunden."}</Alert>}
     </Stack>
     <Dialog open={!!dialog} onClose={()=>!saving&&setDialog(null)} fullWidth maxWidth="sm">
       <DialogTitle>{art==="EINGANG"?"Zahlungseingang erfassen":art==="RUECKZAHLUNG"?"Rückzahlung erfassen":"Kaution mit Verbrauchskosten verrechnen"}</DialogTitle>

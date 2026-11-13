@@ -77,7 +77,7 @@ export default function ReisekostenFahrtabschnittTable({ data, onEdit, onDelete 
 
         cell: ({ row }) => (
           <Stack direction="row" spacing={0}>
-            <Tooltip title="Bearbeiten">
+            <Tooltip title="Ändern">
               <IconButton size="small" onClick={() => onEdit(row.original)}>
                 <EditIcon fontSize="small" />
               </IconButton>

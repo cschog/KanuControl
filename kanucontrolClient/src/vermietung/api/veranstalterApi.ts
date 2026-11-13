@@ -8,8 +8,12 @@ const BASE = "/vermietung/veranstalter";
 export async function searchVeranstalter(params: { search?: string } = {}): Promise<Veranstalter[]> {
   return (await apiClient.get<Veranstalter[]>(BASE, { params })).data;
 }
-export async function saveVeranstalter(id: number | undefined, payload: VeranstalterSave): Promise<Verein> {
+export async function saveVeranstalter(id: number | undefined, payload: VeranstalterSave): Promise<Veranstalter> {
   return id === undefined
-    ? (await apiClient.post<Verein>(BASE, payload)).data
-    : (await apiClient.put<Verein>(`${BASE}/${id}`, payload)).data;
+    ? (await apiClient.post<Veranstalter>(BASE, payload)).data
+    : (await apiClient.put<Veranstalter>(`${BASE}/${id}`, payload)).data;
+}
+
+export async function deleteVeranstalter(id: number): Promise<void> {
+  await apiClient.delete(`${BASE}/${id}`);
 }

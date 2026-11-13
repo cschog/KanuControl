@@ -569,7 +569,7 @@ const BeitragsstrukturTable = () => {
                       }}
                     >
                       <Button size="small" variant="outlined" onClick={() => openEditDialog(row)}>
-                        Bearbeiten
+                        Ändern
                       </Button>
 
                       <Button

@@ -257,7 +257,7 @@ const FoerdersatzTable = () => {
               }}
             >
               <Button size="small" variant="outlined" onClick={() => handleEdit(row)}>
-                Bearbeiten
+                Ändern
               </Button>
 
               <Button

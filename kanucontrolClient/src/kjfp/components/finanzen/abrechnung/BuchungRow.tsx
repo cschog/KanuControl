@@ -69,7 +69,7 @@ export default function BuchungRow({
               onEdit(beleg, buchung);
             }}
           >
-            Bearbeiten
+            Ändern
           </Button>
 
           <Button

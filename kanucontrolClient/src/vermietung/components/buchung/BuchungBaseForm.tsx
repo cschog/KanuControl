@@ -1,18 +1,27 @@
 import { formatPersonName } from "@/core/utils/personName";
 // src/vermietung/components/buchung/BuchungBaseForm.tsx
 
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import EntschaedigungEditor from "./EntschaedigungEditor";
+import { getVerbrauchskosten } from "@/vermietung/api/verbrauchskostenApi";
+import type { Verbrauchskosten } from "@/vermietung/types/Verbrauchskosten";
+import { Berechnungsart } from "@/vermietung/enums/Berechnungsart";
+import type { BuchungBereich } from "./buchungBereiche";
 import { BuchungBankverbindung } from "./BuchungBankverbindung";
 import React, { useEffect, useMemo, useState } from "react";
 import { geldRunden, mietEinheiten } from "@/vermietung/utils/mietpreis";
 import { getPreis } from "@/vermietung/api/buchungApi";
 import type { Buchungsquelle } from "@/vermietung/enums/Buchungsquelle";
 import {
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Button,
   Alert,
   Box,
   Checkbox,
   FormControlLabel,
   MenuItem,
-  Paper,
   TextField,
   Typography,
 } from "@mui/material";
@@ -34,6 +43,11 @@ import { RabattwertTyp } from "@/vermietung/enums/RabattwertTyp";
 import type { MietbereichRabatt } from "@/vermietung/types/MietbereichRabatt";
 
 interface Props {
+  expanded: BuchungBereich[];
+  onExpandedChange: (bereiche: BuchungBereich[]) => void;
+  bereichFehler: Partial<Record<BuchungBereich, string>>;
+  abrechnung: boolean;
+  verbrauchVeraltet: boolean;
   form: BuchungSave;
   neueBuchung: boolean;
   editMode: boolean;
@@ -159,6 +173,7 @@ const formatDatumZeit = (wert?: string | null) => {
 };
 
 export const BuchungBaseForm: React.FC<Props> = ({
+  expanded, onExpandedChange, bereichFehler, abrechnung, verbrauchVeraltet,
   form,
   neueBuchung,
   editMode,
@@ -328,38 +343,65 @@ export const BuchungBaseForm: React.FC<Props> = ({
     onChange("positionen", form.positionen.filter((position) => !zuEntfernendeIds.has(position.mietbereichId)));
   };
 
-  return (
-    <>
-      {/* Linke Spalte: Buchungsdaten */}
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          gap: 2,
-          minWidth: 0,
-        }}
-      >
+  const [verbrauchKonfiguration, setVerbrauchKonfiguration] = useState<Verbrauchskosten[] | null>(null);
+  const [verbrauchLadefehler, setVerbrauchLadefehler] = useState(false);
+  useEffect(() => {
+    let aktiv = true;
+    setVerbrauchKonfiguration(null);
+    setVerbrauchLadefehler(false);
+    if (!form.mietobjektId || kostenlos || form.buchungsquelle === "AIRBNB") {
+      setVerbrauchKonfiguration([]);
+      return;
+    }
+    getVerbrauchskosten(form.mietobjektId).then(rows => {
+      if (aktiv) setVerbrauchKonfiguration(rows.filter(row => row.aktiv));
+    }).catch(() => { if (aktiv) setVerbrauchLadefehler(true); });
+    return () => { aktiv = false; };
+  }, [form.mietobjektId, kostenlos, form.buchungsquelle]);
+
+  const mieterName = formatPersonName(mieter?.name, mieter?.vorname, "first") || "Mieter noch nicht gewählt";
+  const datum = (value?: string) => value ? formatDatumZeit(value) : "Noch nicht erfasst";
+  const zeitraum = `${datum(form.anreise)} – ${form.unbefristet ? "ohne Enddatum" : datum(form.abreise)}`;
+  const rabattLabel = { KEIN_RABATT: "kein Rabatt", VEREIN: "Vereinsrabatt", VERBAND: "Verbandsrabatt", INDIVIDUELL: "individueller Rabatt" }[form.rabattart];
+  const mietpreisLabel = !form.positionen.length ? "noch keine Mietbereiche gewählt" : !form.anreise || (!form.unbefristet && !form.abreise) ? "Zeitraum noch nicht vollständig" : gesamtpreisVollstaendig ? formatPreis(mietpreisNachRabatt) : "noch nicht vollständig ermittelt";
+  const schaeden = form.entschaedigungen ?? [];
+  const schaedenSumme = schaeden.reduce((sum, row) => sum + Math.round(row.einzelpreis * 100) * row.anzahl / 100, 0);
+  const verbrauchRows = buchungsstatus === "ABGESCHLOSSEN" ? verbrauchskosten ?? [] : verbrauchskostenVorschau ?? [];
+  const verbrauchSummary = kostenlos ? "Keine Verbrauchspositionen für diese Buchung"
+    : form.buchungsquelle === "AIRBNB" ? "Airbnb · Abschluss ohne Verbrauchswerte möglich"
+    : verbrauchRows.length ? verbrauchRows.map(k => `${k.bezeichnung}: ${k.verbrauch == null ? k.kosten == null ? "Noch nicht erfasst" : formatPreis(k.kosten) : `${formatZahl(k.verbrauch)} ${k.mengeneinheit ?? ""}`}`).join(" · ")
+    : verbrauchKonfiguration?.length === 0 ? "Keine Verbrauchspositionen für diese Buchung" : "Noch nicht erfasst";
+  const verbrauchGesamtLabel = verbrauchRows.length && verbrauchRows.every(k => k.kosten != null && (!("erfolgreich" in k) || k.erfolgreich))
+    ? ` · Verbrauchskosten ${formatPreis(verbrauchRows.reduce((sum,k) => sum + (k.kosten ?? 0), 0))}` : '';
+  const bereich = (id: BuchungBereich, titel: string, summary: string, children: React.ReactNode) => (
+    <Accordion key={id} expanded={expanded.includes(id)} onChange={(_, offen) => onExpandedChange(offen ? [...expanded, id] : expanded.filter(b => b !== id))}
+      disableGutters sx={{ minWidth: 0, '&:before': { display: 'none' } }}>
+      <AccordionSummary expandIcon={<ExpandMoreIcon />} id={`buchung-${id}-kopf`} aria-controls={`buchung-${id}-inhalt`}>
+        <Box sx={{ minWidth: 0, overflowWrap: 'anywhere' }}>
+          <Typography component="span" fontWeight={600}>{titel}</Typography>
+          <Typography component="span" variant="body2" color="text.secondary" sx={{ display: 'block' }}>{summary}</Typography>
+          {bereichFehler[id] && <Typography component="span" role="alert" color="error" sx={{ display: 'block' }}>Fehler: {bereichFehler[id]}</Typography>}
+        </Box>
+      </AccordionSummary>
+      <AccordionDetails data-buchung-bereich={id}
+        sx={{ ...(id === "mieter" || id === "zahlung" ? {maxWidth: 760} : {}), display: 'grid', gap: 2, minWidth: 0, scrollMarginBottom: '160px' }}>{children}</AccordionDetails>
+    </Accordion>
+  );
+
+  return <Box sx={{ display: 'grid', gap: 1.5, minWidth: 0 }}>
+    <Typography sx={{ overflowWrap: 'anywhere' }}>{mieterName} · {zeitraum} · Mietpreis nach Rabatt {mietpreisLabel}
+      {form.fruehereBuchungsnummer && ` · frühere Buchungsnummer ${form.fruehereBuchungsnummer}`}</Typography>
+    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+      <Button onClick={() => onExpandedChange(['mieter', 'aufenthalt', 'miete', 'zahlung', 'verbrauch', 'schaeden', 'intern'])}>Alle aufklappen</Button>
+      <Button onClick={() => onExpandedChange([])}>Alle zuklappen</Button>
+    </Box>
+    {bereich('mieter', 'Mieter und Veranstalter', `${mieterName} · ${veranstalter?.name || 'kein Veranstalter'} · ${rabattLabel}`, <>
         <PersonAutocomplete
           label="Mieter"
           vermietung
           value={mieter}
           disabled={!buchungsdatenEditierbar}
           onChange={onMieterChange}
-        />
-
-        <TextField label="Frühere Buchungsnummer" value={form.fruehereBuchungsnummer ?? ""}
-          onChange={event => onChange("fruehereBuchungsnummer", event.target.value)}
-          disabled={!editMode} inputProps={{maxLength:100}} fullWidth size="small"
-          helperText="Optional für die Migration; die aktuelle Buchungsnummer bleibt erhalten." />
-        <TextField
-          label="Veranstaltung"
-          value={form.veranstaltung ?? ""}
-          onChange={(event) => onChange("veranstaltung", event.target.value)}
-          disabled={!buchungsdatenEditierbar}
-          inputProps={{ maxLength: 80 }}
-          helperText={`${(form.veranstaltung ?? "").length}/80 Zeichen (optional)`}
-          fullWidth
-          size="small"
         />
 
         <VereinAutocomplete
@@ -376,59 +418,64 @@ export const BuchungBaseForm: React.FC<Props> = ({
         </Alert>}
 
 
-        {form.buchungsquelle === "DIREKT" && <TextField select label="Zahlungsvariante" fullWidth size="small"
-          value={form.zahlungsvariante ?? "ANZAHLUNG"} disabled={!buchungsdatenEditierbar}
-          helperText="Ohne Abrechnung: vollständig kostenlos, ohne Anzahlung und Kaution; automatischer Abschluss nach Mietende."
-          onChange={e => onChange("zahlungsvariante", e.target.value as BuchungSave["zahlungsvariante"])}>
-          <MenuItem value="OHNE_ABRECHNUNG">Ohne Abrechnung (kostenlos)</MenuItem>
-          <MenuItem value="ANZAHLUNG">Anzahlung</MenuItem>
-          <MenuItem value="BEI_ABRECHNUNG">Zahlung bei Abrechnung</MenuItem>
-          <MenuItem value="GESAMTMIETE_VORAUS">Gesamtmiete im Voraus</MenuItem>
-        </TextField>}
-        {form.buchungsquelle === "DIREKT" && (form.zahlungsvariante ?? "ANZAHLUNG") === "ANZAHLUNG" ? (
+        {form.buchungsquelle === "AIRBNB" ? (
+          <Alert severity="info">Für Airbnb-Buchungen ist keine Rabattierung vorgesehen.</Alert>
+        ) : (
           <TextField
-            label="Anzahlung (€)"
-            type="number"
-            value={form.anzahlungBetrag ?? 0}
+            select
+            label="Rabatt"
+            value={form.rabattart ?? Rabattart.KEIN_RABATT}
             disabled={!buchungsdatenEditierbar}
             fullWidth
-            size="small"
-            slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
-            onChange={(event) => onChange("anzahlungBetrag", Math.max(0, Number(event.target.value) || 0))}
-          />
-        ) : null}
+            onChange={(event) => onChange("rabattart", event.target.value as Rabattart)}
+          >
+            <MenuItem value={Rabattart.KEIN_RABATT}>Kein Rabatt</MenuItem>
+            <MenuItem value={Rabattart.VEREIN}>Vereinsrabatt</MenuItem>
+            <MenuItem value={Rabattart.VERBAND}>Verbandsrabatt</MenuItem>
+            <MenuItem value={Rabattart.INDIVIDUELL}>Individueller Rabatt</MenuItem>
+          </TextField>
+        )}
 
-        {form.buchungsquelle === "DIREKT" && !kostenlos ? (
-          <TextField
-            label="Kaution (€)"
-            type="number"
-            value={form.kautionBetrag ?? 0}
-            disabled={!buchungsdatenEditierbar}
-            fullWidth
-            size="small"
-            slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
-            onChange={(event) => onChange("kautionBetrag", Math.max(0, Number(event.target.value) || 0))}
-          />
-        ) : form.buchungsquelle === "AIRBNB" ? (
-          <Alert severity="info">Für Airbnb-Buchungen werden keine Anzahlung und keine Kaution erhoben.</Alert>
-        ) : null}
-
-        {!kostenlos && buchungsstatus === "ANFRAGE" && form.buchungsquelle === "DIREKT" && form.zahlungsvariante !== "GESAMTMIETE_VORAUS" && form.anreise && (() => {
-          const heute = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Berlin" }).format(new Date());
-          return (Date.parse(form.anreise.slice(0, 10)) - Date.parse(heute)) / 86400000 < (mietobjekt?.kurzfristgrenzeTage ?? 42) && (mietobjekt?.kurzfristgrenzeTage ?? 42) > 0;
-        })() && <Alert severity="info" action={<button type="button" disabled={!buchungsdatenEditierbar} onClick={() => onChange("zahlungsvariante", "GESAMTMIETE_VORAUS")}>Übernehmen</button>}>Kurzfristige Anfrage: Gesamtmiete im Voraus empfohlen.</Alert>}
-        <BuchungBankverbindung
-          mietobjektId={form.mietobjektId}
-          value={form.bankverbindungAuswahl ?? "PRIMAER"}
+        {form.buchungsquelle !== "AIRBNB" && form.rabattart === Rabattart.INDIVIDUELL && (
+          <Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 160px), 1fr))", gap: 1 }}>
+            <TextField
+              select
+              label="Rabattart"
+              value={form.rabattwertTyp ?? RabattwertTyp.PROZENTUAL}
+              disabled={!buchungsdatenEditierbar}
+              onChange={(event) => onChange("rabattwertTyp", event.target.value as RabattwertTyp)}
+            >
+              <MenuItem value={RabattwertTyp.PROZENTUAL}>Prozent</MenuItem>
+              <MenuItem value={RabattwertTyp.ABSOLUT}>Euro</MenuItem>
+            </TextField>
+            <TextField
+              label={form.rabattwertTyp === RabattwertTyp.PROZENTUAL ? "Prozent" : "Betrag (€)"}
+              type="number"
+              value={form.rabattwert ?? 0}
+              disabled={!buchungsdatenEditierbar}
+              slotProps={{ htmlInput: { min: 0, ...(form.rabattwertTyp === RabattwertTyp.PROZENTUAL ? { max: 100 } : {}), step: "0.01" }}}
+              onChange={(event) => onChange("rabattwert", event.target.value === "" ? 0 : Number(event.target.value))}
+            />
+          </Box>
+        )}
+    </>)}
+    {bereich('aufenthalt', 'Aufenthalt und Gruppe', `${zeitraum} · ${!form.unbefristet && form.anreise && form.abreise ? `${mietEinheiten(Berechnungsart.TAG, form.anreise, form.abreise)} Miettage · ` : ''}${form.anzahlJugendliche == null && form.anzahlErwachsene == null ? 'Teilnehmer nicht erfasst' : `Jugendliche ${form.anzahlJugendliche ?? 'nicht erfasst'} · Erwachsene ${form.anzahlErwachsene ?? 'nicht erfasst'}`}`, <>
+        <TextField
+          label="Veranstaltung"
+          value={form.veranstaltung ?? ""}
+          onChange={(event) => onChange("veranstaltung", event.target.value)}
           disabled={!buchungsdatenEditierbar}
-          onChange={(value) => onChange("bankverbindungAuswahl", value)}
+          inputProps={{ maxLength: 80 }}
+          helperText={`${(form.veranstaltung ?? "").length}/80 Zeichen (optional)`}
+          fullWidth
+          size="small"
         />
 
-
+<Box sx={{ display: "grid", gridTemplateColumns: "1fr", gap: 2, "@container buchungsmaske (min-width: 720px)": { gridTemplateColumns: "1fr 1fr" } }}>
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: { xs: "1fr", sm: "2fr 1fr" },
+            gridTemplateColumns: "1fr", "@container buchungsmaske (min-width: 720px)": { gridTemplateColumns: "minmax(0,2fr) minmax(0,1fr)" },
             gap: 2,
           }}
         >
@@ -472,7 +519,7 @@ export const BuchungBaseForm: React.FC<Props> = ({
           />
 
           <TextField
-            label="Uhrzeit"
+            label="Beginn Uhrzeit"
             type="time"
             value={form.anreise?.slice(11, 16) ?? ""}
             disabled={!buchungsdatenEditierbar || (neueBuchung && (mietobjektLoading || !mietobjekt?.anreisezeit))}
@@ -491,22 +538,12 @@ export const BuchungBaseForm: React.FC<Props> = ({
           />
         </Box>
 
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={form.unbefristet ?? false}
-              disabled={!buchungsdatenEditierbar || (neueBuchung && (mietobjektLoading || !mietobjekt?.abreisezeit))}
-              onChange={(event) => onChange("unbefristet", event.target.checked)}
-            />
-          }
-          label="Buchung ohne Enddatum"
-        />
-
+        <Box sx={{ display: "grid", gap: 1 }}>
         {!form.unbefristet && (
           <Box
             sx={{
               display: "grid",
-              gridTemplateColumns: { xs: "1fr", sm: "2fr 1fr" },
+              gridTemplateColumns: "1fr", "@container buchungsmaske (min-width: 720px)": { gridTemplateColumns: "minmax(0,2fr) minmax(0,1fr)" },
               gap: 2,
             }}
           >
@@ -535,7 +572,7 @@ export const BuchungBaseForm: React.FC<Props> = ({
             />
 
             <TextField
-              label="Uhrzeit"
+              label="Ende Uhrzeit"
               type="time"
               value={form.abreise?.slice(11, 16) ?? ""}
               disabled={!buchungsdatenEditierbar}
@@ -554,6 +591,18 @@ export const BuchungBaseForm: React.FC<Props> = ({
             />
           </Box>
         )}
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={form.unbefristet ?? false}
+              disabled={!buchungsdatenEditierbar || (neueBuchung && (mietobjektLoading || !mietobjekt?.abreisezeit))}
+              onChange={(event) => onChange("unbefristet", event.target.checked)}
+            />
+          }
+          label="Buchung ohne Enddatum"
+        />
+
+        </Box>
         {!form.unbefristet && form.anreise && form.abreise && form.abreise <= form.anreise && (
           <Alert severity="info" sx={{ gridColumn: "1 / -1" }}>
             Die Abreise muss zeitlich nach der Anreise liegen. Für eine Tagesveranstaltung am selben Tag
@@ -561,13 +610,18 @@ export const BuchungBaseForm: React.FC<Props> = ({
           </Alert>
         )}
 
+
+</Box>
         <Typography variant="h6">Teilnehmer</Typography>
         <Typography variant="body2" color="text.secondary">
           Leere Felder bedeuten „nicht erfasst“. Bei Jugendlichen bitte das ungefähre Alter angeben.
         </Typography>
-        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
+        <Box sx={{ display: "grid", gridTemplateColumns: "1fr", "@container buchungsmaske (min-width: 720px)": { gridTemplateColumns: "minmax(0, 2fr) minmax(0, 1fr)" }, gap: 2 }}>
+          <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: "minmax(0,1fr)", "@container buchungsmaske (min-width: 720px)": { gridTemplateColumns: "repeat(2,minmax(0,1fr))" } }}>
+<Typography variant="subtitle2" sx={{gridColumn:"1 / -1"}}>Jugendliche und Altersspanne</Typography>
           <TextField
-            label="Anzahl Jugendliche"
+            sx={{gridColumn:"1 / -1"}}
+            name="anzahlJugendliche" label="Anzahl Jugendliche"
             type="number"
             value={form.anzahlJugendliche ?? ""}
             disabled={!buchungsdatenEditierbar}
@@ -584,7 +638,7 @@ export const BuchungBaseForm: React.FC<Props> = ({
             fullWidth
           />
           <TextField
-            label="Alter ungefähr von"
+            name="jugendAlterVon" label="Alter ungefähr von"
             type="number"
             value={form.jugendAlterVon ?? ""}
             disabled={!buchungsdatenEditierbar || !(form.anzahlJugendliche && form.anzahlJugendliche > 0)}
@@ -597,7 +651,7 @@ export const BuchungBaseForm: React.FC<Props> = ({
             fullWidth
           />
           <TextField
-            label="Alter ungefähr bis"
+            name="jugendAlterBis" label="Alter ungefähr bis"
             type="number"
             value={form.jugendAlterBis ?? ""}
             disabled={!buchungsdatenEditierbar || !(form.anzahlJugendliche && form.anzahlJugendliche > 0)}
@@ -609,8 +663,9 @@ export const BuchungBaseForm: React.FC<Props> = ({
             }}
             fullWidth
           />
+          </Box>
           <TextField
-            label="Anzahl Erwachsene"
+            name="anzahlErwachsene" label="Anzahl Erwachsene"
             type="number"
             value={form.anzahlErwachsene ?? ""}
             disabled={!buchungsdatenEditierbar}
@@ -627,116 +682,10 @@ export const BuchungBaseForm: React.FC<Props> = ({
           <Typography>Teilnehmer gesamt: {form.anzahlJugendliche + form.anzahlErwachsene}</Typography>
         )}
 
-        <TextField
-          label="Bemerkung"
-          value={form.bemerkung ?? ""}
-          disabled={!editMode}
-          multiline
-          minRows={3}
-          fullWidth
-          onChange={(event) => onChange("bemerkung", event.target.value)}
-        />
-
-        <TextField
-          select
-          label="Bewertung des Mieters"
-          value={form.bewertung ?? ""}
-          disabled={!editMode}
-          fullWidth
-          onChange={(event) => {
-            const value = event.target.value;
-            onChange("bewertung", value === "" ? null : Number(value));
-          }}
-          helperText="Optionale Bewertung von 1 bis 5 Sternen"
-        >
-          <MenuItem value="">Keine Bewertung</MenuItem>
-          {[1, 2, 3, 4, 5].map((wert) => (
-            <MenuItem key={wert} value={wert}>
-              {"★".repeat(wert)}
-              {"☆".repeat(5 - wert)} ({wert}/5)
-            </MenuItem>
-          ))}
-        </TextField>
-
-        {form.buchungsquelle === "AIRBNB" ? (
-          <Alert severity="info">Für Airbnb-Buchungen ist keine Rabattierung vorgesehen.</Alert>
-        ) : (
-          <TextField
-            select
-            label="Rabatt"
-            value={form.rabattart ?? Rabattart.KEIN_RABATT}
-            disabled={!buchungsdatenEditierbar}
-            fullWidth
-            onChange={(event) => onChange("rabattart", event.target.value as Rabattart)}
-          >
-            <MenuItem value={Rabattart.KEIN_RABATT}>Kein Rabatt</MenuItem>
-            <MenuItem value={Rabattart.VEREIN}>Vereinsrabatt</MenuItem>
-            <MenuItem value={Rabattart.VERBAND}>Verbandsrabatt</MenuItem>
-            <MenuItem value={Rabattart.INDIVIDUELL}>Individueller Rabatt</MenuItem>
-          </TextField>
-        )}
-
-        {form.buchungsquelle !== "AIRBNB" && form.rabattart === Rabattart.INDIVIDUELL && (
-          <Box sx={{ display: "grid", gridTemplateColumns: "minmax(120px, 1fr) minmax(110px, 1fr)", gap: 1 }}>
-            <TextField
-              select
-              label="Rabattart"
-              value={form.rabattwertTyp ?? RabattwertTyp.PROZENTUAL}
-              disabled={!buchungsdatenEditierbar}
-              onChange={(event) => onChange("rabattwertTyp", event.target.value as RabattwertTyp)}
-            >
-              <MenuItem value={RabattwertTyp.PROZENTUAL}>Prozent</MenuItem>
-              <MenuItem value={RabattwertTyp.ABSOLUT}>Euro</MenuItem>
-            </TextField>
-            <TextField
-              label={form.rabattwertTyp === RabattwertTyp.PROZENTUAL ? "Prozent" : "Betrag (€)"}
-              type="number"
-              value={form.rabattwert ?? 0}
-              disabled={!buchungsdatenEditierbar}
-              slotProps={{ htmlInput: { min: 0, ...(form.rabattwertTyp === RabattwertTyp.PROZENTUAL ? { max: 100 } : {}), step: "0.01" }}}
-              onChange={(event) => onChange("rabattwert", event.target.value === "" ? 0 : Number(event.target.value))}
-            />
-          </Box>
-        )}
-      </Box>
-
-      {/* Mittlere Spalte: Mietbereiche und Positionen */}
-      <Box sx={{ minWidth: 0 }}>
-        <Paper
-          variant="outlined"
-          sx={{
-            p: 2,
-            borderRadius: 1,
-          }}
-        >
-          <Box sx={{ mb: 2 }}>
-            {kostenlos ? <><Typography variant="subtitle2">Ohne Abrechnung</Typography><Typography variant="h5">0,00 € · kostenlos</Typography></> : form.buchungsquelle === "AIRBNB" ? (
-              <>
-                <Typography variant="subtitle2" color="text.secondary">Mietpreis</Typography>
-                <Typography variant="h5" fontWeight={700} sx={{ mt: 0.5 }}>
-                  {gesamtpreisVollstaendig ? formatPreis(gesamtpreis) : "Preise werden ermittelt …"}
-                </Typography>
-              </>
-            ) : (
-              <>
-                <Typography variant="subtitle2" color="text.secondary">Mietpreis vor Rabatt</Typography>
-                <Typography variant="h6" fontWeight={600} sx={{ mt: 0.5 }}>
-                  {gesamtpreisVollstaendig ? formatPreis(gesamtpreis) : "Preise werden ermittelt …"}
-                </Typography>
-                {rabattbetrag > 0 && (
-                  <>
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>Rabatt</Typography>
-                    <Typography variant="body1" color="success.main">− {formatPreis(rabattbetrag)}</Typography>
-                  </>
-                )}
-                <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 0.75 }}>Mietpreis nach Rabatt</Typography>
-                <Typography variant="h5" fontWeight={700} sx={{ mt: 0.5 }}>
-                  {gesamtpreisVollstaendig ? formatPreis(mietpreisNachRabatt) : "Preise werden ermittelt …"}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">Verbrauchskosten sind nicht rabattiert.</Typography>
-              </>
-            )}
-          </Box>
+    </>)}
+    {bereich('miete', 'Mietbereiche und Preise', `${form.positionen.map(p => mietbereiche.find(b => b.id === p.mietbereichId)?.bezeichnung || 'Mietbereich').join(' + ') || 'Keine Mietbereiche gewählt'} · Miete nach Rabatt ${mietpreisLabel}`, <>
+      <Box sx={{ minWidth: 0, display: "grid", gap: 2, gridTemplateColumns: "minmax(0,1fr)", "@container buchungsmaske (min-width: 960px)": { gridTemplateColumns: "minmax(0,2fr) minmax(0,1fr)" } }}>
+<Box sx={{minWidth:0}}>
 
           <Typography variant="subtitle1" fontWeight={600} color="text.secondary" sx={{ mb: 1.5 }}>
             Mietbereiche / Positionen
@@ -918,30 +867,118 @@ export const BuchungBaseForm: React.FC<Props> = ({
               })}
             </Box>
           )}
-        </Paper>
+
       </Box>
-      {/* Verbrauchswerte und Kosten erst ab Abrechenbar anzeigen. */}
-      {!kostenlos && (buchungsstatus === "ABRECHENBAR" || buchungsstatus === "ABGESCHLOSSEN") && (
+          <Box sx={{ mb: 2 }}>
+            {kostenlos ? <><Typography variant="subtitle2">Ohne Abrechnung</Typography><Typography variant="h5">0,00 € · kostenlos</Typography></> : form.buchungsquelle === "AIRBNB" ? (
+              <>
+                <Typography variant="subtitle2" color="text.secondary">Mietpreis</Typography>
+                <Typography variant="h5" fontWeight={700} sx={{ mt: 0.5 }}>
+                  {gesamtpreisVollstaendig ? formatPreis(gesamtpreis) : "Preise werden ermittelt …"}
+                </Typography>
+              </>
+            ) : (
+              <>
+                <Typography variant="subtitle2" color="text.secondary">Mietpreis vor Rabatt</Typography>
+                <Typography variant="h6" fontWeight={600} sx={{ mt: 0.5 }}>
+                  {gesamtpreisVollstaendig ? formatPreis(gesamtpreis) : "Preise werden ermittelt …"}
+                </Typography>
+                {(
+                  <>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>Rabatt</Typography>
+                    <Typography variant="body1" color="success.main">− {formatPreis(rabattbetrag)}</Typography>
+                  </>
+                )}
+                <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 0.75 }}>Mietpreis nach Rabatt</Typography>
+                <Typography variant="h5" fontWeight={700} sx={{ mt: 0.5 }}>
+                  {gesamtpreisVollstaendig ? formatPreis(mietpreisNachRabatt) : "Preise werden ermittelt …"}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">Verbrauchskosten sind nicht rabattiert.</Typography>
+              </>
+            )}
+          </Box>
+
+      </Box>
+    </>)}
+    {bereich('zahlung', 'Zahlung und Bankverbindung', `${form.buchungsquelle === 'AIRBNB' ? 'Airbnb' : { ANZAHLUNG: 'Anzahlung', BEI_ABRECHNUNG: 'Zahlung bei Abrechnung', GESAMTMIETE_VORAUS: 'Gesamtmiete im Voraus', OHNE_ABRECHNUNG: 'Ohne Abrechnung' }[form.zahlungsvariante ?? 'ANZAHLUNG']} · Kaution ${formatPreis(form.kautionBetrag)} · ${form.bankverbindungAuswahl === 'ALTERNATIV' ? 'Alternativbank' : 'Primärbank'}`, <>
+        {form.buchungsquelle === "DIREKT" && <TextField select label="Zahlungsvariante" fullWidth size="small"
+          value={form.zahlungsvariante ?? "ANZAHLUNG"} disabled={!buchungsdatenEditierbar}
+          helperText="Ohne Abrechnung: vollständig kostenlos, ohne Anzahlung und Kaution; automatischer Abschluss nach Mietende."
+          onChange={e => onChange("zahlungsvariante", e.target.value as BuchungSave["zahlungsvariante"])}>
+          <MenuItem value="OHNE_ABRECHNUNG">Ohne Abrechnung (kostenlos)</MenuItem>
+          <MenuItem value="ANZAHLUNG">Anzahlung</MenuItem>
+          <MenuItem value="BEI_ABRECHNUNG">Zahlung bei Abrechnung</MenuItem>
+          <MenuItem value="GESAMTMIETE_VORAUS">Gesamtmiete im Voraus</MenuItem>
+        </TextField>}
+        {form.buchungsquelle === "DIREKT" && (form.zahlungsvariante ?? "ANZAHLUNG") === "ANZAHLUNG" ? (
+          <TextField
+            label="Anzahlung (€)"
+            type="number"
+            value={form.anzahlungBetrag ?? 0}
+            disabled={!buchungsdatenEditierbar}
+            fullWidth
+            size="small"
+            slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
+            onChange={(event) => onChange("anzahlungBetrag", Math.max(0, Number(event.target.value) || 0))}
+          />
+        ) : null}
+
+        {form.buchungsquelle === "DIREKT" && !kostenlos ? (
+          <TextField
+            label="Kaution (€)"
+            type="number"
+            value={form.kautionBetrag ?? 0}
+            disabled={!buchungsdatenEditierbar}
+            fullWidth
+            size="small"
+            slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
+            onChange={(event) => onChange("kautionBetrag", Math.max(0, Number(event.target.value) || 0))}
+          />
+        ) : form.buchungsquelle === "AIRBNB" ? (
+          <Alert severity="info">Für Airbnb-Buchungen werden keine Anzahlung und keine Kaution erhoben.</Alert>
+        ) : null}
+
+        {!kostenlos && buchungsstatus === "ANFRAGE" && form.buchungsquelle === "DIREKT" && form.zahlungsvariante !== "GESAMTMIETE_VORAUS" && form.anreise && (() => {
+          const heute = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Berlin" }).format(new Date());
+          return (Date.parse(form.anreise.slice(0, 10)) - Date.parse(heute)) / 86400000 < (mietobjekt?.kurzfristgrenzeTage ?? 42) && (mietobjekt?.kurzfristgrenzeTage ?? 42) > 0;
+        })() && <Alert severity="info" action={<button type="button" disabled={!buchungsdatenEditierbar} onClick={() => onChange("zahlungsvariante", "GESAMTMIETE_VORAUS")}>Übernehmen</button>}>Kurzfristige Anfrage: Gesamtmiete im Voraus empfohlen.</Alert>}
+        <BuchungBankverbindung
+          mietobjektId={form.mietobjektId}
+          value={form.bankverbindungAuswahl ?? "PRIMAER"}
+          disabled={!buchungsdatenEditierbar}
+          onChange={(value) => onChange("bankverbindungAuswahl", value)}
+        />
+
+
+    </>)}
+    {bereich('verbrauch', 'Verbrauch und Zählerstände', verbrauchVeraltet ? 'Verbrauchsvorschau nach Speichern aktualisieren' : verbrauchSummary + verbrauchGesamtLabel, <>
+      {verbrauchVeraltet && <Alert severity="info">Die folgenden Verbrauchswerte gehören zum gespeicherten Zeitraum. Bitte die Buchung speichern, um die Vorschau für den geänderten Zeitraum zu aktualisieren.</Alert>}
       <Box sx={{ minWidth: 0 }}>
-        <Paper
-          variant="outlined"
-          sx={{
-            p: 2,
-            borderRadius: 1,
-          }}
-        >
+
           <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>
             Verbrauchswerte und Kosten
           </Typography>
 
-          {form.buchungsquelle === "AIRBNB" ? (
+          {kostenlos ? <Typography>Keine Verbrauchspositionen für diese Buchung</Typography>
+          : form.buchungsquelle !== "AIRBNB" && buchungsstatus !== "ABRECHENBAR" && buchungsstatus !== "ABGESCHLOSSEN" ? (
+            <Box sx={{ display: "grid", gap: 2 }}>
+              {verbrauchLadefehler ? <Alert severity="error">Verbrauchspositionen konnten nicht geladen werden.</Alert>
+                : verbrauchKonfiguration === null ? <Typography>Noch nicht erfasst · Verbrauchspositionen werden geladen …</Typography>
+                : verbrauchKonfiguration.length === 0 ? <Typography>Keine Verbrauchspositionen für diese Buchung</Typography>
+                : verbrauchKonfiguration.map(k => <Box key={k.id}>
+                    <Typography fontWeight={600}>{k.bezeichnung}</Typography>
+                    <Typography variant="body2">{k.abrechnungsart === "ZAEHLERSTAND" ? `Zählerstand · ${formatPreis(k.preis)} je ${k.mengeneinheit || "Einheit"}` : k.abrechnungsart === "TAGESPREIS" ? `Tagespreis · ${formatPreis(k.preis)}` : `Pauschale · ${formatPreis(k.preis)}`}</Typography>
+                    <Typography variant="body2" color="text.secondary">Noch nicht erfasst</Typography>
+                  </Box>)}
+            </Box>
+          ) : form.buchungsquelle === "AIRBNB" ? (
             <Typography variant="body2" color="text.secondary">
               Für Airbnb-Buchungen ist keine Zählerstandsprüfung beim Abschluss erforderlich.
             </Typography>
           ) : buchungsstatus === "ABRECHENBAR" ? (
             !verbrauchskostenVorschau || verbrauchskostenVorschau.length === 0 ? (
               <Typography variant="body2" color="text.secondary">
-                Es liegen keine Verbrauchskosten für die Vorschau vor.
+                Keine Verbrauchspositionen für diese Buchung
               </Typography>
             ) : (
               <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -1094,7 +1131,7 @@ export const BuchungBaseForm: React.FC<Props> = ({
             </Typography>
           ) : !verbrauchskosten || verbrauchskosten.length === 0 ? (
             <Typography variant="body2" color="text.secondary">
-              Für diese Buchung sind keine Verbrauchskosten gespeichert.
+              Keine Verbrauchspositionen für diese Buchung
             </Typography>
           ) : (
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -1229,9 +1266,49 @@ export const BuchungBaseForm: React.FC<Props> = ({
               </Box>
             </Box>
           )}
-        </Paper>
+
       </Box>
-      )}
-    </>
-  );
+
+      {abrechnung && <Typography variant="body2" color="text.secondary">Ablesungen werden im bestehenden Abschlussdialog geprüft und gegebenenfalls ausdrücklich bestätigt. Das Öffnen dieses Bereichs ändert keine Zählerstände.</Typography>}
+    </>)}
+    {bereich('schaeden', 'Schäden und Fehlbestände', schaeden.length ? `${schaeden.length} Positionen · ${formatPreis(schaedenSumme)}` : 'Keine Schäden erfasst', kostenlos ? <Typography>Diese Buchung ist vollständig kostenlos.</Typography> :
+      <EntschaedigungEditor objektId={form.mietobjektId} rows={schaeden} editable={editMode} onChange={rows => onChange('entschaedigungen', rows)} />)}
+    {bereich('intern', 'Interne Angaben', [form.bemerkung ? 'Bemerkung vorhanden' : 'Keine Bemerkung', form.bewertung != null ? `Bewertung ${form.bewertung}/5` : '', form.fruehereBuchungsnummer ? `frühere Nr. ${form.fruehereBuchungsnummer}` : ''].filter(Boolean).join(' · '), <>
+        <TextField
+          label="Bemerkung"
+          value={form.bemerkung ?? ""}
+          disabled={!editMode}
+          multiline
+          minRows={3}
+          fullWidth
+          onChange={(event) => onChange("bemerkung", event.target.value)}
+        />
+
+        <TextField
+          select
+          label="Bewertung des Mieters"
+          value={form.bewertung ?? ""}
+          disabled={!editMode}
+          fullWidth
+          onChange={(event) => {
+            const value = event.target.value;
+            onChange("bewertung", value === "" ? null : Number(value));
+          }}
+          helperText="Optionale Bewertung von 1 bis 5 Sternen"
+        >
+          <MenuItem value="">Keine Bewertung</MenuItem>
+          {[1, 2, 3, 4, 5].map((wert) => (
+            <MenuItem key={wert} value={wert}>
+              {"★".repeat(wert)}
+              {"☆".repeat(5 - wert)} ({wert}/5)
+            </MenuItem>
+          ))}
+        </TextField>
+
+        <TextField label="Frühere Buchungsnummer" value={form.fruehereBuchungsnummer ?? ""}
+          onChange={event => onChange("fruehereBuchungsnummer", event.target.value)}
+          disabled={!editMode} inputProps={{maxLength:100}} fullWidth size="small"
+          helperText="Optional für die Migration; die aktuelle Buchungsnummer bleibt erhalten." />
+    </>)}
+  </Box>;
 };

@@ -359,7 +359,7 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
                     </Typography>
 
                     <Stack direction="row" spacing={0}>
-                      <Tooltip title="Bearbeiten">
+                      <Tooltip title="Ändern">
                         <IconButton size="small" onClick={() => handleEditZahlungsnachweis(row.id)}>
                           <EditIcon fontSize="small" />
                         </IconButton>

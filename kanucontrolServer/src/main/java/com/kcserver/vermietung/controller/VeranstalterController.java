@@ -19,5 +19,7 @@ public class VeranstalterController {
     @GetMapping("/{id}") public ApiResponse<VeranstalterDTO> lesen(@PathVariable Long id){return ApiResponse.of(service.lesen(id));}
     @PostMapping @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<VeranstalterDTO> anlegen(@RequestBody @Valid VeranstalterDTO dto){return ApiResponse.of(service.speichern(null,dto));}
+    @DeleteMapping("/{id}") @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void loeschen(@PathVariable Long id){service.loeschen(id);}
     @PutMapping("/{id}") public ApiResponse<VeranstalterDTO> speichern(@PathVariable Long id,@RequestBody @Valid VeranstalterDTO dto){return ApiResponse.of(service.speichern(id,dto));}
 }

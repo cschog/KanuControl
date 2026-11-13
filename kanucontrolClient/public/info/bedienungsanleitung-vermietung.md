@@ -143,7 +143,7 @@ Unter **Verwaltung → Rabatte** werden die vorgesehenen Mietbereichsrabatte gep
 
 ### Bestehende Mietpreise bewusst neu aus dem Katalog übernehmen
 
-Buchung öffnen und **Bearbeiten** wählen. Bei **Mietbereiche / Positionen** die Option **Mietpreise aus Katalog neu übernehmen** aktivieren und den gewünschten **Preisstand (Stichtag)** auswählen. Die Anzeige vergleicht die bisherige Preisbasis mit den Katalogpreisen. Erst **Speichern** übernimmt für alle gewählten Positionen den am Stichtag gültigen Einzelpreis und die im Mietbereich hinterlegte Berechnungsart. Damit kann etwa eine aus Excel importierte Pauschale pro Buchung durch den Katalogpreis pro Tag ersetzt werden.
+Buchung öffnen und **Ändern** wählen. Bei **Mietbereiche / Positionen** die Option **Mietpreise aus Katalog neu übernehmen** aktivieren und den gewünschten **Preisstand (Stichtag)** auswählen. Die Anzeige vergleicht die bisherige Preisbasis mit den Katalogpreisen. Erst **Speichern** übernimmt für alle gewählten Positionen den am Stichtag gültigen Einzelpreis und die im Mietbereich hinterlegte Berechnungsart. Damit kann etwa eine aus Excel importierte Pauschale pro Buchung durch den Katalogpreis pro Tag ersetzt werden.
 
 Die Option ist standardmäßig ausgeschaltet. Abwählen oder Abbrechen erhält die bisherigen Preise. Die gewählte Rabattregel bleibt erhalten und wird auf der neuen Preisbasis berechnet; Miettage werden unverändert nach der Datumsdifferenz berechnet. Fehlt für eine Position ein gültiger Katalogpreis, kann die Neuberechnung nicht gespeichert werden. Stornierte und abgelehnte Buchungen sind ausgeschlossen. Bereits archivierte Rechnungs-PDFs bleiben unverändert.
 
@@ -190,7 +190,7 @@ Eine Sperre gilt für alle Mietbereiche des ausgewählten Objekts. Sie verhinder
 
 Überlappende Sperren werden abgewiesen. Vorhandene reservierte, bestätigte, abrechenbare oder abgeschlossene Buchungen müssen vor dem Anlegen einer überschneidenden Sperre geklärt werden; KC nennt die betroffenen Buchungsnummern. Eine Sperre ändert diese Buchungen nicht automatisch.
 
-Mit **Bearbeiten** änderst du eine Sperrzeit. **Sperre aufheben** erfordert eine Bestätigung. Ist der Datensatz inzwischen geändert worden, lade die Liste neu und prüfe den aktuellen Stand.
+Mit **Ändern** änderst du eine Sperrzeit. **Sperre aufheben** erfordert eine Bestätigung. Ist der Datensatz inzwischen geändert worden, lade die Liste neu und prüfe den aktuellen Stand.
 
 Der interne Grund bleibt in KC. Auf der Homepage und im Airbnb-Feed wird nur **Gesperrt** ausgegeben.
 

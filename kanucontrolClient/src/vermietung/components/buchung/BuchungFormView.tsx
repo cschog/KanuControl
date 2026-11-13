@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import BuchungsnummerAendern from "./BuchungsnummerAendern";
 import VorlagenVersandarchiv from "./VorlagenVersandarchiv";
 import Abrechnungsdokumente from "./Abrechnungsdokumente";
-import EntschaedigungEditor from "./EntschaedigungEditor";
+import { BuchungAbrechnungUebersicht } from "./BuchungAbrechnungUebersicht";
+import { buchungBereiche, buchungSpeicherFehler, type BuchungBereich, type BereichFehler } from "./buchungBereiche";
+import { getApiErrorMessage } from "@/kjfp/api/utils/apiError";
 // src/vermietung/components/anmeldung/BuchungFormView.tsx
 
-import { Box, Button, Chip, Typography } from "@mui/material";
+import { Alert, Box, Button, Chip, Typography } from "@mui/material";
 import PaymentsIcon from "@mui/icons-material/Payments";
 
 import { BuchungBaseForm } from "./BuchungBaseForm";
@@ -74,6 +76,21 @@ export const BuchungFormView: React.FC<Props> = ({
   disableDelete,
   neueBuchungsquelle = "DIREKT",
 }) => {
+  const formularRef = useRef<HTMLFormElement>(null);
+  const [expanded, setExpanded] = useState<BuchungBereich[]>(buchung ? ['aufenthalt'] : ['mieter', 'aufenthalt']);
+  const [abrechnung, setAbrechnung] = useState(false);
+  const [bereichFehler, setBereichFehler] = useState<BereichFehler>({});
+  const [speicherFehler, setSpeicherFehler] = useState('');
+  const [speichert, setSpeichert] = useState(false);
+  useEffect(() => {
+    setExpanded(buchung?.id ? ['aufenthalt'] : ['mieter', 'aufenthalt']);
+    setAbrechnung(false); setBereichFehler({}); setSpeicherFehler('');
+  }, [buchung?.id, neueBuchungsquelle]);
+  const prepareAbrechnung = () => {
+    setAbrechnung(true);
+    setExpanded(['verbrauch', 'schaeden']);
+    requestAnimationFrame(() => document.getElementById('buchung-verbrauch-kopf')?.scrollIntoView({ block: 'start', behavior: 'smooth' }));
+  };
   const [dokumentRevision, setDokumentRevision] = useState(0);
   const {
     form,
@@ -98,8 +115,48 @@ export const BuchungFormView: React.FC<Props> = ({
 
   const status = buchung ? statusAnzeige[buchung.status] : statusAnzeige.ANFRAGE;
 
+  const save = async () => {
+    if (speichert) return;
+    const fehler = buchungSpeicherFehler(form);
+    const invalid = Array.from(formularRef.current?.querySelectorAll<HTMLElement>('input:invalid, textarea:invalid, [aria-invalid="true"]') ?? [])
+      .filter(el => !el.hasAttribute('disabled'));
+    for (const feld of invalid) {
+      const bereich = feld.closest<HTMLElement>('[data-buchung-bereich]')?.dataset.buchungBereich as BuchungBereich | undefined;
+      if (bereich) fehler[bereich] ??= 'Bitte die markierten Felder prüfen.';
+    }
+    setBereichFehler(fehler); setSpeicherFehler('');
+    if (Object.keys(fehler).length) {
+      const betroffen = buchungBereiche.filter(b => fehler[b]);
+      setExpanded(aktuell => [...new Set([...aktuell, ...betroffen])]);
+      // Wait for the accordion transition before focusing a previously collapsed field.
+      setTimeout(() => {
+        const inhalt = formularRef.current?.querySelector<HTMLElement>(`[data-buchung-bereich="${betroffen[0]}"]`);
+        const invalidFeld = inhalt?.querySelector<HTMLElement>('input:invalid:not(:disabled), [aria-invalid="true"]');
+        const gruppenFeld = betroffen[0] === 'aufenthalt' && fehler.aufenthalt?.includes('Teilnehmer')
+          ? inhalt?.querySelector<HTMLElement>(`[name="${(form.anzahlJugendliche ?? 0) < 0 ? 'anzahlJugendliche' : (form.anzahlErwachsene ?? 0) < 0 ? 'anzahlErwachsene' : form.jugendAlterVon == null ? 'jugendAlterVon' : 'jugendAlterBis'}"]`) : null;
+        const datumFeld = betroffen[0] === 'aufenthalt' && !gruppenFeld
+          ? inhalt?.querySelector<HTMLElement>(`[aria-label="${!form.anreise ? 'Beginn' : 'Ende'}"] [role="spinbutton"], [role="spinbutton"]`) : null;
+        const feld = invalidFeld ?? gruppenFeld ?? datumFeld ?? inhalt?.querySelector<HTMLElement>('input:not(:disabled), [role="spinbutton"], [role="combobox"]');
+        (feld ?? document.getElementById(`buchung-${betroffen[0]}-kopf`))?.focus();
+        (feld ?? inhalt)?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      }, 300);
+      return;
+    }
+    const payload = buildSavePayload();
+    if (!payload) { setSpeicherFehler('Bitte Zeitraum und Preisstand prüfen.'); return; }
+    setSpeichert(true);
+    try { await onSave(payload); }
+    catch (e) {
+      setSpeicherFehler(getApiErrorMessage(e));
+      setExpanded([...buchungBereiche]);
+    } finally { setSpeichert(false); }
+  };
+
   return (
-    <>
+    <Box component="form" ref={formularRef} noValidate onSubmit={e => { e.preventDefault(); void save(); }}
+      sx={{ maxWidth: 1320, mx: 'auto', minWidth: 0, pb: 'max(24px, env(safe-area-inset-bottom))',
+        containerType: 'inline-size', containerName: 'buchungsmaske', '& .MuiInputBase-root': { minWidth: 0 },
+        '& .MuiAccordionDetails-root': { overflowWrap: 'anywhere' } }}>
       <Box
         sx={{
           display: "flex",
@@ -122,31 +179,32 @@ export const BuchungFormView: React.FC<Props> = ({
         </Typography>
 
         <Chip label={status.label} color={status.color} />
+        {buchung?.mietobjektBezeichnung && <Typography variant="body2" color="text.secondary">{buchung.mietobjektBezeichnung}</Typography>}
         {buchung && !editMode && onBuchungsnummerChange && <BuchungsnummerAendern
           key={`${buchung.id}-${buchung.buchungsnummer}`} nummer={buchung.buchungsnummer} onSave={onBuchungsnummerChange}
         />}
         {buchung?.herkunft === "HOMEPAGE" && <Chip label="Homepage-Anfrage" variant="outlined" />}
         {buchung && !editMode && buchung.status !== "ABGELEHNT" && buchung.status !== "STORNIERT" && (
-          <Button variant="outlined" startIcon={<PaymentsIcon />} onClick={onOpenFinanzen}>
-            Abrechnung
+          <Button variant="outlined" startIcon={<PaymentsIcon />} onClick={prepareAbrechnung}>
+            Abrechnung vorbereiten
           </Button>
         )}
       </Box>
       <Box
         sx={{
           display: "grid",
-          gridTemplateColumns: {
-            xs: "1fr",
-            lg: buchung?.status === "ABRECHENBAR" || buchung?.status === "ABGESCHLOSSEN"
-              ? "minmax(260px, 0.9fr) minmax(320px, 1.1fr) minmax(300px, 1fr)"
-              : "minmax(260px, 0.9fr) minmax(320px, 1.1fr)",
-          },
+          gridTemplateColumns: "minmax(0, 1fr)",
           gap: 3,
           mt: 3,
           alignItems: "start",
         }}
       >
         <BuchungBaseForm
+          expanded={expanded}
+          onExpandedChange={setExpanded}
+          bereichFehler={bereichFehler}
+          abrechnung={abrechnung}
+          verbrauchVeraltet={!!buchung && (form.anreise !== buchung.anreise || form.abreise !== buchung.abreise || form.unbefristet !== buchung.unbefristet)}
           form={form}
           neueBuchung={!buchung}
           editMode={editMode}
@@ -173,7 +231,8 @@ export const BuchungFormView: React.FC<Props> = ({
       </Box>
 
       {buchung?.stornoDatum && <Typography sx={{ my: 2 }}>Storniert am {buchung.stornoDatum} · angekündigte Erstattung: {(buchung.stornoErstattung ?? 0).toLocaleString("de-DE", { style: "currency", currency: "EUR" })} · verbindlicher Einbehalt: {(buchung.stornoEinbehalt ?? 0).toLocaleString("de-DE", { style: "currency", currency: "EUR" })}. Tatsächliche Überweisungen werden separat in den Finanzen erfasst.</Typography>}
-      {form.zahlungsvariante !== "OHNE_ABRECHNUNG" && <EntschaedigungEditor objektId={form.mietobjektId} rows={form.entschaedigungen ?? []} editable={editMode} onChange={rows=>update("entschaedigungen",rows)}/>}
+      {abrechnung && buchung && <Box sx={{ mt: 2 }}><BuchungAbrechnungUebersicht id={buchung.id} revision={buchung} ungespeichert={editMode} onFinanzen={onOpenFinanzen} /></Box>}
+      {speicherFehler && <Alert severity="error" role="alert" sx={{ my: 2 }}>{speicherFehler}</Alert>}
       {buchung && !editMode && <Abrechnungsdokumente key={`${buchung.id}-${buchung.status}-${buchung.abrechnungRevision}-${buchung.abschlussRevision}`} id={buchung.id} ausstellbar={buchung.zahlungsvariante !== "OHNE_ABRECHNUNG" && buchung.status === "ABGESCHLOSSEN" && buchung.abrechnungRevision === buchung.abschlussRevision}/>}
       {buchung && !editMode && <VorlagenVersandarchiv key={`${buchung.id}-${buchung.status}-${buchung.abschlussRevision}-${buchung.reservierungMailGesendetAm}-${buchung.reservierungMailFehler}-${dokumentRevision}`} id={buchung.id} refresh={!!buchung.reservierungMailGesendetAm} />}
       <BuchungActionBar
@@ -188,18 +247,15 @@ export const BuchungFormView: React.FC<Props> = ({
         editMode={editMode}
         notifyByEmail={buchung !== null}
         abschlussErforderlich={!!buchung && buchung.abrechnungRevision !== buchung.abschlussRevision}
+        onPrepareAbrechnung={prepareAbrechnung}
+        abrechnungVorbereitet={abrechnung}
+        saving={speichert}
         onEdit={onEdit}
         onCancelEdit={() => {
-          resetForm();
+          resetForm(); setBereichFehler({}); setSpeicherFehler('');
           onCancelEdit();
         }}
-        onSave={async () => {
-          const payload = buildSavePayload();
-
-          if (payload) {
-            await onSave(payload);
-          }
-        }}
+        onSave={() => void save()}
         onReserve={onReserve}
         onConfirm={onConfirm}
         onReopen={onReopen}
@@ -209,6 +265,6 @@ export const BuchungFormView: React.FC<Props> = ({
         onDelete={onDelete}
         disableDelete={disableDelete}
       />
-    </>
+    </Box>
   );
 };
