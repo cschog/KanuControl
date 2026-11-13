@@ -20,11 +20,21 @@ class VorlagenVersandMappingTest {
             var db=DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
             var migration=new Liquibase("db/changelog/changes/20261109-01-vorlagensystem.xml",new ClassLoaderResourceAccessor(),db);
             migration.update(new Contexts(),new LabelExpression());
+            // Auch die spätere Erweiterung des Versandarchivs berücksichtigen.
+            // Die übrigen Spalten/der PostgreSQL-Partialindex werden separat im
+            // BuchungsdokumentMigrationTest geprüft; hier wird nur das Archiv gemappt.
+            var erweiterung = new Liquibase("db/changelog/changes/20261113-03-buchungsdokumente.xml",new ClassLoaderResourceAccessor(),db).getDatabaseChangeLog();
+            for (var changeSet : erweiterung.getChangeSets()) {
+                changeSet.removeAllChanges(changeSet.getChanges().stream().filter(change -> !(change instanceof liquibase.change.core.AddColumnChange column
+                        && "vermietung_vorlagenversand".equals(column.getTableName()))).toList());
+            }
+            new Liquibase(erweiterung,new ClassLoaderResourceAccessor(),db).update(new Contexts(),new LabelExpression());
             // Wie die manuelle EntityManagerFactory: keine Spring-Namenskonvention voraussetzen.
             try(var factory=new Configuration().addAnnotatedClass(VorlagenVersand.class)
                     .setProperty("hibernate.connection.url",url)
                     .setProperty("hibernate.hbm2ddl.auto","validate").buildSessionFactory()) {
                 var vorbereitet=new VorlagenVersand();vorbereitet.setBuchungId(26L);vorbereitet.setMietobjektId(7L);
+                vorbereitet.setVersandSchluessel(UUID.randomUUID().toString());
                 vorbereitet.setVorgang("RESERVIERUNG");vorbereitet.setPdf(new byte[]{1,2,3});vorbereitet.setMetadaten("Beispiel");
                 var bestaetigt=new VorlagenVersand();bestaetigt.setBuchungId(99L);bestaetigt.setMietobjektId(7L);
                 bestaetigt.setVorgang("RESERVIERUNG");bestaetigt.setPdf(new byte[]{4});bestaetigt.setMetadaten("Beispiel");
@@ -36,6 +46,7 @@ class VorlagenVersandMappingTest {
                     var rows=session.createQuery("from VorlagenVersand where buchungId=:buchung order by erstelltAm desc",VorlagenVersand.class)
                             .setParameter("buchung",26L).getResultList();
                     assertEquals(1,rows.size());assertEquals(vorbereitet.getId(),rows.getFirst().getId());
+                    assertEquals(vorbereitet.getVersandSchluessel(),rows.getFirst().getVersandSchluessel());
                     assertNull(rows.getFirst().getSmtpAm());assertArrayEquals(new byte[]{1,2,3},rows.getFirst().getPdf());
                     assertEquals(bestaetigt.getSmtpAm(),session.find(VorlagenVersand.class,bestaetigt.getId()).getSmtpAm());
                 }

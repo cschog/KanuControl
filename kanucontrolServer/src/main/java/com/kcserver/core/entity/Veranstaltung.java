@@ -41,6 +41,11 @@ public class Veranstaltung extends Auditable {
     @Column(nullable = false, length = 200)
     private String name;
 
+    @Column(name = "programmentwurf_titel", length = 200)
+    private String programmentwurfTitel;
+    @Column(name = "programmentwurf_inhalt", columnDefinition = "text")
+    private String programmentwurfInhalt;
+
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
     private VeranstaltungTyp typ;

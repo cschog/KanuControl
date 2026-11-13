@@ -214,8 +214,10 @@ public class PDFAnmeldungFmJemService {
                         FinanzKategorie.MIETE
                 );
 
+                // Die Anmeldevorlage hat keine eigene Zeile für Kultur / Programm.
                 BigDecimal sonstigeKosten = sum(
                         planung,
+                        FinanzKategorie.KULTUR,
                         FinanzKategorie.SONSTIGE_KOSTEN
                 );
 
@@ -245,7 +247,7 @@ public class PDFAnmeldungFmJemService {
 
                 set(form, "honorare", CurrencyUtil.decimal(honorare));
 
-                set(form, "fahrkosten", CurrencyUtil.decimal(fahrkosten));
+                set(form, "fahrtkosten", CurrencyUtil.decimal(fahrkosten));
 
                 set(form, "verbrauchsmaterial",
                         CurrencyUtil.decimal(verbrauchsmaterial));
@@ -345,6 +347,7 @@ public class PDFAnmeldungFmJemService {
             doc.getDocumentInformation().setAuthor("KanuControl");
             doc.getDocumentInformation().setCreator("KanuControl");
 
+            ProgrammentwurfPdf.append(doc, v);
             doc.save(out);
             return out.toByteArray();
 

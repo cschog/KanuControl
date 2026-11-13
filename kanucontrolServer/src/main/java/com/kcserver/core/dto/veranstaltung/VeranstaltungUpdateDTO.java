@@ -13,6 +13,9 @@ import java.time.LocalTime;
 public class VeranstaltungUpdateDTO {
 
     private String name;
+
+    private String programmentwurfTitel;
+    private String programmentwurfInhalt;
     private VeranstaltungTyp typ;
 
     private Boolean kjfpAktiv;

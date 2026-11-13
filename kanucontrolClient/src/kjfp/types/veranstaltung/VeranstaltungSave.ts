@@ -8,6 +8,13 @@ export interface VeranstaltungSave {
   id?: number;
 
   name: string;
+  individuelleGebuehren?: boolean;
+  standardGebuehr?: number | null;
+  scope?: "VERBAND" | "VEREIN" | null;
+  kopieVonVeranstaltungId?: number;
+
+  programmentwurfTitel?: string;
+  programmentwurfInhalt?: string;
   typ?: VeranstaltungTyp;
   kjfpAktiv: boolean;
   fahrtenAktiv: boolean;

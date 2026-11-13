@@ -10,6 +10,12 @@ export interface VeranstaltungDetail {
   id: number;
 
   name: string;
+  individuelleGebuehren?: boolean;
+  standardGebuehr?: number | null;
+  scope?: "VERBAND" | "VEREIN" | null;
+
+  programmentwurfTitel?: string | null;
+  programmentwurfInhalt?: string | null;
   typ: VeranstaltungTyp;
   kjfpAktiv: boolean;
   fahrtenAktiv: boolean;

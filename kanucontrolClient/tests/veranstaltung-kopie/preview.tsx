@@ -1,0 +1,13 @@
+import React from "react";
+import { createRoot } from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
+import { ThemeProvider, createTheme, CssBaseline } from "@mui/material";
+import { LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { AppContext } from "../../src/core/components/context/AppContext";
+import { BackNavigationProvider } from "../../src/core/context/BackNavigationProvider";
+import VeranstaltungenScreen from "../../src/kjfp/components/veranstaltung/VeranstaltungenScreen";
+import keycloak from "../../src/core/auth/keycloak";
+keycloak.updateToken = async () => false;
+const context = { schema: "test", active: null, loading: false, reload: async () => {} };
+createRoot(document.getElementById("root")!).render(<ThemeProvider theme={createTheme()}><CssBaseline/><BrowserRouter><LocalizationProvider dateAdapter={AdapterDayjs}><AppContext.Provider value={context}><BackNavigationProvider><VeranstaltungenScreen/></BackNavigationProvider></AppContext.Provider></LocalizationProvider></BrowserRouter></ThemeProvider>);

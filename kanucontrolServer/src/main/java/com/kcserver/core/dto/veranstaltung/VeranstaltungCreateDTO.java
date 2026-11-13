@@ -13,6 +13,23 @@ public class VeranstaltungCreateDTO {
     @NotNull
     private String name;
 
+    private String programmentwurfTitel;
+    private String programmentwurfInhalt;
+
+    /** Nur beim Kopieren: Quelle im aktuellen Mandanten. Planung wird serverseitig kopiert. */
+    @jakarta.validation.constraints.Positive
+    private Long kopieVonVeranstaltungId;
+
+    private com.kcserver.kjfp.enumtype.CountryCode countryCode;
+    private String plz;
+    private String ort;
+    private Long unterkunftsartId;
+    private Long verpflegungsmodellId;
+    private Long beitragsstrukturId;
+    private Boolean individuelleGebuehren;
+    private java.math.BigDecimal standardGebuehr;
+    private com.kcserver.core.enumtype.VeranstaltungScope scope;
+
     private VeranstaltungTyp typ;
 
     @NotNull

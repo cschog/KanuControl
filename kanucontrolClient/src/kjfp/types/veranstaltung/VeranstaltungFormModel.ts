@@ -12,6 +12,13 @@ export interface VeranstaltungFormModel {
   /* ================= Stammdaten ================= */
 
   name: string;
+  individuelleGebuehren?: boolean;
+  standardGebuehr?: number | null;
+  scope?: "VERBAND" | "VEREIN" | null;
+  kopieVonVeranstaltungId?: number;
+
+  programmentwurfTitel?: string | null;
+  programmentwurfInhalt?: string | null;
   typ?: VeranstaltungTyp;
   kjfpAktiv: boolean;
   fahrtenAktiv: boolean;

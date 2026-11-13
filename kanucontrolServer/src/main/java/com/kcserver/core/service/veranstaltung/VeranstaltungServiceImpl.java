@@ -56,6 +56,7 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
     private final PersonRepository personRepository;
     private final TeilnehmerRepository teilnehmerRepository;
     private final PlanungRepository planungRepository;
+    private final com.kcserver.kjfp.service.planung.PlanungKopierService planungKopierService;
     private final VeranstaltungMapper veranstaltungMapper;
     private final PersonMapper personMapper;
     private final BeitragsstrukturRepository beitragsstrukturRepository;
@@ -100,6 +101,14 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
 
         if (kjfpAktiv) kjfpRegeln.validateLeiterAge(leiter);
 
+        if (dto.getKopieVonVeranstaltungId() != null) {
+            Veranstaltung quelle = veranstaltungRepository.findByIdWithRelations(dto.getKopieVonVeranstaltungId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, ErrorMessages.VERANSTALTUNG_NOT_FOUND));
+            if (!quelle.isKjfpAktiv() || !kjfpAktiv) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Für eine Kopie mit Planung müssen Vorlage und neue Veranstaltung KJFP-aktiv sein.");
+            }
+        }
+
         // =========================================================
         // 2. Erst wenn alle Voraussetzungen erfüllt sind:
         //    bisherige aktive Veranstaltung deaktivieren
@@ -114,6 +123,8 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
 
         Veranstaltung v = new Veranstaltung();
         v.setName(dto.getName());
+        v.setProgrammentwurfTitel(com.kcserver.kjfp.service.veranstaltung.Programmentwurf.titel(dto.getProgrammentwurfTitel()));
+        v.setProgrammentwurfInhalt(com.kcserver.kjfp.service.veranstaltung.Programmentwurf.inhalt(dto.getProgrammentwurfInhalt()));
         v.setTyp(dto.getTyp());
         v.setBeschreibung(dto.getBeschreibung());
         v.setBeginnDatum(dto.getBeginnDatum());
@@ -125,6 +136,21 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
         v.setAktiv(true);
         v.setKjfpAktiv(kjfpAktiv);
         v.setFahrtenAktiv(Boolean.TRUE.equals(dto.getFahrtenAktiv()));
+        v.setCountryCode(dto.getCountryCode());
+        v.setPlz(dto.getPlz());
+        v.setOrt(dto.getOrt());
+        v.setUnterkunftsart(getUnterkunftsart(dto.getUnterkunftsartId()));
+        v.setVerpflegungsmodell(getVerpflegungsmodell(dto.getVerpflegungsmodellId()));
+        v.setScope(dto.getScope());
+        v.setIndividuelleGebuehren(Boolean.TRUE.equals(dto.getIndividuelleGebuehren()));
+        v.setStandardGebuehr(dto.getStandardGebuehr());
+        if (dto.getBeitragsstrukturId() != null) {
+            v.setBeitragsstruktur(beitragsstrukturRepository.findById(dto.getBeitragsstrukturId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Beitragsstruktur nicht gefunden")));
+        }
+        if (v.isIndividuelleGebuehren() && v.getBeitragsstruktur() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ErrorMessages.INDIVIDUELLE_GEBUEHREN_REQUIRE_BEITRAGSSTRUKTUR);
+        }
 
         List<String> warnings = kjfpRegeln.savedKjfpWarnings(v);
 
@@ -139,6 +165,10 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
         t.setRolle(TeilnehmerRolle.LEITER);
         t.setKjfpZugeordnet(true);
         teilnehmerRepository.save(t);
+        }
+
+        if (dto.getKopieVonVeranstaltungId() != null) {
+            planungKopierService.kopieren(dto.getKopieVonVeranstaltungId(), saved);
         }
 
         Veranstaltung loaded = veranstaltungRepository
@@ -481,7 +511,13 @@ public class VeranstaltungServiceImpl implements VeranstaltungService {
 
         if (dto.getName() != null) {
             v.setName(dto.getName());
+        v.setProgrammentwurfTitel(com.kcserver.kjfp.service.veranstaltung.Programmentwurf.titel(dto.getProgrammentwurfTitel()));
+        v.setProgrammentwurfInhalt(com.kcserver.kjfp.service.veranstaltung.Programmentwurf.inhalt(dto.getProgrammentwurfInhalt()));
         }
+
+        // Null/ausgelassen lässt den gespeicherten Entwurf unverändert; Leerstring löscht.
+        if (dto.getProgrammentwurfTitel() != null) v.setProgrammentwurfTitel(com.kcserver.kjfp.service.veranstaltung.Programmentwurf.titel(dto.getProgrammentwurfTitel()));
+        if (dto.getProgrammentwurfInhalt() != null) v.setProgrammentwurfInhalt(com.kcserver.kjfp.service.veranstaltung.Programmentwurf.inhalt(dto.getProgrammentwurfInhalt()));
 
         if (dto.getTyp() != null) {
             v.setTyp(dto.getTyp());

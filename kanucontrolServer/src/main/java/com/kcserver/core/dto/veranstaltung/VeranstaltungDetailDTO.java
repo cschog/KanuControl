@@ -23,6 +23,9 @@ public class VeranstaltungDetailDTO {
        ========================= */
 
     private String name;
+
+    private String programmentwurfTitel;
+    private String programmentwurfInhalt;
     private VeranstaltungTyp typ;
 
     private UnterkunftsartRefDTO unterkunftsart;

@@ -343,3 +343,7 @@ databaseChangeLog:
   - include:
       file: changes/20261113-03-buchungsdokumente.xml
       relativeToChangelogFile: true
+
+  - include:
+      file: changes/20261113-04-programmentwurf.xml
+      relativeToChangelogFile: true

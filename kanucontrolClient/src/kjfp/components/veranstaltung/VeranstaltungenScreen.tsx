@@ -350,6 +350,7 @@ export default function VeranstaltungenScreen() {
       console.error("CREATE ERROR:", err);
 
       setError(getApiErrorMessage(err));
+      throw err; // Kopier-/Anlagedialog bei Fehlern mit allen Eingaben offen lassen.
     }
   };
 
@@ -364,6 +365,15 @@ export default function VeranstaltungenScreen() {
 
     setCopyData({
       name: `${selectedVeranstaltung.name} Kopie`,
+      kopieVonVeranstaltungId: selectedVeranstaltung.kjfpAktiv ? selectedVeranstaltung.id : undefined,
+      kjfpAktiv: selectedVeranstaltung.kjfpAktiv,
+      fahrtenAktiv: selectedVeranstaltung.fahrtenAktiv,
+      beschreibung: selectedVeranstaltung.beschreibung,
+      individuelleGebuehren: selectedVeranstaltung.individuelleGebuehren,
+      standardGebuehr: selectedVeranstaltung.standardGebuehr,
+      scope: selectedVeranstaltung.scope,
+      programmentwurfTitel: selectedVeranstaltung.programmentwurfTitel,
+      programmentwurfInhalt: selectedVeranstaltung.programmentwurfInhalt,
       typ: selectedVeranstaltung.typ,
       verein: selectedVeranstaltung.verein,
       leiter: selectedVeranstaltung.leiter,

@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { programErrors } from "../form/programmentwurfHtml";
+import { useEffect, useRef, useState } from "react";
 import { VeranstaltungFormModel } from "@/kjfp/types/veranstaltung/VeranstaltungFormModel";
 import { VeranstaltungSave } from "@/kjfp/types/veranstaltung/VeranstaltungSave";
 import { VeranstaltungTyp } from "@/kjfp/api/enums/VeranstaltungTyp";
@@ -57,6 +58,7 @@ function mitAutomatischemTyp(form: VeranstaltungFormModel): VeranstaltungFormMod
    ========================================================= */
 
 export function useVeranstaltungForm(initial: VeranstaltungFormModel | null) {
+  const baseline = useRef("");
   const [form, setForm] = useState<VeranstaltungFormModel | null>(null);
 
   /* =========================
@@ -69,11 +71,13 @@ export function useVeranstaltungForm(initial: VeranstaltungFormModel | null) {
       return;
     }
 
-    setForm(mitAutomatischemTyp({
+    const loaded = mitAutomatischemTyp({
       ...initial,
 
       /* ===== Null → Default ===== */
 
+      programmentwurfTitel: initial.programmentwurfTitel ?? "",
+      programmentwurfInhalt: initial.programmentwurfInhalt ?? "",
       countryCode: initial.countryCode ?? undefined,
 
       plz: initial.plz ?? "",
@@ -81,7 +85,9 @@ export function useVeranstaltungForm(initial: VeranstaltungFormModel | null) {
       unterkunftsart: initial.unterkunftsart,
       verpflegungsmodell: initial.verpflegungsmodell,
       beitragsstrukturId: initial.beitragsstrukturId ?? undefined,
-    }));
+    });
+    baseline.current = JSON.stringify(loaded);
+    setForm(loaded);
   }, [initial]);
 
   /* =========================
@@ -89,10 +95,9 @@ export function useVeranstaltungForm(initial: VeranstaltungFormModel | null) {
      ========================= */
 
   const reset = (data?: Partial<VeranstaltungFormModel>) => {
-    setForm(mitAutomatischemTyp({
-      ...emptyVeranstaltung(),
-      ...data,
-    }));
+    const loaded = mitAutomatischemTyp({ ...emptyVeranstaltung(), ...data });
+    baseline.current = JSON.stringify(loaded);
+    setForm(loaded);
   };
 
   /* =========================
@@ -117,7 +122,13 @@ export function useVeranstaltungForm(initial: VeranstaltungFormModel | null) {
 
     return {
       id: form.id,
+      kopieVonVeranstaltungId: form.kopieVonVeranstaltungId,
+      individuelleGebuehren: form.individuelleGebuehren,
+      standardGebuehr: form.standardGebuehr,
+      scope: form.scope,
       name: form.name,
+      programmentwurfTitel: form.programmentwurfTitel ?? "",
+      programmentwurfInhalt: form.programmentwurfInhalt ?? "",
       typ: form.kjfpAktiv ? form.typ : undefined,
       kjfpAktiv: form.kjfpAktiv,
       fahrtenAktiv: form.fahrtenAktiv,
@@ -149,6 +160,7 @@ export function useVeranstaltungForm(initial: VeranstaltungFormModel | null) {
     || form.beginnDatum !== form.endeDatum || form.endeZeit >= form.beginnZeit;
   const validationErrors: string[] = [];
   if (form) {
+    validationErrors.push(...programErrors(form.programmentwurfTitel, form.programmentwurfInhalt));
     if (form.name.trim().length < 2) validationErrors.push("Bitte eine Bezeichnung mit mindestens zwei Zeichen eingeben.");
     if (!form.beginnDatum) validationErrors.push("Bitte das Beginndatum eingeben.");
     if (!form.endeDatum) validationErrors.push("Bitte das Enddatum eingeben.");
@@ -172,6 +184,7 @@ export function useVeranstaltungForm(initial: VeranstaltungFormModel | null) {
     update,
     reset,
     buildSavePayload,
+    isDirty: !!form && JSON.stringify(form) !== baseline.current,
     isValid,
     isEndTimeValid,
     validationErrors,

@@ -2,7 +2,7 @@ package com.kcserver.unit;
 
 import com.kcserver.kjfp.enumtype.*;
 import com.kcserver.kjfp.repository.abrechnung.AbrechnungBuchungRepository;
-import jakarta.persistence.*;
+import static testfixtures.finanzausgleich.FinanzausgleichQueryModel.*;
 import org.hibernate.cfg.Configuration;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.jpa.repository.Query;
@@ -12,15 +12,12 @@ import static org.assertj.core.api.Assertions.*;
 
 /** Führt die produktiven HQL-Aggregationen auf einem isolierten H2-Datenmodell aus. */
 class FinanzausgleichKategorienQueryTest {
-    @Entity(name="TestEvent") static class Event { @Id Long id; }
-    @Entity(name="TestAccount") static class Account { @Id Long id; }
-    @Entity(name="TestAbrechnung") static class Abrechnung { @Id Long id; @ManyToOne Event veranstaltung; }
-    @Entity(name="TestBeleg") static class Beleg { @Id Long id; @ManyToOne Abrechnung abrechnung; @ManyToOne Account finanzGruppe; }
-    @Entity(name="AbrechnungBuchung") static class Buchung {
-        @Id Long id; @ManyToOne Beleg beleg;
-        @Enumerated(EnumType.STRING) FinanzKategorie kategorie;
-        @Enumerated(EnumType.STRING) BuchungsHerkunft herkunft;
-        BigDecimal betrag;
+    @Test void testEntitiesAreOutsideApplicationEntityScan() {
+        var managed = new org.springframework.orm.jpa.persistenceunit.PersistenceManagedTypesScanner(
+                new org.springframework.core.io.DefaultResourceLoader()).scan("com.kcserver");
+        assertThat(managed.getManagedClassNames())
+                .contains(com.kcserver.kjfp.entity.abrechnung.AbrechnungBuchung.class.getName())
+                .doesNotContain(Event.class.getName(), Account.class.getName(), Abrechnung.class.getName(), Beleg.class.getName(), Buchung.class.getName());
     }
     String query(String name) throws Exception {
         return AbrechnungBuchungRepository.class.getMethod(name, Long.class).getAnnotation(Query.class).value();

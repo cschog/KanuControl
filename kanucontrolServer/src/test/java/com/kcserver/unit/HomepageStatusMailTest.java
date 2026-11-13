@@ -38,14 +38,24 @@ class HomepageStatusMailTest {
         Person person=new Person();person.setVorname("Erika");person.setEmail("erika@example.org");buchung.setMieter(person);
         Mietobjekt objekt=new Mietobjekt();objekt.setId(7L);objekt.setBezeichnung("Bootshaus");buchung.setMietobjekt(objekt);
     }
-    @Test void objektTestadresseUndOptionaleCcWerdenVerwendet() {
+    @Test void objektTestadresseUnterdruecktOptionaleCc() {
         var config=new HomepageAnbindung();config.setAntwortTestEmail("test@example.org");config.setAntwortCcEmail("cc@example.org");
         when(configs.findById(7L)).thenReturn(Optional.of(config));
         service.senden(buchung,Buchungsstatus.BESTAETIGT,Buchungsstatus.ANFRAGE);
         var captor=ArgumentCaptor.forClass(SimpleMailMessage.class);verify(sender).send(captor.capture());
         assertArrayEquals(new String[]{"test@example.org"},captor.getValue().getTo());
-        assertArrayEquals(new String[]{"cc@example.org"},captor.getValue().getCc());
+        assertNull(captor.getValue().getCc());
+        assertNull(captor.getValue().getBcc());
         assertTrue(captor.getValue().getSubject().startsWith("[TEST]"));
+    }
+    @Test void optionaleCcWirdOhneTestmodusVerwendet() {
+        var config=new HomepageAnbindung();config.setAntwortCcEmail("cc@example.org");
+        when(configs.findById(7L)).thenReturn(Optional.of(config));
+        service.senden(buchung,Buchungsstatus.BESTAETIGT,Buchungsstatus.ANFRAGE);
+        var captor=ArgumentCaptor.forClass(SimpleMailMessage.class);verify(sender).send(captor.capture());
+        assertArrayEquals(new String[]{"erika@example.org"},captor.getValue().getTo());
+        assertArrayEquals(new String[]{"cc@example.org"},captor.getValue().getCc());
+        assertFalse(captor.getValue().getSubject().startsWith("[TEST]"));
     }
     @Test void globalerTestmodusHatVorrangUndUnterdruecktCc() {
         var config=new HomepageAnbindung();config.setAntwortTestEmail("object@example.org");config.setAntwortCcEmail("cc@example.org");

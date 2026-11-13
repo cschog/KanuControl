@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+    <changeSet id="20261113-04-programmentwurf" author="codex">
+        <addColumn tableName="veranstaltung">
+            <column name="programmentwurf_titel" type="varchar(200)"/>
+            <column name="programmentwurf_inhalt" type="text"/>
+        </addColumn>
+        <rollback><dropColumn tableName="veranstaltung" columnName="programmentwurf_inhalt"/><dropColumn tableName="veranstaltung" columnName="programmentwurf_titel"/></rollback>
+    </changeSet>
+</databaseChangeLog>

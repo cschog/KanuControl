@@ -270,6 +270,13 @@ export default function SimulationPage({ veranstaltungId }: SimulationPageProps)
           <SimulationForm
             simulation={localSimulation}
             onChange={(sim) => {
+              if (
+                sim.teilnehmerBeitragUnter21Jahre !== localSimulation.teilnehmerBeitragUnter21Jahre ||
+                sim.mitarbeiterBeitrag !== localSimulation.mitarbeiterBeitrag
+              ) {
+                setBeitragsvorschlagUebernommen(false);
+              }
+
               setLocalSimulation(sim);
 
               setDirty(true);
