@@ -144,4 +144,31 @@ class BuchungStatusBenachrichtigungTest {
         verify(mails,never()).statusSenden(any());assertEquals(Buchungsstatus.ANFRAGE,buchung.getStatus());
     }
 
+    @Test void kostenloseBuchungWirdBeimLesenOhneMailAbgeschlossen() {
+        buchung.setZahlungsvariante(com.kcserver.vermietung.enumtype.Zahlungsvariante.OHNE_ABRECHNUNG);
+        buchung.setStatus(Buchungsstatus.BESTAETIGT);buchung.setAbreise(LocalDateTime.now(ZoneId.of("Europe/Berlin")).minusHours(1));
+        buchung.setAbrechnungRevision(4);
+        assertEquals(Buchungsstatus.ABGESCHLOSSEN, service.getById(1L).getStatus());
+        assertEquals(4,buchung.getAbschlussRevision());verifyNoInteractions(mails);
+    }
+    @Test void hintergrundAbschlussIstIdempotentUndIgnoriertKostenpflichtigeBuchungen() {
+        buchung.setZahlungsvariante(com.kcserver.vermietung.enumtype.Zahlungsvariante.OHNE_ABRECHNUNG);
+        buchung.setStatus(Buchungsstatus.BESTAETIGT);buchung.setAbreise(LocalDateTime.now(ZoneId.of("Europe/Berlin")).minusHours(1));
+        var bezahlt = new Buchung();bezahlt.setId(2L);bezahlt.setStatus(Buchungsstatus.BESTAETIGT);
+        when(repository.findByStatusAndAbreiseLessThanEqual(eq(Buchungsstatus.BESTAETIGT),any())).thenReturn(List.of(buchung,bezahlt));
+        assertEquals(1,service.aktualisiereKostenloseBuchungen());
+        assertEquals(0,service.aktualisiereKostenloseBuchungen());
+        assertEquals(Buchungsstatus.ABGESCHLOSSEN,buchung.getStatus());assertEquals(Buchungsstatus.BESTAETIGT,bezahlt.getStatus());
+        verify(repository,never()).findLockedById(2L);verifyNoInteractions(mails);
+    }
+    @Test void hintergrundSchliesstWederUnbefristeteNochNachSperreVerschobeneBuchungAb() {
+        buchung.setZahlungsvariante(com.kcserver.vermietung.enumtype.Zahlungsvariante.OHNE_ABRECHNUNG);
+        buchung.setStatus(Buchungsstatus.BESTAETIGT);buchung.setAbreise(LocalDateTime.of(3000,12,31,14,0));
+        when(repository.findByStatusAndAbreiseLessThanEqual(eq(Buchungsstatus.BESTAETIGT),any())).thenReturn(List.of(buchung));
+        assertEquals(0,service.aktualisiereKostenloseBuchungen());
+        buchung.setAbreise(LocalDateTime.now(ZoneId.of("Europe/Berlin")).plusHours(1));
+        assertEquals(0,service.aktualisiereKostenloseBuchungen());assertEquals(Buchungsstatus.BESTAETIGT,buchung.getStatus());
+        verifyNoInteractions(mails);
+    }
+
 }

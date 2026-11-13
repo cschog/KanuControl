@@ -12,6 +12,7 @@ import java.util.Set;
 @Component
 public class HausmeisterBerichtFreigabe {
     private final boolean enabled;
+    private final boolean production;
     private final String environment;
 
     public HausmeisterBerichtFreigabe(Environment config) {
@@ -19,15 +20,17 @@ public class HausmeisterBerichtFreigabe {
         String app = config.getProperty("app.environment", "UNKNOWN").trim();
         Set<String> profiles = Set.copyOf(Arrays.asList(config.getActiveProfiles()));
         environment = Set.of("PROD", "DEV", "TEST").contains(runtime) ? runtime : "UNKNOWN";
-        enabled = config.getProperty("kc.hausmeisterbericht.enabled", Boolean.class, false)
-                && "PROD".equals(runtime) && "PROD".equals(app)
+        production = "PROD".equals(runtime) && "PROD".equals(app)
                 && profiles.contains("prod")
                 && profiles.stream().noneMatch(p -> Set.of("dev", "test", "junit").contains(p.toLowerCase(java.util.Locale.ROOT)));
+        enabled = production && config.getProperty("kc.hausmeisterbericht.enabled", Boolean.class, false);
     }
+
+    public boolean isProduction() { return production; }
 
     @PostConstruct
     public void logStatus() {
-        log.info("Automatischer Hausmeisterbericht: aktiviert={}, Betriebsumgebung={} (Freigabe und Umgebung geprüft)", enabled, environment);
+        log.info("Automatischer Hausmeisterbericht: Servervorgabe={}, Betriebsumgebung={}, PROD-zulässig={} (zusätzlich gilt der gespeicherte Objektschalter)", enabled, environment, production);
     }
     public boolean isEnabled() { return enabled; }
     public String getEnvironment() { return environment; }

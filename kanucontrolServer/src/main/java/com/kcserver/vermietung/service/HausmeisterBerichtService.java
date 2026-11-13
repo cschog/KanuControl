@@ -1,5 +1,6 @@
 package com.kcserver.vermietung.service;
 
+import com.kcserver.core.util.PersonName;
 import com.kcserver.vermietung.config.SmtpMailProperties;
 import com.kcserver.vermietung.entity.*;
 import com.kcserver.vermietung.enumtype.Buchungsstatus;
@@ -29,21 +30,27 @@ public class HausmeisterBerichtService {
     private final com.kcserver.vermietung.config.HausmeisterBerichtFreigabe freigabe;
 
     public java.util.Map<String, Object> status() {
-        return java.util.Map.of("enabled", freigabe.isEnabled(), "environment", freigabe.getEnvironment());
+        return java.util.Map.of("enabled", freigabe.isEnabled(), "environment", freigabe.getEnvironment(),
+                "productionAllowed", freigabe.isProduction(), "smtpEnabled", smtp.isEnabled(), "testMode", smtp.isTestMode());
+    }
+
+    private boolean automatisch(HomepageAnbindung config) {
+        return freigabe.isProduction() && (config.getHausmeisterAutomatisch() == null
+                ? freigabe.isEnabled() : Boolean.TRUE.equals(config.getHausmeisterAutomatisch()));
     }
 
     @Transactional(readOnly = true)
     public List<Long> objektIds() {
-        if (!freigabe.isEnabled()) return List.of();
-        return configs.findAll().stream().filter(c -> c.getHausmeisterEmail() != null
+        if (!freigabe.isProduction()) return List.of();
+        return configs.findAll().stream().filter(this::automatisch).filter(c -> c.getHausmeisterEmail() != null
                 && !c.getHausmeisterEmail().isBlank()).map(HomepageAnbindung::getMietobjektId).toList();
     }
 
     @Transactional
     public void wocheSenden(Long id, LocalDate woche) {
-        if (!freigabe.isEnabled() || !smtp.isEnabled()) return;
+        if (!freigabe.isProduction() || !smtp.isEnabled()) return;
         var config = configs.lockById(id).orElse(null);
-        if (config == null || config.getHausmeisterEmail() == null || config.getHausmeisterEmail().isBlank()
+        if (config == null || !automatisch(config) || config.getHausmeisterEmail() == null || config.getHausmeisterEmail().isBlank()
                 || woche.equals(config.getHausmeisterLetzteWoche())) return;
         senden(config, woche, false);
         config.setHausmeisterLetzteWoche(woche);
@@ -75,6 +82,8 @@ public class HausmeisterBerichtService {
             var helper = new MimeMessageHelper(message, true, "UTF-8");
             helper.setFrom(smtp.getFrom().trim());
             helper.setTo(recipient.trim());
+            if (!smtp.isTestMode() && config.getHausmeisterCcEmail() != null && !config.getHausmeisterCcEmail().isBlank())
+                helper.setCc(config.getHausmeisterCcEmail().trim());
             helper.setSubject((smtp.isTestMode() ? "[TEST] " : "") + (manuell ? "[MANUELL] " : "") + "Hausmeister-Wochenbericht · " + objekt);
             var body = render(objekt, von, bis, rows);
             helper.setText(body[0], body[1]);
@@ -94,7 +103,7 @@ public class HausmeisterBerichtService {
         if (rows.isEmpty()) { plain.append("Keine passenden Buchungen.\n"); html.append("<p>Keine passenden Buchungen.</p>"); }
         for (var b : rows) {
             var person = b.getMieter();
-            String name = person == null ? "Nicht angegeben" : (value(person.getVorname()) + " " + value(person.getName())).trim();
+            String name = person == null ? "Nicht angegeben" : (PersonName.givenFirst(person.getName(), person.getVorname())).trim();
             String phone = person == null ? "" : value(person.getTelefon());
             if (phone.isBlank() && person != null) phone = value(person.getTelefonFestnetz());
             String label = switch (b.getStatus()) { case RESERVIERT -> "Reserviert"; case BESTAETIGT -> "Bestätigt"; case STORNIERT -> "STORNIERT"; default -> b.getStatus().name(); };

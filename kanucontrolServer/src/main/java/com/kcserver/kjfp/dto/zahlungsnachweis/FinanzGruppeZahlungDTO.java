@@ -7,6 +7,7 @@ import java.time.LocalDate;
 
 public record FinanzGruppeZahlungDTO(
         Long zahlungsnachweisId,
+        String belegnummer,
         LocalDate datum,
         BigDecimal betrag,
         Zahlungsweg zahlungsweg,

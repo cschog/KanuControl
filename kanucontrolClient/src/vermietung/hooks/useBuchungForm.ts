@@ -33,6 +33,8 @@ const createInitialForm = (buchungsquelle: Buchungsquelle = "DIREKT"): BuchungSa
   jugendAlterBis: null,
   anzahlErwachsene: null,
   bemerkung: "",
+  veranstaltung: "",
+  fruehereBuchungsnummer: "",
   bewertung: null,
   rabattart: Rabattart.KEIN_RABATT,
   rabattwertTyp: RabattwertTyp.PROZENTUAL,
@@ -99,6 +101,8 @@ export function useBuchungForm(
         jugendAlterBis: buchung.jugendAlterBis ?? null,
         anzahlErwachsene: buchung.anzahlErwachsene ?? null,
         bemerkung: buchung.bemerkung ?? "",
+        veranstaltung: buchung.veranstaltung ?? "",
+        fruehereBuchungsnummer: buchung.fruehereBuchungsnummer ?? "",
         bewertung: buchung.bewertung ?? null,
         rabattart: buchung.buchungsquelle === "AIRBNB" ? Rabattart.KEIN_RABATT : buchung.rabattart ?? Rabattart.KEIN_RABATT,
         rabattwertTyp: buchung.buchungsquelle === "AIRBNB" ? null : buchung.rabattwertTyp ?? RabattwertTyp.PROZENTUAL,
@@ -165,6 +169,8 @@ export function useBuchungForm(
         jugendAlterBis: buchung.jugendAlterBis ?? null,
         anzahlErwachsene: buchung.anzahlErwachsene ?? null,
         bemerkung: buchung.bemerkung ?? "",
+        veranstaltung: buchung.veranstaltung ?? "",
+        fruehereBuchungsnummer: buchung.fruehereBuchungsnummer ?? "",
         bewertung: buchung.bewertung ?? null,
         rabattart: buchung.buchungsquelle === "AIRBNB" ? Rabattart.KEIN_RABATT : buchung.rabattart ?? Rabattart.KEIN_RABATT,
         rabattwertTyp: buchung.buchungsquelle === "AIRBNB" ? null : buchung.rabattwertTyp ?? RabattwertTyp.PROZENTUAL,
@@ -257,6 +263,8 @@ export function useBuchungForm(
         ...current,
         [key]: value,
       };
+
+      if (updated.zahlungsvariante === "OHNE_ABRECHNUNG") { updated.kautionBetrag = 0; updated.anzahlungBetrag = 0; }
 
       if (key === "mietpreiseNeuBerechnen" && value === true && !updated.mietpreisStichtag) {
         updated.mietpreisStichtag = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Berlin" }).format(new Date());

@@ -9,6 +9,8 @@ import java.util.List;
 public record ReisekostenabrechnungDetailResponse(
 
         Long id,
+        Long finanzGruppeId,
+        String belegnummer,
         Long veranstaltungId,
         String veranstaltungName,
         Long fahrerId,

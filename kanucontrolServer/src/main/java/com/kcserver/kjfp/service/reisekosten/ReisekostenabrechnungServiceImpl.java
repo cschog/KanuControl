@@ -1,6 +1,7 @@
 package com.kcserver.kjfp.service.reisekosten;
 
 
+import com.kcserver.core.util.PersonName;
 import com.kcserver.core.dto.person.PersonRefDTO;
 import com.kcserver.core.mapper.PersonMapper;
 import com.kcserver.kjfp.dto.reisekosten.*;
@@ -38,6 +39,8 @@ public class ReisekostenabrechnungServiceImpl
         implements ReisekostenabrechnungService {
 
     private final ReisekostenabrechnungRepository repository;
+    private final com.kcserver.kjfp.repository.finanz.FinanzGruppeRepository finanzGruppeRepository;
+    private final com.kcserver.kjfp.service.abrechnung.BelegnummerService belegnummerService;
     private final VeranstaltungRepository veranstaltungRepository;
     private final PersonRepository personRepository;
     private final PersonMapper personMapper;
@@ -61,10 +64,10 @@ public class ReisekostenabrechnungServiceImpl
 
                     return new ReisekostenabrechnungListResponse(
                             r.getId(),
+                            r.getFinanzGruppe() == null ? null : r.getFinanzGruppe().getId(),
+                            r.getBelegnummer(),
                             r.getFahrer().getId(),
-                            r.getFahrer().getVorname()
-                                    + " "
-                                    + r.getFahrer().getName(),
+                            PersonName.givenFirst(r.getFahrer().getName(), r.getFahrer().getVorname()),
                             r.getGesamtKilometer(),
                             r.getGesamtBetrag(),
                             fehler.isEmpty(),
@@ -125,6 +128,8 @@ public class ReisekostenabrechnungServiceImpl
 
         List<String> fehler = new ArrayList<>();
 
+        if (rk.getFinanzGruppe() == null) fehler.add("Konto fehlt: Bitte Fahrer bearbeiten und Konto zuordnen");
+        if (rk.getBelegnummer() == null) fehler.add("Belegnummer fehlt: Bitte Fahrkostenabrechnung speichern");
         Person fahrer = rk.getFahrer();
 
         if (fahrer.getStrasse() == null ||
@@ -204,10 +209,11 @@ public class ReisekostenabrechnungServiceImpl
                 veranstaltung.getId(),
                 fahrer.getId(),
                 -1L,
-                fahrer.getVorname() + " " + fahrer.getName()
+                PersonName.givenFirst(fahrer.getName(), fahrer.getVorname())
         );
 
 
+        setKonto(abrechnung, request.finanzGruppeId());
         abrechnung.setAbrechnungsdatum(
                 request.abrechnungsdatum()
         );
@@ -236,12 +242,12 @@ public class ReisekostenabrechnungServiceImpl
 
         return new ReisekostenabrechnungDetailResponse(
                 abrechnung.getId(),
+                abrechnung.getFinanzGruppe() == null ? null : abrechnung.getFinanzGruppe().getId(),
+                abrechnung.getBelegnummer(),
                 abrechnung.getVeranstaltung().getId(),
                 abrechnung.getVeranstaltung().getName(),
                 abrechnung.getFahrer().getId(),
-                abrechnung.getFahrer().getVorname()
-                        + " "
-                        + abrechnung.getFahrer().getName(),
+                PersonName.givenFirst(abrechnung.getFahrer().getName(), abrechnung.getFahrer().getVorname()),
                 abrechnung.getAbrechnungsdatum(),
                 abrechnung.getGesamtKilometer(),
                 abrechnung.getGesamtBetrag(),
@@ -297,8 +303,9 @@ public class ReisekostenabrechnungServiceImpl
     ) {
 
         Reisekostenabrechnung abrechnung =
-                repository.findById(id)
+                repository.findForUpdate(id)
                         .orElseThrow();
+        setKonto(abrechnung, request.finanzGruppeId());
         abrechnung.setAbrechnungsdatum(
                 request.abrechnungsdatum()
         );
@@ -324,7 +331,7 @@ public class ReisekostenabrechnungServiceImpl
                         abrechnung.getVeranstaltung().getId(),
                         person.getId(),
                         abrechnung.getId(),
-                        person.getVorname() + " " + person.getName()
+                        PersonName.givenFirst(person.getName(), person.getVorname())
                 );
                 abrechnung.getMitfahrer().add(person);
             }
@@ -352,7 +359,7 @@ public class ReisekostenabrechnungServiceImpl
                                 abrechnung.getVeranstaltung().getId(),
                                 person.getId(),
                                 abrechnung.getId(),
-                                person.getVorname() + " " + person.getName()
+                                PersonName.givenFirst(person.getName(), person.getVorname())
                         );
 
                         FahrtabschnittMitfahrer mitfahrer =
@@ -377,6 +384,16 @@ public class ReisekostenabrechnungServiceImpl
         abrechnung.setGesamtBetrag(
                 berechneGesamtbetrag(abrechnung)
         );
+    }
+
+    private void setKonto(Reisekostenabrechnung abrechnung, Long kontoId) {
+        var konto = kontoId == null ? null : finanzGruppeRepository.findById(kontoId)
+                .filter(g -> g.getVeranstaltung().getId().equals(abrechnung.getVeranstaltung().getId()))
+                .orElseThrow(() -> new IllegalArgumentException("Konto gehört nicht zur Veranstaltung."));
+        belegnummerService.validateKontowechsel(abrechnung.getBelegnummer(), abrechnung.getFinanzGruppe(), konto);
+        if (konto == null) throw new IllegalArgumentException("Bitte dem Fahrer ein Konto mit Belegnummernkreis zuordnen.");
+        abrechnung.setFinanzGruppe(konto);
+        if (abrechnung.getBelegnummer() == null) abrechnung.setBelegnummer(belegnummerService.next(konto).wert());
     }
 
     private @NonNull Fahrtabschnitt getFahrtabschnitt(FahrtabschnittRequest dto, Reisekostenabrechnung abrechnung) {
@@ -648,10 +665,10 @@ public class ReisekostenabrechnungServiceImpl
 
                     return new ReisekostenabrechnungListResponse(
                             r.getId(),
+                            r.getFinanzGruppe() == null ? null : r.getFinanzGruppe().getId(),
+                            r.getBelegnummer(),
                             r.getFahrer().getId(),
-                            r.getFahrer().getVorname()
-                                    + " "
-                                    + r.getFahrer().getName(),
+                            PersonName.givenFirst(r.getFahrer().getName(), r.getFahrer().getVorname()),
                             r.getGesamtKilometer(),
                             r.getGesamtBetrag(),
                             fehler.isEmpty(),

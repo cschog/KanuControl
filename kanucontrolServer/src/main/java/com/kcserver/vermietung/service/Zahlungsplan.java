@@ -7,6 +7,7 @@ import java.time.temporal.ChronoUnit;
 /** Agreed schedule only: never derives payments from a requested amount. */
 public final class Zahlungsplan {
  private Zahlungsplan() {}
+ public static boolean ohneAbrechnung(Buchung b) {return b != null && b.getZahlungsvariante()==Zahlungsvariante.OHNE_ABRECHNUNG;}
  public static Zahlungsvariante vorschlag(LocalDateTime anreise,Integer grenze,LocalDate heute) {
   return (grenze==null || grenze>0) && anreise!=null && ChronoUnit.DAYS.between(heute,anreise.toLocalDate()) < (grenze==null?42:grenze)
    ? Zahlungsvariante.GESAMTMIETE_VORAUS : Zahlungsvariante.ANZAHLUNG;

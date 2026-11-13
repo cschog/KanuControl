@@ -1,3 +1,4 @@
+import ReisekostenKontoSelect from "./ReisekostenKontoSelect";
 // src/components/finanzen/reisekosten/ReisekostenCreateDialog.tsx
 
 import { useState } from "react";
@@ -25,10 +26,11 @@ interface Props {
 
   onClose: () => void;
 
-  onSave: (fahrerId: number, abrechnungsdatum: string, bemerkung: string) => void;
+  onSave: (fahrerId: number, abrechnungsdatum: string, bemerkung: string, finanzGruppeId: number) => void;
 }
 
 export default function ReisekostenCreateDialog({ open, veranstaltungId, onClose, onSave }: Props) {
+  const [kontoId, setKontoId] = useState<number | null>(null);
   const [fahrer, setFahrer] = useState<PersonRef | undefined>();
 
   const [abrechnungsdatum, setAbrechnungsdatum] = useState<Dayjs | null>(dayjs());
@@ -36,11 +38,11 @@ export default function ReisekostenCreateDialog({ open, veranstaltungId, onClose
   const [bemerkung, setBemerkung] = useState("");
 
   const handleSave = () => {
-    if (!fahrer || !abrechnungsdatum) {
+    if (!fahrer || !abrechnungsdatum || kontoId === null) {
       return;
     }
 
-    onSave(fahrer.id, abrechnungsdatum.format("YYYY-MM-DD"), bemerkung);
+    onSave(fahrer.id, abrechnungsdatum.format("YYYY-MM-DD"), bemerkung, kontoId);
   };
 
   return (
@@ -55,6 +57,8 @@ export default function ReisekostenCreateDialog({ open, veranstaltungId, onClose
             value={fahrer}
             onChange={setFahrer}
           />
+
+          <ReisekostenKontoSelect veranstaltungId={veranstaltungId} value={kontoId} onChange={setKontoId} />
 
           <DatePicker
             label="Abrechnungsdatum"
@@ -75,7 +79,7 @@ export default function ReisekostenCreateDialog({ open, veranstaltungId, onClose
       <DialogActions>
         <Button onClick={onClose}>Abbrechen</Button>
 
-        <Button variant="contained" onClick={handleSave}>
+        <Button variant="contained" disabled={!fahrer || !abrechnungsdatum || kontoId === null} onClick={handleSave}>
           Anlegen
         </Button>
       </DialogActions>

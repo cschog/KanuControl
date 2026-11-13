@@ -1,3 +1,4 @@
+import { formatPersonName } from "@/core/utils/personName";
 import { useEffect, useRef } from "react";
 
 import {
@@ -90,7 +91,7 @@ export default function TeilnehmerZuordnenDialog({
               onClick={() => onToggle(teilnehmer.personId)}
             >
               <Typography>
-                {teilnehmer.name}, {teilnehmer.vorname}
+                {formatPersonName(teilnehmer.name, teilnehmer.vorname)}
               </Typography>
             </Box>
           );

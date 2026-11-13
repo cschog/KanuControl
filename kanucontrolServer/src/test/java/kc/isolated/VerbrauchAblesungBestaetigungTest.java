@@ -128,4 +128,21 @@ class VerbrauchAblesungBestaetigungTest {
     @Test void airbnbBenoetigtWeiterhinKeineVerbrauchsabrechnung() {
         booking.setBuchungsquelle(Buchungsquelle.AIRBNB);assertTrue(service.berechneVorschau(booking).isEmpty());service.berechneUndSpeichere(booking);verifyNoInteractions(reads,snapshots);
     }
+    @Test void zukuenftigeBuchungVerwendetKeineAltenAblesungenUndLaesstSichNichtAbrechnen() {
+        var future=LocalDateTime.now(java.time.ZoneId.of("Europe/Berlin")).plusMonths(10);
+        booking.setAnreise(future);booking.setAbreise(future.plusDays(4));
+        readings(reading(1,start,"100"),reading(2,end,"150"));
+        var p=preview();assertFalse(p.erfolgreich());assertFalse(p.bestaetigungErforderlich());
+        assertNull(p.kosten());assertNull(p.anfangsstand());assertNull(p.endstand());assertTrue(p.hinweis().contains("nach Mietende"));
+        assertThrows(IllegalArgumentException.class,()->service.berechneUndSpeichere(booking,List.of(consent(p))));
+        verifyNoInteractions(reads,snapshots);
+    }
+    @Test void laufenderAufenthaltWirdAuchMitErfasstenWertenNochNichtSchlussgerechnet() {
+        booking.setAnreise(LocalDateTime.now(java.time.ZoneId.of("Europe/Berlin")).minusDays(1));
+        booking.setAbreise(LocalDateTime.now(java.time.ZoneId.of("Europe/Berlin")).plusDays(1));
+        assertNull(preview().kosten());
+        assertThrows(IllegalArgumentException.class,()->service.berechneSnapshots(booking,List.of()));
+        verifyNoInteractions(reads,snapshots);
+    }
+
 }

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { isAxiosError } from "axios";
 import {
   Alert, Box, Button, Checkbox, CircularProgress, FormControlLabel,
-  MenuItem, Paper, Stack, TextField, Typography,
+  MenuItem, Paper, Stack, Switch, TextField, Typography,
 } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
 import { getApiErrorMessage } from "@/kjfp/api/utils/apiError";
@@ -22,7 +22,7 @@ function Einstellungen({ mietobjektId }: { mietobjektId: number }) {
   const [saving, setSaving] = useState(false);
   const [testMessage, setTestMessage] = useState<string | null>(null);
   const [testing, setTesting] = useState(false);
-  const [berichtEnabled, setBerichtEnabled] = useState(false);
+  const [berichtStatus, setBerichtStatus] = useState<Awaited<ReturnType<typeof getHausmeisterBerichtStatus>> | null>(null);
   const [dirty, setDirty] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -34,7 +34,7 @@ function Einstellungen({ mietobjektId }: { mietobjektId: number }) {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    setBerichtEnabled(false);
+    setBerichtStatus(null);
     setError(null);
     setSuccess(false);
     Promise.all([getHomepageAnbindung(mietobjektId), getMietbereiche(mietobjektId),
@@ -42,7 +42,7 @@ function Einstellungen({ mietobjektId }: { mietobjektId: number }) {
       .then(([config, items, bericht]) => {
         if (cancelled) return;
         setForm(config);
-        setBerichtEnabled(bericht?.enabled === true && bericht.environment === "PROD");
+        setBerichtStatus(bericht);
         setDirty(false);
         setBereiche(items);
       })
@@ -163,13 +163,13 @@ function Einstellungen({ mietobjektId }: { mietobjektId: number }) {
           helperText={fieldErrors.empfaengerEmail ?? "Vereinsspezifische Adresse für den Versand über das WordPress-Plugin."}
           onChange={(e) => change("empfaengerEmail", e.target.value || null)} />
         <Typography variant="h6">Antwortmails</Typography>
-        <TextField label="Testadresse für Antwortmails" type="email" value={form.antwortTestEmail ?? ""}
+        <TextField name="antwortTestEmail" error={!!fieldErrors.antwortTestEmail} label="Testadresse für Antwortmails" type="email" value={form.antwortTestEmail ?? ""}
           disabled={!editable} slotProps={{htmlInput:{maxLength:254}}}
           helperText="Eingetragen: Antwortmails gehen an diese Testadresse. Leer: Versand an den Mieter. Der globale SMTP-Testmodus hat Vorrang."
           onChange={e=>change("antwortTestEmail",e.target.value || null)}/>
-        <TextField label="CC-Adresse für Antwortmails (optional)" type="email" value={form.antwortCcEmail ?? ""}
+        <TextField name="antwortCcEmail" error={!!fieldErrors.antwortCcEmail} label="CC-Adresse für Antwortmails (optional)" type="email" value={form.antwortCcEmail ?? ""}
           disabled={!editable} slotProps={{htmlInput:{maxLength:254}}}
-          helperText="Zusätzlicher Empfänger. Im globalen SMTP-Testmodus wird CC unterdrückt."
+          helperText="Zusätzlicher Empfänger. Bei einer Testumleitung wird CC unterdrückt."
           onChange={e=>change("antwortCcEmail",e.target.value || null)}/>
         <Typography variant="h6">Hausmeister-Wochenbericht</Typography>
         <Typography variant="body2" color="text.secondary">
@@ -182,7 +182,21 @@ function Einstellungen({ mietobjektId }: { mietobjektId: number }) {
           error={!!fieldErrors.hausmeisterEmail} slotProps={{ htmlInput: { maxLength: 254 } }}
           helperText={fieldErrors.hausmeisterEmail ?? "Empfänger für manuellen und automatischen Versand. Leer lassen, um den Wochenbericht zu deaktivieren. Zum Testen zunächst die eigene Adresse speichern."}
           onChange={(e) => change("hausmeisterEmail", e.target.value || null)} />
-        {!berichtEnabled && <Alert severity="info">Der automatische Versand ist deaktiviert. Manuelles Senden ist auch in DEV und TEST möglich, sofern KC-SMTP aktiviert ist.</Alert>}
+        <TextField name="hausmeisterCcEmail" label="CC-Adresse für Hausmeisterberichte (optional)"
+          type="email" value={form.hausmeisterCcEmail ?? ""} disabled={!editable}
+          error={!!fieldErrors.hausmeisterCcEmail} slotProps={{ htmlInput: { maxLength: 254 } }}
+          helperText={fieldErrors.hausmeisterCcEmail ?? "Kopie bei manuellem und automatischem Versand. Im SMTP-Testmodus wird CC unterdrückt."}
+          onChange={(e) => change("hausmeisterCcEmail", e.target.value || null)} />
+        <FormControlLabel label="Hausmeisterreport automatisch aus PROD senden"
+          control={<Switch checked={form.hausmeisterAutomatisch ?? berichtStatus?.enabled ?? false}
+            disabled={!editable || !berichtStatus?.productionAllowed}
+            onChange={(_, value) => change("hausmeisterAutomatisch", value)} />} />
+        {!berichtStatus ? <Alert severity="warning">Der Versandstatus konnte nicht geladen werden. Bitte neu laden.</Alert>
+          : !berichtStatus.productionAllowed ? <Alert severity="info">Automatischer Versand ist nur in einer vollständig konfigurierten PROD-Umgebung verfügbar. Aktuelle Umgebung: {berichtStatus.environment}.</Alert>
+          : !(form.hausmeisterAutomatisch ?? berichtStatus.enabled) ? <Alert severity="info">Der automatische Versand ist deaktiviert. Zum Aktivieren den PROD-Schalter einschalten und die Einstellungen speichern.</Alert>
+          : <Alert severity="info">{dirty ? "Nach dem Speichern ist" : "Es ist"} der automatische Sonntagsversand freigegeben. Eine gespeicherte Empfängeradresse und aktivierter KC-SMTP-Versand sind erforderlich.</Alert>}
+        {berichtStatus && !berichtStatus.smtpEnabled && <Alert severity="warning">KC-SMTP ist deaktiviert. Der Serverbetreiber muss KC_SMTP_ENABLED aktivieren.</Alert>}
+        {berichtStatus?.testMode && <Alert severity="info">SMTP-Testmodus aktiv: Hausmeisterberichte gehen ausschließlich an den globalen Testempfänger; CC wird unterdrückt.</Alert>}
         <Typography variant="body2">Manuelles Senden erstellt den Bericht ab heute für die nächsten vier Wochen. Der automatische Sonntagsversand bleibt davon unabhängig. Im SMTP-Testmodus gilt der konfigurierte Testempfänger.</Typography>
         <Button disabled={saving || testing || dirty || !form.hausmeisterEmail}
           onClick={async () => {

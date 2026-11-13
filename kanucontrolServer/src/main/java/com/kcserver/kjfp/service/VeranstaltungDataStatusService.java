@@ -1,5 +1,6 @@
 package com.kcserver.kjfp.service;
 
+import com.kcserver.core.util.PersonName;
 import com.kcserver.core.dto.person.PersonDataStatusDTO;
 import com.kcserver.kjfp.dto.validation.DataFieldStatusDTO;
 import com.kcserver.kjfp.dto.validation.DataStatus;
@@ -83,9 +84,7 @@ public class VeranstaltungDataStatusService {
 
     private String formatName(Person person) {
 
-        String vorname = person.getVorname() != null
-                ? person.getVorname().trim()
-                : "";
+        String vorname = PersonName.vorname(person.getVorname());
 
         String nachname = person.getName() != null
                 ? person.getName().trim()

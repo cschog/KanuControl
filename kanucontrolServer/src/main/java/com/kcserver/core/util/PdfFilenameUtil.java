@@ -1,5 +1,6 @@
 package com.kcserver.core.util;
 
+import com.kcserver.core.util.PersonName;
 import com.kcserver.core.dto.veranstaltung.VeranstaltungDetailDTO;
 import com.kcserver.core.entity.Veranstaltung;
 import com.kcserver.kjfp.enumtype.PdfDokumentTyp;
@@ -110,9 +111,7 @@ public class PdfFilenameUtil {
                         " Fahrkostenabrechnung " +
                         veranstaltung.getName() +
                         " " +
-                        nachname +
-                        "_" +
-                        vorname
+                        PersonName.surnameFirst(nachname, vorname).replace(", ", "_")
         ) + ".pdf";
     }
 }

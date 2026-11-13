@@ -1,5 +1,6 @@
 package com.kcserver.vermietung.service;
 
+import com.kcserver.core.util.PersonName;
 import com.kcserver.vermietung.dto.HomepageStatusMailDTO;
 import com.kcserver.vermietung.entity.*;
 import com.kcserver.vermietung.enumtype.Buchungsstatus;
@@ -55,7 +56,7 @@ public class HomepageStatusMailService {
             try { recipient = smtpConfig.requireTestRecipient(); }
             catch (IllegalStateException ex) { throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage()); }
         }
-        String cc = !smtpConfig.isTestMode() && config != null && config.getAntwortCcEmail() != null
+        String cc = !test && config != null && config.getAntwortCcEmail() != null
                 && !config.getAntwortCcEmail().isBlank() ? config.getAntwortCcEmail().trim() : null;
         return new Routing(recipient, cc, test);
     }
@@ -231,7 +232,7 @@ public class HomepageStatusMailService {
         mail.setEmpfaenger(email.trim());
         anbindungen.findById(buchung.getMietobjekt().getId()).ifPresent(config -> mail.setReplyTo(config.getEmpfaengerEmail()));
         String nummer = buchung.getBuchungsnummer();
-        String name = buchung.getMieter().getVorname();
+        String name = PersonName.vorname(buchung.getMieter().getVorname());
         String anrede = name == null || name.isBlank() ? "Hallo," : "Hallo " + name.trim() + ",";
         DateTimeFormatter datum = DateTimeFormatter.ofPattern("dd.MM.yyyy");
         String zeitraum = "vom " + datum.format(buchung.getAnreise()) + (buchung.isUnbefristet()

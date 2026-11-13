@@ -20,6 +20,7 @@ public class VermietungAbrechnungService {
   if(request==null)throw new IllegalArgumentException("Dokumentangaben fehlen.");
   var b=buchungen.findLockedById(id).orElseThrow(()->new IllegalArgumentException("Buchung nicht gefunden."));
   if(b.getStatus()!=Buchungsstatus.ABGESCHLOSSEN||b.getAbrechnungRevision()!=b.getAbschlussRevision())throw new IllegalArgumentException("Aktuellen Buchungsstand zuerst ausdrücklich (erneut) abschließen.");
+  if(Zahlungsplan.ohneAbrechnung(b))throw new IllegalArgumentException("Für Ohne Abrechnung wird keine Rechnung ausgestellt.");
   var old=dokumente.findByBuchungIdOrderByRevisionDesc(id);String reason=Objects.toString(request.korrekturgrund(),"").trim();
   if(reason.length()>1000)throw new IllegalArgumentException("Korrekturgrund zu lang.");
   if(old.isEmpty()?request.ersetztDokumentId()!=null:!Objects.equals(old.getFirst().getId(),request.ersetztDokumentId())||reason.isBlank())throw new IllegalArgumentException("Korrektur benötigt das letzte Dokument und eine Begründung. Bitte neu laden.");

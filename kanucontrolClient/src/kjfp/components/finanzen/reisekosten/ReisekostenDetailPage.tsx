@@ -1,3 +1,5 @@
+import { formatPersonName } from "@/core/utils/personName";
+import ReisekostenKontoSelect from "./ReisekostenKontoSelect";
 // ReisekostenDetailPage.tsx
 
 import { Alert, Stack, Box, Button, Paper, Typography } from "@mui/material";
@@ -23,6 +25,7 @@ export default function ReisekostenDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams();
   const abrechnungId = Number(id);
+  const [kontoId, setKontoId] = useState<number | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedAbschnitt, setSelectedAbschnitt] = useState<FahrtabschnittRequest | null>(null);
   const [fahrtabschnitte, setFahrtabschnitte] = useState<FahrtabschnittRequest[]>([]);
@@ -49,6 +52,7 @@ export default function ReisekostenDetailPage() {
       return;
     }
 
+    setKontoId(data.finanzGruppeId);
     setFahrtabschnitte(
       data.fahrtabschnitte.map((a) => ({
         id: a.id,
@@ -79,6 +83,7 @@ export default function ReisekostenDetailPage() {
 
   const saveToBackend = async (neueFahrtabschnitte: FahrtabschnittRequest[]) => {
     await updateReisekostenabrechnung(abrechnungId, {
+      finanzGruppeId: kontoId,
       abrechnungsdatum: data.abrechnungsdatum,
       bemerkung: data.bemerkung ?? "",
       mitfahrerIds: mitfahrerPool.map((p) => p.id),
@@ -92,6 +97,12 @@ export default function ReisekostenDetailPage() {
 
   return (
     <Box sx={{ p: 3 }}>
+      <Paper sx={{ p: 2, mb: 3 }}>
+        <Typography variant="h6">Fahrer: {data.fahrerName}</Typography>
+        <Typography sx={{ mb: 2 }}>Belegnummer: {data.belegnummer ?? "Bitte Konto zuordnen und speichern"}</Typography>
+        <ReisekostenKontoSelect veranstaltungId={data.veranstaltungId} value={kontoId} onChange={setKontoId} disabled={!!data.belegnummer} />
+        <Button disabled={kontoId === null} onClick={() => saveToBackend(fahrtabschnitte)}>Konto speichern</Button>
+      </Paper>
       <Paper sx={{ p: 2, mb: 3 }}>
         <Typography variant="h6" gutterBottom>
           Mitfahrer
@@ -109,7 +120,7 @@ export default function ReisekostenDetailPage() {
               }}
             >
               <span>
-                {p.name}, {p.vorname}
+                {formatPersonName(p.name, p.vorname)}
               </span>
 
               <Tooltip
@@ -158,7 +169,8 @@ export default function ReisekostenDetailPage() {
               setMitfahrerPool(neuerPool);
 
               await updateReisekostenabrechnung(abrechnungId, {
-                abrechnungsdatum: data.abrechnungsdatum,
+                finanzGruppeId: kontoId,
+      abrechnungsdatum: data.abrechnungsdatum,
                 bemerkung: data.bemerkung ?? "",
                 mitfahrerIds: neuerPool.map((p) => p.id),
                 fahrtabschnitte,

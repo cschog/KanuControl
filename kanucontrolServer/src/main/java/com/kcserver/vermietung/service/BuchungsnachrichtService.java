@@ -45,10 +45,12 @@ public class BuchungsnachrichtService {
     /** Independent content preview: no routing, status change, finance writes, invoice or send archive. */
     public Vorschau vorschau(Long id,Start request){user();return tx.execute(status->{
         if(request==null||request.ziel()==null)throw fehler("Dokumentvorgang fehlt.");
-        var b=buchung(id);var ziel=request.ziel();var vorgang=BuchungsnachrichtDaten.vorgang(ziel);
-        if(BuchungsnachrichtDaten.ohneMail(b.getStatus(),ziel))throw fehler("Für diesen Statuswechsel ist keine E-Mail oder PDF vorgesehen.");
+        var b=buchung(id);var ziel=request.ziel();
+
+        var vorgang=BuchungsnachrichtDaten.vorgang(ziel);
+
         var hints=new ArrayList<String>();
-        hints.add("Unverbindliche Vorschau des aktuellen Buchungsstands. Vor Abschluss und Versand werden Voraussetzungen und Empfänger erneut geprüft.");
+        hints.add("Vorschau aus dem gespeicherten Buchungsstand. Kein Statuswechsel und kein automatischer Versand.");
         var f=finanzen.toDto(b);VorlagenService.Ergebnis result;
         if(ziel==Buchungsstatus.ABGESCHLOSSEN){
             var readings=verbrauch.berechneVorschau(b);
@@ -60,7 +62,7 @@ public class BuchungsnachrichtService {
                     bestaetigungen.add(new AblesungBestaetigungDTO(v.zaehlerId(),b.getAnreise(),b.getAbreise(),v.anfangsablesung(),v.endablesung(),v.anfangsstand(),v.endstand()));
                 }
             }
-            var sn=verbrauch.berechneSnapshots(b,bestaetigungen);f=finanzen.toDto(b,sn);
+            var sn=verbrauch.berechneSimulationsSnapshots(b,bestaetigungen);f=finanzen.toDto(b,sn);
             var old=rechnungen.findByBuchungIdOrderByRevisionDesc(id);int revision=old.isEmpty()?1:old.getFirst().getRevision()+1;
             result=rechnung.entwurf(b,revision,null,f,sn,heute(),false);
             hints.add("Die Rechnung berücksichtigt bisher gebuchte Zahlungen und Verrechnungen. Eine noch offene Kaution wird hier nicht automatisch verrechnet.");
@@ -71,7 +73,7 @@ public class BuchungsnachrichtService {
             result=vorlagen.erstellenVorgang(b,daten.basis(b,heute()),null,vorgang,extra,wahr,tabelle);
         }
         String email=b.getMieter()==null?null:b.getMieter().getEmail();
-        return new Vorschau(ziel,email,result.betreff(),result.mailtext(),result.pdf(),"Vorschau_"+b.getBuchungsnummer()+"_"+vorgang+".pdf",List.copyOf(hints));
+        return new Vorschau(ziel,email,result.betreff(),result.mailtext(),ziel==Buchungsstatus.ABGESCHLOSSEN?SimulationsPdf.markieren(result.pdf()):result.pdf(),"Vorschau_"+b.getBuchungsnummer()+"_"+vorgang+".pdf",List.copyOf(hints));
     });}
     public record Start(@jakarta.validation.constraints.NotNull Buchungsstatus ziel,List<@jakarta.validation.Valid @jakarta.validation.constraints.NotNull AblesungBestaetigungDTO> ablesungen,String korrekturgrund,Boolean sendEmail) {
         public Start(Buchungsstatus ziel,List<AblesungBestaetigungDTO> ablesungen,String korrekturgrund){this(ziel,ablesungen,korrekturgrund,null);}
@@ -91,7 +93,7 @@ public class BuchungsnachrichtService {
     private <T>T lesen(String s,Class<T> c){try{return mapper.readValue(s,c);}catch(Exception e){throw new IllegalStateException(e);}}
     private String hash(byte[] bytes){try{return HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(bytes));}catch(Exception e){throw new IllegalStateException(e);}}
     private Buchung buchung(Long id){return buchungen.findLockedById(id).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Buchung fehlt."));}
-    private BuchungsnachrichtEntwurf entwurf(Long buchung,String id){return entwuerfe.gesperrt(id,user(),TenantContext.getCurrentTenant(),buchung).orElseThrow(()->new ResponseStatusException(HttpStatus.GONE,"Entwurf nicht verfügbar oder einem anderen Benutzer/Mandanten zugeordnet."));}
+    private BuchungsnachrichtEntwurf entwurf(Long buchung,String id){return entwuerfe.gesperrt(id,user(),TenantContext.getCurrentTenant(),buchung).filter(e->!e.isUnabhaengig()).orElseThrow(()->new ResponseStatusException(HttpStatus.GONE,"Entwurf nicht verfügbar oder einem anderen Benutzer/Mandanten zugeordnet."));}
     private List<AblesungBestaetigungDTO> ablesungen(BuchungsnachrichtEntwurf e){return Arrays.asList(lesen(e.getAblesungen(),AblesungBestaetigungDTO[].class));}
     private List<BuchungVerbrauchskosten> snapshots(Buchung b,BuchungsnachrichtEntwurf e){return e.getZiel()==Buchungsstatus.ABGESCHLOSSEN?verbrauch.berechneSnapshots(b,ablesungen(e)):null;}
     private void offen(BuchungsnachrichtEntwurf e){if(e.isAusgefuehrt())throw konflikt("Diese Aktion wurde bereits ausgeführt. Für erneuten Versand den gespeicherten Versuch prüfen.");if(e.getAblauf().isBefore(Instant.now()))throw konflikt("Entwurf abgelaufen. Bitte neu erstellen.");}
@@ -103,16 +105,43 @@ public class BuchungsnachrichtService {
             b.getZahlungsvariante(),b.getBankverbindungAuswahl(),b.getAnreise(),b.getAbreise(),b.getStornoDatum(),b.getStornoErstattung(),b.getStornoEinbehalt(),f,
             Arrays.asList(p.getId(),p.getVorname(),p.getName(),p.getOrganisation(),p.getStrasse(),p.getPlz(),p.getOrt(),p.getCountryCode(),p.getEmail(),p.getIban(),p.getBankName(),p.getBic(),p.getKontoinhaber()),
             b.getMietobjekt().getBezeichnung(),b.getMietobjekt().getBankverbindungPrimaer(),b.getMietobjekt().getBankverbindungAlternativ());
-        if(!e.isOhneMail() || e.getZiel()==Buchungsstatus.ABGESCHLOSSEN){
+        if(e.isUnabhaengig() || !e.isOhneMail() || e.getZiel()==Buchungsstatus.ABGESCHLOSSEN){
             values.add(vorlagen.vorlage(b.getMietobjekt().getId(),BuchungsnachrichtDaten.vorgang(e.getZiel())));
-            var papierstand=papier.findById(1L).orElseThrow(()->fehler("Bitte Briefpapier einrichten."));
-            values.add(Arrays.asList(papierstand.getVersion(),hash(papierstand.getPdf()),papierstand.getBild()==null?null:hash(papierstand.getBild()),papierstand.getGruss()));
-            if(!e.isOhneMail())values.add(mails.nachrichtVorschau(b,"", ""));values.add(daten.basis(b,e.getDatum()));
+            var papierstand=papier.findById(1L).orElse(null);
+            if(papierstand==null && !e.isUnabhaengig())throw fehler("Bitte Briefpapier einrichten.");
+            values.add(papierstand==null?null:Arrays.asList(papierstand.getVersion(),papierstand.getPdf()==null?null:hash(papierstand.getPdf()),papierstand.getBild()==null?null:hash(papierstand.getBild()),papierstand.getGruss()));
+            if(!e.isUnabhaengig() && !e.isOhneMail())values.add(mails.nachrichtVorschau(b,"", ""));values.add(e.isUnabhaengig()?daten.dokumentBasis(b,e.getDatum()):daten.basis(b,e.getDatum()));
         }
         if(b.getVeranstalter()!=null){var v=b.getVeranstalter();values.add(Arrays.asList(v.getId(),v.getName(),v.getStrasse(),v.getPlz(),v.getOrt(),v.getCountryCode()));}
         if(snapshots!=null)for(var v:snapshots)values.add(Arrays.asList(v.getVerbrauchskostenId(),v.getZaehlerId(),v.getBezeichnung(),v.getPreis(),v.getKosten(),v.getAnfangsstand(),v.getEndstand(),v.getAnfangsablesung(),v.getEndablesung(),v.getMengeneinheit(),v.getAbrechnungstage()));
+        values.add(b.getFruehereBuchungsnummer());
+        if(e.isUnabhaengig())values.add(verbrauch.berechneVorschau(b));
         return VorlagenService.hash(json(values));
     }
+    VorlagenService.Ergebnis dokumentMailvorgaben(Buchung b,Buchungsstatus art){
+        var extra=new HashMap<String,String>();var wahr=EnumSet.noneOf(Bedingung.class);
+        var f=finanzen.toDto(b);
+        extra.put("abrechnungssumme",VorlagenService.geld(f.abrechnungGesamt()));
+        extra.put("saldo",VorlagenService.geld(f.saldo()));
+        extra.put("restzahlung",VorlagenService.geld(f.saldo().max(java.math.BigDecimal.ZERO)));
+        extra.put("erstattung",VorlagenService.geld(f.saldo().negate().max(java.math.BigDecimal.ZERO)));
+        var person=b.getMieter();
+        extra.put("mieter_bank_name",Objects.toString(person.getBankName(),""));extra.put("mieter_bank_iban",Objects.toString(person.getIban(),""));extra.put("mieter_bank_bic",Objects.toString(person.getBic(),""));extra.put("mieter_kontoinhaber",Objects.toString(person.getKontoinhaber(),""));
+        if(art==Buchungsstatus.ABGESCHLOSSEN)extra.put("zahlungsfrist",heute().plusDays(14).format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy")));
+        if(art==Buchungsstatus.STORNIERT)extra.putAll(daten.stornoDaten(b,Stornoberechnung.berechnen(heute(),b.getAnreise().toLocalDate(),f.bewegungen()),false));
+        return vorlagen.erstellenVorgang(b,daten.dokumentBasis(b,heute()),null,BuchungsnachrichtDaten.vorgang(art),extra,wahr,null,false);
+    }
+    String migrationsText(Buchung b,Buchungsstatus art,String text){
+        var v=vorlagen.vorlage(b.getMietobjekt().getId(),BuchungsnachrichtDaten.vorgang(art));
+        if(v==null)throw fehler("Keine passende Mailvorlage für dieses Mietobjekt hinterlegt.");
+        var d=new HashMap<>(daten.dokumentBasis(b,heute()).felder());
+        d.put("vorname",b.getMieter().getVorname());d.put("nachname",b.getMieter().getName());
+        d.put("organisation",Buchungsadressat.organisation(b));d.put("fruehere_buchungsnummer",Objects.toString(b.getFruehereBuchungsnummer(),""));
+        d.put("mietobjekt",b.getMietobjekt().getBezeichnung());
+        var p=papier.findById(1L).orElseThrow(()->fehler("Bitte Briefpapier einrichten."));
+        return ersetzen(v.anrede(),d)+"\n\n"+text+"\n\n"+ersetzen(p.getGruss(),d);
+    }
+    String dokumentDatenstand(Buchung b,BuchungsnachrichtEntwurf e){return zustand(b,e,null);}
     private void aktuell(Buchung b,BuchungsnachrichtEntwurf e,List<BuchungVerbrauchskosten> snapshots){
         if(!e.isAusgefuehrt() && e.getZiel()==Buchungsstatus.STORNIERT && !e.getDatum().equals(heute()))throw konflikt("Das Stornodatum hat sich geändert. Bitte neuen Entwurf prüfen.");
         if(!Objects.equals(e.getDatenHash(),zustand(b,e,snapshots)))throw konflikt("Buchung, Zahlungen, Verbrauch, Vorlage oder Empfänger wurden geändert. Bitte neuen Entwurf erstellen und prüfen.");
@@ -152,7 +181,7 @@ public class BuchungsnachrichtService {
         if(route!=null)route=new HomepageStatusMailService.StatusVorschau(route.absender(),route.empfaenger(),route.cc(),route.replyTo(),(route.testmodus()&&!e.getBetreff().startsWith("[TEST] ")?"[TEST] ":"")+e.getBetreff(),e.getMailtext(),route.testmodus(),null);
         return new Ansicht(e.getId(),e.getVersion(),e.getQuelle(),e.getZiel(),BuchungsnachrichtDaten.vorgang(e.getZiel()).name(),e.isOhneMail(),e.getBetreff(),e.getMailtext(),route,e.getPdf(),e.getDateiname(),e.getExternAm(),e.getPdf()==null?null:hash(e.getPdf()),fingerprint(e),e.isAusgefuehrt(),e.getVersuchId(),a==null?null:a.getErgebnis(),a==null?null:a.getFehler(),e.getStorno()==null?null:lesen(e.getStorno(),Stornoberechnung.class));}
     public Ansicht lesen(Long buchung,String id){user();return tx.execute(status->{var e=entwurf(buchung,id);aktuell(buchung(buchung),e,snapshots(buchung(buchung),e));return ansicht(e);});}
-    public List<Kurz> liste(Long id){user();return tx.execute(status->entwuerfe.findByBuchungIdAndBenutzerAndTenantOrderByAblaufDesc(id,user(),TenantContext.getCurrentTenant()).stream().filter(e->e.isAusgefuehrt() || e.getAblauf().isAfter(Instant.now())).map(e->new Kurz(e.getId(),e.getZiel(),e.isAusgefuehrt(),e.getVersuchId()==null?null:archiv.findById(e.getVersuchId()).map(VorlagenVersand::getErgebnis).orElse(null),e.getAblauf())).toList());}
+    public List<Kurz> liste(Long id){user();return tx.execute(status->entwuerfe.findByBuchungIdAndBenutzerAndTenantOrderByAblaufDesc(id,user(),TenantContext.getCurrentTenant()).stream().filter(e->!e.isUnabhaengig()).filter(e->e.isAusgefuehrt() || e.getAblauf().isAfter(Instant.now())).map(e->new Kurz(e.getId(),e.getZiel(),e.isAusgefuehrt(),e.getVersuchId()==null?null:archiv.findById(e.getVersuchId()).map(VorlagenVersand::getErgebnis).orElse(null),e.getAblauf())).toList());}
     public Ansicht aendern(Long b,String id,Aenderung a){user();return tx.execute(status->{var e=entwurf(b,id);offen(e);aktuell(buchung(b),e,snapshots(buchung(b),e));
         if(a==null || !Objects.equals(a.version(),e.getVersion()))throw konflikt("Entwurf wurde geändert. Bitte neu laden.");
         if(!e.isOhneMail())pruefeMail(a.betreff(),a.mailtext());if(!e.isOhneMail()){e.setBetreff(a.betreff().strip());e.setMailtext(normalisieren(a.mailtext()));}
@@ -164,7 +193,7 @@ public class BuchungsnachrichtService {
         String filename=Objects.toString(name,"Bearbeitet.pdf").replaceAll("[^\\p{L}\\p{N}_. -]","_");if(filename.length()>160)filename=filename.substring(0,160);if(!filename.toLowerCase(Locale.ROOT).endsWith(".pdf"))filename+=".pdf";
         e.setDateiname(filename);e.setPdf(pdf.clone());e.setExternAm(Instant.now());entwuerfe.saveAndFlush(e);return ansicht(e);
     });}
-    private static void pruefeMail(String betreff,String text){
+    static void pruefeMail(String betreff,String text){
         if(betreff==null || betreff.isBlank() || betreff.length()>240 || betreff.contains("\n") || betreff.contains("\r") || betreff.codePoints().anyMatch(Character::isISOControl))throw fehler("Betreff benötigt 1 bis 240 Zeichen ohne Zeilenumbruch.");
         if(text==null || text.isBlank() || text.length()>30000 || text.codePoints().anyMatch(c->Character.isISOControl(c)&&c!='\n'&&c!='\r'&&c!='\t'))throw fehler("Mailtext fehlt oder enthält unzulässige Zeichen (maximal 30000 Zeichen).");
     }

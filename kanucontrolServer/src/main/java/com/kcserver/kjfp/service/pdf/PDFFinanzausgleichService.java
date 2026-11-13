@@ -1,5 +1,6 @@
 package com.kcserver.kjfp.service.pdf;
 
+import com.kcserver.core.util.PersonName;
 import com.kcserver.core.entity.Teilnehmer;
 import com.kcserver.core.entity.Veranstaltung;
 
@@ -129,6 +130,7 @@ public class PDFFinanzausgleichService {
 
 
     record ZahlungsDetail(
+            String belegnummer,
             LocalDate datum,
             String teilnehmer,
             String bemerkung,
@@ -642,6 +644,7 @@ public class PDFFinanzausgleichService {
 
                 ueberweisungen.add(
                         new ZahlungsDetail(
+                                z.getBelegnummer(),
                                 z.getDatum(),
                                 teilnehmer,
                                 safe(z.getBemerkung()),
@@ -661,6 +664,7 @@ public class PDFFinanzausgleichService {
 
                 quittungen.add(
                         new ZahlungsDetail(
+                                z.getBelegnummer(),
                                 z.getDatum(),
                                 teilnehmer,
                                 safe(z.getBemerkung()),
@@ -838,8 +842,7 @@ public class PDFFinanzausgleichService {
                      * Einnahmen
                      */
 
-                    if (kategorie ==
-                            FinanzKategorie.SONSTIGE_EINNAHMEN) {
+                    if (isBelegEinnahme(buchung) && kategorie != FinanzKategorie.KJFP_ZUSCHUSS) {
 
                         einnahmen.add(
                                 new BuchungsDetail(
@@ -1547,6 +1550,7 @@ public class PDFFinanzausgleichService {
 
                     quittungen.add(
                             new ZahlungsDetail(
+                                    z.getBelegnummer(),
                                     z.getDatum(),
                                     getZahlungsTeilnehmerText(z),
                                     safe(z.getBemerkung()),
@@ -1624,6 +1628,7 @@ public class PDFFinanzausgleichService {
 
                             ueberweisungen.add(
                                     new ZahlungsDetail(
+                                            z.getBelegnummer(),
                                             z.getDatum(),
                                             getPersonName(
                                                     p.getTeilnehmer()
@@ -1663,6 +1668,7 @@ public class PDFFinanzausgleichService {
 
                             ueberweisungen.add(
                                     new ZahlungsDetail(
+                                            z.getBelegnummer(),
                                             z.getDatum(),
                                             "Überzahlung",
                                             safe(z.getBemerkung()),
@@ -1681,6 +1687,7 @@ public class PDFFinanzausgleichService {
 
                         ueberweisungen.add(
                                 new ZahlungsDetail(
+                                        z.getBelegnummer(),
                                         z.getDatum(),
                                         getZahlungsTeilnehmerText(z),
                                         safe(z.getBemerkung()),
@@ -1727,7 +1734,7 @@ public class PDFFinanzausgleichService {
 
                 /*
                  * =====================================================
-                 * SONSTIGE EINNAHMEN
+                 * WEITERE EINNAHMEN
                  * =====================================================
                  *
                  * Diese werden:
@@ -1737,7 +1744,7 @@ public class PDFFinanzausgleichService {
                  *    aufgenommen
                  */
 
-                if (kategorie == FinanzKategorie.SONSTIGE_EINNAHMEN) {
+                if (isBelegEinnahme(buchung)) {
 
                     sonstigeEinnahmen =
                             sonstigeEinnahmen.add(
@@ -1803,9 +1810,7 @@ public class PDFFinanzausgleichService {
             return "";
         }
 
-        return safe(person.getName())
-                + ", "
-                + safe(person.getVorname());
+        return PersonName.surnameFirst(person.getName(), person.getVorname());
     }
 
     private String getZahlungsTeilnehmerText(
@@ -1855,19 +1860,14 @@ public class PDFFinanzausgleichService {
             return false;
         }
 
-        return switch (kategorie) {
+        return kategorie.isKosten();
+    }
 
-            case UNTERKUNFT,
-                 VERPFLEGUNG,
-                 HONORARE,
-                 FAHRKOSTEN,
-                 VERBRAUCHSMATERIAL,
-                 KULTUR,
-                 MIETE,
-                 SONSTIGE_KOSTEN -> true;
-
-            default -> false;
-        };
+    private boolean isBelegEinnahme(AbrechnungBuchung buchung) {
+        var kategorie = buchung.getKategorie();
+        return kategorie != null && kategorie.isEinnahme()
+                && (kategorie != FinanzKategorie.TEILNEHMERBEITRAG
+                    || buchung.getHerkunft() == com.kcserver.kjfp.enumtype.BuchungsHerkunft.MANUELL);
     }
 
     private void createDetailseite(
@@ -2360,9 +2360,10 @@ public class PDFFinanzausgleichService {
         float x = page.getLeft();
         float width = page.getContentWidth();
 
+        float colBelegnummer = 80f;
         float colDatum = 65f;
-        float colName = 170f;
-        float colBemerkung = width - 65f - 170f - 75f;
+        float colName = 150f;
+        float colBemerkung = width - colBelegnummer - colDatum - colName - 75f;
         float colBetrag = 75f;
 
         float rowHeight = 18f;
@@ -2370,6 +2371,7 @@ public class PDFFinanzausgleichService {
         writeZahlungsHeader(
                 page,
                 x,
+                colBelegnummer,
                 colDatum,
                 colName,
                 colBemerkung,
@@ -2388,6 +2390,7 @@ public class PDFFinanzausgleichService {
                 writeZahlungsHeader(
                         page,
                         x,
+                        colBelegnummer,
                         colDatum,
                         colName,
                         colBemerkung,
@@ -2400,6 +2403,8 @@ public class PDFFinanzausgleichService {
             float y = page.getY();
 
             float currentX = x;
+            page.write(safe(detail.belegnummer()), currentX + 3, y - 13, FONT_BOLD, TEXT_SIZE);
+            currentX += colBelegnummer;
 
             page.write(
                     formatDate(detail.datum()),
@@ -2478,6 +2483,7 @@ public class PDFFinanzausgleichService {
     private void writeZahlungsHeader(
             PDFPageWriter page,
             float x,
+            float colBelegnummer,
             float colDatum,
             float colName,
             float colBemerkung,
@@ -2486,16 +2492,18 @@ public class PDFFinanzausgleichService {
 
         float y = page.getY();
 
+        page.write("Belegnummer", x + 3, y - 13, FONT_BOLD, TEXT_SIZE);
+
         page.write(
                 "Datum",
-                x + 3,
+                x + colBelegnummer + 3,
                 y - 13,
                 FONT_BOLD,
                 TEXT_SIZE
         );
 
         float currentX =
-                x + colDatum;
+                x + colBelegnummer + colDatum;
 
         page.write(
                 "Teilnehmer / Zuordnung",
@@ -2555,10 +2563,10 @@ public class PDFFinanzausgleichService {
         float x = page.getLeft();
         float width = page.getContentWidth();
 
-        float colBeleg = 65f;
+        float colBeleg = 80f;
         float colDatum = 65f;
-        float colAussteller = 110f;
-        float colKategorie = 105f;
+        float colAussteller = 100f;
+        float colKategorie = 95f;
         float colBeschreibung =
                 width
                         - colBeleg
@@ -2648,7 +2656,8 @@ public class PDFFinanzausgleichService {
             page.write(
                     buchung.getKategorie() == null
                             ? ""
-                            : buchung.getKategorie().name(),
+                            : buchung.getKategorie() == FinanzKategorie.TEILNEHMERBEITRAG_RUECKZAHLUNG
+                                ? "TN-Rückzahlung" : buchung.getKategorie().getBezeichnung(),
                     currentX + 3,
                     y - 13,
                     FONT,
@@ -2670,8 +2679,7 @@ public class PDFFinanzausgleichService {
             BigDecimal betrag =
                     safe(buchung.getBetrag());
 
-            if (buchung.getKategorie()
-                    == FinanzKategorie.SONSTIGE_EINNAHMEN) {
+            if (isBelegEinnahme(buchung)) {
 
                 betrag = betrag.negate();
             }
@@ -2734,7 +2742,7 @@ public class PDFFinanzausgleichService {
         float currentX = x;
 
         page.write(
-                "Beleg",
+                "Belegnummer",
                 currentX + 3,
                 y - 13,
                 FONT_BOLD,
@@ -2821,11 +2829,13 @@ public class PDFFinanzausgleichService {
         float x = page.getLeft();
         float width = page.getContentWidth();
 
-        float colDatum = 70f;
-        float colFahrer = 170f;
-        float colKm = 70f;
+        float colBelegnummer = 80f;
+        float colDatum = 65f;
+        float colFahrer = 130f;
+        float colKm = 45f;
         float colBemerkung =
                 width
+                        - colBelegnummer
                         - colDatum
                         - colFahrer
                         - colKm
@@ -2837,15 +2847,17 @@ public class PDFFinanzausgleichService {
 
         float y = page.getY();
 
+        page.write("Belegnummer", x + 3, y - 13, FONT_BOLD, TEXT_SIZE);
+
         page.write(
                 "Datum",
-                x + 3,
+                x + colBelegnummer + 3,
                 y - 13,
                 FONT_BOLD,
                 TEXT_SIZE
         );
 
-        float currentX = x + colDatum;
+        float currentX = x + colBelegnummer + colDatum;
 
         page.write(
                 "Fahrer",
@@ -2904,15 +2916,17 @@ public class PDFFinanzausgleichService {
 
                 y = page.getY();
 
+                page.write("Belegnummer", x + 3, y - 13, FONT_BOLD, TEXT_SIZE);
+
                 page.write(
-                        "Datum",
-                        x + 3,
+                "Datum",
+                x + colBelegnummer + 3,
                         y - 13,
                         FONT_BOLD,
                         TEXT_SIZE
                 );
 
-                currentX = x + colDatum;
+                currentX = x + colBelegnummer + colDatum;
 
                 page.write(
                         "Fahrer",
@@ -2965,6 +2979,8 @@ public class PDFFinanzausgleichService {
             y = page.getY();
 
             currentX = x;
+            page.write(safe(reise.getBelegnummer()), currentX + 3, y - 13, FONT_BOLD, TEXT_SIZE);
+            currentX += colBelegnummer;
 
             page.write(
                     formatDate(
@@ -3108,7 +3124,7 @@ public class PDFFinanzausgleichService {
 
         /*
          * -----------------------------------------------------
-         * Sonstige Einnahmen
+         * Weitere Einnahmen
          *
          * dto.getAusgaben() ist bereits netto.
          * Die Einnahmen werden hier deshalb nur transparent
@@ -3121,7 +3137,7 @@ public class PDFFinanzausgleichService {
             page.moveY(-18f);
 
             page.write(
-                    "davon sonstige Einnahmen",
+                    "davon weitere Einnahmen",
                     x,
                     page.getY(),
                     FONT,

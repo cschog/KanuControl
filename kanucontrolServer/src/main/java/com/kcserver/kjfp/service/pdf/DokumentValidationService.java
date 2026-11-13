@@ -1,5 +1,6 @@
 package com.kcserver.kjfp.service.pdf;
 
+import com.kcserver.core.util.PersonName;
 import com.kcserver.kjfp.entity.planung.Planung;
 import com.kcserver.core.entity.Teilnehmer;
 import com.kcserver.core.entity.Veranstaltung;
@@ -429,7 +430,7 @@ public class DokumentValidationService {
                 .forEach(p -> {
 
                     String name =
-                            p.getVorname() + " " + p.getName();
+                            PersonName.givenFirst(p.getName(), p.getVorname());
 
                     if (isBlank(p.getPlz())) {
                         fehler.add(

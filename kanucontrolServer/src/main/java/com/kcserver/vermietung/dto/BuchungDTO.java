@@ -30,6 +30,8 @@ public class BuchungDTO {
     private java.time.Instant reservierungMailGesendetAm;
     private String reservierungMailFehler;
     private String buchungsnummer;
+    @jakarta.validation.constraints.Size(max=100)
+    private String fruehereBuchungsnummer;
     private Buchungsstatus status;
 
     // Null preserves the selection when an older client updates a booking.
@@ -66,6 +68,9 @@ public class BuchungDTO {
      * Interne Bemerkungen zur Buchung bzw. zum Mieter.
      */
     private String bemerkung;
+
+    @jakarta.validation.constraints.Size(max = 80, message = "Veranstaltung darf höchstens 80 Zeichen enthalten.")
+    private String veranstaltung;
 
     /**
      * Bewertung des Mieters von 1 bis 5 Sternen.

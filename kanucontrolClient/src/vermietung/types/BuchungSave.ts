@@ -11,9 +11,11 @@ export interface BuchungPositionSave {
 }
 
 export interface BuchungSave {
+  veranstaltung?: string | null;
+  fruehereBuchungsnummer?: string | null;
   mietpreiseNeuBerechnen?: boolean;
   mietpreisStichtag?: string;
-  zahlungsvariante?: "ANZAHLUNG" | "BEI_ABRECHNUNG" | "GESAMTMIETE_VORAUS";
+  zahlungsvariante?: "ANZAHLUNG" | "BEI_ABRECHNUNG" | "GESAMTMIETE_VORAUS" | "OHNE_ABRECHNUNG";
   bankverbindungAuswahl?: BankverbindungAuswahl;
   entschaedigungen?: EntschaedigungPosition[];
   abrechnungRevision?: number;

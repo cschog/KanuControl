@@ -1,5 +1,6 @@
 package com.kcserver.vermietung.service;
 
+import com.kcserver.core.util.PersonName;
 import com.kcserver.core.exception.ErrorMessages;
 import com.kcserver.core.entity.Person;
 import com.kcserver.core.entity.Verein;
@@ -137,7 +138,7 @@ public class BuchungService {
                 && buchung.getAbreise().getYear() < 2999
                 && !buchung.getAbreise().isAfter(LocalDateTime.now(java.time.ZoneId.of("Europe/Berlin")))) {
 
-            buchung.setStatus(Buchungsstatus.ABRECHENBAR);
+            nachMietende(buchung);
 
             buchung = buchungRepository.save(buchung);
         }
@@ -180,6 +181,7 @@ public class BuchungService {
                 : BigDecimal.ZERO);
         buchung.setZahlungsvariante(dto.getZahlungsvariante()!=null ? dto.getZahlungsvariante()
                 : Zahlungsplan.vorschlag(dto.getAnreise(), mietobjekt.getKurzfristgrenzeTage(), java.time.LocalDate.now(java.time.ZoneId.of("Europe/Berlin"))));
+        if (Zahlungsplan.ohneAbrechnung(buchung)) buchung.setKautionBetrag(BigDecimal.ZERO);
         buchung.setAnzahlungBetrag(buchung.getBuchungsquelle() == Buchungsquelle.DIREKT
                 ? (buchung.getZahlungsvariante()==com.kcserver.vermietung.enumtype.Zahlungsvariante.ANZAHLUNG ? Optional.ofNullable(dto.getAnzahlungBetrag()).orElse(BigDecimal.ZERO) : BigDecimal.ZERO)
                 : BigDecimal.ZERO);
@@ -188,6 +190,8 @@ public class BuchungService {
         buchung.setMietobjekt(mietobjekt);
         buchung.setVeranstalter(veranstalter);
         buchung.setBemerkung(dto.getBemerkung());
+        buchung.setVeranstaltung(dto.getVeranstaltung());
+        buchung.setFruehereBuchungsnummer(dto.getFruehereBuchungsnummer());
         buchung.setBewertung(dto.getBewertung());
         buchung.setAnzahlJugendliche(dto.getAnzahlJugendliche());
         buchung.setJugendAlterVon(dto.getJugendAlterVon());
@@ -288,11 +292,12 @@ public class BuchungService {
             if (!sindBuchungsdatenUnveraendert(buchung, dto)) {
                 throw new IllegalArgumentException(
                         "Bei stornierten oder abgelehnten Buchungen "
-                                + "dürfen nur Bemerkung und Bewertung "
+                                + "dürfen nur Bemerkung, Bewertung und frühere Buchungsnummer "
                                 + "geändert werden."
                 );
             }
 
+            buchung.setFruehereBuchungsnummer(dto.getFruehereBuchungsnummer());
             buchung.setBemerkung(dto.getBemerkung());
             buchung.setBewertung(dto.getBewertung());
 
@@ -324,7 +329,17 @@ public class BuchungService {
 
         buchung.setMieter(mieter);
         ensureMieter(mieter);
-        BigDecimal neueKaution = buchung.getBuchungsquelle() == Buchungsquelle.DIREKT
+        if (dto.getZahlungsvariante() == com.kcserver.vermietung.enumtype.Zahlungsvariante.OHNE_ABRECHNUNG
+                && !Zahlungsplan.ohneAbrechnung(buchung)) {
+            BigDecimal saldo = buchungFinanzbewegungRepository.findByBuchungIdOrderByDatumAscIdAsc(id).stream()
+                .map(m -> m.getArt() == Finanzbewegungsart.EINGANG ? m.getBetrag()
+                    : m.getArt() == Finanzbewegungsart.RUECKZAHLUNG ? m.getBetrag().negate() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+            if (saldo.signum() != 0) throw new IllegalArgumentException("Vor dem Wechsel zu Ohne Abrechnung bitte vorhandene Zahlungen vollständig zurückzahlen.");
+        }
+        boolean kostenlos = dto.getZahlungsvariante() == com.kcserver.vermietung.enumtype.Zahlungsvariante.OHNE_ABRECHNUNG
+                || dto.getZahlungsvariante() == null && Zahlungsplan.ohneAbrechnung(buchung);
+        BigDecimal neueKaution = !kostenlos && buchung.getBuchungsquelle() == Buchungsquelle.DIREKT
                 ? Optional.ofNullable(dto.getKautionBetrag()).orElse(BigDecimal.ZERO)
                 : BigDecimal.ZERO;
         BigDecimal bereitsVerwahrteKaution =
@@ -349,6 +364,7 @@ public class BuchungService {
         }
         buchung.setKautionBetrag(neueKaution);
         if(dto.getZahlungsvariante()!=null) buchung.setZahlungsvariante(dto.getZahlungsvariante());
+        if (Zahlungsplan.ohneAbrechnung(buchung)) buchung.setKautionBetrag(BigDecimal.ZERO);
         buchung.setAnzahlungBetrag(buchung.getBuchungsquelle() == Buchungsquelle.DIREKT
                 ? (buchung.getZahlungsvariante()==com.kcserver.vermietung.enumtype.Zahlungsvariante.ANZAHLUNG ? Optional.ofNullable(dto.getAnzahlungBetrag()).orElse(BigDecimal.ZERO) : BigDecimal.ZERO)
                 : BigDecimal.ZERO);
@@ -357,6 +373,8 @@ public class BuchungService {
         buchung.setVeranstalter(veranstalter);
 
         buchung.setBemerkung(dto.getBemerkung());
+        buchung.setVeranstaltung(dto.getVeranstaltung());
+        buchung.setFruehereBuchungsnummer(dto.getFruehereBuchungsnummer());
         buchung.setBewertung(dto.getBewertung());
         buchung.setAnzahlJugendliche(dto.getAnzahlJugendliche());
         buchung.setJugendAlterVon(dto.getJugendAlterVon());
@@ -400,6 +418,8 @@ public class BuchungService {
         }
 
         berechneBuchungsrabatt(buchung, dto, rabattAuswahlUnveraendert);
+        if (Zahlungsplan.ohneAbrechnung(buchung) && buchung.getStatus() == Buchungsstatus.ABGESCHLOSSEN)
+            buchung.setAbschlussRevision(buchung.getAbrechnungRevision());
 
         buchungRepository.flush();
 
@@ -456,6 +476,8 @@ public class BuchungService {
             Buchung buchung,
             BuchungDTO dto
     ) {
+        if (!Objects.equals(Objects.toString(buchung.getVeranstaltung(), ""),
+                Objects.toString(dto.getVeranstaltung(), ""))) return false;
         if (dto.getBankverbindungAuswahl() != null
                 && dto.getBankverbindungAuswahl() != buchung.getBankverbindungAuswahl()) {
             return false;
@@ -716,7 +738,7 @@ public class BuchungService {
         dto.setRabattwertTyp(buchung.getRabattwertTyp());
         dto.setRabattwert(buchung.getRabattwert());
         dto.setRabattbetrag(BuchungPreiskalkulation.rabatt(buchung));
-        dto.setKautionBetrag(buchung.getKautionBetrag());
+        dto.setKautionBetrag(Zahlungsplan.ohneAbrechnung(buchung) ? BigDecimal.ZERO : buchung.getKautionBetrag());
         dto.setZahlungsvariante(buchung.getZahlungsvariante());
         dto.setAnzahlungBetrag(buchung.getAnzahlungBetrag());
 
@@ -807,6 +829,8 @@ public class BuchungService {
         );
 
         dto.setBemerkung(buchung.getBemerkung());
+        dto.setVeranstaltung(buchung.getVeranstaltung());
+        dto.setFruehereBuchungsnummer(buchung.getFruehereBuchungsnummer());
         dto.setHerkunft(buchung.getHerkunft());
         dto.setBewertung(buchung.getBewertung());
         dto.setAnzahlJugendliche(buchung.getAnzahlJugendliche());
@@ -816,9 +840,9 @@ public class BuchungService {
 
 
         dto.setVerbrauchskosten(
-                buchungVerbrauchskostenRepository
+                (Zahlungsplan.ohneAbrechnung(buchung) ? java.util.stream.Stream.<BuchungVerbrauchskosten>empty() : buchungVerbrauchskostenRepository
                         .findByBuchungIdOrderByIdAsc(buchung.getId())
-                        .stream()
+                        .stream())
                         .map(kosten -> new BuchungVerbrauchskostenDTO(
                                 kosten.getId(),
                                 kosten.getVerbrauchskostenId(),
@@ -878,6 +902,29 @@ public class BuchungService {
      *
      * Unbefristete Buchungen werden nicht umgestellt.
      */
+    private static void nachMietende(Buchung buchung) {
+        buchung.setStatus(Zahlungsplan.ohneAbrechnung(buchung) ? Buchungsstatus.ABGESCHLOSSEN : Buchungsstatus.ABRECHENBAR);
+        if (Zahlungsplan.ohneAbrechnung(buchung)) buchung.setAbschlussRevision(buchung.getAbrechnungRevision());
+    }
+
+    /** Hintergrundabschluss ohne Dokument, Nachricht, Zahlungs- oder Verbrauchsbuchung. */
+    public int aktualisiereKostenloseBuchungen() {
+        LocalDateTime jetzt = LocalDateTime.now(ZoneId.of("Europe/Berlin"));
+        int anzahl = 0;
+        for (var status : List.of(Buchungsstatus.BESTAETIGT, Buchungsstatus.ABRECHENBAR)) {
+            for (var kandidat : buchungRepository.findByStatusAndAbreiseLessThanEqual(status, jetzt)) {
+                if (!Zahlungsplan.ohneAbrechnung(kandidat)) continue;
+                var b = buchungRepository.findLockedById(kandidat.getId()).orElse(null);
+                if (b == null || !Zahlungsplan.ohneAbrechnung(b) || b.getStatus() != status || b.isUnbefristet()
+                        || b.getAbreise() == null || b.getAbreise().getYear() >= 2999 || b.getAbreise().isAfter(jetzt)) continue;
+                nachMietende(b);
+                anzahl++;
+            }
+        }
+        if (anzahl > 0) buchungRepository.flush();
+        return anzahl;
+    }
+
     public int aktualisiereAbrechenbareBuchungen() {
         LocalDateTime jetzt = LocalDateTime.now(java.time.ZoneId.of("Europe/Berlin"));
 
@@ -896,7 +943,7 @@ public class BuchungService {
                 continue;
             }
 
-            buchung.setStatus(Buchungsstatus.ABRECHENBAR);
+            nachMietende(buchung);
             anzahl++;
         }
 
@@ -1695,7 +1742,7 @@ public class BuchungService {
     /** Der vollständige Mietername ist ausdrücklich für den öffentlichen Homepagekalender freigegeben. */
     private String homepageMietername(Buchung buchung) {
         if (buchung.getMieter() == null) return null;
-        String vorname = Objects.toString(buchung.getMieter().getVorname(), "").trim();
+        String vorname = PersonName.vorname(buchung.getMieter().getVorname());
         String nachname = Objects.toString(buchung.getMieter().getName(), "").trim();
         String vollstaendig = (vorname + " " + nachname).trim();
         return vollstaendig.isEmpty() ? null : vollstaendig;

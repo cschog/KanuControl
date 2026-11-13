@@ -6,6 +6,10 @@ import com.kcserver.vermietung.enumtype.Buchungsstatus;
 import java.time.*;
 @Entity @Table(name="vermietung_nachrichtenentwurf") @Getter @Setter
 public class BuchungsnachrichtEntwurf {
+ @Column(name="unabhaengig",nullable=false) private boolean unabhaengig;
+ @Column(name="aktuelle_fassung",nullable=false) private boolean aktuelleFassung;
+ @Column(name="dokument_am") private Instant dokumentAm;
+ @Column(name="hinweise",columnDefinition="text") private String hinweise="[]";
  @Id private String id=java.util.UUID.randomUUID().toString();
  @Version private Long version;
  @Column(nullable=false,length=255) private String benutzer;

@@ -1,5 +1,6 @@
 package com.kcserver.vermietung.service;
 
+import com.kcserver.core.util.PersonName;
 import com.kcserver.vermietung.dto.*;
 import com.kcserver.vermietung.entity.*;
 import com.kcserver.vermietung.enumtype.*;
@@ -80,7 +81,7 @@ public class FinanzDashboardService {
             if (mietjahr != jahr && mietjahr != jahr-1) continue;
             BigDecimal rent=booking.getMietbereiche().stream().map(BuchungPreiskalkulation::preis).reduce(BigDecimal.ZERO,BigDecimal::add)
                     .subtract(BuchungPreiskalkulation.rabatt(booking)).max(BigDecimal.ZERO);
-            BigDecimal finalAmount=rent.add(snapshots.getOrDefault(booking.getId(),BigDecimal.ZERO)).add(EntschaedigungPositionService.sum(booking));
+            BigDecimal finalAmount=rent.add(Zahlungsplan.ohneAbrechnung(booking)?BigDecimal.ZERO:snapshots.getOrDefault(booking.getId(),BigDecimal.ZERO)).add(EntschaedigungPositionService.sum(booking));
             int month=booking.getAnreise().getMonthValue()-1;
             if (mietjahr == jahr-1) {
                 vorher[month]=vorher[month].add(finalAmount);
@@ -100,7 +101,7 @@ public class FinanzDashboardService {
             BigDecimal rent=booking.getMietbereiche().stream().map(BuchungPreiskalkulation::preis).reduce(BigDecimal.ZERO,BigDecimal::add)
                     .subtract(BuchungPreiskalkulation.rabatt(booking)).max(BigDecimal.ZERO);
             BigDecimal due=rent.subtract(bezahlt.getOrDefault(booking.getId(),BigDecimal.ZERO)).max(BigDecimal.ZERO)
-                    .add(snapshots.getOrDefault(booking.getId(),BigDecimal.ZERO)
+                    .add((Zahlungsplan.ohneAbrechnung(booking)?BigDecimal.ZERO:snapshots.getOrDefault(booking.getId(),BigDecimal.ZERO))
                         .add(EntschaedigungPositionService.sum(booking)).subtract(verbrauchBezahlt.getOrDefault(booking.getId(),BigDecimal.ZERO)).max(BigDecimal.ZERO));
             if(due.signum()>0) {
                 offen.put(booking.getId(),due);
@@ -119,7 +120,7 @@ public class FinanzDashboardService {
         List<FinanzDashboardDTO.Monat> months=new ArrayList<>(); BigDecimal running=BigDecimal.ZERO,prev=BigDecimal.ZERO;
         for(int i=0;i<12;i++) {running=running.add(monat[i]);prev=prev.add(vorher[i]);months.add(new FinanzDashboardDTO.Monat(i+1,monat[i],running,prev));}
         var rows=details.values().stream().map(b->new FinanzDashboardDTO.Buchung(b.getId(),b.getBuchungsnummer(),
-            (Objects.toString(b.getMieter().getVorname(),"")+" "+Objects.toString(b.getMieter().getName(),"")).trim(),
+            PersonName.givenFirst(b.getMieter().getName(), b.getMieter().getVorname()),
             b.getMietobjekt().getBezeichnung(),b.getBuchungsquelle().name(),b.getStatus().name(),jahreswerte.getOrDefault(b.getId(),BigDecimal.ZERO),offen.getOrDefault(b.getId(),BigDecimal.ZERO)))
             .sorted(Comparator.comparing(FinanzDashboardDTO.Buchung::nummer,Comparator.nullsLast(Comparator.naturalOrder())).reversed()).toList();
         return new FinanzDashboardDTO(jahr,stand,grenze,sum,prior,grenze.subtract(sum),planned,booked,trend,forecast,unbefristet,months,rows,

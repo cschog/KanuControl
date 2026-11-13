@@ -1,5 +1,6 @@
 package com.kcserver.kjfp.service.pdf;
 
+import com.kcserver.core.util.PersonName;
 import com.kcserver.core.entity.Person;
 import com.kcserver.core.entity.Teilnehmer;
 import com.kcserver.core.entity.Veranstaltung;
@@ -119,7 +120,7 @@ public class PDFErhebungsbogenService {
 
             var l = v.getLeiter();
 
-            String name = join(" ", l.getVorname(), l.getName());
+            String name = PersonName.givenFirst(l.getName(), l.getVorname());
             set(form, "leitung_name", name);
 
             set(form, "leitung_anschrift", l.getStrasse());

@@ -73,9 +73,9 @@ class BuchungsnachrichtWorkflowTest {
  }
  @Test void unabhaengigeRechnungVorAbschlussUndKautionsabwicklung(){
   b.setStatus(Buchungsstatus.BESTAETIGT);b.setKautionBetrag(new BigDecimal("250"));b.getMieter().setEmail(null);
-  when(verbrauch.berechneVorschau(b)).thenReturn(List.of());when(verbrauch.berechneSnapshots(b,List.of())).thenReturn(List.of());
+  when(verbrauch.berechneVorschau(b)).thenReturn(List.of());when(verbrauch.berechneSimulationsSnapshots(b,List.of())).thenReturn(List.of());
   var v=service.vorschau(1L,new BuchungsnachrichtService.Start(Buchungsstatus.ABGESCHLOSSEN,List.of(),null));
-  assertArrayEquals(original,v.pdf());assertEquals("Rechnungsmail",v.mailtext());assertEquals(Buchungsstatus.BESTAETIGT,b.getStatus());
+  assertTrue(pdfText(v.pdf()).contains("ENTWURF / SIMULATION"));assertEquals("Rechnungsmail",v.mailtext());assertEquals(Buchungsstatus.BESTAETIGT,b.getStatus());
   verifyNoInteractions(bs,mails);assertTrue(drafts.isEmpty());assertTrue(documents.isEmpty());assertTrue(archives.isEmpty());
   verify(verbrauch,never()).berechneUndSpeichere(any(),anyList());verify(fs,never()).add(anyLong(),any());
  }
@@ -86,7 +86,7 @@ class BuchungsnachrichtWorkflowTest {
   when(verbrauch.berechneVorschau(b)).thenReturn(List.of(row));when(verbrauch.berechneSnapshots(eq(b),anyList())).thenReturn(List.of());
   var v=service.vorschau(1L,new BuchungsnachrichtService.Start(Buchungsstatus.ABGESCHLOSSEN,List.of(),null));
   assertTrue(v.hinweise().stream().anyMatch(h->h.contains("24 Stunden")));
-  verify(verbrauch).berechneSnapshots(b,List.of(new AblesungBestaetigungDTO(7L,b.getAnreise(),b.getAbreise(),start,end,BigDecimal.TEN,new BigDecimal("20"))));
+  verify(verbrauch).berechneSimulationsSnapshots(b,List.of(new AblesungBestaetigungDTO(7L,b.getAnreise(),b.getAbreise(),start,end,BigDecimal.TEN,new BigDecimal("20"))));
   verifyNoInteractions(bs,mails);assertTrue(drafts.isEmpty());
  }
  @Test void abschlussOhneMailBenoetigtKeineAdresseUndArchiviertBearbeiteteRechnung()throws Exception{
@@ -118,6 +118,20 @@ class BuchungsnachrichtWorkflowTest {
   assertThrows(Exception.class,()->service.lesen(1L,d.id()));
   v.setStrasse("Schulstraße 1");assertDoesNotThrow(()->service.lesen(1L,d.id()));
   b.setVeranstalter(null);assertThrows(Exception.class,()->service.lesen(1L,d.id()));
+ }
+
+ private static String pdfText(byte[] bytes){try(var d=org.apache.pdfbox.Loader.loadPDF(bytes)){return new org.apache.pdfbox.text.PDFTextStripper().getText(d);}catch(Exception ex){throw new RuntimeException(ex);}}
+ @Test void zukunftssimulationVerbrauchtKeineRechnungsnummerUndFehlendeVerbraeucheWerdenNichtNull(){
+  b.setAbreise(b.getAnreise().plusDays(4));
+  when(verbrauch.berechneVorschau(b)).thenReturn(List.of());
+  when(verbrauch.berechneSimulationsSnapshots(b,List.of())).thenReturn(List.of());
+  var v=service.vorschau(1L,new BuchungsnachrichtService.Start(Buchungsstatus.ABGESCHLOSSEN,List.of(),null));
+  assertTrue(pdfText(v.pdf()).contains("ENTWURF / SIMULATION"));
+  verifyNoInteractions(bs,mails);verify(rr,never()).saveAndFlush(any());assertTrue(documents.isEmpty());
+  var missing=new VerbrauchskostenVorschauDTO(7L,"Zähler","Strom",null,null,"kWh",BigDecimal.ONE,null,null,null,null,null,null,null,false,"Endablesung fehlt",false);
+  when(verbrauch.berechneVorschau(b)).thenReturn(List.of(missing));
+  var error=assertThrows(org.springframework.web.server.ResponseStatusException.class,()->service.vorschau(1L,new BuchungsnachrichtService.Start(Buchungsstatus.ABGESCHLOSSEN,List.of(),null)));
+  assertTrue(error.getReason().contains("Endablesung fehlt"));
  }
 
 }

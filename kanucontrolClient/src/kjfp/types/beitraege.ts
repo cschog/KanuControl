@@ -38,6 +38,7 @@ export interface TeilnehmerListDTO {
 }
 
 export interface ZahlungsnachweisDetailDTO {
+  belegnummer: string | null;
   id: number;
   datum: string;
   betrag: number;
@@ -49,6 +50,7 @@ export interface ZahlungsnachweisDetailDTO {
 }
 
 export interface ZahlungsnachweisListDTO {
+  belegnummer: string | null;
   id: number;
   datum?: string;
   betrag: number;
@@ -95,6 +97,7 @@ export interface TeilnehmerBeitraegeResponseDTO {
 }
 
 export interface FinanzGruppeZahlungDTO {
+  belegnummer: string | null;
   zahlungsnachweisId: number;
   datum: string;
   betrag: number;

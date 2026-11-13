@@ -86,7 +86,7 @@ class HausmeisterBerichtServiceTest {
         when(provider.getIfAvailable()).thenReturn(sender); when(sender.createMimeMessage()).thenReturn(message);
         var smtp = new SmtpMailProperties(); smtp.setEnabled(true); smtp.setTestMode(true);
         smtp.setTestRecipient("test@example.org"); smtp.setFrom("kc@example.org");
-        var config = new HomepageAnbindung(); config.setMietobjektId(7L); config.setHausmeisterEmail("real@example.org");
+        var config = new HomepageAnbindung(); config.setMietobjektId(7L); config.setHausmeisterEmail("real@example.org"); config.setHausmeisterCcEmail("cc@example.org");
         var objekt = new Mietobjekt(); objekt.setBezeichnung("Bootshaus"); config.setMietobjekt(objekt);
         when(configs.lockById(7L)).thenReturn(java.util.Optional.of(config));
         when(bookings.findByMietobjektIdAndStatusInAndAnreiseLessThanAndAbreiseGreaterThan(any(), any(), any(), any()))
@@ -95,6 +95,8 @@ class HausmeisterBerichtServiceTest {
         service.manuellSenden(7L);
         assertEquals("test@example.org", message.getAllRecipients()[0].toString());
         assertTrue(message.getSubject().startsWith("[TEST]"));
+        assertEquals(1, message.getAllRecipients().length);
+        assertNull(message.getRecipients(jakarta.mail.Message.RecipientType.CC));
         assertNull(config.getHausmeisterLetzteWoche());
         verify(configs, never()).saveAndFlush(any());
         verify(sender).send(message);
@@ -102,5 +104,38 @@ class HausmeisterBerichtServiceTest {
         service.wocheSenden(7L, week);
         assertEquals(week, config.getHausmeisterLetzteWoche());
         verify(configs).saveAndFlush(config);
+        smtp.setTestMode(false);
+        config.setHausmeisterAutomatisch(false);
+        service.manuellSenden(7L);
+        assertEquals("real@example.org", message.getRecipients(jakarta.mail.Message.RecipientType.TO)[0].toString());
+        assertEquals("cc@example.org", message.getRecipients(jakarta.mail.Message.RecipientType.CC)[0].toString());
+        clearInvocations(sender);
+        service.wocheSenden(7L, week.plusWeeks(1));
+        verifyNoInteractions(sender);
     }
+    @Test @SuppressWarnings("unchecked")
+    void objektSchalterUeberschreibtServervorgabeNurInProd() {
+        var configs = mock(HomepageAnbindungRepository.class);
+        var config = new HomepageAnbindung(); config.setMietobjektId(7L); config.setHausmeisterEmail("real@example.org");
+        config.setHausmeisterAutomatisch(true);
+        when(configs.findAll()).thenReturn(java.util.List.of(config));
+        var env = new org.springframework.mock.env.MockEnvironment()
+                .withProperty("kc.runtime-environment", "PROD").withProperty("app.environment", "PROD");
+        env.setActiveProfiles("prod");
+        var service = new HausmeisterBerichtService(configs, mock(BuchungRepository.class), mock(ObjectProvider.class),
+                new SmtpMailProperties(), new com.kcserver.vermietung.config.HausmeisterBerichtFreigabe(env));
+        assertEquals(java.util.List.of(7L), service.objektIds());
+        config.setHausmeisterAutomatisch(false); assertTrue(service.objektIds().isEmpty());
+        config.setHausmeisterAutomatisch(null); assertTrue(service.objektIds().isEmpty());
+        env.setProperty("kc.hausmeisterbericht.enabled", "true");
+        service = new HausmeisterBerichtService(configs, mock(BuchungRepository.class), mock(ObjectProvider.class),
+                new SmtpMailProperties(), new com.kcserver.vermietung.config.HausmeisterBerichtFreigabe(env));
+        assertEquals(java.util.List.of(7L), service.objektIds());
+        config.setHausmeisterAutomatisch(false); assertTrue(service.objektIds().isEmpty());
+        config.setHausmeisterAutomatisch(true); env.setActiveProfiles("test");
+        service = new HausmeisterBerichtService(configs, mock(BuchungRepository.class), mock(ObjectProvider.class),
+                new SmtpMailProperties(), new com.kcserver.vermietung.config.HausmeisterBerichtFreigabe(env));
+        assertTrue(service.objektIds().isEmpty());
+    }
+
 }

@@ -315,3 +315,31 @@ databaseChangeLog:
   - include:
       file: changes/20261111-03-veranstalter.xml
       relativeToChangelogFile: true
+
+  - include:
+      file: changes/20261112-01-gemeinsame-belegnummern.xml
+      relativeToChangelogFile: true
+
+  - include:
+      file: changes/20261112-02-belegnummern-je-konto.xml
+      relativeToChangelogFile: true
+
+  - include:
+      file: changes/20261112-03-buchung-veranstaltung.xml
+      relativeToChangelogFile: true
+
+  - include:
+      file: changes/20261112-04-meter-import.xml
+      relativeToChangelogFile: true
+
+  - include:
+      file: changes/20261113-01-hausmeister-versand.xml
+      relativeToChangelogFile: true
+
+  - include:
+      file: changes/20261113-02-buchung-veranstaltung-80.xml
+      relativeToChangelogFile: true
+
+  - include:
+      file: changes/20261113-03-buchungsdokumente.xml
+      relativeToChangelogFile: true

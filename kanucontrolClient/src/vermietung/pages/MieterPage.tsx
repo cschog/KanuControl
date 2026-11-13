@@ -1,3 +1,4 @@
+import { formatPersonName } from "@/core/utils/personName";
 import { isAxiosError } from "axios";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Box, Button, Chip, CircularProgress, FormControlLabel, Grid, Paper, Stack, TextField, Typography, Checkbox, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, ListItemButton, MenuItem, ToggleButton, ToggleButtonGroup } from "@mui/material";
@@ -174,7 +175,7 @@ export default function MieterPage() {
       setSelectedId(null);
       setForm(emptyForm);
       setPersonRef(undefined); setEdit(false); setIsNew(false);
-      setSuccess(`Mieter ${deleteTarget.vorname} ${deleteTarget.name} wurde gelöscht.`);
+      setSuccess(`Mieter ${formatPersonName(deleteTarget.name, deleteTarget.vorname, "first")} wurde gelöscht.`);
       setDeleteTarget(null);
     } catch (err: unknown) {
       setDeleteError(getApiErrorMessage(err, "Der Mieter konnte nicht gelöscht werden. Bitte erneut versuchen."));
@@ -231,7 +232,7 @@ export default function MieterPage() {
           return <ListItemButton key={item.id} onClick={() => select(item)} sx={{ display: "block", p: 1.5, minWidth: 0, borderBottom: 1, borderColor: "divider" }}>
             <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" gap={1}>
               <Box sx={{ minWidth: 0 }}>
-                <Typography fontWeight={600}>{item.vorname} {item.name}</Typography>
+                <Typography fontWeight={600}>{formatPersonName(item.name, item.vorname, "first")}</Typography>
                 {!!item.mietobjekte?.length && <Typography variant="body2">{item.mietobjekte.join(", ")}</Typography>}
                 {contact && <Typography variant="body2" color="text.secondary">{contact}</Typography>}
               </Box>
@@ -248,7 +249,7 @@ export default function MieterPage() {
       </Paper>
     ) : (
         <Paper variant="outlined" sx={{ p: 2, minWidth: 0 }}>
-          <Typography variant="h6" sx={{ minWidth: 0, mb: 2 }}>{isNew ? "Neuen Mieter anlegen" : `${selected?.vorname ?? ""} ${selected?.name ?? ""}`}</Typography>
+          <Typography variant="h6" sx={{ minWidth: 0, mb: 2 }}>{isNew ? "Neuen Mieter anlegen" : `${formatPersonName(selected?.name ?? "", selected?.vorname ?? "", "first")}`}</Typography>
           {!isNew && selected && selected.buchungen > 0 && <Typography id="mieter-delete-blocked" variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             Löschen ist erst möglich, wenn alle zugehörigen Buchungen gelöscht sind. Das gilt auch für stornierte und abgeschlossene Buchungen.
           </Typography>}
@@ -323,7 +324,7 @@ export default function MieterPage() {
     <Dialog open={!!deleteTarget} onClose={() => { if (!deleting) setDeleteTarget(null); }} aria-labelledby="mieter-delete-title" maxWidth="sm" fullWidth>
       <DialogTitle id="mieter-delete-title">Mieter löschen?</DialogTitle>
       <DialogContent>
-        <DialogContentText>Möchtest du {deleteTarget?.vorname} {deleteTarget?.name} dauerhaft aus der Mieterverwaltung löschen?</DialogContentText>
+        <DialogContentText>Möchtest du {formatPersonName(deleteTarget?.name, deleteTarget?.vorname, "first")} dauerhaft aus der Mieterverwaltung löschen?</DialogContentText>
         <DialogContentText sx={{ mt: 1 }}>Ein Mieter mit Buchungen kann erst gelöscht werden, wenn alle zugehörigen Buchungen gelöscht sind. Eine zugehörige KJFP-Person bleibt erhalten.</DialogContentText>
         {deleteError && <Alert severity="error" sx={{ mt: 2 }}>{deleteError}</Alert>}
       </DialogContent>

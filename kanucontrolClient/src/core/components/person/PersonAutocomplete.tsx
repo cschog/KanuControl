@@ -1,3 +1,4 @@
+import { formatPersonName } from "@/core/utils/personName";
 // src/core/components/person/PersonAutocomplete.tsx
 import { EntityAutocomplete } from "@/core/components/common/reference/EntityAutocomplete";
 import { PersonRef } from "@/core/api/types/person/PersonRef";
@@ -37,7 +38,7 @@ export function PersonAutocomplete({
       fetch={(params) => vermietung
         ? searchVermietungPersonen(params.search)
         : searchPersons({ ...params, nurLeiter, stichtag })}
-      getLabel={(p) => `${p.name}, ${p.vorname}${p.hauptvereinAbk ? ` (${p.hauptvereinAbk})` : ""}`}
+      getLabel={(p) => `${formatPersonName(p.name, p.vorname)}${p.hauptvereinAbk ? ` (${p.hauptvereinAbk})` : ""}`}
       onChange={onChange}
       dataStatus={dataStatus}
       dataStatusMessage={dataStatusMessage}

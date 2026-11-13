@@ -1,5 +1,6 @@
 package com.kcserver.vermietung.service;
 
+import com.kcserver.core.util.PersonName;
 import com.kcserver.vermietung.entity.Buchung;
 import com.kcserver.vermietung.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -27,13 +28,15 @@ public class AbrechnungVorlagenService {
  }
  public VorlagenService.Ergebnis entwurf(Buchung b,int revision,Vorlage entwurf,com.kcserver.vermietung.dto.BuchungFinanzenDTO f,
           List<com.kcserver.vermietung.entity.BuchungVerbrauchskosten> snapshots,LocalDate heute,boolean pruefeErstattungskonto) {
+  if(Zahlungsplan.ohneAbrechnung(b))throw fehler("Für Ohne Abrechnung wird keine Rechnung erstellt.");
   VorlagenService.tenant();
   var p=papier.findById(1L).orElseThrow(()->fehler("Bitte Mandanten-Briefpapier einrichten."));
   var v=normalisieren(entwurf!=null?entwurf:vorlagen.vorlage(b.getMietobjekt().getId(),Vorgang.ABGERECHNET));
   if(v==null)throw fehler("Keine Abrechnungsvorlage (ABGERECHNET) für dieses Mietobjekt hinterlegt.");
   var person=b.getMieter();var date=DateTimeFormatter.ofPattern("dd.MM.yyyy");
   var d=new HashMap<String,String>();
-  d.put("buchungsnummer",b.getBuchungsnummer());d.put("vorname",person.getVorname());d.put("nachname",person.getName());
+  d.put("fruehere_buchungsnummer",Objects.toString(b.getFruehereBuchungsnummer(),""));
+        d.put("buchungsnummer",b.getBuchungsnummer());d.put("vorname",person.getVorname());d.put("nachname",person.getName());
   d.put("organisation",Buchungsadressat.organisation(b));
   d.put("anreise",date.format(b.getAnreise()));d.put("abreise",date.format(b.getAbreise()));d.put("mietobjekt",b.getMietobjekt().getBezeichnung());
   d.put("briefdatum",date.format(heute));
@@ -45,8 +48,9 @@ public class AbrechnungVorlagenService {
   var bank=b.getBankverbindungAuswahl()==com.kcserver.vermietung.enumtype.BankverbindungAuswahl.ALTERNATIV?b.getMietobjekt().getBankverbindungAlternativ():b.getMietobjekt().getBankverbindungPrimaer();
   d.put("bank_name",bank==null?"":Objects.toString(bank.getBankName(),""));d.put("bank_iban",bank==null?"":Objects.toString(bank.getIban(),""));d.put("bank_bic",bank==null?"":Objects.toString(bank.getBic(),""));
   d.put("mieter_bank_name",Objects.toString(person.getBankName(),""));d.put("mieter_bank_iban",Objects.toString(person.getIban(),""));d.put("mieter_bank_bic",Objects.toString(person.getBic(),""));
-  d.put("mieter_kontoinhaber",person.getKontoinhaber()==null||person.getKontoinhaber().isBlank()?(person.getVorname()+" "+person.getName()).strip():person.getKontoinhaber());
+  d.put("mieter_kontoinhaber",person.getKontoinhaber()==null||person.getKontoinhaber().isBlank()?(PersonName.givenFirst(person.getName(), person.getVorname())).strip():person.getKontoinhaber());
   var wahr=EnumSet.of(Bedingung.IMMER,Bedingung.valueOf("ZAHLUNG_"+b.getZahlungsvariante().name()),f.saldo().signum()<0?Bedingung.ERSTATTUNG_POSITIV:f.saldo().signum()>0?Bedingung.RESTZAHLUNG_POSITIV:Bedingung.AUSGEGLICHEN);
+  if(b.getFruehereBuchungsnummer()!=null && !b.getFruehereBuchungsnummer().isBlank())wahr.add(Bedingung.FRUEHERE_BUCHUNGSNUMMER_VORHANDEN);
   if(f.kautionSoll().signum()>0)wahr.add(Bedingung.KAUTION_POSITIV);
   if(pruefeErstattungskonto && f.saldo().signum()<0 && d.get("mieter_bank_iban").isBlank())throw fehler("Für eine Rückerstattung bitte die IBAN des Mieters hinterlegen.");
   var felder=new HashMap<String,String>();

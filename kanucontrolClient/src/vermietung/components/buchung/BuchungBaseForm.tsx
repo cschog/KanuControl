@@ -1,3 +1,4 @@
+import { formatPersonName } from "@/core/utils/personName";
 // src/vermietung/components/buchung/BuchungBaseForm.tsx
 
 import { BuchungBankverbindung } from "./BuchungBankverbindung";
@@ -205,7 +206,8 @@ export const BuchungBaseForm: React.FC<Props> = ({
     form.anreise, form.abreise, form.unbefristet,
   );
 
-  const gesamtpreis = form.positionen.reduce<number>((summe, position) => {
+  const kostenlos = form.zahlungsvariante === "OHNE_ABRECHNUNG";
+  const gesamtpreis = kostenlos ? 0 : form.positionen.reduce<number>((summe, position) => {
     const buchungsposition = preispositionen.find(
       (item) => item.mietbereichId === position.mietbereichId,
     );
@@ -219,7 +221,7 @@ export const BuchungBaseForm: React.FC<Props> = ({
     return summe + geldRunden(preis * position.anzahl * einheitenFuer(position.mietbereichId));
   }, 0);
 
-  const gesamtpreisVollstaendig = form.positionen.every((position) => {
+  const gesamtpreisVollstaendig = kostenlos || form.positionen.every((position) => {
     const buchungsposition = preispositionen.find(
       (item) => item.mietbereichId === position.mietbereichId,
     );
@@ -345,6 +347,21 @@ export const BuchungBaseForm: React.FC<Props> = ({
           onChange={onMieterChange}
         />
 
+        <TextField label="Frühere Buchungsnummer" value={form.fruehereBuchungsnummer ?? ""}
+          onChange={event => onChange("fruehereBuchungsnummer", event.target.value)}
+          disabled={!editMode} inputProps={{maxLength:100}} fullWidth size="small"
+          helperText="Optional für die Migration; die aktuelle Buchungsnummer bleibt erhalten." />
+        <TextField
+          label="Veranstaltung"
+          value={form.veranstaltung ?? ""}
+          onChange={(event) => onChange("veranstaltung", event.target.value)}
+          disabled={!buchungsdatenEditierbar}
+          inputProps={{ maxLength: 80 }}
+          helperText={`${(form.veranstaltung ?? "").length}/80 Zeichen (optional)`}
+          fullWidth
+          size="small"
+        />
+
         <VereinAutocomplete
           label="Veranstalter"
           veranstalter
@@ -352,16 +369,18 @@ export const BuchungBaseForm: React.FC<Props> = ({
           disabled={!buchungsdatenEditierbar}
           onChange={onVeranstalterChange}
         />
-        {veranstalter && <Alert severity="info">
+        {kostenlos && <Alert severity="info">Diese Buchung ist vollständig kostenlos. Es werden keine Miet-, Verbrauchs- oder Zusatzkosten berechnet. Nach Mietende wird die bestätigte Buchung automatisch abgeschlossen.</Alert>}
+        {veranstalter && !kostenlos && <Alert severity="info">
           Rechnung an: {veranstalter.name}<br />
-          Ansprechpartner: {[mieter?.vorname, mieter?.name].filter(Boolean).join(" ")}
+          Ansprechpartner: {formatPersonName(mieter?.name, mieter?.vorname, "first")}
         </Alert>}
 
 
         {form.buchungsquelle === "DIREKT" && <TextField select label="Zahlungsvariante" fullWidth size="small"
           value={form.zahlungsvariante ?? "ANZAHLUNG"} disabled={!buchungsdatenEditierbar}
-          helperText="Gespeicherte Auswahl bleibt bestehen. Kaution ist in allen Varianten optional."
+          helperText="Ohne Abrechnung: vollständig kostenlos, ohne Anzahlung und Kaution; automatischer Abschluss nach Mietende."
           onChange={e => onChange("zahlungsvariante", e.target.value as BuchungSave["zahlungsvariante"])}>
+          <MenuItem value="OHNE_ABRECHNUNG">Ohne Abrechnung (kostenlos)</MenuItem>
           <MenuItem value="ANZAHLUNG">Anzahlung</MenuItem>
           <MenuItem value="BEI_ABRECHNUNG">Zahlung bei Abrechnung</MenuItem>
           <MenuItem value="GESAMTMIETE_VORAUS">Gesamtmiete im Voraus</MenuItem>
@@ -379,7 +398,7 @@ export const BuchungBaseForm: React.FC<Props> = ({
           />
         ) : null}
 
-        {form.buchungsquelle === "DIREKT" ? (
+        {form.buchungsquelle === "DIREKT" && !kostenlos ? (
           <TextField
             label="Kaution (€)"
             type="number"
@@ -390,11 +409,11 @@ export const BuchungBaseForm: React.FC<Props> = ({
             slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
             onChange={(event) => onChange("kautionBetrag", Math.max(0, Number(event.target.value) || 0))}
           />
-        ) : (
+        ) : form.buchungsquelle === "AIRBNB" ? (
           <Alert severity="info">Für Airbnb-Buchungen werden keine Anzahlung und keine Kaution erhoben.</Alert>
-        )}
+        ) : null}
 
-        {buchungsstatus === "ANFRAGE" && form.buchungsquelle === "DIREKT" && form.zahlungsvariante !== "GESAMTMIETE_VORAUS" && form.anreise && (() => {
+        {!kostenlos && buchungsstatus === "ANFRAGE" && form.buchungsquelle === "DIREKT" && form.zahlungsvariante !== "GESAMTMIETE_VORAUS" && form.anreise && (() => {
           const heute = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Berlin" }).format(new Date());
           return (Date.parse(form.anreise.slice(0, 10)) - Date.parse(heute)) / 86400000 < (mietobjekt?.kurzfristgrenzeTage ?? 42) && (mietobjekt?.kurzfristgrenzeTage ?? 42) > 0;
         })() && <Alert severity="info" action={<button type="button" disabled={!buchungsdatenEditierbar} onClick={() => onChange("zahlungsvariante", "GESAMTMIETE_VORAUS")}>Übernehmen</button>}>Kurzfristige Anfrage: Gesamtmiete im Voraus empfohlen.</Alert>}
@@ -691,7 +710,7 @@ export const BuchungBaseForm: React.FC<Props> = ({
           }}
         >
           <Box sx={{ mb: 2 }}>
-            {form.buchungsquelle === "AIRBNB" ? (
+            {kostenlos ? <><Typography variant="subtitle2">Ohne Abrechnung</Typography><Typography variant="h5">0,00 € · kostenlos</Typography></> : form.buchungsquelle === "AIRBNB" ? (
               <>
                 <Typography variant="subtitle2" color="text.secondary">Mietpreis</Typography>
                 <Typography variant="h5" fontWeight={700} sx={{ mt: 0.5 }}>
@@ -866,7 +885,7 @@ export const BuchungBaseForm: React.FC<Props> = ({
                             (item) => item.mietbereichId === mietbereich.id,
                           );
 
-                          const preis =
+                          const preis = kostenlos ? 0 :
                             buchungsposition?.vereinbarterPreis ?? geladenePreise[mietbereich.id];
 
                           const berechnungsart =
@@ -901,7 +920,8 @@ export const BuchungBaseForm: React.FC<Props> = ({
           )}
         </Paper>
       </Box>
-      {/* Dritte Spalte: Verbrauchswerte und Kosten */}
+      {/* Verbrauchswerte und Kosten erst ab Abrechenbar anzeigen. */}
+      {!kostenlos && (buchungsstatus === "ABRECHENBAR" || buchungsstatus === "ABGESCHLOSSEN") && (
       <Box sx={{ minWidth: 0 }}>
         <Paper
           variant="outlined"
@@ -1211,6 +1231,7 @@ export const BuchungBaseForm: React.FC<Props> = ({
           )}
         </Paper>
       </Box>
+      )}
     </>
   );
 };

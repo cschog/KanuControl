@@ -1,3 +1,4 @@
+import { kategorieZuTyp, type FinanzKategorie } from "@/kjfp/types/finanz";
 import { useEffect, useMemo, useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 
@@ -69,7 +70,7 @@ function SignedMoney({ value, positive = true }: SignedMoneyProps) {
 }
 
 function isEinnahmeKategorie(kategorie: string): boolean {
-  return ["PFAND", "KJFP_ZUSCHUSS", "SONSTIGE_EINNAHMEN"].includes(kategorie);
+  return kategorieZuTyp[kategorie as FinanzKategorie] === "EINNAHME";
 }
 
 export default function FinanzGruppeBelege({ veranstaltungId, finanzGruppeId }: Props) {
@@ -95,6 +96,7 @@ export default function FinanzGruppeBelege({ veranstaltungId, finanzGruppeId }: 
 
   const zahlungsColumns = useMemo<ColumnDef<FinanzGruppeZahlungDTO & { id: number }>[]>(
     () => [
+      { accessorKey: "belegnummer", header: "Belegnummer", size: 130 },
       {
         accessorKey: "datum",
         header: "Datum",
@@ -178,39 +180,18 @@ export default function FinanzGruppeBelege({ veranstaltungId, finanzGruppeId }: 
         ),
       },
 
-      {
-        id: "betrag",
-        header: "Betrag",
-        size: 75,
-        meta: {
-          align: "right",
-        },
-        cell: ({ row }) => {
-          const positionen = row.original.positionen;
-
-          const betrag = positionen.reduce((sum, position) => sum + Number(position.betrag), 0);
-
-          /*
-           * Ein Beleg kann theoretisch mehrere Positionen enthalten.
-           *
-           * Für die Darstellung bestimmen wir die Richtung
-           * anhand des resultierenden fachlichen Betrags.
-           */
-          const positive =
-            positionen.length > 0 &&
-            positionen.every((position) => isEinnahmeKategorie(position.kategorie));
-
-          /*
-           * Negative gespeicherte Beträge sind ebenfalls
-           * Auszahlungen, z.B. Rückzahlungen.
-           */
-          const isRueckzahlung = positionen.some(
-            (position) => position.kategorie === "TEILNEHMERBEITRAG" && Number(position.betrag) < 0,
-          );
-
-          return <SignedMoney value={betrag} positive={positive && !isRueckzahlung} />;
-        },
-      },
+      ...([true, false] as const).map((einnahme): ColumnDef<AbrechnungBeleg> => ({
+        id: einnahme ? "einnahmen" : "ausgaben",
+        header: einnahme ? "Einnahmen" : "Ausgaben",
+        size: 90,
+        meta: { align: "right" },
+        cell: ({ row }) => <SignedMoney
+          value={row.original.positionen
+            .filter((position) => isEinnahmeKategorie(position.kategorie) === einnahme)
+            .reduce((sum, position) => sum + Number(position.betrag), 0)}
+          positive={einnahme}
+        />,
+      })),
     ],
     [],
   );
@@ -221,6 +202,7 @@ export default function FinanzGruppeBelege({ veranstaltungId, finanzGruppeId }: 
 
   const reisekostenColumns = useMemo<ColumnDef<ReisekostenabrechnungListResponse>[]>(
     () => [
+      { accessorKey: "belegnummer", header: "Belegnummer", size: 130 },
       {
         accessorKey: "fahrerName",
         header: "Fahrer",

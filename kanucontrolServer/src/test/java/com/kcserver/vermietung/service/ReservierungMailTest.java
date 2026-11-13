@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class ReservierungMailTest {
-    @Test void mimeAnhangUndTextNutzenTestRoutingUndCcGenauEinmal() throws Exception {
+    @Test void mimeAnhangUndTextNutzenTestRoutingOhneCc() throws Exception {
         try(var factory=Validation.buildDefaultValidatorFactory()) {
             var configs=mock(HomepageAnbindungRepository.class);var sender=mock(JavaMailSender.class);
             var pdf=mock(ReservierungsbestaetigungPdf.class);var b=ReservierungsbestaetigungTest.beispiel();
@@ -36,8 +36,7 @@ class ReservierungMailTest {
             var vorbereitet=service.reservierungVorbereiten(b);var message=vorbereitet.message();message.saveChanges();
             assertEquals("[TEST] 2027-015 Reservierungsbestätigung",message.getSubject());
             assertEquals("objekttest@example.org",message.getRecipients(Message.RecipientType.TO)[0].toString());
-            assertEquals(1,message.getRecipients(Message.RecipientType.CC).length);
-            assertEquals("kopie@example.org",message.getRecipients(Message.RecipientType.CC)[0].toString());
+            assertNull(message.getRecipients(Message.RecipientType.CC));
             assertEquals("antwort@example.org",message.getReplyTo()[0].toString());
             var parts=new ArrayList<Part>();collect(message,parts);
             var attachments=parts.stream().filter(p->{try{return p.getFileName()!=null;}catch(Exception e){throw new RuntimeException(e);}}).toList();

@@ -527,16 +527,15 @@ public class PDFDocumentComposer {
             Matrix matrix;
 
             if (rotate) {
-
-                matrix =
-                        new Matrix(
-                                0,
-                                -scale,
-                                scale,
-                                0,
-                                x,
-                                y + outputHeight
-                        );
+                // Gleiche Leserichtung wie PDF-Anhänge: Querformat von rechts lesbar.
+                matrix = new Matrix(
+                        0,
+                        scale,
+                        -scale,
+                        0,
+                        x + outputWidth,
+                        y
+                );
 
             } else {
 
@@ -783,6 +782,8 @@ public class PDFDocumentComposer {
                         - 16f;
 
         float fontSize = 8f;
+        String label = "Beleg " + belegNummer;
+        float labelWidth = FOOTER_FONT.getStringWidth(label) / 1000f * fontSize;
 
         try (
                 PDPageContentStream content =
@@ -807,7 +808,7 @@ public class PDFDocumentComposer {
             content.addRect(
                     x - 3f,
                     y - 3f,
-                    48f,
+                    labelWidth + 6f,
                     13f
             );
 
@@ -835,7 +836,7 @@ public class PDFDocumentComposer {
             );
 
             content.showText(
-                    "Beleg " + belegNummer
+                    label
             );
 
             content.endText();

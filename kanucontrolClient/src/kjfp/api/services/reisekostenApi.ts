@@ -12,6 +12,7 @@ import {
 export interface ReisekostenabrechnungCreateRequest {
   veranstaltungId: number;
   fahrerId: number;
+  finanzGruppeId: number;
   abrechnungsdatum: string;
   bemerkung?: string;
 }

@@ -1,3 +1,4 @@
+import { formatPersonName } from "@/core/utils/personName";
 import { ColumnDef } from "@tanstack/react-table";
 import { Box, Tooltip } from "@mui/material";
 import { PersonList } from "@/core/api/types/person/Person";
@@ -6,7 +7,7 @@ export const personColumnsTanstack: ColumnDef<PersonList>[] = [
   {
     id: "fullName",
     header: "Name",
-    accessorFn: (row) => `${row.name ?? ""}, ${row.vorname ?? ""}`,
+    accessorFn: (row) => `${formatPersonName(row.name ?? "", row.vorname ?? "")}`,
     cell: ({ row }) => {
       const person = row.original;
 
@@ -67,7 +68,7 @@ export const personColumnsTanstack: ColumnDef<PersonList>[] = [
             </Tooltip>
           )}
 
-          <Box>{`${person.name ?? ""}, ${person.vorname ?? ""}`}</Box>
+          <Box>{`${formatPersonName(person.name ?? "", person.vorname ?? "")}`}</Box>
         </Box>
       );
     },

@@ -1,3 +1,4 @@
+import { formatPersonName } from "@/core/utils/personName";
 import { useEffect, useState, useCallback } from "react";
 import { getApiErrorMessage } from "@/kjfp/api/utils/apiError";
 import { ErrorDialog } from "@/core/components/common/ErrorDialog";
@@ -183,7 +184,7 @@ export default function TeilnehmerScreen() {
       : await getGemeinsameTeilnehmer(active.id).then((content) => ({ content, totalElements: content.length }));
 
     const matching = b.content.filter((t) => {
-      const name = `${t.person?.vorname ?? ""} ${t.person?.name ?? ""}`.toLowerCase();
+      const name = `${formatPersonName(t.person?.name ?? "", t.person?.vorname ?? "", "first")}`.toLowerCase();
       return (!debounceSearchR || name.includes(debounceSearchR.toLowerCase())) &&
         (!debounceVereinR || (t.person?.hauptvereinAbk ?? "").toLowerCase().includes(debounceVereinR.toLowerCase()));
     });
@@ -563,7 +564,7 @@ export default function TeilnehmerScreen() {
                           )}
 
                           <Typography fontWeight={600}>
-                            {row.name}, {row.vorname}
+                            {formatPersonName(row.name, row.vorname)}
                           </Typography>
                         </Box>
 
@@ -613,7 +614,7 @@ export default function TeilnehmerScreen() {
                           )}
 
                           <Typography fontWeight={600}>
-                            {row.person?.name}, {row.person?.vorname}
+                            {formatPersonName(row.person?.name, row.person?.vorname)}
                           </Typography>
                           {gemeinsameAnsicht && active.kjfpAktiv && (
                             <Chip size="small" label={row.kjfpZugeordnet ? "KJFP" : "Allgemein"} variant={row.kjfpZugeordnet ? "filled" : "outlined"} onClick={() => assignedColumns && setTeilnehmerKjfpZuordnung(active.id, row.id, !row.kjfpZugeordnet).then(load).catch((e: unknown) => setError(getApiErrorMessage(e)))} />

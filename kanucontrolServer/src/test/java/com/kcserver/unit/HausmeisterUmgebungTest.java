@@ -84,7 +84,10 @@ class HausmeisterUmgebungTest {
         var heute=LocalDate.now(java.time.ZoneId.of("Europe/Berlin"));
         verify(bookings).findByMietobjektIdAndStatusInAndAnreiseLessThanAndAbreiseGreaterThan(eq(7L),any(),eq(heute.plusWeeks(4).atStartOfDay()),eq(heute.atStartOfDay()));
         assertEquals(letzteWoche,saved.getHausmeisterLetzteWoche());verify(configs,never()).saveAndFlush(any());
-        clearInvocations(configs,bookings,mail);service.wocheSenden(7L,heute);verifyNoInteractions(configs,bookings,mail);
+        clearInvocations(configs,bookings,mail);service.wocheSenden(7L,heute);
+        if ("PROD".equals(umgebung) && "prod".equals(profil)) verify(configs).lockById(7L);
+        else verifyNoInteractions(configs);
+        verifyNoInteractions(bookings,mail);verify(configs,never()).saveAndFlush(any());
     }
 
     @Test void echteProfilkonfigurationenBleibenOhneSeparateFreigabeGesperrt() {

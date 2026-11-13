@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+    <changeSet id="20261112-04-meter-import" author="codex">
+        <addColumn tableName="zaehlerstand"><column name="import_messzeit" type="TIMESTAMP WITH TIME ZONE"/></addColumn>
+        <addUniqueConstraint tableName="zaehlerstand" columnNames="zaehler_id,import_messzeit" constraintName="uq_zaehlerstand_import_messzeit"/>
+        <rollback><dropUniqueConstraint tableName="zaehlerstand" constraintName="uq_zaehlerstand_import_messzeit"/><dropColumn tableName="zaehlerstand" columnName="import_messzeit"/></rollback>
+    </changeSet>
+</databaseChangeLog>

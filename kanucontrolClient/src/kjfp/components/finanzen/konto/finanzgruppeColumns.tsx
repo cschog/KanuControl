@@ -1,3 +1,4 @@
+import { formatPersonName } from "@/core/utils/personName";
 // src/components/finanzen/finanzgruppeColumns.tsx
 
 import { ColumnDef } from "@tanstack/react-table";
@@ -37,14 +38,14 @@ export const kuerzelColumns = ({
           <Chip
             key={t.id}
             size="small"
-            label={`${t.vorname} ${t.nachname}`}
+            label={`${formatPersonName(t.nachname, t.vorname, "first")}`}
             onDelete={
               row.original.system
                 ? undefined
                 : (e) => {
                     e.stopPropagation();
 
-                    onRemoveTeilnehmer(row.original.id, t.personId, `${t.vorname} ${t.nachname}`);
+                    onRemoveTeilnehmer(row.original.id, t.personId, `${formatPersonName(t.nachname, t.vorname, "first")}`);
                   }
             }
           />

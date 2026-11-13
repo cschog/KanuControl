@@ -1,3 +1,4 @@
+import { formatPersonName } from "@/core/utils/personName";
 import { getSperrzeiten, type Sperrzeit } from "@/vermietung/api/sperrzeitApi";
 import { getApiErrorMessage } from "@/kjfp/api/utils/apiError";
 import { useEffect, useMemo, useState } from "react";
@@ -61,7 +62,7 @@ function BuchungChip({ buchung, onSelect, fullWidth = false }: {
   onSelect: (buchung: Buchung) => void;
   fullWidth?: boolean;
 }) {
-  const mietername = `${buchung.mieterVorname} ${buchung.mieterName}`.trim();
+  const mietername = `${formatPersonName(buchung.mieterName, buchung.mieterVorname, "first")}`.trim();
   const titel = [
     mietername,
     `Buchung ${buchung.buchungsnummer}`,

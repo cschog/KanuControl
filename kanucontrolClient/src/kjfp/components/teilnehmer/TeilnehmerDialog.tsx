@@ -1,3 +1,4 @@
+import { formatPersonName } from "@/core/utils/personName";
 import {
   Dialog,
   DialogTitle,
@@ -79,7 +80,7 @@ const TeilnehmerDialog: FC<Props> = ({ open, veranstaltungId, gruppeId, onClose,
           .filter((t) => !t.kuerzel)
           .map((t) => ({
             id: t.id,
-            label: `${t.person.name}, ${t.person.vorname}`,
+            label: `${formatPersonName(t.person.name, t.person.vorname)}`,
           }));
 
         setOptions(mapped);

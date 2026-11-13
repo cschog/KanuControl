@@ -6,6 +6,8 @@ import java.util.List;
 public record ReisekostenabrechnungListResponse(
 
         Long id,
+        Long finanzGruppeId,
+        String belegnummer,
         Long fahrerId,
         String fahrerName,
         Integer gesamtKilometer,

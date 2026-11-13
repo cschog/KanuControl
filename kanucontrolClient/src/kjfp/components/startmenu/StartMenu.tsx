@@ -1,3 +1,4 @@
+import { formatPersonName } from "@/core/utils/personName";
 import { Box, Alert } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import { useNavigate } from "react-router-dom";
@@ -43,9 +44,7 @@ const StartMenue = () => {
   }, []);
 
   const contextText = active
-    ? `Mandant: ${schema} · ${active.name} · ${active.leiter?.vorname ?? ""} ${
-        active.leiter?.name ?? ""
-      }`
+    ? `Mandant: ${schema} · ${active.name} · ${formatPersonName(active.leiter?.name, active.leiter?.vorname, "first")}`
     : `Mandant: ${schema}`;
 
   const allgemeineButtons = [

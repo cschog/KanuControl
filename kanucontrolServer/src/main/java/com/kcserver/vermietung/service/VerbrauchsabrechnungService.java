@@ -73,7 +73,14 @@ public class VerbrauchsabrechnungService {
     /** Same validated computation for preview and commit, without writes. */
     @Transactional(readOnly=true)
     public List<BuchungVerbrauchskosten> berechneSnapshots(Buchung buchung,List<AblesungBestaetigungDTO> bestaetigungen) {
-        if(buchung.getBuchungsquelle()==Buchungsquelle.AIRBNB)return List.of();
+        return berechneSnapshots(buchung,bestaetigungen,false);
+    }
+    @Transactional(readOnly=true)
+    public List<BuchungVerbrauchskosten> berechneSimulationsSnapshots(Buchung buchung,List<AblesungBestaetigungDTO> bestaetigungen) {
+        return berechneSnapshots(buchung,bestaetigungen,true);
+    }
+    private List<BuchungVerbrauchskosten> berechneSnapshots(Buchung buchung,List<AblesungBestaetigungDTO> bestaetigungen,boolean simulation) {
+        if(Zahlungsplan.ohneAbrechnung(buchung) || buchung.getBuchungsquelle()==Buchungsquelle.AIRBNB)return List.of();
 
         if (buchung.getAnreise() == null || buchung.getAbreise() == null) {
             throw new IllegalArgumentException(
@@ -94,6 +101,8 @@ public class VerbrauchsabrechnungService {
                     "Der Abreisezeitpunkt muss nach dem Anreisezeitpunkt liegen."
             );
         }
+        if(!simulation)pruefeMietende(buchung);
+
         LocalDateTime anreiseZeitpunkt = buchung.getAnreise();
         LocalDateTime abreiseZeitpunkt = buchung.getAbreise();
 
@@ -240,6 +249,7 @@ public class VerbrauchsabrechnungService {
     public List<VerbrauchskostenVorschauDTO> berechneVorschau(
             Buchung buchung
     ) {
+        if (Zahlungsplan.ohneAbrechnung(buchung)) return List.of();
         List<VerbrauchskostenVorschauDTO> ergebnis = new ArrayList<>();
 
         if (buchung.getBuchungsquelle() == Buchungsquelle.AIRBNB) {
@@ -285,6 +295,12 @@ public class VerbrauchsabrechnungService {
                     null,
                     ErrorMessages.VERBRAUCHSABRECHNUNG_ABREISE_INVALID
             ));
+            return ergebnis;
+        }
+
+        if (buchung.getAbreise().isAfter(LocalDateTime.now(java.time.ZoneId.of("Europe/Berlin")))) {
+            ergebnis.add(fehlerVorschau(null, null, "Verbrauchskosten", null, null, null, null,
+                    "Verbrauchskosten können erst nach Mietende ermittelt werden. Es werden keine früheren Ablesungen als Verbrauch dieses Aufenthalts verwendet."));
             return ergebnis;
         }
 
@@ -669,6 +685,11 @@ public class VerbrauchsabrechnungService {
         snapshot.setAnfangsablesung(anfang.getAblesedatum());
         snapshot.setEndablesung(ende.getAblesedatum());
         snapshot.setKosten(kosten);
+    }
+
+    public static void pruefeMietende(Buchung buchung) {
+        if (buchung.getAbreise() == null || buchung.getAbreise().isAfter(LocalDateTime.now(java.time.ZoneId.of("Europe/Berlin"))))
+            throw new IllegalArgumentException("Eine Schlussabrechnung ist erst nach Mietende möglich. Der tatsächliche Verbrauch dieses Aufenthalts steht vorher noch nicht fest. Bitte die Reservierungs- oder Bestätigungsvorschau verwenden.");
     }
 
     private record Ablesepaar(Zaehlerstand anfang, Zaehlerstand ende) {}

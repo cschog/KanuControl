@@ -33,6 +33,10 @@ public class HomepageAnbindungDTO {
 
     @Email @Size(max = 254)
     private String hausmeisterEmail;
+    @Email @Size(max = 254)
+    private String hausmeisterCcEmail;
+    private Boolean hausmeisterAutomatisch;
+
     @jakarta.validation.constraints.Email @jakarta.validation.constraints.Size(max=254)
     private String antwortTestEmail;
 

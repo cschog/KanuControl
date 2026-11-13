@@ -1,12 +1,13 @@
 package com.kcserver.kjfp.service.pdf;
 
 
+import com.kcserver.core.util.PersonName;
 import com.kcserver.core.exception.ErrorMessages;
 import com.kcserver.core.util.PdfFilenameUtil;
 import com.kcserver.core.entity.Teilnehmer;
 import com.kcserver.core.entity.Veranstaltung;
 import com.kcserver.kjfp.entity.abrechnung.AbrechnungBuchung;
-import com.kcserver.kjfp.enumtype.BuchungsHerkunft;
+import com.kcserver.kjfp.service.finanz.FinanzService;
 import com.kcserver.kjfp.enumtype.PdfDokumentTyp;
 import com.kcserver.kjfp.enumtype.VeranstaltungTyp;
 import com.kcserver.core.repository.TeilnehmerRepository;
@@ -55,6 +56,7 @@ public class PDFAbrechnungService {
     private final ZahlungsnachweisRepository zahlungsnachweisRepository;
 
     private final VeranstaltungValidator validator;
+    private final FinanzService finanzService;
 
     public byte[] generate(Long veranstaltungId) {
 
@@ -190,7 +192,7 @@ public class PDFAbrechnungService {
         var l = v.getLeiter();
 
         set(form, "leitung_name",
-                join (" ", l.getVorname(), l.getName()));
+                PersonName.givenFirst(l.getName(), l.getVorname()));
 
         set(form, "leitung_anschrift", l.getStrasse());
         set(form, "leitung_plz_ort",
@@ -331,17 +333,14 @@ public class PDFAbrechnungService {
                 sum(
                         buchungen,
                         FinanzKategorie.MIETE,
+                        FinanzKategorie.KULTUR,
+                        FinanzKategorie.TEILNEHMERBEITRAG_RUECKZAHLUNG,
                         FinanzKategorie.SONSTIGE_KOSTEN
                 );
 
-        BigDecimal tnGesamt =
-                zahlungsnachweisRepository
-                        .sumBetragByVeranstaltung(v.getId())
-                        .add(
-                                sumVkTeilnehmerbeitragsKorrekturen(
-                                        buchungen
-                                )
-                        );
+        // Dieselben Buchungen und Reisekosten wie in der Abrechnungsübersicht.
+        var summary = finanzService.buildSummary(buchungen, 0, automatischeFahrkosten);
+        BigDecimal tnGesamt = summary.getTeilnehmerbeitrag();
 
         BigDecimal sonstigeEinnahmen =
                 sum(
@@ -356,17 +355,11 @@ public class PDFAbrechnungService {
                         FinanzKategorie.KJFP_ZUSCHUSS
                 );
 
-        BigDecimal gesamtKosten =
-                unterkunftVerpflegung
-                        .add(honorare)
-                        .add(fahrkosten)
-                        .add(material)
-                        .add(mieteSonstige);
+        BigDecimal gesamtKosten = summary.getKosten();
 
-        BigDecimal bisherigeEinnahmen =
-                tnGesamt
-                        .add(sonstigeEinnahmen)
-                        .add(kjfp);
+        // Explizit gebuchte Eigenanteile erscheinen ebenfalls in der Eigenleistung.
+        BigDecimal bisherigeEinnahmen = summary.getEinnahmen()
+                .subtract(sum(buchungen, FinanzKategorie.EIGENANTEIL));
 
         BigDecimal eigenleistung =
                 gesamtKosten.subtract(
@@ -459,70 +452,6 @@ public class PDFAbrechnungService {
                             );
                 }
             }
-        }
-
-        return result;
-    }
-    private BigDecimal sum(
-            List<AbrechnungBuchung> buchungen,
-            FinanzKategorie kategorie,
-            String finanzGruppeKuerzel
-    ) {
-
-        BigDecimal result = BigDecimal.ZERO;
-
-        for (AbrechnungBuchung b : buchungen) {
-
-            if (b.getKategorie() != kategorie
-                    || b.getBetrag() == null
-                    || b.getBeleg() == null
-                    || b.getBeleg().getFinanzGruppe() == null) {
-                continue;
-            }
-
-            if (!finanzGruppeKuerzel.equals(
-                    b.getBeleg()
-                            .getFinanzGruppe()
-                            .getKuerzel()
-            )) {
-                continue;
-            }
-
-            result = result.add(b.getBetrag());
-        }
-
-        return result;
-    }
-    private BigDecimal sumVkTeilnehmerbeitragsKorrekturen(
-            List<AbrechnungBuchung> buchungen
-    ) {
-
-        BigDecimal result = BigDecimal.ZERO;
-
-        for (AbrechnungBuchung b : buchungen) {
-
-            if (b.getKategorie() != FinanzKategorie.TEILNEHMERBEITRAG
-                    || b.getBetrag() == null
-                    || b.getBeleg() == null
-                    || b.getBeleg().getFinanzGruppe() == null) {
-                continue;
-            }
-
-            if (!"VK".equals(
-                    b.getBeleg()
-                            .getFinanzGruppe()
-                            .getKuerzel()
-            )) {
-                continue;
-            }
-
-            // Die automatische VK-Buchung für Überweisungen
-            // ist bereits über die Zahlungsnachweise enthalten.
-            if (b.getHerkunft() == BuchungsHerkunft.TEILNEHMERBEITRAG) {
-                continue;
-            }
-
-            result = result.add(b.getBetrag());
         }
 
         return result;

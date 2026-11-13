@@ -63,7 +63,7 @@ public final class BriefpapierPdf {
         try(var doc=org.apache.pdfbox.Loader.loadPDF(bytes)){
             if(doc.isEncrypted() || doc.getNumberOfPages()<1 || doc.getNumberOfPages()>100)throw fehler("PDF muss unverschlüsselt sein und 1 bis 100 Seiten enthalten.");
             pruefeObjekt(doc.getDocumentCatalog().getCOSObject(),Collections.newSetFromMap(new IdentityHashMap<>()),new int[]{0},0);
-            var out=new org.apache.pdfbox.text.PDFTextStripper();out.setEndPage(Math.min(2,doc.getNumberOfPages()));out.getText(doc);
+            var out=new org.apache.pdfbox.text.PDFTextStripper();out.setEndPage(doc.getNumberOfPages());out.getText(doc);
         }catch(IOException|IllegalArgumentException ex){throw fehler("PDF-Anhang ist nicht lesbar.");}
     }
     public static void pruefeBild(byte[] image) {

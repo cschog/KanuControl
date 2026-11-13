@@ -13,6 +13,7 @@ import java.util.List;
 public class ZahlungsnachweisListDTO {
 
     private Long id;
+    private String belegnummer;
     private LocalDate datum;
     private BigDecimal betrag;
     private String bemerkung;

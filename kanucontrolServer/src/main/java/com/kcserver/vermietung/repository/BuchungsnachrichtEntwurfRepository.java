@@ -4,6 +4,10 @@ import org.springframework.data.jpa.repository.*;
 import jakarta.persistence.LockModeType;
 import java.util.*;
 public interface BuchungsnachrichtEntwurfRepository extends JpaRepository<BuchungsnachrichtEntwurf,String> {
+ List<BuchungsnachrichtEntwurf> findByBuchungIdAndTenantAndUnabhaengigTrueAndAktuelleFassungTrue(Long buchungId,String tenant);
+ @Lock(LockModeType.PESSIMISTIC_WRITE)
+ @Query("select e from BuchungsnachrichtEntwurf e where e.id=:id and e.tenant=:tenant and e.buchungId=:buchungId and e.unabhaengig=true and (e.benutzer=:benutzer or e.aktuelleFassung=true)")
+ Optional<BuchungsnachrichtEntwurf> dokument(String id,String benutzer,String tenant,Long buchungId);
  @Lock(LockModeType.PESSIMISTIC_WRITE)
  @Query("select e from BuchungsnachrichtEntwurf e where e.id=:id and e.benutzer=:benutzer and e.tenant=:tenant and e.buchungId=:buchungId")
  Optional<BuchungsnachrichtEntwurf> gesperrt(String id,String benutzer,String tenant,Long buchungId);

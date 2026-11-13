@@ -1,5 +1,6 @@
 package com.kcserver.kjfp.service.pdf;
 
+import com.kcserver.core.util.PersonName;
 import com.kcserver.core.dto.person.PersonRefDTO;
 import com.kcserver.core.dto.teilnehmer.TeilnehmerDetailDTO;
 import com.kcserver.core.dto.veranstaltung.VeranstaltungDetailDTO;
@@ -138,7 +139,7 @@ public class PDFTeilnehmerlisteService {
 
         if (v.getLeiter() != null) {
             set(form, "leiter_name",
-                    v.getLeiter().getVorname() + " " + v.getLeiter().getName());
+                    PersonName.givenFirst(v.getLeiter().getName(), v.getLeiter().getVorname()));
         }
 
         if (v.getTyp() != null) {
@@ -167,7 +168,7 @@ public class PDFTeilnehmerlisteService {
         PersonRefDTO p = tn.getPerson();
 
         set(form, "nr_" + row, String.valueOf(globalNr));
-        set(form, "name_" + row, p.getName() + ", " + p.getVorname());
+        set(form, "name_" + row, PersonName.surnameFirst(p.getName(), p.getVorname()));
 
         if (tn.getRolle() != null)
             set(form, "rolle_" + row, tn.getRolle().getCode());

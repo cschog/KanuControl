@@ -18,7 +18,7 @@ public class HausmeisterBerichtScheduler {
     // Wiederholung am Sonntagnachmittag ermöglicht Nachholung nach Neustart/SMTP-Ausfall.
     @Scheduled(cron = "0 */5 15-23 * * SUN", zone = "Europe/Berlin")
     public void senden() {
-        if (!freigabe.isEnabled()) return;
+        if (!freigabe.isProduction()) return;
         var day = LocalDate.now(HausmeisterBerichtService.ZONE);
         var tenants = jdbc.queryForList("""
             select distinct table_schema from information_schema.tables

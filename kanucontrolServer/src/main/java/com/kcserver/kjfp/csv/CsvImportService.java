@@ -1,5 +1,6 @@
 package com.kcserver.kjfp.csv;
 
+import com.kcserver.core.util.PersonName;
 import com.kcserver.core.dto.person.PersonSaveDTO;
 import com.kcserver.core.service.MitgliedService;
 import com.kcserver.core.service.person.PersonService;
@@ -175,9 +176,7 @@ public class CsvImportService {
         } else if (dto != null) {
 
             field = "Person";
-            value = dto.getVorname()
-                    + " "
-                    + dto.getName()
+            value = PersonName.givenFirst(dto.getName(), dto.getVorname())
                     + (dto.getGeburtsdatum() != null
                     ? " (" + dto.getGeburtsdatum() + ")"
                     : "");

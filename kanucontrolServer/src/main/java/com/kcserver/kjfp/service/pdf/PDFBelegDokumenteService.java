@@ -87,6 +87,7 @@ public class PDFBelegDokumenteService {
                         )
                         .stream()
                         .filter(this::hasManualBooking)
+                        .sorted(java.util.Comparator.comparing(AbrechnungBeleg::getBelegnummer, BelegnummerSortierung.NUMMERN).thenComparing(AbrechnungBeleg::getId))
                         .toList();
 
         if (belege.isEmpty()) {
@@ -373,10 +374,7 @@ public class PDFBelegDokumenteService {
         for (BelegDokumentGruppe gruppe : gruppen) {
 
             String belegNummer =
-                    String.format(
-                            "#%02d",
-                            gruppe.nummer()
-                    );
+                    safe(gruppe.beleg().getBelegnummer());
 
             for (A4LayoutItem dokument :
                     gruppe.dokumente()) {
@@ -559,19 +557,17 @@ public class PDFBelegDokumenteService {
             float tableWidth =
                     page.getContentWidth();
 
-            float colBeleg = 45f;
-            float colDatum = 70f;
-            float colDokumente = 55f;
-            float colBelegnummer = 90f;
-            float colAussteller = 90f;
-            float colBetrag = 75f;
+            float colBeleg = 80f;
+            float colDatum = 60f;
+            float colDokumente = 40f;
+            float colAussteller = 75f;
+            float colBetrag = 140f;
 
             float colBeschreibung =
                     tableWidth
                             - colBeleg
                             - colDatum
                             - colDokumente
-                            - colBelegnummer
                             - colAussteller
                             - colBetrag;
 
@@ -581,7 +577,6 @@ public class PDFBelegDokumenteService {
                     colBeleg,
                     colDatum,
                     colDokumente,
-                    colBelegnummer,
                     colAussteller,
                     colBetrag,
                     colBeschreibung
@@ -589,13 +584,18 @@ public class PDFBelegDokumenteService {
 
             page.moveY(-ROW_HEIGHT);
 
-            int nummer = 1;
-
-            for (AbrechnungBeleg beleg : belege) {
+            BigDecimal kontoEinnahmen = BigDecimal.ZERO;
+            BigDecimal kontoAusgaben = BigDecimal.ZERO;
+            BigDecimal gesamtEinnahmen = BigDecimal.ZERO;
+            BigDecimal gesamtAusgaben = BigDecimal.ZERO;
+            for (int index = 0; index < belege.size(); index++) {
+                AbrechnungBeleg beleg = belege.get(index);
+                boolean kontoEnde = index + 1 == belege.size()
+                        || !kontoSchluessel(beleg).equals(kontoSchluessel(belege.get(index + 1)));
 
                 boolean neueSeite =
                         page.ensureSpace(
-                                ROW_HEIGHT
+                                kontoEnde ? 2 * ROW_HEIGHT : ROW_HEIGHT
                         );
 
                 if (neueSeite) {
@@ -606,8 +606,7 @@ public class PDFBelegDokumenteService {
                             colBeleg,
                             colDatum,
                             colDokumente,
-                            colBelegnummer,
-                            colAussteller,
+                                    colAussteller,
                             colBetrag,
                             colBeschreibung
                     );
@@ -619,10 +618,7 @@ public class PDFBelegDokumenteService {
                         page.getY();
 
                 page.write(
-                        String.format(
-                                "#%02d",
-                                nummer
-                        ),
+                        safe(beleg.getBelegnummer()),
                         tableX + 3,
                         y - 14,
                         FONT,
@@ -655,34 +651,11 @@ public class PDFBelegDokumenteService {
                 );
 
                 page.write(
-                        truncate(
-                                safe(
-                                        beleg.getBelegnummer()
-                                ),
-                                18
-                        ),
+                        fitText(safe(beleg.getAussteller()), colAussteller - 6, FONT, TEXT_SIZE),
                         tableX
                                 + colBeleg
                                 + colDatum
                                 + colDokumente
-                                + 3,
-                        y - 14,
-                        FONT,
-                        TEXT_SIZE
-                );
-
-                page.write(
-                        truncate(
-                                safe(
-                                        beleg.getAussteller()
-                                ),
-                                20
-                        ),
-                        tableX
-                                + colBeleg
-                                + colDatum
-                                + colDokumente
-                                + colBelegnummer
                                 + 3,
                         y - 14,
                         FONT,
@@ -690,15 +663,11 @@ public class PDFBelegDokumenteService {
                 );
                 // BESCHREIBUNG
                 page.write(
-                        truncate(
-                                safe(beleg.getBeschreibung()),
-                                45
-                        ),
+                        fitText(safe(beleg.getBeschreibung()), colBeschreibung - 6, FONT, TEXT_SIZE),
                         tableX
                                 + colBeleg
                                 + colDatum
                                 + colDokumente
-                                + colBelegnummer
                                 + colAussteller
                                 + 3,
                         y - 14,
@@ -706,21 +675,32 @@ public class PDFBelegDokumenteService {
                         TEXT_SIZE
                 );
 
-                // BETRAG
-                page.writeRight(
-                        formatBetrag(
-                                getBelegBetrag(beleg)
-                        ),
-                        tableX + tableWidth,
-                        y - 14,
-                        FONT,
-                        TEXT_SIZE
-                );
-
-                nummer++;
-
+                BigDecimal einnahmen = getBelegEinnahmen(beleg);
+                BigDecimal ausgaben = getBelegAusgaben(beleg);
+                writeBetraege(page, einnahmen, ausgaben, tableX + tableWidth, y - 14, false);
+                kontoEinnahmen = kontoEinnahmen.add(einnahmen);
+                kontoAusgaben = kontoAusgaben.add(ausgaben);
+                gesamtEinnahmen = gesamtEinnahmen.add(einnahmen);
+                gesamtAusgaben = gesamtAusgaben.add(ausgaben);
                 page.moveY(-ROW_HEIGHT);
+                if (kontoEnde) {
+                    float sumY = page.getY();
+                    page.line(tableX, sumY, tableX + tableWidth, sumY);
+                    page.write("Zwischensumme " + kontoBezeichnung(beleg), tableX + 3,
+                            sumY - 14, FONT_BOLD, TEXT_SIZE);
+                    writeBetraege(page, kontoEinnahmen, kontoAusgaben,
+                            tableX + tableWidth, sumY - 14, true);
+                    page.moveY(-ROW_HEIGHT);
+                    kontoEinnahmen = BigDecimal.ZERO;
+                    kontoAusgaben = BigDecimal.ZERO;
+                }
             }
+
+            page.ensureSpace(2 * ROW_HEIGHT);
+            page.write("Gesamtsumme", tableX + 3, page.getY() - 14, FONT_BOLD, TEXT_SIZE);
+            writeBetraege(page, gesamtEinnahmen, gesamtAusgaben,
+                    tableX + tableWidth, page.getY() - 14, true);
+            page.moveY(-ROW_HEIGHT);
 
             page.ensureSpace(30f);
 
@@ -785,7 +765,6 @@ public class PDFBelegDokumenteService {
             float colBeleg,
             float colDatum,
             float colDokumente,
-            float colBelegnummer,
             float colAussteller,
             float colBetrag,
             float colBeschreibung
@@ -793,8 +772,7 @@ public class PDFBelegDokumenteService {
 
         float xDatum = x + colBeleg;
         float xDokumente = xDatum + colDatum;
-        float xBelegnummer = xDokumente + colDokumente;
-        float xAussteller = xBelegnummer + colBelegnummer;
+        float xAussteller = xDokumente + colDokumente;
         float xBeschreibung = xAussteller + colAussteller;
         float xBetrag = xBeschreibung + colBeschreibung;
         float tableRight = xBetrag + colBetrag;
@@ -803,7 +781,7 @@ public class PDFBelegDokumenteService {
                 page.getY();
 
         page.write(
-                "Beleg",
+                "Belegnummer",
                 x + 3,
                 y - 14,
                 FONT_BOLD,
@@ -827,14 +805,6 @@ public class PDFBelegDokumenteService {
         );
 
         page.write(
-                "Belegnummer",
-                xBelegnummer + 3,
-                y - 14,
-                FONT_BOLD,
-                TEXT_SIZE
-        );
-
-        page.write(
                 "Aussteller",
                 xAussteller + 3,
                 y - 14,
@@ -850,8 +820,9 @@ public class PDFBelegDokumenteService {
                 TEXT_SIZE
         );
 
+        page.writeRight("Einnahmen", tableRight - 70, y - 14, FONT_BOLD, TEXT_SIZE);
         page.writeRight(
-                "Betrag",
+                "Ausgaben",
                 tableRight,
                 y - 14,
                 FONT_BOLD,
@@ -1042,6 +1013,53 @@ public class PDFBelegDokumenteService {
                 betrag
         );
     }
+    private String fitText(String text, float width, org.apache.pdfbox.pdmodel.font.PDFont font,
+                           float size) throws IOException {
+        if (font.getStringWidth(text) / 1000 * size <= width) return text;
+        while (!text.isEmpty() && font.getStringWidth(text + "...") / 1000 * size > width) {
+            text = text.substring(0, text.length() - 1);
+        }
+        return text + "...";
+    }
+
+    private void writeBetraege(PDFPageWriter page, BigDecimal einnahmen, BigDecimal ausgaben,
+                              float right, float y, boolean bold) throws IOException {
+        var font = bold ? FONT_BOLD : FONT;
+        if (einnahmen.setScale(2, java.math.RoundingMode.HALF_UP).signum() != 0) {
+            page.writeRight(formatBetrag(einnahmen), right - 70, y, font, TEXT_SIZE);
+        }
+        if (ausgaben.setScale(2, java.math.RoundingMode.HALF_UP).signum() != 0) {
+            page.writeRight(formatBetrag(ausgaben), right, y, font, TEXT_SIZE);
+        }
+    }
+
+    private BigDecimal getBelegEinnahmen(AbrechnungBeleg beleg) {
+        return beleg.getPositionen().stream()
+                .filter(p -> p.getKategorie() != null && p.getKategorie().isEinnahme())
+                .map(AbrechnungBuchung::getBetrag).filter(java.util.Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private BigDecimal getBelegAusgaben(AbrechnungBeleg beleg) {
+        return beleg.getPositionen().stream()
+                .filter(p -> p.getKategorie() == null || p.getKategorie().isKosten())
+                .map(AbrechnungBuchung::getBetrag).filter(java.util.Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private String kontoSchluessel(AbrechnungBeleg beleg) {
+        var konto = beleg.getFinanzGruppe();
+        return konto != null && konto.getId() != null
+                ? konto.getId().toString() : kontoBezeichnung(beleg);
+    }
+
+    private String kontoBezeichnung(AbrechnungBeleg beleg) {
+        if (beleg.getFinanzGruppe() != null) return safe(beleg.getFinanzGruppe().getKuerzel());
+        String nummer = safe(beleg.getBelegnummer());
+        int separator = nummer.lastIndexOf('_');
+        return separator < 0 ? nummer : nummer.substring(0, separator);
+    }
+
     private BigDecimal getBelegBetrag(AbrechnungBeleg beleg) {
         return beleg.getPositionen()
                 .stream()

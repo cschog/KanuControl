@@ -17,6 +17,10 @@ import java.util.Optional;
 
 public interface ZahlungsnachweisRepository
         extends JpaRepository<Zahlungsnachweis, Long> {
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @Query("select z from Zahlungsnachweis z where z.id = :id and z.veranstaltung.id = :veranstaltungId")
+    java.util.Optional<Zahlungsnachweis> findForUpdate(@Param("id") Long id, @Param("veranstaltungId") Long veranstaltungId);
+
 
     @EntityGraph(attributePaths = {
             "positionen",
@@ -223,6 +227,7 @@ public interface ZahlungsnachweisRepository
     @Query("""
     select new com.kcserver.kjfp.dto.zahlungsnachweis.FinanzGruppeZahlungDTO(
         z.id,
+        z.belegnummer,
         z.datum,
 
         case
@@ -253,6 +258,7 @@ public interface ZahlungsnachweisRepository
     @Query("""
     select distinct new com.kcserver.kjfp.dto.zahlungsnachweis.FinanzGruppeZahlungDTO(
         z.id,
+        z.belegnummer,
         z.datum,
 
         z.betrag,
@@ -285,6 +291,7 @@ public interface ZahlungsnachweisRepository
     @Query("""
     select new com.kcserver.kjfp.dto.zahlungsnachweis.FinanzGruppeZahlungDTO(
         z.id,
+        z.belegnummer,
         z.datum,
 
         -z.betrag,

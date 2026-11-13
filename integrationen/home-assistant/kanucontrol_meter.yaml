@@ -1,0 +1,109 @@
+# HA package: merge into homeassistant.packages. Disabled on every HA start.
+# Do not install unchanged on production; see README.md and secrets.example.yaml.
+rest_command:
+  kanucontrol_meter_import:
+    url: !secret kc_meter_import_url
+    method: POST
+    headers:
+      X-KC-Import-Key: !secret kc_meter_import_key
+    content_type: application/json
+    verify_ssl: true
+    timeout: 30
+    payload: "{{ reading_payload }}"
+
+automation:
+  - id: kanucontrol_hourly_electricity_import
+    alias: KanuControl – stündlicher Stromzählerstand
+    description: Kumulierten kWh-Bezug zur vollen Stunde übertragen
+    initial_state: false
+    mode: single
+    triggers:
+      - trigger: time_pattern
+        minutes: "0"
+        seconds: "0"
+    variables:
+      source_sensor: !secret kc_meter_sensor
+      target_tenant: !secret kc_meter_tenant
+      target_meter_id: !secret kc_meter_id
+      max_sensor_age_seconds: 300
+    actions:
+      # Snapshot once. Retries must use precisely the same measurement and value.
+      - variables:
+          source_reading: >-
+            {%- set s = states[source_sensor] -%}
+            {{ {'value': states(source_sensor),
+                'unit': state_attr(source_sensor, 'unit_of_measurement'),
+                'reported': as_timestamp(s.last_reported, 0) if s is not none else 0} }}
+      - if:
+          - condition: template
+            value_template: >-
+              {{ not is_number(source_reading['value'])
+                 or source_reading['unit'] != 'kWh' }}
+        then:
+          - action: persistent_notification.create
+            data:
+              notification_id: kc_meter_import
+              title: KanuControl Zählerimport ausgelassen
+              message: Sensor fehlt, ist nicht numerisch oder hat nicht die Einheit kWh.
+          - stop: Ungültiger Sensorwert – kein Versand
+      - if:
+          - condition: template
+            value_template: >-
+              {{ (source_reading['value'] | float) < 0
+                 or (source_reading['value'] | float) >= 1000000000000
+                 or (as_timestamp(now()) - source_reading['reported']) > max_sensor_age_seconds
+                 or (as_timestamp(now()) - source_reading['reported']) < -5 }}
+        then:
+          - action: persistent_notification.create
+            data:
+              notification_id: kc_meter_import
+              title: KanuControl Zählerimport ausgelassen
+              message: Sensorwert ist negativ, zu groß oder wurde seit über fünf Minuten nicht gemeldet.
+          - stop: Ungültiger oder veralteter Sensorwert – kein Versand
+      - variables:
+          reading_payload: >-
+            {{ {'tenant': target_tenant, 'meterId': target_meter_id | int,
+                'measuredAt': utcnow().replace(microsecond=0).isoformat(),
+                'value': source_reading['value'] | float | round(3), 'unit': 'kWh',
+                'remark': 'Automatischer Import von Home Assistant'} | to_json }}
+      - repeat:
+          sequence:
+            - variables:
+                import_response: {}
+            - action: rest_command.kanucontrol_meter_import
+              data:
+                reading_payload: "{{ reading_payload }}"
+              response_variable: import_response
+              continue_on_error: true
+            - if:
+                - condition: template
+                  value_template: >-
+                    {{ import_response.get('status', 0) not in [200, 201]
+                       and (import_response.get('status', 0) < 400
+                            or import_response.get('status', 0) >= 500
+                            or import_response.get('status', 0) == 429)
+                       and repeat.index < 3 }}
+              then:
+                - delay: "00:01:00"
+          until:
+            - condition: template
+              value_template: >-
+                {{ import_response.get('status', 0) in [200, 201]
+                   or (400 <= import_response.get('status', 0) < 500
+                       and import_response.get('status', 0) != 429)
+                   or repeat.index >= 3 }}
+      - if:
+          - condition: template
+            value_template: "{{ import_response.get('status', 0) in [200, 201] }}"
+        then:
+          - action: persistent_notification.dismiss
+            data:
+              notification_id: kc_meter_import
+        else:
+          - action: persistent_notification.create
+            data:
+              notification_id: kc_meter_import
+              title: KanuControl Zählerimport fehlgeschlagen
+              message: >-
+                HTTP {{ import_response.get('status', 'keine Antwort') }}.
+                Der Messpunkt konnte nicht bestätigt werden. Siehe Automation-Trace.

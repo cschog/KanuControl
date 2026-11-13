@@ -22,7 +22,7 @@ import { useState, useEffect, useRef } from "react";
 
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 
-import { kategorieZuTyp, FinanzKategorie } from "@/kjfp/types/finanz";
+import { kategorieZuTyp, finanzKategorieLabel, FinanzKategorie } from "@/kjfp/types/finanz";
 import { BelegCreate, BuchungCreate } from "@/kjfp/types/abrechnung";
 
 interface Props {
@@ -294,6 +294,11 @@ export default function BelegMitBuchungDialog({ open, kuerzelListe, onClose, onS
           <Typography variant="h6">Erste Buchung</Typography>
 
           <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+            <TextField select fullWidth label="Art der Buchung" value={kategorieZuTyp[kategorie]}
+              onChange={(event) => setKategorie(event.target.value === "EINNAHME" ? "PFAND" : "VERPFLEGUNG")}>
+              <MenuItem value="KOSTEN">Ausgabe</MenuItem>
+              <MenuItem value="EINNAHME">Einnahme</MenuItem>
+            </TextField>
             <TextField
               select
               fullWidth
@@ -302,12 +307,12 @@ export default function BelegMitBuchungDialog({ open, kuerzelListe, onClose, onS
               onChange={(e) => setKategorie(e.target.value as FinanzKategorie)}
               required
             >
-              {Object.keys(kategorieZuTyp).map((k) => {
+              {Object.keys(kategorieZuTyp).filter((key) => kategorieZuTyp[key as FinanzKategorie] === kategorieZuTyp[kategorie]).map((k) => {
                 const key = k as FinanzKategorie;
 
                 return (
                   <MenuItem key={key} value={key}>
-                    {key.replaceAll("_", " ")}
+                    {finanzKategorieLabel[key]}
                   </MenuItem>
                 );
               })}

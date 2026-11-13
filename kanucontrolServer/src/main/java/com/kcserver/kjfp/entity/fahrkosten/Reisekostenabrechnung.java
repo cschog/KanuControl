@@ -30,6 +30,13 @@ public class Reisekostenabrechnung extends Auditable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "belegnummer", length = 50)
+    private String belegnummer;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "finanz_gruppe_id")
+    private com.kcserver.kjfp.entity.FinanzGruppe finanzGruppe;
+
     @ManyToOne(optional = false)
     @JoinColumn(
             name = "veranstaltung_id",

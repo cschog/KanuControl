@@ -84,12 +84,17 @@ public class VorlagenService {
     }
     public Ergebnis erstellenVorgang(Buchung b,ReservierungsbestaetigungPdf.Inhalt basis,Vorlage entwurf,Vorgang vorgang,
             Map<String,String> extra,Set<Bedingung> bedingungen,Abrechnungsbereich tabelle){
+        return erstellenVorgang(b,basis,entwurf,vorgang,extra,bedingungen,tabelle,true);
+    }
+    public Ergebnis erstellenVorgang(Buchung b,ReservierungsbestaetigungPdf.Inhalt basis,Vorlage entwurf,Vorgang vorgang,
+            Map<String,String> extra,Set<Bedingung> bedingungen,Abrechnungsbereich tabelle,boolean pdfErzeugen){
         tenant();var papier=briefpapier.findById(1L).orElseThrow(()->fehler("Bitte Mandanten-Briefpapier einrichten."));
         var gespeichert=vorlagen.findByMietobjektIdAndVorgang(b.getMietobjekt().getId(),vorgang).orElse(null);
         Vorlage v=normalisieren(entwurf!=null?entwurf:gespeichert==null?null:lesen(gespeichert));
         if(v==null)throw fehler("Keine Vorlage für den Vorgang "+vorgang+" an diesem Mietobjekt hinterlegt.");pruefe(v);
         var f=new LinkedHashMap<>(basis.felder());var d=new TreeMap<String,String>();var datum=DateTimeFormatter.ofPattern("dd.MM.yyyy");
         var miete=BuchungPreiskalkulation.miete(b);var rest=Zahlungsplan.restmiete(b);
+        d.put("fruehere_buchungsnummer",Objects.toString(b.getFruehereBuchungsnummer(),""));
         d.put("buchungsnummer",b.getBuchungsnummer());d.put("vorname",b.getMieter().getVorname());d.put("nachname",b.getMieter().getName());
         d.put("anreise",datum.format(b.getAnreise()));d.put("abreise",datum.format(b.getAbreise()));d.put("briefdatum",f.get("briefdatum"));
         d.put("zahlungsfrist",datum.format(Zahlungsplan.frist(b.getAnreise().toLocalDate(), LocalDate.parse(f.get("briefdatum"),datum))));d.put("mietobjekt",b.getMietobjekt().getBezeichnung());
@@ -105,7 +110,12 @@ public class VorlagenService {
         d.put("organisation",Buchungsadressat.organisation(b));
         if(vorgang==Vorgang.BESTAETIGUNG || b.getBuchungsquelle()==com.kcserver.vermietung.enumtype.Buchungsquelle.AIRBNB){wahr.remove(Bedingung.ANZAHLUNG_POSITIV);wahr.remove(Bedingung.RESTMIETE_POSITIV);wahr.remove(Bedingung.KAUTION_POSITIV);wahr.remove(Bedingung.ZAHLUNG_GESAMTMIETE_VORAUS);}
         if(miete.signum()==0)wahr.remove(Bedingung.ZAHLUNG_GESAMTMIETE_VORAUS);
+        if(b.getFruehereBuchungsnummer()!=null && !b.getFruehereBuchungsnummer().isBlank())wahr.add(Bedingung.FRUEHERE_BUCHUNGSNUMMER_VORHANDEN);
         d.putAll(extra);wahr.addAll(bedingungen);
+        if(!pdfErzeugen){
+            String metadata=json(d);
+            return new Ergebnis(null,ersetzen(v.betreff(),d),ersetzen(v.mailtext(),d),hash(metadata),metadata);
+        }
         f.put("anrede",ersetzen(v.anrede(),d));
         var absaetze=texte(v,d,wahr);String gruss=ersetzen(papier.getGruss(),d);
         var rows=new ArrayList<String>();
@@ -130,7 +140,7 @@ public class VorlagenService {
         return beispielVorschau(objektId,vorgang,entwurf,ogGebucht,kurzfristig,papierEntwurf(version,gruss,pdf,bild,bildEntfernen));
     }
     public static List<String> szenarien(Vorgang vorgang){return switch(vorgang){
-        case RESERVIERUNG -> List.of("ANZAHLUNG","GESAMTMIETE_VORAUS","BEI_ABRECHNUNG");
+        case RESERVIERUNG -> List.of("ANZAHLUNG","GESAMTMIETE_VORAUS","BEI_ABRECHNUNG","OHNE_ABRECHNUNG");
         case ABGERECHNET -> List.of("RESTZAHLUNG","ERSTATTUNG","AUSGEGLICHEN");
         case STORNIERUNG -> List.of("STORNO_FRUEH","STORNO_KURZ","STORNO_OHNE_ZAHLUNG");
         default -> List.of("STANDARD");};}
@@ -175,6 +185,7 @@ public class VorlagenService {
         if(szenario.equals("ANZAHLUNG")){wahr.add(Bedingung.ZAHLUNG_ANZAHLUNG);wahr.add(Bedingung.ANZAHLUNG_POSITIV);wahr.add(Bedingung.RESTMIETE_POSITIV);d.put("anzahlung","150,00");d.put("restmiete","350,00");}
         else {d.put("anzahlung","0,00");d.put("restmiete","0,00");}
         if(szenario.equals("GESAMTMIETE_VORAUS"))wahr.add(Bedingung.ZAHLUNG_GESAMTMIETE_VORAUS);
+        if(szenario.equals("OHNE_ABRECHNUNG")){wahr.add(Bedingung.ZAHLUNG_OHNE_ABRECHNUNG);wahr.remove(Bedingung.KAUTION_POSITIV);d.put("mietbetrag","0,00");d.put("kaution","0,00");}
         if(szenario.equals("BEI_ABRECHNUNG")){wahr.add(Bedingung.ZAHLUNG_BEI_ABRECHNUNG);wahr.remove(Bedingung.KAUTION_POSITIV);}
         if(vorgang==Vorgang.BESTAETIGUNG)wahr.remove(Bedingung.KAUTION_POSITIV);
         BigDecimal saldo=szenario.equals("RESTZAHLUNG")?new BigDecimal("100.00"):szenario.equals("AUSGEGLICHEN")?BigDecimal.ZERO:ogGebucht?new BigDecimal("-99.00"):new BigDecimal("-349.00");
@@ -215,5 +226,5 @@ public class VorlagenService {
         rows.add(new Abrechnungsbereich.Zeile(saldo.signum()<0?"Rückerstattung":saldo.signum()>0?"Restzahlung":"Ausgeglichen","","",Abrechnungsbereich.geld(saldo.abs())));
         return new Abrechnungsbereich(List.copyOf(rows));
     }
-    private static String geld(BigDecimal n){var f=java.text.NumberFormat.getNumberInstance(Locale.GERMANY);f.setMinimumFractionDigits(2);f.setMaximumFractionDigits(2);return f.format(n);}
+    static String geld(BigDecimal n){var f=java.text.NumberFormat.getNumberInstance(Locale.GERMANY);f.setMinimumFractionDigits(2);f.setMaximumFractionDigits(2);return f.format(n);}
 }

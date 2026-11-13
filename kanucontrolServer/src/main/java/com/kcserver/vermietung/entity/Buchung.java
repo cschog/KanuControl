@@ -49,6 +49,9 @@ public class Buchung extends Auditable {
     @Column(name = "buchungsnummer", nullable = false, length = 15)
     private String buchungsnummer;
 
+    @Column(name="fruehere_buchungsnummer", length=100)
+    private String fruehereBuchungsnummer;
+
     @Column(name = "buchungsjahr", nullable = false)
     private Integer buchungsjahr;
 
@@ -121,6 +124,9 @@ public class Buchung extends Auditable {
 
     @Column(columnDefinition = "TEXT")
     private String bemerkung;
+
+    @Column(name = "veranstaltung", length = 80)
+    private String veranstaltung;
 
     /**
      * Optionale Bewertung der Buchung, beispielsweise 1 bis 5 Sterne.

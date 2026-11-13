@@ -12,6 +12,10 @@ import java.util.Set;
 
 public interface ReisekostenabrechnungRepository
         extends JpaRepository<Reisekostenabrechnung, Long> {
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @Query("select r from Reisekostenabrechnung r where r.id = :id")
+    java.util.Optional<Reisekostenabrechnung> findForUpdate(@Param("id") Long id);
+
 
     List<Reisekostenabrechnung> findByVeranstaltungId(
             Long veranstaltungId

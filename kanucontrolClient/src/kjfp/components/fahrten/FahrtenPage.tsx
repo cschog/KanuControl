@@ -1,3 +1,4 @@
+import { formatPersonName } from "@/core/utils/personName";
 import { useCallback, useEffect, useState } from "react";
 import { Alert, Accordion, AccordionDetails, AccordionSummary, Box, Button, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, MenuItem, Paper, Stack, TextField, Typography } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -100,11 +101,11 @@ export default function FahrtenPage() {
                 {b.lizenzErforderlich && <ChipLabel missing={!b.lizenzVorhanden} />}
                 <Button size="small" onClick={() => { setSelectedBoat(b.kanu.id); setLicenseOpen(true); }}>Lizenz erfassen</Button>
                 <TextField select size="small" label="Teilnehmer hinzufügen" value="" sx={{ minWidth: 230 }} onChange={async (e) => { try { await addCrew(active!.id, f.id, b.fahrtKanuId, Number(e.target.value)); await load(); } catch (err: unknown) { setError(getApiErrorMessage(err)); } }}>
-                  {teilnehmer.filter((t) => !f.kanus.some((boat) => boat.besatzung.some((c) => c.teilnehmerId === t.id))).map((t) => <MenuItem key={t.id} value={t.id}>{t.person?.vorname} {t.person?.name}</MenuItem>)}
+                  {teilnehmer.filter((t) => !f.kanus.some((boat) => boat.besatzung.some((c) => c.teilnehmerId === t.id))).map((t) => <MenuItem key={t.id} value={t.id}>{formatPersonName(t.person?.name, t.person?.vorname, "first")}</MenuItem>)}
                 </TextField>
               </Stack>
               <Stack direction="row" spacing={1} sx={{ mt: 1 }} flexWrap="wrap">
-                {b.besatzung.map((c) => <Button size="small" variant="outlined" key={c.id} onClick={async () => { try { await removeCrew(active!.id, f.id, c.id); await load(); } catch (err: unknown) { setError(getApiErrorMessage(err)); } }}>{c.vorname} {c.name} ×</Button>)}
+                {b.besatzung.map((c) => <Button size="small" variant="outlined" key={c.id} onClick={async () => { try { await removeCrew(active!.id, f.id, c.id); await load(); } catch (err: unknown) { setError(getApiErrorMessage(err)); } }}>{formatPersonName(c.name, c.vorname, "first")} ×</Button>)}
                 <Typography variant="caption" color="text.secondary">{b.besatzung.length}/{b.kanu.platzanzahl} Plätze</Typography>
               </Stack>
             </Paper>)}
@@ -130,7 +131,7 @@ export default function FahrtenPage() {
       <Paper sx={{ p: 2 }}><Typography variant="h6">Gewässer</Typography><Stack direction="row" spacing={1} sx={{ my: 1 }}><TextField size="small" label="Gewässername" value={watersName} onChange={(e) => setWatersName(e.target.value)} /><Button onClick={submitWater}>Hinzufügen</Button></Stack>{gewaesser.map((g) => <Typography key={g.id}>{g.name}</Typography>)}</Paper>
     </Stack>}
 
-    {tab === "auswertung" && <Paper sx={{ p: 2 }}><Typography variant="h6">Kilometer nach Teilnehmer und Gewässer</Typography>{kilometer.map((k) => <Typography key={`${k.personId}-${k.gewaesser}`}>{k.vorname} {k.name} · {k.gewaesser}: {k.kilometer} km</Typography>)}</Paper>}
+    {tab === "auswertung" && <Paper sx={{ p: 2 }}><Typography variant="h6">Kilometer nach Teilnehmer und Gewässer</Typography>{kilometer.map((k) => <Typography key={`${k.personId}-${k.gewaesser}`}>{formatPersonName(k.name, k.vorname, "first")} · {k.gewaesser}: {k.kilometer} km</Typography>)}</Paper>}
 
     <Dialog open={rideOpen} onClose={() => setRideOpen(false)} fullWidth maxWidth="sm"><DialogTitle>Fahrt anlegen</DialogTitle><DialogContent><Stack spacing={1.5} sx={{ pt: 1 }}>
       <TextField type="date" label="Datum" InputLabelProps={{ shrink: true }} value={newRide.datum} onChange={(e) => setNewRide({ ...newRide, datum: e.target.value })} />

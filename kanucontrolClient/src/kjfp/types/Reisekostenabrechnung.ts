@@ -3,6 +3,8 @@ import { PersonRef } from "@/core/api/types/person/PersonRef";
 
 export interface ReisekostenabrechnungListResponse {
   id: number;
+  finanzGruppeId: number | null;
+  belegnummer: string | null;
   fahrerId: number;
   fahrerName: string;
   gesamtKilometer: number;
@@ -46,6 +48,8 @@ export interface ReisekostenabrechnungDetailResponse {
   id: number;
   veranstaltungId: number;
   veranstaltungName: string;
+  finanzGruppeId: number | null;
+  belegnummer: string | null;
   fahrerId: number;
   fahrerName: string;
   abrechnungsdatum: string;
@@ -57,6 +61,7 @@ export interface ReisekostenabrechnungDetailResponse {
 }
 
 export interface ReisekostenabrechnungUpdateRequest {
+  finanzGruppeId: number | null;
   abrechnungsdatum: string;
   bemerkung: string;
   mitfahrerIds: number[];

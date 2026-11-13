@@ -1,3 +1,4 @@
+import { formatPersonName } from "@/core/utils/personName";
 import {
   Alert,
   Box,
@@ -336,7 +337,7 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
                         <Stack spacing={0.25} sx={{ mt: 0.25 }}>
                           {row.teilnehmer.map((tn) => (
                             <Typography key={tn.id} variant="body2">
-                              {tn.nachname}, {tn.vorname}
+                              {formatPersonName(tn.nachname, tn.vorname)}
                             </Typography>
                           ))}
                         </Stack>
@@ -520,7 +521,7 @@ const BeitraegePage = ({ veranstaltungId }: Props) => {
                         minWidth: 0,
                       }}
                     >
-                      {row.person.name}, {row.person.vorname}
+                      {formatPersonName(row.person.name, row.person.vorname)}
                     </Typography>
 
                     <Typography

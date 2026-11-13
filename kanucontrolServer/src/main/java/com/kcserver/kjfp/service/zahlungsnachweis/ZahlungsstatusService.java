@@ -36,6 +36,11 @@ public class ZahlungsstatusService {
             BigDecimal sollBeitrag,
             BigDecimal gezahlterBetrag
     ) {
+        // Beitragsfreiheit erfüllt das Soll auch ohne Zahlungsnachweis.
+        if (sollBeitrag.compareTo(BigDecimal.ZERO) == 0) {
+            return Zahlungsstatus.GRUEN;
+        }
+
         if (gezahlterBetrag == null
                 || gezahlterBetrag.compareTo(BigDecimal.ZERO) == 0) {
             return Zahlungsstatus.ROT;

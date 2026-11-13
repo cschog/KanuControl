@@ -12,7 +12,7 @@ import {
 import { useEffect, useState } from "react";
 
 import { Buchung, BuchungCreate } from "@/kjfp/types/abrechnung";
-import { FinanzKategorie, FinanzTyp, kategorieZuTyp } from "@/kjfp/types/finanz";
+import { FinanzKategorie, FinanzTyp, kategorieZuTyp, finanzKategorieLabel } from "@/kjfp/types/finanz";
 import { useAppContext } from "@/core/components/context/AppContext";
 
 interface Props {
@@ -24,6 +24,7 @@ interface Props {
 }
 
 export default function BuchungDialog({ open, typ, initialData, onClose, onSave }: Props) {
+  const [ausgewaehlterTyp, setAusgewaehlterTyp] = useState<FinanzTyp>(typ);
   const [kategorie, setKategorie] = useState<FinanzKategorie | "">("");
   const [betrag, setBetrag] = useState("");
   const [beschreibung, setBeschreibung] = useState("");
@@ -35,6 +36,7 @@ export default function BuchungDialog({ open, typ, initialData, onClose, onSave 
   ========================================================= */
 
   useEffect(() => {
+    setAusgewaehlterTyp(initialData ? kategorieZuTyp[initialData.kategorie] : typ);
     if (initialData) {
       setKategorie(initialData.kategorie);
       setBetrag(initialData.betrag.toString());
@@ -46,14 +48,14 @@ export default function BuchungDialog({ open, typ, initialData, onClose, onSave 
       setBeschreibung("");
       setKjfpBetrag("");
     }
-  }, [initialData, open]);
+  }, [initialData, open, typ]);
 
   /* =========================================================
      Kategorien filtern (typesafe)
   ========================================================= */
 
   const gefilterteKategorien = (Object.keys(kategorieZuTyp) as FinanzKategorie[]).filter(
-    (k) => kategorieZuTyp[k] === typ,
+    (k) => kategorieZuTyp[k] === ausgewaehlterTyp,
   );
 
   /* =========================================================
@@ -83,6 +85,14 @@ export default function BuchungDialog({ open, typ, initialData, onClose, onSave 
 
       <DialogContent>
         <Stack spacing={2} mt={1}>
+          <TextField select label="Art der Buchung" value={ausgewaehlterTyp}
+            onChange={(event) => {
+              setAusgewaehlterTyp(event.target.value as FinanzTyp);
+              setKategorie("");
+            }} fullWidth>
+            <MenuItem value="KOSTEN">Ausgabe</MenuItem>
+            <MenuItem value="EINNAHME">Einnahme</MenuItem>
+          </TextField>
           <TextField
             select
             label="Kategorie"
@@ -92,7 +102,7 @@ export default function BuchungDialog({ open, typ, initialData, onClose, onSave 
           >
             {gefilterteKategorien.map((k) => (
               <MenuItem key={k} value={k}>
-                {k.replaceAll("_", " ")}
+                {finanzKategorieLabel[k]}
               </MenuItem>
             ))}
           </TextField>

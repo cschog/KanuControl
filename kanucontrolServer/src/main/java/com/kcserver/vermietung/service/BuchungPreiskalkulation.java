@@ -18,6 +18,7 @@ public final class BuchungPreiskalkulation {
         return Math.max(1, ChronoUnit.DAYS.between(b.getAnreise().toLocalDate(), b.getAbreise().toLocalDate()));
     }
     public static BigDecimal preis(BuchungMietbereich position) {
+        if (Zahlungsplan.ohneAbrechnung(position.getBuchung())) return BigDecimal.ZERO.setScale(2);
         return zero(position.getVereinbarterPreis())
                 .multiply(BigDecimal.valueOf(position.getAnzahl() == null ? 0 : position.getAnzahl()))
                 .multiply(BigDecimal.valueOf(einheiten(position))).setScale(2, RoundingMode.HALF_UP);

@@ -1,3 +1,4 @@
+import { formatPersonName } from "@/core/utils/personName";
 // src/components/finanzen/reisekosten/FahrtabschnittDialog.tsx
 
 import { useEffect, useState } from "react";
@@ -136,7 +137,7 @@ export default function FahrtabschnittDialog({
                       }}
                     />
                   }
-                  label={`${person.vorname} ${person.name}`}
+                  label={`${formatPersonName(person.name, person.vorname, "first")}`}
                 />
               ))}
             </Stack>

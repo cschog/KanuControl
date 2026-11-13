@@ -1,3 +1,4 @@
+import { formatPersonName } from "@/core/utils/personName";
 import { ColumnDef } from "@tanstack/react-table";
 import { IconButton, Stack, Tooltip } from "@mui/material";
 
@@ -16,6 +17,8 @@ export const zahlungsnachweiseColumns = ({
   onEdit,
   onDelete,
 }: Props): ColumnDef<ZahlungsnachweisListDTO>[] => [
+  { accessorKey: "belegnummer", header: "Belegnummer", size: 130,
+    cell: ({ row }) => row.original.belegnummer ?? (row.original.zahlungsweg === "QUITTUNG" ? "Konto prüfen / Quittung speichern" : "") },
   {
     accessorKey: "datum",
     header: "Datum",
@@ -50,7 +53,7 @@ export const zahlungsnachweiseColumns = ({
         return null;
       }
 
-      return teilnehmer.map((tn) => `${tn.nachname}, ${tn.vorname}`).join("; ");
+      return teilnehmer.map((tn) => `${formatPersonName(tn.nachname, tn.vorname)}`).join("; ");
     },
   },
 

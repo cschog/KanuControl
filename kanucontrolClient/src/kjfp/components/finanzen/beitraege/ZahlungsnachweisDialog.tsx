@@ -1,3 +1,4 @@
+import { formatPersonName } from "@/core/utils/personName";
 import {
   Alert,
   Box,
@@ -799,7 +800,7 @@ const ZahlungsnachweisDialog = ({
                                   lineHeight: 1.2,
                                 }}
                               >
-                                {t.person.name}, {t.person.vorname}
+                                {formatPersonName(t.person.name, t.person.vorname)}
                               </Typography>
 
                               <Typography

@@ -1,4 +1,5 @@
 package com.kcserver.vermietung.service;
+import com.kcserver.core.util.PersonName;
 import com.kcserver.vermietung.dto.*;
 import com.kcserver.vermietung.entity.*;
 import com.kcserver.vermietung.enumtype.*;
@@ -27,6 +28,7 @@ public class BuchungFinanzenService {
  }
  public BuchungFinanzenDTO verrechneKaution(Long id,KautionsverrechnungDTO dto){
   var b=buchungen.findLockedById(id).orElseThrow(()->new IllegalArgumentException("Buchung nicht gefunden: "+id));
+  if(Zahlungsplan.ohneAbrechnung(b)) throw new IllegalArgumentException("Bei Ohne Abrechnung ist keine Kautionsverrechnung vorgesehen.");
   if(b.getBuchungsquelle()!=Buchungsquelle.DIREKT || (b.getStatus()!=Buchungsstatus.ABRECHENBAR && b.getStatus()!=Buchungsstatus.ABGESCHLOSSEN))
    throw new IllegalArgumentException("Kautionsverrechnung ist nur für abrechenbare oder abgeschlossene Direktbuchungen möglich.");
   // Bestätigte Ablesungen werden nochmals gegen den aktuellen Datenstand geprüft.
@@ -50,6 +52,7 @@ public class BuchungFinanzenService {
  }
  public BuchungFinanzenDTO add(Long buchungId,FinanzbewegungSaveDTO dto){
   Buchung b=buchungen.findLockedById(buchungId).orElseThrow(()->new IllegalArgumentException("Buchung nicht gefunden: "+buchungId));
+  if(Zahlungsplan.ohneAbrechnung(b)) throw new IllegalArgumentException("Bei Ohne Abrechnung sind keine Zahlungsbewegungen vorgesehen.");
   if(b.getStatus()==Buchungsstatus.STORNIERT && b.getStornoEinbehalt()!=null && b.getStornoEinbehalt().signum()>0 && dto.art()==Finanzbewegungsart.RUECKZAHLUNG)
    throw new IllegalArgumentException("Die kurzfristige Stornierung sieht keine Erstattung vor. Der gespeicherte Einbehalt ist verbindlich.");
   if(b.getBuchungsquelle()==Buchungsquelle.AIRBNB && (dto.kategorie()==Finanzkategorie.ANZAHLUNG || dto.kategorie()==Finanzkategorie.KAUTION)) throw new IllegalArgumentException("Airbnb-Buchungen haben keine Anzahlung und Kaution.");
@@ -72,7 +75,7 @@ public class BuchungFinanzenService {
  public BuchungFinanzenDTO toDto(Buchung b){return toDto(b,null);}
  public BuchungFinanzenDTO toDto(Buchung b,List<BuchungVerbrauchskosten> berechneteSnapshots){
   List<MietkostenPositionDTO> mietkosten=b.getMietbereiche().stream().map(p->{
-   BigDecimal einzelpreis=zero(p.getVereinbarterPreis()).setScale(2,RoundingMode.HALF_UP);
+   BigDecimal einzelpreis=(Zahlungsplan.ohneAbrechnung(b)?BigDecimal.ZERO:zero(p.getVereinbarterPreis())).setScale(2,RoundingMode.HALF_UP);
    BigDecimal gesamt=BuchungPreiskalkulation.preis(p);
    return new MietkostenPositionDTO(p.getMietbereich().getBezeichnung(),p.getAnzahl(),einzelpreis,gesamt,BuchungPreiskalkulation.einheiten(p),p.getBerechnungsart()==null?null:p.getBerechnungsart().name());
   }).toList();
@@ -82,7 +85,9 @@ public class BuchungFinanzenService {
   List<BuchungVerbrauchskosten> snapshots=berechneteSnapshots!=null?berechneteSnapshots:verbrauch.findByBuchungIdOrderByIdAsc(b.getId());
   BigDecimal utilities;
   boolean verbrauchVorschauVollstaendig=true;
-  if(berechneteSnapshots!=null || !snapshots.isEmpty()){
+  if(Zahlungsplan.ohneAbrechnung(b)){
+   utilities=BigDecimal.ZERO;
+  } else if(berechneteSnapshots!=null || !snapshots.isEmpty()){
    utilities=snapshots.stream().map(BuchungVerbrauchskosten::getKosten).reduce(BigDecimal.ZERO,BigDecimal::add);
   } else if(b.getBuchungsquelle()==Buchungsquelle.DIREKT && b.getStatus()==Buchungsstatus.ABRECHENBAR){
    List<VerbrauchskostenVorschauDTO> vorschau=verbrauchsabrechnungService.berechneVorschau(b);
@@ -94,7 +99,7 @@ public class BuchungFinanzenService {
    utilities=BigDecimal.ZERO;
   }
   List<FinanzbewegungDTO> history=bewegungen.findByBuchungIdOrderByDatumAscIdAsc(b.getId()).stream().map(m->new FinanzbewegungDTO(m.getId(),m.getKategorie(),m.getArt(),m.getBetrag(),m.getDatum(),m.getBemerkung())).toList();
-  return new BuchungFinanzenDTO(b.getId(),b.getBuchungsnummer(),(Optional.ofNullable(b.getMieter().getVorname()).orElse("")+" "+Optional.ofNullable(b.getMieter().getName()).orElse("")).trim(),b.getMietobjekt().getBezeichnung(),b.getBuchungsquelle(),b.getStatus().name(),b.getAnreise()==null?null:b.getAnreise().toLocalDate(),b.getAbreise()==null?null:b.getAbreise().toLocalDate(),b.isUnbefristet(),b.getBuchungsquelle()==Buchungsquelle.DIREKT?zero(b.getAnzahlungBetrag()):BigDecimal.ZERO,b.getBuchungsquelle()==Buchungsquelle.DIREKT?zero(b.getKautionBetrag()):BigDecimal.ZERO,mietkosten,mietrabatt,rent,utilities,verbrauchVorschauVollstaendig,history,EntschaedigungPositionService.rows(b),EntschaedigungPositionService.sum(b),b.getStornoEinbehalt());
+  return new BuchungFinanzenDTO(b.getId(),b.getBuchungsnummer(),PersonName.givenFirst(b.getMieter().getName(), b.getMieter().getVorname()),b.getMietobjekt().getBezeichnung(),b.getBuchungsquelle(),b.getStatus().name(),b.getAnreise()==null?null:b.getAnreise().toLocalDate(),b.getAbreise()==null?null:b.getAbreise().toLocalDate(),b.isUnbefristet(),!Zahlungsplan.ohneAbrechnung(b)&&b.getBuchungsquelle()==Buchungsquelle.DIREKT?zero(b.getAnzahlungBetrag()):BigDecimal.ZERO,!Zahlungsplan.ohneAbrechnung(b)&&b.getBuchungsquelle()==Buchungsquelle.DIREKT?zero(b.getKautionBetrag()):BigDecimal.ZERO,mietkosten,mietrabatt,rent,utilities,verbrauchVorschauVollstaendig,history,EntschaedigungPositionService.rows(b),EntschaedigungPositionService.sum(b),b.getStornoEinbehalt());
  }
  private BigDecimal zero(BigDecimal x){return x==null?BigDecimal.ZERO:x;}
 }

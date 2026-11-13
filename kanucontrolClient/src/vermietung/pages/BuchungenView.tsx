@@ -1,3 +1,4 @@
+import { formatPersonName } from "@/core/utils/personName";
 import AblesungBestaetigungDialog from "@/vermietung/components/buchung/AblesungBestaetigungDialog";
 // src/vermietung/pages/BuchungenView.tsx
 
@@ -449,7 +450,7 @@ if (showForm) {
         setSearchParams(current => { const next = new URLSearchParams(current); next.delete("mieterId"); return next; });
       }}>Mieterfilter aufheben</Button>}>
         {(() => { const b = buchungen.find(item => item.mieterId === mieterIdFilter);
-          return b ? `Buchungen von ${b.mieterVorname} ${b.mieterName}` : "Buchungen des ausgewählten Mieters"; })()}
+          return b ? `Buchungen von ${formatPersonName(b.mieterName, b.mieterVorname, "first")}` : "Buchungen des ausgewählten Mieters"; })()}
       </Alert>}
       {veranstalterIdFilter !== null && <Alert severity="info" sx={{ mb: 2 }} action={<Button color="inherit" onClick={() => {
         setSearchParams(current => { const next = new URLSearchParams(current); next.delete("veranstalterId"); return next; });
@@ -571,6 +572,7 @@ if (showForm) {
 
       {ansicht === "LISTE" ? (
         <BuchungTable
+          showMietobjekt={filterMietobjektId === ""}
           data={filteredBuchungen.filter((buchung) =>
             filterJahr === "" || Number(buchung.anreise.slice(0, 4)) === filterJahr,
           )}

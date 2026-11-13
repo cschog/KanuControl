@@ -1,3 +1,4 @@
+import { formatPersonName } from "@/core/utils/personName";
 import {
   Paper,
   Table,
@@ -102,7 +103,7 @@ const TeilnehmerZuordnungTable: FC<Props> = ({ veranstaltungId }) => {
             {teilnehmer.map((t) => (
               <TableRow key={t.id}>
                 <TableCell>
-                  {t.person.name}, {t.person.vorname}
+                  {formatPersonName(t.person.name, t.person.vorname)}
                 </TableCell>
 
                 <TableCell>

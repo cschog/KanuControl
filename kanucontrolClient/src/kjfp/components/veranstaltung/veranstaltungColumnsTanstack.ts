@@ -1,3 +1,4 @@
+import { formatPersonName } from "@/core/utils/personName";
 // src/kjfp/components/veranstaltung/veranstaltungColumnsTanstack.ts
 import { ColumnDef } from "@tanstack/react-table";
 import { VeranstaltungList } from "@/kjfp/types/veranstaltung/VeranstaltungList";
@@ -53,7 +54,7 @@ export const veranstaltungColumnsTanstack: ColumnDef<VeranstaltungList>[] = [
         return r.leiterName;
       }
 
-      return `${r.leiterName}, ${r.leiterVorname}`;
+      return `${formatPersonName(r.leiterName, r.leiterVorname)}`;
     },
   },
 ];

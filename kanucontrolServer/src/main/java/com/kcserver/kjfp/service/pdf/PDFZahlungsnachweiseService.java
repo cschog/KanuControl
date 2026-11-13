@@ -1,5 +1,6 @@
 package com.kcserver.kjfp.service.pdf;
 
+import com.kcserver.core.util.PersonName;
 import com.kcserver.kjfp.entity.Dokument;
 import com.kcserver.core.entity.Teilnehmer;
 import com.kcserver.core.entity.Veranstaltung;
@@ -84,8 +85,8 @@ public class PDFZahlungsnachweiseService {
                 gruppe.nachweis();
 
         return String.format(
-                "#%02d  Zahlungsnachweis %s  %s",
-                gruppe.nummer(),
+                "%s  Zahlungsnachweis %s  %s",
+                safe(nachweis.getBelegnummer()),
                 formatDate(nachweis.getDatum()),
                 formatMoney(getPdfBetrag(nachweis))
         );
@@ -196,7 +197,7 @@ public class PDFZahlungsnachweiseService {
      *
      * - Deckblatt
      * - Liste aller Zahlungsnachweise
-     * - fortlaufende Belegnummer #01, #02, ...
+     * - gespeicherte Belegnummer bei Quittungen
      * - Gesamtsumme
      * - Logo und Seitennummer
      *
@@ -221,7 +222,9 @@ public class PDFZahlungsnachweiseService {
                 zahlungsnachweisRepository
                         .findForPdfByVeranstaltungId(
                                 veranstaltungId
-                        );
+                        ).stream().sorted(java.util.Comparator.comparing(
+                                Zahlungsnachweis::getBelegnummer, BelegnummerSortierung.NUMMERN)
+                                .thenComparing(Zahlungsnachweis::getId)).toList();
 
         List<Zahlungsnachweis> teilnehmerNachweise =
                 zahlungsnachweisRepository
@@ -264,7 +267,7 @@ public class PDFZahlungsnachweiseService {
              *
              * Die Gruppe enthält:
              *
-             * - fortlaufende Belegnummer
+             * - gespeicherte Belegnummer
              * - Zahlungsnachweis
              * - zugehörige Dokumente
              */
@@ -432,10 +435,7 @@ public class PDFZahlungsnachweiseService {
         for (PDFBelegGruppe gruppe : gruppen) {
 
             String belegNummer =
-                    String.format(
-                            "#%02d",
-                            gruppe.nummer()
-                    );
+                    safe(gruppe.nachweis().getBelegnummer());
 
             for (A4LayoutItem dokument :
                     gruppe.dokumente()) {
@@ -578,7 +578,7 @@ public class PDFZahlungsnachweiseService {
             float tableWidth =
                     page.getContentWidth();
 
-            float colBeleg = 45f;
+            float colBeleg = 90f;
             float colDatum = 70f;
             float colBetrag = 75f;
             float colDokumente = 55f;
@@ -657,10 +657,7 @@ public class PDFZahlungsnachweiseService {
                         page.getY();
 
                 String nummerText =
-                        String.format(
-                                "#%02d",
-                                nummer
-                        );
+                        safe(nachweis.getBelegnummer());
 
                 page.write(
                         nummerText,
@@ -835,7 +832,7 @@ public class PDFZahlungsnachweiseService {
                 page.getY();
 
         page.write(
-                "Beleg",
+                "Belegnummer",
                 x + 3,
                 y - 14,
                 FONT_BOLD,
@@ -1214,9 +1211,7 @@ public class PDFZahlungsnachweiseService {
                 .map(Teilnehmer::getPerson)
                 .filter(java.util.Objects::nonNull)
                 .map(person ->
-                        person.getName()
-                                + ", "
-                                + person.getVorname()
+                        PersonName.surnameFirst(person.getName(), person.getVorname())
                 )
                 .collect(
                         java.util.stream.Collectors.joining("; ")

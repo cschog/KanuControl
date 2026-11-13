@@ -57,6 +57,11 @@ public class HomepageAnbindung extends Auditable {
 
     @Column(name = "hausmeister_email", length = 254)
     private String hausmeisterEmail;
+    @Column(name = "hausmeister_cc_email", length = 254)
+    private String hausmeisterCcEmail;
+    @Column(name = "hausmeister_automatisch")
+    private Boolean hausmeisterAutomatisch;
+
     @jakarta.persistence.Column(name="antwort_test_email", length=254)
     private String antwortTestEmail;
 

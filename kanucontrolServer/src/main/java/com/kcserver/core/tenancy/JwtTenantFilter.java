@@ -63,7 +63,9 @@ public class JwtTenantFilter
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
 
-        return com.kcserver.vermietung.ical.AirbnbFeedPath.matches(request.getMethod(), path)
+        return path.equals(com.kcserver.vermietung.zaehlerimport.MeterImportSecurity.PATH)
+                || path.startsWith(com.kcserver.vermietung.zaehlerimport.MeterImportSecurity.PATH + "/")
+                || com.kcserver.vermietung.ical.AirbnbFeedPath.matches(request.getMethod(), path)
                 || path.equals("/api/csv-import/mapping-template")
                 || path.startsWith("/actuator")
                 || path.startsWith("/error")

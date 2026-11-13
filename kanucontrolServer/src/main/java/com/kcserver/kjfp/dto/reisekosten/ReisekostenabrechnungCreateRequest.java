@@ -8,6 +8,7 @@ public record ReisekostenabrechnungCreateRequest(
         Long veranstaltungId,
         Long fahrerId,
         LocalDate abrechnungsdatum,
+        Long finanzGruppeId,
         String bemerkung
 
 ) {}

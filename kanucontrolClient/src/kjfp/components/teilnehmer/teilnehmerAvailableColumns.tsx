@@ -1,3 +1,4 @@
+import { formatPersonName } from "@/core/utils/personName";
 import { Box, Tooltip } from "@mui/material";
 import { ColumnDef } from "@tanstack/react-table";
 import { PersonList } from "@/core/api/types/person/PersonList";
@@ -6,7 +7,7 @@ export const teilnehmerAvailableColumns: ColumnDef<PersonList>[] = [
   {
     id: "fullname",
     header: "Name",
-    accessorFn: (row) => `${row.name ?? ""}, ${row.vorname ?? ""}`,
+    accessorFn: (row) => `${formatPersonName(row.name ?? "", row.vorname ?? "")}`,
     sortingFn: "text",
     size: 260,
 
@@ -49,7 +50,7 @@ export const teilnehmerAvailableColumns: ColumnDef<PersonList>[] = [
             </Tooltip>
           )}
 
-          <Box>{`${person.name ?? ""}, ${person.vorname ?? ""}`}</Box>
+          <Box>{`${formatPersonName(person.name ?? "", person.vorname ?? "")}`}</Box>
         </Box>
       );
     },

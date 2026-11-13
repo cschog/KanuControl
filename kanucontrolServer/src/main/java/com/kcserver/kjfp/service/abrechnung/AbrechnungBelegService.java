@@ -36,6 +36,7 @@ public class AbrechnungBelegService {
     private final AbrechnungBuchungRepository buchungRepository;
     private final FinanzGruppeRepository finanzGruppeRepository;
     private final AbrechnungMapper mapper;
+    private final BelegnummerService belegnummerService;
 
     /* =========================================================
        BELEG ANLEGEN
@@ -61,14 +62,9 @@ public class AbrechnungBelegService {
                                 HttpStatus.NOT_FOUND,
                                 ErrorMessages.KUERZEL_NOT_FOUND));
 
-        // 🔥 MAX
-        Integer max = belegRepository
-                .findMaxLfdNrByAbrechnungId(abrechnung.getId());
-
-        int next = (max == null ? 1 : max + 1);
-
-        String belegnummer =
-                gruppe.getKuerzel() + "_" + String.format("%03d", next);
+        BelegnummerService.Nummer nummer = belegnummerService.next(gruppe);
+        int next = nummer.laufend();
+        String belegnummer = nummer.wert();
 
         AbrechnungBeleg beleg = new AbrechnungBeleg();
         beleg.setLfdNr(next);
@@ -136,6 +132,8 @@ public class AbrechnungBelegService {
                                 ErrorMessages.KUERZEL_NOT_FOUND
                         )
                 );
+
+        belegnummerService.validateKontowechsel(beleg.getBelegnummer(), beleg.getFinanzGruppe(), gruppe);
 
         beleg.setDatum(
                 dto.getDatum() != null

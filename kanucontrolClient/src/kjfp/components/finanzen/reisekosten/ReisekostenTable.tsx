@@ -49,6 +49,7 @@ const ReisekostenTable = ({ veranstaltungId }: Props) => {
 
   const columns = useMemo<ColumnDef<ReisekostenabrechnungListResponse>[]>(
     () => [
+      { accessorKey: "belegnummer", header: "Belegnummer", size: 130 },
       {
         accessorKey: "fahrerName",
         header: "Fahrer",
@@ -119,10 +120,11 @@ const ReisekostenTable = ({ veranstaltungId }: Props) => {
         open={dialogOpen}
         veranstaltungId={veranstaltungId}
         onClose={() => setDialogOpen(false)}
-        onSave={async (fahrerId, abrechnungsdatum, bemerkung) => {
+        onSave={async (fahrerId, abrechnungsdatum, bemerkung, finanzGruppeId) => {
           const id = await createReisekostenabrechnung({
             veranstaltungId,
             fahrerId,
+            finanzGruppeId,
             abrechnungsdatum,
             bemerkung,
           });

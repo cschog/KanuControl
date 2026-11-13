@@ -35,6 +35,7 @@ and b.kategorie in (
     com.kcserver.kjfp.enumtype.FinanzKategorie.VERBRAUCHSMATERIAL,
     com.kcserver.kjfp.enumtype.FinanzKategorie.KULTUR,
     com.kcserver.kjfp.enumtype.FinanzKategorie.MIETE,
+    com.kcserver.kjfp.enumtype.FinanzKategorie.TEILNEHMERBEITRAG_RUECKZAHLUNG,
     com.kcserver.kjfp.enumtype.FinanzKategorie.SONSTIGE_KOSTEN
 )
 """)
@@ -47,6 +48,7 @@ where b.beleg.abrechnung.veranstaltung.id = :veranstaltungId
 and b.betrag > 0
 and b.kategorie in (
     com.kcserver.kjfp.enumtype.FinanzKategorie.TEILNEHMERBEITRAG,
+    com.kcserver.kjfp.enumtype.FinanzKategorie.EIGENANTEIL,
     com.kcserver.kjfp.enumtype.FinanzKategorie.PFAND,
     com.kcserver.kjfp.enumtype.FinanzKategorie.KJFP_ZUSCHUSS,
     com.kcserver.kjfp.enumtype.FinanzKategorie.SONSTIGE_EINNAHMEN
@@ -76,6 +78,7 @@ and b.kategorie in (
           com.kcserver.kjfp.enumtype.FinanzKategorie.VERBRAUCHSMATERIAL,
           com.kcserver.kjfp.enumtype.FinanzKategorie.KULTUR,
           com.kcserver.kjfp.enumtype.FinanzKategorie.MIETE,
+          com.kcserver.kjfp.enumtype.FinanzKategorie.TEILNEHMERBEITRAG_RUECKZAHLUNG,
           com.kcserver.kjfp.enumtype.FinanzKategorie.SONSTIGE_KOSTEN
       )
     group by b.beleg.finanzGruppe.id
@@ -91,11 +94,14 @@ and b.kategorie in (
         COALESCE(SUM(
             CASE
                 WHEN b.betrag > 0
-                AND b.kategorie IN (
+                AND (b.kategorie IN (
+                    com.kcserver.kjfp.enumtype.FinanzKategorie.EIGENANTEIL,
                     com.kcserver.kjfp.enumtype.FinanzKategorie.PFAND,
                     com.kcserver.kjfp.enumtype.FinanzKategorie.KJFP_ZUSCHUSS,
                     com.kcserver.kjfp.enumtype.FinanzKategorie.SONSTIGE_EINNAHMEN
                 )
+                    OR (b.kategorie = com.kcserver.kjfp.enumtype.FinanzKategorie.TEILNEHMERBEITRAG
+                        AND b.herkunft = com.kcserver.kjfp.enumtype.BuchungsHerkunft.MANUELL))
                 THEN b.betrag
                 ELSE 0
             END
@@ -113,6 +119,7 @@ and b.kategorie in (
                com.kcserver.kjfp.enumtype.FinanzKategorie.VERBRAUCHSMATERIAL,
                com.kcserver.kjfp.enumtype.FinanzKategorie.KULTUR,
                com.kcserver.kjfp.enumtype.FinanzKategorie.MIETE,
+               com.kcserver.kjfp.enumtype.FinanzKategorie.TEILNEHMERBEITRAG_RUECKZAHLUNG,
                com.kcserver.kjfp.enumtype.FinanzKategorie.SONSTIGE_KOSTEN
            )
            THEN b.betrag
@@ -149,17 +156,21 @@ and b.kategorie in (
                     com.kcserver.kjfp.enumtype.FinanzKategorie.VERBRAUCHSMATERIAL,
                     com.kcserver.kjfp.enumtype.FinanzKategorie.KULTUR,
                     com.kcserver.kjfp.enumtype.FinanzKategorie.MIETE,
+                    com.kcserver.kjfp.enumtype.FinanzKategorie.TEILNEHMERBEITRAG_RUECKZAHLUNG,
                     com.kcserver.kjfp.enumtype.FinanzKategorie.SONSTIGE_KOSTEN
                 )
                 then b.betrag
 
                 /* Einnahmen reduzieren den Finanzbedarf */
                 when b.betrag > 0
-                and b.kategorie in (
+                and (b.kategorie in (
+                    com.kcserver.kjfp.enumtype.FinanzKategorie.EIGENANTEIL,
                     com.kcserver.kjfp.enumtype.FinanzKategorie.PFAND,
                     com.kcserver.kjfp.enumtype.FinanzKategorie.KJFP_ZUSCHUSS,
                     com.kcserver.kjfp.enumtype.FinanzKategorie.SONSTIGE_EINNAHMEN
                 )
+                    OR (b.kategorie = com.kcserver.kjfp.enumtype.FinanzKategorie.TEILNEHMERBEITRAG
+                        AND b.herkunft = com.kcserver.kjfp.enumtype.BuchungsHerkunft.MANUELL))
                 then -b.betrag
 
                 else 0

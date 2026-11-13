@@ -10,8 +10,8 @@ public final class VorlagenModell {
     private VorlagenModell() {}
     public enum Vorgang { RESERVIERUNG, BESTAETIGUNG, STORNIERUNG, ABLEHNUNG, ABRECHENBAR, ABGERECHNET }
     public enum Bedingung { IMMER, ANZAHLUNG_POSITIV, KAUTION_POSITIV, RESTMIETE_POSITIV,
-        OG_GEBUCHT, OG_NICHT_GEBUCHT, STORNO_UNTER_56_TAGEN, STORNO_AB_56_TAGEN,
-        ZAHLUNG_ANZAHLUNG, ZAHLUNG_BEI_ABRECHNUNG, ZAHLUNG_GESAMTMIETE_VORAUS,
+        FRUEHERE_BUCHUNGSNUMMER_VORHANDEN, OG_GEBUCHT, OG_NICHT_GEBUCHT, STORNO_UNTER_56_TAGEN, STORNO_AB_56_TAGEN,
+        ZAHLUNG_OHNE_ABRECHNUNG, ZAHLUNG_ANZAHLUNG, ZAHLUNG_BEI_ABRECHNUNG, ZAHLUNG_GESAMTMIETE_VORAUS,
         RESTZAHLUNG_POSITIV, ERSTATTUNG_POSITIV, AUSGEGLICHEN, STORNO_ERSTATTUNG_POSITIV, STORNO_EINBEHALT_POSITIV, STORNO_OHNE_ZAHLUNG }
     public record Variante(Bedingung bedingung, String text) {}
     public record Block(String titel, String text, Bedingung bedingung, List<Variante> varianten) {}
@@ -22,7 +22,7 @@ public final class VorlagenModell {
         }
     }
     public record Briefpapier(Long version, String gruss, boolean pdfVorhanden, boolean bildVorhanden) {}
-    public static final Set<String> FELDER = Set.of("buchungsnummer", "vorname", "nachname", "anreise", "abreise", "mietbetrag",
+    public static final Set<String> FELDER = Set.of("buchungsnummer", "fruehere_buchungsnummer", "vorname", "nachname", "anreise", "abreise", "mietbetrag",
         "anzahlung", "kaution", "restmiete", "zahlungsfrist", "briefdatum", "mietobjekt", "bank_name", "bank_iban", "bank_bic", "hausregeln_url", "abrechnungssumme", "restzahlung", "erstattung", "saldo",
         "organisation", "mieter_bank_name", "mieter_bank_iban", "mieter_bank_bic", "mieter_kontoinhaber", "stornodatum", "storno_gezahlter_betrag", "storno_bereits_erstattet", "storno_erstattung", "storno_einbehalt");
     private static final Pattern TOKEN = Pattern.compile("\\{\\{([a-z_]+)}}");
@@ -70,9 +70,23 @@ public final class VorlagenModell {
     public static String ersetzen(String text, Map<String,String> daten) {
         text = normalisieren(text);
         pruefeText(text, true);
+        String first = daten.get("vorname");
+        boolean platzhalterVorname = first != null && first.strip().matches("_+");
+        if (platzhalterVorname) {
+            text = text.replaceAll("\\{\\{nachname\\}\\}\\s*,\\s*\\{\\{vorname\\}\\}", "{{nachname}}")
+                    .replaceAll("\\{\\{vorname\\}\\}\\s*,?\\s*\\{\\{nachname\\}\\}", "{{nachname}}");
+        }
+        // Optional legacy-number sentences must disappear as a whole when there is no value.
+        if (Objects.toString(daten.get("fruehere_buchungsnummer"), "").isBlank() && text.contains("{{fruehere_buchungsnummer}}")) {
+            text = text.replaceAll("(?m)[^.!?\\n]*\\{\\{fruehere_buchungsnummer}}[^.!?\\n]*[.!?]?", "").strip();
+        }
         var matcher = TOKEN.matcher(text); var out = new StringBuilder();
         while (matcher.find()) {
-            String value = daten.get(matcher.group(1));
+            String value = platzhalterVorname && matcher.group(1).equals("vorname")
+                    ? daten.get("nachname") : daten.get(matcher.group(1));
+            if (matcher.group(1).equals("fruehere_buchungsnummer") && (value==null || value.isBlank())) {
+                matcher.appendReplacement(out, ""); continue;
+            }
             if (value == null || value.isBlank()) throw fehler("Pflichtwert für " + matcher.group() + " fehlt.");
             matcher.appendReplacement(out, java.util.regex.Matcher.quoteReplacement(value));
         }

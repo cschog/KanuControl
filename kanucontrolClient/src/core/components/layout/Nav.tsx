@@ -1,3 +1,4 @@
+import { formatPersonName } from "@/core/utils/personName";
 import React, { lazy, Suspense, useEffect, useState } from "react";
 import packageJson from "../../../../package.json";
 import Popover from "@mui/material/Popover";
@@ -314,11 +315,11 @@ const Navigation = () => {
                   {active
                     ? isMobile
                       ? `${schema} · ${active.name}${
-                          active.leiter ? ` · ${active.leiter.vorname} ${active.leiter.name}` : ""
+                          active.leiter ? ` · ${formatPersonName(active.leiter.name, active.leiter.vorname, "first")}` : ""
                         }`
                       : `${schema} · ${active.name} · ${
                           active.leiter
-                            ? `${active.leiter.vorname} ${active.leiter.name}`
+                            ? `${formatPersonName(active.leiter.name, active.leiter.vorname, "first")}`
                             : "kein Leiter"
                         }`
                     : schema}

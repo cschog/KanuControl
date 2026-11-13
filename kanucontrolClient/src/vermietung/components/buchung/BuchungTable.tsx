@@ -1,3 +1,5 @@
+import { useMemo } from "react";
+import { formatPersonName } from "@/core/utils/personName";
 import { GenericTableTanstack } from "@/core/components/table/GenericTableTanstack";
 
 import type { Buchung } from "@/vermietung/types/Buchung";
@@ -6,6 +8,7 @@ import { buchungColumnsTanstack } from "@/vermietung/components/buchung/buchungC
 
 interface Props {
   data: Buchung[];
+  showMietobjekt: boolean;
 
   selectedId: number | null;
 
@@ -24,20 +27,30 @@ interface Props {
   ) => void;
 }
 
-export function BuchungTable({ data, selectedId, onSelect, sorting, onSortingChange }: Props) {
+export function BuchungTable({ data, showMietobjekt, selectedId, onSelect, sorting, onSortingChange }: Props) {
+  const columns = useMemo(() => buchungColumnsTanstack(showMietobjekt), [showMietobjekt]);
+  const visibleSorting = useMemo(() => sorting.filter(({ id }) =>
+    id !== (showMietobjekt ? "veranstalter" : "mietobjektBezeichnung")), [sorting, showMietobjekt]);
   return (
     <GenericTableTanstack
       data={data}
-      columns={buchungColumnsTanstack}
+      columns={columns}
       selectedRowId={selectedId}
       onSelectRow={(row) => onSelect(row ?? null)}
       manualSorting={false}
-      sorting={sorting}
+      sorting={visibleSorting}
       onSortingChange={onSortingChange}
       getRowBackgroundColor={(row) => (row.buchungsquelle === "AIRBNB" ? "#FFF3E0" : undefined)}
       mobileRenderRow={(row) => (
         <div>
-          <strong>{row.buchungsnummer}</strong>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: "1rem" }}>
+            <strong style={{ flexShrink: 0 }}>{row.buchungsnummer}</strong>
+            <span style={{ minWidth: 0, textAlign: "right", overflowWrap: "anywhere" }}>
+              {formatPersonName(row.mieterName, row.mieterVorname, "first")}
+            </span>
+          </div>
+
+          <div>{showMietobjekt ? row.mietobjektBezeichnung : `Veranstalter: ${row.veranstalter?.name ?? "—"}`}</div>
 
           <div>
             {formatDate(row.anreise)} – {formatDate(row.abreise)}

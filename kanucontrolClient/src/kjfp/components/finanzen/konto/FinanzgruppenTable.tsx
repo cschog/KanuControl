@@ -1,3 +1,4 @@
+import { formatPersonName } from "@/core/utils/personName";
 import {
   Paper,
   Table,
@@ -197,7 +198,7 @@ const FinanzgruppenTable: FC<Props> = ({ veranstaltungId, reloadKey }) => {
                         {g.teilnehmer?.map((t) => (
                           <Chip
                             key={t.id}
-                            label={`${t.nachname}, ${t.vorname}`}
+                            label={`${formatPersonName(t.nachname, t.vorname)}`}
                             size="small"
                             color="primary"
                           />

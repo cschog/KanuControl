@@ -25,6 +25,9 @@ public class Zahlungsnachweis extends Auditable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "belegnummer", length = 50)
+    private String belegnummer;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "veranstaltung_id", nullable = false)
     private Veranstaltung veranstaltung;

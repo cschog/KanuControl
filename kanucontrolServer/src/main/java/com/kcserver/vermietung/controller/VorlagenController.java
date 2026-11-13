@@ -85,7 +85,7 @@ public class VorlagenController {
         VorlagenService.tenant();var a=archiv.findById(id).orElseThrow(()->new org.springframework.web.server.ResponseStatusException(HttpStatus.NOT_FOUND));
         var result=new LinkedHashMap<String,Object>();result.put("vorgang",a.getVorgang());result.put("ergebnis",a.getErgebnis());result.put("fehler",a.getFehler());
         try{var node=new com.fasterxml.jackson.databind.ObjectMapper().readTree(a.getMetadaten());
-            if(node.isObject())for(String key:List.of("betreff","mailtext","routing","dateiname","externAm","pdfHash","quelle","ziel","storno"))if(node.has(key))result.put(key,node.get(key));
+            if(node.isObject())for(String key:List.of("betreff","mailtext","routing","dateiname","externAm","pdfHash","quelle","ziel","storno","benutzer","mieter","pruefsumme","simulation","herkunft","dokumentart"))if(node.has(key))result.put(key,node.get(key));
         }catch(com.fasterxml.jackson.core.JsonProcessingException ignored){/* Older archive metadata was not structured JSON. */}
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(response(result));
     }

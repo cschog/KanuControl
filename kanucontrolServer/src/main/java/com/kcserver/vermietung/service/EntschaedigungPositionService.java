@@ -32,6 +32,6 @@ public class EntschaedigungPositionService {
   }
   b.getEntschaedigungen().removeIf(e->!wanted.contains(e));wanted.stream().filter(e->!b.getEntschaedigungen().contains(e)).forEach(b.getEntschaedigungen()::add);
  }
- public static List<EntschaedigungPositionDTO> rows(Buchung b){return b.getEntschaedigungen().stream().sorted(Comparator.comparingInt(BuchungEntschaedigung::getSortierung)).map(e->new EntschaedigungPositionDTO(e.getId(),e.getKatalog()==null?null:e.getKatalog().getId(),e.getBezeichnung(),e.getAnlass(),BigDecimal.valueOf(e.getAnzahl()),e.getEinzelpreis(),e.getKatalogpreis(),e.getGesamtbetrag(),e.getBemerkung(),e.getPreisbegruendung(),e.getSortierung())).toList();}
- public static BigDecimal sum(Buchung b){return b.getEntschaedigungen().stream().map(BuchungEntschaedigung::getGesamtbetrag).reduce(BigDecimal.ZERO,BigDecimal::add).setScale(2);}
+ public static List<EntschaedigungPositionDTO> rows(Buchung b){if(Zahlungsplan.ohneAbrechnung(b))return List.of();return b.getEntschaedigungen().stream().sorted(Comparator.comparingInt(BuchungEntschaedigung::getSortierung)).map(e->new EntschaedigungPositionDTO(e.getId(),e.getKatalog()==null?null:e.getKatalog().getId(),e.getBezeichnung(),e.getAnlass(),BigDecimal.valueOf(e.getAnzahl()),e.getEinzelpreis(),e.getKatalogpreis(),e.getGesamtbetrag(),e.getBemerkung(),e.getPreisbegruendung(),e.getSortierung())).toList();}
+ public static BigDecimal sum(Buchung b){if(Zahlungsplan.ohneAbrechnung(b))return BigDecimal.ZERO.setScale(2);return b.getEntschaedigungen().stream().map(BuchungEntschaedigung::getGesamtbetrag).reduce(BigDecimal.ZERO,BigDecimal::add).setScale(2);}
 }

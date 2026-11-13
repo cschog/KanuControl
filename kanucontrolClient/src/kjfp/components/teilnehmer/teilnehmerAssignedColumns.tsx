@@ -1,3 +1,4 @@
+import { formatPersonName } from "@/core/utils/personName";
 import { Box, Chip, Tooltip } from "@mui/material";
 import { ColumnDef } from "@tanstack/react-table";
 
@@ -14,7 +15,7 @@ export function teilnehmerAssignedColumns({ onRoleClick, showKjfpAssignment = fa
     {
       id: "fullname",
       header: "Name",
-      accessorFn: (row) => `${row.person?.name ?? ""}, ${row.person?.vorname ?? ""}`,
+      accessorFn: (row) => `${formatPersonName(row.person?.name ?? "", row.person?.vorname ?? "")}`,
       sortingFn: "text",
       size: 260,
 
@@ -57,7 +58,7 @@ export function teilnehmerAssignedColumns({ onRoleClick, showKjfpAssignment = fa
               </Tooltip>
             )}
 
-            <Box>{`${person?.name ?? ""}, ${person?.vorname ?? ""}`}</Box>
+            <Box>{`${formatPersonName(person?.name ?? "", person?.vorname ?? "")}`}</Box>
           </Box>
         );
       },

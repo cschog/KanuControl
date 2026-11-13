@@ -1,3 +1,4 @@
+import { useState } from "react";
 import BuchungsnummerAendern from "./BuchungsnummerAendern";
 import VorlagenVersandarchiv from "./VorlagenVersandarchiv";
 import Abrechnungsdokumente from "./Abrechnungsdokumente";
@@ -73,6 +74,7 @@ export const BuchungFormView: React.FC<Props> = ({
   disableDelete,
   neueBuchungsquelle = "DIREKT",
 }) => {
+  const [dokumentRevision, setDokumentRevision] = useState(0);
   const {
     form,
     update,
@@ -135,7 +137,9 @@ export const BuchungFormView: React.FC<Props> = ({
           display: "grid",
           gridTemplateColumns: {
             xs: "1fr",
-            lg: "minmax(260px, 0.9fr) minmax(320px, 1.1fr) minmax(300px, 1fr)",
+            lg: buchung?.status === "ABRECHENBAR" || buchung?.status === "ABGESCHLOSSEN"
+              ? "minmax(260px, 0.9fr) minmax(320px, 1.1fr) minmax(300px, 1fr)"
+              : "minmax(260px, 0.9fr) minmax(320px, 1.1fr)",
           },
           gap: 3,
           mt: 3,
@@ -169,15 +173,16 @@ export const BuchungFormView: React.FC<Props> = ({
       </Box>
 
       {buchung?.stornoDatum && <Typography sx={{ my: 2 }}>Storniert am {buchung.stornoDatum} · angekündigte Erstattung: {(buchung.stornoErstattung ?? 0).toLocaleString("de-DE", { style: "currency", currency: "EUR" })} · verbindlicher Einbehalt: {(buchung.stornoEinbehalt ?? 0).toLocaleString("de-DE", { style: "currency", currency: "EUR" })}. Tatsächliche Überweisungen werden separat in den Finanzen erfasst.</Typography>}
-      <EntschaedigungEditor objektId={form.mietobjektId} rows={form.entschaedigungen ?? []} editable={editMode} onChange={rows=>update("entschaedigungen",rows)}/>
-      {buchung && !editMode && <Abrechnungsdokumente key={`${buchung.id}-${buchung.status}-${buchung.abrechnungRevision}-${buchung.abschlussRevision}`} id={buchung.id} ausstellbar={buchung.status === "ABGESCHLOSSEN" && buchung.abrechnungRevision === buchung.abschlussRevision}/>}
-      {buchung && !editMode && <VorlagenVersandarchiv key={`${buchung.id}-${buchung.status}-${buchung.abschlussRevision}-${buchung.reservierungMailGesendetAm}-${buchung.reservierungMailFehler}`} id={buchung.id} refresh={!!buchung.reservierungMailGesendetAm} />}
+      {form.zahlungsvariante !== "OHNE_ABRECHNUNG" && <EntschaedigungEditor objektId={form.mietobjektId} rows={form.entschaedigungen ?? []} editable={editMode} onChange={rows=>update("entschaedigungen",rows)}/>}
+      {buchung && !editMode && <Abrechnungsdokumente key={`${buchung.id}-${buchung.status}-${buchung.abrechnungRevision}-${buchung.abschlussRevision}`} id={buchung.id} ausstellbar={buchung.zahlungsvariante !== "OHNE_ABRECHNUNG" && buchung.status === "ABGESCHLOSSEN" && buchung.abrechnungRevision === buchung.abschlussRevision}/>}
+      {buchung && !editMode && <VorlagenVersandarchiv key={`${buchung.id}-${buchung.status}-${buchung.abschlussRevision}-${buchung.reservierungMailGesendetAm}-${buchung.reservierungMailFehler}-${dokumentRevision}`} id={buchung.id} refresh={!!buchung.reservierungMailGesendetAm} />}
       <BuchungActionBar
         buchung={buchung ?? undefined}
         buchungId={buchung?.id}
         direktbuchung={buchung?.buchungsquelle === "DIREKT"}
         reservierungMailGesendetAm={buchung?.reservierungMailGesendetAm}
         reservierungMailFehler={buchung?.reservierungMailFehler}
+        onDokumentVersandt={() => setDokumentRevision(v => v + 1)}
         onRefresh={onRefresh}
         status={buchung?.status ?? "ANFRAGE"}
         editMode={editMode}

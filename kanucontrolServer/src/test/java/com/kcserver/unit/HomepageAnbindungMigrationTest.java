@@ -93,4 +93,21 @@ class HomepageAnbindungMigrationTest {
             assertEquals("1", text(c, "SELECT COUNT(*) FROM mietobjekt"));
         }
     }
+    @Test void hausmeisterSchalterUndCcErhaltenBestandsvorgabeUndSindRuecknehmbar() throws Exception {
+        try (Connection c = DriverManager.getConnection("jdbc:h2:mem:" + UUID.randomUUID() + ";MODE=PostgreSQL")) {
+            migrate(c, "CLUB_REPORT");
+            c.createStatement().execute("INSERT INTO homepage_anbindung (mietobjekt_id,bezeichnung,created_at) VALUES (7,'Homepage',CURRENT_TIMESTAMP)");
+            var database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(c));
+            database.setDefaultSchemaName("CLUB_REPORT");
+            var lb = new Liquibase("db/changelog/changes/20261113-01-hausmeister-versand.xml", new ClassLoaderResourceAccessor(), database);
+            lb.update(new Contexts(), new LabelExpression());
+            assertNull(text(c, "SELECT hausmeister_automatisch FROM homepage_anbindung"));
+            c.createStatement().execute("UPDATE homepage_anbindung SET hausmeister_automatisch=TRUE,hausmeister_cc_email='cc@example.org'");
+            assertEquals("cc@example.org", text(c, "SELECT hausmeister_cc_email FROM homepage_anbindung"));
+            lb.rollback(1, new Contexts(), new LabelExpression());
+            assertThrows(SQLException.class, () -> c.createStatement().executeQuery("SELECT hausmeister_automatisch FROM homepage_anbindung"));
+            assertEquals("Homepage", text(c, "SELECT bezeichnung FROM homepage_anbindung"));
+        }
+    }
+
 }

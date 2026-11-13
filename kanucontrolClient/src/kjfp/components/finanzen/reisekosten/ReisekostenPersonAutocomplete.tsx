@@ -1,3 +1,4 @@
+import { formatPersonName } from "@/core/utils/personName";
 import { EntityAutocomplete } from "@/core/components/common/reference/EntityAutocomplete";
 import { PersonRef } from "@/core/api/types/person/PersonRef";
 
@@ -28,7 +29,7 @@ export function ReisekostenPersonAutocomplete({
       value={value}
       disabled={disabled}
       fetch={(search) => searchVerfuegbareReisekostenPersonen(veranstaltungId, search)}
-      getLabel={(p) => `${p.name}, ${p.vorname}${p.hauptvereinAbk ? ` (${p.hauptvereinAbk})` : ""}`}
+      getLabel={(p) => `${formatPersonName(p.name, p.vorname)}${p.hauptvereinAbk ? ` (${p.hauptvereinAbk})` : ""}`}
       onChange={onChange}
     />
   );

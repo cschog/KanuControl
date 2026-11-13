@@ -9,6 +9,8 @@ export interface HomepageAnbindung {
   antwortTestEmail?: string | null;
   antwortCcEmail?: string | null;
   hausmeisterEmail?: string | null;
+  hausmeisterCcEmail?: string | null;
+  hausmeisterAutomatisch?: boolean | null;
   empfaengerEmail: string | null;
   gastBestaetigung: boolean;
   verwaltungsBenachrichtigung: boolean;

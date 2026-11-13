@@ -1,3 +1,4 @@
+import { formatPersonName } from "@/core/utils/personName";
 import { ColumnDef } from "@tanstack/react-table";
 
 import { IconButton } from "@mui/material";
@@ -17,7 +18,7 @@ export const zahlungsPositionColumns = ({ onDelete }: Props): ColumnDef<Zahlungs
     header: "Teilnehmer",
     size: 300,
 
-    accessorFn: (row) => `${row.nachname ?? ""}, ${row.vorname ?? ""}`,
+    accessorFn: (row) => `${formatPersonName(row.nachname ?? "", row.vorname ?? "")}`,
 
     sortingFn: "text",
   },

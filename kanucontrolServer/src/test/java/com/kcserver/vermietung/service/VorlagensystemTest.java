@@ -152,7 +152,7 @@ class VorlagensystemTest {
             org.springframework.test.util.ReflectionTestUtils.setField(s,"reservierungsPdf",pdf);org.springframework.test.util.ReflectionTestUtils.setField(s,"vorlagen",mock(VorlagenService.class));
             String fingerprint=s.reservierungVorschau(b).fingerprint();
             assertThrows(Exception.class,()->s.reservierungVorbereiten(b));
-            config.setAntwortCcEmail("changed@example.org");assertThrows(Exception.class,()->s.reservierungVorbereiten(b,fingerprint));verify(sender,never()).createMimeMessage();
+            config.setAntwortTestEmail("changed@example.org");assertThrows(Exception.class,()->s.reservierungVorbereiten(b,fingerprint));verify(sender,never()).createMimeMessage();
             String fresh=s.reservierungVorschau(b).fingerprint();var mail=s.reservierungVorbereiten(b,fresh);
             assertArrayEquals(geruestBytes(mail),mail.pdf());assertTrue(mail.metadaten().contains("revision=1"));verify(sender,never()).send(any(jakarta.mail.internet.MimeMessage.class));
         }

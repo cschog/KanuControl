@@ -317,3 +317,6 @@ Eine Antwort mit erfolgreichem Speichern darf nicht durch einen nachfolgenden Ma
 
 
 [Zur Vermietungsanleitung](/info/bedienungsanleitung-vermietung.md) · [Zur Hilfeübersicht](/info/bedienungsanleitung.md)
+
+
+Seit 13.11.2026: Unter Homepage-Anbindung → Hausmeister-Wochenbericht kann der automatische Versand je Mietobjekt mit „Hausmeisterreport automatisch aus PROD senden“ ein- und ausgeschaltet werden. Änderungen speichern. Der Schalter ist nur in geprüfter PROD-Umgebung verfügbar und benötigt keinen Serverneustart. Ohne explizite Objekteinstellung gilt weiterhin KC_HAUSMEISTERBERICHT_ENABLED als Vorgabe. Eine CC-Adresse gilt für manuelle und automatische Berichte; der globale SMTP-Testmodus unterdrückt CC. Antwortmail-Testadressen unterdrücken ebenfalls CC.

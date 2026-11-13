@@ -1,5 +1,6 @@
 package com.kcserver.kjfp.service.pdf;
 
+import com.kcserver.core.util.PersonName;
 import com.kcserver.core.entity.Mitglied;
 import com.kcserver.core.entity.Person;
 import com.kcserver.core.entity.Teilnehmer;
@@ -544,9 +545,7 @@ public class PDFTeilnehmerDatenkontrolleService {
 
         writeCell(
                 content,
-                safe(person.getName())
-                        + ", "
-                        + safe(person.getVorname()),
+                PersonName.surnameFirst(person.getName(), person.getVorname()),
                 x,
                 top,
                 COL_NAME

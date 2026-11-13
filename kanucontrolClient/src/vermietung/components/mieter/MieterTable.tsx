@@ -1,3 +1,4 @@
+import { formatPersonName } from "@/core/utils/personName";
 import { useMemo } from "react";
 import { Box, Chip, Tooltip } from "@mui/material";
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
@@ -6,7 +7,7 @@ import MieterBuchungenLink from "./MieterBuchungenLink";
 import type { Mieter } from "@/vermietung/types/Mieter";
 
 const values = {
-  name: (m: Mieter) => `${m.name}, ${m.vorname}`,
+  name: (m: Mieter) => `${formatPersonName(m.name, m.vorname)}`,
   email: (m: Mieter) => m.email?.trim() ?? "",
   telefon: (m: Mieter) => m.telefon?.trim() ?? "",
   festnetz: (m: Mieter) => m.telefonFestnetz?.trim() ?? "",

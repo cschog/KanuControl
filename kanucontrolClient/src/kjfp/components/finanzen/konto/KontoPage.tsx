@@ -1,3 +1,4 @@
+import { formatPersonName } from "@/core/utils/personName";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Box, Button, Chip, Stack, Typography } from "@mui/material";
@@ -317,7 +318,7 @@ export default function KontoPage({ veranstaltungId }: Props) {
                   <Chip
                     key={teilnehmer.id}
                     size="small"
-                    label={`${teilnehmer.vorname} ${teilnehmer.nachname}`}
+                    label={`${formatPersonName(teilnehmer.nachname, teilnehmer.vorname, "first")}`}
                     onDelete={
                       row.system
                         ? undefined
@@ -325,7 +326,7 @@ export default function KontoPage({ veranstaltungId }: Props) {
                             openRemoveDialog(
                               row.id,
                               teilnehmer.personId,
-                              `${teilnehmer.vorname} ${teilnehmer.nachname}`,
+                              `${formatPersonName(teilnehmer.nachname, teilnehmer.vorname, "first")}`,
                             )
                     }
                   />

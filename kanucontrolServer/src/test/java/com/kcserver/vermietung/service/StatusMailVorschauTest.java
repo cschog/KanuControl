@@ -30,13 +30,13 @@ class StatusMailVorschauTest {
             var service=new HomepageStatusMailService(mailRepo,configRepo,validation.getValidator(),provider,smtp);
             var b=ReservierungsbestaetigungTest.beispiel();var alt=b.getStatus();
             var v=service.statusVorschau(b,zielstatus,alt);
-            assertEquals("test@example.org",v.empfaenger());assertEquals("cc@example.org",v.cc());assertTrue(v.testmodus());
+            assertEquals("test@example.org",v.empfaenger());assertNull(v.cc());assertTrue(v.testmodus());
             verifyNoInteractions(sender,provider,mailRepo);assertEquals(alt,b.getStatus());
             assertThrows(ResponseStatusException.class,()->service.statusVorbereiten(b,zielstatus,alt,null));
             var prepared=service.statusVorbereiten(b,zielstatus,alt,v.fingerprint());
             assertEquals(v.betreff(),prepared.message().getSubject());assertEquals(v.text(),prepared.message().getText());
             assertArrayEquals(new String[]{v.empfaenger()},prepared.message().getTo());
-            assertArrayEquals(new String[]{v.cc()},prepared.message().getCc());assertEquals(v.replyTo(),prepared.message().getReplyTo());
+            assertNull(prepared.message().getCc());assertEquals(v.replyTo(),prepared.message().getReplyTo());
             assertEquals(v.absender(),prepared.message().getFrom());verify(sender,never()).send(any(SimpleMailMessage.class));
             // Configuration changes after preparation must not alter the approved message.
             config.setAntwortTestEmail("changed@example.org");

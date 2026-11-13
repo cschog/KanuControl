@@ -1,5 +1,6 @@
 package com.kcserver.vermietung.service;
 
+import com.kcserver.core.util.PersonName;
 import com.kcserver.vermietung.entity.Buchung;
 import com.kcserver.kjfp.enumtype.CountryCode;
 import java.util.Map;
@@ -11,7 +12,7 @@ public final class Buchungsadressat {
     public static Map<String,String> felder(Buchung b) {
         var p=b.getMieter();
         if(p==null)throw fehler("Mieter fehlt.");
-        String person=pflicht(p.getVorname(),"Vorname des Mieters")+" "+pflicht(p.getName(),"Nachname des Mieters");
+        String person=PersonName.givenFirst(pflicht(p.getName(),"Nachname des Mieters"), pflicht(p.getVorname(),"Vorname des Mieters"));
         var v=b.getVeranstalter();
         String organisation=v==null?leer(p.getOrganisation()):pflicht(v.getName(),"Veranstaltername");
         String typ=v==null?"Mieters":"Veranstalters";

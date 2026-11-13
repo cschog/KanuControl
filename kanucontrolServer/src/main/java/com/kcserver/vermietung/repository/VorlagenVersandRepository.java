@@ -1,6 +1,7 @@
 package com.kcserver.vermietung.repository;
 import com.kcserver.vermietung.entity.VorlagenVersand;
 public interface VorlagenVersandRepository extends org.springframework.data.jpa.repository.JpaRepository<VorlagenVersand,String> {
+    java.util.Optional<VorlagenVersand> findByVersandSchluessel(String schluessel);
     java.util.List<VorlagenVersand> findByBuchungIdOrderByErstelltAmDesc(Long buchung);
     @org.springframework.data.jpa.repository.Modifying
     @org.springframework.data.jpa.repository.Query("delete from VorlagenVersand e where e.buchungId = :id")

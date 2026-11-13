@@ -20,7 +20,9 @@ export interface BuchungPosition {
 }
 
 export interface Buchung {
-  zahlungsvariante?: "ANZAHLUNG" | "BEI_ABRECHNUNG" | "GESAMTMIETE_VORAUS";
+  veranstaltung?: string | null;
+  fruehereBuchungsnummer?: string | null;
+  zahlungsvariante?: "ANZAHLUNG" | "BEI_ABRECHNUNG" | "GESAMTMIETE_VORAUS" | "OHNE_ABRECHNUNG";
   bankverbindungAuswahl?: BankverbindungAuswahl;
   entschaedigungen?: EntschaedigungPosition[];
   abrechnungRevision?: number;

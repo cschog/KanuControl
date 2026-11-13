@@ -1,5 +1,6 @@
 package com.kcserver.vermietung.service;
 
+import com.kcserver.core.util.PersonName;
 import com.kcserver.vermietung.entity.*;
 import com.kcserver.vermietung.enumtype.*;
 import com.kcserver.vermietung.repository.*;
@@ -81,7 +82,7 @@ public class ReservierungsbestaetigungPdf {
         f.putAll(Buchungsadressat.felder(b));
         f.put("briefdatum", datum.format(heute));
         f.put("buchungsnummer", required(b.getBuchungsnummer(), "Buchungsnummer"));
-        f.put("anrede", "Hallo " + p.getVorname().trim() + ",");
+        f.put("anrede", "Hallo " + (PersonName.vorname(p.getVorname()).isEmpty() ? p.getName().trim() : PersonName.vorname(p.getVorname())) + ",");
         f.put("aufenthalt", "ich danke für die Anmeldung und freue mich, dass ihr vom " + datum.format(b.getAnreise())
                 + " bis " + datum.format(b.getAbreise()) + " unser Bootshaus in Obermaubach nutzen wollt.");
         f.put("mietpreissatz", "Die Miete beträgt" + tarif + " " + money(miete) + " €.");

@@ -34,6 +34,7 @@ import java.util.Objects;
 @Transactional
 public class ZahlungsnachweisService {
 
+    private final com.kcserver.kjfp.service.abrechnung.BelegnummerService belegnummerService;
     private final ZahlungsnachweisRepository zahlungsnachweisRepository;
     private final VeranstaltungRepository veranstaltungRepository;
     private final TeilnehmerRepository teilnehmerRepository;
@@ -73,6 +74,7 @@ public class ZahlungsnachweisService {
                     nachweisMap.get(dto.getId());
 
             if (nachweis != null) {
+                dto.setBelegnummer(nachweis.getBelegnummer());
                 dto.setTeilnehmer(
                         getTeilnehmerKurzDTOs(nachweis)
                 );
@@ -155,13 +157,9 @@ public class ZahlungsnachweisService {
         nachweis.setZahlungsweg(dto.getZahlungsweg());
         nachweis.setBemerkung(dto.getBemerkung());
         nachweis.setVeranstaltung(veranstaltung);
-        nachweis.setFinanzGruppe(
-                ermittleFinanzGruppe(
-                        veranstaltungId,
-                        dto.getZahlungsweg(),
-                        dto.getFinanzGruppeId()
-                )
-        );
+        var neuesKonto = ermittleFinanzGruppe(veranstaltungId, dto.getZahlungsweg(), dto.getFinanzGruppeId());
+        belegnummerService.validateKontowechsel(nachweis.getBelegnummer(), nachweis.getFinanzGruppe(), neuesKonto);
+        nachweis.setFinanzGruppe(neuesKonto);
 
         List<Teilnehmer> teilnehmer =
                 ladeTeilnehmer(
@@ -199,6 +197,7 @@ public class ZahlungsnachweisService {
                 dto.getBetrag()
         );
 
+        nummeriereQuittung(nachweis);
         nachweis = zahlungsnachweisRepository.save(nachweis);
 
         return mapper.toDetailDTO(nachweis);
@@ -221,11 +220,9 @@ public class ZahlungsnachweisService {
             ZahlungsnachweisUpdateDTO dto
     ) {
 
-        Zahlungsnachweis nachweis =
-                getEntity(
-                        veranstaltungId,
-                        zahlungsnachweisId
-                );
+        Zahlungsnachweis nachweis = zahlungsnachweisRepository
+                .findForUpdate(zahlungsnachweisId, veranstaltungId).orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, ErrorMessages.ZAHLUNGSNACHWEIS_NOT_FOUND));
 
         if (dto.getBetrag() == null
                 || dto.getBetrag().compareTo(BigDecimal.ZERO) <= 0) {
@@ -277,13 +274,9 @@ public class ZahlungsnachweisService {
         nachweis.setBetrag(dto.getBetrag());
         nachweis.setZahlungsweg(dto.getZahlungsweg());
         nachweis.setBemerkung(dto.getBemerkung());
-        nachweis.setFinanzGruppe(
-                ermittleFinanzGruppe(
-                        veranstaltungId,
-                        dto.getZahlungsweg(),
-                        dto.getFinanzGruppeId()
-                )
-        );
+        var neuesKonto = ermittleFinanzGruppe(veranstaltungId, dto.getZahlungsweg(), dto.getFinanzGruppeId());
+        belegnummerService.validateKontowechsel(nachweis.getBelegnummer(), nachweis.getFinanzGruppe(), neuesKonto);
+        nachweis.setFinanzGruppe(neuesKonto);
 
         nachweis.clearPositionen();
 
@@ -329,6 +322,7 @@ public class ZahlungsnachweisService {
                 dto.getBetrag()
         );
 
+        nummeriereQuittung(nachweis);
         nachweis = zahlungsnachweisRepository.save(nachweis);
 
         return mapper.toDetailDTO(nachweis);
@@ -433,10 +427,17 @@ public class ZahlungsnachweisService {
 
         rueckzahlung.setFinanzGruppe(finanzGruppe);
 
+        nummeriereQuittung(rueckzahlung);
         rueckzahlung =
                 zahlungsnachweisRepository.save(rueckzahlung);
 
         return mapper.toDetailDTO(rueckzahlung);
+    }
+
+    private void nummeriereQuittung(Zahlungsnachweis nachweis) {
+        if (nachweis.getZahlungsweg() == Zahlungsweg.QUITTUNG && nachweis.getBelegnummer() == null) {
+            nachweis.setBelegnummer(belegnummerService.next(nachweis.getFinanzGruppe()).wert());
+        }
     }
 
     private List<Teilnehmer> ladeTeilnehmer(

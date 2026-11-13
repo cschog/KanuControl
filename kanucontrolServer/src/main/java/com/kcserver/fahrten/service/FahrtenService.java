@@ -1,5 +1,6 @@
 package com.kcserver.fahrten.service;
 
+import com.kcserver.core.util.PersonName;
 import com.kcserver.core.entity.Person;
 import com.kcserver.fahrten.dto.FahrtenDTOs.*;
 import com.kcserver.fahrten.entity.*;
@@ -123,7 +124,7 @@ public class FahrtenService {
         k.setKennzeichnung(d.kennzeichnung().trim()); k.setBezeichnung(d.bezeichnung().trim()); k.setTyp(d.typ()); k.setPlatzanzahl(d.platzanzahl()); k.setAktiv(d.aktiv()); k.setVeranstaltung(event);
         k.setEigentuemer(d.eigentuemerId() == null ? null : personRepository.findById(d.eigentuemerId()).orElseThrow(() -> missing("Eigentümer nicht gefunden.")));
     }
-    private KanuInfo toKanu(Kanu k) { return new KanuInfo(k.getId(), k.getKennzeichnung(), k.getBezeichnung(), k.getTyp(), k.getPlatzanzahl(), k.isAktiv(), k.getVeranstaltung() != null, k.getVeranstaltung() == null ? null : k.getVeranstaltung().getId(), k.getEigentuemer() == null ? null : k.getEigentuemer().getId(), k.getEigentuemer() == null ? null : k.getEigentuemer().getVorname() + " " + k.getEigentuemer().getName()); }
+    private KanuInfo toKanu(Kanu k) { return new KanuInfo(k.getId(), k.getKennzeichnung(), k.getBezeichnung(), k.getTyp(), k.getPlatzanzahl(), k.isAktiv(), k.getVeranstaltung() != null, k.getVeranstaltung() == null ? null : k.getVeranstaltung().getId(), k.getEigentuemer() == null ? null : k.getEigentuemer().getId(), k.getEigentuemer() == null ? null : PersonName.givenFirst(k.getEigentuemer().getName(), k.getEigentuemer().getVorname())); }
     private FahrtInfo toFahrt(Fahrt f) { return new FahrtInfo(f.getId(), f.getVeranstaltung().getId(), f.getDatum(), f.getBeginnZeit(), f.getEndeZeit(), new GewaesserInfo(f.getGewaesser().getId(), f.getGewaesser().getName()), f.getStartort(), f.getZielort(), f.getKilometer(), f.getStreckenangabe(), f.getBemerkung(), fahrtKanuRepository.findByFahrt_IdOrderById(f.getId()).stream().map(this::toBoot).toList()); }
     private BootInfo toBoot(FahrtKanu fk) { var crew = besatzungRepository.findByFahrtKanu_IdOrderById(fk.getId()); boolean licensed = !fk.isLizenzErforderlich() || lizenzRepository.existsByKanu_IdAndGueltigVonLessThanEqualAndGueltigBisGreaterThanEqual(fk.getKanu().getId(), fk.getFahrt().getDatum(), fk.getFahrt().getDatum()); return new BootInfo(fk.getId(), toKanu(fk.getKanu()), fk.isLizenzErforderlich(), licensed, crew.stream().map(x -> new CrewInfo(x.getId(), x.getTeilnehmer().getId(), x.getTeilnehmer().getPerson().getId(), x.getTeilnehmer().getPerson().getVorname(), x.getTeilnehmer().getPerson().getName())).toList()); }
     private LizenzInfo toLizenz(KanuLizenz l) { return new LizenzInfo(l.getId(), l.getKanu().getId(), l.getLizenznummer(), l.getGueltigVon(), l.getGueltigBis(), l.getKosten()); }

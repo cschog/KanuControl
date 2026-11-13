@@ -1,5 +1,6 @@
 package com.kcserver.kjfp.service.pdf;
 
+import com.kcserver.core.util.PersonName;
 import com.kcserver.kjfp.dto.reisekosten.KostenZeile;
 import com.kcserver.core.entity.Person;
 import com.kcserver.kjfp.entity.fahrkosten.Fahrtabschnitt;
@@ -46,6 +47,9 @@ public class PDFFahrkostenabrechnungService {
                     repository.findById(abrechnungId)
                             .orElseThrow();
 
+            if (abrechnung.getFinanzGruppe() == null || abrechnung.getBelegnummer() == null) {
+                throw new IllegalArgumentException("Bitte zuerst dem Fahrer ein Konto zuordnen und die Fahrkostenabrechnung speichern.");
+            }
             LocalDate datum = abrechnung.getAbrechnungsdatum();
 
             ReisekostenKonfiguration konfiguration =
@@ -90,6 +94,7 @@ public class PDFFahrkostenabrechnungService {
                         konfiguration
                 );
                 fillFooter(form, abrechnung);
+                writeBelegnummer(document, abrechnung.getBelegnummer());
 
                 PDDocumentInformation info =
                         document.getDocumentInformation();
@@ -119,6 +124,24 @@ public class PDFFahrkostenabrechnungService {
         }
     }
 
+    /** Wiederholt die gespeicherte Nummer im sichtbaren Kopfbereich jeder Formularseite. */
+    private void writeBelegnummer(PDDocument document, String belegnummer) throws IOException {
+        var font = new org.apache.pdfbox.pdmodel.font.PDType1Font(
+                org.apache.pdfbox.pdmodel.font.Standard14Fonts.FontName.HELVETICA_BOLD);
+        for (var page : document.getPages()) {
+            var bounds = page.getCropBox();
+            try (var stream = new org.apache.pdfbox.pdmodel.PDPageContentStream(document,
+                    page, org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode.APPEND, true, true)) {
+                stream.beginText();
+                stream.setNonStrokingColor(java.awt.Color.BLACK);
+                stream.setFont(font, 10);
+                stream.newLineAtOffset(bounds.getLowerLeftX() + 57, bounds.getUpperRightY() - 51);
+                stream.showText("Belegnummer: " + belegnummer);
+                stream.endText();
+            }
+        }
+    }
+
     @Transactional(readOnly = true)
     public String buildFilename(Long abrechnungId) {
 
@@ -145,9 +168,7 @@ public class PDFFahrkostenabrechnungService {
         set(
                 form,
                 "Name",
-                fahrer.getVorname()
-                        + " "
-                        + fahrer.getName()
+                PersonName.givenFirst(fahrer.getName(), fahrer.getVorname())
         );
 
         set(
@@ -299,9 +320,7 @@ public class PDFFahrkostenabrechnungService {
         set(
                 form,
                 "Unterschrift",
-                fahrer.getVorname()
-                        + " "
-                        + fahrer.getName()
+                PersonName.givenFirst(fahrer.getName(), fahrer.getVorname())
         );
     }
     private String formatEuro(BigDecimal betrag) {
@@ -437,7 +456,7 @@ public class PDFFahrkostenabrechnungService {
 
         result.add(
                 new KostenZeile(
-                        fahrer.getVorname() + " " + fahrer.getName(),
+                        PersonName.givenFirst(fahrer.getName(), fahrer.getVorname()),
                         "F",
                         fahrerKm,
                         cfg.getPkwSatz(),
@@ -494,9 +513,7 @@ public class PDFFahrkostenabrechnungService {
 
                     result.add(
                             new KostenZeile(
-                                    p.getVorname()
-                                            + " "
-                                            + p.getName(),
+                                    PersonName.givenFirst(p.getName(), p.getVorname()),
                                     "MF",
                                     km,
                                     cfg.getMitfahrerSatz(),

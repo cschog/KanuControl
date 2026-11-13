@@ -17,19 +17,15 @@ export const belegColumns: ColumnDef<AbrechnungBeleg>[] = [
     size: 110,
   },
 
-  // {
-  //   id: "kategorie",
-  //   header: "Kategorie",
-  //   size: 180,
-  //   enableSorting: false,
-  //   cell: ({ row }) => {
-  //     const positionen = row.original.positionen;
-  //     if (positionen.length !== 1) {
-  //       return "-";
-  //     }
-  //     return finanzKategorieLabel[positionen[0].kategorie];
-  //   },
-  // },
+  {
+    id: "art",
+    header: "Art",
+    size: 150,
+    accessorFn: (beleg) => {
+      const typen = new Set(beleg.positionen.map((position) => kategorieZuTyp[position.kategorie]));
+      return typen.size > 1 ? "Einnahmen / Ausgaben" : typen.has("EINNAHME") ? "Einnahme" : typen.has("KOSTEN") ? "Ausgabe" : "-";
+    },
+  },
 
   {
     accessorKey: "aussteller",
@@ -72,29 +68,16 @@ export const belegColumns: ColumnDef<AbrechnungBeleg>[] = [
       ),
   },
 
-  {
-    id: "summe",
-    header: "Summe",
+  ...(["EINNAHME", "KOSTEN"] as const).map((typ): ColumnDef<AbrechnungBeleg> => ({
+    id: typ === "EINNAHME" ? "einnahmen" : "ausgaben",
+    header: typ === "EINNAHME" ? "Einnahmen" : "Ausgaben",
     size: 120,
     enableSorting: false,
-    meta: {
-      align: "right",
-    },
-
-    cell: ({ row }) => {
-      const summe = row.original.positionen.reduce((sum, p) => sum + p.betrag, 0);
-
-      const typ =
-        row.original.positionen.length > 0
-          ? kategorieZuTyp[row.original.positionen[0].kategorie]
-          : undefined;
-
-      return (
-        <Money
-          value={summe}
-          color={typ === "EINNAHME" ? "success.main" : typ === "KOSTEN" ? "error.main" : undefined}
-        />
-      );
-    },
-  },
+    meta: { align: "right" },
+    cell: ({ row }) => <Money
+      value={row.original.positionen.filter((p) => kategorieZuTyp[p.kategorie] === typ)
+        .reduce((sum, p) => sum + p.betrag, 0)}
+      color={typ === "EINNAHME" ? "success.main" : "error.main"}
+    />,
+  })),
 ];

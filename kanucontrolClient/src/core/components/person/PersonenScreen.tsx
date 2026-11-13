@@ -1,3 +1,4 @@
+import { formatPersonName } from "@/core/utils/personName";
 // src/components/person/PersonenScreen.tsx
 
 import { useCallback, useEffect, useState, useRef } from "react";
@@ -579,7 +580,7 @@ export default function PersonenScreen() {
                       )}
 
                       <Typography fontWeight={600}>
-                        {row.name}, {row.vorname}
+                        {formatPersonName(row.name, row.vorname)}
                       </Typography>
                     </Box>
 

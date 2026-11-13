@@ -87,7 +87,8 @@ public class AbrechnungService {
 
         dto.setFinanz(summary);
 
-        BigDecimal kjfpKosten = BigDecimal.ZERO;
+        // Reisekosten werden separat ermittelt und gehören vollständig zum KJFP-Anteil.
+        BigDecimal kjfpKosten = fahrkosten == null ? BigDecimal.ZERO : fahrkosten;
         BigDecimal kjfpEinnahmen = BigDecimal.ZERO;
         BigDecimal sonstigeKosten = BigDecimal.ZERO;
         BigDecimal sonstigeEinnahmen = BigDecimal.ZERO;

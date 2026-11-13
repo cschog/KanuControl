@@ -5,6 +5,7 @@ import lombok.Setter;
 import java.time.Instant;
 @Entity @Table(name="vermietung_vorlagenversand") @Getter @Setter
 public class VorlagenVersand {
+    @Column(name="versand_schluessel",length=36,unique=true) private String versandSchluessel;
     @Id private String id = java.util.UUID.randomUUID().toString();
     @Column(name="buchung_id",nullable=false) private Long buchungId;
     @Column(name="mietobjekt_id",nullable=false) private Long mietobjektId;

@@ -1,5 +1,6 @@
 package com.kcserver.kjfp.service.pdf;
 
+import com.kcserver.core.util.PersonName;
 import com.kcserver.kjfp.dto.validation.DataStatus;
 import com.kcserver.kjfp.dto.validation.VereinDataStatusDTO;
 import com.kcserver.core.entity.Veranstaltung;
@@ -108,7 +109,7 @@ public class PDFAnmeldungFmJemService {
                 var k = v.getVerein().getKontoinhaber();
 
                 set(form, "kontoinhaber_name",
-                        join(" ", k.getVorname(), k.getName()));
+                        PersonName.givenFirst(k.getName(), k.getVorname()));
 
                 set(form, "kontoinhaber_anschrift", k.getStrasse());
 
@@ -125,7 +126,7 @@ public class PDFAnmeldungFmJemService {
                 var l = v.getLeiter();
 
                 set(form, "leitung_name",
-                        join(" ", l.getVorname(), l.getName()));
+                        PersonName.givenFirst(l.getName(), l.getVorname()));
 
                 set(form, "leitung_anschrift", l.getStrasse());
 
