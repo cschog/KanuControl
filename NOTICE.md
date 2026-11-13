@@ -1,53 +1,55 @@
-KanuControl
-Copyright (c) 2026 Chris Schog
+# KanuControl
 
-This product includes software developed by Chris Schog.
+Copyright (c) 2026 Chris Schog.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this software except in compliance with the License.
-You may obtain a copy of the License at
+This product includes software developed by Chris Schog and is made
+available under the Apache License, Version 2.0. See [LICENSE](LICENSE) and
+[the Apache license text](https://www.apache.org/licenses/LICENSE-2.0).
 
-    http://www.apache.org/licenses/LICENSE-2.0
+## Trademark and branding
 
+The KanuControl name, logo and icon are project identifiers of Chris Schog.
+The Apache License does not grant general rights to use these identifiers
+as product branding, subject to the origin-identification and NOTICE
+exception in Section 6. See [TRADEMARK.md](TRADEMARK.md).
 
-------------------------------------------------------------------
-TRADEMARK AND BRANDING
-------------------------------------------------------------------
+Preserve the copyright, license and attribution notices required by
+Section 4 of the Apache License. These informational notices do not modify
+the license terms or require removal of legally required attribution.
 
-"KanuControl", the KanuControl name, logo, and icon are trademarks
-of Chris Schog and are NOT covered by the Apache License 2.0.
+## Third-party software and fonts
 
-You may use, modify, and distribute the software under the terms
-of the Apache License 2.0, but you may NOT use the KanuControl name,
-logo, icon, or branding in derived or redistributed versions
-without explicit written permission.
+KanuControl uses third-party components under their respective licenses.
+The following is a selected overview of direct components used in this
+project, not an exhaustive inventory of all transitive dependencies:
 
-All redistributed versions must remove KanuControl branding unless
-officially authorized.
+- Spring Boot and Spring Framework: Apache License 2.0.
+- Hibernate ORM: GNU Lesser General Public License, version 2.1 or later.
+- Keycloak and keycloak-js: Apache License 2.0.
+- Liquibase Core 4.33.0: Apache License 2.0.
+- Apache PDFBox 3.0.2: Apache License 2.0; its distribution also contains
+  separately licensed components. The original upstream
+  [LICENSE](legal/third-party/pdfbox/LICENSE.txt) and
+  [NOTICE](legal/third-party/pdfbox/NOTICE.txt) are included unchanged.
+- jsoup 1.24.1: MIT License, copyright (c) 2009-2026 Jonathan Hedley.
+  The [upstream license](legal/third-party/jsoup/LICENSE.txt) is included unchanged.
+- React, React DOM, Material UI and TanStack Table: MIT License.
+- Vite and TypeScript: MIT License and Apache License 2.0, respectively.
+- Roboto fonts, supplied through @fontsource/roboto: SIL Open Font License
+  1.1. The [font license](legal/third-party/roboto/OFL.txt) is included unchanged.
+- Embedded DejaVu Sans fonts for program-draft PDFs: Bitstream Vera and
+  applicable Arev font terms, with DejaVu changes in the public domain.
+  See the [complete bundled font notices](kanucontrolServer/src/main/resources/fonts/LICENSE-DejaVu.txt).
 
+Each third-party component remains the property of its respective copyright
+holders. Consult the license and notice files accompanying the exact
+component version being distributed. KanuControl's Apache License does not
+replace third-party license terms.
 
-------------------------------------------------------------------
-THIRD-PARTY SOFTWARE
-------------------------------------------------------------------
+## Disclaimer
 
-This software may include third-party libraries licensed under
-their respective open-source licenses, including but not limited to:
+Unless required by applicable law or agreed to in writing, the software is
+provided "AS IS", WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+express or implied. See LICENSE for the applicable terms.
 
-- Spring Boot (Apache License 2.0)
-- Hibernate (LGPL / Apache components)
-- Keycloak (Apache License 2.0)
-- Liquibase (Apache License 2.0)
-- React (MIT License)
-- Material UI (MIT License)
-
-Each third-party component remains the property of its respective
-copyright holder.
-
-
-------------------------------------------------------------------
-DISCLAIMER
-------------------------------------------------------------------
-
-Unless required by applicable law or agreed to in writing, this
-software is provided "AS IS", WITHOUT WARRANTIES OR CONDITIONS OF
-ANY KIND, either express or implied.
+Documentation reviewed for KanuControl 2.2.2 on 13 November 2026.

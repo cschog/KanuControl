@@ -1,6 +1,8 @@
 # Impressum
 
-## Angaben gemäß § 5 TMG
+## Anbieterkennzeichnung
+
+Angaben gemäß [§ 5 Digitale-Dienste-Gesetz (DDG)](https://www.gesetze-im-internet.de/ddg/__5.html)
 
 ### Betreiber der KanuControl-Installation
 
@@ -23,11 +25,11 @@ Chris Schog
 
 KanuControl
 
-Version: V1.7.x
+Dokumentierter Softwarestand: **2.2.2**
 
 KanuControl ist eine Software zur Verwaltung von Kanuvereinen und Vereinsveranstaltungen.
 
-Der Schwerpunkt liegt auf der Unterstützung bei der Planung, Beantragung, Durchführung und Abrechnung von geförderten Jugendmaßnahmen.
+Die Anwendung unterstützt KJFP-Maßnahmen, gemeinsame Vereinsaktionen und Fahrten sowie Vermietung einschließlich Buchungen, Abrechnung und Dokumenten.
 
 Hierzu werden Personen, Mitglieder, Vereine, Veranstaltungen, Teilnehmer, Beiträge und Reisekosten zentral verwaltet und für die Zuschussbearbeitung aufbereitet.
 
@@ -51,8 +53,12 @@ Die Betreiber der Software übernehmen keine Haftung für fehlerhafte oder unvol
 
 Die Software KanuControl einschließlich Quellcode, Datenmodell, Benutzeroberfläche und Dokumentation unterliegt dem Urheberrecht.
 
-Eine Vervielfältigung, Bearbeitung oder Weitergabe außerhalb der vereinbarten Nutzung bedarf der Zustimmung des Rechteinhabers.
+Für die Nutzung, Bearbeitung und Weitergabe des Quellcodes gelten die Bedingungen der mitgelieferten **Apache License 2.0**. Für Name, Logo und weitere Kennzeichen gelten die gesonderten Markenhinweise des Projekts. Komponenten Dritter unterliegen ihren jeweiligen Lizenzen.
+
+Die maßgeblichen Hinweise stehen in [LICENSE](https://github.com/cschog/KanuControl/blob/master/LICENSE), [NOTICE.md](https://github.com/cschog/KanuControl/blob/master/NOTICE.md) und [TRADEMARK.md](https://github.com/cschog/KanuControl/blob/master/TRADEMARK.md).
 
 ---
 
-Stand: September 2026
+Dokumentationsstand: 13. November 2026
+
+Die tatsächlich laufenden Client- und Serverversionen stehen im Kopfbereich der Anwendung.

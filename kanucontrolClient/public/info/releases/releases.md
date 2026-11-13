@@ -1,3 +1,47 @@
+# Was ist neu? – KanuControl 2.2.2
+
+**Dokumentationsstand: 13. November 2026 · Client und Server: 2.2.2**
+
+## KJFP: Programmentwurf und Anmeldung
+
+- Veranstaltungsdaten und Programmentwurf stehen in zwei unabhängig aufklappbaren Bereichen.
+- Der optionale Programmentwurf unterstützt Überschrift, Fett/Kursiv, Listen, Absätze und Zeilenumbrüche und wird gemeinsam mit der Veranstaltung gespeichert.
+- Die Anmeldung übernimmt den gespeicherten Entwurf nach den beiden vorhandenen Formularseiten; längere Programme erhalten weitere Seiten.
+- Fahrkosten werden in der vorgesehenen Formularzeile ausgegeben. Kultur / Programm wird unter „Sonstige Kosten“ berücksichtigt und fließt in die Gesamtsumme ein.
+
+## KJFP: Kopieren mit eigener Planung
+
+- Beim Kopieren einer KJFP-Veranstaltung entsteht eine eigene Planung im Status „In Bearbeitung“.
+- Teilnehmerzahlen, Beiträge, Preise, Kostenansätze und Planungspositionen werden übernommen. Automatische Beträge werden für die neuen Veranstaltungsdaten neu berechnet.
+- Auch Unterkunft, Verpflegung, Ort, Beitragsstruktur, Beschreibung, Gebühreneinstellungen und Programmentwurf werden übernommen.
+- Die Vorlage bleibt als eigene Planung erhalten. Teilnehmerlisten, Abrechnung und Belege werden nicht kopiert.
+- Bei manueller Änderung des Teilnehmer- oder Mitarbeiterbeitrags wird „Beitragsvorschlag übernehmen“ in der Simulation wieder aktiv.
+
+## Vermietung: Bedienung und Dokumente seit 2.1.1
+
+Die aktuellen Versionen ergänzen die ältere Hilfe insbesondere um:
+
+- Getrennte Mieter- und Veranstalterverwaltung.
+- Sieben aufklappbare Buchungsbereiche und eine erreichbare Aktionsleiste; Löschen steht unter „Weitere Aktionen“.
+- Jahresfilter nach Mietbeginn in der Abrechnung und überarbeitete Tabellen- und Formularbedienung.
+- Vorschau, Speichern/Ersetzen, PDF-Import und manuellen Versand von Buchungsdokumenten unabhängig von Statusaktionen.
+- Simulationsabrechnungen mit eindeutiger Entwurfskennzeichnung, frühere Buchungsnummern und nachvollziehbares Versandarchiv.
+- Direkten Statusmail- und Dokumentversand über KC-SMTP. WordPress übernimmt weiterhin die erste Eingangsbestätigung.
+
+## Qualität und Versionsanzeige
+
+Der Produktionsbuild des Clients und der vollständige Server-Testlauf für 2.2.2 sind erfolgreich. Von 829 Testfällen wurden 814 ausgeführt und 15 optionale PostgreSQL-Integrationstests mangels gesonderter Testdatenbank-Konfiguration übersprungen; es gab keine Fehler oder fehlgeschlagenen Prüfungen.
+
+Die tatsächlich laufenden Frontend- und Backend-Versionen stehen im Kopfbereich. Der dokumentierte Quellstand sagt nicht aus, ob eine Installation bereits aktualisiert wurde.
+
+[Bedienungsanleitung KJFP](/info/bedienungsanleitung-kjfp.md) · [Bedienungsanleitung Vermietung](/info/bedienungsanleitung-vermietung.md) · [Bedienungsanleitung Fahrten](/info/bedienungsanleitung-fahrten.md) · [Homepage-Anbindung](/info/homepage-anbindung.md)
+
+---
+
+# Frühere Versionshinweise
+
+Die folgenden Angaben dokumentieren den damaligen Stand und sind keine Beschreibung des aktuellen Prüfstands.
+
 # Was ist neu? – KanuControl 2.1.1
 
 **Veröffentlicht: 6. November 2026**

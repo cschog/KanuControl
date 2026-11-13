@@ -1,6 +1,6 @@
 # Bedienungsanleitung Vermietung
 
-**Anwendung:** KanuControl 2.1.0 · **Dokumentationsstand:** 3. November 2026
+**Anwendung:** KanuControl 2.2.2 · **Dokumentationsstand:** 13. November 2026
 
 Diese Anleitung beschreibt die Vermietung von Objekten wie dem Bootshaus. Für Veranstaltungen, Förderung und Veranstaltungsfinanzen gibt es die [Bedienungsanleitung KJFP](/info/bedienungsanleitung-kjfp.md).
 
@@ -20,7 +20,7 @@ Diese Anleitung beschreibt die Vermietung von Objekten wie dem Bootshaus. Für V
 - [10. Sperrzeiten](#10-sperrzeiten)
 - [11. Homepage-Anfragen und Bootshauskalender](#11-homepage-anfragen-und-bootshauskalender)
 - [12. Airbnb-Kalenderexport](#12-airbnb-kalenderexport)
-- [13. E-Mails und Homepage-Warteschlange](#13-e-mails-und-homepage-warteschlange)
+- [13. Dokumente, E-Mails und Versandarchiv](#13-dokumente-e-mails-und-versandarchiv)
 - [14. Häufige Fragen](#14-haufige-fragen)
 
 
@@ -28,7 +28,7 @@ Diese Anleitung beschreibt die Vermietung von Objekten wie dem Bootshaus. Für V
 
 Wähle nach der Anmeldung das Modul **Vermietung**. Dafür benötigst du die Rolle VERMIETUNG oder ADMIN. Ist nur dieses Modul freigeschaltet, wird es direkt geöffnet.
 
-Das Startmenü enthält **Mieter**, **Mietobjekte**, **Buchung**, **Abrechnung**, **Finanz-Dashboard**, **Verbrauch & Belegung** und **Verwaltung**. Im Kopfbereich stehen Verein und aktives Mietobjekt. Prüfe diesen Kontext vor dem Anlegen einer Buchung.
+Das Startmenü enthält **Veranstalter**, **Mieter**, **Mietobjekte**, **Buchung**, **Abrechnung**, **Finanz-Dashboard**, **Verbrauch & Belegung** und **Verwaltung**. Im Kopfbereich stehen Verein und aktives Mietobjekt. Prüfe diesen Kontext vor dem Anlegen einer Buchung.
 
 Die Verwaltung enthält mehrere Reiter. **Sperrzeiten** und **Airbnb-Export** stehen rechts hinter **Homepage-Anbindung**. Wenn nicht alle Reiter sichtbar sind, scrolle die Reiterleiste horizontal oder nutze den Pfeil am rechten Rand. Auf einem kleinen Bildschirm kannst du die Leiste verschieben.
 
@@ -80,12 +80,18 @@ Das Formular ergänzt verfügbare Voraussetzungen beim Auswählen. Wird eine Vor
 Öffne **Vermietung → Buchung** und starte die Anlage einer Direkt- oder Airbnb-Buchung für das aktive Mietobjekt.
 
 1. Mieter auswählen; bei Bedarf den Kontakt zuvor anlegen.
-2. Veranstalter auswählen, sofern relevant.
+2. Veranstalter auswählen, sofern relevant. Mieter und Veranstalter werden getrennt gepflegt; Veranstalter können auch Organisationen sein.
 3. Anreise- und Abreisedatum sowie Uhrzeiten prüfen.
 4. Mietbereiche auswählen.
 5. Preise und Rabatte kontrollieren.
 6. Teilnehmerzahlen, Bemerkung sowie bei Direktbuchung Anzahlung und Kaution erfassen.
 7. Speichern und anschließend den passenden Status wählen.
+
+### Aufklappbare Buchungsbereiche
+
+Die Maske ist in sieben aufklappbare Bereiche gegliedert: Mieter/Veranstalter/Rabatt, Aufenthalt, Mietbereiche/Preise, Zahlung, Verbrauch, Schäden und interne Angaben. Eingaben bleiben beim Zuklappen erhalten. Zusammenfassungen im Bereichskopf helfen beim Prüfen. Speicherfehler öffnen den betroffenen Bereich.
+
+Die Aktionsleiste bleibt am unteren Rand erreichbar. **Löschen** steht unter **Weitere Aktionen**. Vor dem Abrechnungsabschluss zeigt KC eine vorbereitende Übersicht der gespeicherten Buchungs-, Zahlungs- und Verbrauchsdaten. Bei noch ungespeicherten Änderungen zuerst speichern und die Übersicht neu prüfen.
 
 ### Checkbox oder Menge
 
@@ -93,7 +99,7 @@ Bei **Bestand 1** erscheint eine Checkbox ohne Mengenfeld. Das Auswählen übern
 
 ### Zeitraum und Mindestaufenthalt
 
-Anreise und Abreise werden mit Uhrzeiten gespeichert. Der Mindestaufenthalt beträgt eine Übernachtung: Das Abreisedatum liegt frühestens am Folgetag. Es müssen keine 24 Stunden zwischen Anreise und Abreise liegen. Freitag 16:00 Uhr bis Samstag 14:00 Uhr ist somit eine Übernachtung.
+Anreise und Abreise werden mit Uhrzeiten gespeichert. In KC sind auch Buchungen am selben Tag möglich, sofern das Ende zeitlich nach dem Beginn liegt. Das Homepageformular verwendet die konfigurierten Anreise-/Abreisezeiten und ist auf Übernachtungsanfragen ausgerichtet. Freitag 16:00 Uhr bis Samstag 14:00 Uhr ist eine Übernachtung; eine Dauer von 24 Stunden ist dafür nicht erforderlich.
 
 Bei „Buchung ohne Enddatum“ ist die Laufzeit noch offen. Tagespreise werden vorläufig ohne eine unbegrenzte Laufzeit dargestellt. Für eine endgültige Abrechnung wird ein konkretes Ende benötigt.
 
@@ -135,7 +141,7 @@ Bei der Berechnungsart **TAG** gilt:
 Einzelpreis × Menge × Miettage
 ```
 
-Die Miettage entsprechen der Differenz der Kalendertage von Anreise und Abreise. Freitag 16:00 Uhr bis Sonntag 14:00 Uhr ergibt zwei Miettage. Bei 300 Euro pro Tag und Menge 1 sind das 600 Euro. Ein Rabatt von 50 Prozent reduziert diese Summe auf 300 Euro.
+Die Miettage entsprechen der Differenz der Kalendertage von Anreise und Abreise, mindestens jedoch einem Miettag. Freitag 16:00 Uhr bis Sonntag 14:00 Uhr ergibt zwei Miettage. Bei 300 Euro pro Tag und Menge 1 sind das 600 Euro. Ein Rabatt von 50 Prozent reduziert diese Summe auf 300 Euro.
 
 Andere Berechnungsarten, etwa eine Pauschale pro Buchung, werden nicht mit Miettagen multipliziert. Im Formular werden der verwendete Preis, die Berechnungsart und gegebenenfalls die Miettage angezeigt.
 
@@ -151,11 +157,17 @@ Die Option ist standardmäßig ausgeschaltet. Abwählen oder Abbrechen erhält d
 
 Öffne **Vermietung → Abrechnung** oder die Schaltfläche **Abrechnung** einer Buchung. Dort werden Soll, erfasste Zahlungen, offene Beträge und Bewegungen zu Anzahlung, Miete, Verbrauchskosten und Kaution betrachtet.
 
+Die Liste startet mit dem aktuellen Jahr. Über **Jahr (Mietbeginn)** wählst du das Anreisejahr oder **Alle Jahre**. Der Filter lässt sich mit Mietobjekt und Status kombinieren. Diese Jahresauswahl bezieht sich auf den Mietbeginn; das Finanz-Dashboard wertet dagegen Zahlungsdaten aus.
+
 ### Sollbeträge und Zahlungseingänge
 
 Ein im Buchungsformular eingetragener Anzahlungs- oder Kautionsbetrag ist eine Forderung und noch kein Zahlungseingang. Tatsächliche Eingänge müssen als Finanzbewegung erfasst werden.
 
 Die Anzahlung ist Teil der gesamten Miete und wird nicht zusätzlich zur Miete berechnet. Bei Airbnb-Buchungen werden in KC keine Anzahlungs- oder Kautionsforderungen erhoben.
+
+### Zahlungsvariante
+
+Bei Direktbuchungen stehen **Anzahlung**, **Zahlung bei Abrechnung**, **Gesamtmiete im Voraus** und **Ohne Abrechnung** zur Verfügung. Die Auswahl beeinflusst die angezeigten Zahlungsanforderungen. **Ohne Abrechnung** kennzeichnet eine kostenlose Buchung; prüfe diese Auswahl bewusst. Primäre bzw. alternative Bankverbindung und vereinbarte Beträge vor dem Speichern kontrollieren.
 
 ### Rückzahlungen und Verrechnung
 
@@ -235,11 +247,23 @@ Der geheime Link wird nur unmittelbar nach dem Erzeugen angezeigt. Er bleibt nac
 
 Wird der Export deaktiviert und gespeichert, liefert der vorhandene Link einen gültigen, leeren Kalender. Airbnb-Buchungen werden in dieser Ausbaustufe noch nicht nach KC importiert.
 
-## 13. E-Mails und Homepage-Warteschlange
+## 13. Dokumente, E-Mails und Versandarchiv
 
-WordPress verschickt die Eingangsbestätigung nach erfolgreicher KC-Übernahme gemäß den KC-Einstellungen. Statusänderungen von Homepage-Buchungen erzeugen außerdem Mailaufträge in KC, die WordPress abholt und über seine Mailkonfiguration versendet.
+### Dokumente unabhängig vom Buchungsstatus vorbereiten
 
-Eine erfolgreiche Mailübergabe ist noch kein Zustellnachweis. Prüfe bei fehlenden Nachrichten den WordPress-Versand und die Warteschlange unter **Einstellungen → KC Buchungsanfrage**. Ein erneuter Mailversand kann Nachrichten verdoppeln; prüfe zuerst den vorhandenen Vorgang.
+In der Buchung können Reservierungsbestätigung, Endabrechnung und Simulationsabrechnung unabhängig von einer Statusaktion vorbereitet werden. **Vorschau** erzeugt eine neue Fassung; **Gespeichertes Dokument öffnen** zeigt die zuletzt gespeicherte bzw. importierte Fassung. Speichern/Ersetzen und PDF-Import ändern den Buchungsstatus nicht und lösen keinen Versand aus. Bei einer vorhandenen Fassung muss eine Ersetzung bewusst bestätigt werden.
+
+Eine Simulationsabrechnung trägt die Kennzeichnung **ENTWURF / SIMULATION – keine endgültige Rechnung**. Sie erfasst keine Zahlungen und ersetzt keinen regulären Abrechnungsabschluss. Änderungen an Buchung oder Zahlungen können eine gespeicherte Fassung veralten lassen; Hinweise vor der Verwendung prüfen und bei Bedarf eine neue Vorschau erzeugen.
+
+Das optionale Feld **Frühere Buchungsnummer** unter den internen Angaben erleichtert den Umstieg aus alten Listen. Es verändert die aktuelle Buchungsnummer nicht.
+
+### Versand und Archiv
+
+Vor einem manuellen Versand prüfst du Empfänger, CC, Betreff, Nachricht und die ausgewählte PDF-Fassung. Erst die ausdrückliche Versandaktion übergibt die Nachricht an SMTP. Im **Versandarchiv** lassen sich die versandte Fassung und die verwendeten Texte nachvollziehen. Spätere Änderungen ersetzen keinen früheren Anhang im Archiv.
+
+WordPress verschickt weiterhin die erste Eingangsbestätigung einer Homepage-Anfrage. Statusnachrichten aus KC und der manuelle Dokumentversand laufen über die SMTP-Konfiguration des KC-Servers. Die ausgelieferte WordPress-Erweiterung holt keine neuen Statusmail-Aufträge mehr ab.
+
+Im globalen oder mietobjektbezogenen Testmodus wird an die Testadresse gesendet; CC und BCC werden unterdrückt. Eine erfolgreiche SMTP-Übergabe ist noch kein Zustellnachweis. Bei unklarem Versandstatus zuerst den vorhandenen Vorgang, das Archiv und den zuständigen Mailausgang prüfen; bewusstes erneutes Senden kann doppelte Nachrichten verursachen.
 
 ## 14. Häufige Fragen
 

@@ -1,6 +1,6 @@
 # Hilfe und Bedienungsanleitungen
 
-**Dokumentationsstand: 3. November 2026 · KanuControl 2.1.0**
+**Dokumentationsstand: 13. November 2026 · KanuControl 2.2.2**
 
 Wähle die Anleitung für den Bereich, in dem du arbeiten möchtest. Die Module haben eigene Abläufe und einen eigenen Arbeitskontext.
 
@@ -8,7 +8,7 @@ Wähle die Anleitung für den Bereich, in dem du arbeiten möchtest. Die Module 
 
 [Bedienungsanleitung KJFP öffnen](/info/bedienungsanleitung-kjfp.md)
 
-Für Vereine, Personen, Veranstaltungen, Teilnehmer, Förderung, Simulation, Planung, Beiträge, Abrechnung, Fahrkosten, Konten, Finanzausgleich und Dokumente.
+Für Vereine, Personen, Veranstaltungen mit Programmentwurf und Planungskopie, Teilnehmer, Förderung, Simulation, Planung, Beiträge, Abrechnung, Fahrkosten, Konten, Finanzausgleich und Dokumente.
 
 ## Vermietung
 
@@ -20,7 +20,7 @@ Für Mieter, Mietobjekte und Mietbereiche, Buchungen, Mietpreise, Rabatte, Verbr
 
 [Bedienungsanleitung Fahrten öffnen](/info/bedienungsanleitung-fahrten.md)
 
-Für Treffen, Tages- und Mehrtagesfahrten, Training, gemeinsame Personen und Veranstaltungen, Etappen und Kilometer, Boote, Lizenzen, Übernachtung, Teilnehmerbeiträge und Belege.
+Für gemeinsame Personen und Aktionen, Fahrten auf Flüssen, Kanus, Lizenzen, Besatzungen und die Kilometer-Auswertung. Veranstaltungsfinanzen werden bei KJFP-Zuordnung im KJFP-Modul bearbeitet.
 
 ## Homepage einrichten
 

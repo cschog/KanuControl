@@ -1,6 +1,6 @@
 # Bedienungsanleitung KJFP
 
-**Anwendung:** KanuControl 2.1.0 · **Dokumentationsstand:** 3. November 2026
+**Anwendung:** KanuControl 2.2.2 · **Dokumentationsstand:** 13. November 2026
 
 Diese Anleitung beschreibt das Modul **KJFP**: Veranstaltungen, Teilnehmer, Förderung und Veranstaltungsfinanzen. Die [Vermietung hat eine eigene Anleitung](/info/bedienungsanleitung-vermietung.md). Über das Fragezeichen im Kopfbereich kannst du beide Anleitungen jederzeit öffnen.
 
@@ -273,7 +273,7 @@ Rahmendaten einer Maßnahme.
 Dazu gehören unter anderem:
 
 -   Veranstaltungsname
--   Veranstaltungsart
+-   KJFP- und Fahrten-Aktivierung; bei KJFP wird FM/JEM aus der Dauer ermittelt
 -   Beginn und Ende
 -   Veranstaltungsort
 -   Leitung
@@ -284,8 +284,9 @@ Dazu gehören unter anderem:
 
 ### Dynamische Anforderungen
 
-Nicht jede Angabe ist bereits bei der Anlage einer Veranstaltung
-zwingend erforderlich.
+Für eine KJFP-Veranstaltung werden Name, Verein, Leitung, Beginn und Ende mit Uhrzeit benötigt. Die Art **FM** (1–4 Kalendertage) bzw. **JEM** (ab 5 Kalendertagen) wird automatisch aus der Dauer einschließlich An- und Abreisetag ermittelt.
+
+Weitere Angaben müssen nicht vollständig bei der Anlage vorliegen.
 
 Mit zunehmender Verwendung können zusätzliche Anforderungen aktiviert
 werden. KanuControl zeigt über die Datenstatus an, welche Angaben für
@@ -294,10 +295,23 @@ den aktuellen Arbeitsschritt noch fehlen oder empfohlen werden.
 Die Vollständigkeit wird damit schrittweise aufgebaut und nicht pauschal
 bei der Neuanlage erzwungen.
 
+### Veranstaltungsdaten und Programmentwurf
+
+Die Maske hat zwei unabhängig aufklappbare Bereiche: **Veranstaltungsdaten** ist anfangs geöffnet, **Programmentwurf** geschlossen. Beide dürfen gleichzeitig offen sein. Zuklappen erhält die Eingaben; gespeichert wird gemeinsam über **Speichern** bzw. **Anlegen**.
+
+Im Programmentwurf stehen eine einzeilige Überschrift mit höchstens 200 Zeichen und ein formatierbarer Text mit höchstens 50.000 sichtbaren Zeichen zur Verfügung. Unterstützt werden Fett, Kursiv, deren Kombination, Aufzählungen und nummerierte Listen ohne Verschachtelung, Absätze und manuelle Zeilenumbrüche. **Formatierung entfernen** erhält den Text und löst Listen auf. Fremde Schriftarten, Farben und nicht unterstützte Inhalte werden beim Einfügen entfernt. Bei der ersten Texteingabe wird die Überschrift „Programmentwurf“ vorgeschlagen; sie bleibt frei änderbar.
+
+Der Bereichskopf zeigt, ob Programmtext vorhanden ist. Ein Titel allein gilt nicht als Programmtext. Der gesamte Entwurf ist optional. Nach dem Leeren des Texts und Speichern entfallen die Programmseiten der nächsten Anmeldung. Vor dem Verlassen ungespeicherte Änderungen speichern oder bewusst verwerfen.
+
 ### Veranstaltung kopieren
 
-Bestehende Veranstaltungen können als Vorlage kopiert werden. Das
-erleichtert die Anlage wiederkehrender Veranstaltungen.
+1. Die gewünschte Vorlage öffnen und **Kopieren** wählen.
+2. Im Dialog **Veranstaltung mit Planung kopieren** Name, Termine und Veranstaltungsdaten prüfen bzw. ändern.
+3. Mit **Anlegen** die neue Veranstaltung samt eigener Planung speichern.
+
+Übernommen werden auch Beschreibung, Programmentwurf, Unterkunft, Verpflegung, Land/PLZ/Ort, Beitragsstruktur und vorhandene Gebühreneinstellungen. Die Planung enthält die gespeicherten Teilnehmer- und Mitarbeiterzahlen, Beiträge, Preise, Kostenansätze und Planungspositionen. Automatische Beträge werden für die neuen Veranstaltungsdaten neu berechnet.
+
+Die neue Planung steht immer **In Bearbeitung**, auch wenn die Vorlage bereits eingereicht ist. Änderungen der Kopie verändern die ursprüngliche Planung nicht. Hat die Vorlage noch keine gespeicherte Planung, legt KC eine Planung mit Standardwerten an. Teilnehmerlisten, Abrechnung und Belege werden nicht kopiert; die Leitung wird wie bei einer Neuanlage zugeordnet. Die neue Veranstaltung wird nach dem Anlegen aktiv. Bei einem Speicherfehler bleibt der Dialog mit den Eingaben geöffnet.
 
 ### Aktive Veranstaltung
 
@@ -360,38 +374,13 @@ verfügbar ist.
 Die Simulation dient dazu, die Finanzierung einer Veranstaltung vor der
 verbindlichen Planung durchzuspielen.
 
-Verändert werden können – abhängig von der Veranstaltung --
-beispielsweise:
+Verändert werden können Teilnehmer- und Mitarbeiterzahlen, Beiträge sowie die Preise und Ansätze für Unterkunft, Verpflegung, Fahrkosten, Honorare, Verbrauchsmaterial, Kultur, Miete und sonstige Kosten. Die Berechnung berücksichtigt die Veranstaltungsdauer, die hinterlegten Fördersätze und gegebenenfalls KiK.
 
--   Teilnehmer- und Mitarbeiterzahlen
--   Teilnehmerbeiträge
--   Unterkunft
--   Verpflegung
--   Fahrkosten
--   Honorare
--   Verbrauchsmaterial
--   Kulturprogramm
--   Miete
--   Pfand
--   sonstige Kosten
--   sonstige Einnahmen
--   KJFP-Förderung
--   KiK-Zuschlag
+Nach einer Eingabe wird automatisch neu gerechnet. **Beitragsvorschlag übernehmen** setzt die vorgeschlagenen Teilnehmer- und Mitarbeiterbeiträge ein. Änderst du einen dieser Beiträge anschließend manuell, wird die Schaltfläche wieder aktiv. Erst **Simulation speichern** übernimmt die Änderungen dauerhaft in die Planung. Bei eingereichter Planung sind Speichern und Beitragsübernahme gesperrt; die Planung muss zuerst wieder geöffnet werden.
 
-Die Simulation berechnet die finanziellen Auswirkungen unmittelbar neu.
+#### Voraussetzungen der Simulation
 
-#### Dynamische Anforderungen der Simulation
-
-Die Simulation berücksichtigt die konkrete Art und Ausgestaltung der
-Veranstaltung.
-
-Die **Unterkunftsart ist nicht grundsätzlich erforderlich**. Bei einer
-Tagesveranstaltung wird keine Unterkunft benötigt. Bei einer
-Veranstaltung mit Übernachtung kann die Unterkunft dagegen für die
-Simulation relevant werden.
-
-Auch weitere Angaben werden abhängig von den Regeln der jeweiligen
-Veranstaltung geprüft.
+Der aktuelle Simulationsablauf benötigt eine **Beitragsstruktur**, eine **Unterkunftsart** und ein **Verpflegungsmodell** an der Veranstaltung. Fehlende Voraussetzungen werden angezeigt. Für Maßnahmen ohne Übernachtung können die berechneten Übernachtungskosten null sein; die Auswahl der Unterkunftsart wird im aktuellen Formular trotzdem vorausgesetzt.
 
 #### KiK
 
@@ -418,8 +407,7 @@ Die Planung enthält unter anderem:
 -   Verbrauchsmaterial
 -   Kulturprogramm
 -   Miete
--   Pfand
--   sonstige Kosten und Einnahmen
+-   sonstige Kosten
 -   KJFP-Förderung
 -   KiK-Zuschlag, sofern vorhanden
 -   Eigenanteil
@@ -513,7 +501,7 @@ Für einen Beleg können unter anderem erfasst werden:
 -   Dokumente
 
 Dokumente können Fotos und PDF-Dateien sein. Ein Foto einer Rechnung
-muss **IMMER** im Querformat aufgenommen werden.
+sollte vollständig und gut lesbar sein. Prüfe die Ausrichtung und die PDF-Vorschau vor der Weiterverwendung.
 
 #### Buchungen
 
@@ -697,6 +685,14 @@ Dabei unterscheidet KanuControl zwischen:
 
 Die Dokumentprüfung berücksichtigt damit den konkreten Zweck des
 Dokuments und nicht pauschal die Vollständigkeit aller Stammdaten.
+
+### Anmeldung mit Programmentwurf
+
+**Anmeldung (Vorschau)** und **Anmeldung (Download)** verwenden den zuletzt gespeicherten Stand. Die bestehende Anmeldung hat zwei Seiten; der Programmtext beginnt danach auf **Seite 3** und wird bei Bedarf auf weitere Seiten umgebrochen. Name und Zeitraum der Veranstaltung stehen im Kopf der Programmseiten. Eine interne Veranstaltungsnummer wird dort nicht ausgegeben.
+
+Unterstützte Hervorhebungen, Listen und Zeilenumbrüche werden übernommen. Ohne Programmtext entstehen keine Zusatzseiten, auch bei einem Titel oder ausschließlich leeren Absätzen. Nach Änderungen zuerst die Veranstaltung speichern und die PDF erneut erzeugen. Ein Upload eines endgültigen Programm-PDFs ist in dieser Ausbaustufe nicht vorgesehen.
+
+In der Kostenaufstellung der Anmeldung wird **Kultur / Programm** zusammen mit sonstigen Kosten unter **Sonstige Kosten** ausgewiesen. Fahrkosten stehen in der eigenen Fahrkostenzeile. Beide Beträge fließen in die Gesamtsummen ein.
 
 ### Digitale Belege
 

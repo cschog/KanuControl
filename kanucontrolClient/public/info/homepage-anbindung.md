@@ -1,6 +1,6 @@
 # Homepage-Anbindung: Anfrageformular und Bootshauskalender
 
-**Dokumentationsstand: 3. November 2026 · WordPress-Plugin 0.1.11**
+**Anwendung: KanuControl 2.2.2 · Dokumentationsstand: 13. November 2026 · ausgeliefertes WordPress-Plugin 0.1.14**
 
 Diese Anleitung beschreibt die Einrichtung durch die KC- und WordPress-Administration. Die tägliche Bearbeitung von Anfragen steht in der [Bedienungsanleitung Vermietung](/info/bedienungsanleitung-vermietung.md).
 
@@ -25,6 +25,10 @@ VERMIETUNG und ADMIN können die Einstellungen lesen und ändern sowie den Hausm
 
 Für den Bootshauskalender muss **Erdgeschoss mit Wiese** eindeutig freigegeben sein. Dieser Kalender ist fest auf das EG eingestellt; er bietet keine Mietbereichsauswahl. Das Anfrageformular kann weiterhin weitere freigegebene Räume und Extras anbieten.
 
+### Hausmeister-Wochenbericht
+
+Unter **Homepage-Anbindung** → Hausmeister-Wochenbericht kann der automatische Versand je Mietobjekt mit „Hausmeisterreport automatisch aus PROD senden“ ein- und ausgeschaltet werden. Änderungen speichern. Der Schalter ist nur in geprüfter PROD-Umgebung verfügbar und benötigt keinen Serverneustart. Ohne explizite Objekteinstellung gilt weiterhin `KC_HAUSMEISTERBERICHT_ENABLED` als Vorgabe. Eine CC-Adresse gilt für manuelle und automatische Berichte; der globale SMTP-Testmodus unterdrückt CC. Antwortmail-Testadressen unterdrücken ebenfalls CC.
+
 ## 3. Technischer Zugang und WordPress
 
 ### Service-Account
@@ -41,7 +45,7 @@ Die Rolle darf nur die freigegebenen Integrationsendpunkte nutzen. Client-Secret
 
 ### Plugin installieren und Verbindung prüfen
 
-1. In WordPress die aktuelle ZIP **kc-buchungsanfrage-0.1.11.zip** über **Plugins → Plugin hochladen** installieren bzw. die vorhandene Version ersetzen.
+1. In WordPress die aktuelle ZIP **kc-buchungsanfrage-0.1.14.zip** über **Plugins → Plugin hochladen** installieren bzw. die vorhandene Version ersetzen.
 2. **Einstellungen → KC Buchungsanfrage** öffnen.
 3. KC-API-Basisadresse einschließlich `/api`, Keycloak-Token-Adresse, technische Client-ID, Client-Secret und Mietobjekt-ID eintragen.
 4. Zunächst **Vorschau nur für Administratoren** wählen und speichern.
@@ -102,6 +106,8 @@ Das Formular erfasst Name, E-Mail mit Wiederholung, Telefon, Postanschrift, gege
 
 Die Uhrzeiten kommen aus dem KC-Mietobjekt. Mindestens eine Übernachtung ist erforderlich; eine volle Dauer von 24 Stunden ist nicht nötig. Anzahlung und Kaution werden bei der späteren Bearbeitung in KC geprüft und ergänzt. Eine freie Verfügbarkeit allein ist noch keine Buchungszusage.
 
+Optionale Bankangaben für die spätere Zahlungsabwicklung können im ausgelieferten Formular erfasst werden: Kontoinhaber, IBAN und BIC. Leere Bankfelder bleiben zulässig; eine eingetragene IBAN wird auf Länderkennung, Länge und Prüfziffer geprüft. Bankangaben werden nicht im öffentlichen Kalender angezeigt.
+
 ### Kompakter Bootshauskalender
 
 Der Kalender zeigt fest **Erdgeschoss mit Wiese**. In den Tagesfeldern stehen nur Tageszahl, Zeitbalken und Buchungsnummern. Beim Darüberfahren erscheinen Uhrzeit, Status, Buchungsnummer und der vollständige Mietername. Diese Angaben sind auch über zugängliche Beschriftungen abrufbar.
@@ -132,9 +138,9 @@ Vor der öffentlichen Freigabe die in KC erfassten Belegungen prüfen, den Formu
 
 WordPress versendet Mails über seine vorhandene Mailkonfiguration. Das Anfrage-Plugin richtet selbst keinen SMTP-Server ein. Die Mail- bzw. SMTP-Einstellungen stammen vom jeweiligen Hostinganbieter.
 
-Nach erfolgreicher KC-Übernahme werden die gewünschten Eingangsbestätigungen angestoßen. Statusänderungen von Homepage-Buchungen erzeugen zusätzlich dauerhafte Mailaufträge in KC; WordPress holt sie mit dem technischen Zugang ab. Der Schalter für die erste Eingangsbestätigung schaltet diese Statusnachrichten nicht aus.
+Nach erfolgreicher KC-Übernahme werden die gewünschten Eingangsbestätigungen angestoßen. Statusnachrichten nach einer Änderung in KC versendet der KC-Server direkt über seine SMTP-Konfiguration. Das ausgelieferte WordPress-Plugin holt keine neuen Statusmail-Aufträge mehr ab. Der Schalter für die erste Eingangsbestätigung schaltet diese Statusnachrichten nicht aus.
 
-Bei einer fehlenden oder ungültigen Mieter-E-Mail kann ein Statuswechsel mit Mailauftrag abgewiesen werden. Korrigiere zuerst die Kontaktadresse in KC. Bereits erzeugte Aufträge beziehen sich auf den Zustand beim Statuswechsel.
+Für den KC-Versand müssen SMTP-Freigabe, Absender und Empfängerkonfiguration eingerichtet sein. Prüfe vor der Freischaltung den globalen und den mietobjektbezogenen Testmodus. Im Testmodus werden CC und BCC unterdrückt. Bei einer fehlenden oder ungültigen Mieter-E-Mail kann eine Statusaktion abgewiesen werden; zuerst die Kontaktadresse in KC korrigieren.
 
 ### Vorgänge in WordPress prüfen
 
@@ -171,7 +177,7 @@ Plugin und KC-Serverstand prüfen. Die neue Darstellung braucht die Zeitbelegung
 
 ### Die Anfrage kommt an, aber eine Mail fehlt
 
-Den Mailstatus des vorhandenen Vorgangs prüfen und den WordPress-Versand testen. Ein neuer Formularversuch würde einen neuen Anfragevorgang erzeugen und ist kein Ersatz für eine Mailprüfung.
+Bei der ersten Eingangsbestätigung den Mailstatus des vorhandenen WordPress-Vorgangs prüfen. Bei einer Statusmail oder einem Dokumentversand aus KC die KC-SMTP-Konfiguration, Testadresse, Versandhinweise und das Versandarchiv prüfen. Ein neuer Formularversuch würde eine neue Anfrage erzeugen und ist kein Ersatz für eine Mailprüfung.
 
 ### Eine Übertragung bleibt nach geändertem Hinweistext stehen
 
@@ -233,7 +239,7 @@ POST /api/integrationen/homepage/objekte/{mietobjektId}/verfuegbarkeit
 }
 ```
 
-Die Bereichs-ID ist nur ein Beispiel. Anreise und Abreise sind Kalendertage, die Uhrzeiten bestimmt KC. Es wird mindestens eine Übernachtung verlangt; Anreise darf nicht in der Vergangenheit liegen. Die aktuelle Tagesgrenze wird für dieses Formular in Europe/Berlin ausgewertet.
+Die Bereichs-ID ist nur ein Beispiel. Anreise und Abreise sind Kalendertage, die Uhrzeiten bestimmt KC. Das WordPress-Formular ist auf mindestens eine Übernachtung ausgerichtet. Die Schnittstelle prüft den Zeitraum mit den konfigurierten Uhrzeiten; die Abreise muss zeitlich nach der Anreise liegen. Anreise darf nicht in der Vergangenheit liegen. Die aktuelle Tagesgrenze wird für dieses Formular in Europe/Berlin ausgewertet.
 
 Eine fachliche Verfügbarkeitsantwort enthält `verfuegbar` und `hinweis`. Nicht freigegebene Bereiche oder unvollständige Eingaben werden als fehlerhafte Anfrage abgewiesen. `verfuegbar: true` speichert oder reserviert nichts.
 
@@ -271,15 +277,19 @@ POST /api/integrationen/homepage/objekte/{mietobjektId}/anfragen
 }
 ```
 
+Optional können `bankName` (im ausgelieferten Formular „Kontoinhaber“), `iban` und `bic` mitgegeben werden. Leere Angaben bleiben optional; für ausgefüllte IBAN/BIC gelten die serverseitigen Formatprüfungen. Diese Felder gehören nicht in öffentliche Katalog- oder Kalenderantworten.
+
 Die Anfrage-ID muss pro neuem fachlichem Vorgang neu als UUID erzeugt und bei jeder Wiederholung beibehalten werden. WordPress verwendet UUID v4. Daten und Reihenfolge der Positionen müssen für eine Wiederholung gleich bleiben. Dieselbe ID mit veränderten Angaben ergibt einen Konflikt. Auch nach einer zwischenzeitlichen Änderung der Konfiguration muss eine unklare Übertragung mit ihren ursprünglichen Angaben wiederholt werden; eine bereits gespeicherte Anfrage wird dabei wiedererkannt.
 
 `konfigurationVersion` muss beim erstmaligen Eingang dem zuvor gelesenen Katalog entsprechen. Bei geänderten Hinweisen muss das Formular neu geladen und die neue Fassung geprüft werden. Ohne bestätigte Hausregeln und Kenntnisnahme des Datenschutzhinweises wird keine Anfrage angelegt.
 
 Eine erfolgreiche Antwort enthält `buchungId`, `buchungsnummer`, `status` mit dem Wert ANFRAGE sowie `gastBestaetigung`, `verwaltungsBenachrichtigung`, `empfaengerEmail` und `mietumfang`. Die internen Versandangaben sind ausschließlich für den authentifizierten Homepage-Server bestimmt. Eigene Adapter dürfen insbesondere `empfaengerEmail` nicht unkontrolliert an Gäste ausgeben.
 
-Die KC-Schnittstelle selbst versendet keine E-Mails. Ein eigener Adapter muss dies nach erfolgreicher Übernahme gemäß den zurückgegebenen Vorgaben erledigen und ausstehende Nachrichten getrennt verwalten. WordPress übernimmt diese Aufgabe mit der eingebauten Warteschlange.
+Die Anfrage-Schnittstelle versendet die erste Eingangsbestätigung nicht selbst. Ein eigener Adapter muss diese nach erfolgreicher Übernahme gemäß den zurückgegebenen Vorgaben erledigen und ausstehende Nachrichten getrennt verwalten. WordPress übernimmt diese Aufgabe mit der eingebauten Warteschlange. Spätere Statusmails versendet KC direkt über SMTP.
 
-### Statusnachrichten abholen und quittieren
+### Legacy-API für frühere Statusnachrichten
+
+Die folgenden Endpunkte bleiben für ältere Integrationsclients verfügbar. Das ausgelieferte WordPress-Plugin verwendet diesen Abruf nicht mehr; für neue Statusmails ist KC-SMTP zuständig. Die nachfolgenden Hinweise betreffen ausschließlich noch vorhandene Legacy-Aufträge.
 
 ```text
 GET /api/integrationen/homepage/objekte/{mietobjektId}/nachrichten
@@ -317,6 +327,3 @@ Eine Antwort mit erfolgreichem Speichern darf nicht durch einen nachfolgenden Ma
 
 
 [Zur Vermietungsanleitung](/info/bedienungsanleitung-vermietung.md) · [Zur Hilfeübersicht](/info/bedienungsanleitung.md)
-
-
-Seit 13.11.2026: Unter Homepage-Anbindung → Hausmeister-Wochenbericht kann der automatische Versand je Mietobjekt mit „Hausmeisterreport automatisch aus PROD senden“ ein- und ausgeschaltet werden. Änderungen speichern. Der Schalter ist nur in geprüfter PROD-Umgebung verfügbar und benötigt keinen Serverneustart. Ohne explizite Objekteinstellung gilt weiterhin KC_HAUSMEISTERBERICHT_ENABLED als Vorgabe. Eine CC-Adresse gilt für manuelle und automatische Berichte; der globale SMTP-Testmodus unterdrückt CC. Antwortmail-Testadressen unterdrücken ebenfalls CC.
