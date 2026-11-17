@@ -2,7 +2,9 @@
 
 Webbasierte Vereins-, Veranstaltungs- und Vermietungsverwaltung für Kanuvereine und Kanuverbände.
 
-**Client und Server:** 2.2.2 · **Dokumentationsstand:** 13. November 2026
+**Client und Server:** 2.3.1 · **Versionsstand:** 17. November 2026
+
+Versionsschema und gemeinsames Hochzählen: [docs/Versionierung.md](docs/Versionierung.md).
 
 KanuControl unterstützt KJFP-Maßnahmen von der Simulation bis zur Abrechnung, gemeinsame Vereinsaktionen und Fahrten sowie die Vermietung von Objekten wie einem Bootshaus. Welche Module und Funktionen verfügbar sind, hängt von Freischaltung, Benutzerrollen und Konfiguration ab. Die tatsächlich laufenden Client- und Serverversionen stehen im Kopfbereich der Anwendung.
 

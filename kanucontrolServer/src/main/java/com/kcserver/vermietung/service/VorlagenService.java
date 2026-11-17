@@ -41,7 +41,7 @@ public class VorlagenService {
         gruss=papier.getGruss();byte[] asset=papier.getPdf();byte[] image=papier.getBild();
         var d=new HashMap<String,String>();for(String k:FELDER)d.put(k,"Beispiel");
         d.put("vorname","Erika");d.put("nachname","Mustermann");
-        var f=Map.of("empfaenger_name","Erika Mustermann","empfaenger_strasse","Musterstraße 12","empfaenger_ort","52076 Aachen","briefdatum","09.11.2026","buchungsnummer","2026-001","anrede","Hallo Erika,","bank_name","Bank: Musterbank","bank_iban","IBAN: DE00000000000000000000","bank_bic","BIC: MUSTER00");
+        var f=Map.of("empfaenger_name","Erika Mustermann","empfaenger_strasse","Musterstraße 12","empfaenger_ort","52076 Aachen","briefdatum","09.11.2026","buchungsnummer","2026-001","anrede","Hallo Erika,","bank_name","Musterbank","bank_iban","IBAN: DE00000000000000000000","bank_bic","BIC: MUSTER00");
         byte[] preview=BriefpapierPdf.render(asset,f,List.of("Beispielüberschrift","Hier erscheinen die konfigurierten Textblöcke. Bitte Anschrift, Datum, Bankfelder und den verfügbaren Textbereich prüfen."),ersetzen(gruss,d),image,List.of(),"2026-001");
         return new Probe(preview,hash(json(Arrays.asList(version,gruss,Base64.getEncoder().encodeToString(asset),image==null?null:Base64.getEncoder().encodeToString(image)))));
     }
@@ -175,7 +175,7 @@ public class VorlagenService {
         var f=new HashMap<String,String>();
         f.put("empfaenger_name","Erika Mustermann");f.put("empfaenger_strasse","Musterstraße 12");f.put("empfaenger_ort","52076 Aachen");
         f.put("briefdatum",d.get("briefdatum"));f.put("buchungsnummer",d.get("buchungsnummer"));f.put("anrede",ersetzen(v.anrede(),d));
-        f.put("bank_name","Bank: "+d.get("bank_name"));f.put("bank_iban","IBAN: "+d.get("bank_iban"));f.put("bank_bic","BIC: "+d.get("bank_bic"));
+        f.put("bank_name",d.get("bank_name"));f.put("bank_iban","IBAN: "+d.get("bank_iban"));f.put("bank_bic","BIC: "+d.get("bank_bic"));
         var wahr=EnumSet.of(Bedingung.IMMER,Bedingung.ANZAHLUNG_POSITIV,Bedingung.KAUTION_POSITIV,Bedingung.RESTMIETE_POSITIV,
                 ogGebucht?Bedingung.OG_GEBUCHT:Bedingung.OG_NICHT_GEBUCHT,
                 kurzfristig?Bedingung.STORNO_UNTER_56_TAGEN:Bedingung.STORNO_AB_56_TAGEN);

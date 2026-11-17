@@ -1,3 +1,4 @@
+import MieterProfilLink from "../mieter/MieterProfilLink";
 import { formatPersonName } from "@/core/utils/personName";
 // src/vermietung/components/buchung/BuchungBaseForm.tsx
 
@@ -9,7 +10,7 @@ import { Berechnungsart } from "@/vermietung/enums/Berechnungsart";
 import type { BuchungBereich } from "./buchungBereiche";
 import { BuchungBankverbindung } from "./BuchungBankverbindung";
 import React, { useEffect, useMemo, useState } from "react";
-import { geldRunden, mietEinheiten } from "@/vermietung/utils/mietpreis";
+import { geldRunden, mietEinheiten, mietdauerLabel, mietpositionsDauerLabel, hatUebernachtung } from "@/vermietung/utils/mietpreis";
 import { getPreis } from "@/vermietung/api/buchungApi";
 import type { Buchungsquelle } from "@/vermietung/enums/Buchungsquelle";
 import {
@@ -50,6 +51,7 @@ interface Props {
   verbrauchVeraltet: boolean;
   form: BuchungSave;
   neueBuchung: boolean;
+  buchungId?: number;
   editMode: boolean;
   mietbereiche: Mietbereich[];
   rabatteByMietbereich: Record<number, MietbereichRabatt[]>;
@@ -176,6 +178,7 @@ export const BuchungBaseForm: React.FC<Props> = ({
   expanded, onExpandedChange, bereichFehler, abrechnung, verbrauchVeraltet,
   form,
   neueBuchung,
+  buchungId,
   editMode,
   buchungsdatenEditierbar,
   mietbereiche,
@@ -349,7 +352,7 @@ export const BuchungBaseForm: React.FC<Props> = ({
     let aktiv = true;
     setVerbrauchKonfiguration(null);
     setVerbrauchLadefehler(false);
-    if (!form.mietobjektId || kostenlos || form.buchungsquelle === "AIRBNB") {
+    if (!form.mietobjektId || form.buchungsquelle === "AIRBNB") {
       setVerbrauchKonfiguration([]);
       return;
     }
@@ -367,9 +370,8 @@ export const BuchungBaseForm: React.FC<Props> = ({
   const schaeden = form.entschaedigungen ?? [];
   const schaedenSumme = schaeden.reduce((sum, row) => sum + Math.round(row.einzelpreis * 100) * row.anzahl / 100, 0);
   const verbrauchRows = buchungsstatus === "ABGESCHLOSSEN" ? verbrauchskosten ?? [] : verbrauchskostenVorschau ?? [];
-  const verbrauchSummary = kostenlos ? "Keine Verbrauchspositionen für diese Buchung"
-    : form.buchungsquelle === "AIRBNB" ? "Airbnb · Abschluss ohne Verbrauchswerte möglich"
-    : verbrauchRows.length ? verbrauchRows.map(k => `${k.bezeichnung}: ${k.verbrauch == null ? k.kosten == null ? "Noch nicht erfasst" : formatPreis(k.kosten) : `${formatZahl(k.verbrauch)} ${k.mengeneinheit ?? ""}`}`).join(" · ")
+  const verbrauchSummary = form.buchungsquelle === "AIRBNB" ? "Airbnb · Abschluss ohne Verbrauchswerte möglich"
+    : verbrauchRows.length ? verbrauchRows.map(k => `${k.bezeichnung}: ${kostenlos && k.verbrauch != null ? `${formatZahl(k.verbrauch)} ${k.mengeneinheit ?? ""}` : k.kosten == null ? "Noch nicht erfasst" : formatPreis(k.kosten)}`).join(" · ")
     : verbrauchKonfiguration?.length === 0 ? "Keine Verbrauchspositionen für diese Buchung" : "Noch nicht erfasst";
   const verbrauchGesamtLabel = verbrauchRows.length && verbrauchRows.every(k => k.kosten != null && (!("erfolgreich" in k) || k.erfolgreich))
     ? ` · Verbrauchskosten ${formatPreis(verbrauchRows.reduce((sum,k) => sum + (k.kosten ?? 0), 0))}` : '';
@@ -403,6 +405,7 @@ export const BuchungBaseForm: React.FC<Props> = ({
           disabled={!buchungsdatenEditierbar}
           onChange={onMieterChange}
         />
+        <Box><MieterProfilLink personId={mieter?.id ?? form.mieterId} buchungId={buchungId} /></Box>
 
         <VereinAutocomplete
           label="Veranstalter"
@@ -411,7 +414,7 @@ export const BuchungBaseForm: React.FC<Props> = ({
           disabled={!buchungsdatenEditierbar}
           onChange={onVeranstalterChange}
         />
-        {kostenlos && <Alert severity="info">Diese Buchung ist vollständig kostenlos. Es werden keine Miet-, Verbrauchs- oder Zusatzkosten berechnet. Nach Mietende wird die bestätigte Buchung automatisch abgeschlossen.</Alert>}
+        {kostenlos && <Alert severity="info">Diese Buchung ist vollständig kostenlos. Es werden keine Miet-, Verbrauchs- oder Zusatzkosten berechnet. Beim Abschluss werden Verbrauchswerte ohne Kostenforderung für spätere Auswertungen gespeichert.</Alert>}
         {veranstalter && !kostenlos && <Alert severity="info">
           Rechnung an: {veranstalter.name}<br />
           Ansprechpartner: {formatPersonName(mieter?.name, mieter?.vorname, "first")}
@@ -459,7 +462,7 @@ export const BuchungBaseForm: React.FC<Props> = ({
           </Box>
         )}
     </>)}
-    {bereich('aufenthalt', 'Aufenthalt und Gruppe', `${zeitraum} · ${!form.unbefristet && form.anreise && form.abreise ? `${mietEinheiten(Berechnungsart.TAG, form.anreise, form.abreise)} Miettage · ` : ''}${form.anzahlJugendliche == null && form.anzahlErwachsene == null ? 'Teilnehmer nicht erfasst' : `Jugendliche ${form.anzahlJugendliche ?? 'nicht erfasst'} · Erwachsene ${form.anzahlErwachsene ?? 'nicht erfasst'}`}`, <>
+    {bereich('aufenthalt', 'Aufenthalt und Gruppe', `${zeitraum} · ${!form.unbefristet && form.anreise && form.abreise ? `${mietdauerLabel(mietEinheiten(Berechnungsart.TAG, form.anreise, form.abreise), form.anreise, form.abreise)} · ` : ''}${form.anzahlJugendliche == null && form.anzahlErwachsene == null ? 'Teilnehmer nicht erfasst' : `Jugendliche ${form.anzahlJugendliche ?? 'nicht erfasst'} · Erwachsene ${form.anzahlErwachsene ?? 'nicht erfasst'}`}`, <>
         <TextField
           label="Veranstaltung"
           value={form.veranstaltung ?? ""}
@@ -852,8 +855,8 @@ export const BuchungBaseForm: React.FC<Props> = ({
 
                               {berechnungsart && (
                                 <Typography variant="caption" color="text.secondary">
-                                  {BERECHNUNGSART_LABELS[berechnungsart]}
-                                  {berechnungsart === "TAG" && !form.unbefristet && ` · ${einheitenFuer(mietbereich.id)} Miettage`}
+                                  {berechnungsart === "TAG" && hatUebernachtung(form.anreise, form.abreise, form.unbefristet) ? "Pro Übernachtung" : BERECHNUNGSART_LABELS[berechnungsart]}
+                                  {!form.unbefristet && mietpositionsDauerLabel(berechnungsart, einheitenFuer(mietbereich.id), form.anreise, form.abreise) && ` · ${mietpositionsDauerLabel(berechnungsart, einheitenFuer(mietbereich.id), form.anreise, form.abreise)}`}
                                   {berechnungsart === "TAG" && form.unbefristet && " · vorläufig ohne Laufzeit"}
                                 </Typography>
                               )}
@@ -903,7 +906,7 @@ export const BuchungBaseForm: React.FC<Props> = ({
     {bereich('zahlung', 'Zahlung und Bankverbindung', `${form.buchungsquelle === 'AIRBNB' ? 'Airbnb' : { ANZAHLUNG: 'Anzahlung', BEI_ABRECHNUNG: 'Zahlung bei Abrechnung', GESAMTMIETE_VORAUS: 'Gesamtmiete im Voraus', OHNE_ABRECHNUNG: 'Ohne Abrechnung' }[form.zahlungsvariante ?? 'ANZAHLUNG']} · Kaution ${formatPreis(form.kautionBetrag)} · ${form.bankverbindungAuswahl === 'ALTERNATIV' ? 'Alternativbank' : 'Primärbank'}`, <>
         {form.buchungsquelle === "DIREKT" && <TextField select label="Zahlungsvariante" fullWidth size="small"
           value={form.zahlungsvariante ?? "ANZAHLUNG"} disabled={!buchungsdatenEditierbar}
-          helperText="Ohne Abrechnung: vollständig kostenlos, ohne Anzahlung und Kaution; automatischer Abschluss nach Mietende."
+          helperText="Ohne Abrechnung: kostenlos, ohne Rechnung, Anzahlung und Kaution. Verbrauchswerte bleiben für Auswertungen erhalten."
           onChange={e => onChange("zahlungsvariante", e.target.value as BuchungSave["zahlungsvariante"])}>
           <MenuItem value="OHNE_ABRECHNUNG">Ohne Abrechnung (kostenlos)</MenuItem>
           <MenuItem value="ANZAHLUNG">Anzahlung</MenuItem>
@@ -959,17 +962,19 @@ export const BuchungBaseForm: React.FC<Props> = ({
             Verbrauchswerte und Kosten
           </Typography>
 
-          {kostenlos ? <Typography>Keine Verbrauchspositionen für diese Buchung</Typography>
-          : form.buchungsquelle !== "AIRBNB" && buchungsstatus !== "ABRECHENBAR" && buchungsstatus !== "ABGESCHLOSSEN" ? (
+          {form.buchungsquelle !== "AIRBNB" && buchungsstatus !== "ABRECHENBAR" && buchungsstatus !== "ABGESCHLOSSEN" ? (
             <Box sx={{ display: "grid", gap: 2 }}>
               {verbrauchLadefehler ? <Alert severity="error">Verbrauchspositionen konnten nicht geladen werden.</Alert>
                 : verbrauchKonfiguration === null ? <Typography>Noch nicht erfasst · Verbrauchspositionen werden geladen …</Typography>
                 : verbrauchKonfiguration.length === 0 ? <Typography>Keine Verbrauchspositionen für diese Buchung</Typography>
-                : verbrauchKonfiguration.map(k => <Box key={k.id}>
+                : verbrauchKonfiguration.map(k => {
+                    const anreise = form.anreise?.slice(0, 10);
+                    const preis = anreise ? k.preise?.find(p => p.gueltigVon <= anreise && (!p.gueltigBis || p.gueltigBis >= anreise))?.preis : undefined;
+                    return <Box key={k.id}>
                     <Typography fontWeight={600}>{k.bezeichnung}</Typography>
-                    <Typography variant="body2">{k.abrechnungsart === "ZAEHLERSTAND" ? `Zählerstand · ${formatPreis(k.preis)} je ${k.mengeneinheit || "Einheit"}` : k.abrechnungsart === "TAGESPREIS" ? `Tagespreis · ${formatPreis(k.preis)}` : `Pauschale · ${formatPreis(k.preis)}`}</Typography>
+                    <Typography variant="body2">{preis == null ? "Kein gültiger Preis zum Anreisedatum" : k.abrechnungsart === "ZAEHLERSTAND" ? `Zählerstand · ${formatPreis(preis)} je ${k.mengeneinheit || "Einheit"}` : k.abrechnungsart === "TAGESPREIS" ? `Tagespreis · ${formatPreis(preis)}` : `Pauschale · ${formatPreis(preis)}`}</Typography>
                     <Typography variant="body2" color="text.secondary">Noch nicht erfasst</Typography>
-                  </Box>)}
+                  </Box>;})}
             </Box>
           ) : form.buchungsquelle === "AIRBNB" ? (
             <Typography variant="body2" color="text.secondary">

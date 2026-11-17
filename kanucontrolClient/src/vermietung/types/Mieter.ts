@@ -18,6 +18,7 @@ export interface Mieter {
   iban?: string;
   bic?: string;
   aktiv: boolean;
+  airbnb?: boolean;
   mietobjekte?: string[];
   buchungen: number;
   buchungsquellen: Buchungsquelle[];

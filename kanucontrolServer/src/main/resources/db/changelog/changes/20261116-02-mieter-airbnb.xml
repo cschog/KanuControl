@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+ <changeSet id="20261116-02-mieter-airbnb" author="codex">
+  <addColumn tableName="mieter"><column name="airbnb" type="BOOLEAN" defaultValueBoolean="false"><constraints nullable="false"/></column></addColumn>
+  <sql>UPDATE mieter SET airbnb = TRUE
+   WHERE EXISTS (SELECT 1 FROM buchung b WHERE b.mieter_id = mieter.person_id AND b.buchungsquelle = 'AIRBNB')
+     AND NOT EXISTS (SELECT 1 FROM buchung b WHERE b.mieter_id = mieter.person_id AND b.buchungsquelle = 'DIREKT')</sql>
+  <rollback><dropColumn tableName="mieter" columnName="airbnb"/></rollback>
+ </changeSet>
+</databaseChangeLog>

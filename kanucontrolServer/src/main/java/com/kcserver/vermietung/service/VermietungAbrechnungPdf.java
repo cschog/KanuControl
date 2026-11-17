@@ -15,7 +15,7 @@ public final class VermietungAbrechnungPdf {
   try(var doc=new PDDocument();var out=new ByteArrayOutputStream();var input=PDDocument.class.getResourceAsStream("/org/apache/pdfbox/resources/ttf/LiberationSans-Regular.ttf")){
    var font=PDType0Font.load(doc,Objects.requireNonNull(input));
    try(var l=new Layout(doc,font)){
-    l.line("Vermietungsabrechnung "+r.buchungsnummer(),18);l.line("Revision "+revision+(revision>1?" - Korrektur der vorherigen Revision":""),11);
+    l.line("Vermietungsabrechnung "+r.buchungsnummer(),18);
     l.line(r.mietobjekt()+" | "+r.mieter(),12);l.line((r.anreise()==null?"":r.anreise().format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy")))+" bis "+(r.unbefristet()?"unbefristet":r.abreise()==null?"":r.abreise().format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy")))+" | "+r.buchungsquelle(),10);
     l.line("Mietkosten",14);for(var p:r.mietkosten())l.line(p.bezeichnung()+": "+p.anzahl()+" x "+p.abrechnungseinheiten()+" Einheit(en) x "+money(p.einzelpreis())+" = "+money(p.gesamtbetrag()),10);
     if(r.mietrabatt().signum()>0)l.line("Mietrabatt: -"+money(r.mietrabatt()),11);

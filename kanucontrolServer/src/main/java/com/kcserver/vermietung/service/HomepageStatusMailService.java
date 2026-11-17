@@ -47,7 +47,12 @@ public class HomepageStatusMailService {
     public record ReservierungMail(JavaMailSender sender, jakarta.mail.internet.MimeMessage message, byte[] pdf, String metadaten) {}
     private record Routing(String empfaenger, String cc, boolean test) {}
 
+    private static void pruefeDirektbuchung(Buchung b){
+        if(b.getBuchungsquelle()==com.kcserver.vermietung.enumtype.Buchungsquelle.AIRBNB)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"An Airbnb-Mieter werden keine E-Mails versendet.");
+    }
     private Routing routing(Buchung buchung, String email) {
+        pruefeDirektbuchung(buchung);
         var config = anbindungen.findById(buchung.getMietobjekt().getId()).orElse(null);
         String objectTest = config == null ? null : config.getAntwortTestEmail();
         boolean test = smtpConfig.isTestMode() || objectTest != null && !objectTest.isBlank();
@@ -131,6 +136,7 @@ public class HomepageStatusMailService {
 
     /** Shared routing and MIME construction for all modular booking messages. */
     public StatusVorschau nachrichtVorschau(Buchung b,String betreff,String text){
+        pruefeDirektbuchung(b);
         String email=b.getMieter()==null?null:b.getMieter().getEmail();
         if(email==null || !validator.validate(new Adresse(email)).isEmpty())throw new IllegalArgumentException("Eine gültige E-Mail-Adresse des Mieters ist erforderlich.");
         var ziel=routing(b,email.strip());var config=anbindungen.findById(b.getMietobjekt().getId()).orElse(null);
@@ -222,6 +228,7 @@ public class HomepageStatusMailService {
 
     private HomepageStatusMail erstelleMail(Buchung buchung, Buchungsstatus neuerStatus,
                                              Buchungsstatus alterStatus) {
+        pruefeDirektbuchung(buchung);
         String email = buchung.getMieter() == null ? null : buchung.getMieter().getEmail();
         if (email == null || !validator.validate(new Adresse(email)).isEmpty()) {
             throw new IllegalArgumentException("Für die Statusmail ist eine gültige E-Mail-Adresse des Mieters erforderlich.");

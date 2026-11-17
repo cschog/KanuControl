@@ -58,231 +58,31 @@ public class PDFDocumentComposer {
     }
 
 
-    /**
-     * Platziert eine importierte PDF-Seite auf einer A4-Seite.
-     */
-    /**
-     * Platziert eine importierte PDF-Seite auf einer A4-Seite.
-     *
-     * Die Rotation wird ausschließlich durch die
-     * A4LayoutPlacement vorgegeben.
-     */
-    /**
-     * Platziert eine importierte PDF-Seite auf einer A4-Seite.
-     *
-     * Die Rotation wird grundsätzlich durch die
-     * A4LayoutPlacement vorgegeben.
-     *
-     * Zusätzlich werden Querformat-PDFs um 180° gedreht.
-     * Dadurch bleibt die bestehende 90°-Rotation der Layout-Engine
-     * erhalten und wird bei Querformat-PDFs entsprechend ergänzt.
-     */
-    private void placeForm(
-            PDDocument target,
-            PDFormXObject form,
-            A4LayoutPlacement placement
-    ) throws IOException {
-
-        int pageIndex =
-                placement.pageNumber() - 1;
-
-        if (pageIndex < 0
-                || pageIndex >= target.getNumberOfPages()) {
-
-            throw new IllegalArgumentException(
-                    "Ungültige Seitennummer: "
-                            + placement.pageNumber()
-            );
-        }
-
-        PDPage targetPage =
-                target.getPage(pageIndex);
-
-        PDRectangle bbox =
-                form.getBBox();
-
-        float sourceWidth =
-                bbox.getWidth();
-
-        float sourceHeight =
-                bbox.getHeight();
-
-        /*
-         * Die Layout-Engine hat bereits entschieden,
-         * ob das PDF um 90° gedreht werden soll.
-         *
-         * Für PDFs mit Layout-Rotation 90° wollen wir
-         * zusätzlich 180° drehen:
-         *
-         *   90° + 180° = 270°
-         */
-
-        int rotation =
-                ((placement.rotation() % 360) + 360) % 360;
-
-        if (rotation == 90) {
-            rotation = 270;
-        }
-
-        /*
-         * =========================================================
-         * Effektive Dokumentgröße
-         * =========================================================
-         *
-         * Bei 90° und 270° werden Breite und Höhe vertauscht.
-         * Bei 0° und 180° bleiben sie unverändert.
-         */
-        boolean swapDimensions =
-                rotation == 90
-                        || rotation == 270;
-
-        float effectiveWidth =
-                swapDimensions
-                        ? sourceHeight
-                        : sourceWidth;
-
-        float effectiveHeight =
-                swapDimensions
-                        ? sourceWidth
-                        : sourceHeight;
-
-        /*
-         * =========================================================
-         * Skalierung
-         * =========================================================
-         */
-        float scale =
-                Math.min(
-                        placement.width()
-                                / effectiveWidth,
-
-                        placement.height()
-                                / effectiveHeight
-                );
-
-        /*
-         * Tatsächliche Ausgabegröße.
-         */
-        float outputWidth =
-                effectiveWidth * scale;
-
-        float outputHeight =
-                effectiveHeight * scale;
-
-        /*
-         * Innerhalb des Layout-Rechtecks zentrieren.
-         */
-        float x =
-                placement.x()
-                        + (placement.width()
-                        - outputWidth) / 2f;
-
-        float y =
-                placement.y()
-                        + (placement.height()
-                        - outputHeight) / 2f;
-
-        try (
-                PDPageContentStream content =
-                        new PDPageContentStream(
-                                target,
-                                targetPage,
-                                PDPageContentStream.AppendMode.APPEND,
-                                true,
-                                true
-                        )
-        ) {
-
-            Matrix matrix;
-
-            switch (rotation) {
-
-                /*
-                 * Keine Rotation
-                 */
-                case 0:
-
-                    matrix =
-                            new Matrix(
-                                    scale,
-                                    0,
-                                    0,
-                                    scale,
-                                    x,
-                                    y
-                            );
-
-                    break;
-
-                /*
-                 * 90° Rotation
-                 *
-                 * Entspricht deiner bisherigen Implementierung.
-                 */
-                case 90:
-
-                    matrix =
-                            new Matrix(
-                                    0,
-                                    -scale,
-                                    scale,
-                                    0,
-                                    x,
-                                    y + outputHeight
-                            );
-
-                    break;
-
-                /*
-                 * 180° Rotation
-                 *
-                 * Wichtig:
-                 * Breite/Höhe werden NICHT vertauscht.
-                 */
-                case 180:
-
-                    matrix =
-                            new Matrix(
-                                    -scale,
-                                    0,
-                                    0,
-                                    -scale,
-                                    x + outputWidth,
-                                    y + outputHeight
-                            );
-
-                    break;
-
-                /*
-                 * 270° Rotation
-                 *
-                 * Entspricht 90° in Gegenrichtung.
-                 */
-                case 270:
-
-                    matrix =
-                            new Matrix(
-                                    0,
-                                    scale,
-                                    -scale,
-                                    0,
-                                    x + outputWidth,
-                                    y
-                            );
-
-                    break;
-
-                default:
-
-                    throw new IllegalArgumentException(
-                            "Nicht unterstützte Rotation: "
-                                    + rotation
-                    );
-            }
-
-            content.transform(matrix);
-
-            content.drawForm(form);
+    /** Das importierte Form enthält bereits PDF-Rotation und CropBox-Transformation. */
+    private void placeForm(PDDocument target,PDFormXObject form,A4LayoutPlacement placement) throws IOException {
+        int pageIndex=placement.pageNumber()-1;
+        if(pageIndex<0 || pageIndex>=target.getNumberOfPages())throw new IllegalArgumentException("Ungültige Seitennummer.");
+        var box=form.getBBox();
+        var visible=form.getMatrix().createAffineTransform().createTransformedShape(
+                new java.awt.geom.Rectangle2D.Float(box.getLowerLeftX(),box.getLowerLeftY(),box.getWidth(),box.getHeight())).getBounds2D();
+        int rotation=Math.floorMod(placement.rotation(),360);
+        boolean swap=rotation==90||rotation==270;
+        double width=swap?visible.getHeight():visible.getWidth(), height=swap?visible.getWidth():visible.getHeight();
+        if(width<=0||height<=0)throw new IOException("Ungültige PDF-Seitengröße.");
+        double scale=Math.min(placement.width()/width,placement.height()/height);
+        double outputWidth=width*scale,outputHeight=height*scale;
+        double x=placement.x()+(placement.width()-outputWidth)/2, y=placement.y()+(placement.height()-outputHeight)/2;
+        java.awt.geom.AffineTransform tx=switch(rotation) {
+            case 0 -> new java.awt.geom.AffineTransform(scale,0,0,scale,x,y);
+            // Layout-Konvention: Querformat von rechts lesbar, ebenso wie bei Bildern.
+            case 90 -> new java.awt.geom.AffineTransform(0,scale,-scale,0,x+outputWidth,y);
+            case 180 -> new java.awt.geom.AffineTransform(-scale,0,0,-scale,x+outputWidth,y+outputHeight);
+            case 270 -> new java.awt.geom.AffineTransform(0,-scale,scale,0,x,y+outputHeight);
+            default -> throw new IllegalArgumentException("Ungültige Layout-Drehung.");
+        };
+        tx.translate(-visible.getX(),-visible.getY());
+        try(var content=new PDPageContentStream(target,target.getPage(pageIndex),PDPageContentStream.AppendMode.APPEND,true,true)) {
+            content.transform(new Matrix(tx));content.drawForm(form);
         }
     }
 
@@ -307,10 +107,7 @@ public class PDFDocumentComposer {
         PDPage targetPage =
                 target.getPage(pageIndex);
 
-        BufferedImage original =
-                ImageIO.read(
-                        new ByteArrayInputStream(imageBytes)
-                );
+        BufferedImage original = DokumentBild.lesen(imageBytes);
 
         if (original == null) {
 
@@ -689,10 +486,18 @@ public class PDFDocumentComposer {
                                         0
                                 );
 
-                        forms.put(
-                                placement.itemId(),
-                                form
-                        );
+                        // LayerUtility 3.x skaliert /Rotate=90/270 nicht proportional.
+                        // Nur die echte Seitendrehung und den CropBox-Ursprung anwenden.
+                        var crop=sourcePage.getCropBox();
+                        java.awt.geom.AffineTransform sourceTransform=switch(Math.floorMod(sourcePage.getRotation(),360)) {
+                            case 90 -> new java.awt.geom.AffineTransform(0,-1,1,0,0,crop.getWidth());
+                            case 180 -> new java.awt.geom.AffineTransform(-1,0,0,-1,crop.getWidth(),crop.getHeight());
+                            case 270 -> new java.awt.geom.AffineTransform(0,1,-1,0,crop.getHeight(),0);
+                            default -> new java.awt.geom.AffineTransform();
+                        };
+                        sourceTransform.translate(-crop.getLowerLeftX(),-crop.getLowerLeftY());
+                        form.setBBox(crop);form.setMatrix(sourceTransform);
+                        forms.put(placement.itemId(),form);
                     }
                 }
 

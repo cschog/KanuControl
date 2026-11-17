@@ -1,5 +1,4 @@
 import apiClient from "@/core/api/client/apiClient";
-import { optimizeUploadFile } from "@/core/utils/imageUtils";
 import { DokumentDTO } from "@/kjfp/types/dokument";
 import { ReferenzObjekt } from "@/kjfp/api/enums/ReferenzObjekt";
 
@@ -14,23 +13,10 @@ export async function upload(
   file: File,
   referenzObjekt?: ReferenzObjekt | null,
 ): Promise<DokumentDTO> {
-  let uploadFile = file;
-
-  try {
-    uploadFile = await optimizeUploadFile(file);
-
-    if (uploadFile !== file) {
-      console.info(
-        `Bild komprimiert: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB → ${(uploadFile.size / 1024 / 1024).toFixed(2)} MB)`,
-      );
-    }
-  } catch (error) {
-    console.warn("Bild konnte nicht optimiert werden. Original wird hochgeladen.", error);
-  }
-
+  // Original unverändert aufbewahren; Orientierung wird separat gespeichert.
   const formData = new FormData();
 
-  formData.append("file", uploadFile);
+  formData.append("file", file);
 
   if (referenzObjekt) {
     formData.append("referenzObjekt", referenzObjekt);
@@ -90,4 +76,21 @@ export async function updateReferenzObjekt(
   );
 
   return response.data;
+}
+
+export interface DokumentAusrichtung { drehungen: number[]; version: number }
+export async function getAusrichtung(belegId: number, dokumentId: number): Promise<DokumentAusrichtung> {
+  return (await apiClient.get<DokumentAusrichtung>(`/belege/${belegId}/dokumente/${dokumentId}/ausrichtung`)).data;
+}
+export async function saveAusrichtung(belegId: number, dokumentId: number, value: DokumentAusrichtung): Promise<DokumentAusrichtung> {
+  return (await apiClient.put<DokumentAusrichtung>(`/belege/${belegId}/dokumente/${dokumentId}/ausrichtung`, value)).data;
+}
+export async function getVorschauSeite(belegId: number, dokumentId: number, seite: number): Promise<Blob> {
+  return (await apiClient.get<Blob>(`/belege/${belegId}/dokumente/${dokumentId}/vorschau/${seite}`, { responseType: "blob" })).data;
+}
+export function downloadDatei(blob: Blob, name: string) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a"); link.href = url;
+  link.download = blob.type === "image/png" ? name.replace(/\.[^.]+$/, "") + ".png" : name;
+  link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

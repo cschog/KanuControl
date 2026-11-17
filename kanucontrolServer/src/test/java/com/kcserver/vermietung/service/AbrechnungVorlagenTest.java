@@ -49,7 +49,7 @@ class AbrechnungVorlagenTest {
   var wasser=new BuchungVerbrauchskosten();wasser.setBezeichnung("Wasser");wasser.setAbrechnungstage(2);wasser.setPreis(n("10"));wasser.setKosten(n("20"));when(vr.findByBuchungIdOrderByIdAsc(1L)).thenReturn(List.of(strom,gas,wasser));
   for(var row:finanzen(bezahlt).mietkosten()){var position=new BuchungMietbereich();position.setBuchung(b);position.setAnzahl(row.anzahl());position.setVereinbarterPreis(row.einzelpreis());position.setBerechnungsart(Berechnungsart.valueOf(row.berechnungsart()));b.getMietbereiche().add(position);}
   var service=new AbrechnungVorlagenService(vs,pr,vr,fs);byte[] bytes=service.erstellen(b,2,null);
-  try(var doc=Loader.loadPDF(bytes)){var text=new PDFTextStripper().getText(doc);assertTrue(text.contains(erwartet),text);for(var s:verboten)assertFalse(text.contains(s),text);assertTrue(text.contains("24.02.2025"));assertTrue(text.contains("01.09.2025"));assertTrue(text.contains("Strom"));assertTrue(text.contains("Gas"));assertTrue(text.contains("Revision 2"));assertTrue(text.contains("Pfadfinder Erkelenz"));}
+  try(var doc=Loader.loadPDF(bytes)){var text=new PDFTextStripper().getText(doc);assertTrue(text.contains(erwartet),text);for(var s:verboten)assertFalse(text.contains(s),text);assertTrue(text.contains("24.02.2025"));assertTrue(text.contains("01.09.2025"));assertTrue(text.contains("Strom"));assertTrue(text.contains("Gas"));assertFalse(text.contains("Revision"));assertTrue(text.contains("Pfadfinder Erkelenz"));}
   if(bezahlt.compareTo(n("1000"))==0){assertEquals(n("-99.00"),finanzen(bezahlt).saldo());java.nio.file.Files.write(java.nio.file.Path.of("/tmp/kc-rechnung-erstattung.pdf"),bytes);b.getMieter().setIban(null);assertThrows(Exception.class,()->service.erstellen(b,3,null));}
  }
  @ParameterizedTest @EnumSource(Zahlungsvariante.class)
@@ -72,4 +72,12 @@ class AbrechnungVorlagenTest {
   byte[] bytes=AbrechnungBriefLayout.render(papier,Map.of(),List.of("Einleitung","Abschließender Zahlungstext"),"Mit freundlichen Grüßen",null,"2025-30",new Abrechnungsbereich(rows));
   try(var doc=Loader.loadPDF(bytes)){assertTrue(doc.getNumberOfPages()>2);String text=new PDFTextStripper().getText(doc);assertTrue(text.contains("Position 119"));assertTrue(text.contains("Abschließender Zahlungstext"));assertEquals(doc.getNumberOfPages(),text.split("Position / Zahlung",-1).length-1);assertTrue(text.contains("Seite 2"));}java.nio.file.Files.write(java.nio.file.Path.of("/tmp/kc-rechnung-lang.pdf"),bytes);
  }
+ @org.junit.jupiter.api.Test void auchEinfachesAbrechnungsPdfEnthaeltKeineRevisionsnummer()throws Exception{
+  try(var pdf=org.apache.pdfbox.Loader.loadPDF(VermietungAbrechnungPdf.render(finanzen(new java.math.BigDecimal("1000")),7))){
+   var text=new org.apache.pdfbox.text.PDFTextStripper().getText(pdf);
+   org.junit.jupiter.api.Assertions.assertFalse(text.contains("Revision"));
+   org.junit.jupiter.api.Assertions.assertTrue(text.contains("Vermietungsabrechnung"));
+  }
+ }
+
 }

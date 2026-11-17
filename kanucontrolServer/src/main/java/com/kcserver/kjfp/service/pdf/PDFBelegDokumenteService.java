@@ -45,6 +45,8 @@ public class PDFBelegDokumenteService {
                     Standard14Fonts.FontName.HELVETICA_BOLD
             );
 
+    private final DokumentAusrichtung ausrichtung = new DokumentAusrichtung();
+
     private final PDFDocumentSizeService documentSizeService;
 
     private static final float TITLE_SIZE = 18f;
@@ -109,10 +111,9 @@ public class PDFBelegDokumenteService {
              * =================================================
              */
 
-            List<BelegDokumentGruppe> gruppen =
-                    createGruppen(
-                            belege
-                    );
+            Map<Dokument,List<DokumentAusrichtung.Seite>> seiten=new LinkedHashMap<>();
+            for(var beleg:belege) for(var dokument:beleg.getDokumente()) seiten.put(dokument,ausrichtung.seiten(dokument));
+            List<BelegDokumentGruppe> gruppen = createGruppen(belege,seiten);
 
             /*
              * =================================================
@@ -132,9 +133,7 @@ public class PDFBelegDokumenteService {
              */
 
             Map<String, byte[]> documents =
-                    collectDocuments(
-                            gruppen
-                    );
+                    collectDocuments(gruppen,seiten);
 
             /*
              * =================================================
@@ -265,89 +264,25 @@ public class PDFBelegDokumenteService {
      * =========================================================
      */
 
-    private List<BelegDokumentGruppe> createGruppen(
-            List<AbrechnungBeleg> belege
-    ) {
-
-        List<BelegDokumentGruppe> gruppen =
-                new ArrayList<>();
-
-        int nummer = 1;
-
-        for (AbrechnungBeleg beleg : belege) {
-
-            List<A4LayoutItem> dokumente =
-                    new ArrayList<>();
-
-            for (Dokument dokument :
-                    beleg.getDokumente()) {
-
-                String itemId =
-                        createItemId(
-                                beleg,
-                                dokument
-                        );
-
-
-                PDFDocumentSize size;
-
-                try {
-
-                    size =
-                            documentSizeService.determine(
-                                    dokument
-                            );
-
-                } catch (IllegalStateException e) {
-
-                    throw new RuntimeException(
-                            "Keine Dokumentgröße hinterlegt: "
-                                    + "Beleg "
-                                    + beleg.getId()
-                                    + ", Dokument "
-                                    + dokument.getId()
-                                    + ", Dateiname "
-                                    + dokument.getOriginalDateiname(),
-                            e
-                    );
+    private List<BelegDokumentGruppe> createGruppen(List<AbrechnungBeleg> belege,Map<Dokument,List<DokumentAusrichtung.Seite>> seiten) {
+        List<BelegDokumentGruppe> gruppen=new ArrayList<>();int nummer=1;
+        for(var beleg:belege) {
+            List<A4LayoutItem> dokumente=new ArrayList<>();
+            for(var dokument:beleg.getDokumente()) {
+                var pages=seiten.get(dokument);
+                for(int i=0;i<pages.size();i++) {
+                    var page=pages.get(i);var size=documentSizeService.determine(dokument,page.breite(),page.hoehe());
+                    dokumente.add(new A4LayoutItem(createItemId(beleg,dokument)+"-p"+i,size.width(),size.height(),size.density(),size.referenzObjekt()));
                 }
-
-                dokumente.add(
-                        new A4LayoutItem(
-                                itemId,
-                                size.width(),
-                                size.height(),
-                                size.density(),
-                                size.referenzObjekt()
-                        )
-                );
             }
-
-            gruppen.add(
-                    new BelegDokumentGruppe(
-                            nummer,
-                            beleg,
-                            dokumente
-                    )
-            );
-
-            nummer++;
+            gruppen.add(new BelegDokumentGruppe(nummer++,beleg,dokumente));
         }
-
         return gruppen;
     }
 
-
-    private String createItemId(
-            AbrechnungBeleg beleg,
-            Dokument dokument
-    ) {
-        return "BELEG-"
-                + beleg.getId()
-                + "-DOC-"
-                + dokument.getId();
+    private String createItemId(AbrechnungBeleg beleg,Dokument dokument) {
+        return "BELEG-"+beleg.getId()+"-DOC-"+dokument.getId();
     }
-
 
     private boolean hatDokumente(
             AbrechnungBeleg beleg
@@ -396,31 +331,14 @@ public class PDFBelegDokumenteService {
      * =========================================================
      */
 
-    private Map<String, byte[]> collectDocuments(
-            List<BelegDokumentGruppe> gruppen
-    ) {
-
-        Map<String, byte[]> documents =
-                new LinkedHashMap<>();
-
-        for (BelegDokumentGruppe gruppe : gruppen) {
-
-            for (Dokument dokument :
-                    gruppe.beleg().getDokumente()) {
-
-                documents.put(
-                        createItemId(
-                                gruppe.beleg(),
-                                dokument
-                        ),
-                        dokument.getInhalt()
-                );
-            }
+    private Map<String,byte[]> collectDocuments(List<BelegDokumentGruppe> gruppen,Map<Dokument,List<DokumentAusrichtung.Seite>> seiten) {
+        Map<String,byte[]> documents=new LinkedHashMap<>();
+        for(var gruppe:gruppen)for(var dokument:gruppe.beleg().getDokumente()) {
+            var pages=seiten.get(dokument);
+            for(int i=0;i<pages.size();i++)documents.put(createItemId(gruppe.beleg(),dokument)+"-p"+i,pages.get(i).bytes());
         }
-
         return documents;
     }
-
 
     private List<A4LayoutItem> createLayoutItems(
             List<BelegDokumentGruppe> gruppen

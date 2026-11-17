@@ -45,7 +45,16 @@ class BuchungsnachrichtWorkflowTest {
  }
  BuchungFinanzenDTO finanzen(){var f=AbrechnungVorlagenTest.finanzen(new BigDecimal("1000"));return new BuchungFinanzenDTO(f.buchungId(),f.buchungsnummer(),f.mieter(),f.mietobjekt(),f.buchungsquelle(),b.getStatus().name(),f.anreise(),f.abreise(),false,f.anzahlungSoll(),f.kautionSoll(),f.mietkosten(),f.mietrabatt(),f.mieteSoll(),f.verbrauchSoll(),true,f.bewegungen(),f.entschaedigungen(),f.entschaedigungSoll(),b.getStornoEinbehalt());}
  @AfterEach void cleanup(){TenantContext.clear();SecurityContextHolder.clearContext();}
- BuchungsnachrichtService.Ansicht start(Buchungsstatus ziel){return service.erstellen(1L,new BuchungsnachrichtService.Start(ziel,List.of(),""));}
+ BuchungsnachrichtService.Ansicht start(Buchungsstatus ziel){return service.erstellen(1L,new BuchungsnachrichtService.Start(ziel,List.of(),"",true));}
+ @Test void airbnbStatuswechselUndAbschlussOhnePdfOderMail(){
+  b.setBuchungsquelle(Buchungsquelle.AIRBNB);
+  for(var ziel:List.of(Buchungsstatus.RESERVIERT,Buchungsstatus.BESTAETIGT,Buchungsstatus.ABGESCHLOSSEN)){
+   var d=start(ziel);assertTrue(d.ohneMail());assertNull(d.pdf());
+   service.ausfuehren(1L,d.id(),new BuchungsnachrichtService.Freigabe(d.fingerprint(),false));
+  }
+  verifyNoInteractions(mails,vs,rr);assertTrue(documents.isEmpty());assertTrue(archives.isEmpty());
+  assertThrows(Exception.class,()->service.vorschau(1L,new BuchungsnachrichtService.Start(Buchungsstatus.RESERVIERT,List.of(),null)));
+ }
  @Test void bearbeitetesMehrseitigesPdfUndTexteWerdenExaktVersandtUndArchiviert()throws Exception{
   var d=start(Buchungsstatus.BESTAETIGT);assertEquals(Buchungsstatus.ANFRAGE,b.getStatus());
   var edited=service.aendern(1L,d.id(),new BuchungsnachrichtService.Aenderung(d.version(),"Individueller Betreff","Individueller Text",false));
@@ -132,6 +141,42 @@ class BuchungsnachrichtWorkflowTest {
   when(verbrauch.berechneVorschau(b)).thenReturn(List.of(missing));
   var error=assertThrows(org.springframework.web.server.ResponseStatusException.class,()->service.vorschau(1L,new BuchungsnachrichtService.Start(Buchungsstatus.ABGESCHLOSSEN,List.of(),null)));
   assertTrue(error.getReason().contains("Endablesung fehlt"));
+ }
+
+ @Test void vorhandeneRechnungKannOhneKorrekturgrundErsetztUndGesendetWerden(){
+  b.setStatus(Buchungsstatus.ABRECHENBAR);when(verbrauch.berechneSnapshots(eq(b),anyList())).thenReturn(List.of());
+  var old=new VermietungAbrechnung();old.setId(19L);old.setRevision(1);old.setPdf(original);documents.add(old);
+  var d=service.erstellen(1L,new BuchungsnachrichtService.Start(Buchungsstatus.ABGESCHLOSSEN,List.of(),null,true));
+  assertArrayEquals(original,d.pdf());assertFalse(d.ausgefuehrt());assertEquals("",drafts.get(d.id()).getKorrekturgrund());
+  var done=service.ausfuehren(1L,d.id(),new BuchungsnachrichtService.Freigabe(d.fingerprint(),false));
+  assertEquals("SMTP_BESTAETIGT",done.ergebnis());assertEquals(2,documents.getFirst().getRevision());
+  verify(mails).reservierungSenden(any());
+ }
+
+ @Test void abschlussOhneAusdruecklicheMailwahlVersendetKeineMail(){
+  b.setStatus(Buchungsstatus.ABRECHENBAR);b.getMieter().setEmail(null);
+  when(verbrauch.berechneSnapshots(eq(b),anyList())).thenReturn(List.of());
+  var d=service.erstellen(1L,new BuchungsnachrichtService.Start(Buchungsstatus.ABGESCHLOSSEN,List.of(),null));assertTrue(d.ohneMail());
+  service.ausfuehren(1L,d.id(),new BuchungsnachrichtService.Freigabe(d.fingerprint(),false));verifyNoInteractions(mails);
+ }
+
+ @Test void nachrichtenlisteZeigtJeDokumentartNurDenErstenNeuestenEintrag(){
+  var neu=new BuchungsnachrichtEntwurf();neu.setId("neu");neu.setZiel(Buchungsstatus.ABGESCHLOSSEN);neu.setAusgefuehrt(true);neu.setAblauf(Instant.now().plusSeconds(3600));
+  var alt=new BuchungsnachrichtEntwurf();alt.setId("alt");alt.setZiel(Buchungsstatus.ABGESCHLOSSEN);alt.setAusgefuehrt(true);alt.setAblauf(Instant.now().minusSeconds(3600));
+  var reservierung=new BuchungsnachrichtEntwurf();reservierung.setId("reservierung");reservierung.setZiel(Buchungsstatus.RESERVIERT);reservierung.setAblauf(Instant.now().plusSeconds(1800));
+  when(er.findByBuchungIdAndBenutzerAndTenantOrderByAblaufDesc(1L,"alice","ekc_test")).thenReturn(List.of(neu,alt,reservierung));
+  var liste=service.liste(1L);assertEquals(List.of("neu","reservierung"),liste.stream().map(BuchungsnachrichtService.Kurz::id).toList());
+ }
+
+ @Test void kostenloserAbschlussPrueftVerbrauchAberErstelltKeineRechnungUndKeineMail(){
+  b.setZahlungsvariante(Zahlungsvariante.OHNE_ABRECHNUNG);b.setStatus(Buchungsstatus.ABRECHENBAR);b.getMieter().setEmail(null);
+  var messung=new BuchungVerbrauchskosten();messung.setVerbrauch(new BigDecimal("25"));messung.setKosten(BigDecimal.ZERO);
+  when(verbrauch.berechneSnapshots(eq(b),anyList())).thenReturn(List.of(messung));
+  var d=service.erstellen(1L,new BuchungsnachrichtService.Start(Buchungsstatus.ABGESCHLOSSEN,List.of(),null,true));
+  assertTrue(d.ohneMail());assertNull(d.pdf());
+  var done=service.ausfuehren(1L,d.id(),new BuchungsnachrichtService.Freigabe(d.fingerprint(),false));
+  assertTrue(done.ausgefuehrt());assertEquals(Buchungsstatus.ABGESCHLOSSEN,b.getStatus());assertTrue(documents.isEmpty());assertTrue(archives.isEmpty());verifyNoInteractions(mails,vs,rr);
+  verify(verbrauch,atLeastOnce()).berechneSnapshots(eq(b),anyList());
  }
 
 }

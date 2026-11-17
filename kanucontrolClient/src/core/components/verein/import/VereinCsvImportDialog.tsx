@@ -59,8 +59,32 @@ export function VereinCsvImportDialog({ open, vereinId, onClose }: Props) {
   /* MAPPING TEMPLATE */
   /* ========================================================= */
 
-  const downloadMappingTemplate = () => {
-    window.open("/api/csv-import/mapping-template", "_blank");
+  const downloadMappingTemplate = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { data } = await apiClient.get<Blob>("/csv-import/mapping-template", {
+        responseType: "blob",
+      });
+      const url = window.URL.createObjectURL(data);
+      const link = document.createElement("a");
+
+      try {
+        link.href = url;
+        link.download = "mapping-template.csv";
+        document.body.appendChild(link);
+        link.click();
+      } finally {
+        link.remove();
+        // Dem Browser Zeit geben, den Download zu übernehmen.
+        window.setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+      }
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, "Das Mapping-Template konnte nicht heruntergeladen werden."));
+    } finally {
+      setLoading(false);
+    }
   };
 
   /* ========================================================= */

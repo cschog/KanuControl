@@ -39,8 +39,8 @@ class MieterControllerTest {
         verify(service).create(any());
     }
 
-    @Test void fehlendeLeereUndUngueltigeEmailWerdenBeiAnlageUndAenderungAbgewiesen() throws Exception {
-        for(String email: new String[]{"null", "\"\"", "\"   \"", "\"keine-mail\""}) {
+    @Test void ungueltigeEmailWirdBeiAnlageUndAenderungAbgewiesen() throws Exception {
+        for(String email: new String[]{"\"keine-mail\""}) {
             String body="{\"name\":\"Adler\",\"vorname\":\"Anna\",\"email\":"+email+"}";
             mvc.perform(post("/api/vermietung/mieter").contentType(org.springframework.http.MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.fieldErrors.email").exists());
@@ -54,6 +54,31 @@ class MieterControllerTest {
             .content("{\"name\":\"Adler\",\"vorname\":\"Anna\",\"email\":\"anna@example.org\"}"))
             .andExpect(status().isOk());
         verify(service).update(eq(5L),argThat(d->d.getStrasse()==null && d.getPlz()==null && d.getOrt()==null && d.getEmail().equals("anna@example.org")));
+    }
+
+    @Test void airbnbDarfOhneMailAngelegtUndGeaendertWerden() throws Exception {
+        for(String email: new String[]{"null", "\"\"", "\"   \""}) {
+            String body="{\"name\":\"Adler\",\"vorname\":\"Anna\",\"airbnb\":true,\"email\":"+email+"}";
+            mvc.perform(post("/api/vermietung/mieter").contentType(org.springframework.http.MediaType.APPLICATION_JSON).content(body)).andExpect(status().isCreated());
+            mvc.perform(put("/api/vermietung/mieter/5").contentType(org.springframework.http.MediaType.APPLICATION_JSON).content(body)).andExpect(status().isOk());
+        }
+        verify(service,times(3)).create(argThat(dto->dto.isAirbnb()));
+        verify(service,times(3)).update(eq(5L),argThat(dto->dto.isAirbnb()));
+    }
+    @Test void airbnbMitUngueltigerMailWirdWeiterhinAmEmailFeldAbgewiesen() throws Exception {
+        mvc.perform(post("/api/vermietung/mieter").contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+            .content("{\"name\":\"Adler\",\"vorname\":\"Anna\",\"airbnb\":true,\"email\":\"keine-mail\"}"))
+            .andExpect(status().isBadRequest()).andExpect(jsonPath("$.fieldErrors.email").exists());
+        verifyNoInteractions(service);
+    }
+
+    @Test void auchDirektmieterKoennenOhneEmailFuerAbschlussOhneMailGespeichertWerden() throws Exception {
+        for(String email: new String[]{"null", "\"\"", "\"   \""}) {
+            String body="{\"name\":\"Adler\",\"vorname\":\"Anna\",\"email\":"+email+"}";
+            mvc.perform(post("/api/vermietung/mieter").contentType(org.springframework.http.MediaType.APPLICATION_JSON).content(body)).andExpect(status().isCreated());
+            mvc.perform(put("/api/vermietung/mieter/5").contentType(org.springframework.http.MediaType.APPLICATION_JSON).content(body)).andExpect(status().isOk());
+        }
+        verify(service,times(3)).create(any());verify(service,times(3)).update(eq(5L),any());
     }
 
 }

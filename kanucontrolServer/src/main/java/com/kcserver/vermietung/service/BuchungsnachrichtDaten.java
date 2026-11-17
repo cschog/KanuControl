@@ -45,7 +45,7 @@ public class BuchungsnachrichtDaten {
         d.putAll(Buchungsadressat.felder(b));
         d.put("briefdatum",heute.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));d.put("buchungsnummer",b.getBuchungsnummer());d.put("anrede","Hallo "+(PersonName.vorname(p.getVorname()).isEmpty()?p.getName():PersonName.vorname(p.getVorname()))+",");
         var bank=b.getBankverbindungAuswahl()==BankverbindungAuswahl.ALTERNATIV?b.getMietobjekt().getBankverbindungAlternativ():b.getMietobjekt().getBankverbindungPrimaer();
-        d.put("bank_name",bank==null?"":"Bank: "+leer(bank.getBankName()));d.put("bank_iban",bank==null?"":"IBAN: "+leer(bank.getIban()));d.put("bank_bic",bank==null?"":"BIC: "+leer(bank.getBic()));
+        d.put("bank_name",bank==null?"":leer(bank.getBankName()));d.put("bank_iban",bank==null?"":"IBAN: "+leer(bank.getIban()));d.put("bank_bic",bank==null?"":"BIC: "+leer(bank.getBic()));
         if(pruefen && b.getStatus()==Buchungsstatus.ANFRAGE && b.getZahlungsvariante()!=Zahlungsvariante.BEI_ABRECHNUNG && b.getBuchungsquelle()==Buchungsquelle.DIREKT && (BuchungPreiskalkulation.miete(b).signum()>0 || b.getKautionBetrag().signum()>0)){
             if(bank==null)throw fehler("Bitte die ausgewählte Bankverbindung am Mietobjekt einrichten.");pflicht(bank.getIban(),"IBAN des Vereins");pflicht(bank.getBankName(),"Bankname des Vereins");
         }

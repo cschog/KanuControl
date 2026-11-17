@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField, Typography } from "@mui/material";
+import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField, Typography } from "@mui/material";
+import DokumentPdfVorschau from "./DokumentPdfVorschau";
+import MieterStammdatenLink from "../mieter/MieterStammdatenLink";
 import apiClient from "@/core/api/client/apiClient";
 import { getApiErrorMessage } from "@/kjfp/api/utils/apiError";
 import type { Buchung } from "@/vermietung/types/Buchung";
@@ -13,25 +15,25 @@ interface Fassung {
 interface Mail {
   dokumentId: string; pruefsumme: string; routingHash: string; mieter: string;
   routing: { absender: string; empfaenger: string; cc: string | null; replyTo: string | null; testmodus: boolean };
-  betreff: string; mailtext: string; migrationsBetreff: string; migrationsText: string; fassung: Fassung; buchungsstatus: Buchungsstatus;
+  betreff: string; mailtext: string; fassung: Fassung; buchungsstatus: Buchungsstatus;
 }
 interface Versand { id: string; ergebnis: string; fehler: string | null }
 const namen: Partial<Record<Buchungsstatus, string>> = {
   RESERVIERT: "Reservierungsbestätigung", BESTAETIGT: "Buchungsbestätigung", ABGELEHNT: "Ablehnung",
-  STORNIERT: "Stornierung", ABGESCHLOSSEN: "Abrechnung / Rechnung als Simulation",
+  STORNIERT: "Stornierung", ABGESCHLOSSEN: "Abrechnung / Rechnung",
 };
 function blob(f: Fassung) { return new Blob([Uint8Array.from(atob(f.pdf), c => c.charCodeAt(0))], { type: "application/pdf" }); }
 function exportieren(f: Fassung) {
   const url = URL.createObjectURL(blob(f)), a = document.createElement("a");
   a.href = url; a.download = f.dateiname; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
-export default function BuchungsVorschauDialog({ buchung, ziel, ungespeichert = false, onClose, onVersandt }: {
-  buchung: Buchung; ziel: Buchungsstatus; ungespeichert?: boolean; onClose: () => void; onVersandt?: () => void;
+export default function BuchungsVorschauDialog({ buchung, ziel, abschlussmail = false, ungespeichert = false, onClose, onVersandt }: {
+  buchung: Buchung; ziel: Buchungsstatus; abschlussmail?: boolean; ungespeichert?: boolean; onClose: () => void; onVersandt?: () => void;
 }) {
   const [art, setArt] = useState(ziel), [saved, setSaved] = useState<Fassung | null>(null);
   const [selected, setSelected] = useState<Fassung | null>(null), [preview, setPreview] = useState<Fassung | null>(null);
   const [limit, setLimit] = useState(10_000_000), [busy, setBusy] = useState(false), [loading, setLoading] = useState(true);
-  const [error, setError] = useState(""), [pdfUrl, setPdfUrl] = useState("");
+  const [error, setError] = useState("");
   const [replace, setReplace] = useState<"save" | File | null>(null);
   const [mail, setMail] = useState<Mail | null>(null), [betreff, setBetreff] = useState(""), [text, setText] = useState("");
   const [versand, setVersand] = useState<Versand | null>(null), [attempt, setAttempt] = useState("");
@@ -40,17 +42,21 @@ export default function BuchungsVorschauDialog({ buchung, ziel, ungespeichert = 
   useEffect(() => {
     let active = true;
     setLoading(true); setSelected(null); setSaved(null); setPreview(null); setMail(null); setError("");
+    if (abschlussmail && art === "ABGESCHLOSSEN") {
+      apiClient.post<Mail>(`${base}/abschlussmail`).then(({ data }) => {
+        if (!active) return;
+        setSelected(data.fassung); setSaved(data.fassung); setMail(data);
+        setBetreff(data.betreff); setText(data.mailtext); setVersand(null); setAttempt(crypto.randomUUID());
+      }).catch(e => { if (active) setError(getApiErrorMessage(e)); }).finally(() => { if (active) setLoading(false); });
+      return () => { active = false; };
+    }
     apiClient.get<{ dokumente: Fassung[]; uploadLimit: number }>(base).then(({ data }) => {
       if (!active) return;
       const f = data.dokumente.find(d => d.art === art) ?? null;
       setSaved(f); setSelected(f); setLimit(data.uploadLimit);
     }).catch(e => { if (active) setError(getApiErrorMessage(e)); }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [base, art]);
-  useEffect(() => {
-    if (!selected) { setPdfUrl(""); return; }
-    const url = URL.createObjectURL(blob(selected)); setPdfUrl(url); return () => URL.revokeObjectURL(url);
-  }, [selected]);
+  }, [base, art, abschlussmail]);
   async function run(action: () => Promise<void>) {
     if (lock.current) return;
     lock.current = true; setBusy(true); setError("");
@@ -104,12 +110,12 @@ export default function BuchungsVorschauDialog({ buchung, ziel, ungespeichert = 
     {selected.art !== (mail?.buchungsstatus ?? buchung.status) && <Alert severity="warning">Die Dokumentart weicht vom aktuellen Buchungsstatus {mail?.buchungsstatus ?? buchung.status} ab. Der Status bleibt unverändert.</Alert>}
     {selected.herkunft === "Manuell hochgeladen" && <Alert severity="info">Manuell bearbeitete PDF. Spätere Buchungsänderungen werden nicht automatisch übernommen.</Alert>}
   </>;
-  return <Dialog open fullWidth maxWidth="lg" onClose={() => { if (!busy) onClose(); }} slotProps={{ paper: { sx: { maxHeight: "calc(100dvh - 32px)", m: 2 } } }}>
+  return <><Dialog open={!mail} fullWidth maxWidth="lg" onClose={() => { if (!busy) onClose(); }} slotProps={{ paper: { sx: { maxHeight: "calc(100dvh - 32px)", m: 2 } } }}>
     <DialogTitle>Buchungsdokumente · {buchung.buchungsnummer} · Status {buchung.status}</DialogTitle>
     <DialogContent dividers><Stack spacing={2}>
       <Alert severity="info">Vorschau, Speichern, Import und manueller Versand ändern keinen Buchungsstatus. Verwendet werden die aktuellen gespeicherten Buchungsdaten.</Alert>
       {ungespeichert && <Alert severity="warning">Das Buchungsformular ist zur Bearbeitung geöffnet. Ungespeicherte Änderungen werden nicht verwendet. Für deren Übernahme diesen Dialog schließen und die Buchung zuerst speichern.</Alert>}
-      {error && <Alert severity="error">{error}</Alert>}
+      {error && <Alert severity="error" action={<MieterStammdatenLink personId={buchung.mieterId} buchungId={buchung.id} fehler={error} />}>{error}</Alert>}
       <TextField select label="Dokumentart" value={art} disabled={disabled} onChange={e => setArt(e.target.value as Buchungsstatus)}>
         {Object.entries(namen).map(([key, value]) => <MenuItem key={key} value={key}>{value}</MenuItem>)}
       </TextField>
@@ -137,29 +143,29 @@ export default function BuchungsVorschauDialog({ buchung, ziel, ungespeichert = 
           <Button disabled={disabled} onClick={() => exportieren(selected)}>Herunterladen</Button>
           <Button disabled={disabled} onClick={() => void prepare()}>E-Mail vorbereiten</Button>
         </Stack>
-        {pdfUrl && <Box component="iframe" title="Ausgewählte PDF-Fassung" src={pdfUrl} sx={{ width: "100%", height: { xs: 420, md: 600 }, border: 1, borderColor: "divider" }} />}
+        {!mail && <DokumentPdfVorschau pdf={selected.pdf} dateiname={selected.dateiname} title="Ausgewählte PDF-Fassung" height={600} />}
       </>}
     </Stack></DialogContent>
     <DialogActions><Button disabled={busy} onClick={onClose}>Schließen</Button></DialogActions>
+    </Dialog>
     <Dialog open={!!replace} onClose={() => { if (!busy) setReplace(null); }}>
-      <DialogTitle>Gespeicherte PDF ersetzen?</DialogTitle><DialogContent>Die aktuelle Fassung wird ersetzt. Bereits versendete Anhänge bleiben im Versandprotokoll erhalten.</DialogContent>
+      <DialogTitle>Gespeicherte PDF ersetzen?</DialogTitle><DialogContent>Die aktuelle PDF wird durch die neue Fassung ersetzt. Frühere PDF-Versionen werden nicht aufbewahrt.</DialogContent>
       <DialogActions><Button disabled={busy} onClick={() => setReplace(null)}>Abbrechen</Button><Button disabled={busy} onClick={() => void persist(replace instanceof File ? replace : undefined)}>Fassung ausdrücklich ersetzen</Button></DialogActions>
     </Dialog>
     <Dialog open={!!mail} fullWidth maxWidth="lg" onClose={() => { if (!busy) setMail(null); }}>
       <DialogTitle>E-Mail vorbereiten · {buchung.buchungsnummer}</DialogTitle>
       <DialogContent dividers><Stack spacing={2}>
-        {error && <Alert severity="error">{error}</Alert>}{warnings}
+        {error && <Alert severity="error" action={<MieterStammdatenLink personId={buchung.mieterId} buchungId={buchung.id} fehler={error} />}>{error}</Alert>}{warnings}
         {mail && <>
           <Typography>Mieter: {mail.mieter}</Typography>
           {mail.routing.testmodus && <Alert severity="info">SMTP-Testmodus aktiv. Tatsächliches Ziel: {mail.routing.empfaenger}. Kopien werden gemäß Testmodus behandelt.</Alert>}
           <Typography>Von: {mail.routing.absender} · An: {mail.routing.empfaenger}</Typography>
           {mail.routing.cc && <Typography>CC: {mail.routing.cc}</Typography>}
           {mail.routing.replyTo && <Typography>Antwort an: {mail.routing.replyTo}</Typography>}
-          <Button disabled={busy || !!versand} onClick={() => { setBetreff(mail.migrationsBetreff); setText(mail.migrationsText); }}>Mailvorschlag „Umstieg auf KanuControl“ übernehmen</Button>
           <TextField label="Betreff" value={betreff} disabled={busy || !!versand} onChange={e => setBetreff(e.target.value)} slotProps={{ htmlInput: { maxLength: 240 } }} />
           <TextField label="Mailtext" multiline minRows={6} value={text} disabled={busy || !!versand} onChange={e => setText(e.target.value)} slotProps={{ htmlInput: { maxLength: 30000 } }} />
-          <Typography>Anhang: {selected?.dateiname} · {selected?.herkunft} · SHA-256: {mail.pruefsumme}</Typography>
-          {pdfUrl && <Box component="iframe" title="Exakter E-Mail-Anhang" src={pdfUrl} sx={{ width: "100%", height: 400, border: 1, borderColor: "divider" }} />}
+          <Typography>Anhang: {mail.fassung.dateiname} · {mail.fassung.herkunft}</Typography>
+          <DokumentPdfVorschau pdf={mail.fassung.pdf} dateiname={mail.fassung.dateiname} title="Exakter E-Mail-Anhang" height={500} />
         </>}
         {versand && <Alert severity={versand.ergebnis === "SMTP_BESTAETIGT" ? "success" : "warning"}>{versand.ergebnis === "SMTP_BESTAETIGT" ? "Nachricht an SMTP übergeben." : versand.fehler || "Versandergebnis unklar. Postausgang prüfen; keine automatische Wiederholung."}</Alert>}
       </Stack></DialogContent>
@@ -169,5 +175,5 @@ export default function BuchungsVorschauDialog({ buchung, ziel, ungespeichert = 
         <Button variant="contained" disabled={busy || !!versand || !betreff.trim() || !text.trim()} onClick={() => void send()}>{busy ? "Wird verarbeitet …" : "Jetzt senden"}</Button>
       </DialogActions>
     </Dialog>
-  </Dialog>;
+  </>;
 }

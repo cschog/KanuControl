@@ -62,6 +62,7 @@ public class VerbrauchsabrechnungService {
 
     public void berechneUndSpeichere(Buchung buchung, List<AblesungBestaetigungDTO> bestaetigungen) {
 
+        if (buchung.getStatus() == com.kcserver.vermietung.enumtype.Buchungsstatus.ABGESCHLOSSEN) return;
         var snapshots=berechneSnapshots(buchung,bestaetigungen);
         if(buchung.getBuchungsquelle()==Buchungsquelle.AIRBNB)return;
         buchungVerbrauchskostenRepository.deleteByBuchungId(buchung.getId());
@@ -80,7 +81,9 @@ public class VerbrauchsabrechnungService {
         return berechneSnapshots(buchung,bestaetigungen,true);
     }
     private List<BuchungVerbrauchskosten> berechneSnapshots(Buchung buchung,List<AblesungBestaetigungDTO> bestaetigungen,boolean simulation) {
-        if(Zahlungsplan.ohneAbrechnung(buchung) || buchung.getBuchungsquelle()==Buchungsquelle.AIRBNB)return List.of();
+        if (buchung.getStatus() == com.kcserver.vermietung.enumtype.Buchungsstatus.ABGESCHLOSSEN)
+            return buchungVerbrauchskostenRepository.findByBuchungIdOrderByIdAsc(buchung.getId());
+        if(buchung.getBuchungsquelle()==Buchungsquelle.AIRBNB)return List.of();
 
         if (buchung.getAnreise() == null || buchung.getAbreise() == null) {
             throw new IllegalArgumentException(
@@ -128,7 +131,8 @@ public class VerbrauchsabrechnungService {
          * Erst alle Positionen berechnen.
          * Bei einem Fehler wird noch nichts gespeichert oder gelöscht.
          */
-        for (Verbrauchskosten konfiguration : konfigurationen) {
+        for (Verbrauchskosten basis : konfigurationen) {
+            Verbrauchskosten konfiguration = basis.zumDatum(anreiseZeitpunkt.toLocalDate());
 
             if (konfiguration.getAbrechnungsart()
                     == com.kcserver.vermietung.enumtype.Verbrauchsabrechnungsart.ZAEHLERSTAND) {
@@ -173,6 +177,9 @@ public class VerbrauchsabrechnungService {
             }
         }
 
+        if(Zahlungsplan.ohneAbrechnung(buchung))for(var snapshot:snapshots){
+            snapshot.setPreis(BigDecimal.ZERO.setScale(2));snapshot.setKosten(BigDecimal.ZERO.setScale(2));
+        }
         return List.copyOf(snapshots);
     }
 
@@ -249,11 +256,22 @@ public class VerbrauchsabrechnungService {
     public List<VerbrauchskostenVorschauDTO> berechneVorschau(
             Buchung buchung
     ) {
-        if (Zahlungsplan.ohneAbrechnung(buchung)) return List.of();
+        if (buchung.getStatus() == com.kcserver.vermietung.enumtype.Buchungsstatus.ABGESCHLOSSEN) {
+            return buchungVerbrauchskostenRepository.findByBuchungIdOrderByIdAsc(buchung.getId()).stream()
+                    .map(v -> new VerbrauchskostenVorschauDTO(v.getZaehlerId(), v.getZaehlerBezeichnung(),
+                            v.getBezeichnung(), v.getVerbrauchsart(), v.getAbrechnungsart(), v.getMengeneinheit(),
+                            v.getPreis(), v.getAnfangsstand(), v.getEndstand(), v.getVerbrauch(),
+                            v.getAnfangsablesung(), v.getEndablesung(), v.getAbrechnungstage(), v.getKosten(), true, null))
+                    .toList();
+        }
         List<VerbrauchskostenVorschauDTO> ergebnis = new ArrayList<>();
 
         if (buchung.getBuchungsquelle() == Buchungsquelle.AIRBNB) {
-            return ergebnis;
+            if(Zahlungsplan.ohneAbrechnung(buchung))return ergebnis.stream().map(v->new VerbrauchskostenVorschauDTO(
+            v.zaehlerId(),v.zaehlerBezeichnung(),v.bezeichnung(),v.verbrauchsart(),v.abrechnungsart(),v.mengeneinheit(),
+            BigDecimal.ZERO.setScale(2),v.anfangsstand(),v.endstand(),v.verbrauch(),v.anfangsablesung(),v.endablesung(),v.abrechnungstage(),
+            v.kosten()==null?null:BigDecimal.ZERO.setScale(2),v.erfolgreich(),v.hinweis(),v.bestaetigungErforderlich())).toList();
+        return ergebnis;
         }
 
         if (buchung.getAnreise() == null || buchung.getAbreise() == null) {
@@ -267,7 +285,11 @@ public class VerbrauchsabrechnungService {
                     null,
                     ErrorMessages.VERBRAUCHSABRECHNUNG_ANREISE_ABREISE_REQUIRED
             ));
-            return ergebnis;
+            if(Zahlungsplan.ohneAbrechnung(buchung))return ergebnis.stream().map(v->new VerbrauchskostenVorschauDTO(
+            v.zaehlerId(),v.zaehlerBezeichnung(),v.bezeichnung(),v.verbrauchsart(),v.abrechnungsart(),v.mengeneinheit(),
+            BigDecimal.ZERO.setScale(2),v.anfangsstand(),v.endstand(),v.verbrauch(),v.anfangsablesung(),v.endablesung(),v.abrechnungstage(),
+            v.kosten()==null?null:BigDecimal.ZERO.setScale(2),v.erfolgreich(),v.hinweis(),v.bestaetigungErforderlich())).toList();
+        return ergebnis;
         }
 
         if (buchung.getAbreise().getYear() >= 2999) {
@@ -281,7 +303,11 @@ public class VerbrauchsabrechnungService {
                     null,
                     ErrorMessages.VERBRAUCHSABRECHNUNG_VORSCHAU_UNBEFRISTET
             ));
-            return ergebnis;
+            if(Zahlungsplan.ohneAbrechnung(buchung))return ergebnis.stream().map(v->new VerbrauchskostenVorschauDTO(
+            v.zaehlerId(),v.zaehlerBezeichnung(),v.bezeichnung(),v.verbrauchsart(),v.abrechnungsart(),v.mengeneinheit(),
+            BigDecimal.ZERO.setScale(2),v.anfangsstand(),v.endstand(),v.verbrauch(),v.anfangsablesung(),v.endablesung(),v.abrechnungstage(),
+            v.kosten()==null?null:BigDecimal.ZERO.setScale(2),v.erfolgreich(),v.hinweis(),v.bestaetigungErforderlich())).toList();
+        return ergebnis;
         }
 
         if (!buchung.getAbreise().isAfter(buchung.getAnreise())) {
@@ -295,13 +321,21 @@ public class VerbrauchsabrechnungService {
                     null,
                     ErrorMessages.VERBRAUCHSABRECHNUNG_ABREISE_INVALID
             ));
-            return ergebnis;
+            if(Zahlungsplan.ohneAbrechnung(buchung))return ergebnis.stream().map(v->new VerbrauchskostenVorschauDTO(
+            v.zaehlerId(),v.zaehlerBezeichnung(),v.bezeichnung(),v.verbrauchsart(),v.abrechnungsart(),v.mengeneinheit(),
+            BigDecimal.ZERO.setScale(2),v.anfangsstand(),v.endstand(),v.verbrauch(),v.anfangsablesung(),v.endablesung(),v.abrechnungstage(),
+            v.kosten()==null?null:BigDecimal.ZERO.setScale(2),v.erfolgreich(),v.hinweis(),v.bestaetigungErforderlich())).toList();
+        return ergebnis;
         }
 
         if (buchung.getAbreise().isAfter(LocalDateTime.now(java.time.ZoneId.of("Europe/Berlin")))) {
             ergebnis.add(fehlerVorschau(null, null, "Verbrauchskosten", null, null, null, null,
                     "Verbrauchskosten können erst nach Mietende ermittelt werden. Es werden keine früheren Ablesungen als Verbrauch dieses Aufenthalts verwendet."));
-            return ergebnis;
+            if(Zahlungsplan.ohneAbrechnung(buchung))return ergebnis.stream().map(v->new VerbrauchskostenVorschauDTO(
+            v.zaehlerId(),v.zaehlerBezeichnung(),v.bezeichnung(),v.verbrauchsart(),v.abrechnungsart(),v.mengeneinheit(),
+            BigDecimal.ZERO.setScale(2),v.anfangsstand(),v.endstand(),v.verbrauch(),v.anfangsablesung(),v.endablesung(),v.abrechnungstage(),
+            v.kosten()==null?null:BigDecimal.ZERO.setScale(2),v.erfolgreich(),v.hinweis(),v.bestaetigungErforderlich())).toList();
+        return ergebnis;
         }
 
         LocalDateTime anreiseZeitpunkt = buchung.getAnreise();
@@ -347,7 +381,15 @@ public class VerbrauchsabrechnungService {
                     ));
         }
 
-        for (Verbrauchskosten konfiguration : konfigurationen) {
+        for (Verbrauchskosten basis : konfigurationen) {
+            Verbrauchskosten konfiguration;
+            try {
+                konfiguration = basis.zumDatum(anreiseZeitpunkt.toLocalDate());
+            } catch (IllegalArgumentException ex) {
+                ergebnis.add(fehlerVorschau(null, null, basis.getBezeichnung(), basis.getVerbrauchsart(),
+                        basis.getAbrechnungsart(), basis.getMengeneinheit(), null, ex.getMessage()));
+                continue;
+            }
 
             switch (konfiguration.getAbrechnungsart()) {
 
@@ -421,6 +463,10 @@ public class VerbrauchsabrechnungService {
             }
         }
 
+        if(Zahlungsplan.ohneAbrechnung(buchung))return ergebnis.stream().map(v->new VerbrauchskostenVorschauDTO(
+            v.zaehlerId(),v.zaehlerBezeichnung(),v.bezeichnung(),v.verbrauchsart(),v.abrechnungsart(),v.mengeneinheit(),
+            BigDecimal.ZERO.setScale(2),v.anfangsstand(),v.endstand(),v.verbrauch(),v.anfangsablesung(),v.endablesung(),v.abrechnungstage(),
+            v.kosten()==null?null:BigDecimal.ZERO.setScale(2),v.erfolgreich(),v.hinweis(),v.bestaetigungErforderlich())).toList();
         return ergebnis;
     }
 

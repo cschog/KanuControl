@@ -7,6 +7,7 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { getBuchungFinanzen, erfasseFinanzbewegung } from "@/vermietung/api/finanzenApi";
 import type { BuchungFinanzen, Finanzbewegung, Finanzbewegungsart, Finanzkategorie } from "@/vermietung/types/Finanzen";
 import { ErrorDialog } from "@/core/components/common/ErrorDialog";
+import { mietpositionsDauerLabel } from "@/vermietung/utils/mietpreis";
 import { getApiErrorMessage } from "@/kjfp/api/utils/apiError";
 
 const kategorien: { key: Finanzkategorie; label: string }[] = [
@@ -282,7 +283,7 @@ const AbrechnungPage = () => {
               </Typography>}
               {category.key === "MIETE" && row.mietkosten.length > 0 && <Box sx={{gridColumn:"1 / -1",pl:1,borderLeft:2,borderColor:"divider"}}>
                 {row.mietkosten.map((item,index)=><Typography key={index} variant="body2" color="text.secondary">
-                  {item.bezeichnung}: {item.anzahl} × {item.berechnungsart === "TAG" ? `${item.abrechnungseinheiten ?? 1} Tage × ` : ""}{betragLabel(item.einzelpreis)} = {betragLabel(item.gesamtbetrag)}
+                  {item.bezeichnung}: {item.anzahl} × {mietpositionsDauerLabel(item.berechnungsart, item.abrechnungseinheiten ?? 1, row.anreise, row.abreise, row.unbefristet) ? `${mietpositionsDauerLabel(item.berechnungsart, item.abrechnungseinheiten ?? 1, row.anreise, row.abreise, row.unbefristet)} × ` : ""}{betragLabel(item.einzelpreis)} = {betragLabel(item.gesamtbetrag)}
                 </Typography>)}
                 {row.mietrabatt > 0 && <Typography variant="body2" color="text.secondary">Buchungsrabatt: −{betragLabel(row.mietrabatt)}</Typography>}
                 <Typography variant="body2" color="text.secondary">Mietkosten gesamt: {betragLabel(row.mieteSoll)} · Anzahlung {betragLabel(advanceSoll(row))} wird angerechnet.</Typography>

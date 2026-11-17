@@ -15,7 +15,7 @@ public class VermietungAbrechnungService {
  public record Dokument(Long id,int revision,Instant erstellt,String korrekturgrund){}
  public record Ausstellung(Long ersetztDokumentId,String korrekturgrund){}
  private Dokument dto(VermietungAbrechnung e){return new Dokument(e.getId(),e.getRevision(),e.getErstellt(),e.getKorrekturgrund());}
- @Transactional(readOnly=true) public List<Dokument> list(Long id){return dokumente.findByBuchungIdOrderByRevisionDesc(id).stream().map(this::dto).toList();}
+ @Transactional(readOnly=true) public List<Dokument> list(Long id){return dokumente.findByBuchungIdOrderByRevisionDesc(id).stream().limit(1).map(this::dto).toList();}
  public Dokument create(Long id,Ausstellung request){
   if(request==null)throw new IllegalArgumentException("Dokumentangaben fehlen.");
   var b=buchungen.findLockedById(id).orElseThrow(()->new IllegalArgumentException("Buchung nicht gefunden."));
@@ -23,9 +23,9 @@ public class VermietungAbrechnungService {
   if(Zahlungsplan.ohneAbrechnung(b))throw new IllegalArgumentException("Für Ohne Abrechnung wird keine Rechnung ausgestellt.");
   var old=dokumente.findByBuchungIdOrderByRevisionDesc(id);String reason=Objects.toString(request.korrekturgrund(),"").trim();
   if(reason.length()>1000)throw new IllegalArgumentException("Korrekturgrund zu lang.");
-  if(old.isEmpty()?request.ersetztDokumentId()!=null:!Objects.equals(old.getFirst().getId(),request.ersetztDokumentId())||reason.isBlank())throw new IllegalArgumentException("Korrektur benötigt das letzte Dokument und eine Begründung. Bitte neu laden.");
+  if(old.isEmpty()?request.ersetztDokumentId()!=null:!Objects.equals(old.getFirst().getId(),request.ersetztDokumentId()))throw new IllegalArgumentException("Die letzte Rechnungsfassung wurde geändert. Bitte neu laden.");
   var e=new VermietungAbrechnung();e.setBuchung(b);e.setRevision(old.isEmpty()?1:old.getFirst().getRevision()+1);e.setErstellt(Instant.now());e.setKorrekturgrund(reason);
-  e.setPdf(vorlagen.erstellen(b,e.getRevision(),null));return dto(dokumente.saveAndFlush(e));
+  e.setPdf(vorlagen.erstellen(b,e.getRevision(),null));dokumente.saveAndFlush(e);dokumente.entferneFrueherePdfs(id,e.getId(),new byte[0]);return dto(e);
  }
- @Transactional(readOnly=true) public byte[] pdf(Long id,Long dokumentId){return dokumente.findByIdAndBuchungId(dokumentId,id).orElseThrow(()->new IllegalArgumentException("Dokument nicht gefunden.")).getPdf();}
+ @Transactional(readOnly=true) public byte[] pdf(Long id,Long dokumentId){return dokumente.findByBuchungIdOrderByRevisionDesc(id).stream().findFirst().filter(e->e.getId().equals(dokumentId)).orElseThrow(()->new IllegalArgumentException("Nur die letzte PDF-Fassung ist verfügbar.")).getPdf();}
 }

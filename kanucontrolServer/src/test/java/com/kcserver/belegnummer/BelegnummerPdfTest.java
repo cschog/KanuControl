@@ -27,7 +27,8 @@ class BelegnummerPdfTest {
     BelegnummerPdfTest() {
         event.setId(1L); event.setName("Nummernprüfung");
         event.setBeginnDatum(LocalDate.of(2026, 1, 1)); event.setEndeDatum(LocalDate.of(2026, 1, 2));
-        when(sizes.determine(any())).thenReturn(new PDFDocumentSize(595, 842, PdfDocumentDensity.HIGH, ReferenzObjekt.DIN_A4));
+        when(sizes.determine(any())).thenReturn(new PDFDocumentSize(595,842,PdfDocumentDensity.HIGH,ReferenzObjekt.DIN_A4));
+        when(sizes.determine(any(),anyDouble(),anyDouble())).thenReturn(new PDFDocumentSize(595, 842, PdfDocumentDensity.HIGH, ReferenzObjekt.DIN_A4));
     }
     Dokument document(long id) throws Exception {
         var d = new Dokument(); d.setId(id); d.setReihenfolge((int) id);

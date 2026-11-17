@@ -1,3 +1,27 @@
+# Was ist neu? – KanuControl 2.3.1
+
+**Quellstand: 17. November 2026 · Client und Server: 2.3.1**
+
+In der Verbrauchskostenverwaltung werden alle hinterlegten Preise mit ihrem Gültigkeitszeitraum angezeigt. Damit bleiben historische und zukünftige Preise auch ohne aktuell gültigen Preis direkt in der Übersicht und auf Mobilgeräten sichtbar.
+
+Kein Deployment ausgeführt.
+
+---
+
+# Was ist neu? – KanuControl 2.3.0
+
+**Quellstand: 17. November 2026 · Client und Server: 2.3.0**
+
+- Verbrauchspreise lassen sich mit Gültigkeitsbeginn und optionalem Enddatum verwalten, auch rückwirkend. Neue Zeiträume begrenzen unveränderte Nachbarzeiträume automatisch.
+- Für die gesamte Buchung gilt der Preis am Anreisetag. Fehlende Preise werden in der Vorschau angezeigt und verhindern den Abschluss.
+- Abgeschlossene Buchungen verwenden ihre gespeicherten Verbrauchskosten. Kostenlose Buchungen behalten ihre Verbrauchswerte für Auswertungen ohne Kostenforderung.
+- Vorhandene Preise werden bei der nächsten Mandantenmigration ab dem 1. Januar 0001 übernommen; bestehende Abrechnungssnapshots bleiben erhalten.
+- Fördersätze, KiK-Zuschläge und Fahrkosten-Konfiguration stehen unter Administration. Die entsprechenden KJFP-Reiter entfallen.
+
+Diese Versionsnummer bezeichnet den vorbereiteten Quellstand. Es wurde kein Deployment ausgeführt. Die tatsächlich laufenden Versionen stehen im Kopfbereich der Anwendung.
+
+---
+
 # Was ist neu? – KanuControl 2.2.2
 
 **Dokumentationsstand: 13. November 2026 · Client und Server: 2.2.2**

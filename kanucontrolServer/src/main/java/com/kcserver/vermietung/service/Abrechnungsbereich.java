@@ -45,19 +45,36 @@ public record Abrechnungsbereich(List<Zeile> zeilen) {
  }
  private static Abrechnungsbereich aus(BuchungFinanzenDTO f,List<BuchungVerbrauchskosten> verbrauch,int revision,Rabattdarstellung rabatt) {
   var z=new ArrayList<Zeile>();int nr=0;
-  z.add(new Zeile("Abrechnung - Revision "+revision,"","",""));
+  boolean uebernachtung=!f.unbefristet() && f.anreise()!=null && f.abreise()!=null && f.abreise().isAfter(f.anreise());
+  z.add(new Zeile("Abrechnung","","",""));
   for(var p:f.mietkosten()){
    if(p.anzahl()==null || p.anzahl()<=0 || p.gesamtbetrag().signum()==0)continue;
-   z.add(new Zeile((++nr)+". "+p.bezeichnung(),(p.anzahl()==1?"":p.anzahl()+" × ")+p.abrechnungseinheiten()+("TAG".equals(p.berechnungsart())?(Long.valueOf(1).equals(p.abrechnungseinheiten())?" Tag":" Tage"):""),geld(p.einzelpreis()),geld(p.gesamtbetrag())));
+   boolean taeglich="TAG".equals(p.berechnungsart());
+   boolean mitAufenthalt=uebernachtung && !"GANZJAEHRIG".equals(p.berechnungsart());
+   long dauer=mitAufenthalt?java.time.temporal.ChronoUnit.DAYS.between(f.anreise(),f.abreise()):p.abrechnungseinheiten();
+   String menge=mitAufenthalt?dauer+(dauer==1?" Übernachtung":" Übernachtungen")
+     +(taeglich || dauer==1?"":" (pauschal)")
+     :p.abrechnungseinheiten()+(taeglich?(p.abrechnungseinheiten()==1?" Tag":" Tage"):"");
+   z.add(new Zeile((++nr)+". "+p.bezeichnung(),(p.anzahl()==1?"":p.anzahl()+" × ")+menge,geld(p.einzelpreis()),geld(p.gesamtbetrag())));
   }
   for(var row:rabatt.zeilen())z.add(new Zeile(row.text(),"","",geld(row.betrag().negate())));
+  var verbrauchsgruppen=new ArrayList<List<BuchungVerbrauchskosten>>();
+  var strom=new ArrayList<BuchungVerbrauchskosten>();
   for(var p:verbrauch){
-   if(p.getKosten()==null || p.getKosten().signum()==0)continue;
-   String name=p.getBezeichnung();String zaehler=p.getZaehlerBezeichnung();
-   if(zaehler!=null && !zaehler.isBlank() && !name.toLowerCase(Locale.ROOT).contains(zaehler.toLowerCase(Locale.ROOT)))name+=" - "+zaehler;
-   z.add(new Zeile((++nr)+". "+name,
-    p.getVerbrauch()!=null?p.getVerbrauch().stripTrailingZeros().toPlainString().replace('.',',')+" "+Objects.toString(p.getMengeneinheit(),""):
-     p.getAbrechnungstage()!=null?p.getAbrechnungstage()+" Tage":"1 pauschal",geld(p.getPreis()),geld(p.getKosten())));
+   if(p.getKosten()==null)continue;
+   if(verbrauchsname(p).equals("Strom")){
+    if(strom.isEmpty())verbrauchsgruppen.add(strom);
+    strom.add(p);
+   }else if(p.getKosten().signum()!=0)verbrauchsgruppen.add(List.of(p));
+  }
+  for(var gruppe:verbrauchsgruppen){
+   var kosten=gruppe.stream().map(BuchungVerbrauchskosten::getKosten).reduce(BigDecimal.ZERO,BigDecimal::add);
+   if(kosten.signum()==0)continue;
+   var p=gruppe.getFirst();
+   String menge=verbrauchsmenge(gruppe,uebernachtung);
+   boolean gleicherPreis=p.getPreis()!=null && gruppe.stream().allMatch(v->v.getPreis()!=null && v.getPreis().compareTo(p.getPreis())==0);
+   String preis=gleicherPreis && (gruppe.size()==1 || !menge.isBlank())?geld(p.getPreis()):"";
+   z.add(new Zeile((++nr)+". "+verbrauchsname(p),menge,preis,geld(kosten)));
   }
   for(var p:f.entschaedigungen())if(p.gesamtbetrag().signum()!=0)z.add(new Zeile((++nr)+". Entschädigung: "+p.bezeichnung()+" ("+(p.anlass().name().equals("VERLUST")?"Verlust":"Beschädigung")+")",p.anzahl().stripTrailingZeros().toPlainString().replace('.',','),geld(p.einzelpreis()),geld(p.gesamtbetrag())));
   z.add(new Zeile("Abrechnungssumme","","",geld(f.abrechnungGesamt())));
@@ -81,4 +98,26 @@ public record Abrechnungsbereich(List<Zeile> zeilen) {
   z.add(new Zeile(f.saldo().signum()<0?"Rückerstattung":f.saldo().signum()>0?"Restzahlung":"Ausgeglichen","","",geld(f.saldo().abs())));
   return new Abrechnungsbereich(List.copyOf(z));
  }
+ private static String verbrauchsname(BuchungVerbrauchskosten p){
+  if(p.getVerbrauchsart()!=null)return switch(p.getVerbrauchsart()){
+   case STROM -> "Strom";case GAS -> "Gas";case WASSER -> "Wasser";
+  };
+  String name=Objects.toString(p.getBezeichnung(),"");String normal=name.strip().toLowerCase(Locale.ROOT);
+  if(normal.startsWith("strom"))return "Strom";
+  if(normal.startsWith("gas"))return "Gas";
+  if(normal.startsWith("wasser"))return "Wasser";
+  String zaehler=p.getZaehlerBezeichnung();
+  return zaehler!=null && !zaehler.isBlank() && !normal.contains(zaehler.toLowerCase(Locale.ROOT))?name+" - "+zaehler:name;
+ }
+ private static String verbrauchsmenge(List<BuchungVerbrauchskosten> gruppe,boolean uebernachtung){
+  var p=gruppe.getFirst();
+  if(gruppe.stream().allMatch(v->v.getVerbrauch()!=null && Objects.equals(v.getMengeneinheit(),p.getMengeneinheit()))){
+   var summe=gruppe.stream().map(BuchungVerbrauchskosten::getVerbrauch).reduce(BigDecimal.ZERO,BigDecimal::add);
+   return summe.stripTrailingZeros().toPlainString().replace('.',',')+" "+Objects.toString(p.getMengeneinheit(),"");
+  }
+  if(gruppe.size()>1)return "";
+  return p.getAbrechnungstage()!=null?p.getAbrechnungstage()
+   +(uebernachtung?(p.getAbrechnungstage()==1?" Übernachtung":" Übernachtungen"):(p.getAbrechnungstage()==1?" Tag":" Tage")):"1 pauschal";
+ }
+
 }

@@ -23,6 +23,11 @@ public class BeitragsregelValidator {
             );
         }
 
+        // Vor dem Sortieren prüfen: null darf keinen technischen Fehler auslösen.
+        if (regeln.stream().anyMatch(regel -> regel == null || regel.getSortierung() == null)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ErrorMessages.SORTIERUNG_REQUIRED);
+        }
+
         Map<String, List<Beitragsregel>> gruppiert =
                 regeln.stream()
                         .collect(Collectors.groupingBy(r ->

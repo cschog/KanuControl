@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { BUCHUNGSSTATUS_LABELS } from "@/vermietung/enums/Buchungsstatus";
 import { formatPersonName } from "@/core/utils/personName";
 import { GenericTableTanstack } from "@/core/components/table/GenericTableTanstack";
 
@@ -68,20 +69,5 @@ function formatDate(value: string): string {
 }
 
 function formatStatus(status: Buchung["status"]): string {
-  switch (status) {
-    case "ANFRAGE":
-      return "Anfrage";
-
-    case "BESTAETIGT":
-      return "Bestätigt";
-
-    case "STORNIERT":
-      return "Storniert";
-
-    case "ABGESCHLOSSEN":
-      return "Abgeschlossen";
-
-    default:
-      return status;
-  }
+  return BUCHUNGSSTATUS_LABELS[status];
 }

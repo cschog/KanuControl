@@ -25,7 +25,7 @@ public class KostenloseBuchungScheduler {
             for (String tenant : tenants) {
                 TenantContext.setCurrentTenant(tenant);
                 try { buchungen.aktualisiereKostenloseBuchungen(); }
-                catch (RuntimeException ex) { log.warn("Kostenloser Buchungsabschluss fehlgeschlagen für Mandant {}", tenant, ex); }
+                catch (RuntimeException ex) { log.warn("Vorbereitung der kostenlosen Verbrauchsprüfung fehlgeschlagen für Mandant {}", tenant, ex); }
                 finally { TenantContext.clear(); }
             }
         } finally {

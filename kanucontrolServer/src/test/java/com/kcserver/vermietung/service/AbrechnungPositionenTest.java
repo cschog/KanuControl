@@ -38,10 +38,42 @@ class AbrechnungPositionenTest {
   assertTrue(t.zeilen().stream().anyMatch(z->z.beschreibung().equals("Rabatt auf Positionen 1, 2 und 3")&&z.betrag().startsWith("-50,00")));
   assertFalse(t.zeilen().stream().anyMatch(z->z.beschreibung().contains("%")));
  }
- @Test void leereVerbrauchspositionenEntfallenUndStromzaehlerBleibenGetrennt(){
+ @Test void leereVerbrauchspositionenEntfallenUndZaehlernamenWerdenAusgeblendet(){
   var b=buchung("0","0");var strom=new BuchungVerbrauchskosten();strom.setBezeichnung("Strom");strom.setZaehlerBezeichnung("Campingplatz");strom.setVerbrauch(n("1.9"));strom.setMengeneinheit("kWh");strom.setPreis(n("2"));strom.setKosten(n("3.8"));var leer=new BuchungVerbrauchskosten();leer.setBezeichnung("Unbenutzt");leer.setKosten(BigDecimal.ZERO);
   var t=Abrechnungsbereich.aus(finanzen(b),List.of(strom,leer),1,b);
-  assertTrue(t.zeilen().stream().anyMatch(z->z.beschreibung().equals("4. Strom - Campingplatz")&&z.menge().equals("1,9 kWh")));
+  assertTrue(t.zeilen().stream().anyMatch(z->z.beschreibung().equals("4. Strom")&&z.menge().equals("1,9 kWh")));
   assertFalse(t.zeilen().stream().anyMatch(z->z.beschreibung().contains("Unbenutzt")||z.beschreibung().startsWith("Rabatt")));
  }
+ @Test void mietpositionenZeigenTagOderUebernachtungenUndPauschalenBleibenUnveraendert(){
+  var f=AbrechnungVorlagenTest.finanzen(n("1000"));
+  for(int naechte:new int[]{0,1,2}){
+   long einheiten=Math.max(1,naechte);
+   var pos=new MietkostenPositionDTO("Bootshaus",1,n("100"),n("100").multiply(BigDecimal.valueOf(einheiten)),einheiten,"TAG");
+   var pauschal=new MietkostenPositionDTO("Erdgeschoss mit Wiese",1,n("15"),n("15"),1L,"BUCHUNG");
+   var dto=new BuchungFinanzenDTO(f.buchungId(),f.buchungsnummer(),f.mieter(),f.mietobjekt(),f.buchungsquelle(),f.buchungsstatus(),f.anreise(),f.anreise().plusDays(naechte),false,f.anzahlungSoll(),f.kautionSoll(),List.of(pos,pauschal),f.mietrabatt(),f.mieteSoll(),f.verbrauchSoll(),f.verbrauchVorschauVollstaendig(),f.bewegungen(),f.entschaedigungen(),f.entschaedigungSoll());
+   var wasser=new BuchungVerbrauchskosten();wasser.setBezeichnung("Wasserpreis");wasser.setAbrechnungstage((int)einheiten);wasser.setPreis(n("10"));wasser.setKosten(n("10").multiply(BigDecimal.valueOf(einheiten)));
+   var strom=new BuchungVerbrauchskosten();strom.setBezeichnung("Strompreis");strom.setVerbrauch(n("25"));strom.setMengeneinheit("kWh");strom.setPreis(n("2"));strom.setKosten(n("50"));
+   var rows=Abrechnungsbereich.aus(dto,List.of(wasser,strom),1).zeilen();
+   assertEquals(naechte==0?"1 Tag":naechte==1?"1 Übernachtung":"2 Übernachtungen",rows.stream().filter(z->z.beschreibung().endsWith("Wasser")).findFirst().orElseThrow().menge());
+   assertEquals("25 kWh",rows.stream().filter(z->z.beschreibung().endsWith("Strom")).findFirst().orElseThrow().menge());
+   assertEquals(naechte==0?"1 Tag":naechte==1?"1 Übernachtung":"2 Übernachtungen",rows.get(1).menge());
+   assertEquals(naechte==0?"1":naechte==1?"1 Übernachtung":"2 Übernachtungen (pauschal)",rows.get(2).menge());assertEquals(Abrechnungsbereich.geld(pos.gesamtbetrag()),rows.get(1).betrag());
+  }
+ }
+
+ @Test void alleStromzaehlerErgebenEinePositionMitSummenUndGasWasserHabenKurzeNamen(){
+  var eg=new BuchungVerbrauchskosten();eg.setBezeichnung("Strompreis");eg.setVerbrauchsart(Verbrauchsart.STROM);eg.setZaehlerBezeichnung("Strom-Zähler Bootshaus");eg.setVerbrauch(n("25"));eg.setMengeneinheit("kWh");eg.setPreis(n("2"));eg.setKosten(n("50"));
+  var camping=new BuchungVerbrauchskosten();camping.setBezeichnung("Campingplatz");camping.setVerbrauchsart(Verbrauchsart.STROM);camping.setZaehlerBezeichnung("Camping-Zähler");camping.setVerbrauch(n("5.5"));camping.setMengeneinheit("kWh");camping.setPreis(n("2"));camping.setKosten(n("11"));
+  var gas=new BuchungVerbrauchskosten();gas.setBezeichnung("Gaspreis");gas.setVerbrauchsart(Verbrauchsart.GAS);gas.setZaehlerBezeichnung("Gaszähler");gas.setVerbrauch(n("0.1"));gas.setMengeneinheit("m3");gas.setPreis(n("3"));gas.setKosten(n("0.30"));
+  var wasser=new BuchungVerbrauchskosten();wasser.setBezeichnung("Wasserpreis");wasser.setVerbrauchsart(Verbrauchsart.WASSER);wasser.setAbrechnungstage(2);wasser.setPreis(n("10"));wasser.setKosten(n("20"));
+  var rows=Abrechnungsbereich.aus(AbrechnungVorlagenTest.finanzen(n("1000")),List.of(eg,gas,camping,wasser),1).zeilen();
+  var strom=rows.stream().filter(z->z.beschreibung().matches("[0-9]+\\. Strom")).toList();assertEquals(1,strom.size());
+  assertEquals("30,5 kWh",strom.getFirst().menge());assertEquals(Abrechnungsbereich.geld(n("61")),strom.getFirst().betrag());assertEquals(Abrechnungsbereich.geld(n("2")),strom.getFirst().preis());
+  assertTrue(rows.stream().anyMatch(z->z.beschreibung().equals("5. Gas")));assertTrue(rows.stream().anyMatch(z->z.beschreibung().equals("6. Wasser")&&z.menge().equals("2 Übernachtungen")));
+  assertFalse(rows.stream().anyMatch(z->z.beschreibung().contains("Zähler")||z.beschreibung().contains("preis")));assertEquals(n("25"),eg.getVerbrauch());
+  camping.setPreis(n("3"));camping.setKosten(n("16.50"));
+  var mixed=Abrechnungsbereich.aus(AbrechnungVorlagenTest.finanzen(n("1000")),List.of(eg,camping),1).zeilen().stream().filter(z->z.beschreibung().endsWith(". Strom")).findFirst().orElseThrow();
+  assertEquals("",mixed.preis());assertEquals(Abrechnungsbereich.geld(n("66.50")),mixed.betrag());
+ }
+
 }

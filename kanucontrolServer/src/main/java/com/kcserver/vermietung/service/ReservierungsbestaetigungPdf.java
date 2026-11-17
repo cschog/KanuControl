@@ -92,7 +92,7 @@ public class ReservierungsbestaetigungPdf {
         f.put("stornierung_text", b.getAnreise().toLocalDate().isBefore(heute.plusWeeks(8))
                 ? "Da die Buchung in weniger als 8 Wochen beginnt, können wir geleistete Anzahlungen bei Stornierung nicht mehr zurückzahlen."
                 : "Abmeldungen und Änderungen der Anmeldungen müssen mindestens 8 Wochen vor dem angemeldeten Termin schriftlich erfolgen. Andernfalls können wir die geleistete Anzahlung nicht erstatten, da uns Kosten und Mietausfall entstehen.");
-        f.put("bank_name", "Bank: " + required(bank.getBankName(), bankLabel + ": Bankname"));
+        f.put("bank_name", required(bank.getBankName(), bankLabel + ": Bankname"));
         f.put("bank_iban", "IBAN: " + required(bank.getIban(), bankLabel + ": IBAN"));
         f.put("bank_bic", "BIC: " + required(bank.getBic(), bankLabel + ": BIC"));
         boolean ogGebucht = b.getMietbereiche().stream().anyMatch(pos -> enthaeltOg(pos.getMietbereich(), new HashSet<>()));

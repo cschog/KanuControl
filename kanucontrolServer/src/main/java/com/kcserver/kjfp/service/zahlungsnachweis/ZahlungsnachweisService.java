@@ -364,11 +364,12 @@ public class ZahlungsnachweisService {
             );
         }
 
-        Zahlungsnachweis urspruenglicherZahlungsnachweis =
-                getEntity(
-                        veranstaltungId,
-                        zahlungsnachweisId
-                );
+        // Die offene Überzahlung erst unter derselben Sperre prüfen, die auch
+        // Bearbeitungen verwenden. Gleichzeitige Rückzahlungen dürfen sie nicht doppelt nutzen.
+        Zahlungsnachweis urspruenglicherZahlungsnachweis = zahlungsnachweisRepository
+                .findForUpdate(zahlungsnachweisId, veranstaltungId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, ErrorMessages.ZAHLUNGSNACHWEIS_NOT_FOUND));
 
         BigDecimal nochZurueckzahlbar =
                 zahlungsnachweisSaldoService

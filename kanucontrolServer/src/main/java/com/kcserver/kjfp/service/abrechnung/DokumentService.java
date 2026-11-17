@@ -41,10 +41,22 @@ public class DokumentService {
     }
 
     private final DokumentRepository dokumentRepository;
+    private final com.kcserver.kjfp.service.pdf.DokumentAusrichtung ausrichtung;
     private final AbrechnungBelegRepository abrechnungBelegRepository;
     private final ZahlungsnachweisRepository zahlungsnachweisRepository;
     private final DokumentMapper dokumentMapper;
     private final FinanzGruppeRepository finanzGruppeRepository;
+
+    public com.kcserver.kjfp.service.pdf.DokumentAusrichtung.Info updateAusrichtung(Long belegId,Long dokumentId,
+            com.kcserver.kjfp.service.pdf.DokumentAusrichtung.Aenderung aenderung) {
+        Dokument dokument=getForBeleg(belegId,dokumentId);
+        ausrichtung.setzen(dokument,aenderung);
+        try {dokumentRepository.flush();}
+        catch(org.springframework.orm.ObjectOptimisticLockingFailureException ex) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,"Das Dokument wurde inzwischen geändert. Bitte erneut öffnen.",ex);
+        }
+        return ausrichtung.info(dokument);
+    }
 
     /**
      * Alle Dokumente eines Belegs.
@@ -566,15 +578,7 @@ public class DokumentService {
 
         dokument.setReihenfolge(reihenfolge);
 
-        /*
-         * Dokumentformat
-         *
-         * Fotos werden bei KanuControl grundsätzlich
-         * im Querformat fotografiert.
-         *
-         * Bei PDFs wird die Ausrichtung aus der
-         * ersten PDF-Seite übernommen.
-         */
+        // Original bleibt erhalten; Geometrie und zusätzliche Drehungen sind Metadaten.
         dokument.setReferenzObjekt(referenzObjekt);
 
         DocumentDimensions dimensions =
@@ -622,28 +626,15 @@ public class DokumentService {
             String mimeType
     ) {
 
-        /*
-         * =========================================================
-         * FOTO / BILD
-         * =========================================================
-         *
-         * Fotos von Belegen werden bei KanuControl
-         * grundsätzlich im Querformat fotografiert.
-         *
-         * Deshalb:
-         *
-         * DIN A4 -> 297 x 210 mm
-         * DIN A5 -> 210 x 148 mm
-         * DIN A6 -> 148 x 105 mm
-         * DIN A7 -> 105 x 74 mm
-         */
-        if (mimeType != null
-                && mimeType.startsWith("image/")) {
-
-            return new DocumentDimensions(
-                    referenzObjekt.getHoeheMm(),
-                    referenzObjekt.getBreiteMm()
-            );
+        if (mimeType != null && mimeType.startsWith("image/")) {
+            try {
+                var image=com.kcserver.kjfp.service.pdf.DokumentBild.lesen(file.getBytes());
+                boolean landscape=image.getWidth()>=image.getHeight();
+                return new DocumentDimensions(landscape?referenzObjekt.getHoeheMm():referenzObjekt.getBreiteMm(),
+                        landscape?referenzObjekt.getBreiteMm():referenzObjekt.getHoeheMm());
+            } catch(IOException ex) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Das Bild konnte nicht gelesen werden: "+ex.getMessage(),ex);
+            }
         }
 
         /*
@@ -678,7 +669,7 @@ public class DokumentService {
                         pdf.getPage(0);
 
                 PDRectangle box =
-                        page.getMediaBox();
+                        page.getCropBox();
 
                 float width =
                         box.getWidth();
@@ -687,7 +678,7 @@ public class DokumentService {
                         box.getHeight();
 
                 int rotation =
-                        page.getRotation();
+                        Math.floorMod(page.getRotation(),360);
 
                 /*
                  * Bei 90° bzw. 270° ist die sichtbare

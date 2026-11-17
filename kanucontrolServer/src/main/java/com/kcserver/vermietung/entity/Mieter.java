@@ -21,5 +21,8 @@ public class Mieter {
     private Person person;
 
     @Column(nullable = false)
+    private boolean airbnb;
+
+    @Column(nullable = false)
     private boolean aktiv = true;
 }

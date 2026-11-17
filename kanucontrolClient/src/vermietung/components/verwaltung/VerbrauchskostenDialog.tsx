@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { isAxiosError } from "axios";
 import {
   Alert,
   Button,
@@ -37,7 +38,7 @@ export default function VerbrauchskostenDialog({ open, verbrauchskosten, onClose
   const [verbrauchsart, setVerbrauchsart] = useState<Verbrauchsart>("STROM");
   const [abrechnungsart, setAbrechnungsart] = useState<Verbrauchsabrechnungsart>("PAUSCHALE");
   const [mengeneinheit, setMengeneinheit] = useState("");
-  const [preis, setPreis] = useState("0");
+  const [preise, setPreise] = useState<{gueltigVon: string; gueltigBis: string; preis: string}[]>([]);
   const [aktiv, setAktiv] = useState(true);
 
   const [saving, setSaving] = useState(false);
@@ -52,7 +53,8 @@ export default function VerbrauchskostenDialog({ open, verbrauchskosten, onClose
     setVerbrauchsart(verbrauchskosten?.verbrauchsart ?? "STROM");
     setAbrechnungsart(verbrauchskosten?.abrechnungsart ?? "PAUSCHALE");
     setMengeneinheit(verbrauchskosten?.mengeneinheit ?? "");
-    setPreis(String(verbrauchskosten?.preis ?? 0));
+    setPreise((verbrauchskosten?.preise ?? [{ gueltigVon: "0001-01-01", gueltigBis: null, preis: verbrauchskosten?.preis ?? 0 }])
+      .map(p => ({ ...p, gueltigBis: p.gueltigBis ?? "", preis: String(p.preis) })));
     setAktiv(verbrauchskosten?.aktiv ?? true);
     setError(null);
   }, [open, verbrauchskosten]);
@@ -72,7 +74,7 @@ export default function VerbrauchskostenDialog({ open, verbrauchskosten, onClose
   }
 
   async function handleSave() {
-    const preisWert = Number(preis.replace(",", "."));
+
 
     if (!bezeichnung.trim()) {
       setError("Bitte eine Bezeichnung eingeben.");
@@ -84,16 +86,19 @@ export default function VerbrauchskostenDialog({ open, verbrauchskosten, onClose
       return;
     }
 
-    if (preis.trim() === "" || !Number.isFinite(preisWert) || preisWert < 0) {
-      setError("Bitte einen gültigen, nicht negativen Preis eingeben.");
-      return;
-    }
-
     if (abrechnungsart === "ZAEHLERSTAND" && !mengeneinheit.trim()) {
       setError("Bei der Abrechnung nach Zählerstand ist eine Mengeneinheit erforderlich.");
       return;
     }
 
+    if (!preise.length || preise.some(p => !/^\d{4}-\d{2}-\d{2}$/.test(p.gueltigVon)
+      || (p.gueltigBis && p.gueltigBis < p.gueltigVon) || !p.preis.trim()
+      || !Number.isFinite(Number(p.preis.replace(",", "."))) || Number(p.preis.replace(",", ".")) < 0)) {
+      setError("Bitte gültige Preise und Zeiträume eingeben."); return;
+    }
+    if (new Set(preise.map(p => p.gueltigVon)).size !== preise.length) {
+      setError("Jeder Gültigkeitsbeginn darf nur einmal vorkommen."); return;
+    }
     setSaving(true);
     setError(null);
 
@@ -103,14 +108,16 @@ export default function VerbrauchskostenDialog({ open, verbrauchskosten, onClose
         verbrauchsart,
         abrechnungsart,
         mengeneinheit: abrechnungsart === "ZAEHLERSTAND" ? mengeneinheit.trim() : null,
-        preis: preisWert,
+        preis: Number(preise[0].preis.replace(",", ".")),
+        preise: preise.map(p => ({ gueltigVon: p.gueltigVon, gueltigBis: p.gueltigBis || null, preis: Number(p.preis.replace(",", ".")) })),
         aktiv,
       });
 
       onClose();
     } catch (err) {
       console.error("Fehler beim Speichern der Verbrauchskosten:", err);
-      setError("Die Verbrauchskosten konnten nicht gespeichert werden.");
+      setError(isAxiosError<{ message?: string }>(err) && err.response?.data?.message
+        ? err.response.data.message : "Die Verbrauchskosten konnten nicht gespeichert werden.");
     } finally {
       setSaving(false);
     }
@@ -174,23 +181,22 @@ export default function VerbrauchskostenDialog({ open, verbrauchskosten, onClose
             />
           )}
 
-          <TextField
-            label={
-              abrechnungsart === "PAUSCHALE"
-                ? "Pauschalpreis (€)"
-                : abrechnungsart === "TAGESPREIS"
-                  ? "Preis pro Tag (€)"
-                  : "Preis pro Einheit (€)"
-            }
-            type="number"
-            value={preis}
-            onChange={(event) => setPreis(event.target.value)}
-            slotProps={{
-              htmlInput: { min: 0, step: 0.01 },
-            }}
-            required
-            fullWidth
-          />
+          <Alert severity="info">Für die gesamte Buchung gilt der Preis am Anreisetag. Ein neuer Beginn begrenzt den vorherigen Preis automatisch.</Alert>
+          {preise.map((p, index) => (
+            <Stack key={index} spacing={1} sx={{ border: 1, borderColor: "divider", p: 2, borderRadius: 1 }}>
+              <TextField label="Gültig von" type="date" value={p.gueltigVon} required
+                slotProps={{ inputLabel: { shrink: true } }}
+                onChange={e => setPreise(ps => ps.map((v, i) => i === index ? {...v, gueltigVon: e.target.value} : v))} />
+              <TextField label="Gültig bis" type="date" value={p.gueltigBis} helperText={p.gueltigBis ? "Einschließlich dieses Tages" : "Unbegrenzt"}
+                slotProps={{ inputLabel: { shrink: true } }}
+                onChange={e => setPreise(ps => ps.map((v, i) => i === index ? {...v, gueltigBis: e.target.value} : v))} />
+              <TextField label="Preis (€)" type="number" value={p.preis} required
+                slotProps={{ htmlInput: { min: 0, step: 0.01 } }}
+                onChange={e => setPreise(ps => ps.map((v, i) => i === index ? {...v, preis: e.target.value} : v))} />
+              <Button disabled={saving || preise.length === 1} onClick={() => setPreise(ps => ps.filter((_, i) => i !== index))}>Preis entfernen</Button>
+            </Stack>
+          ))}
+          <Button disabled={saving} onClick={() => setPreise(ps => [...ps, { gueltigVon: "", gueltigBis: "", preis: "0" }])}>Preis hinzufügen (auch rückwirkend)</Button>
 
           <FormControlLabel
             control={

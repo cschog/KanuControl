@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+ <changeSet id="20261117-01-verbrauchspreise" author="codex">
+  <sql>
+   CREATE TABLE verbrauchskosten_preis (
+    verbrauchskosten_id BIGINT NOT NULL REFERENCES verbrauchskosten(id) ON DELETE CASCADE,
+    gueltig_von DATE NOT NULL, gueltig_bis DATE, preis NUMERIC(10,2) NOT NULL,
+    PRIMARY KEY (verbrauchskosten_id, gueltig_von),
+    CHECK (preis &gt;= 0), CHECK (gueltig_bis IS NULL OR gueltig_bis &gt;= gueltig_von)
+   );
+   INSERT INTO verbrauchskosten_preis (verbrauchskosten_id, gueltig_von, preis)
+    SELECT id, DATE '0001-01-01', preis FROM verbrauchskosten;
+  </sql>
+ </changeSet>
+</databaseChangeLog>

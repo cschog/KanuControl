@@ -75,6 +75,7 @@ public class MieterService {
         }
         Mieter mieter = new Mieter();
         mieter.setPerson(saved);
+        mieter.setAirbnb(dto.isAirbnb());
         mieter.setAktiv(true);
         return toDto(mieterRepository.save(mieter), List.of());
     }
@@ -82,6 +83,7 @@ public class MieterService {
     public MieterDTO update(Long id, MieterSaveDTO dto) {
         Mieter mieter = findLocked(id);
         apply(mieter.getPerson(), dto);
+        mieter.setAirbnb(dto.isAirbnb());
         if (dto.getAktiv() != null) mieter.setAktiv(dto.getAktiv());
         return toDto(mieterRepository.save(mieter), buchungenFuer(mieter.getPerson().getId()));
     }
@@ -154,6 +156,7 @@ public class MieterService {
         dto.setIban(p.getIban());
         dto.setBic(p.getBic());
         dto.setAktiv(mieter.isAktiv());
+        dto.setAirbnb(mieter.isAirbnb());
         dto.setBuchungsquellen(buchungen.stream().map(Buchung::getBuchungsquelle).distinct().toList());
         dto.setBuchungen(buchungen.size());
         dto.setMietobjekte(buchungen.stream().map(Buchung::getMietobjekt).filter(Objects::nonNull)

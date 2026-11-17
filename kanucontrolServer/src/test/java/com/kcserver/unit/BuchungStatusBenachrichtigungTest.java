@@ -144,12 +144,12 @@ class BuchungStatusBenachrichtigungTest {
         verify(mails,never()).statusSenden(any());assertEquals(Buchungsstatus.ANFRAGE,buchung.getStatus());
     }
 
-    @Test void kostenloseBuchungWirdBeimLesenOhneMailAbgeschlossen() {
+    @Test void kostenloseBuchungWartetNachMietendeAufVerbrauchspruefung() {
         buchung.setZahlungsvariante(com.kcserver.vermietung.enumtype.Zahlungsvariante.OHNE_ABRECHNUNG);
         buchung.setStatus(Buchungsstatus.BESTAETIGT);buchung.setAbreise(LocalDateTime.now(ZoneId.of("Europe/Berlin")).minusHours(1));
         buchung.setAbrechnungRevision(4);
-        assertEquals(Buchungsstatus.ABGESCHLOSSEN, service.getById(1L).getStatus());
-        assertEquals(4,buchung.getAbschlussRevision());verifyNoInteractions(mails);
+        assertEquals(Buchungsstatus.ABRECHENBAR, service.getById(1L).getStatus());
+        assertNotEquals(4,buchung.getAbschlussRevision());verifyNoInteractions(mails);
     }
     @Test void hintergrundAbschlussIstIdempotentUndIgnoriertKostenpflichtigeBuchungen() {
         buchung.setZahlungsvariante(com.kcserver.vermietung.enumtype.Zahlungsvariante.OHNE_ABRECHNUNG);
@@ -158,7 +158,7 @@ class BuchungStatusBenachrichtigungTest {
         when(repository.findByStatusAndAbreiseLessThanEqual(eq(Buchungsstatus.BESTAETIGT),any())).thenReturn(List.of(buchung,bezahlt));
         assertEquals(1,service.aktualisiereKostenloseBuchungen());
         assertEquals(0,service.aktualisiereKostenloseBuchungen());
-        assertEquals(Buchungsstatus.ABGESCHLOSSEN,buchung.getStatus());assertEquals(Buchungsstatus.BESTAETIGT,bezahlt.getStatus());
+        assertEquals(Buchungsstatus.ABRECHENBAR,buchung.getStatus());assertEquals(Buchungsstatus.BESTAETIGT,bezahlt.getStatus());
         verify(repository,never()).findLockedById(2L);verifyNoInteractions(mails);
     }
     @Test void hintergrundSchliesstWederUnbefristeteNochNachSperreVerschobeneBuchungAb() {

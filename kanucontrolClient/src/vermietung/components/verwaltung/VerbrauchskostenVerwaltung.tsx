@@ -139,6 +139,28 @@ export default function VerbrauchskostenVerwaltung() {
     });
   }
 
+  function renderPreise(item: Verbrauchskosten) {
+    const einheit = item.abrechnungsart === "TAGESPREIS" ? " / Tag"
+      : item.abrechnungsart === "ZAEHLERSTAND" && item.mengeneinheit ? ` / ${item.mengeneinheit}` : "";
+    const formatDatum = (datum: string) => datum.split("-").reverse().join(".");
+    const preise = [...(item.preise ?? [])].sort((a, b) => b.gueltigVon.localeCompare(a.gueltigVon));
+
+    if (!preise.length) {
+      return <Typography>{item.preis == null ? "Kein Preis hinterlegt" : `${formatPreis(item.preis)}${einheit}`}</Typography>;
+    }
+
+    return <Box sx={{ display: "flex", flexDirection: "column", gap: 1, textAlign: "right" }}>
+      {preise.map(preis => <Box key={preis.gueltigVon}>
+        <Typography>{formatPreis(preis.preis)}{einheit}</Typography>
+        <Typography variant="caption" color="text.secondary">
+          {preis.gueltigVon === "0001-01-01"
+            ? preis.gueltigBis ? `bis ${formatDatum(preis.gueltigBis)}` : "Unbefristet"
+            : preis.gueltigBis ? `${formatDatum(preis.gueltigVon)} – ${formatDatum(preis.gueltigBis)}` : `ab ${formatDatum(preis.gueltigVon)}`}
+        </Typography>
+      </Box>)}
+    </Box>;
+  }
+
   function formatAbrechnungsart(item: Verbrauchskosten) {
     switch (item.abrechnungsart) {
       case "PAUSCHALE":
@@ -283,13 +305,7 @@ export default function VerbrauchskostenVerwaltung() {
                     >
                       <Typography color="text.secondary">Preis</Typography>
 
-                      <Typography fontWeight={600} textAlign="right">
-                        {formatPreis(item.preis)}
-                        {item.abrechnungsart === "TAGESPREIS" && " / Tag"}
-                        {item.abrechnungsart === "ZAEHLERSTAND" &&
-                          item.mengeneinheit &&
-                          ` / ${item.mengeneinheit}`}
-                      </Typography>
+                      {renderPreise(item)}
                     </Box>
                   </Box>
 
@@ -329,11 +345,7 @@ export default function VerbrauchskostenVerwaltung() {
                       <TableCell>{item.mengeneinheit ?? "–"}</TableCell>
 
                       <TableCell align="right">
-                        {formatPreis(item.preis)}
-                        {item.abrechnungsart === "TAGESPREIS" && " / Tag"}
-                        {item.abrechnungsart === "ZAEHLERSTAND" &&
-                          item.mengeneinheit &&
-                          ` / ${item.mengeneinheit}`}
+                        {renderPreise(item)}
                       </TableCell>
 
                       <TableCell align="center">

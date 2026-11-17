@@ -25,11 +25,12 @@ public class BuchungsdokumentService {
     private final BuchungsnachrichtService nachrichten;
     private final HomepageStatusMailService mails;
     private final VorlagenVersandRepository archiv;
+    private final VermietungAbrechnungRepository rechnungen;
     private final VorlagenArchivService archivstatus;
     private final ObjectMapper mapper;
     private final TransactionTemplate tx;
 
-    public BuchungsdokumentService(BuchungsnachrichtEntwurfRepository e,BuchungRepository b,BuchungsnachrichtService n,HomepageStatusMailService m,VorlagenVersandRepository a,VorlagenArchivService s,ObjectMapper om,PlatformTransactionManager tm){
+    public BuchungsdokumentService(BuchungsnachrichtEntwurfRepository e,BuchungRepository b,BuchungsnachrichtService n,HomepageStatusMailService m,VorlagenVersandRepository a,VorlagenArchivService s,ObjectMapper om,VermietungAbrechnungRepository r,PlatformTransactionManager tm){
 
         entwuerfe=e;
         buchungen=b;
@@ -38,6 +39,7 @@ public class BuchungsdokumentService {
         archiv=a;
         archivstatus=s;
         mapper=om;
+        rechnungen=r;
         tx=new TransactionTemplate(tm);
 
     }
@@ -45,7 +47,7 @@ public class BuchungsdokumentService {
     public record Fassung(String id,Long version,Buchungsstatus art,boolean gespeichert,String herkunft,Instant zeitpunkt,String benutzer,String dateiname,String pruefsumme,boolean simulation,boolean datenGeaendert,String betreff,String mailtext,byte[] pdf,List<String> hinweise,Instant letzterVersand,String versandstatus){}
     public record Uebersicht(List<Fassung> dokumente,int uploadLimit){}
     public record Speichern(String ersetztId){}
-    public record Versandvorbereitung(String dokumentId,String pruefsumme,String routingHash,String mieter,HomepageStatusMailService.StatusVorschau routing,String betreff,String mailtext,String migrationsBetreff,String migrationsText,Fassung fassung,Buchungsstatus buchungsstatus){}
+    public record Versandvorbereitung(String dokumentId,String pruefsumme,String routingHash,String mieter,HomepageStatusMailService.StatusVorschau routing,String betreff,String mailtext,Fassung fassung,Buchungsstatus buchungsstatus){}
     public record Senden(String versuch,String pruefsumme,String routingHash,String betreff,String mailtext){}
     public record Versand(String id,String ergebnis,String fehler){}
     private record Ausgang(Versand result,HomepageStatusMailService.ReservierungMail mail){}
@@ -65,7 +67,9 @@ public class BuchungsdokumentService {
     }
 
     private Buchung buchung(Long id){
-        return buchungen.findLockedById(id).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Buchung fehlt."));
+        var b=buchungen.findLockedById(id).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Buchung fehlt."));
+        if(b.getBuchungsquelle()==com.kcserver.vermietung.enumtype.Buchungsquelle.AIRBNB)throw fehler("Für Airbnb-Buchungen werden keine PDFs erstellt und keine E-Mails versendet.");
+        return b;
     }
 
     private BuchungsnachrichtEntwurf dokument(Long b,String id){
@@ -116,6 +120,10 @@ public class BuchungsdokumentService {
         }
     }
 
+    private boolean alteSimulation(BuchungsnachrichtEntwurf e){
+        return e.getExternAm()==null && e.getZiel()==Buchungsstatus.ABGESCHLOSSEN && e.getDateiname().endsWith("_Simulation.pdf");
+    }
+
     private Fassung ansicht(Buchung b,BuchungsnachrichtEntwurf e){
 
         List<String> hinweise;
@@ -128,7 +136,7 @@ public class BuchungsdokumentService {
 
         var a=e.getVersuchId()==null?null:archiv.findById(e.getVersuchId()).orElse(null);
 
-        return new Fassung(e.getId(),e.getVersion(),e.getZiel(),e.isAktuelleFassung(),e.getExternAm()==null?"In KanuControl erzeugt":"Manuell hochgeladen",e.getDokumentAm(),e.getBenutzer(),e.getDateiname(),hash(e.getPdf()),e.getZiel()==Buchungsstatus.ABGESCHLOSSEN,geaendert(b,e),e.getBetreff(),e.getMailtext(),e.getPdf(),hinweise,a==null?null:a.getErstelltAm(),a==null?null:a.getErgebnis());
+        return new Fassung(e.getId(),e.getVersion(),e.getZiel(),e.isAktuelleFassung(),e.getExternAm()==null?"In KanuControl erzeugt":"Manuell hochgeladen",e.getDokumentAm(),e.getBenutzer(),e.getDateiname(),hash(e.getPdf()),alteSimulation(e),geaendert(b,e),e.getBetreff(),e.getMailtext(),e.getPdf(),hinweise,a==null?null:a.getErstelltAm(),a==null?null:a.getErgebnis());
 
     }
 
@@ -155,7 +163,7 @@ public class BuchungsdokumentService {
         return tx.execute(s->{
 
             var b=buchung(id);
-            var v=nachrichten.vorschau(id,new BuchungsnachrichtService.Start(art,List.of(),null));
+            var v=nachrichten.dokumentVorschau(id,new BuchungsnachrichtService.Start(art,List.of(),null));
             var e=neu(b,art);
 
             e.setPdf(v.pdf().clone());
@@ -187,7 +195,7 @@ public class BuchungsdokumentService {
         e.setDokumentAm(Instant.now());
         e.setAblauf(Instant.now().plusSeconds(86400));
 
-        e.setDateiname(b.getBuchungsnummer()+"_"+BuchungsnachrichtDaten.vorgang(art)+(art==Buchungsstatus.ABGESCHLOSSEN?"_Simulation":"")+".pdf");
+        e.setDateiname(b.getBuchungsnummer()+"_"+BuchungsnachrichtDaten.vorgang(art)+".pdf");
         return e;
 
     }
@@ -204,11 +212,13 @@ public class BuchungsdokumentService {
             var alt=aktuelle(id,e.getZiel());
             ersetzung(alt,ersetztId);
             if(alt!=null){
-                alt.setAktuelleFassung(false);
-                entwuerfe.saveAndFlush(alt);
+                entwuerfe.delete(alt);
+                entwuerfe.flush();
             }
             e.setAktuelleFassung(true);
             entwuerfe.saveAndFlush(e);
+            entwuerfe.entferneFruehereDokumente(id,TenantContext.getCurrentTenant(),e.getZiel(),e.getId());
+            archiv.entferneFrueherePdfs(id,BuchungsnachrichtDaten.vorgang(e.getZiel()).name(),null,new byte[0]);
             return ansicht(b,e);
 
         }
@@ -238,11 +248,13 @@ public class BuchungsdokumentService {
             e.setDatenHash(nachrichten.dokumentDatenstand(b,e));
 
             if(alt!=null){
-                alt.setAktuelleFassung(false);
-                entwuerfe.saveAndFlush(alt);
+                entwuerfe.delete(alt);
+                entwuerfe.flush();
             }
             e.setAktuelleFassung(true);
             entwuerfe.saveAndFlush(e);
+            entwuerfe.entferneFruehereDokumente(id,TenantContext.getCurrentTenant(),e.getZiel(),e.getId());
+            archiv.entferneFrueherePdfs(id,BuchungsnachrichtDaten.vorgang(e.getZiel()).name(),null,new byte[0]);
             return ansicht(b,e);
 
         }
@@ -250,7 +262,29 @@ public class BuchungsdokumentService {
     }
 
     private String routingHash(HomepageStatusMailService.StatusVorschau route,Buchung b,BuchungsnachrichtEntwurf e){
-        return VorlagenService.hash(json(Arrays.asList(route,b.getMieter().getEmail(),nachrichten.dokumentDatenstand(b,e))));
+        return VorlagenService.hash(json(Arrays.asList(e.getId(),route,b.getMieter().getEmail(),nachrichten.dokumentDatenstand(b,e))));
+    }
+
+    /** Prepare the exact stored final invoice without repeating the booking completion. */
+    public Versandvorbereitung abschlussmail(Long id){
+        user();
+        String fassung=tx.execute(s->{
+            var b=buchung(id);
+            if(b.getStatus()!=Buchungsstatus.ABGESCHLOSSEN)throw fehler("Bitte die Buchung zuerst abschließen.");
+            var rechnung=rechnungen.findByBuchungIdOrderByRevisionDesc(id).stream().findFirst()
+                .orElseThrow(()->fehler("Für diese Buchung ist keine Abschlussrechnung gespeichert."));
+            if(rechnung.getPdf()==null || rechnung.getPdf().length==0)throw fehler("Die gespeicherte Abschlussrechnung ist nicht verfügbar.");
+            var e=neu(b,Buchungsstatus.ABGESCHLOSSEN);
+            e.setPdf(rechnung.getPdf().clone());
+            e.setDokumentAm(rechnung.getErstellt());
+            e.setHinweise(json(List.of("Gespeicherte Abschlussrechnung. Der Mailversand ändert weder Buchungsstatus noch Finanzdaten.")));
+            e.setDatenHash(nachrichten.dokumentDatenstand(b,e));
+            var alt=aktuelle(id,Buchungsstatus.ABGESCHLOSSEN);
+            if(alt!=null){entwuerfe.delete(alt);entwuerfe.flush();}
+            e.setAktuelleFassung(true);entwuerfe.saveAndFlush(e);
+            return e.getId();
+        });
+        return vorbereiten(id,fassung);
     }
 
     public Versandvorbereitung vorbereiten(Long id,String fassung){
@@ -266,10 +300,17 @@ public class BuchungsdokumentService {
 
             if(route.testmodus()&&!betreff.startsWith("[TEST] "))betreff="[TEST] "+betreff;
 
-            String alt=Objects.toString(b.getFruehereBuchungsnummer(),"").strip();
-            String mig="Wir haben unsere Buchungsverwaltung auf KanuControl umgestellt. "+(alt.isEmpty()?"Ihre Buchung wird künftig unter der Buchungsnummer "+b.getBuchungsnummer()+" geführt.":"Ihre bisherige Buchungsnummer "+alt+" wird künftig unter der Buchungsnummer "+b.getBuchungsnummer()+" geführt.")+" Bitte verwenden Sie diese bei künftigen Rückfragen und Zahlungen. Die aktualisierten Buchungsunterlagen finden Sie im Anhang.";
-
-            return new Versandvorbereitung(e.getId(),hash(e.getPdf()),routingHash(route,b,e),b.getMieter().getEmail(),route,betreff,text,"Ihre Buchung "+b.getBuchungsnummer()+" – neue Buchungsnummer",nachrichten.migrationsText(b,e.getZiel(),mig),ansicht(b,e),b.getStatus());
+            // Replace legacy generated simulations before presenting the exact attachment.
+            if(alteSimulation(e)){
+                var v=nachrichten.dokumentVorschau(id,new BuchungsnachrichtService.Start(e.getZiel(),List.of(),null));
+                e.setPdf(v.pdf().clone());
+                e.setDateiname(b.getBuchungsnummer()+"_"+BuchungsnachrichtDaten.vorgang(e.getZiel())+".pdf");
+                e.setDokumentAm(Instant.now());
+                e.setHinweise(json(v.hinweise()));
+                e.setDatenHash(nachrichten.dokumentDatenstand(b,e));
+                entwuerfe.saveAndFlush(e);
+            }
+            return new Versandvorbereitung(e.getId(),hash(e.getPdf()),routingHash(route,b,e),b.getMieter().getEmail(),route,betreff,text,ansicht(b,e),b.getStatus());
 
         }
         );
@@ -315,7 +356,7 @@ public class BuchungsdokumentService {
             meta.put("dokumentart",e.getZiel());
             meta.put("dateiname",e.getDateiname());
             meta.put("pruefsumme",hash(e.getPdf()));
-            meta.put("simulation",e.getZiel()==Buchungsstatus.ABGESCHLOSSEN);
+            meta.put("simulation",alteSimulation(e));
             meta.put("herkunft",e.getExternAm()==null?"ERZEUGT":"IMPORTIERT");
             meta.put("mieter",b.getMieter().getEmail());
             meta.put("routing",finalRoute);
@@ -333,6 +374,7 @@ public class BuchungsdokumentService {
             a.setPdf(e.getPdf().clone());
             a.setMetadaten(json(meta));
             archiv.saveAndFlush(a);
+            archiv.entferneFrueherePdfs(id,a.getVorgang(),a.getId(),new byte[0]);
             e.setVersuchId(a.getId());
             entwuerfe.saveAndFlush(e);
             return new Ausgang(new Versand(a.getId(),a.getErgebnis(),null),mail);

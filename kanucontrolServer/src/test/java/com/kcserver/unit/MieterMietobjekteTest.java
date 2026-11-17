@@ -33,4 +33,16 @@ class MieterMietobjekteTest {
  var dto=new MieterSaveDTO();dto.setVorname("Anna");dto.setName("Adler");dto.setAktiv(false);
  var result=service.update(1L,dto);assertFalse(result.isAktiv());assertEquals(List.of("Bootshaus"),result.getMietobjekte());assertEquals(1,result.getBuchungen());
  }
+ @Test void airbnbKennzeichnungWirdGespeichertUndZurueckgegeben(){
+  var dto=new MieterSaveDTO();dto.setName("Adler");dto.setVorname("Anna");dto.setAirbnb(true);
+  var result=service.update(1L,dto);assertTrue(profil.isAirbnb());assertTrue(result.isAirbnb());assertNull(result.getEmail());
+  assertTrue(service.get(1L).isAirbnb());assertTrue(service.getAll().getFirst().isAirbnb());
+  dto.setAirbnb(false);dto.setEmail("anna@example.org");assertFalse(service.update(1L,dto).isAirbnb());
+ }
+ @Test void airbnbKannVorDerErstenBuchungOhneMailAngelegtWerden(){
+  when(personen.save(any())).thenAnswer(i->i.getArgument(0));
+  var dto=new MieterSaveDTO();dto.setName("Adler");dto.setVorname("Anna");dto.setAirbnb(true);
+  var result=service.create(dto);assertTrue(result.isAirbnb());assertNull(result.getEmail());assertEquals(0,result.getBuchungen());
+ }
+
 }

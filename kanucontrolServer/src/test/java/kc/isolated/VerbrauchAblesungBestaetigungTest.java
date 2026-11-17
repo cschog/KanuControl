@@ -30,6 +30,7 @@ class VerbrauchAblesungBestaetigungTest {
         var area=new Mietbereich();area.setZaehler(Set.of(meter));
         var pos=new BuchungMietbereich();pos.setMietbereich(area);booking.setMietbereiche(List.of(pos));
         var config=new Verbrauchskosten();config.setId(3L);config.setBezeichnung("Strom");config.setVerbrauchsart(Verbrauchsart.STROM);config.setAbrechnungsart(Verbrauchsabrechnungsart.ZAEHLERSTAND);config.setPreis(new BigDecimal("0.40"));config.setMengeneinheit("kWh");
+        config.getPreise().add(new Verbrauchspreis(java.time.LocalDate.of(1,1,1),null,new BigDecimal("0.40")));
         when(configs.findByMietobjektIdOrderByIdAsc(1L)).thenReturn(List.of(config));
     }
     Zaehlerstand reading(long id,LocalDateTime time,String value) {
@@ -143,6 +144,17 @@ class VerbrauchAblesungBestaetigungTest {
         assertNull(preview().kosten());
         assertThrows(IllegalArgumentException.class,()->service.berechneSnapshots(booking,List.of()));
         verifyNoInteractions(reads,snapshots);
+    }
+
+    @Test void kostenloseBuchungSpeichertZaehlerstaendeUndVerbrauchOhneKostenforderung(){
+        booking.setZahlungsvariante(Zahlungsvariante.OHNE_ABRECHNUNG);
+        readings(reading(1,start,"100"),reading(2,end,"125"));
+        var p=preview();assertTrue(p.erfolgreich());assertEquals(new BigDecimal("25"),p.verbrauch());assertEquals(0,p.kosten().signum());
+        var result=service.berechneSnapshots(booking,List.of());assertEquals(1,result.size());
+        assertEquals(new BigDecimal("100"),result.getFirst().getAnfangsstand());assertEquals(new BigDecimal("125"),result.getFirst().getEndstand());
+        assertEquals(new BigDecimal("25"),result.getFirst().getVerbrauch());assertEquals(0,result.getFirst().getKosten().signum());assertEquals(0,result.getFirst().getPreis().signum());
+        service.berechneUndSpeichere(booking);
+        verify(snapshots).saveAll(argThat(rows->{var values=new ArrayList<BuchungVerbrauchskosten>();rows.forEach(values::add);return values.size()==1&&values.getFirst().getVerbrauch().compareTo(new BigDecimal("25"))==0&&values.getFirst().getKosten().signum()==0;}));
     }
 
 }

@@ -38,4 +38,6 @@ public class VerbrauchskostenDTO {
     private BigDecimal preis;
 
     private boolean aktiv = true;
+
+    private java.util.List<com.kcserver.vermietung.entity.Verbrauchspreis> preise;
 }

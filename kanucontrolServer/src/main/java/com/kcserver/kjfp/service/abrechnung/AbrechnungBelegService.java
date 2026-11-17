@@ -366,10 +366,12 @@ public class AbrechnungBelegService {
 
     private void checkNotSystem(AbrechnungBeleg beleg) {
 
-        boolean systemBeleg = beleg.getPositionen().stream()
-                .anyMatch(position ->
-                        position.getHerkunft() != BuchungsHerkunft.MANUELL
-                );
+        // Systembelege können vor der ersten Zahlung oder nach dem Löschen leer sein.
+        boolean systemBeleg = java.util.Arrays.stream(BuchungsHerkunft.values())
+                .filter(herkunft -> herkunft != BuchungsHerkunft.MANUELL)
+                .anyMatch(herkunft -> herkunft.getBelegnummer().equals(beleg.getBelegnummer()))
+                || beleg.getPositionen().stream().anyMatch(position ->
+                        position.getHerkunft() != BuchungsHerkunft.MANUELL);
 
         if (systemBeleg) {
             throw new ResponseStatusException(

@@ -78,7 +78,7 @@ public class VorlagenController {
     }
     @GetMapping("/archiv/{buchung}") @Transactional(readOnly=true)
     public ResponseEntity<ApiResponse<List<Map<String,Object>>>> archiv(@PathVariable Long buchung){
-        VorlagenService.tenant();return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(response(archiv.findByBuchungIdOrderByErstelltAmDesc(buchung).stream().map(a->{Map<String,Object> m=new LinkedHashMap<>();m.put("id",a.getId());m.put("erstelltAm",a.getErstelltAm());m.put("ergebnis",a.getErgebnis());m.put("smtpAm",a.getSmtpAm());m.put("vorgang",a.getVorgang());return m;}).toList()));
+        VorlagenService.tenant();return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(response(archiv.findByBuchungIdOrderByErstelltAmDesc(buchung).stream().filter(a->a.getPdf()!=null && a.getPdf().length>0).map(a->{Map<String,Object> m=new LinkedHashMap<>();m.put("id",a.getId());m.put("erstelltAm",a.getErstelltAm());m.put("ergebnis",a.getErgebnis());m.put("smtpAm",a.getSmtpAm());m.put("vorgang",a.getVorgang());return m;}).toList()));
     }
     @GetMapping("/archiv/nachricht/{id}") @Transactional(readOnly=true)
     public ResponseEntity<ApiResponse<Map<String,Object>>> archivNachricht(@PathVariable String id){
@@ -90,5 +90,5 @@ public class VorlagenController {
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(response(result));
     }
     @GetMapping("/archiv/datei/{id}") @Transactional(readOnly=true)
-    public ResponseEntity<byte[]> archivPdf(@PathVariable String id){VorlagenService.tenant();var a=archiv.findById(id).orElseThrow(()->new org.springframework.web.server.ResponseStatusException(HttpStatus.NOT_FOUND));return ResponseEntity.ok().cacheControl(CacheControl.noStore()).contentType(MediaType.APPLICATION_PDF).header(HttpHeaders.CONTENT_DISPOSITION,"inline; filename=\"Versand.pdf\"").body(a.getPdf());}
+    public ResponseEntity<byte[]> archivPdf(@PathVariable String id){VorlagenService.tenant();var a=archiv.findById(id).orElseThrow(()->new org.springframework.web.server.ResponseStatusException(HttpStatus.NOT_FOUND));if(a.getPdf()==null || a.getPdf().length==0)throw new org.springframework.web.server.ResponseStatusException(HttpStatus.NOT_FOUND,"Diese PDF wurde durch die letzte Fassung ersetzt.");return ResponseEntity.ok().cacheControl(CacheControl.noStore()).contentType(MediaType.APPLICATION_PDF).header(HttpHeaders.CONTENT_DISPOSITION,"inline; filename=\"Versand.pdf\"").body(a.getPdf());}
 }

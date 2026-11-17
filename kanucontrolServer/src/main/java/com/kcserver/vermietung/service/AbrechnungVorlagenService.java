@@ -28,6 +28,7 @@ public class AbrechnungVorlagenService {
  }
  public VorlagenService.Ergebnis entwurf(Buchung b,int revision,Vorlage entwurf,com.kcserver.vermietung.dto.BuchungFinanzenDTO f,
           List<com.kcserver.vermietung.entity.BuchungVerbrauchskosten> snapshots,LocalDate heute,boolean pruefeErstattungskonto) {
+  if(b.getBuchungsquelle()==com.kcserver.vermietung.enumtype.Buchungsquelle.AIRBNB)throw fehler("Für Airbnb-Buchungen werden keine PDFs erstellt.");
   if(Zahlungsplan.ohneAbrechnung(b))throw fehler("Für Ohne Abrechnung wird keine Rechnung erstellt.");
   VorlagenService.tenant();
   var p=papier.findById(1L).orElseThrow(()->fehler("Bitte Mandanten-Briefpapier einrichten."));

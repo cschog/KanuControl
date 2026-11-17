@@ -347,3 +347,15 @@ databaseChangeLog:
   - include:
       file: changes/20261113-04-programmentwurf.xml
       relativeToChangelogFile: true
+
+  - include:
+      file: changes/20261116-01-dokument-ausrichtung.xml
+      relativeToChangelogFile: true
+
+  - include:
+      file: changes/20261116-02-mieter-airbnb.xml
+      relativeToChangelogFile: true
+
+  - include:
+      file: changes/20261117-01-verbrauchspreise.xml
+      relativeToChangelogFile: true

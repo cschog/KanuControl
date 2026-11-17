@@ -75,10 +75,6 @@ public class AbrechnungSynchronisationsService {
                         BuchungsHerkunft.KJFP
                 );
 
-        beleg.removePositionenByHerkunft(
-                BuchungsHerkunft.KJFP
-        );
-
         List<Teilnehmer> teilnehmer =
                 teilnehmerRepository.findAllKjfpWithPerson(
                         abrechnung.getVeranstaltung().getId()
@@ -93,6 +89,7 @@ public class AbrechnungSynchronisationsService {
 
         if (zuschuss == null
                 || zuschuss.compareTo(BigDecimal.ZERO) <= 0) {
+            beleg.removePositionenByHerkunft(BuchungsHerkunft.KJFP);
             return;
         }
 
@@ -109,7 +106,7 @@ public class AbrechnungSynchronisationsService {
             BigDecimal betrag
     ) {
 
-        AbrechnungBuchung buchung = new AbrechnungBuchung();
+        AbrechnungBuchung buchung = automatischePosition(beleg, BuchungsHerkunft.KJFP);
 
         buchung.setKategorie(FinanzKategorie.KJFP_ZUSCHUSS);
         buchung.setHerkunft(BuchungsHerkunft.KJFP);
@@ -120,7 +117,9 @@ public class AbrechnungSynchronisationsService {
                 "KJFP-Zuschuss " + veranstaltung.getName()
         );
 
-        beleg.addPosition(buchung);
+        if (buchung.getBeleg() == null) {
+            beleg.addPosition(buchung);
+        }
     }
 
     private void synchronisiereTeilnehmerbeitraege(
@@ -147,11 +146,6 @@ public class AbrechnungSynchronisationsService {
                         BuchungsHerkunft.TEILNEHMERBEITRAG
                 );
 
-        // Alte automatische Position entfernen
-        beleg.removePositionenByHerkunft(
-                BuchungsHerkunft.TEILNEHMERBEITRAG
-        );
-
         /*
          * Für die Abrechnung zählen alle tatsächlich eingegangenen
          * Zahlungsnachweise.
@@ -168,11 +162,11 @@ public class AbrechnungSynchronisationsService {
         BigDecimal kjfpBetrag = zahlungsPositionRepository.sumKjfpBetragByVeranstaltung(abrechnung.getVeranstaltung().getId());
 
         if (betrag.compareTo(BigDecimal.ZERO) <= 0) {
+            beleg.removePositionenByHerkunft(BuchungsHerkunft.TEILNEHMERBEITRAG);
             return;
         }
 
-        AbrechnungBuchung buchung =
-                new AbrechnungBuchung();
+        AbrechnungBuchung buchung = automatischePosition(beleg, BuchungsHerkunft.TEILNEHMERBEITRAG);
 
         buchung.setKategorie(
                 FinanzKategorie.TEILNEHMERBEITRAG
@@ -189,6 +183,16 @@ public class AbrechnungSynchronisationsService {
                 "TN-Beiträge"
         );
 
-        beleg.addPosition(buchung);
+        if (buchung.getBeleg() == null) {
+            beleg.addPosition(buchung);
+        }
     }
+    /** Vorhandene Systembuchungen aktualisieren statt sie im selben Kontext abzulösen. */
+    private AbrechnungBuchung automatischePosition(AbrechnungBeleg beleg, BuchungsHerkunft herkunft) {
+        return beleg.getPositionen().stream()
+                .filter(position -> position.getHerkunft() == herkunft)
+                .findFirst()
+                .orElseGet(AbrechnungBuchung::new);
+    }
+
 }

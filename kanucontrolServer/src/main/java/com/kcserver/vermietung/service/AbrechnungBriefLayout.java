@@ -63,7 +63,7 @@ final class AbrechnungBriefLayout implements AutoCloseable {
  private void header()throws IOException {ensure(25,false);cells(new Abrechnungsbereich.Zeile("Position / Zahlung","Menge","Einzelpreis","Betrag"),false);}
  private void row(Abrechnungsbereich.Zeile z)throws IOException {cells(z,true);}
  private void cells(Abrechnungsbereich.Zeile z,boolean repeat)throws IOException {
-  PDFont rowFont=Set.of("Abrechnungssumme","Restzahlung").contains(z.beschreibung())?boldFont:font;
+  PDFont rowFont=!repeat || Set.of("Abrechnungssumme","Restzahlung").contains(z.beschreibung())?boldFont:font;
   float[] widths={width*.49f,width*.17f,width*.17f,width*.17f};
   var values=List.of(z.beschreibung(),z.menge(),z.preis(),z.betrag());var lines=new ArrayList<List<String>>();int count=1;
   for(int i=0;i<4;i++){var v=BriefpapierPdf.wrap(values.get(i),rowFont,9,widths[i]-8);lines.add(v);count=Math.max(count,v.size());}

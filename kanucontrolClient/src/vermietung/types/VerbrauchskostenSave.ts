@@ -1,4 +1,4 @@
-import type { Verbrauchsart, Verbrauchsabrechnungsart } from "@/vermietung/types/Verbrauchskosten";
+import type { Verbrauchsart, Verbrauchsabrechnungsart, Verbrauchspreis } from "@/vermietung/types/Verbrauchskosten";
 
 export interface VerbrauchskostenSave {
   bezeichnung: string;
@@ -6,5 +6,6 @@ export interface VerbrauchskostenSave {
   abrechnungsart: Verbrauchsabrechnungsart;
   mengeneinheit: string | null;
   preis: number;
+  preise?: Verbrauchspreis[];
   aktiv: boolean;
 }

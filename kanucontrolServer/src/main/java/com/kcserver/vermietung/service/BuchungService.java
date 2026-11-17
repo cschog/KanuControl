@@ -418,8 +418,6 @@ public class BuchungService {
         }
 
         berechneBuchungsrabatt(buchung, dto, rabattAuswahlUnveraendert);
-        if (Zahlungsplan.ohneAbrechnung(buchung) && buchung.getStatus() == Buchungsstatus.ABGESCHLOSSEN)
-            buchung.setAbschlussRevision(buchung.getAbrechnungRevision());
 
         buchungRepository.flush();
 
@@ -840,7 +838,7 @@ public class BuchungService {
 
 
         dto.setVerbrauchskosten(
-                (Zahlungsplan.ohneAbrechnung(buchung) ? java.util.stream.Stream.<BuchungVerbrauchskosten>empty() : buchungVerbrauchskostenRepository
+                (buchungVerbrauchskostenRepository
                         .findByBuchungIdOrderByIdAsc(buchung.getId())
                         .stream())
                         .map(kosten -> new BuchungVerbrauchskostenDTO(
@@ -903,15 +901,14 @@ public class BuchungService {
      * Unbefristete Buchungen werden nicht umgestellt.
      */
     private static void nachMietende(Buchung buchung) {
-        buchung.setStatus(Zahlungsplan.ohneAbrechnung(buchung) ? Buchungsstatus.ABGESCHLOSSEN : Buchungsstatus.ABRECHENBAR);
-        if (Zahlungsplan.ohneAbrechnung(buchung)) buchung.setAbschlussRevision(buchung.getAbrechnungRevision());
+        buchung.setStatus(Buchungsstatus.ABRECHENBAR);
     }
 
-    /** Hintergrundabschluss ohne Dokument, Nachricht, Zahlungs- oder Verbrauchsbuchung. */
+    /** Kostenlose Aufenthalte nach Mietende zur Verbrauchsprüfung bereitstellen. */
     public int aktualisiereKostenloseBuchungen() {
         LocalDateTime jetzt = LocalDateTime.now(ZoneId.of("Europe/Berlin"));
         int anzahl = 0;
-        for (var status : List.of(Buchungsstatus.BESTAETIGT, Buchungsstatus.ABRECHENBAR)) {
+        for (var status : List.of(Buchungsstatus.BESTAETIGT)) {
             for (var kandidat : buchungRepository.findByStatusAndAbreiseLessThanEqual(status, jetzt)) {
                 if (!Zahlungsplan.ohneAbrechnung(kandidat)) continue;
                 var b = buchungRepository.findLockedById(kandidat.getId()).orElse(null);
@@ -1087,7 +1084,7 @@ public class BuchungService {
     }
 
     void pruefeKautionsabschluss(Buchung buchung) {
-        if (buchung.getBuchungsquelle() != Buchungsquelle.DIREKT) {
+        if (buchung.getBuchungsquelle() != Buchungsquelle.DIREKT || Zahlungsplan.ohneAbrechnung(buchung)) {
             return;
         }
 
@@ -1158,7 +1155,9 @@ public class BuchungService {
                 .subtract(zurueckgezahlt)
                 .subtract(verrechnet)
                 .subtract(mietRueckzahlungAusKaution);
-        if (kautionssaldo.signum() != 0) {
+        // Nach einer Verrechnung weist die Abschlussrechnung den verbleibenden
+        // Kautionsbetrag als Erstattung aus. Eine echte Rückzahlung wird separat gebucht.
+        if (kautionssaldo.signum() < 0 || kautionssaldo.signum() > 0 && verrechnet.signum() <= 0) {
             throw new IllegalArgumentException(
                     "Die Buchung kann erst abgeschlossen werden, wenn die "
                             + "Kaution vollständig zurückgezahlt oder mit "

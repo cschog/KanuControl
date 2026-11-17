@@ -81,7 +81,7 @@ class ReservierungsbestaetigungTest {
     @Test void alternativeBankErsetztAlleBankangabenUndHatKeinenFallback() {
         b.setBankverbindungAuswahl(BankverbindungAuswahl.ALTERNATIV);
         var f=pdf.inhalt(b,LocalDate.now()).felder();
-        assertEquals("Bank: Sekundärbank",f.get("bank_name"));
+        assertEquals("Sekundärbank",f.get("bank_name"));
         assertFalse(f.containsKey("bank_kontoinhaber"));
         assertEquals("IBAN: DE12500105170648489890",f.get("bank_iban"));
         assertEquals("BIC: INGDDEFFXXX",f.get("bank_bic"));

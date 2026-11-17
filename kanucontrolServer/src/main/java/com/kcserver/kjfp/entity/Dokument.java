@@ -55,6 +55,14 @@ public class Dokument extends Auditable {
     @Column(nullable = false)
     private byte[] inhalt;
 
+    /** Zusätzliche Drehung je Seite im Uhrzeigersinn; Originalinhalt bleibt unverändert. */
+    @Column(name = "seiten_drehungen", columnDefinition = "text")
+    private String seitenDrehungen;
+
+    @Version
+    @Column(name = "ausrichtung_version", nullable = false)
+    private Long ausrichtungVersion;
+
     /*
      * Bild-/Dokumentgeometrie
      */

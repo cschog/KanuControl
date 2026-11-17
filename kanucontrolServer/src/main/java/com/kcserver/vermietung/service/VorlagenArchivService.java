@@ -10,7 +10,7 @@ public class VorlagenArchivService {
     /** Commit the exact attachment before SMTP; a crash leaves an explicitly unconfirmed attempt. */
     @Transactional(propagation=Propagation.REQUIRES_NEW)
     public String beginnen(Buchung b,HomepageStatusMailService.ReservierungMail mail){
-        VorlagenService.tenant();var a=new VorlagenVersand();a.setBuchungId(b.getId());a.setMietobjektId(b.getMietobjekt().getId());a.setVorgang("RESERVIERUNG");a.setPdf(mail.pdf().clone());a.setMetadaten(mail.metadaten());return archiv.saveAndFlush(a).getId();
+        VorlagenService.tenant();var a=new VorlagenVersand();a.setBuchungId(b.getId());a.setMietobjektId(b.getMietobjekt().getId());a.setVorgang("RESERVIERUNG");a.setPdf(mail.pdf().clone());a.setMetadaten(mail.metadaten());archiv.saveAndFlush(a);archiv.entferneFrueherePdfs(b.getId(),a.getVorgang(),a.getId(),new byte[0]);return a.getId();
     }
     @Transactional(propagation=Propagation.REQUIRES_NEW)
     public void ergebnis(String id,boolean erfolg,String fehler){

@@ -8,6 +8,17 @@ import org.springframework.stereotype.Service;
 @Service
 public class PDFDocumentSizeService {
 
+    public PDFDocumentSize determine(Dokument dokument,double breite,double hoehe) {
+        if(!Double.isFinite(breite)||!Double.isFinite(hoehe)||breite<=0||hoehe<=0)
+            throw new IllegalStateException("Ungültige Dokumentgröße.");
+        ReferenzObjekt ref=dokument.getReferenzObjekt();
+        if(ref==null)throw new IllegalStateException("Kein Referenzobjekt hinterlegt.");
+        double targetWidth=breite>=hoehe?ref.getHoeheMm():ref.getBreiteMm();
+        double targetHeight=breite>=hoehe?ref.getBreiteMm():ref.getHoeheMm();
+        double scale=Math.min(targetWidth/breite,targetHeight/hoehe)*72/25.4;
+        return new PDFDocumentSize((float)(breite*scale),(float)(hoehe*scale),PdfDocumentDensity.MEDIUM,ref);
+    }
+
     public PDFDocumentSize determine(
             Dokument dokument
     ) {

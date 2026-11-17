@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Alert, Box, Button, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, MenuItem, Stack, TextField, Typography } from "@mui/material";
+import DokumentPdfVorschau from "./DokumentPdfVorschau";
+import MieterStammdatenLink from "../mieter/MieterStammdatenLink";
 import apiClient from "@/core/api/client/apiClient";
 import { getBuchungFinanzenById, verrechneAbschlussKaution } from "@/vermietung/api/finanzenApi";
 import type { BuchungFinanzen, Finanzkategorie } from "@/vermietung/types/Finanzen";
@@ -27,16 +29,13 @@ function kautionssaldo(f:BuchungFinanzen):number {
  return cent(Math.max(0,zahlungen-Math.max(0,rueck-Math.max(0,eingang-f.mieteSoll))));
 }
 function eingang(f:BuchungFinanzen,k:Finanzkategorie):number{return f.bewegungen.filter(m=>m.kategorie===k).reduce((s,m)=>s+(m.art==="RUECKZAHLUNG"?-m.betrag:m.betrag),0);}
-function VorschauPdf({pdf}:{pdf:string}){
- const [url,setUrl]=useState("");
- useEffect(()=>{const u=URL.createObjectURL(new Blob([Uint8Array.from(atob(pdf),c=>c.charCodeAt(0))],{type:"application/pdf"}));setUrl(u);return()=>URL.revokeObjectURL(u);},[pdf]);
- return <Box><Button component="a" href={url} target="_blank" rel="noopener noreferrer">PDF mit allen Seiten öffnen</Button><Box component="iframe" key={url} title="Finaler PDF-Anhang" src={url} sx={{width:"100%",height:550,border:1,borderColor:"divider"}}/></Box>;
-}
 export default function BuchungsnachrichtDialog({buchung,ziel,entwurfId,onClose,onApplied}:{buchung:Buchung;ziel?:Buchungsstatus;entwurfId?:string;onClose:()=>void;onApplied:()=>Promise<void>}){
  const [draft,setDraft]=useState<Entwurf|null>(null),[betreff,setBetreff]=useState(""),[text,setText]=useState("");
- const [busy,setBusy]=useState(false),[error,setError]=useState(""),[reviewed,setReviewed]=useState(false),[retry,setRetry]=useState(false),[confirmReadings,setConfirmReadings]=useState(false),[grund,setGrund]=useState("");
- const [sendEmail,setSendEmail]=useState(true);
+ const [busy,setBusy]=useState(false),[error,setError]=useState(""),[reviewed,setReviewed]=useState(false),[retry,setRetry]=useState(false),[confirmReadings,setConfirmReadings]=useState(false);
+ const [sendEmail,setSendEmail]=useState(false);
  const lock=useRef(false);const base=`/vermietung/buchungen/${buchung.id}/nachrichten`;
+ const kostenlos=buchung.zahlungsvariante==="OHNE_ABRECHNUNG";
+ const dokumentlos=kostenlos||buchung.buchungsquelle==="AIRBNB";
  const zielstatus=draft?.ziel??ziel;const completion=zielstatus==="ABGESCHLOSSEN";
  const [pruefbuchung,setPruefbuchung]=useState<Buchung|null>(null),[pruefungRevision,setPruefungRevision]=useState(0),[readingsLoading,setReadingsLoading]=useState(false);
  const [finanzen,setFinanzen]=useState<BuchungFinanzen|null>(null),[verrechnungHinweis,setVerrechnungHinweis]=useState("");
@@ -45,6 +44,8 @@ export default function BuchungsnachrichtDialog({buchung,ziel,entwurfId,onClose,
  const verbrauch=(pruefbuchung?.verbrauchskostenVorschau??[]).reduce((s,v)=>s+(v.kosten??0),0);
  const offen=cent(Math.max(0,verbrauch-(finanzen?eingang(finanzen,"VERBRAUCHSKOSTEN"):0)));
  const verrechenbar=cent(Math.min(kaution,offen));
+ const kautionVerrechnet=!!finanzen?.bewegungen.some(m=>m.kategorie==="KAUTION"&&m.art==="VERRECHNUNG"&&m.betrag>0);
+ const kautionAbschlussBereit=kaution<=0 || kautionVerrechnet&&offen<=0;
  const readings=(pruefbuchung?.verbrauchskostenVorschau??[]).filter(v=>v.bestaetigungErforderlich);
  const incompleteReadings=(pruefbuchung?.verbrauchskostenVorschau??[]).filter(v=>!v.erfolgreich&&!v.bestaetigungErforderlich);
  const dirty=!!draft&&(betreff!==draft.betreff||text!==draft.mailtext);
@@ -62,7 +63,7 @@ export default function BuchungsnachrichtDialog({buchung,ziel,entwurfId,onClose,
   return confirmReadings?readings.map(v=>({zaehlerId:v.zaehlerId!,anreise:pruefbuchung!.anreise,abreise:pruefbuchung!.abreise,anfangsablesung:v.anfangsablesung!,endablesung:v.endablesung!,anfangsstand:v.anfangsstand!,endstand:v.endstand!})):[];
  }
  const abschlussBereit=!!pruefbuchung&&!!finanzen&&!readingsLoading&&incompleteReadings.length===0&&(readings.length===0||confirmReadings);
- async function createDraft(){accept((await apiClient.post<Entwurf>(base,{ziel:zielstatus,ablesungen:bestaetigteAblesungen(),korrekturgrund:grund,sendEmail:completion?sendEmail:undefined})).data);}
+ async function createDraft(){accept((await apiClient.post<Entwurf>(base,{ziel:zielstatus,ablesungen:bestaetigteAblesungen(),sendEmail:completion?sendEmail:undefined})).data);}
  async function erstellen(){
   if(completion&&!abschlussBereit)return;
   await run(createDraft);
@@ -73,18 +74,25 @@ export default function BuchungsnachrichtDialog({buchung,ziel,entwurfId,onClose,
    const f=await verrechneAbschlussKaution(buchung.id,{betrag:verrechenbar,datum:verrechnungsdatum,ablesungen:bestaetigteAblesungen()});
    setFinanzen(f);setVerrechnungHinweis(`${euro(verrechenbar)} Kaution wurden verbindlich mit Verbrauchskosten verrechnet. Diese Verrechnung bleibt auch beim Abbrechen des Dialogs gespeichert.`);
    await applied.current();
-   if(kautionssaldo(f)<=0)await createDraft();
+   if(kautionssaldo(f)<=0 || cent(Math.max(0,verbrauch-eingang(f,"VERBRAUCHSKOSTEN")))<=0)await createDraft();
   });
  }
  function download(){if(!draft?.pdf)return;const u=URL.createObjectURL(new Blob([Uint8Array.from(atob(draft.pdf),c=>c.charCodeAt(0))],{type:"application/pdf"}));const a=document.createElement("a");a.href=u;a.download=draft.dateiname;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);}
  const succeeded=!!draft?.ausgefuehrt&&(draft.ohneMail||draft.ergebnis==="SMTP_BESTAETIGT");
- const action=draft?.ohneMail?(completion?"Ohne Mail abschließen":"Bestätigen ohne Mail"):zielstatus==="RESERVIERT"?"Reservieren und senden":zielstatus==="BESTAETIGT"?"Bestätigen und senden":zielstatus==="ABGELEHNT"?"Ablehnen und senden":zielstatus==="STORNIERT"?"Stornieren und senden":"Abschließen und senden";
+ const action=draft?.ohneMail?(completion?kostenlos?"Ohne Rechnung abschließen":"Ohne Mail abschließen":"Bestätigen ohne Mail"):zielstatus==="RESERVIERT"?"Reservieren und senden":zielstatus==="BESTAETIGT"?"Bestätigen und senden":zielstatus==="ABGELEHNT"?"Ablehnen und senden":zielstatus==="STORNIERT"?"Stornieren und senden":"Abschließen und senden";
  return <Dialog open fullWidth maxWidth="lg" slotProps={{paper:{sx:{maxHeight:"calc(100dvh - 32px)",m:2}}}} onClose={()=>{if(!busy)onClose();}}>
-  <DialogTitle>{nachrichtNamen[zielstatus??""]??"Buchungsnachricht"} vor Ausführung prüfen</DialogTitle>
+  <DialogTitle>{kostenlos&&completion?"Verbrauchswerte und Abschluss":nachrichtNamen[zielstatus??""]??"Buchungsnachricht"} vor Ausführung prüfen</DialogTitle>
   <DialogContent dividers sx={{minHeight:0,overflowY:"auto"}}><Stack spacing={2}>
    <Typography>Buchung {buchung.buchungsnummer} · {statusNamen[draft?.quelle??buchung.status]} → {statusNamen[zielstatus??""]}. Vorschau und Bearbeitung ändern keine Buchungs- oder Finanzdaten.</Typography>
+   {buchung.buchungsquelle==="AIRBNB"&&<Alert severity="info">Für Airbnb-Buchungen werden keine PDFs erstellt und keine E-Mails versendet.</Alert>}
+   {kostenlos&&pruefbuchung&&<Stack spacing={0.5}>
+    <Typography variant="subtitle1">Verbrauchswerte für spätere Auswertungen</Typography>
+    {(pruefbuchung.verbrauchskostenVorschau??[]).map((v,i)=><Typography key={i} variant="body2">
+      {v.bezeichnung}{v.zaehlerBezeichnung?` · ${v.zaehlerBezeichnung}`:""}: {v.verbrauch!=null?`${v.verbrauch.toLocaleString("de-DE")} ${v.mengeneinheit??""}`:v.abrechnungstage!=null?`${v.abrechnungstage} Abrechnungseinheiten`:"Keine Messmenge"}
+    </Typography>)}
+   </Stack>}
    {!draft&&<>
-    {completion&&<><TextField select label="Mailversand beim Abschluss" value={sendEmail?"MIT_MAIL":"OHNE_MAIL"} disabled={busy} onChange={e=>setSendEmail(e.target.value==="MIT_MAIL")} helperText="Die Rechnung wird in beiden Fällen erstellt und archiviert. Ohne Mailversand ist keine E-Mail-Adresse des Mieters erforderlich."><MenuItem value="MIT_MAIL">Mit Mailversand abschließen</MenuItem><MenuItem value="OHNE_MAIL">Ohne Mailversand abschließen</MenuItem></TextField><Alert severity="info">Vor dem Abschluss werden Verbrauch und Kautionsabwicklung geprüft. Eine vorhandene Rechnung wird nur als neue Korrekturrevision ergänzt.</Alert><TextField label="Korrekturgrund (bei bereits ausgestellter Rechnung erforderlich)" value={grund} onChange={e=>setGrund(e.target.value)} slotProps={{htmlInput:{maxLength:1000}}}/>
+    {completion&&<>{!dokumentlos&&<TextField select label="Mailversand beim Abschluss" value={buchung.buchungsquelle!=="AIRBNB"&&sendEmail?"MIT_MAIL":"OHNE_MAIL"} disabled={busy || buchung.buchungsquelle==="AIRBNB"} onChange={e=>setSendEmail(e.target.value==="MIT_MAIL")} helperText={buchung.buchungsquelle==="AIRBNB"?"Abschluss ohne PDF und Mailversand.":"Die letzte Rechnung wird gespeichert. Ohne Mailversand ist keine E-Mail-Adresse des Mieters erforderlich."}><MenuItem value="MIT_MAIL">Mit Mailversand abschließen</MenuItem><MenuItem value="OHNE_MAIL">Ohne Mailversand abschließen</MenuItem></TextField>}<Alert severity="info">{kostenlos?"Die Verbrauchswerte werden für spätere Auswertungen gespeichert. Es entstehen keine Kosten, keine Rechnung und keine E-Mail.":"Vor dem Abschluss werden die Verbrauchswerte geprüft. Die aktuelle Abschlussrechnung ersetzt die vorherige PDF-Fassung."}</Alert>
      {readingsLoading&&<Typography role="status">Aktuelle Verbrauchswerte werden geladen …</Typography>}
      {!readingsLoading&&!pruefbuchung&&<Alert severity="warning">Die aktuellen Verbrauchswerte konnten nicht geladen werden. Bitte erneut laden, bevor die Vorschau erstellt wird.</Alert>}
      {incompleteReadings.length>0&&<Alert severity="error">Verbrauchswerte sind unvollständig: {incompleteReadings.map(v=>`${v.bezeichnung}: ${v.hinweis??"Bitte Zählerstände prüfen."}`).join("; ")}</Alert>}
@@ -104,17 +112,17 @@ export default function BuchungsnachrichtDialog({buchung,ziel,entwurfId,onClose,
       {verrechenbar>0?<>
        <Typography>Verrechnen: {euro(verrechenbar)} · Danach noch zurückzuzahlen: {euro(Math.max(0,kaution-verrechenbar))}</Typography>
        <TextField label="Verrechnungsdatum" type="date" value={verrechnungsdatum} disabled={busy} onChange={e=>setVerrechnungsdatum(e.target.value)} slotProps={{inputLabel:{shrink:true}}}/>
-       <Typography variant="body2">Der folgende Button bucht die Verrechnung verbindlich. Sie bleibt beim Abbrechen gespeichert. Anschließend wird die Rechnungsvorschau mit dieser Verrechnung erstellt, sofern die Kaution vollständig abgewickelt ist. Es wird noch keine E-Mail versandt.</Typography>
-       <Button variant="contained" disabled={busy||!abschlussBereit||!verrechnungsdatum} onClick={()=>void verrechnen()}>{kaution>verrechenbar?"Kaution anteilig verrechnen":"Kaution verrechnen und Rechnungsvorschau erstellen"}</Button>
+       <Typography variant="body2">Der folgende Button bucht die Verrechnung verbindlich. Sie bleibt beim Abbrechen gespeichert. Anschließend werden die Abschlussrechnung und bei gewähltem Mailversand die Abschlussmail zur Prüfung geöffnet. Ein verbleibender Kautionsbetrag wird als Erstattung ausgewiesen. Es wird noch keine E-Mail versandt.</Typography>
+       <Button variant="contained" disabled={busy||!abschlussBereit||!verrechnungsdatum} onClick={()=>void verrechnen()}>{sendEmail?"Kaution verrechnen und Abschlussmail öffnen":"Kaution verrechnen und Abschlussrechnung öffnen"}</Button>
       </>:<Alert severity="info">Keine offenen Verbrauchskosten zum Verrechnen vorhanden.</Alert>}
-      {kaution>verrechenbar&&<Alert severity="warning">Den verbleibenden Kautionsbetrag vor dem Abschluss tatsächlich zurückzahlen und die ausgeführte Rückzahlung unter Abrechnung erfassen.</Alert>}
+      {kaution>verrechenbar&&!kautionAbschlussBereit&&<Alert severity="warning">Den verbleibenden Kautionsbetrag vor dem Abschluss tatsächlich zurückzahlen und die ausgeführte Rückzahlung unter Abrechnung erfassen.</Alert>}
      </Stack></Box>}
      <Button disabled={busy||readingsLoading} onClick={()=>{setPruefbuchung(null);setConfirmReadings(false);setPruefungRevision(v=>v+1);}}>Verbrauchswerte erneut laden</Button>
     </>}
-    <Button variant="outlined" disabled={busy||(completion&&(!abschlussBereit||kaution>0))} onClick={()=>void erstellen()}>Nachrichtenvorschau erstellen</Button>
+    <Button variant="outlined" disabled={busy||(completion&&(!abschlussBereit||!kautionAbschlussBereit))} onClick={()=>void erstellen()}>{completion?dokumentlos?"Verbrauchswerte prüfen und Abschluss vorbereiten":sendEmail?"Abschlussmail und PDF öffnen":"Abschlussrechnung öffnen":"Nachrichtenvorschau erstellen"}</Button>
    </>}
    {draft&&<>
-    {draft.ohneMail?<Alert severity="info">{completion?"Abschluss ohne Mailversand: Die Rechnung wird geprüft und beim Abschluss archiviert. Es wird keine E-Mail versandt.":"Statusänderung ohne Mailversand. Die geforderte Anzahlung beziehungsweise Vorauszahlung wird geprüft; die spätere Restmiete löst keine zusätzliche Nachricht aus."}</Alert>:<>
+    {draft.ohneMail?<Alert severity="info">{completion?dokumentlos?"Abschluss ohne Rechnung und Mailversand. Die Verbrauchswerte werden gespeichert.":"Abschluss ohne Mailversand: Die letzte Rechnung wird gespeichert.":"Statusänderung ohne Mailversand. Die geforderte Anzahlung beziehungsweise Vorauszahlung wird geprüft; die spätere Restmiete löst keine zusätzliche Nachricht aus."}</Alert>:<>
      {draft.routing?.testmodus&&<Alert severity="warning">Testumleitung aktiv. Angezeigt werden die tatsächlichen Versandempfänger.</Alert>}
      <Typography>Von: {draft.routing?.absender} · An: {draft.routing?.empfaenger}{draft.routing?.cc?` · Kopie: ${draft.routing.cc}`:""}{draft.routing?.replyTo?` · Antwort an: ${draft.routing.replyTo}`:""}</Typography>
      {draft.routing?.testmodus && <Typography>Versandbetreff: {draft.routing.betreff}</Typography>}
@@ -131,15 +139,15 @@ export default function BuchungsnachrichtDialog({buchung,ziel,entwurfId,onClose,
       <Button disabled={busy||dirty||!draft.externAm} onClick={()=>void run(async()=>accept((await apiClient.put<Entwurf>(`${base}/${draft.id}`,{version:draft.version,betreff,mailtext:text,originalWiederherstellen:true})).data))}>Automatisch erzeugtes PDF wiederherstellen</Button></>}
      </Stack>
      <Typography variant="body2">In PDF Expert oder Acrobat bearbeiten, speichern und hier wieder hochladen. Änderungen am PDF ändern keine Finanzdaten.</Typography>
-     {draft.pdf&&<VorschauPdf key={draft.pdfHash} pdf={draft.pdf}/>}
+     {draft.pdf&&<DokumentPdfVorschau pdf={draft.pdf} dateiname={draft.dateiname} title="Finaler PDF-Anhang" height={550}/>}
     </>}
-    {draft.ausgefuehrt&&<Alert severity={succeeded?"success":"warning"}>{succeeded?draft.ohneMail?(completion?"Buchung abgeschlossen und Rechnung archiviert. Es wurde keine E-Mail versandt.":"Status ohne Mailversand geändert."):"Status gespeichert; SMTP hat den Versand bestätigt.":draft.fehler??"Status gespeichert. Der Versand ist noch nicht bestätigt. Vor einer Wiederholung Postausgang prüfen."}</Alert>}
+    {draft.ausgefuehrt&&<Alert severity={succeeded?"success":"warning"}>{succeeded?draft.ohneMail?(completion?dokumentlos?"Buchung ohne Rechnung und Mailversand abgeschlossen. Die Verbrauchswerte sind gespeichert.":"Buchung abgeschlossen und letzte Rechnung gespeichert. Die Abschlussmail kann später über „Abschlussmail senden“ vorbereitet werden.":"Status ohne Mailversand geändert."):"Status gespeichert; SMTP hat den Versand bestätigt.":draft.fehler??"Status gespeichert. Der Versand ist noch nicht bestätigt. Vor einer Wiederholung Postausgang prüfen."}</Alert>}
    </>}
   </Stack></DialogContent>
   <DialogActions sx={{flexDirection:"column",alignItems:"stretch",gap:1,px:3,pb:2,flexShrink:0}}>
    {verrechnungHinweis&&<Alert severity="success">{verrechnungHinweis}</Alert>}
-   {error&&<Alert severity="error">{error}</Alert>}
-   {draft&&!succeeded&&<FormControlLabel label={draft.ohneMail?(completion?"Rechnung und Abschluss ohne Mailversand geprüft":"Statusänderung ohne Versand geprüft"):"Empfänger, Betreff, Mailtext und vollständigen PDF-Anhang geprüft"} control={<Checkbox checked={reviewed} disabled={busy||dirty} onChange={e=>setReviewed(e.target.checked)}/>}/>}
+   {error&&<Alert severity="error" action={<MieterStammdatenLink personId={buchung.mieterId} buchungId={buchung.id} fehler={error} />}>{error}</Alert>}
+   {draft&&!succeeded&&<FormControlLabel label={draft.ohneMail?(completion?kostenlos?"Verbrauchswerte und Abschluss ohne Rechnung geprüft":"Rechnung und Abschluss ohne Mailversand geprüft":"Statusänderung ohne Versand geprüft"):"Empfänger, Betreff, Mailtext und vollständigen PDF-Anhang geprüft"} control={<Checkbox checked={reviewed} disabled={busy||dirty} onChange={e=>setReviewed(e.target.checked)}/>}/>}
    {draft?.ausgefuehrt&&!succeeded&&!draft.ohneMail&&<FormControlLabel label="Postausgang geprüft. Ich möchte diesen gespeicherten Versand ausdrücklich wiederholen." control={<Checkbox checked={retry} onChange={e=>setRetry(e.target.checked)}/>}/>}
    {dirty&&<Typography color="warning.main">Textänderungen zuerst übernehmen; danach die aktuelle Nachricht erneut prüfen.</Typography>}
    <Stack direction="row" useFlexGap flexWrap="wrap" justifyContent="flex-end" gap={1}>

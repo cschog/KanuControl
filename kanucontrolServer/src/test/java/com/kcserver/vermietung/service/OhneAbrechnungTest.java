@@ -23,11 +23,11 @@ class OhneAbrechnungTest {
   b.setZahlungsvariante(Zahlungsvariante.BEI_ABRECHNUNG);
   assertEquals(0,new BigDecimal("400").compareTo(BuchungPreiskalkulation.miete(b)));assertEquals(0,new BigDecimal("150").compareTo(EntschaedigungPositionService.sum(b)));
  }
- @Test void verbrauchOhneAblesungOderPreiszugriffIstLeer() {
+ @Test void verbrauchOhneKonfigurationIstLeer() {
   var costs=mock(VerbrauchskostenRepository.class);var meters=mock(ZaehlerRepository.class);var readings=mock(ZaehlerstandRepository.class);var snapshots=mock(BuchungVerbrauchskostenRepository.class);
-  var service=new VerbrauchsabrechnungService(costs,meters,readings,snapshots);var b=beispiel();
+  var service=new VerbrauchsabrechnungService(costs,meters,readings,snapshots);var b=beispiel();b.setStatus(Buchungsstatus.ABRECHENBAR);
   assertTrue(service.berechneSnapshots(b,List.of()).isEmpty());assertTrue(service.berechneVorschau(b).isEmpty());
-  verifyNoInteractions(costs,meters,readings,snapshots);
+  verify(costs,times(2)).findByMietobjektIdOrderByIdAsc(b.getMietobjekt().getId());verifyNoInteractions(meters,readings,snapshots);
  }
  @Test void finanzanzeigeIgnoriertAlteVerbrauchskostenUndKaution() {
   var snapshots=mock(BuchungVerbrauchskostenRepository.class);var b=beispiel();

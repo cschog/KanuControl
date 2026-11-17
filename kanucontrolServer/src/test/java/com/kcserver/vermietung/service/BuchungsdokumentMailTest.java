@@ -30,6 +30,10 @@ class BuchungsdokumentMailTest {
    var parts=new ArrayList<Part>();collect(mail.message(),parts);var attachment=parts.stream().filter(p->{try{return p.getFileName()!=null;}catch(Exception ex){throw new RuntimeException(ex);}}).findFirst().orElseThrow();assertArrayEquals(pdf,attachment.getInputStream().readAllBytes());
    smtp.setEnabled(false);var finalRoute=route;assertThrows(Exception.class,()->service.nachrichtVorbereiten(finalRoute,pdf,"Extern.pdf","meta"));verify(sender,never()).send(any(MimeMessage.class));
    smtp.setTestMode(false);config.setAntwortTestEmail(null);route=service.nachrichtVorschau(b,"Betreff","Text");assertEquals("mieter@example.org",route.empfaenger());assertEquals("cc@example.org",route.cc());
+   b.setBuchungsquelle(com.kcserver.vermietung.enumtype.Buchungsquelle.AIRBNB);assertThrows(Exception.class,()->service.nachrichtVorschau(b,"Betreff","Text"));verify(sender,never()).send(any(MimeMessage.class));
+   b.setBuchungsquelle(com.kcserver.vermietung.enumtype.Buchungsquelle.DIREKT);
+   b.getMieter().setEmail(null);assertThrows(Exception.class,()->service.nachrichtVorschau(b,"Betreff","Text"));
+   b.getMieter().setEmail("");assertThrows(Exception.class,()->service.nachrichtVorschau(b,"Betreff","Text"));
    b.getMieter().setEmail("ungültig");assertThrows(Exception.class,()->service.nachrichtVorschau(b,"Betreff","Text"));
   }
  }

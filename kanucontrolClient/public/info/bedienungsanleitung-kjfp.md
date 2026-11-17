@@ -699,6 +699,22 @@ In der Kostenaufstellung der Anmeldung wird **Kultur / Programm** zusammen mit s
 Belegdokumente können als Foto oder PDF gespeichert werden. Dokumente
 können angezeigt, heruntergeladen und gelöscht werden.
 
+Unter **Anzeigen** öffnet sich die Belegvorschau. Bei mehrseitigen PDFs wählen
+Sie zuerst die betroffene **Seite**. Mit **90° links drehen** und **90° rechts
+drehen** korrigieren Sie deren Ausrichtung. Zweimal drehen korrigiert einen
+kopfstehenden Beleg; viermal drehen stellt die Ausgangsausrichtung wieder her.
+
+Erst **Drehungen speichern** übernimmt die Änderung dauerhaft für Vorschau,
+Download und PDF-Beleg-Report. **Abbrechen** verwirft ungespeicherte Drehungen
+nach Rückfrage. Die Originaldatei bleibt unverändert erhalten. In einer
+schreibgeschützten Ansicht öffnen Sie den Beleg zunächst zur Bearbeitung.
+Bilddownloads werden als PNG mit der gespeicherten Ausrichtung ausgegeben;
+PDFs behalten ihr Format. Alle Seiten eines PDF-Belegs erscheinen im Report.
+Die bestehende Platzierung von Querformaten auf A4 bleibt erhalten.
+
+Uploads übernehmen die ausgewählte Originaldatei ohne vorherige Bildoptimierung.
+Die Dateigrenze beträgt 10 MB; Bilder dürfen höchstens 40 Megapixel haben.
+
 ### Zahlungsnachweis-Dokumente
 
 Auch Zahlungsnachweise können mit Dokumenten versehen werden. Dadurch

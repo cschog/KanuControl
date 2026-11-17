@@ -1,4 +1,3 @@
-import VorlagenVersandarchiv from "./VorlagenVersandarchiv";
 import { useEffect, useRef, useState } from "react";
 import {
   Alert, Box, Button, CircularProgress, Dialog, DialogActions, DialogContent,
@@ -85,7 +84,6 @@ export default function ReservierungsbestaetigungDialog({ id, reserviert, gesend
           : "Bitte prüfe die Bestätigung. Die Anfrage bleibt unverändert, bis du unten reservierst."}</Typography>
         {error && <Alert severity="error" action={!vorschau ? <Button color="inherit" onClick={() => setVersuch(v => v + 1)}>Neu laden</Button> : undefined}>{error}</Alert>}
         {!vorschau && !error && <Box role="status" sx={{ display: "flex", gap: 2, alignItems: "center" }}><CircularProgress size={24} />Vorschau wird erstellt …</Box>}
-        <VorlagenVersandarchiv id={id} refresh={versendet} />
         {vorschau && <>
           {vorschau.testmodus && <Alert severity="info">Testversand aktiv. Empfänger und Kopie stehen unten.</Alert>}
           <Box>

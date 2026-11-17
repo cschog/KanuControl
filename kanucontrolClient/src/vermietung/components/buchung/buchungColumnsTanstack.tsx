@@ -1,3 +1,4 @@
+import { BUCHUNGSSTATUS_LABELS } from "@/vermietung/enums/Buchungsstatus";
 import { formatPersonName } from "@/core/utils/personName";
 import type { ColumnDef } from "@tanstack/react-table";
 
@@ -56,26 +57,5 @@ export const buchungColumnsTanstack = (showMietobjekt: boolean): ColumnDef<Buchu
 ];
 
 function formatStatus(status: Buchung["status"]): string {
-  switch (status) {
-    case "ANFRAGE":
-      return "Anfrage";
-
-    case "ABGELEHNT":
-      return "Abgelehnt";
-
-    case "RESERVIERT":
-      return "Reserviert";
-
-    case "BESTAETIGT":
-      return "Bestätigt";
-
-    case "STORNIERT":
-      return "Storniert";
-
-    case "ABGESCHLOSSEN":
-      return "Abgeschlossen";
-
-    default:
-      return status;
-  }
+  return BUCHUNGSSTATUS_LABELS[status];
 }

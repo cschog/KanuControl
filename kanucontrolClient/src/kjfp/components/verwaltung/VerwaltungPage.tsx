@@ -16,15 +16,15 @@ const Unterkunftsarten = lazy(
 const Verpflegungsmodelle = lazy(
   () => import("@/kjfp/components/verwaltung/verpflegung/VerpflegungsmodellPage"),
 );
-const Foerdersaetze = lazy(() => import("@/core/components/admin/foerdersatz/FoerdersatzAdminPage"));
-const KikZuschlaege = lazy(() => import("@/core/components/admin/kik/KikZuschlagAdminPage"));
-const Fahrkosten = lazy(() => import("@/core/components/admin/reisekosten/ReisekostenKonfigurationPage"));
 /* =========================================================
    COMPONENT
    ========================================================= */
 
 const VerwaltungPage = () => {
-  const [tab, setTab] = useState(() => Number(localStorage.getItem("verwaltungTab")) || 0);
+  const [tab, setTab] = useState(() => {
+    const saved = Number(localStorage.getItem("verwaltungTab"));
+    return Number.isInteger(saved) && saved >= 0 && saved < 3 ? saved : 0;
+  });
 
   /* =========================================================
      TAB CHANGE
@@ -85,9 +85,6 @@ const VerwaltungPage = () => {
         <Tab label="Beitragsstrukturen" />
         <Tab label="Unterkunftsarten" />
         <Tab label="Verpflegungsmodelle" />
-        <Tab label="Fördersätze" />
-        <Tab label="KIK-Zuschläge" />
-        <Tab label="Fahrkosten-Konfiguration" />
       </Tabs>
 
       {/* =====================================================
@@ -103,9 +100,6 @@ const VerwaltungPage = () => {
           {tab === 0 && <BeitragsStrukturen />}
           {tab === 1 && <Unterkunftsarten />}
           {tab === 2 && <Verpflegungsmodelle />}
-          {tab === 3 && <Foerdersaetze />}
-          {tab === 4 && <KikZuschlaege />}
-          {tab === 5 && <Fahrkosten />}
         </Box>
       </Suspense>
     </Box>

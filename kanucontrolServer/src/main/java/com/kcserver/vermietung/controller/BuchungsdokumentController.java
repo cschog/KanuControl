@@ -47,6 +47,10 @@ public class BuchungsdokumentController {
 
     }
 
+    @PostMapping("/abschlussmail") public ResponseEntity<ApiResponse<BuchungsdokumentService.Versandvorbereitung>> abschlussmail(@PathVariable Long buchung){
+        return ok(service.abschlussmail(buchung));
+    }
+
     @PostMapping("/{id}/mail") public ResponseEntity<ApiResponse<BuchungsdokumentService.Versandvorbereitung>> vorbereiten(@PathVariable Long buchung,@PathVariable String id){
         return ok(service.vorbereiten(buchung,id));
     }

@@ -26,9 +26,10 @@ class BuchungsdokumentTest {
   when(f.er.dokument(anyString(),anyString(),anyString(),anyLong())).thenAnswer(i->{var e=f.drafts.get(i.getArgument(0));return e!=null&&e.isUnabhaengig()&&e.getTenant().equals(i.getArgument(2))&&e.getBuchungId().equals(i.getArgument(3))&&(e.isAktuelleFassung()||e.getBenutzer().equals(i.getArgument(1)))?Optional.of(e):Optional.empty();});
   when(f.er.findByBuchungIdAndTenantAndUnabhaengigTrueAndAktuelleFassungTrue(anyLong(),anyString())).thenAnswer(i->f.drafts.values().stream().filter(e->e.isUnabhaengig()&&e.isAktuelleFassung()&&e.getBuchungId().equals(i.getArgument(0))&&e.getTenant().equals(i.getArgument(1))).toList());
   when(f.ar.findByVersandSchluessel(anyString())).thenAnswer(i->f.archives.values().stream().filter(a->Objects.equals(a.getVersandSchluessel(),i.getArgument(0))).findFirst());
+  doAnswer(i->{f.drafts.remove(((BuchungsnachrichtEntwurf)i.getArgument(0)).getId());return null;}).when(f.er).delete(any(BuchungsnachrichtEntwurf.class));
   var status=mock(VorlagenArchivService.class);doAnswer(i->{f.archives.get(i.getArgument(0)).setErgebnis(Boolean.TRUE.equals(i.getArgument(1))?"SMTP_BESTAETIGT":"FEHLER_ODER_UNKLAR");return null;}).when(status).ergebnis(anyString(),anyBoolean(),nullable(String.class));
   var tm=mock(PlatformTransactionManager.class);when(tm.getTransaction(any())).thenReturn(new SimpleTransactionStatus());
-  service=new BuchungsdokumentService(f.er,f.br,f.service,f.mails,f.ar,status,f.mapper,tm);
+  service=new BuchungsdokumentService(f.er,f.br,f.service,f.mails,f.ar,status,f.mapper,f.rr,tm);
  }
  @AfterEach void cleanup(){f.cleanup();}
  BuchungsdokumentService.Senden request(BuchungsdokumentService.Fassung d){var m=service.vorbereiten(1L,d.id());return new BuchungsdokumentService.Senden(UUID.randomUUID().toString(),m.pruefsumme(),m.routingHash(),"  Individueller Betreff  ","Text\nmit Zeilen\n");}
@@ -42,7 +43,7 @@ class BuchungsdokumentTest {
  @Test void vorschauErsetztNieUndSpeichernVerlangtBewussteErsetzung(){
   var d=service.vorschau(1L,Buchungsstatus.RESERVIERT);service.speichern(1L,d.id(),null);var neu=service.vorschau(1L,Buchungsstatus.RESERVIERT);
   assertEquals(d.id(),service.liste(1L).dokumente().getFirst().id());assertThrows(Exception.class,()->service.speichern(1L,neu.id(),null));
-  service.speichern(1L,neu.id(),d.id());assertEquals(neu.id(),service.liste(1L).dokumente().getFirst().id());assertArrayEquals(d.pdf(),service.lesen(1L,d.id()).pdf());
+  service.speichern(1L,neu.id(),d.id());assertEquals(neu.id(),service.liste(1L).dokumente().getFirst().id());assertThrows(Exception.class,()->service.lesen(1L,d.id()));
  }
  @Test void aenderungWirdErkanntOhneAlteFassungZuVeraendern(){
   var d=service.vorschau(1L,Buchungsstatus.RESERVIERT);service.speichern(1L,d.id(),null);assertFalse(service.lesen(1L,d.id()).datenGeaendert());f.b.getMieter().setStrasse("Neue Straße");
@@ -58,8 +59,8 @@ class BuchungsdokumentTest {
  }
  @Test void ersetzungNachMailvorbereitungKannNiemalsAnhangUnbemerktAustauschen(){
   var d=service.vorschau(1L,Buchungsstatus.RESERVIERT);service.speichern(1L,d.id(),null);var r=request(d);
-  var neu=service.vorschau(1L,Buchungsstatus.RESERVIERT);service.speichern(1L,neu.id(),d.id());var sent=service.senden(1L,d.id(),r);assertArrayEquals(d.pdf(),f.archives.get(sent.id()).getPdf());
-  assertThrows(Exception.class,()->service.senden(1L,neu.id(),r));assertEquals(1,f.archives.size());
+  var neu=service.vorschau(1L,Buchungsstatus.RESERVIERT);service.speichern(1L,neu.id(),d.id());assertThrows(Exception.class,()->service.senden(1L,d.id(),r));
+  assertThrows(Exception.class,()->service.senden(1L,neu.id(),r));assertEquals(0,f.archives.size());
  }
  @Test void ungueltigerImportUndPruefsummenKonfliktBewahrenVorhandeneFassung(){
   var d=service.vorschau(1L,Buchungsstatus.RESERVIERT);service.speichern(1L,d.id(),null);
@@ -77,11 +78,11 @@ class BuchungsdokumentTest {
   login("alice","ROLE_ADMIN");TenantContext.setCurrentTenant("anderer");assertThrows(Exception.class,()->service.lesen(1L,d.id()));TenantContext.setCurrentTenant("ekc_test");
   assertThrows(Exception.class,()->f.service.lesen(1L,d.id()));assertThrows(Exception.class,()->f.service.ausfuehren(1L,d.id(),new BuchungsnachrichtService.Freigabe("x",false)));verifyNoInteractions(f.bs);
  }
- @Test void simulationIstImPdfMarkiertUndImportBleibtSimulation()throws Exception{
+ @Test void versandfassungHatKeinenSimulationsaufdruckUndImportBleibtUnveraendert()throws Exception{
   f.b.setStatus(Buchungsstatus.BESTAETIGT);when(f.verbrauch.berechneVorschau(f.b)).thenReturn(List.of());when(f.verbrauch.berechneSimulationsSnapshots(eq(f.b),anyList())).thenReturn(List.of());
-  var d=service.vorschau(1L,Buchungsstatus.ABGESCHLOSSEN);assertTrue(d.simulation());
-  try(var pdf=org.apache.pdfbox.Loader.loadPDF(d.pdf())){assertTrue(new org.apache.pdfbox.text.PDFTextStripper().getText(pdf).contains("ENTWURF / SIMULATION"));}
-  var imported=service.importieren(1L,Buchungsstatus.ABGESCHLOSSEN,null,f.original,"Extern.pdf");assertTrue(imported.simulation());assertArrayEquals(f.original,imported.pdf());assertTrue(f.documents.isEmpty());verifyNoInteractions(f.bs);verify(f.verbrauch,never()).berechneUndSpeichere(any(),anyList());
+  var d=service.vorschau(1L,Buchungsstatus.ABGESCHLOSSEN);assertFalse(d.simulation());
+  try(var pdf=org.apache.pdfbox.Loader.loadPDF(d.pdf())){assertFalse(new org.apache.pdfbox.text.PDFTextStripper().getText(pdf).contains("ENTWURF / SIMULATION"));}
+  var imported=service.importieren(1L,Buchungsstatus.ABGESCHLOSSEN,null,f.original,"Extern.pdf");assertFalse(imported.simulation());assertArrayEquals(f.original,imported.pdf());assertTrue(f.documents.isEmpty());verifyNoInteractions(f.bs);verify(f.verbrauch,never()).berechneUndSpeichere(any(),anyList());
  }
  @Test void abgelaufeneVorschauKannNichtGespeichertOderVersandtWerden(){
   var d=service.vorschau(1L,Buchungsstatus.RESERVIERT);var r=request(d);f.drafts.get(d.id()).setAblauf(Instant.now().minusSeconds(1));assertThrows(Exception.class,()->service.speichern(1L,d.id(),null));assertThrows(Exception.class,()->service.senden(1L,d.id(),r));
@@ -90,18 +91,45 @@ class BuchungsdokumentTest {
   var d=service.vorschau(1L,Buchungsstatus.RESERVIERT);var r=request(d);f.b.getMieter().setEmail("neu@example.org");
   assertThrows(Exception.class,()->service.senden(1L,d.id(),r));verify(f.mails,never()).reservierungSenden(any());
  }
- @Test void migrationsVorschlagMitUndOhneAlteNummerNutztKonfigurierteAnredeUndGruss(){
-  var d=service.vorschau(1L,Buchungsstatus.RESERVIERT);var m=service.vorbereiten(1L,d.id());
-  assertFalse(m.migrationsText().contains("bisherige Buchungsnummer"));assertTrue(m.migrationsText().startsWith("Hallo "));assertTrue(m.migrationsText().endsWith("Gruß"));
-  f.b.setFruehereBuchungsnummer("ALT-4711");m=service.vorbereiten(1L,d.id());assertTrue(m.migrationsText().contains("ALT-4711"));assertTrue(m.migrationsText().contains(f.b.getBuchungsnummer()));
-  var data=Map.of("buchungsnummer",f.b.getBuchungsnummer());assertEquals("Neue Nummer: "+f.b.getBuchungsnummer()+".",VorlagenModell.ersetzen("Frühere Buchungsnummer: {{fruehere_buchungsnummer}}. Neue Nummer: {{buchungsnummer}}.",data));
+ @Test void alteSimulationWirdVorMailpruefungDurchEndgueltigenAnhangErsetzt()throws Exception{
+  var d=service.vorschau(1L,Buchungsstatus.ABGESCHLOSSEN);
+  var e=f.drafts.get(d.id());e.setPdf(SimulationsPdf.markieren(d.pdf()));e.setDateiname("Alt_Simulation.pdf");
+  assertTrue(service.lesen(1L,d.id()).simulation());
+  var m=service.vorbereiten(1L,d.id());assertFalse(m.fassung().simulation());
+  try(var pdf=org.apache.pdfbox.Loader.loadPDF(m.fassung().pdf())){assertFalse(new org.apache.pdfbox.text.PDFTextStripper().getText(pdf).contains("ENTWURF / SIMULATION"));}
+  var req=new BuchungsdokumentService.Senden(UUID.randomUUID().toString(),m.pruefsumme(),m.routingHash(),m.betreff(),m.mailtext());
+  var result=service.senden(1L,d.id(),req);assertArrayEquals(m.fassung().pdf(),f.archives.get(result.id()).getPdf());
  }
+ @Test void airbnbErzeugtWederDokumenteNochMailsAuchMitEmail(){
+  f.b.setBuchungsquelle(com.kcserver.vermietung.enumtype.Buchungsquelle.AIRBNB);
+  for(var art:List.of(Buchungsstatus.RESERVIERT,Buchungsstatus.ABGESCHLOSSEN)){
+   assertThrows(Exception.class,()->service.vorschau(1L,art));
+   assertThrows(Exception.class,()->service.importieren(1L,art,null,f.original,"Extern.pdf"));
+  }
+  verifyNoInteractions(f.mails);assertTrue(f.drafts.isEmpty());
+ }
+
  @Test void verschluesseltePdfWirdVorErsetzungAbgewiesen()throws Exception{
   var d=service.vorschau(1L,Buchungsstatus.RESERVIERT);service.speichern(1L,d.id(),null);byte[] locked;
   try(var pdf=new org.apache.pdfbox.pdmodel.PDDocument();var out=new java.io.ByteArrayOutputStream()){
    pdf.addPage(new org.apache.pdfbox.pdmodel.PDPage());pdf.protect(new org.apache.pdfbox.pdmodel.encryption.StandardProtectionPolicy("owner","password",new org.apache.pdfbox.pdmodel.encryption.AccessPermission()));pdf.save(out);locked=out.toByteArray();
   }
   assertThrows(Exception.class,()->service.importieren(1L,Buchungsstatus.RESERVIERT,d.id(),locked,"Locked.pdf"));assertArrayEquals(d.pdf(),service.lesen(1L,d.id()).pdf());
+ }
+
+ @Test void spaetereAbschlussmailVerwendetGespeicherteRechnungOhneNeuenAbschluss(){
+  f.b.setStatus(Buchungsstatus.ABGESCHLOSSEN);
+  var rechnung=new VermietungAbrechnung();rechnung.setId(19L);rechnung.setRevision(1);rechnung.setErstellt(Instant.now());rechnung.setPdf(f.original);f.documents.add(rechnung);
+  var mail=service.abschlussmail(1L);assertArrayEquals(f.original,mail.fassung().pdf());assertEquals(Buchungsstatus.ABGESCHLOSSEN,f.b.getStatus());
+  verify(f.mails,never()).reservierungSenden(any());
+  var req=new BuchungsdokumentService.Senden(UUID.randomUUID().toString(),mail.pruefsumme(),mail.routingHash(),mail.betreff(),mail.mailtext());
+  var result=service.senden(1L,mail.dokumentId(),req);assertEquals("SMTP_BESTAETIGT",result.ergebnis());
+  assertArrayEquals(f.original,f.archives.get(result.id()).getPdf());verifyNoInteractions(f.bs);assertEquals(1,f.documents.size());
+ }
+ @Test void spaetereMailErfordertAbschlussUndVorhandeneRechnung(){
+  assertThrows(Exception.class,()->service.abschlussmail(1L));
+  f.b.setStatus(Buchungsstatus.ABGESCHLOSSEN);assertThrows(Exception.class,()->service.abschlussmail(1L));
+  verify(f.mails,never()).reservierungSenden(any());
  }
 
 }

@@ -23,6 +23,7 @@ import type { BuchungSave } from "@/vermietung/types/BuchungSave";
 import { useVermietungContext } from "@/vermietung/context/VermietungContext";
 import { useBackNavigation } from "@/core/context/BackNavigationContext";
 import type { Buchungsquelle } from "@/vermietung/enums/Buchungsquelle";
+import { BUCHUNGSSTATUS_LABELS } from "@/vermietung/enums/Buchungsstatus";
 import type { Buchungsstatus } from "@/vermietung/enums/Buchungsstatus";
 import Buchungskalender from "@/vermietung/components/buchung/Buchungskalender";
 
@@ -54,7 +55,7 @@ const BuchungenView = () => {
   const [filterMietobjektId, setFilterMietobjektId] = useState<number | "">("");
   const [filterInitialisiert, setFilterInitialisiert] = useState(mieterIdFilter !== null || veranstalterIdFilter !== null);
   const [filterJahr, setFilterJahr] = useState<number | "">("");
-  const [buchungsanzeige, setBuchungsanzeige] = useState<"STANDARD" | "ALLE">(mieterIdFilter || veranstalterIdFilter ? "ALLE" : "STANDARD");
+  const [filterStatus, setFilterStatus] = useState<Buchungsstatus | "ALLE">(mieterIdFilter || veranstalterIdFilter ? "ALLE" : "ABRECHENBAR");
   const [ansicht, setAnsicht] = useState<"LISTE" | "KALENDER">("LISTE");
 
   const [showForm, setShowForm] = useState(false);
@@ -359,8 +360,8 @@ const handleReopen = async (sendEmail = false, fingerprint?: string) => {
 
   const gefilterteBuchungen = buchungen.filter((buchung) => {
     const passtZumMietobjekt = filterMietobjektId === "" || buchung.mietobjektId === filterMietobjektId;
-    const istAusgeblendet = buchung.status === "ABGELEHNT" || buchung.status === "STORNIERT";
-    return (mieterIdFilter === null || buchung.mieterId === mieterIdFilter) && (veranstalterIdFilter === null || buchung.veranstalterVereinId === veranstalterIdFilter) && passtZumMietobjekt && (buchungsanzeige === "ALLE" || !istAusgeblendet);
+    const passtZumStatus = filterStatus === "ALLE" || buchung.status === filterStatus;
+    return (mieterIdFilter === null || buchung.mieterId === mieterIdFilter) && (veranstalterIdFilter === null || buchung.veranstalterVereinId === veranstalterIdFilter) && passtZumMietobjekt && passtZumStatus;
   });
 
   // Später beginnende Buchungen stehen oben; fehlende/ungültige Termine kommen ans Ende.
@@ -404,7 +405,8 @@ if (showForm) {
         onBack={handleBack}
         onOpenFinanzen={() => {
           if (!selectedBuchung) return;
-          navigate(`/vermietung/abrechnung?buchungId=${selectedBuchung.id}`, {
+          const params = new URLSearchParams({ buchungId: String(selectedBuchung.id), jahr: selectedBuchung.anreise?.slice(0, 4) || "ALLE" });
+          navigate(`/vermietung/abrechnung?${params.toString()}`, {
             state: {
               returnTo: `${location.pathname}${location.search}`,
               returnToState: location.state ?? null,
@@ -525,13 +527,15 @@ if (showForm) {
           <TextField
             select
             size="small"
-            label="Buchungen"
-            value={buchungsanzeige}
-            onChange={(event) => setBuchungsanzeige(event.target.value as "STANDARD" | "ALLE")}
+            label="Status"
+            value={filterStatus}
+            onChange={(event) => setFilterStatus(event.target.value as Buchungsstatus | "ALLE")}
             sx={{ width: { xs: "100%", sm: 230 } }}
           >
-            <MenuItem value="STANDARD">Ohne abgelehnte und stornierte</MenuItem>
-            <MenuItem value="ALLE">Alle Buchungen</MenuItem>
+            <MenuItem value="ALLE">Alle Status</MenuItem>
+            {Object.entries(BUCHUNGSSTATUS_LABELS).map(([value, label]) => (
+              <MenuItem key={value} value={value}>{label}</MenuItem>
+            ))}
           </TextField>
 
           <Box

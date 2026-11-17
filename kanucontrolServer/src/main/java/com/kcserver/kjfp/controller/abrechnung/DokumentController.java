@@ -23,6 +23,7 @@ import java.util.List;
 public class DokumentController {
 
     private final DokumentService dokumentService;
+    private final com.kcserver.kjfp.service.pdf.DokumentAusrichtung ausrichtung;
 
     /*
      * =========================================================
@@ -75,7 +76,28 @@ public class DokumentController {
                         dokumentId
                 );
 
-        return createResponse(dokument);
+        var datei=ausrichtung.ausgabe(dokument);
+        return ResponseEntity.ok().cacheControl(org.springframework.http.CacheControl.noStore())
+                .contentType(MediaType.parseMediaType(datei.mimeType())).contentLength(datei.bytes().length)
+                .header(HttpHeaders.CONTENT_DISPOSITION,ContentDisposition.inline().filename(datei.dateiname(),java.nio.charset.StandardCharsets.UTF_8).build().toString())
+                .body(new ByteArrayResource(datei.bytes()));
+    }
+
+    @GetMapping("/belege/{belegId}/dokumente/{dokumentId}/ausrichtung")
+    public com.kcserver.kjfp.service.pdf.DokumentAusrichtung.Info ausrichtung(@PathVariable Long belegId,@PathVariable Long dokumentId) {
+        return ausrichtung.info(dokumentService.getForBeleg(belegId,dokumentId));
+    }
+
+    @PutMapping("/belege/{belegId}/dokumente/{dokumentId}/ausrichtung")
+    public com.kcserver.kjfp.service.pdf.DokumentAusrichtung.Info ausrichtungSpeichern(@PathVariable Long belegId,@PathVariable Long dokumentId,
+            @RequestBody com.kcserver.kjfp.service.pdf.DokumentAusrichtung.Aenderung aenderung) {
+        return dokumentService.updateAusrichtung(belegId,dokumentId,aenderung);
+    }
+
+    @GetMapping("/belege/{belegId}/dokumente/{dokumentId}/vorschau/{seite}")
+    public ResponseEntity<byte[]> vorschau(@PathVariable Long belegId,@PathVariable Long dokumentId,@PathVariable int seite) {
+        byte[] bytes=ausrichtung.vorschau(dokumentService.getForBeleg(belegId,dokumentId),seite);
+        return ResponseEntity.ok().cacheControl(org.springframework.http.CacheControl.noStore()).contentType(MediaType.IMAGE_PNG).body(bytes);
     }
 
     @PutMapping("/belege/{belegId}/dokumente/{dokumentId}/referenz-objekt")

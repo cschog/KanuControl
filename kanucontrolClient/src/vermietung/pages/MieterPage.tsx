@@ -1,3 +1,4 @@
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { COUNTRIES } from "@/kjfp/api/enums/CountryCode";
 import PostalCodeAutocomplete from "@/core/components/common/PostalCodeAutocomplete";
 import { formatPersonName } from "@/core/utils/personName";
@@ -19,12 +20,12 @@ import { PersonAutocomplete } from "@/core/components/person/PersonAutocomplete"
 import { getPersonById } from "@/core/api/services/personApi";
 import { useBackNavigation } from "@/core/context/BackNavigationContext";
 
-type MieterTextKey = Exclude<keyof MieterSave, "aktiv" | "personId">;
+type MieterTextKey = Exclude<keyof MieterSave, "aktiv" | "personId" | "airbnb">;
 
-const emptyForm: MieterSave = { name: "", vorname: "", email: "", telefon: "", telefonFestnetz: "", strasse: "", plz: "", ort: "", countryCode: "DE", organisation: "", kontoinhaber: "", bankName: "", iban: "", bic: "", aktiv: true };
+const emptyForm: MieterSave = { name: "", vorname: "", email: "", telefon: "", telefonFestnetz: "", strasse: "", plz: "", ort: "", countryCode: "DE", organisation: "", kontoinhaber: "", bankName: "", iban: "", bic: "", airbnb: false, aktiv: true };
 
 function fromMieter(mieter: Mieter): MieterSave {
-  return { name: mieter.name, vorname: mieter.vorname, email: mieter.email ?? "", telefon: mieter.telefon ?? "", telefonFestnetz: mieter.telefonFestnetz ?? "", strasse: mieter.strasse ?? "", plz: mieter.plz ?? "", ort: mieter.ort ?? "", countryCode: mieter.countryCode ?? "DE", organisation: mieter.organisation ?? "", kontoinhaber: mieter.kontoinhaber ?? "", bankName: mieter.bankName ?? "", iban: mieter.iban ?? "", bic: mieter.bic ?? "", aktiv: mieter.aktiv };
+  return { name: mieter.name, vorname: mieter.vorname, email: mieter.email ?? "", telefon: mieter.telefon ?? "", telefonFestnetz: mieter.telefonFestnetz ?? "", strasse: mieter.strasse ?? "", plz: mieter.plz ?? "", ort: mieter.ort ?? "", countryCode: mieter.countryCode ?? "DE", organisation: mieter.organisation ?? "", kontoinhaber: mieter.kontoinhaber ?? "", bankName: mieter.bankName ?? "", iban: mieter.iban ?? "", bic: mieter.bic ?? "", airbnb: mieter.airbnb ?? false, aktiv: mieter.aktiv };
 }
 
 function MieterFehler({ text }: { text: string }) {
@@ -34,12 +35,23 @@ function MieterFehler({ text }: { text: string }) {
 }
 
 export default function MieterPage() {
+  const [params] = useSearchParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const personParam = Number(params.get("personId"));
+  const zielPersonId = Number.isSafeInteger(personParam) && personParam > 0 ? personParam : null;
+  const direktBearbeiten = params.get("bearbeiten") === "1";
+  const feldParam = params.get("feld") ?? "";
+  const zielFeld = ["vorname", "name", "email", "iban"].includes(feldParam) ? feldParam : "";
+  const geoeffneterLink = useRef("");
+  const navigationState = location.state as { returnTo?: string } | null;
+  const returnTo = navigationState?.returnTo?.startsWith("/vermietung/buchung?") ? navigationState.returnTo : null;
   const [mieter, setMieter] = useState<Mieter[]>([]);
   const isMobile = useMediaQuery(useTheme().breakpoints.down("sm"));
   const [sorting, setSorting] = useState<SortingState>([{ id: "name", desc: false }]);
   const [search, setSearch] = useState("");
-  const [mietobjektFilter, setMietobjektFilter] = useState("");
-  const mietobjekte = useMemo(() => [...new Set(mieter.flatMap(item => item.mietobjekte ?? []))].sort((a, b) => a.localeCompare(b, "de")), [mieter]);
+  const [mietobjektFilter, setMietobjektFilter] = useState("Bootshaus");
+  const mietobjekte = useMemo(() => [...new Set(["Bootshaus", ...mieter.flatMap(item => item.mietobjekte ?? [])])].sort((a, b) => a.localeCompare(b, "de")), [mieter]);
   const [aktivFilter, setAktivFilter] = useState<"aktiv" | "alle" | "inaktiv">("aktiv");
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [form, setForm] = useState<MieterSave>(emptyForm);
@@ -75,13 +87,14 @@ export default function MieterPage() {
 
   const backToList = useCallback(() => {
     if (saving || deleting) return;
+    if (returnTo) { navigate(returnTo); return; }
     setSelectedId(null);
     setIsNew(false);
     setEdit(false);
     setForm(emptyForm);
     setPersonRef(undefined);
     setError(null); setFieldErrors({});
-  }, [saving, deleting]);
+  }, [saving, deleting, navigate, returnTo]);
 
   async function reload(selectId: number | null = null) {
     setLoading(true);
@@ -100,6 +113,24 @@ export default function MieterPage() {
   }
 
   useEffect(() => { void reload(); }, []);
+  useEffect(() => {
+    if (loading || zielPersonId === null) return;
+    const key = `${zielPersonId}:${direktBearbeiten}:${zielFeld}`;
+    if (geoeffneterLink.current === key) return;
+    geoeffneterLink.current = key;
+    const ziel = mieter.find(item => item.personId === zielPersonId);
+    if (!ziel) { setError("Der verlinkte Mieter wurde nicht gefunden."); return; }
+    setSelectedId(ziel.id); setForm(fromMieter(ziel)); setIsNew(false); setEdit(direktBearbeiten);
+    setError(null); setFieldErrors({});
+  }, [loading, mieter, zielPersonId, direktBearbeiten, zielFeld]);
+  useEffect(() => {
+    if (!edit || selected?.personId !== zielPersonId || !zielFeld) return;
+    const frame = requestAnimationFrame(() => {
+      const input = document.querySelector<HTMLInputElement>(`input[name="${zielFeld}"]`);
+      input?.focus(); input?.scrollIntoView({ block: "center" });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [edit, selected?.personId, zielPersonId, zielFeld]);
   useEffect(() => {
     setDetailViewOpen(detailOpen);
     registerBackHandler(detailOpen ? backToList : null);
@@ -148,8 +179,7 @@ export default function MieterPage() {
       const errors: Record<string, string> = {};
       if (payload.name.length < 2 || payload.name.length > 100) errors.name = "Der Nachname muss zwischen 2 und 100 Zeichen lang sein.";
       if (payload.vorname.length < 2 || payload.vorname.length > 100) errors.vorname = "Der Vorname muss zwischen 2 und 100 Zeichen lang sein.";
-      if (!payload.email) errors.email = "Bitte eine E-Mail-Adresse eingeben.";
-      else if (payload.email.length > 255 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email)) errors.email = "Bitte eine gültige E-Mail-Adresse eingeben.";
+      if (payload.email && (payload.email.length > 255 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email))) errors.email = "Bitte eine gültige E-Mail-Adresse eingeben.";
       if (Object.keys(errors).length) { setFieldErrors(errors); setError("Bitte die markierten Angaben prüfen."); return; }
       const saved = isNew ? await createMieter(payload) : selected ? await updateMieter(selected.id, payload) : null;
       if (!saved) return;
@@ -187,7 +217,7 @@ export default function MieterPage() {
   }
 
   const field = (label: string, key: MieterTextKey, required = false) => (
-    <TextField label={label} required={required} value={form[key] ?? ""} disabled={!edit || saving || deleting} fullWidth size="small"
+    <TextField name={key} label={label} required={required} value={form[key] ?? ""} disabled={!edit || saving || deleting} fullWidth size="small"
       type={key === "email" ? "email" : "text"} error={!!fieldErrors[key]} helperText={fieldErrors[key]}
       onChange={(event) => {
         setForm((current) => ({ ...current, [key]: event.target.value }));
@@ -203,11 +233,11 @@ export default function MieterPage() {
     {error && <MieterFehler text={error} />}
     {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
     {loading ? <CircularProgress /> : !detailOpen ? (
-      <Paper variant="outlined" sx={{ p: 2, minWidth: 0 }}>
-        <Box sx={{ mb: 2 }}>
+      <Paper variant="outlined" sx={{ p: 1.25, minWidth: 0 }}>
+        <Stack direction={{ xs: "column", md: "row" }} alignItems={{ xs: "stretch", md: "center" }} gap={1} sx={{ mb: 1.25 }}>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
           <SearchField value={search} onChange={setSearch} placeholder="Name, E-Mail oder Telefon" />
         </Box>
-        <Stack direction={{ xs: "column", sm: "row" }} alignItems={{ xs: "stretch", sm: "center" }} gap={2} sx={{ mb: 2 }}>
         <ToggleButtonGroup value={aktivFilter} exclusive size="small" aria-label="Mieter nach Aktivstatus filtern"
           onChange={(_, value: "aktiv" | "alle" | "inaktiv" | null) => { if (value !== null) setAktivFilter(value); }}
           sx={{ width: { xs: "100%", sm: "auto" }, "& .MuiToggleButton-root": {
@@ -219,13 +249,13 @@ export default function MieterPage() {
           <ToggleButton value="inaktiv">Inaktiv</ToggleButton>
         </ToggleButtonGroup>
         <TextField select size="small" label="Mietobjekt" value={mietobjektFilter}
-          onChange={event => setMietobjektFilter(event.target.value)} sx={{ minWidth: { sm: 220 } }}>
+          onChange={event => setMietobjektFilter(event.target.value)} sx={{ minWidth: { md: 190 } }}>
           <MenuItem value="">Alle Mietobjekte</MenuItem>
           {mietobjekte.map(name => <MenuItem key={name} value={name}>{name}</MenuItem>)}
         </TextField>
         </Stack>
         {!isMobile ? <MieterTable data={filteredMieter} sorting={sorting} onSortingChange={setSorting}
-          onSelect={select} emptyState={<Typography sx={{ p: 2 }} color="text.secondary">
+          onSelect={select} showMietobjekte={!mietobjektFilter} emptyState={<Typography sx={{ p: 2 }} color="text.secondary">
             {emptyListMessage}
           </Typography>} /> : <>
         {filteredMieter.length === 0 && <Typography sx={{ py: 2 }} color="text.secondary">
@@ -233,16 +263,15 @@ export default function MieterPage() {
         </Typography>}
         {filteredMieter.map((item) => {
           const contact = [item.email, item.telefon, item.telefonFestnetz].filter((value) => value?.trim()).join(" · ");
-          return <ListItemButton key={item.id} onClick={() => select(item)} sx={{ display: "block", p: 1.5, minWidth: 0, borderBottom: 1, borderColor: "divider" }}>
+          return <ListItemButton key={item.id} onClick={() => select(item)} sx={{ display: "block", px: 1, py: 0.75, minWidth: 0, borderBottom: 1, borderColor: "divider",
+            ...((item.airbnb || item.buchungsquellen.includes("AIRBNB")) ? { backgroundColor: "#FFF3E0", "&:hover": { backgroundColor: "#FFE0B2" } } : {}) }}>
             <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" gap={1}>
               <Box sx={{ minWidth: 0 }}>
-                <Typography fontWeight={600}>{formatPersonName(item.name, item.vorname, "first")}</Typography>
-                {!!item.mietobjekte?.length && <Typography variant="body2">{item.mietobjekte.join(", ")}</Typography>}
-                {contact && <Typography variant="body2" color="text.secondary">{contact}</Typography>}
+                <Typography fontWeight={600} sx={{ fontSize: "0.9rem", lineHeight: 1.35 }}>{formatPersonName(item.name, item.vorname, "first")}</Typography>
+                {!mietobjektFilter && !!item.mietobjekte?.length && <Typography variant="body2">{item.mietobjekte.join(", ")}</Typography>}
+                {contact && <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.8rem", lineHeight: 1.35 }}>{contact}</Typography>}
               </Box>
               <Stack direction="row" gap={0.5} flexWrap="wrap" sx={{ flexShrink: 0 }}>
-                {item.buchungsquellen.includes("AIRBNB") && <Chip size="small" label="Airbnb" color="warning" variant="outlined" />}
-                {item.buchungsquellen.includes("DIREKT") && <Chip size="small" label="Direkt" color="primary" variant="outlined" />}
                 {!item.aktiv && <Chip size="small" label="Inaktiv" />}
               </Stack>
             </Stack>
@@ -291,14 +320,20 @@ export default function MieterPage() {
             <Typography variant="caption" color="text.secondary">Ohne Auswahl wird eine neue Person angelegt, die nur im Vermietungsbereich erscheint.</Typography>
           </Box>}
           <Grid container spacing={1.5}>
+            <Grid size={{ xs: 12 }}><FormControlLabel label="Airbnb-Mieter" control={<Checkbox
+              checked={!!form.airbnb} disabled={!edit || saving || deleting}
+              onChange={event => {
+                setForm(current => ({ ...current, airbnb: event.target.checked }));
+                setFieldErrors(current => { const next = { ...current }; delete next.email; return next; });
+              }} />} /></Grid>
             <Grid size={{ xs: 12 }}>{field("Organisation / Verein", "organisation")}</Grid>
             <Grid size={{ xs: 12, sm: 6 }}>{field("Kontoinhaber (falls abweichend)", "kontoinhaber")}</Grid>
             <Grid size={{ xs: 12, sm: 6 }}>{field("Vorname", "vorname", true)}</Grid>
             <Grid size={{ xs: 12, sm: 6 }}>{field("Nachname", "name", true)}</Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>{field("E-Mail", "email", true)}</Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>{field("E-Mail", "email")}</Grid>
             <Grid size={{ xs: 12, sm: 6 }}>{field("Telefon", "telefon")}</Grid>
             <Grid size={{ xs: 12, sm: 6 }}>{field("Festnetz", "telefonFestnetz")}</Grid>
-            <Grid size={{ xs: 12 }}><Typography variant="body2" color="text.secondary">Die postalische Adresse ist optional. Eine gültige E-Mail-Adresse ist erforderlich.</Typography></Grid>
+            <Grid size={{ xs: 12 }}><Typography variant="body2" color="text.secondary">{form.airbnb ? "Airbnb-Mieter können ohne E-Mail-Adresse gespeichert werden. Die postalische Adresse ist optional." : "Die E-Mail-Adresse ist nur für einen Mailversand erforderlich. Die postalische Adresse ist optional."}</Typography></Grid>
             <Grid size={{ xs: 12 }}>{field("Straße und Hausnummer", "strasse")}</Grid>
             <Grid size={{ xs: 12 }}><TextField
               select label="Land" value={form.countryCode ?? "DE"}
@@ -338,7 +373,7 @@ export default function MieterPage() {
         { label: "Abbrechen", variant: "outlined", onClick: cancel, disabled: saving || deleting },
       ] : [
         { label: "Ändern", variant: "outlined", onClick: () => setEdit(true), disabled: saving || deleting },
-        { label: "Zurück", onClick: backToList, disabled: saving || deleting },
+        { label: returnTo ? "Zur Buchung" : "Zurück", onClick: backToList, disabled: saving || deleting },
       ]}
       right={!edit && selected ? [{ label: "Löschen", variant: "outlined", color: "error",
         disabled: saving || deleting || selected.buchungen > 0,

@@ -1,5 +1,8 @@
+import BelegDokumentVorschau from "./BelegDokumentVorschau";
+import { getApiErrorMessage } from "@/kjfp/api/utils/apiError";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  Alert,
   Box,
   Button,
   FormControl,
@@ -26,7 +29,7 @@ import {
   deleteBelegDokument,
   download,
   findAll,
-  preview,
+  downloadDatei,
   upload,
   updateReferenzObjekt,
 } from "@/kjfp/api/services/belegDokumentApi";
@@ -43,6 +46,8 @@ const REFERENZ_STORAGE_KEY = "kanucontrol.dokument.referenzObjekt";
 
 export default function BelegDokumentPanel({ belegId, readOnly = false }: Props) {
   const [dokumente, setDokumente] = useState<DokumentDTO[]>([]);
+  const [vorschau, setVorschau] = useState<DokumentDTO | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -91,6 +96,9 @@ export default function BelegDokumentPanel({ belegId, readOnly = false }: Props)
       await upload(belegId, file, referenzObjekt);
 
       await loadDokumente(false);
+      setError(null);
+    } catch (err) {
+      setError(getApiErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -137,14 +145,7 @@ export default function BelegDokumentPanel({ belegId, readOnly = false }: Props)
   async function handleDownload(dokument: DokumentDTO) {
     const blob = await download(belegId, dokument.id);
 
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = dokument.originalDateiname;
-    a.click();
-
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    downloadDatei(blob, dokument.originalDateiname);
   }
 
   function formatSize(bytes: number) {
@@ -255,6 +256,8 @@ export default function BelegDokumentPanel({ belegId, readOnly = false }: Props)
         )}
       </Stack>
 
+      {error && <Alert severity="error" onClose={() => setError(null)}>{error}</Alert>}
+      {vorschau && <BelegDokumentVorschau belegId={belegId} dokument={vorschau} readOnly={readOnly} onClose={() => setVorschau(null)} />}
       <LoadingOverlay loading={loading} text="Dokumente werden geladen..." />
 
       {!loading && dokumente.length === 0 && (
@@ -344,7 +347,8 @@ export default function BelegDokumentPanel({ belegId, readOnly = false }: Props)
                   <IconButton
                     size="small"
                     title="Anzeigen"
-                    onClick={() => void preview(belegId, dokument.id)}
+                    aria-label={`Anzeigen: ${dokument.originalDateiname}`}
+                    onClick={() => setVorschau(dokument)}
                   >
                     <VisibilityIcon />
                   </IconButton>

@@ -45,6 +45,24 @@ public class Verbrauchskosten extends Auditable {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal preis;
 
+    @ElementCollection
+    @CollectionTable(name = "verbrauchskosten_preis", joinColumns = @JoinColumn(name = "verbrauchskosten_id"))
+    @OrderBy("gueltigVon ASC")
+    private java.util.List<Verbrauchspreis> preise = new java.util.ArrayList<>();
+
+    /** Liefert eine unverwaltete Konfiguration mit dem Preis am Anreisetag. */
+    public Verbrauchskosten zumDatum(java.time.LocalDate datum) {
+        Verbrauchspreis tarif = preise.stream().filter(p -> !datum.isBefore(p.getGueltigVon())
+                && (p.getGueltigBis() == null || !datum.isAfter(p.getGueltigBis())))
+                .findFirst().orElseThrow(() -> new IllegalArgumentException(
+                        "Kein gültiger Preis für „" + bezeichnung + "“ am " + datum + "."));
+        Verbrauchskosten kopie = new Verbrauchskosten();
+        kopie.setId(id); kopie.setMietobjekt(mietobjekt); kopie.setBezeichnung(bezeichnung);
+        kopie.setVerbrauchsart(verbrauchsart); kopie.setAbrechnungsart(abrechnungsart);
+        kopie.setMengeneinheit(mengeneinheit); kopie.setAktiv(aktiv); kopie.setPreis(tarif.getPreis());
+        return kopie;
+    }
+
     @Column(nullable = false)
     private boolean aktiv = true;
 }
