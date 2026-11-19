@@ -1,5 +1,6 @@
 package com.kcserver.core.config;
 
+import com.kcserver.core.tenancy.TenantSchemaName;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
@@ -32,26 +33,46 @@ public class SchemaMultiTenantConnectionProvider
 
     @Override
     public Connection getConnection(Object tenantIdentifier) throws SQLException {
-        String schema = tenantIdentifier.toString();
+        String schema = TenantSchemaName.requireValid(
+                tenantIdentifier == null ? null : tenantIdentifier.toString());
 
         Connection connection = getAnyConnection();
 
-        try (var stmt = connection.createStatement()) {
-            stmt.execute("set search_path to " + schema);
+        try {
+            connection.setSchema(schema);
+            return connection;
+        } catch (SQLException | RuntimeException ex) {
+            discard(connection, ex);
+            throw ex;
         }
-
-        return connection;
     }
 
     @Override
     public void releaseConnection(Object tenantIdentifier, Connection connection)
             throws SQLException {
 
-        try (var stmt = connection.createStatement()) {
-            stmt.execute("set search_path to kanu");
+        try {
+            connection.setSchema("kanu");
+        } catch (SQLException | RuntimeException ex) {
+            discard(connection, ex);
+            throw ex;
         }
 
         connection.close();
+    }
+
+    private void discard(Connection connection, Exception failure) {
+        // A failed reset must not return an unknown search_path to the pool.
+        try {
+            connection.abort(Runnable::run);
+        } catch (SQLException | RuntimeException cleanupFailure) {
+            failure.addSuppressed(cleanupFailure);
+        }
+        try {
+            connection.close();
+        } catch (SQLException | RuntimeException cleanupFailure) {
+            failure.addSuppressed(cleanupFailure);
+        }
     }
 
     @Override

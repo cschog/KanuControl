@@ -43,6 +43,9 @@ public class SecurityConfig {
         );
 
         http
+                // API authentication requires an explicit bearer header, never a saved session.
+                .sessionManagement(session -> session.sessionCreationPolicy(
+                        org.springframework.security.config.http.SessionCreationPolicy.STATELESS))
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .authorizeHttpRequests(auth -> auth

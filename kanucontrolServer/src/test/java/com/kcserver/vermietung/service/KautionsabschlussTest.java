@@ -11,7 +11,7 @@ import static org.mockito.Mockito.*;
 
 class KautionsabschlussTest {
  final BuchungFinanzbewegungRepository bewegungen=mock(BuchungFinanzbewegungRepository.class);
- final BuchungService service=new BuchungService(null,null,null,null,null,null,null,null,null,null,null,null,null,bewegungen,null);
+ final BuchungService service=new BuchungService(null,null,null,null,null,null,null,null,null,null,null,null,null,bewegungen,null, org.mockito.Mockito.mock(com.kcserver.vermietung.service.VermietungAenderungsprotokoll.class));
  final Buchung b=new Buchung();final List<BuchungFinanzbewegung> history=new ArrayList<>();
  @BeforeEach void setup(){b.setId(1L);b.setBuchungsquelle(Buchungsquelle.DIREKT);b.setKautionBetrag(new BigDecimal("250"));when(bewegungen.findByBuchungIdOrderByDatumAscIdAsc(1L)).thenReturn(history);}
  void move(Finanzbewegungsart art,String betrag){var m=new BuchungFinanzbewegung();m.setKategorie(Finanzkategorie.KAUTION);m.setArt(art);m.setBetrag(new BigDecimal(betrag));history.add(m);}

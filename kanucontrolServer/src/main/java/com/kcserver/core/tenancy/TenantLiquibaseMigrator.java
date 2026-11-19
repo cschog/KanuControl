@@ -81,6 +81,8 @@ public class TenantLiquibaseMigrator {
 
     private void migrateSchema(String schema) throws Exception {
 
+        TenantSchemaName.requireValid(schema);
+
         log.info("Liquibase migration for schema '{}'", schema);
 
         try (Connection connection = dataSource.getConnection()) {
@@ -144,9 +146,10 @@ public class TenantLiquibaseMigrator {
         Integer count = jdbcTemplate.queryForObject(
                 """
                 SELECT count(*)
-                FROM information_schema.tables
-                WHERE table_schema = ?
-                AND table_name = ?
+                FROM pg_catalog.pg_class c
+                JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+                WHERE n.nspname = ? AND c.relname = ?
+                AND c.relkind IN ('r', 'p')
                 """,
                 Integer.class,
                 schema,
@@ -156,30 +159,19 @@ public class TenantLiquibaseMigrator {
         return count != null && count > 0;
     }
     private boolean hasLiquibaseEntries(String schema) {
-
-        try {
-
-            Integer count = jdbcTemplate.queryForObject(
-                    """
-                    SELECT count(*)
-                    FROM %s.databasechangelog
-                    """.formatted(schema),
-                    Integer.class
-            );
-
-            return count != null && count > 0;
-
-        } catch (Exception e) {
-
-            // Tabelle existiert nicht
+        String identifier = TenantSchemaName.quoted(schema);
+        if (!tableExists(schema, "databasechangelog")) {
             return false;
         }
+        // Permission, syntax and connection errors must not trigger changeLogSync.
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT count(*) FROM " + identifier + ".databasechangelog", Integer.class);
+        return count != null && count > 0;
     }
     private boolean isManagedSchema(String schema) {
 
-        return schema.equals("kanu")
-
-                || schema.matches("[a-z]{3,5}_.*");
+        return schema != null && schema.length() <= 63
+                && (schema.equals("kanu") || schema.matches("[a-z]{3,5}_[a-z0-9_]*"));
 
     }
 }

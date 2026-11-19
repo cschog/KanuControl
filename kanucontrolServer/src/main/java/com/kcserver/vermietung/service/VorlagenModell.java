@@ -85,12 +85,12 @@ public final class VorlagenModell {
         String first = daten.get("vorname");
         boolean platzhalterVorname = first != null && first.strip().matches("_+");
         if (platzhalterVorname) {
-            text = text.replaceAll("\\{\\{nachname\\}\\}\\s*,\\s*\\{\\{vorname\\}\\}", "{{nachname}}")
-                    .replaceAll("\\{\\{vorname\\}\\}\\s*,?\\s*\\{\\{nachname\\}\\}", "{{nachname}}");
+            text = namenspaareErsetzen(text, "{{nachname}}", "{{vorname}}", true);
+            text = namenspaareErsetzen(text, "{{vorname}}", "{{nachname}}", false);
         }
         // Optional legacy-number sentences must disappear as a whole when there is no value.
         if (Objects.toString(daten.get("fruehere_buchungsnummer"), "").isBlank() && text.contains("{{fruehere_buchungsnummer}}")) {
-            text = text.replaceAll("(?m)[^.!?\\n]*\\{\\{fruehere_buchungsnummer}}[^.!?\\n]*[.!?]?", "").strip();
+            text = altnummerSaetzeEntfernen(text).strip();
         }
         var matcher = TOKEN.matcher(text); var out = new StringBuilder();
         while (matcher.find()) {
@@ -104,6 +104,53 @@ public final class VorlagenModell {
         }
         matcher.appendTail(out); return out.toString();
     }
+    private static String namenspaareErsetzen(String text, String erster, String zweiter, boolean kommaPflicht) {
+        var out = new StringBuilder(text.length());
+        int kopiertBis = 0;
+        int sucheAb = 0;
+        int start;
+        while ((start = text.indexOf(erster, sucheAb)) >= 0) {
+            int ende = start + erster.length();
+            while (ende < text.length() && regexLeerraum(text.charAt(ende))) ende++;
+            boolean komma = ende < text.length() && text.charAt(ende) == ',';
+            if (komma) ende++;
+            while (ende < text.length() && regexLeerraum(text.charAt(ende))) ende++;
+            if ((!kommaPflicht || komma) && text.startsWith(zweiter, ende)) {
+                ende += zweiter.length();
+                out.append(text, kopiertBis, start).append("{{nachname}}");
+                kopiertBis = ende;
+                sucheAb = ende;
+            } else {
+                sucheAb = start + erster.length();
+            }
+        }
+        return out.append(text, kopiertBis, text.length()).toString();
+    }
+
+    private static boolean regexLeerraum(char c) {
+        // Preserve Java's default (non-Unicode) \\s semantics.
+        return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f' || c == '\u000b';
+    }
+
+    private static String altnummerSaetzeEntfernen(String text) {
+        var out = new StringBuilder(text.length());
+        int start = 0;
+        for (int ende = 0; ende <= text.length(); ende++) {
+            char grenze = ende == text.length() ? '\0' : text.charAt(ende);
+            if (ende == text.length() || grenze == '.' || grenze == '!' || grenze == '?' || grenze == '\n') {
+                String abschnitt = text.substring(start, ende);
+                if (!abschnitt.contains("{{fruehere_buchungsnummer}}")) {
+                    out.append(abschnitt);
+                    if (ende < text.length()) out.append(grenze);
+                } else if (grenze == '\n') {
+                    out.append(grenze);
+                }
+                start = ende + 1;
+            }
+        }
+        return out.toString();
+    }
+
     public static List<String> texte(Vorlage v, Map<String,String> daten, Set<Bedingung> wahr) {
         pruefe(v); var result = new ArrayList<String>();
         for (Block b : v.bloecke()) if (wahr.contains(b.bedingung())) {

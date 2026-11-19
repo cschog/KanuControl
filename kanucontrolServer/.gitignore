@@ -26,3 +26,4 @@ Thumbs.db
 # Lokale SonarQube-Caches und Exporte
 .sonar/
 sonarqube-issues.json
+/sonar-issues.json

@@ -1,4 +1,5 @@
 package com.kcserver.unit;
+import static com.kcserver.support.MigrationSqlAssertions.assertSqlState;
 
 import liquibase.Contexts;
 import liquibase.LabelExpression;
@@ -39,7 +40,7 @@ class HomepageAnbindungMigrationTest {
             migrate(c, "CLUB_A");
             c.createStatement().execute("INSERT INTO homepage_anbindung (mietobjekt_id, bezeichnung, created_at) VALUES (7, 'Verein A', CURRENT_TIMESTAMP)");
             c.createStatement().execute("INSERT INTO homepage_anbindung_mietbereich VALUES (7, 10)");
-            assertThrows(SQLException.class, () -> c.createStatement().execute("INSERT INTO homepage_anbindung_mietbereich VALUES (7, 999)"));
+            assertSqlState(c, "INSERT INTO homepage_anbindung_mietbereich VALUES (7, 999)", "23506");
             migrate(c, "CLUB_B");
             c.createStatement().execute("INSERT INTO homepage_anbindung (mietobjekt_id, bezeichnung, created_at) VALUES (7, 'Verein B', CURRENT_TIMESTAMP)");
             assertEquals("Verein A", text(c, "SELECT bezeichnung FROM CLUB_A.homepage_anbindung WHERE mietobjekt_id = 7"));
@@ -62,9 +63,9 @@ class HomepageAnbindungMigrationTest {
             assertEquals("FALSE", text(c, "SELECT aktiv FROM homepage_anbindung").toUpperCase());
             String insert = "INSERT INTO homepage_anfrage (mietobjekt_id,anfrage_id,payload_hash,antwort_json,hinweis_stand,created_at) VALUES (7,'test-id','hash','{}','stand',CURRENT_TIMESTAMP)";
             c.createStatement().execute(insert);
-            assertThrows(SQLException.class, () -> c.createStatement().execute(insert));
+            assertSqlState(c, insert, "23505");
             lb.rollback(1, new Contexts(), new LabelExpression());
-            assertThrows(SQLException.class, () -> c.createStatement().executeQuery("SELECT * FROM homepage_anfrage"));
+            assertSqlState(c, "SELECT * FROM homepage_anfrage", "42S02");
             assertEquals("Homepage", text(c, "SELECT bezeichnung FROM homepage_anbindung"));
         }
     }
@@ -81,7 +82,7 @@ class HomepageAnbindungMigrationTest {
             c.createStatement().execute("DELETE FROM buchung WHERE id=1");
             assertEquals("1",text(c,"SELECT COUNT(*) FROM homepage_status_mail WHERE buchung_id IS NULL"));
             lb.rollback(1,new Contexts(),new LabelExpression());
-            assertThrows(SQLException.class,()->c.createStatement().executeQuery("SELECT * FROM homepage_status_mail"));
+            assertSqlState(c, "SELECT * FROM homepage_status_mail", "42S02");
             assertEquals("1",text(c,"SELECT COUNT(*) FROM mietobjekt"));
         }
     }
@@ -89,7 +90,7 @@ class HomepageAnbindungMigrationTest {
         try (Connection c = DriverManager.getConnection("jdbc:h2:mem:" + UUID.randomUUID() + ";MODE=PostgreSQL")) {
             Liquibase liquibase = migrate(c, "CLUB_C");
             liquibase.rollback(1, new Contexts(), new LabelExpression());
-            assertThrows(SQLException.class, () -> c.createStatement().executeQuery("SELECT * FROM homepage_anbindung"));
+            assertSqlState(c, "SELECT * FROM homepage_anbindung", "42S02");
             assertEquals("1", text(c, "SELECT COUNT(*) FROM mietobjekt"));
         }
     }
@@ -105,7 +106,7 @@ class HomepageAnbindungMigrationTest {
             c.createStatement().execute("UPDATE homepage_anbindung SET hausmeister_automatisch=TRUE,hausmeister_cc_email='cc@example.org'");
             assertEquals("cc@example.org", text(c, "SELECT hausmeister_cc_email FROM homepage_anbindung"));
             lb.rollback(1, new Contexts(), new LabelExpression());
-            assertThrows(SQLException.class, () -> c.createStatement().executeQuery("SELECT hausmeister_automatisch FROM homepage_anbindung"));
+            assertSqlState(c, "SELECT hausmeister_automatisch FROM homepage_anbindung", "42S22");
             assertEquals("Homepage", text(c, "SELECT bezeichnung FROM homepage_anbindung"));
         }
     }

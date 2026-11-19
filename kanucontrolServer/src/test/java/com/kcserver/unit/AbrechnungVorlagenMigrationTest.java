@@ -1,4 +1,5 @@
 package com.kcserver.unit;
+import static com.kcserver.support.MigrationSqlAssertions.assertSqlState;
 import liquibase.*;
 import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
@@ -18,7 +19,7 @@ class AbrechnungVorlagenMigrationTest {
     try(var rs=c.createStatement().executeQuery("SELECT zahlungsvariante FROM buchung")){assertTrue(rs.next());assertEquals("ANZAHLUNG",rs.getString(1));}
     try(var rs=c.createStatement().executeQuery("SELECT kurzfristgrenze_tage FROM mietobjekt")){assertTrue(rs.next());assertEquals(42,rs.getInt(1));}
     c.createStatement().execute("UPDATE person SET organisation='Verein',kontoinhaber='Verein'");
-    lb.rollback(1,new Contexts(),new LabelExpression());assertThrows(SQLException.class,()->c.createStatement().executeQuery("SELECT organisation FROM person"));
+    lb.rollback(1,new Contexts(),new LabelExpression());assertSqlState(c, "SELECT organisation FROM person", "42S22");
    }
   }
  }

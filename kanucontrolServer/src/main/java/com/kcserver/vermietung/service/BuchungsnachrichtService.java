@@ -37,7 +37,9 @@ public class BuchungsnachrichtService {
     public BuchungsnachrichtService(BuchungsnachrichtEntwurfRepository e,BuchungRepository b,BuchungService bs,
         BuchungFinanzenService f,VerbrauchsabrechnungService v,VorlagenService vs,MandantenBriefpapierRepository p,
         AbrechnungVorlagenService r,VermietungAbrechnungRepository rr,HomepageStatusMailService m,
-        VorlagenVersandRepository a,VorlagenArchivService as,BuchungsnachrichtDaten d,ObjectMapper om,PlatformTransactionManager tm){
+        VorlagenVersandRepository a,VorlagenArchivService as,BuchungsnachrichtDaten d,ObjectMapper om,PlatformTransactionManager tm,
+        BuchungVerbrauchskostenRepository gespeicherterVerbrauch){
+        this.gespeicherterVerbrauch=gespeicherterVerbrauch;
         entwuerfe=e;buchungen=b;buchungsservice=bs;finanzen=f;verbrauch=v;vorlagen=vs;papier=p;rechnung=r;rechnungen=rr;
         mails=m;archiv=a;archivstatus=as;daten=d;mapper=om;tx=new TransactionTemplate(tm);
     }
@@ -105,7 +107,7 @@ public class BuchungsnachrichtService {
     private BuchungsnachrichtEntwurf entwurf(Long buchung,String id){return entwuerfe.gesperrt(id,user(),TenantContext.getCurrentTenant(),buchung).filter(e->!e.isUnabhaengig()).orElseThrow(()->new ResponseStatusException(HttpStatus.GONE,"Entwurf nicht verfügbar oder einem anderen Benutzer/Mandanten zugeordnet."));}
     private List<AblesungBestaetigungDTO> ablesungen(BuchungsnachrichtEntwurf e){return Arrays.asList(lesen(e.getAblesungen(),AblesungBestaetigungDTO[].class));}
     private List<BuchungVerbrauchskosten> snapshots(Buchung b,BuchungsnachrichtEntwurf e){return e.getZiel()==Buchungsstatus.ABGESCHLOSSEN?(b.getStatus()==Buchungsstatus.ABGESCHLOSSEN?verbrauchGespeichert(b):verbrauch.berechneSnapshots(b,ablesungen(e))):null;}
-    @org.springframework.beans.factory.annotation.Autowired private BuchungVerbrauchskostenRepository gespeicherterVerbrauch;
+    private final BuchungVerbrauchskostenRepository gespeicherterVerbrauch;
     private List<BuchungVerbrauchskosten> verbrauchGespeichert(Buchung b){return gespeicherterVerbrauch.findByBuchungIdOrderByIdAsc(b.getId());}
     private void offen(BuchungsnachrichtEntwurf e){if(e.isAusgefuehrt())throw konflikt("Diese Aktion wurde bereits ausgeführt. Für erneuten Versand den gespeicherten Versuch prüfen.");if(e.getAblauf().isBefore(Instant.now()))throw konflikt("Entwurf abgelaufen. Bitte neu erstellen.");}
     private static ResponseStatusException konflikt(String s){return new ResponseStatusException(HttpStatus.CONFLICT,s);}

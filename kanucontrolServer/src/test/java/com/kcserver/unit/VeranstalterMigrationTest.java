@@ -1,4 +1,5 @@
 package com.kcserver.unit;
+import static com.kcserver.support.MigrationSqlAssertions.assertSqlState;
 
 import liquibase.*;
 import liquibase.database.DatabaseFactory;
@@ -30,7 +31,7 @@ class VeranstalterMigrationTest {
                     c.createStatement().execute("UPDATE verein SET name='Nur B' WHERE id=7");
                     try(var rs=c.createStatement().executeQuery("SELECT name FROM CLUB_A.verein WHERE id=7")){rs.next();assertEquals("Bestandsverein",rs.getString(1));}
                     lb.rollback(1,new Contexts(),new LabelExpression());
-                    assertThrows(SQLException.class,()->c.createStatement().executeQuery("SELECT kjfp_verein FROM verein"));
+                    assertSqlState(c, "SELECT kjfp_verein FROM verein", "42S22");
                     try(var rs=c.createStatement().executeQuery("SELECT veranstalter_verein_id FROM buchung WHERE id=1")){rs.next();assertEquals(7,rs.getLong(1));}
                 }
             }

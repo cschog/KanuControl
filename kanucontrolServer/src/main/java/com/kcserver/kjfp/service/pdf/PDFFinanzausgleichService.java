@@ -41,6 +41,12 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.AclEntry;
+import java.nio.file.attribute.AclFileAttributeView;
+import java.nio.file.attribute.AclEntryPermission;
+import java.nio.file.attribute.AclEntryType;
+import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -3846,13 +3852,10 @@ public class PDFFinanzausgleichService {
      * =========================================================
      */
 
-    private byte[] mergeDocuments(PDDocument deckblatt, byte[] dokumentPdf) throws IOException {
-
-        Path deckblattFile = Files.createTempFile("kc-deckblatt-", ".pdf");
-        Path dokumentFile = null;
-        Path outputFile = Files.createTempFile("kc-finanzausgleich-", ".pdf");
-
-        try {
+    byte[] mergeDocuments(PDDocument deckblatt, byte[] dokumentPdf) throws IOException {
+        try (MergeTempFiles temp = createMergeTempFiles()) {
+            Path deckblattFile = temp.createFile("kc-deckblatt-");
+            Path outputFile = temp.createFile("kc-finanzausgleich-");
             // Deckblatt als temporäre PDF-Datei speichern
             deckblatt.save(deckblattFile.toFile());
 
@@ -3863,7 +3866,7 @@ public class PDFFinanzausgleichService {
 
             // Detail-/Dokument-PDF
             if (dokumentPdf != null && dokumentPdf.length > 0) {
-                dokumentFile = Files.createTempFile("kc-dokumente-", ".pdf");
+                Path dokumentFile = temp.createFile("kc-dokumente-");
                 Files.write(dokumentFile, dokumentPdf);
 
                 merger.addSource(dokumentFile.toFile());
@@ -3877,14 +3880,97 @@ public class PDFFinanzausgleichService {
 
             return Files.readAllBytes(outputFile);
 
-        } finally {
-            Files.deleteIfExists(deckblattFile);
+        }
+    }
 
-            if (dokumentFile != null) {
-                Files.deleteIfExists(dokumentFile);
+    MergeTempFiles createMergeTempFiles() throws IOException {
+        return new MergeTempFiles();
+    }
+
+    /** One private directory per merge; no request data in names and no shared mutable state. */
+    static class MergeTempFiles implements AutoCloseable {
+        private final Path directory;
+        private final FileAttribute<?> filePermissions;
+        private final List<AclEntry> ownerAcl;
+        private final List<Path> files = new ArrayList<>();
+
+        MergeTempFiles() throws IOException {
+            Path base = Path.of(System.getProperty("java.io.tmpdir")).toRealPath();
+            var store = Files.getFileStore(base);
+            FileAttribute<?> directoryPermissions;
+            if (store.supportsFileAttributeView("posix")) {
+                ownerAcl = null;
+                directoryPermissions = PosixFilePermissions.asFileAttribute(
+                        PosixFilePermissions.fromString("rwx------"));
+                filePermissions = PosixFilePermissions.asFileAttribute(
+                        PosixFilePermissions.fromString("rw-------"));
+            } else if (store.supportsFileAttributeView("acl")) {
+                var owner = base.getFileSystem().getUserPrincipalLookupService()
+                        .lookupPrincipalByName(System.getProperty("user.name"));
+                ownerAcl = List.of(AclEntry.newBuilder().setType(AclEntryType.ALLOW)
+                        .setPrincipal(owner).setPermissions(EnumSet.allOf(AclEntryPermission.class)).build());
+                directoryPermissions = new FileAttribute<List<AclEntry>>() {
+                    @Override public String name() { return "acl:acl"; }
+                    @Override public List<AclEntry> value() { return ownerAcl; }
+                };
+                filePermissions = directoryPermissions;
+            } else {
+                throw new IOException("Temp-Dateisystem unterstützt weder POSIX-Rechte noch ACLs.");
             }
+            // Permissions are part of creation, before any confidential bytes are written.
+            directory = Files.createTempDirectory(base, "kc-finanzausgleich-", directoryPermissions);
+            try {
+                secureAcl(directory);
+            } catch (IOException | RuntimeException failure) {
+                try { Files.deleteIfExists(directory); }
+                catch (IOException | RuntimeException cleanupFailure) { failure.addSuppressed(cleanupFailure); }
+                throw failure;
+            }
+        }
 
-            Files.deleteIfExists(outputFile);
+        final Path createFile(String prefix) throws IOException {
+            Path file = allocateFile(prefix);
+            files.add(file);
+            secureAcl(file);
+            return file;
+        }
+
+        private void secureAcl(Path path) throws IOException {
+            if (ownerAcl != null) {
+                var view = Files.getFileAttributeView(path, AclFileAttributeView.class);
+                // Remove inherited grants before writing any PDF data, then verify the result.
+                view.setAcl(ownerAcl);
+                if (!view.getAcl().equals(ownerAcl)) {
+                    throw new IOException("Prozesskonto-exklusive PDF-Temp-ACL konnte nicht bestätigt werden.");
+                }
+            }
+        }
+
+        Path allocateFile(String prefix) throws IOException {
+            return Files.createTempFile(directory, prefix, ".pdf", filePermissions);
+        }
+
+        void delete(Path path) throws IOException {
+            Files.deleteIfExists(path);
+        }
+
+        @Override public void close() throws IOException {
+            IOException failure = null;
+            List<Path> cleanup = new ArrayList<>(files.reversed());
+            cleanup.add(directory);
+            for (Path path : cleanup) {
+                try {
+                    delete(path);
+                } catch (IOException | RuntimeException ex) {
+                    if (failure == null) {
+                        failure = new IOException("Temporäre PDF-Dateien konnten nicht vollständig gelöscht werden.");
+                    }
+                    failure.addSuppressed(ex);
+                }
+            }
+            if (failure != null) {
+                throw failure;
+            }
         }
     }
 

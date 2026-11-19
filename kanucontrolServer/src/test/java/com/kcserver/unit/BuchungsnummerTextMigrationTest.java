@@ -1,4 +1,5 @@
 package com.kcserver.unit;
+import static com.kcserver.support.MigrationSqlAssertions.assertSqlState;
 
 import liquibase.*;
 import liquibase.database.DatabaseFactory;
@@ -31,8 +32,8 @@ class BuchungsnummerTextMigrationTest {
                 c.createStatement().execute("INSERT INTO buchung VALUES(5,2026,1,'2026-01')");
                 c.createStatement().execute("INSERT INTO buchung VALUES(6,2026,1,'2026-1')");
                 assertEquals("2026-01",nummer(c,5));assertEquals("2026-1",nummer(c,6));
-                assertThrows(SQLException.class,()->c.createStatement().execute("INSERT INTO buchung VALUES(7,2026,1,'2026-01')"));
-                assertThrows(SQLException.class,()->c.createStatement().execute("INSERT INTO buchung VALUES(8,2026,2,NULL)"));
+                assertSqlState(c, "INSERT INTO buchung VALUES(7,2026,1,'2026-01')", "23505");
+                assertSqlState(c, "INSERT INTO buchung VALUES(8,2026,2,NULL)", "23502");
             }
         }
     }
@@ -40,8 +41,8 @@ class BuchungsnummerTextMigrationTest {
         try(var c=DriverManager.getConnection("jdbc:h2:mem:"+UUID.randomUUID()+";MODE=PostgreSQL")) {
             altbestand(c);var lb=migration(c);lb.update(new Contexts(),new LabelExpression());
             lb.rollback(1,new Contexts(),new LabelExpression());
-            assertThrows(SQLException.class,()->c.createStatement().executeQuery("SELECT buchungsnummer FROM buchung"));
-            assertThrows(SQLException.class,()->c.createStatement().execute("INSERT INTO buchung VALUES(5,2026,1)"));
+            assertSqlState(c, "SELECT buchungsnummer FROM buchung", "42S22");
+            assertSqlState(c, "INSERT INTO buchung VALUES(5,2026,1)", "23505");
         }
     }
     @Test void rollbackVerhindertVerlustUnterscheidbarerTextnummern() throws Exception {

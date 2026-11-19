@@ -1,0 +1,2450 @@
+[
+  {
+    "input": "Hallo {{nachname}}, {{vorname}},",
+    "first": "___",
+    "previous": null,
+    "expected": "Hallo Muster$\\,"
+  },
+  {
+    "input": "Hallo {{nachname}}, {{vorname}},",
+    "first": "___",
+    "previous": "ALT-42",
+    "expected": "Hallo Muster$\\,"
+  },
+  {
+    "input": "Hallo {{nachname}}, {{vorname}},",
+    "first": "___",
+    "previous": " \t",
+    "expected": "Hallo Muster$\\,"
+  },
+  {
+    "input": "Hallo {{nachname}}, {{vorname}},",
+    "first": "Anna",
+    "previous": null,
+    "expected": "Hallo Muster$\\, Anna,"
+  },
+  {
+    "input": "Hallo {{nachname}}, {{vorname}},",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": "Hallo Muster$\\, Anna,"
+  },
+  {
+    "input": "Hallo {{nachname}}, {{vorname}},",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": "Hallo Muster$\\, Anna,"
+  },
+  {
+    "input": "Hallo {{nachname}}, {{vorname}},",
+    "first": null,
+    "previous": null,
+    "error": 422
+  },
+  {
+    "input": "Hallo {{nachname}}, {{vorname}},",
+    "first": null,
+    "previous": "ALT-42",
+    "error": 422
+  },
+  {
+    "input": "Hallo {{nachname}}, {{vorname}},",
+    "first": null,
+    "previous": " \t",
+    "error": 422
+  },
+  {
+    "input": "{{vorname}} {{nachname}}",
+    "first": "___",
+    "previous": null,
+    "expected": "Muster$\\"
+  },
+  {
+    "input": "{{vorname}} {{nachname}}",
+    "first": "___",
+    "previous": "ALT-42",
+    "expected": "Muster$\\"
+  },
+  {
+    "input": "{{vorname}} {{nachname}}",
+    "first": "___",
+    "previous": " \t",
+    "expected": "Muster$\\"
+  },
+  {
+    "input": "{{vorname}} {{nachname}}",
+    "first": "Anna",
+    "previous": null,
+    "expected": "Anna Muster$\\"
+  },
+  {
+    "input": "{{vorname}} {{nachname}}",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": "Anna Muster$\\"
+  },
+  {
+    "input": "{{vorname}} {{nachname}}",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": "Anna Muster$\\"
+  },
+  {
+    "input": "{{vorname}} {{nachname}}",
+    "first": null,
+    "previous": null,
+    "error": 422
+  },
+  {
+    "input": "{{vorname}} {{nachname}}",
+    "first": null,
+    "previous": "ALT-42",
+    "error": 422
+  },
+  {
+    "input": "{{vorname}} {{nachname}}",
+    "first": null,
+    "previous": " \t",
+    "error": 422
+  },
+  {
+    "input": "{{vorname}}, {{nachname}}",
+    "first": "___",
+    "previous": null,
+    "expected": "Muster$\\"
+  },
+  {
+    "input": "{{vorname}}, {{nachname}}",
+    "first": "___",
+    "previous": "ALT-42",
+    "expected": "Muster$\\"
+  },
+  {
+    "input": "{{vorname}}, {{nachname}}",
+    "first": "___",
+    "previous": " \t",
+    "expected": "Muster$\\"
+  },
+  {
+    "input": "{{vorname}}, {{nachname}}",
+    "first": "Anna",
+    "previous": null,
+    "expected": "Anna, Muster$\\"
+  },
+  {
+    "input": "{{vorname}}, {{nachname}}",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": "Anna, Muster$\\"
+  },
+  {
+    "input": "{{vorname}}, {{nachname}}",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": "Anna, Muster$\\"
+  },
+  {
+    "input": "{{vorname}}, {{nachname}}",
+    "first": null,
+    "previous": null,
+    "error": 422
+  },
+  {
+    "input": "{{vorname}}, {{nachname}}",
+    "first": null,
+    "previous": "ALT-42",
+    "error": 422
+  },
+  {
+    "input": "{{vorname}}, {{nachname}}",
+    "first": null,
+    "previous": " \t",
+    "error": 422
+  },
+  {
+    "input": "{{nachname}} {{vorname}}",
+    "first": "___",
+    "previous": null,
+    "expected": "Muster$\\ Muster$\\"
+  },
+  {
+    "input": "{{nachname}} {{vorname}}",
+    "first": "___",
+    "previous": "ALT-42",
+    "expected": "Muster$\\ Muster$\\"
+  },
+  {
+    "input": "{{nachname}} {{vorname}}",
+    "first": "___",
+    "previous": " \t",
+    "expected": "Muster$\\ Muster$\\"
+  },
+  {
+    "input": "{{nachname}} {{vorname}}",
+    "first": "Anna",
+    "previous": null,
+    "expected": "Muster$\\ Anna"
+  },
+  {
+    "input": "{{nachname}} {{vorname}}",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": "Muster$\\ Anna"
+  },
+  {
+    "input": "{{nachname}} {{vorname}}",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": "Muster$\\ Anna"
+  },
+  {
+    "input": "{{nachname}} {{vorname}}",
+    "first": null,
+    "previous": null,
+    "error": 422
+  },
+  {
+    "input": "{{nachname}} {{vorname}}",
+    "first": null,
+    "previous": "ALT-42",
+    "error": 422
+  },
+  {
+    "input": "{{nachname}} {{vorname}}",
+    "first": null,
+    "previous": " \t",
+    "error": 422
+  },
+  {
+    "input": "{{nachname}}, {{vorname}} {{nachname}}",
+    "first": "___",
+    "previous": null,
+    "expected": "Muster$\\ Muster$\\"
+  },
+  {
+    "input": "{{nachname}}, {{vorname}} {{nachname}}",
+    "first": "___",
+    "previous": "ALT-42",
+    "expected": "Muster$\\ Muster$\\"
+  },
+  {
+    "input": "{{nachname}}, {{vorname}} {{nachname}}",
+    "first": "___",
+    "previous": " \t",
+    "expected": "Muster$\\ Muster$\\"
+  },
+  {
+    "input": "{{nachname}}, {{vorname}} {{nachname}}",
+    "first": "Anna",
+    "previous": null,
+    "expected": "Muster$\\, Anna Muster$\\"
+  },
+  {
+    "input": "{{nachname}}, {{vorname}} {{nachname}}",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": "Muster$\\, Anna Muster$\\"
+  },
+  {
+    "input": "{{nachname}}, {{vorname}} {{nachname}}",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": "Muster$\\, Anna Muster$\\"
+  },
+  {
+    "input": "{{nachname}}, {{vorname}} {{nachname}}",
+    "first": null,
+    "previous": null,
+    "error": 422
+  },
+  {
+    "input": "{{nachname}}, {{vorname}} {{nachname}}",
+    "first": null,
+    "previous": "ALT-42",
+    "error": 422
+  },
+  {
+    "input": "{{nachname}}, {{vorname}} {{nachname}}",
+    "first": null,
+    "previous": " \t",
+    "error": 422
+  },
+  {
+    "input": "{{vorname}}\n,\t{{nachname}}",
+    "first": "___",
+    "previous": null,
+    "expected": "Muster$\\"
+  },
+  {
+    "input": "{{vorname}}\n,\t{{nachname}}",
+    "first": "___",
+    "previous": "ALT-42",
+    "expected": "Muster$\\"
+  },
+  {
+    "input": "{{vorname}}\n,\t{{nachname}}",
+    "first": "___",
+    "previous": " \t",
+    "expected": "Muster$\\"
+  },
+  {
+    "input": "{{vorname}}\n,\t{{nachname}}",
+    "first": "Anna",
+    "previous": null,
+    "expected": "Anna\n,\tMuster$\\"
+  },
+  {
+    "input": "{{vorname}}\n,\t{{nachname}}",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": "Anna\n,\tMuster$\\"
+  },
+  {
+    "input": "{{vorname}}\n,\t{{nachname}}",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": "Anna\n,\tMuster$\\"
+  },
+  {
+    "input": "{{vorname}}\n,\t{{nachname}}",
+    "first": null,
+    "previous": null,
+    "error": 422
+  },
+  {
+    "input": "{{vorname}}\n,\t{{nachname}}",
+    "first": null,
+    "previous": "ALT-42",
+    "error": 422
+  },
+  {
+    "input": "{{vorname}}\n,\t{{nachname}}",
+    "first": null,
+    "previous": " \t",
+    "error": 422
+  },
+  {
+    "input": "Vorher. Bezug {{fruehere_buchungsnummer}}! Nachher?",
+    "first": "___",
+    "previous": null,
+    "expected": "Vorher. Nachher?"
+  },
+  {
+    "input": "Vorher. Bezug {{fruehere_buchungsnummer}}! Nachher?",
+    "first": "___",
+    "previous": "ALT-42",
+    "expected": "Vorher. Bezug ALT-42! Nachher?"
+  },
+  {
+    "input": "Vorher. Bezug {{fruehere_buchungsnummer}}! Nachher?",
+    "first": "___",
+    "previous": " \t",
+    "expected": "Vorher. Nachher?"
+  },
+  {
+    "input": "Vorher. Bezug {{fruehere_buchungsnummer}}! Nachher?",
+    "first": "Anna",
+    "previous": null,
+    "expected": "Vorher. Nachher?"
+  },
+  {
+    "input": "Vorher. Bezug {{fruehere_buchungsnummer}}! Nachher?",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": "Vorher. Bezug ALT-42! Nachher?"
+  },
+  {
+    "input": "Vorher. Bezug {{fruehere_buchungsnummer}}! Nachher?",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": "Vorher. Nachher?"
+  },
+  {
+    "input": "Vorher. Bezug {{fruehere_buchungsnummer}}! Nachher?",
+    "first": null,
+    "previous": null,
+    "expected": "Vorher. Nachher?"
+  },
+  {
+    "input": "Vorher. Bezug {{fruehere_buchungsnummer}}! Nachher?",
+    "first": null,
+    "previous": "ALT-42",
+    "expected": "Vorher. Bezug ALT-42! Nachher?"
+  },
+  {
+    "input": "Vorher. Bezug {{fruehere_buchungsnummer}}! Nachher?",
+    "first": null,
+    "previous": " \t",
+    "expected": "Vorher. Nachher?"
+  },
+  {
+    "input": "{{fruehere_buchungsnummer}} und {{fruehere_buchungsnummer}}. Danach.",
+    "first": "___",
+    "previous": null,
+    "expected": "Danach."
+  },
+  {
+    "input": "{{fruehere_buchungsnummer}} und {{fruehere_buchungsnummer}}. Danach.",
+    "first": "___",
+    "previous": "ALT-42",
+    "expected": "ALT-42 und ALT-42. Danach."
+  },
+  {
+    "input": "{{fruehere_buchungsnummer}} und {{fruehere_buchungsnummer}}. Danach.",
+    "first": "___",
+    "previous": " \t",
+    "expected": "Danach."
+  },
+  {
+    "input": "{{fruehere_buchungsnummer}} und {{fruehere_buchungsnummer}}. Danach.",
+    "first": "Anna",
+    "previous": null,
+    "expected": "Danach."
+  },
+  {
+    "input": "{{fruehere_buchungsnummer}} und {{fruehere_buchungsnummer}}. Danach.",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": "ALT-42 und ALT-42. Danach."
+  },
+  {
+    "input": "{{fruehere_buchungsnummer}} und {{fruehere_buchungsnummer}}. Danach.",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": "Danach."
+  },
+  {
+    "input": "{{fruehere_buchungsnummer}} und {{fruehere_buchungsnummer}}. Danach.",
+    "first": null,
+    "previous": null,
+    "expected": "Danach."
+  },
+  {
+    "input": "{{fruehere_buchungsnummer}} und {{fruehere_buchungsnummer}}. Danach.",
+    "first": null,
+    "previous": "ALT-42",
+    "expected": "ALT-42 und ALT-42. Danach."
+  },
+  {
+    "input": "{{fruehere_buchungsnummer}} und {{fruehere_buchungsnummer}}. Danach.",
+    "first": null,
+    "previous": " \t",
+    "expected": "Danach."
+  },
+  {
+    "input": "A\nBezug {{fruehere_buchungsnummer}}\nB",
+    "first": "___",
+    "previous": null,
+    "expected": "A\n\nB"
+  },
+  {
+    "input": "A\nBezug {{fruehere_buchungsnummer}}\nB",
+    "first": "___",
+    "previous": "ALT-42",
+    "expected": "A\nBezug ALT-42\nB"
+  },
+  {
+    "input": "A\nBezug {{fruehere_buchungsnummer}}\nB",
+    "first": "___",
+    "previous": " \t",
+    "expected": "A\n\nB"
+  },
+  {
+    "input": "A\nBezug {{fruehere_buchungsnummer}}\nB",
+    "first": "Anna",
+    "previous": null,
+    "expected": "A\n\nB"
+  },
+  {
+    "input": "A\nBezug {{fruehere_buchungsnummer}}\nB",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": "A\nBezug ALT-42\nB"
+  },
+  {
+    "input": "A\nBezug {{fruehere_buchungsnummer}}\nB",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": "A\n\nB"
+  },
+  {
+    "input": "A\nBezug {{fruehere_buchungsnummer}}\nB",
+    "first": null,
+    "previous": null,
+    "expected": "A\n\nB"
+  },
+  {
+    "input": "A\nBezug {{fruehere_buchungsnummer}}\nB",
+    "first": null,
+    "previous": "ALT-42",
+    "expected": "A\nBezug ALT-42\nB"
+  },
+  {
+    "input": "A\nBezug {{fruehere_buchungsnummer}}\nB",
+    "first": null,
+    "previous": " \t",
+    "expected": "A\n\nB"
+  },
+  {
+    "input": "Text {{fruehere_buchungsnummer}} ohne Punkt",
+    "first": "___",
+    "previous": null,
+    "expected": ""
+  },
+  {
+    "input": "Text {{fruehere_buchungsnummer}} ohne Punkt",
+    "first": "___",
+    "previous": "ALT-42",
+    "expected": "Text ALT-42 ohne Punkt"
+  },
+  {
+    "input": "Text {{fruehere_buchungsnummer}} ohne Punkt",
+    "first": "___",
+    "previous": " \t",
+    "expected": ""
+  },
+  {
+    "input": "Text {{fruehere_buchungsnummer}} ohne Punkt",
+    "first": "Anna",
+    "previous": null,
+    "expected": ""
+  },
+  {
+    "input": "Text {{fruehere_buchungsnummer}} ohne Punkt",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": "Text ALT-42 ohne Punkt"
+  },
+  {
+    "input": "Text {{fruehere_buchungsnummer}} ohne Punkt",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": ""
+  },
+  {
+    "input": "Text {{fruehere_buchungsnummer}} ohne Punkt",
+    "first": null,
+    "previous": null,
+    "expected": ""
+  },
+  {
+    "input": "Text {{fruehere_buchungsnummer}} ohne Punkt",
+    "first": null,
+    "previous": "ALT-42",
+    "expected": "Text ALT-42 ohne Punkt"
+  },
+  {
+    "input": "Text {{fruehere_buchungsnummer}} ohne Punkt",
+    "first": null,
+    "previous": " \t",
+    "expected": ""
+  },
+  {
+    "input": "{{vorname}} {{nachname}}",
+    "first": "___",
+    "previous": null,
+    "expected": "Muster$\\ Muster$\\"
+  },
+  {
+    "input": "{{vorname}} {{nachname}}",
+    "first": "___",
+    "previous": "ALT-42",
+    "expected": "Muster$\\ Muster$\\"
+  },
+  {
+    "input": "{{vorname}} {{nachname}}",
+    "first": "___",
+    "previous": " \t",
+    "expected": "Muster$\\ Muster$\\"
+  },
+  {
+    "input": "{{vorname}} {{nachname}}",
+    "first": "Anna",
+    "previous": null,
+    "expected": "Anna Muster$\\"
+  },
+  {
+    "input": "{{vorname}} {{nachname}}",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": "Anna Muster$\\"
+  },
+  {
+    "input": "{{vorname}} {{nachname}}",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": "Anna Muster$\\"
+  },
+  {
+    "input": "{{vorname}} {{nachname}}",
+    "first": null,
+    "previous": null,
+    "error": 422
+  },
+  {
+    "input": "{{vorname}} {{nachname}}",
+    "first": null,
+    "previous": "ALT-42",
+    "error": 422
+  },
+  {
+    "input": "{{vorname}} {{nachname}}",
+    "first": null,
+    "previous": " \t",
+    "error": 422
+  },
+  {
+    "input": "{{vorname}} {{nachname}}",
+    "first": "___",
+    "previous": null,
+    "expected": "Muster$\\ Muster$\\"
+  },
+  {
+    "input": "{{vorname}} {{nachname}}",
+    "first": "___",
+    "previous": "ALT-42",
+    "expected": "Muster$\\ Muster$\\"
+  },
+  {
+    "input": "{{vorname}} {{nachname}}",
+    "first": "___",
+    "previous": " \t",
+    "expected": "Muster$\\ Muster$\\"
+  },
+  {
+    "input": "{{vorname}} {{nachname}}",
+    "first": "Anna",
+    "previous": null,
+    "expected": "Anna Muster$\\"
+  },
+  {
+    "input": "{{vorname}} {{nachname}}",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": "Anna Muster$\\"
+  },
+  {
+    "input": "{{vorname}} {{nachname}}",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": "Anna Muster$\\"
+  },
+  {
+    "input": "{{vorname}} {{nachname}}",
+    "first": null,
+    "previous": null,
+    "error": 422
+  },
+  {
+    "input": "{{vorname}} {{nachname}}",
+    "first": null,
+    "previous": "ALT-42",
+    "error": 422
+  },
+  {
+    "input": "{{vorname}} {{nachname}}",
+    "first": null,
+    "previous": " \t",
+    "error": 422
+  },
+  {
+    "input": "{{fruehere_buchungsnummer}}{{nachname}}!\r\n{{nachname}}.{{vorname}} {{vorname}}!{{fruehere_buchungsnummer}}{{vorname}},!{{vorname}}\n{{fruehere_buchungsnummer}}.\n{{vorname}}",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": "ALT-42Muster$\\!\nMuster$\\.Anna Anna!ALT-42Anna,!Anna\nALT-42.\nAnna"
+  },
+  {
+    "input": "  {{vorname}}?",
+    "first": null,
+    "previous": null,
+    "error": 422
+  },
+  {
+    "input": "?\n.HalloHallo?Grüße?\n.Hallo,\r\nBezug , {{fruehere_buchungsnummer}}",
+    "first": null,
+    "previous": null,
+    "expected": "?\n.HalloHallo?Grüße?\n.Hallo,"
+  },
+  {
+    "input": "{{buchungsnummer}}Grüße!\n?{{vorname}} . ,\n\t,{{nachname}}{{buchungsnummer}}{{vorname}}\r\n",
+    "first": "___",
+    "previous": "ALT-42",
+    "expected": "2026-007Grüße!\n?Muster$\\ . ,\n\t,Muster$\\2026-007Muster$\\\n"
+  },
+  {
+    "input": "{{buchungsnummer}}{{nachname}} {{buchungsnummer}} Bezug {{fruehere_buchungsnummer}}\n{{fruehere_buchungsnummer}}, !\t",
+    "first": "___",
+    "previous": " \t",
+    "expected": ""
+  },
+  {
+    "input": "{{nachname}}{{fruehere_buchungsnummer}}?Hallo{{fruehere_buchungsnummer}} ",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": ""
+  },
+  {
+    "input": "! \r\n. Grüße\nGrüße{{buchungsnummer}} Hallo{{fruehere_buchungsnummer}}{{nachname}}?",
+    "first": null,
+    "previous": "ALT-42",
+    "expected": "! \n. Grüße\nGrüße2026-007 HalloALT-42Muster$\\?"
+  },
+  {
+    "input": "{{nachname}}.",
+    "first": null,
+    "previous": "ALT-42",
+    "expected": "Muster$\\."
+  },
+  {
+    "input": "\n   {{fruehere_buchungsnummer}}{{nachname}}.\t\nBezug {{buchungsnummer}}{{buchungsnummer}} !!{{buchungsnummer}}{{fruehere_buchungsnummer}}\r\nBezug {{fruehere_buchungsnummer}}",
+    "first": "___",
+    "previous": " \t",
+    "expected": "Bezug 2026-0072026-007 !!"
+  },
+  {
+    "input": ".",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": "."
+  },
+  {
+    "input": " !Hallo\n{{nachname}}{{nachname}}Bezug \n",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": " !Hallo\nMuster$\\Muster$\\Bezug \n"
+  },
+  {
+    "input": "{{buchungsnummer}}{{nachname}}.!{{vorname}}.Grüße.  Bezug Bezug ,{{nachname}}{{vorname}},Bezug ,{{fruehere_buchungsnummer}}{{vorname}}Grüße{{vorname}}\n{{buchungsnummer}}",
+    "first": "___",
+    "previous": "ALT-42",
+    "expected": "2026-007Muster$\\.!Muster$\\.Grüße.  Bezug Bezug ,Muster$\\Muster$\\,Bezug ,ALT-42Muster$\\GrüßeMuster$\\\n2026-007"
+  },
+  {
+    "input": " {{buchungsnummer}}\nGrüße {{buchungsnummer}}{{fruehere_buchungsnummer}}\n{{buchungsnummer}}\n\t! {{buchungsnummer}},",
+    "first": null,
+    "previous": "ALT-42",
+    "expected": " 2026-007\nGrüße 2026-007ALT-42\n2026-007\n\t! 2026-007,"
+  },
+  {
+    "input": "Bezug Hallo  ?{{nachname}}GrüßeBezug    {{fruehere_buchungsnummer}}",
+    "first": "___",
+    "previous": " \t",
+    "expected": "Bezug Hallo  ?"
+  },
+  {
+    "input": "HalloBezug  {{buchungsnummer}} .",
+    "first": "___",
+    "previous": null,
+    "expected": "HalloBezug  2026-007 ."
+  },
+  {
+    "input": "?{{fruehere_buchungsnummer}}",
+    "first": null,
+    "previous": null,
+    "expected": "?"
+  },
+  {
+    "input": "  Bezug  Bezug {{vorname}}\n{{vorname}} !HalloBezug \n{{vorname}}??",
+    "first": null,
+    "previous": " \t",
+    "error": 422
+  },
+  {
+    "input": "Grüße.\tHalloGrüße?Grüße{{nachname}} , Hallo{{buchungsnummer}}Hallo\r\nGrüße{{vorname}}??{{nachname}}",
+    "first": "___",
+    "previous": " \t",
+    "expected": "Grüße.\tHalloGrüße?GrüßeMuster$\\ , Hallo2026-007Hallo\nGrüßeMuster$\\??Muster$\\"
+  },
+  {
+    "input": "{{vorname}} {{nachname}}\r\n?,",
+    "first": null,
+    "previous": "ALT-42",
+    "error": 422
+  },
+  {
+    "input": ",{{buchungsnummer}}",
+    "first": "Anna",
+    "previous": null,
+    "expected": ",2026-007"
+  },
+  {
+    "input": "{{fruehere_buchungsnummer}}.\nHalloHallo",
+    "first": null,
+    "previous": null,
+    "expected": "HalloHallo"
+  },
+  {
+    "input": "{{buchungsnummer}}Bezug \t, {{vorname}}\t!\r\n?!  \n?\r\n ",
+    "first": "___",
+    "previous": "ALT-42",
+    "expected": "2026-007Bezug \t, Muster$\\\t!\n?!  \n?\n "
+  },
+  {
+    "input": " {{nachname}}{{fruehere_buchungsnummer}}?\r\n\r\n {{nachname}}{{fruehere_buchungsnummer}}!  \r\n{{nachname}}Grüße!Grüße\r\n ",
+    "first": null,
+    "previous": "ALT-42",
+    "expected": " Muster$\\ALT-42?\n\n Muster$\\ALT-42!  \nMuster$\\Grüße!Grüße\n "
+  },
+  {
+    "input": "Bezug  \n ",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": "Bezug  \n "
+  },
+  {
+    "input": " .{{vorname}}\t\n,Bezug {{nachname}}Bezug Bezug Hallo\tGrüße\r\n\r\n{{buchungsnummer}}{{buchungsnummer}}{{nachname}}",
+    "first": "___",
+    "previous": null,
+    "expected": " .Muster$\\\t\n,Bezug Muster$\\Bezug Bezug Hallo\tGrüße\n\n2026-0072026-007Muster$\\"
+  },
+  {
+    "input": "{{buchungsnummer}}{{buchungsnummer}}.Bezug {{fruehere_buchungsnummer}}Bezug {{buchungsnummer}}\r\n\t",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": "2026-0072026-007."
+  },
+  {
+    "input": "HalloBezug  ,{{vorname}}\r\n?{{fruehere_buchungsnummer}} ",
+    "first": "Anna",
+    "previous": null,
+    "expected": "HalloBezug  ,Anna\n?"
+  },
+  {
+    "input": "{{fruehere_buchungsnummer}}{{buchungsnummer}}Hallo?\r\n \n{{buchungsnummer}}",
+    "first": null,
+    "previous": " \t",
+    "expected": " \n2026-007"
+  },
+  {
+    "input": "{{buchungsnummer}} {{vorname}} Hallo, {{nachname}}Grüße!\t{{buchungsnummer}}{{vorname}}Bezug \t\r\n{{nachname}} ",
+    "first": "___",
+    "previous": null,
+    "expected": "2026-007 Muster$\\ Hallo, Muster$\\Grüße!\t2026-007Muster$\\Bezug \t\nMuster$\\ "
+  },
+  {
+    "input": "\n{{nachname}}? \r\n  {{buchungsnummer}}",
+    "first": null,
+    "previous": "ALT-42",
+    "expected": "\nMuster$\\? \n  2026-007"
+  },
+  {
+    "input": "{{fruehere_buchungsnummer}}Hallo\n{{fruehere_buchungsnummer}}Bezug .{{nachname}}{{nachname}}\n\r\n.{{vorname}}.{{nachname}}{{vorname}}Bezug ",
+    "first": null,
+    "previous": null,
+    "error": 422
+  },
+  {
+    "input": " \tHallo.GrüßeGrüße ",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": " \tHallo.GrüßeGrüße "
+  },
+  {
+    "input": "{{nachname}}\n{{buchungsnummer}} {{vorname}} \nBezug \t",
+    "first": "___",
+    "previous": "ALT-42",
+    "expected": "Muster$\\\n2026-007 Muster$\\ \nBezug \t"
+  },
+  {
+    "input": " \t \nBezug Hallo\n {{fruehere_buchungsnummer}}?\n\t,Grüße",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": " \t \nBezug Hallo\n ALT-42?\n\t,Grüße"
+  },
+  {
+    "input": "\r\nGrüße,Grüße  \nGrüße \n Bezug Grüße\tBezug !Hallo",
+    "first": null,
+    "previous": null,
+    "expected": "\nGrüße,Grüße  \nGrüße \n Bezug Grüße\tBezug !Hallo"
+  },
+  {
+    "input": "  \n ",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": "  \n "
+  },
+  {
+    "input": "\t {{vorname}},!{{buchungsnummer}}Grüße{{fruehere_buchungsnummer}}{{vorname}}{{nachname}}\n",
+    "first": null,
+    "previous": null,
+    "error": 422
+  },
+  {
+    "input": "{{fruehere_buchungsnummer}}  Grüße{{nachname}}Bezug ,\r\n{{nachname}}\t\r\n\n\r\n{{nachname}}!\n \r\n {{fruehere_buchungsnummer}}{{buchungsnummer}}",
+    "first": "___",
+    "previous": " \t",
+    "expected": "Muster$\\\t\n\n\nMuster$\\!"
+  },
+  {
+    "input": "Bezug {{nachname}}",
+    "first": null,
+    "previous": "ALT-42",
+    "expected": "Bezug Muster$\\"
+  },
+  {
+    "input": "Bezug {{nachname}},\t?{{vorname}}{{vorname}}{{fruehere_buchungsnummer}}Grüße{{nachname}}\t\n \r\n \n \r\n ",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": "Bezug Muster$\\,\t?AnnaAnnaALT-42GrüßeMuster$\\\t\n \n \n \n "
+  },
+  {
+    "input": "\tGrüße{{nachname}}Bezug Bezug !{{vorname}}!{{vorname}}Hallo!\r\n{{vorname}}",
+    "first": "Anna",
+    "previous": null,
+    "expected": "\tGrüßeMuster$\\Bezug Bezug !Anna!AnnaHallo!\nAnna"
+  },
+  {
+    "input": ",{{fruehere_buchungsnummer}}!\r\n!??\nGrüße{{buchungsnummer}}\t!?\n{{nachname}}{{buchungsnummer}}",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": ",ALT-42!\n!??\nGrüße2026-007\t!?\nMuster$\\2026-007"
+  },
+  {
+    "input": "{{nachname}}",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": "Muster$\\"
+  },
+  {
+    "input": " Hallo {{nachname}}{{buchungsnummer}}Grüße!",
+    "first": "___",
+    "previous": "ALT-42",
+    "expected": " Hallo Muster$\\2026-007Grüße!"
+  },
+  {
+    "input": ",.{{nachname}}\r\n\nGrüße.? ,,{{nachname}}Hallo ",
+    "first": "___",
+    "previous": null,
+    "expected": ",.Muster$\\\n\nGrüße.? ,,Muster$\\Hallo "
+  },
+  {
+    "input": "\n\r\n{{nachname}}{{fruehere_buchungsnummer}} ",
+    "first": null,
+    "previous": " \t",
+    "expected": ""
+  },
+  {
+    "input": "\nGrüße  \t",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": "\nGrüße  \t"
+  },
+  {
+    "input": "{{nachname}},{{vorname}}Hallo{{buchungsnummer}} \n,\t\r\n!Hallo\r\n.Grüße{{buchungsnummer}}?.{{buchungsnummer}}Bezug !",
+    "first": null,
+    "previous": "ALT-42",
+    "error": 422
+  },
+  {
+    "input": "?Hallo \r\n",
+    "first": "___",
+    "previous": null,
+    "expected": "?Hallo \n"
+  },
+  {
+    "input": ".?.  Bezug \n ,.\n{{nachname}}\tGrüße?{{vorname}}\n \n",
+    "first": "Anna",
+    "previous": null,
+    "expected": ".?.  Bezug \n ,.\nMuster$\\\tGrüße?Anna\n \n"
+  },
+  {
+    "input": " \n\t\tHallo.{{vorname}}\tBezug ..{{vorname}}",
+    "first": "___",
+    "previous": null,
+    "expected": " \n\t\tHallo.Muster$\\\tBezug ..Muster$\\"
+  },
+  {
+    "input": "{{buchungsnummer}}{{vorname}} .Grüße \r\n{{buchungsnummer}}{{nachname}}{{vorname}}Bezug  {{buchungsnummer}}GrüßeGrüßeHallo.",
+    "first": null,
+    "previous": "ALT-42",
+    "error": 422
+  },
+  {
+    "input": "!.{{nachname}}Grüße  {{vorname}}\r\n,.Bezug {{nachname}}{{fruehere_buchungsnummer}}Bezug Hallo!",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": "!.Muster$\\Grüße  Anna\n,.Bezug Muster$\\ALT-42Bezug Hallo!"
+  },
+  {
+    "input": "Hallo{{nachname}}\r\nBezug . Hallo\t\n",
+    "first": "___",
+    "previous": null,
+    "expected": "HalloMuster$\\\nBezug . Hallo\t\n"
+  },
+  {
+    "input": "{{nachname}}\n{{buchungsnummer}}{{fruehere_buchungsnummer}}Bezug ?Bezug  Bezug ,!",
+    "first": "___",
+    "previous": null,
+    "expected": "Muster$\\\nBezug  Bezug ,!"
+  },
+  {
+    "input": "\r\n,\r\n  Grüße?\r\n{{nachname}}{{nachname}}\r\nHallo{{fruehere_buchungsnummer}}!\r\n.\n",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": "\n,\n  Grüße?\nMuster$\\Muster$\\\nHalloALT-42!\n.\n"
+  },
+  {
+    "input": "{{fruehere_buchungsnummer}}\t",
+    "first": null,
+    "previous": "ALT-42",
+    "expected": "ALT-42\t"
+  },
+  {
+    "input": " {{buchungsnummer}}{{buchungsnummer}}\n\n\r\n.?!Grüße{{vorname}}{{nachname}}",
+    "first": null,
+    "previous": null,
+    "error": 422
+  },
+  {
+    "input": "?Grüße,,Hallo\r\n{{buchungsnummer}}{{buchungsnummer}}.\n !\t?Grüße\n",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": "?Grüße,,Hallo\n2026-0072026-007.\n !\t?Grüße\n"
+  },
+  {
+    "input": "{{vorname}}?\t\r\nBezug \t Grüße,\t! {{buchungsnummer}}Grüße\t! {{vorname}}.",
+    "first": "___",
+    "previous": null,
+    "expected": "Muster$\\?\t\nBezug \t Grüße,\t! 2026-007Grüße\t! Muster$\\."
+  },
+  {
+    "input": "{{nachname}}\n{{vorname}}{{buchungsnummer}}\r\n.!",
+    "first": null,
+    "previous": "ALT-42",
+    "error": 422
+  },
+  {
+    "input": " \n!,Bezug {{buchungsnummer}}\r\n,?\r\nBezug Hallo\n!",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": " \n!,Bezug 2026-007\n,?\nBezug Hallo\n!"
+  },
+  {
+    "input": "?",
+    "first": null,
+    "previous": " \t",
+    "expected": "?"
+  },
+  {
+    "input": ",GrüßeHallo?!\r\n,{{fruehere_buchungsnummer}} \r\n \t,\t{{nachname}}Bezug ",
+    "first": null,
+    "previous": "ALT-42",
+    "expected": ",GrüßeHallo?!\n,ALT-42 \n \t,\tMuster$\\Bezug "
+  },
+  {
+    "input": ",, Bezug {{buchungsnummer}} ,Grüße{{vorname}},Hallo{{fruehere_buchungsnummer}},  ",
+    "first": "___",
+    "previous": " \t",
+    "expected": ""
+  },
+  {
+    "input": "{{fruehere_buchungsnummer}}.Grüße{{fruehere_buchungsnummer}}Grüße\t. {{vorname}},!,\t \n {{fruehere_buchungsnummer}}?Grüße.{{nachname}}Bezug {{nachname}}",
+    "first": "Anna",
+    "previous": null,
+    "expected": "Anna,!,\t \nGrüße.Muster$\\Bezug Muster$\\"
+  },
+  {
+    "input": "{{buchungsnummer}}{{nachname}}Bezug  , ,..Bezug   {{nachname}}",
+    "first": null,
+    "previous": " \t",
+    "expected": "2026-007Muster$\\Bezug  , ,..Bezug   Muster$\\"
+  },
+  {
+    "input": "Grüße ?Bezug \n\r\n!{{nachname}}{{vorname}}Hallo,Grüße  {{vorname}}\t!\n ",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": "Grüße ?Bezug \n\n!Muster$\\AnnaHallo,Grüße  Anna\t!\n "
+  },
+  {
+    "input": " .{{buchungsnummer}}{{vorname}}",
+    "first": null,
+    "previous": "ALT-42",
+    "error": 422
+  },
+  {
+    "input": " Hallo.{{buchungsnummer}}\r\n.Hallo{{fruehere_buchungsnummer}}?{{buchungsnummer}}{{fruehere_buchungsnummer}}, !,,Bezug HalloHallo\n\t{{buchungsnummer}} ",
+    "first": "___",
+    "previous": " \t",
+    "expected": "Hallo.2026-007\n.,,Bezug HalloHallo\n\t2026-007 "
+  },
+  {
+    "input": ",.",
+    "first": "___",
+    "previous": " \t",
+    "expected": ",."
+  },
+  {
+    "input": "{{buchungsnummer}}\r\n\n{{fruehere_buchungsnummer}},{{nachname}}\r\n{{buchungsnummer}}.Hallo{{fruehere_buchungsnummer}}",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": "2026-007\n\n\n2026-007."
+  },
+  {
+    "input": "!Grüße{{buchungsnummer}} \r\n{{nachname}}GrüßeBezug {{vorname}},  ?\r\n?!Hallo\r\n. {{nachname}}",
+    "first": "___",
+    "previous": " \t",
+    "expected": "!Grüße2026-007 \nMuster$\\GrüßeBezug Muster$\\,  ?\n?!Hallo\n. Muster$\\"
+  },
+  {
+    "input": "\t\n Bezug \n{{fruehere_buchungsnummer}} {{vorname}},{{nachname}}Grüße  ",
+    "first": null,
+    "previous": " \t",
+    "expected": "Bezug"
+  },
+  {
+    "input": "\t{{vorname}}  \r\n",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": "\tAnna  \n"
+  },
+  {
+    "input": ",\n{{buchungsnummer}}{{nachname}}\n\r\n{{fruehere_buchungsnummer}}\n {{buchungsnummer}}{{nachname}} {{fruehere_buchungsnummer}}Bezug {{buchungsnummer}}",
+    "first": "___",
+    "previous": " \t",
+    "expected": ",\n2026-007Muster$\\"
+  },
+  {
+    "input": "\r\n?.Hallo{{buchungsnummer}} ,{{fruehere_buchungsnummer}} ",
+    "first": "Anna",
+    "previous": null,
+    "expected": "?."
+  },
+  {
+    "input": "{{vorname}} ,{{fruehere_buchungsnummer}}.",
+    "first": null,
+    "previous": null,
+    "expected": ""
+  },
+  {
+    "input": "Hallo.{{buchungsnummer}}{{buchungsnummer}}!  {{fruehere_buchungsnummer}} ,Grüße{{fruehere_buchungsnummer}} {{buchungsnummer}}Grüße\n!.\r\n \r\n! ",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": "Hallo.2026-0072026-007!  ALT-42 ,GrüßeALT-42 2026-007Grüße\n!.\n \n! "
+  },
+  {
+    "input": ",.Grüße{{fruehere_buchungsnummer}}Grüße\n",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": ",."
+  },
+  {
+    "input": "\t",
+    "first": null,
+    "previous": null,
+    "expected": "\t"
+  },
+  {
+    "input": " {{nachname}}\r\n\t \t",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": " Muster$\\\n\t \t"
+  },
+  {
+    "input": ",{{fruehere_buchungsnummer}}Grüße.? {{vorname}}{{vorname}}.\nHallo{{buchungsnummer}}\r\n,",
+    "first": null,
+    "previous": null,
+    "error": 422
+  },
+  {
+    "input": "{{buchungsnummer}}?,Bezug ",
+    "first": "Anna",
+    "previous": null,
+    "expected": "2026-007?,Bezug "
+  },
+  {
+    "input": "\t?\r\n\nBezug {{vorname}}\t{{buchungsnummer}}\n\r\n.{{vorname}}",
+    "first": null,
+    "previous": " \t",
+    "error": 422
+  },
+  {
+    "input": "\n\n\r\n\r\n! \t\r\n",
+    "first": "___",
+    "previous": "ALT-42",
+    "expected": "\n\n\n\n! \t\n"
+  },
+  {
+    "input": "  {{fruehere_buchungsnummer}}{{vorname}}",
+    "first": "___",
+    "previous": " \t",
+    "expected": ""
+  },
+  {
+    "input": "Hallo.Hallo{{nachname}} ",
+    "first": null,
+    "previous": null,
+    "expected": "Hallo.HalloMuster$\\ "
+  },
+  {
+    "input": "Bezug \t  ! {{buchungsnummer}}",
+    "first": null,
+    "previous": null,
+    "expected": "Bezug \t  ! 2026-007"
+  },
+  {
+    "input": "Hallo{{nachname}} \r\n{{buchungsnummer}}?{{nachname}}\tGrüße\n\n,GrüßeHalloBezug ",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": "HalloMuster$\\ \n2026-007?Muster$\\\tGrüße\n\n,GrüßeHalloBezug "
+  },
+  {
+    "input": " {{fruehere_buchungsnummer}}Hallo\t!{{buchungsnummer}}",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": "2026-007"
+  },
+  {
+    "input": "\tBezug  .?{{nachname}}Hallo{{vorname}}GrüßeBezug Bezug ",
+    "first": "Anna",
+    "previous": null,
+    "expected": "\tBezug  .?Muster$\\HalloAnnaGrüßeBezug Bezug "
+  },
+  {
+    "input": " !Grüße\t,{{vorname}}?",
+    "first": "___",
+    "previous": null,
+    "expected": " !Grüße\t,Muster$\\?"
+  },
+  {
+    "input": " ! \t{{buchungsnummer}}{{nachname}}Bezug \t Hallo!\r\n .{{vorname}}Bezug  \r\nBezug ",
+    "first": "___",
+    "previous": null,
+    "expected": " ! \t2026-007Muster$\\Bezug \t Hallo!\n .Muster$\\Bezug  \nBezug "
+  },
+  {
+    "input": "!,{{vorname}}{{nachname}},  , \t!\r\n  .\r\n, GrüßeHallo{{buchungsnummer}} ",
+    "first": "Anna",
+    "previous": null,
+    "expected": "!,AnnaMuster$\\,  , \t!\n  .\n, GrüßeHallo2026-007 "
+  },
+  {
+    "input": ".,{{fruehere_buchungsnummer}}Hallo",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": ".,ALT-42Hallo"
+  },
+  {
+    "input": "Grüße?Bezug Bezug \r\nGrüße\tBezug \n{{fruehere_buchungsnummer}}\r\n\r\n\t{{vorname}} Bezug Grüße{{fruehere_buchungsnummer}}",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": "Grüße?Bezug Bezug \nGrüße\tBezug \nALT-42\n\n\tAnna Bezug GrüßeALT-42"
+  },
+  {
+    "input": "\t{{nachname}},Bezug !   \t!! \n,?GrüßeGrüße{{nachname}}Hallo{{buchungsnummer}}Grüße\n",
+    "first": null,
+    "previous": "ALT-42",
+    "expected": "\tMuster$\\,Bezug !   \t!! \n,?GrüßeGrüßeMuster$\\Hallo2026-007Grüße\n"
+  },
+  {
+    "input": "{{vorname}}{{fruehere_buchungsnummer}}! ?{{buchungsnummer}}",
+    "first": "___",
+    "previous": " \t",
+    "expected": "?2026-007"
+  },
+  {
+    "input": ",Grüße{{fruehere_buchungsnummer}}{{vorname}}{{fruehere_buchungsnummer}} ",
+    "first": null,
+    "previous": "ALT-42",
+    "error": 422
+  },
+  {
+    "input": "{{buchungsnummer}}Grüße{{vorname}}{{fruehere_buchungsnummer}}.HalloHalloHallo!?  \r\nGrüße \r\nHallo{{fruehere_buchungsnummer}}Bezug {{buchungsnummer}}\t{{buchungsnummer}}  ",
+    "first": "Anna",
+    "previous": null,
+    "expected": "HalloHalloHallo!?  \nGrüße"
+  },
+  {
+    "input": "Hallo{{vorname}}\n\r\n{{fruehere_buchungsnummer}}{{buchungsnummer}},\n {{buchungsnummer}}",
+    "first": "Anna",
+    "previous": null,
+    "expected": "HalloAnna\n\n\n 2026-007"
+  },
+  {
+    "input": "{{vorname}}Grüße{{nachname}}.Hallo {{fruehere_buchungsnummer}}",
+    "first": null,
+    "previous": "ALT-42",
+    "error": 422
+  },
+  {
+    "input": "{{buchungsnummer}},\t{{nachname}}{{buchungsnummer}}?. {{vorname}}Bezug Grüße,{{vorname}}{{nachname}}Hallo\t",
+    "first": null,
+    "previous": null,
+    "error": 422
+  },
+  {
+    "input": "Hallo{{buchungsnummer}}",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": "Hallo2026-007"
+  },
+  {
+    "input": "Grüße {{nachname}} \r\nHallo.Bezug Grüße! {{nachname}}",
+    "first": "___",
+    "previous": null,
+    "expected": "Grüße Muster$\\ \nHallo.Bezug Grüße! Muster$\\"
+  },
+  {
+    "input": "Hallo {{buchungsnummer}}{{nachname}},{{fruehere_buchungsnummer}} ?.Grüße{{buchungsnummer}}\t",
+    "first": "Anna",
+    "previous": null,
+    "expected": ".Grüße2026-007"
+  },
+  {
+    "input": " {{buchungsnummer}}?\r\n,",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": " 2026-007?\n,"
+  },
+  {
+    "input": " Grüße  Hallo{{nachname}}{{fruehere_buchungsnummer}} .Hallo\tBezug Hallo{{vorname}}!{{fruehere_buchungsnummer}}{{fruehere_buchungsnummer}}{{nachname}}?",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": "Hallo\tBezug HalloAnna!"
+  },
+  {
+    "input": "\t!\t?..\n,,! \t,\n{{fruehere_buchungsnummer}}Bezug \r\n?!Grüße",
+    "first": null,
+    "previous": " \t",
+    "expected": "!\t?..\n,,! \t,\n\n?!Grüße"
+  },
+  {
+    "input": "\nGrüße\r\n{{nachname}}!{{vorname}},\t\r\nBezug \t{{buchungsnummer}}!  ",
+    "first": null,
+    "previous": " \t",
+    "error": 422
+  },
+  {
+    "input": "?\r\n ",
+    "first": null,
+    "previous": null,
+    "expected": "?\n "
+  },
+  {
+    "input": "?Bezug Hallo Bezug ",
+    "first": "___",
+    "previous": "ALT-42",
+    "expected": "?Bezug Hallo Bezug "
+  },
+  {
+    "input": "GrüßeBezug {{nachname}}{{fruehere_buchungsnummer}}Bezug Bezug    .{{buchungsnummer}}.\n{{nachname}}Grüße,!?",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": "GrüßeBezug Muster$\\ALT-42Bezug Bezug    .2026-007.\nMuster$\\Grüße,!?"
+  },
+  {
+    "input": "{{vorname}}{{vorname}}{{buchungsnummer}}Hallo,\n.,.\t\n",
+    "first": null,
+    "previous": null,
+    "error": 422
+  },
+  {
+    "input": " {{nachname}}Bezug {{fruehere_buchungsnummer}}\n",
+    "first": null,
+    "previous": "ALT-42",
+    "expected": " Muster$\\Bezug ALT-42\n"
+  },
+  {
+    "input": " {{buchungsnummer}}Hallo\t Grüße?GrüßeGrüße",
+    "first": "___",
+    "previous": null,
+    "expected": " 2026-007Hallo\t Grüße?GrüßeGrüße"
+  },
+  {
+    "input": "{{nachname}}{{fruehere_buchungsnummer}}GrüßeBezug \n,!\n Bezug Bezug \r\n {{vorname}}?{{fruehere_buchungsnummer}}, ,\t{{fruehere_buchungsnummer}},!Grüße",
+    "first": null,
+    "previous": null,
+    "error": 422
+  },
+  {
+    "input": ".{{nachname}}Bezug {{buchungsnummer}}\t\r\nGrüße \t\t.",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": ".Muster$\\Bezug 2026-007\t\nGrüße \t\t."
+  },
+  {
+    "input": "Hallo. \t\tGrüßeGrüße?\n\tGrüße!Hallo",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": "Hallo. \t\tGrüßeGrüße?\n\tGrüße!Hallo"
+  },
+  {
+    "input": " ?Bezug ,\n? ",
+    "first": "Anna",
+    "previous": null,
+    "expected": " ?Bezug ,\n? "
+  },
+  {
+    "input": "GrüßeBezug   ",
+    "first": null,
+    "previous": null,
+    "expected": "GrüßeBezug   "
+  },
+  {
+    "input": "{{vorname}}Grüße{{fruehere_buchungsnummer}}{{vorname}} .HalloBezug !Bezug  ",
+    "first": "___",
+    "previous": "ALT-42",
+    "expected": "Muster$\\GrüßeALT-42Muster$\\ .HalloBezug !Bezug  "
+  },
+  {
+    "input": "\n \tGrüße{{buchungsnummer}}{{fruehere_buchungsnummer}}Hallo{{buchungsnummer}}\r\n{{fruehere_buchungsnummer}} ",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": "\n \tGrüße2026-007ALT-42Hallo2026-007\nALT-42 "
+  },
+  {
+    "input": "?{{buchungsnummer}}\t.{{vorname}}{{fruehere_buchungsnummer}}Hallo{{nachname}}!Hallo{{fruehere_buchungsnummer}}Bezug .Grüße{{buchungsnummer}}",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": "?2026-007\t.AnnaALT-42HalloMuster$\\!HalloALT-42Bezug .Grüße2026-007"
+  },
+  {
+    "input": "\r\n?? ??{{vorname}}Grüße{{vorname}} ,!{{nachname}} {{fruehere_buchungsnummer}}{{vorname}} Hallo\t.{{fruehere_buchungsnummer}}",
+    "first": "___",
+    "previous": " \t",
+    "expected": "?? ??Muster$\\GrüßeMuster$\\ ,!"
+  },
+  {
+    "input": "{{nachname}}! Bezug .Hallo  {{fruehere_buchungsnummer}}Hallo Grüße\t  ,Bezug ",
+    "first": null,
+    "previous": " \t",
+    "expected": "Muster$\\! Bezug ."
+  },
+  {
+    "input": ".{{fruehere_buchungsnummer}}. {{buchungsnummer}}\n{{nachname}}",
+    "first": "___",
+    "previous": null,
+    "expected": ". 2026-007\nMuster$\\"
+  },
+  {
+    "input": " .{{nachname}}.,",
+    "first": "___",
+    "previous": null,
+    "expected": " .Muster$\\.,"
+  },
+  {
+    "input": " Bezug Hallo!{{nachname}}Grüße, {{nachname}}{{buchungsnummer}}",
+    "first": null,
+    "previous": null,
+    "expected": " Bezug Hallo!Muster$\\Grüße, Muster$\\2026-007"
+  },
+  {
+    "input": "{{nachname}} ,{{buchungsnummer}}!{{vorname}}, {{nachname}}\t Bezug !",
+    "first": "___",
+    "previous": null,
+    "expected": "Muster$\\ ,2026-007!Muster$\\, Muster$\\\t Bezug !"
+  },
+  {
+    "input": ",{{nachname}}{{nachname}}\n{{fruehere_buchungsnummer}}?{{buchungsnummer}}{{fruehere_buchungsnummer}},\tGrüße \r\n\r\n",
+    "first": "___",
+    "previous": null,
+    "expected": ",Muster$\\Muster$\\"
+  },
+  {
+    "input": "{{vorname}}!{{nachname}}HalloHalloGrüße{{buchungsnummer}}!!\r\nGrüßeGrüße{{buchungsnummer}}{{vorname}}\t",
+    "first": null,
+    "previous": " \t",
+    "error": 422
+  },
+  {
+    "input": " {{vorname}}?\t ?.GrüßeBezug {{buchungsnummer}}?",
+    "first": "Anna",
+    "previous": null,
+    "expected": " Anna?\t ?.GrüßeBezug 2026-007?"
+  },
+  {
+    "input": ".!.",
+    "first": null,
+    "previous": " \t",
+    "expected": ".!."
+  },
+  {
+    "input": ",{{nachname}}?  ,  . ",
+    "first": null,
+    "previous": null,
+    "expected": ",Muster$\\?  ,  . "
+  },
+  {
+    "input": "{{buchungsnummer}}HalloGrüße\n\t  \r\nBezug Grüße,Hallo{{fruehere_buchungsnummer}}?!\t!{{nachname}}.\t ",
+    "first": null,
+    "previous": " \t",
+    "expected": "2026-007HalloGrüße\n\t  \n!\t!Muster$\\."
+  },
+  {
+    "input": " \r\n.{{buchungsnummer}}\n",
+    "first": "___",
+    "previous": " \t",
+    "expected": " \n.2026-007\n"
+  },
+  {
+    "input": "{{nachname}},!. \r\n\tHallo!\r\n ",
+    "first": null,
+    "previous": " \t",
+    "expected": "Muster$\\,!. \n\tHallo!\n "
+  },
+  {
+    "input": "{{buchungsnummer}}{{fruehere_buchungsnummer}}. GrüßeBezug \r\n\n\n,{{nachname}}{{fruehere_buchungsnummer}} Bezug {{fruehere_buchungsnummer}}",
+    "first": null,
+    "previous": null,
+    "expected": "GrüßeBezug"
+  },
+  {
+    "input": "Bezug  {{vorname}}{{buchungsnummer}}\n,\n.Grüße  \t",
+    "first": "___",
+    "previous": "ALT-42",
+    "expected": "Bezug  Muster$\\2026-007\n,\n.Grüße  \t"
+  },
+  {
+    "input": "Grüße??\r\n{{fruehere_buchungsnummer}} Bezug {{buchungsnummer}} Bezug !Grüße   ",
+    "first": null,
+    "previous": " \t",
+    "expected": "Grüße??\nGrüße  "
+  },
+  {
+    "input": "Bezug ?{{nachname}}?Hallo \n\tHallo{{vorname}}. {{vorname}}HalloHallo\tGrüße!",
+    "first": null,
+    "previous": "ALT-42",
+    "error": 422
+  },
+  {
+    "input": "?{{buchungsnummer}}{{nachname}}Grüße{{nachname}}Hallo {{buchungsnummer}}{{vorname}}Bezug Hallo {{vorname}}!\n {{vorname}}!{{vorname}}Bezug Grüße",
+    "first": "___",
+    "previous": "ALT-42",
+    "expected": "?2026-007Muster$\\GrüßeMuster$\\Hallo 2026-007Muster$\\Bezug Hallo Muster$\\!\n Muster$\\!Muster$\\Bezug Grüße"
+  },
+  {
+    "input": "  Grüße{{fruehere_buchungsnummer}}{{nachname}}.\n,Hallo{{nachname}},,!?Bezug  \r\n",
+    "first": null,
+    "previous": " \t",
+    "expected": ",HalloMuster$\\,,!?Bezug"
+  },
+  {
+    "input": " ? Grüße\r\n",
+    "first": "Anna",
+    "previous": null,
+    "expected": " ? Grüße\n"
+  },
+  {
+    "input": "Hallo Bezug {{vorname}}Bezug \t?!Hallo{{vorname}}GrüßeBezug ,{{buchungsnummer}}{{nachname}}\r\n{{vorname}}Grüße{{vorname}}{{vorname}}Bezug \r\n{{vorname}}\r\n",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": "Hallo Bezug AnnaBezug \t?!HalloAnnaGrüßeBezug ,2026-007Muster$\\\nAnnaGrüßeAnnaAnnaBezug \nAnna\n"
+  },
+  {
+    "input": "\n ..\t{{fruehere_buchungsnummer}} \n\t!\r\n{{vorname}} Hallo Grüße{{vorname}}Bezug ,{{vorname}}",
+    "first": null,
+    "previous": null,
+    "error": 422
+  },
+  {
+    "input": "{{nachname}}!",
+    "first": "___",
+    "previous": null,
+    "expected": "Muster$\\!"
+  },
+  {
+    "input": "\n!{{buchungsnummer}}Hallo?{{nachname}} !?{{nachname}}Bezug {{nachname}}?  ",
+    "first": null,
+    "previous": null,
+    "expected": "\n!2026-007Hallo?Muster$\\ !?Muster$\\Bezug Muster$\\?  "
+  },
+  {
+    "input": ". \n.? , HalloBezug Grüße .{{vorname}} . ",
+    "first": "___",
+    "previous": null,
+    "expected": ". \n.? , HalloBezug Grüße .Muster$\\ . "
+  },
+  {
+    "input": "  Bezug {{vorname}}{{fruehere_buchungsnummer}}{{buchungsnummer}}.Bezug {{buchungsnummer}}\t??,.Hallo{{buchungsnummer}}\r\n\t",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": "Bezug 2026-007\t??,.Hallo2026-007"
+  },
+  {
+    "input": ".  \t",
+    "first": null,
+    "previous": null,
+    "expected": ".  \t"
+  },
+  {
+    "input": "!{{buchungsnummer}},\r\n!HalloBezug {{nachname}}!Hallo ",
+    "first": "___",
+    "previous": null,
+    "expected": "!2026-007,\n!HalloBezug Muster$\\!Hallo "
+  },
+  {
+    "input": "Bezug {{buchungsnummer}}Bezug  \nGrüße{{vorname}}\t?{{fruehere_buchungsnummer}}\n \t Grüße",
+    "first": "Anna",
+    "previous": null,
+    "expected": "Bezug 2026-007Bezug  \nGrüßeAnna\t?\n \t Grüße"
+  },
+  {
+    "input": "\r\n{{buchungsnummer}}\r\nHallo{{vorname}}  \t, {{buchungsnummer}} \r\n ?.\n  {{vorname}}\r\n ",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": "\n2026-007\nHalloAnna  \t, 2026-007 \n ?.\n  Anna\n "
+  },
+  {
+    "input": "{{fruehere_buchungsnummer}}.Bezug \r\n  ?Bezug Grüße",
+    "first": "___",
+    "previous": null,
+    "expected": "Bezug \n  ?Bezug Grüße"
+  },
+  {
+    "input": "{{buchungsnummer}}{{fruehere_buchungsnummer}} Bezug {{buchungsnummer}}\n{{vorname}}.Hallo! ",
+    "first": "Anna",
+    "previous": null,
+    "expected": "Anna.Hallo!"
+  },
+  {
+    "input": "!\n \nBezug ?GrüßeBezug ,",
+    "first": "___",
+    "previous": "ALT-42",
+    "expected": "!\n \nBezug ?GrüßeBezug ,"
+  },
+  {
+    "input": "\t? {{buchungsnummer}}\r\n{{fruehere_buchungsnummer}},! \t Bezug , Bezug ",
+    "first": null,
+    "previous": "ALT-42",
+    "expected": "\t? 2026-007\nALT-42,! \t Bezug , Bezug "
+  },
+  {
+    "input": "{{fruehere_buchungsnummer}}?Hallo{{vorname}} Hallo{{fruehere_buchungsnummer}}Hallo",
+    "first": "___",
+    "previous": null,
+    "expected": ""
+  },
+  {
+    "input": "{{nachname}}GrüßeGrüße, {{buchungsnummer}}{{vorname}}{{vorname}}\t!,",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": "Muster$\\GrüßeGrüße, 2026-007AnnaAnna\t!,"
+  },
+  {
+    "input": "\t!{{fruehere_buchungsnummer}}{{nachname}}Bezug Hallo\t !{{nachname}}",
+    "first": "Anna",
+    "previous": null,
+    "expected": "!Muster$\\"
+  },
+  {
+    "input": "Grüße\t.?\r\n!{{nachname}}! ,{{nachname}}",
+    "first": null,
+    "previous": " \t",
+    "expected": "Grüße\t.?\n!Muster$\\! ,Muster$\\"
+  },
+  {
+    "input": "{{buchungsnummer}}Bezug !Grüße  ",
+    "first": "Anna",
+    "previous": null,
+    "expected": "2026-007Bezug !Grüße  "
+  },
+  {
+    "input": ".\t Hallo!{{vorname}}Grüße{{vorname}} Hallo!Bezug \t",
+    "first": "___",
+    "previous": "ALT-42",
+    "expected": ".\t Hallo!Muster$\\GrüßeMuster$\\ Hallo!Bezug \t"
+  },
+  {
+    "input": ",\n\n\t.{{fruehere_buchungsnummer}} Hallo{{fruehere_buchungsnummer}}Hallo {{vorname}}\r\n{{fruehere_buchungsnummer}}Hallo!\tBezug {{fruehere_buchungsnummer}}!HalloGrüße",
+    "first": "___",
+    "previous": " \t",
+    "expected": ",\n\n\t.\nHalloGrüße"
+  },
+  {
+    "input": " {{vorname}}Hallo! \r\n{{nachname}} {{fruehere_buchungsnummer}}{{fruehere_buchungsnummer}}\n\n{{fruehere_buchungsnummer}}Grüße\t.",
+    "first": "___",
+    "previous": null,
+    "expected": " Muster$\\Hallo!"
+  },
+  {
+    "input": "Bezug  ,\r\n\tHallo\t{{vorname}}{{fruehere_buchungsnummer}} !{{buchungsnummer}}",
+    "first": "Anna",
+    "previous": null,
+    "expected": "Bezug  ,\n2026-007"
+  },
+  {
+    "input": "Hallo{{fruehere_buchungsnummer}} Grüße",
+    "first": "___",
+    "previous": "ALT-42",
+    "expected": "HalloALT-42 Grüße"
+  },
+  {
+    "input": ".Hallo{{vorname}}!\t {{buchungsnummer}}!  \r\n{{buchungsnummer}},Hallo, ",
+    "first": "___",
+    "previous": " \t",
+    "expected": ".HalloMuster$\\!\t 2026-007!  \n2026-007,Hallo, "
+  },
+  {
+    "input": " \n",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": " \n"
+  },
+  {
+    "input": "Hallo{{nachname}}, .. {{buchungsnummer}} \r\nGrüße {{vorname}}Bezug {{buchungsnummer}}.?\t\r\n\r\n\tHallo.",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": "HalloMuster$\\, .. 2026-007 \nGrüße AnnaBezug 2026-007.?\t\n\n\tHallo."
+  },
+  {
+    "input": "\n{{vorname}} Hallo{{vorname}}Bezug {{vorname}}{{buchungsnummer}} {{nachname}},Grüße{{vorname}} ,, \r\n",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": "\nAnna HalloAnnaBezug Anna2026-007 Muster$\\,GrüßeAnna ,, \n"
+  },
+  {
+    "input": " {{buchungsnummer}}\r\n?Bezug ! \r\n{{vorname}}.,",
+    "first": "___",
+    "previous": "ALT-42",
+    "expected": " 2026-007\n?Bezug ! \nMuster$\\.,"
+  },
+  {
+    "input": "\r\n.{{vorname}}  Grüße{{vorname}}Grüße Grüße",
+    "first": null,
+    "previous": null,
+    "error": 422
+  },
+  {
+    "input": " .!Grüße,?{{vorname}}Grüße\n?Hallo,  \n\n{{buchungsnummer}}!",
+    "first": null,
+    "previous": " \t",
+    "error": 422
+  },
+  {
+    "input": " ?Hallo.!Bezug {{fruehere_buchungsnummer}}{{vorname}}",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": " ?Hallo.!Bezug ALT-42Anna"
+  },
+  {
+    "input": ".?!   \t\n\tGrüßeGrüße\t ",
+    "first": null,
+    "previous": null,
+    "expected": ".?!   \t\n\tGrüßeGrüße\t "
+  },
+  {
+    "input": "Grüße,\nGrüße\r\n {{vorname}}{{fruehere_buchungsnummer}}",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": "Grüße,\nGrüße"
+  },
+  {
+    "input": " Bezug {{nachname}}Grüße{{buchungsnummer}},{{nachname}}.!{{fruehere_buchungsnummer}}{{fruehere_buchungsnummer}} \n",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": " Bezug Muster$\\Grüße2026-007,Muster$\\.!ALT-42ALT-42 \n"
+  },
+  {
+    "input": " GrüßeGrüße{{buchungsnummer}}{{vorname}}?Bezug !{{fruehere_buchungsnummer}}{{vorname}}\r\n {{nachname}}\t{{vorname}},{{buchungsnummer}}",
+    "first": "___",
+    "previous": "ALT-42",
+    "expected": " GrüßeGrüße2026-007Muster$\\?Bezug !ALT-42Muster$\\\n Muster$\\\tMuster$\\,2026-007"
+  },
+  {
+    "input": " \r\n{{buchungsnummer}} {{vorname}}!Hallo?{{nachname}}Hallo{{vorname}}Hallo,{{buchungsnummer}}{{vorname}},\n",
+    "first": "___",
+    "previous": "ALT-42",
+    "expected": " \n2026-007 Muster$\\!Hallo?Muster$\\HalloMuster$\\Hallo,2026-007Muster$\\,\n"
+  },
+  {
+    "input": "{{vorname}},,",
+    "first": "___",
+    "previous": null,
+    "expected": "Muster$\\,,"
+  },
+  {
+    "input": "Grüße,\n\t\r\n{{vorname}}{{buchungsnummer}}{{buchungsnummer}} Bezug \n,Bezug ",
+    "first": null,
+    "previous": " \t",
+    "error": 422
+  },
+  {
+    "input": "\tHallo\r\n{{nachname}}!!{{vorname}}",
+    "first": "___",
+    "previous": null,
+    "expected": "\tHallo\nMuster$\\!!Muster$\\"
+  },
+  {
+    "input": ",",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": ","
+  },
+  {
+    "input": "{{buchungsnummer}}\r\n,. {{nachname}}GrüßeBezug {{vorname}}..",
+    "first": null,
+    "previous": "ALT-42",
+    "error": 422
+  },
+  {
+    "input": "!\r\n{{nachname}}.{{nachname}}!\n\n\n Bezug ?,Hallo{{vorname}}\t.Grüße\n,",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": "!\nMuster$\\.Muster$\\!\n\n\n Bezug ?,HalloAnna\t.Grüße\n,"
+  },
+  {
+    "input": ",,,?\r\n! {{fruehere_buchungsnummer}}",
+    "first": null,
+    "previous": " \t",
+    "expected": ",,,?\n!"
+  },
+  {
+    "input": " {{vorname}}?.Hallo  ",
+    "first": null,
+    "previous": " \t",
+    "error": 422
+  },
+  {
+    "input": ". {{vorname}}{{buchungsnummer}},Hallo",
+    "first": "___",
+    "previous": "ALT-42",
+    "expected": ". Muster$\\2026-007,Hallo"
+  },
+  {
+    "input": " \r\n{{nachname}}\n\n",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": " \nMuster$\\\n\n"
+  },
+  {
+    "input": "\t.! \r\nBezug \t?.,Grüße{{fruehere_buchungsnummer}}{{vorname}}{{fruehere_buchungsnummer}}?\n!\n",
+    "first": null,
+    "previous": " \t",
+    "expected": ".! \nBezug \t?.\n!"
+  },
+  {
+    "input": ",?!",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": ",?!"
+  },
+  {
+    "input": ", Grüße Bezug Bezug \t{{nachname}}Bezug ",
+    "first": "___",
+    "previous": null,
+    "expected": ", Grüße Bezug Bezug \tMuster$\\Bezug "
+  },
+  {
+    "input": "\r\n{{vorname}}!{{buchungsnummer}}.Bezug  \t. \r\n Hallo{{nachname}}Hallo!{{vorname}}\t{{nachname}}?",
+    "first": null,
+    "previous": null,
+    "error": 422
+  },
+  {
+    "input": "{{vorname}}?Grüße{{buchungsnummer}} !HalloHallo\n \t Grüße.Hallo.{{vorname}} .{{buchungsnummer}}",
+    "first": null,
+    "previous": " \t",
+    "error": 422
+  },
+  {
+    "input": ",",
+    "first": null,
+    "previous": null,
+    "expected": ","
+  },
+  {
+    "input": "{{nachname}} \t",
+    "first": null,
+    "previous": "ALT-42",
+    "expected": "Muster$\\ \t"
+  },
+  {
+    "input": "Hallo!{{vorname}}!\nGrüße{{nachname}} Hallo?{{fruehere_buchungsnummer}}Grüße.",
+    "first": "___",
+    "previous": null,
+    "expected": "Hallo!Muster$\\!\nGrüßeMuster$\\ Hallo?"
+  },
+  {
+    "input": "Bezug Grüße\t?\r\n{{vorname}}Bezug \n{{fruehere_buchungsnummer}}",
+    "first": null,
+    "previous": " \t",
+    "error": 422
+  },
+  {
+    "input": "\n{{fruehere_buchungsnummer}} !,{{fruehere_buchungsnummer}}{{fruehere_buchungsnummer}}.Bezug ",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": "Bezug"
+  },
+  {
+    "input": ",.. \r\nBezug {{nachname}} Grüße{{fruehere_buchungsnummer}}?{{fruehere_buchungsnummer}}!Bezug ",
+    "first": null,
+    "previous": " \t",
+    "expected": ",.. \nBezug"
+  },
+  {
+    "input": "{{buchungsnummer}}{{vorname}},{{vorname}}\r\n?Grüße!,\t\t!\r\n{{fruehere_buchungsnummer}}!Grüße\tHallo?,!\r\n{{vorname}}",
+    "first": null,
+    "previous": "ALT-42",
+    "error": 422
+  },
+  {
+    "input": "\t{{buchungsnummer}},\t!\n?\r\n{{buchungsnummer}}\t{{nachname}} Bezug \r\n!Bezug ! ?\n",
+    "first": "Anna",
+    "previous": null,
+    "expected": "\t2026-007,\t!\n?\n2026-007\tMuster$\\ Bezug \n!Bezug ! ?\n"
+  },
+  {
+    "input": "  .Hallo ?  {{fruehere_buchungsnummer}}Grüße \r\n\tBezug Hallo \t{{buchungsnummer}},\t",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": ".Hallo ?\n\tBezug Hallo \t2026-007,"
+  },
+  {
+    "input": "Bezug Bezug \t\t{{nachname}}{{buchungsnummer}}Hallo ?Hallo{{vorname}}\r\n  Grüße\r\n {{fruehere_buchungsnummer}} \n{{buchungsnummer}}!",
+    "first": "___",
+    "previous": null,
+    "expected": "Bezug Bezug \t\tMuster$\\2026-007Hallo ?HalloMuster$\\\n  Grüße\n\n2026-007!"
+  },
+  {
+    "input": "Bezug {{vorname}} !\tBezug  \t\n\t,  ?!Hallo ?",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": "Bezug Anna !\tBezug  \t\n\t,  ?!Hallo ?"
+  },
+  {
+    "input": "{{buchungsnummer}}{{fruehere_buchungsnummer}}{{vorname}}Bezug ,.Bezug {{nachname}}\t",
+    "first": null,
+    "previous": null,
+    "expected": "Bezug Muster$\\"
+  },
+  {
+    "input": "Grüße{{vorname}}",
+    "first": "___",
+    "previous": null,
+    "expected": "GrüßeMuster$\\"
+  },
+  {
+    "input": "{{nachname}},\n{{vorname}}{{buchungsnummer}}HalloBezug ",
+    "first": "___",
+    "previous": " \t",
+    "expected": "Muster$\\2026-007HalloBezug "
+  },
+  {
+    "input": " \t \t",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": " \t \t"
+  },
+  {
+    "input": "\r\n \n\t!Grüße\r\n!!.\r\n{{vorname}}",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": "\n \n\t!Grüße\n!!.\nAnna"
+  },
+  {
+    "input": " Grüße{{buchungsnummer}}HalloHallo? \r\nBezug  \n Hallo\t .\r\n{{fruehere_buchungsnummer}}",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": " Grüße2026-007HalloHallo? \nBezug  \n Hallo\t .\nALT-42"
+  },
+  {
+    "input": " ??\t \r\n \t ?.Bezug  . .Hallo\r\n!. Hallo\t\r\n",
+    "first": "Anna",
+    "previous": null,
+    "expected": " ??\t \n \t ?.Bezug  . .Hallo\n!. Hallo\t\n"
+  },
+  {
+    "input": "\r\nGrüße  {{vorname}} ",
+    "first": null,
+    "previous": " \t",
+    "error": 422
+  },
+  {
+    "input": "Bezug {{fruehere_buchungsnummer}}. {{nachname}}!\r\n. \r\n{{fruehere_buchungsnummer}}.\n{{fruehere_buchungsnummer}}!{{vorname}}Hallo !Bezug .{{fruehere_buchungsnummer}}Grüße",
+    "first": "___",
+    "previous": "ALT-42",
+    "expected": "Bezug ALT-42. Muster$\\!\n. \nALT-42.\nALT-42!Muster$\\Hallo !Bezug .ALT-42Grüße"
+  },
+  {
+    "input": ".HalloBezug .! ?{{buchungsnummer}}?Grüße {{fruehere_buchungsnummer}}Hallo??!\n",
+    "first": null,
+    "previous": " \t",
+    "expected": ".HalloBezug .! ?2026-007??!"
+  },
+  {
+    "input": "{{fruehere_buchungsnummer}}{{buchungsnummer}}\r\n \r\n{{buchungsnummer}}.{{buchungsnummer}} ! \r\nBezug Bezug {{vorname}}{{nachname}}{{vorname}}\t!{{nachname}}.{{fruehere_buchungsnummer}}",
+    "first": "Anna",
+    "previous": null,
+    "expected": " \n2026-007.2026-007 ! \nBezug Bezug AnnaMuster$\\Anna\t!Muster$\\."
+  },
+  {
+    "input": "{{buchungsnummer}},,?\t\r\n ! ?",
+    "first": "___",
+    "previous": null,
+    "expected": "2026-007,,?\t\n ! ?"
+  },
+  {
+    "input": " \n?{{vorname}}Grüße{{nachname}}\n",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": " \n?AnnaGrüßeMuster$\\\n"
+  },
+  {
+    "input": "!. \n?\tHallo {{fruehere_buchungsnummer}}.\t{{fruehere_buchungsnummer}}.\tBezug {{nachname}} . ?\r\n{{nachname}} ",
+    "first": null,
+    "previous": null,
+    "expected": "!. \n?\tBezug Muster$\\ . ?\nMuster$\\"
+  },
+  {
+    "input": "Grüße\t{{nachname}}{{buchungsnummer}}.{{buchungsnummer}} Hallo\t{{buchungsnummer}}.{{fruehere_buchungsnummer}}?\r\n\n,",
+    "first": null,
+    "previous": " \t",
+    "expected": "Grüße\tMuster$\\2026-007.2026-007 Hallo\t2026-007.\n\n,"
+  },
+  {
+    "input": "!\n",
+    "first": null,
+    "previous": "ALT-42",
+    "expected": "!\n"
+  },
+  {
+    "input": "HalloBezug Hallo\n{{vorname}}\t\nBezug \t\t.",
+    "first": null,
+    "previous": " \t",
+    "error": 422
+  },
+  {
+    "input": "\r\n\t.Hallo{{fruehere_buchungsnummer}}{{vorname}}\t",
+    "first": "___",
+    "previous": "ALT-42",
+    "expected": "\n\t.HalloALT-42Muster$\\\t"
+  },
+  {
+    "input": "\n \tBezug Grüße !Bezug Bezug Grüße\r\n",
+    "first": null,
+    "previous": " \t",
+    "expected": "\n \tBezug Grüße !Bezug Bezug Grüße\n"
+  },
+  {
+    "input": "{{vorname}}!{{nachname}}HalloBezug  Grüße{{buchungsnummer}}",
+    "first": "___",
+    "previous": " \t",
+    "expected": "Muster$\\!Muster$\\HalloBezug  Grüße2026-007"
+  },
+  {
+    "input": "{{vorname}}{{nachname}}",
+    "first": null,
+    "previous": "ALT-42",
+    "error": 422
+  },
+  {
+    "input": "\t,\t\n\nHallo{{nachname}} \r\n{{vorname}}\t.\t",
+    "first": null,
+    "previous": "ALT-42",
+    "error": 422
+  },
+  {
+    "input": "{{vorname}}.{{nachname}}",
+    "first": "___",
+    "previous": " \t",
+    "expected": "Muster$\\.Muster$\\"
+  },
+  {
+    "input": " ...Grüße\r\n{{buchungsnummer}}GrüßeHalloGrüße",
+    "first": null,
+    "previous": null,
+    "expected": " ...Grüße\n2026-007GrüßeHalloGrüße"
+  },
+  {
+    "input": "\n\r\n\t{{nachname}}\t{{nachname}}  {{fruehere_buchungsnummer}}?\r\n",
+    "first": "___",
+    "previous": null,
+    "expected": ""
+  },
+  {
+    "input": "{{buchungsnummer}}. \t  {{fruehere_buchungsnummer}}\r\n\nGrüßeHalloGrüße! !\t!!?{{fruehere_buchungsnummer}}\t\r\n ",
+    "first": null,
+    "previous": "ALT-42",
+    "expected": "2026-007. \t  ALT-42\n\nGrüßeHalloGrüße! !\t!!?ALT-42\t\n "
+  },
+  {
+    "input": ",,Grüße\n\r\n  \r\nGrüßeGrüße{{vorname}}\t{{nachname}}",
+    "first": null,
+    "previous": " \t",
+    "error": 422
+  },
+  {
+    "input": ", ,\tGrüße,Grüße\r\n!!Grüße\t \nGrüße",
+    "first": "___",
+    "previous": " \t",
+    "expected": ", ,\tGrüße,Grüße\n!!Grüße\t \nGrüße"
+  },
+  {
+    "input": " {{fruehere_buchungsnummer}} {{buchungsnummer}}{{nachname}},.Bezug  {{vorname}}{{buchungsnummer}}{{fruehere_buchungsnummer}}\t{{buchungsnummer}}?{{fruehere_buchungsnummer}}Grüße \r\n?",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": " ALT-42 2026-007Muster$\\,.Bezug  Anna2026-007ALT-42\t2026-007?ALT-42Grüße \n?"
+  },
+  {
+    "input": "??Bezug Grüße?!.!{{buchungsnummer}}\n\r\n",
+    "first": null,
+    "previous": " \t",
+    "expected": "??Bezug Grüße?!.!2026-007\n\n"
+  },
+  {
+    "input": "?",
+    "first": "___",
+    "previous": "ALT-42",
+    "expected": "?"
+  },
+  {
+    "input": "\t \n?.,\n\n,{{vorname}} Grüße\r\nGrüße  {{vorname}}{{buchungsnummer}}",
+    "first": null,
+    "previous": " \t",
+    "error": 422
+  },
+  {
+    "input": "{{fruehere_buchungsnummer}}\nHallo{{nachname}} \n {{vorname}}?Grüße\t.{{fruehere_buchungsnummer}}{{buchungsnummer}} .,{{vorname}}{{nachname}} Bezug Hallo{{nachname}}",
+    "first": null,
+    "previous": "ALT-42",
+    "error": 422
+  },
+  {
+    "input": ".Bezug Grüße \t!.!? \t",
+    "first": "___",
+    "previous": " \t",
+    "expected": ".Bezug Grüße \t!.!? \t"
+  },
+  {
+    "input": "Grüße",
+    "first": null,
+    "previous": " \t",
+    "expected": "Grüße"
+  },
+  {
+    "input": ".{{fruehere_buchungsnummer}}!\t",
+    "first": "___",
+    "previous": " \t",
+    "expected": "."
+  },
+  {
+    "input": " {{nachname}} \t Bezug !{{nachname}}{{nachname}}{{nachname}}",
+    "first": "Anna",
+    "previous": null,
+    "expected": " Muster$\\ \t Bezug !Muster$\\Muster$\\Muster$\\"
+  },
+  {
+    "input": " , ,Bezug {{fruehere_buchungsnummer}}{{fruehere_buchungsnummer}}\r\n!,{{nachname}}Grüße!?Bezug  {{vorname}}{{vorname}}",
+    "first": "___",
+    "previous": " \t",
+    "expected": "!,Muster$\\Grüße!?Bezug  Muster$\\Muster$\\"
+  },
+  {
+    "input": "{{vorname}}{{buchungsnummer}}Bezug ?Bezug \tBezug \r\n\n{{nachname}}\r\n{{nachname}} {{buchungsnummer}}\n\r\n{{buchungsnummer}}",
+    "first": null,
+    "previous": " \t",
+    "error": 422
+  },
+  {
+    "input": "\r\nBezug  \r\n",
+    "first": null,
+    "previous": "ALT-42",
+    "expected": "\nBezug  \n"
+  },
+  {
+    "input": "{{vorname}}?Grüße Hallo\t{{fruehere_buchungsnummer}}\nBezug ",
+    "first": null,
+    "previous": null,
+    "error": 422
+  },
+  {
+    "input": "{{buchungsnummer}}",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": "2026-007"
+  },
+  {
+    "input": "{{buchungsnummer}},Bezug  \r\n, \tBezug .",
+    "first": null,
+    "previous": null,
+    "expected": "2026-007,Bezug  \n, \tBezug ."
+  },
+  {
+    "input": "Grüße\t{{fruehere_buchungsnummer}}Hallo ",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": "Grüße\tALT-42Hallo "
+  },
+  {
+    "input": "  Hallo ",
+    "first": null,
+    "previous": null,
+    "expected": "  Hallo "
+  },
+  {
+    "input": ".",
+    "first": null,
+    "previous": " \t",
+    "expected": "."
+  },
+  {
+    "input": "Bezug {{buchungsnummer}}{{buchungsnummer}}?Grüße{{buchungsnummer}}\nGrüße\n",
+    "first": "___",
+    "previous": "ALT-42",
+    "expected": "Bezug 2026-0072026-007?Grüße2026-007\nGrüße\n"
+  },
+  {
+    "input": "Grüße.! Bezug \r\n",
+    "first": "___",
+    "previous": " \t",
+    "expected": "Grüße.! Bezug \n"
+  },
+  {
+    "input": ",{{buchungsnummer}} Hallo{{vorname}} Bezug {{vorname}}Bezug \r\n\n{{vorname}}",
+    "first": "___",
+    "previous": " \t",
+    "expected": ",2026-007 HalloMuster$\\ Bezug Muster$\\Bezug \n\nMuster$\\"
+  },
+  {
+    "input": "\n, Grüße{{buchungsnummer}}Grüße!   ?\r\n {{fruehere_buchungsnummer}}\t",
+    "first": null,
+    "previous": null,
+    "expected": ", Grüße2026-007Grüße!   ?"
+  },
+  {
+    "input": " Bezug  ?..   .?? \nBezug {{fruehere_buchungsnummer}}",
+    "first": "___",
+    "previous": " \t",
+    "expected": "Bezug  ?..   .?? "
+  },
+  {
+    "input": "{{vorname}}\r\n {{buchungsnummer}}\t.{{nachname}}!\n\n\tGrüße,.\t\t.. \r\n{{vorname}}",
+    "first": "Anna",
+    "previous": null,
+    "expected": "Anna\n 2026-007\t.Muster$\\!\n\n\tGrüße,.\t\t.. \nAnna"
+  },
+  {
+    "input": "HalloHalloGrüße",
+    "first": "___",
+    "previous": null,
+    "expected": "HalloHalloGrüße"
+  },
+  {
+    "input": " {{buchungsnummer}}  ?Bezug \n\nBezug \r\n{{buchungsnummer}}\t? {{buchungsnummer}}!Bezug  ?\t {{fruehere_buchungsnummer}}",
+    "first": null,
+    "previous": " \t",
+    "expected": " 2026-007  ?Bezug \n\nBezug \n2026-007\t? 2026-007!Bezug  ?"
+  },
+  {
+    "input": "  !\n\t, Bezug Hallo,{{vorname}}!Hallo{{nachname}}{{vorname}}.!?",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": "  !\n\t, Bezug Hallo,Anna!HalloMuster$\\Anna.!?"
+  },
+  {
+    "input": "{{buchungsnummer}} Grüße!.  \t\r\n\r\n ",
+    "first": "___",
+    "previous": null,
+    "expected": "2026-007 Grüße!.  \t\n\n "
+  },
+  {
+    "input": ", . {{vorname}}.",
+    "first": null,
+    "previous": "ALT-42",
+    "error": 422
+  },
+  {
+    "input": "{{vorname}},{{nachname}}!?Bezug  Bezug {{fruehere_buchungsnummer}}!!Grüße",
+    "first": null,
+    "previous": " \t",
+    "error": 422
+  },
+  {
+    "input": "Bezug {{fruehere_buchungsnummer}}!{{fruehere_buchungsnummer}}!{{vorname}}Hallo {{buchungsnummer}}\t Grüße\t{{fruehere_buchungsnummer}}\t",
+    "first": null,
+    "previous": " \t",
+    "expected": ""
+  },
+  {
+    "input": "Grüße",
+    "first": null,
+    "previous": "ALT-42",
+    "expected": "Grüße"
+  },
+  {
+    "input": " Hallo{{buchungsnummer}}\t .{{fruehere_buchungsnummer}}! {{vorname}}{{vorname}}\n {{vorname}}\tBezug \n?{{fruehere_buchungsnummer}},{{vorname}}!?",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": " Hallo2026-007\t . AnnaAnna\n Anna\tBezug \n??"
+  },
+  {
+    "input": "{{nachname}}Bezug  \t\t.,   Hallo{{nachname}}\t{{nachname}}\r\n \t.{{vorname}}Hallo\n\n",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": "Muster$\\Bezug  \t\t.,   HalloMuster$\\\tMuster$\\\n \t.AnnaHallo\n\n"
+  },
+  {
+    "input": "\n!Bezug Bezug {{vorname}}{{vorname}},GrüßeBezug Bezug ?{{vorname}}?{{fruehere_buchungsnummer}}\t{{nachname}}",
+    "first": "___",
+    "previous": null,
+    "expected": "!Bezug Bezug Muster$\\Muster$\\,GrüßeBezug Bezug ?Muster$\\?"
+  },
+  {
+    "input": "Grüße",
+    "first": null,
+    "previous": null,
+    "expected": "Grüße"
+  },
+  {
+    "input": "Hallo Grüße",
+    "first": null,
+    "previous": null,
+    "expected": "Hallo Grüße"
+  },
+  {
+    "input": "Bezug ",
+    "first": null,
+    "previous": null,
+    "expected": "Bezug "
+  },
+  {
+    "input": "?Bezug {{fruehere_buchungsnummer}}?{{buchungsnummer}}, {{fruehere_buchungsnummer}}{{nachname}}{{nachname}} ,{{fruehere_buchungsnummer}}{{nachname}} ?",
+    "first": "___",
+    "previous": " \t",
+    "expected": "?"
+  },
+  {
+    "input": "?\t ,.?Bezug  {{nachname}}.  {{nachname}} {{fruehere_buchungsnummer}} . ",
+    "first": null,
+    "previous": null,
+    "expected": "?\t ,.?Bezug  Muster$\\."
+  },
+  {
+    "input": ".\nGrüße,{{vorname}}GrüßeGrüße{{fruehere_buchungsnummer}}Grüße\tGrüße\r\n{{buchungsnummer}} ?\nHallo\nGrüße",
+    "first": null,
+    "previous": "ALT-42",
+    "error": 422
+  },
+  {
+    "input": "?Bezug ! Grüße\nHallo! GrüßeHallo, {{buchungsnummer}}\n \t Bezug ",
+    "first": "___",
+    "previous": "ALT-42",
+    "expected": "?Bezug ! Grüße\nHallo! GrüßeHallo, 2026-007\n \t Bezug "
+  },
+  {
+    "input": "??!Bezug \r\n ",
+    "first": "Anna",
+    "previous": null,
+    "expected": "??!Bezug \n "
+  },
+  {
+    "input": "{{fruehere_buchungsnummer}}GrüßeGrüße.\r\n.!{{vorname}}\n\t{{vorname}}{{nachname}} ",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": "ALT-42GrüßeGrüße.\n.!Anna\n\tAnnaMuster$\\ "
+  },
+  {
+    "input": "!{{vorname}}\n \n\r\n\nBezug  ",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": "!Anna\n \n\n\nBezug  "
+  },
+  {
+    "input": "{{fruehere_buchungsnummer}}\n{{fruehere_buchungsnummer}} ",
+    "first": "Anna",
+    "previous": null,
+    "expected": ""
+  },
+  {
+    "input": "\r\n {{vorname}} ",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": "\n Anna "
+  },
+  {
+    "input": "{{fruehere_buchungsnummer}}",
+    "first": null,
+    "previous": null,
+    "expected": ""
+  },
+  {
+    "input": "Bezug \t{{fruehere_buchungsnummer}}{{fruehere_buchungsnummer}}Grüße{{buchungsnummer}}{{buchungsnummer}}{{vorname}}\r\n{{vorname}}{{vorname}}!",
+    "first": null,
+    "previous": "ALT-42",
+    "error": 422
+  },
+  {
+    "input": "\r\n{{fruehere_buchungsnummer}}\t {{nachname}} . {{buchungsnummer}}{{fruehere_buchungsnummer}} .{{nachname}}{{buchungsnummer}}!,  \t ",
+    "first": "___",
+    "previous": " \t",
+    "expected": "Muster$\\2026-007!,"
+  },
+  {
+    "input": "Bezug ,{{buchungsnummer}}\nHallo {{vorname}}{{vorname}}  \n{{nachname}} {{buchungsnummer}}  \t  ",
+    "first": "Anna",
+    "previous": null,
+    "expected": "Bezug ,2026-007\nHallo AnnaAnna  \nMuster$\\ 2026-007  \t  "
+  },
+  {
+    "input": "?,Grüße!\r\nGrüße\n. Hallo{{buchungsnummer}}Hallo",
+    "first": "___",
+    "previous": " \t",
+    "expected": "?,Grüße!\nGrüße\n. Hallo2026-007Hallo"
+  },
+  {
+    "input": " !{{fruehere_buchungsnummer}}HalloGrüßeBezug ?Hallo!,{{vorname}}{{buchungsnummer}}",
+    "first": "Anna",
+    "previous": null,
+    "expected": "!Hallo!,Anna2026-007"
+  },
+  {
+    "input": "Hallo\t!{{nachname}}{{fruehere_buchungsnummer}}Hallo ,, \n?,{{buchungsnummer}}{{vorname}} {{buchungsnummer}}\n{{buchungsnummer}}!",
+    "first": "___",
+    "previous": " \t",
+    "expected": "Hallo\t!\n?,2026-007Muster$\\ 2026-007\n2026-007!"
+  },
+  {
+    "input": "{{fruehere_buchungsnummer}}?Bezug Hallo{{buchungsnummer}}\tHallo.",
+    "first": "Anna",
+    "previous": " \t",
+    "expected": "Bezug Hallo2026-007\tHallo."
+  },
+  {
+    "input": "Hallo!.Grüße ,Grüße?{{buchungsnummer}}.Hallo?\t {{vorname}}!{{fruehere_buchungsnummer}}{{fruehere_buchungsnummer}}! ? ",
+    "first": "Anna",
+    "previous": "ALT-42",
+    "expected": "Hallo!.Grüße ,Grüße?2026-007.Hallo?\t Anna!ALT-42ALT-42! ? "
+  },
+  {
+    "input": ",Hallo\r\n?  {{buchungsnummer}}{{buchungsnummer}}!!{{vorname}} {{vorname}} \nHallo   ,",
+    "first": null,
+    "previous": " \t",
+    "error": 422
+  },
+  {
+    "input": ".{{buchungsnummer}}{{nachname}}Grüße{{fruehere_buchungsnummer}}??Hallo.\r\n{{buchungsnummer}},\r\n?GrüßeGrüßeGrüße?",
+    "first": null,
+    "previous": " \t",
+    "expected": ".?Hallo.\n2026-007,\n?GrüßeGrüßeGrüße?"
+  },
+  {
+    "input": "! ,{{vorname}},! {{nachname}}? \r\n {{fruehere_buchungsnummer}}{{buchungsnummer}} {{buchungsnummer}}{{vorname}}",
+    "first": null,
+    "previous": "ALT-42",
+    "error": 422
+  },
+  {
+    "input": "{{buchungsnummer}},. Bezug   Bezug {{fruehere_buchungsnummer}} ,Bezug ,?,Hallo.{{buchungsnummer}} \r\n\n ",
+    "first": null,
+    "previous": null,
+    "expected": "2026-007,.,Hallo.2026-007 \n\n "
+  },
+  {
+    "input": ".?Grüße{{buchungsnummer}}   , {{vorname}} \t\t?.Hallo{{nachname}}",
+    "first": null,
+    "previous": " \t",
+    "error": 422
+  },
+  {
+    "input": "\t \r\n{{fruehere_buchungsnummer}}  \t\t{{nachname}}{{fruehere_buchungsnummer}}GrüßeGrüße",
+    "first": "___",
+    "previous": " \t",
+    "expected": ""
+  },
+  {
+    "input": "{{fruehere_buchungsnummer}}?\nGrüßeHallo",
+    "first": null,
+    "previous": "ALT-42",
+    "expected": "ALT-42?\nGrüßeHallo"
+  }
+]

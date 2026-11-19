@@ -20,7 +20,7 @@ class BuchungAbschlussVorschauTest {
         var buchungen = mock(BuchungRepository.class);
         var verbrauch = mock(VerbrauchsabrechnungService.class);
         var service = new BuchungService(buchungen, null, null, null, null, null, null, null, null, null, null,
-                verbrauch, mock(BuchungVerbrauchskostenRepository.class), null, null);
+                verbrauch, mock(BuchungVerbrauchskostenRepository.class), null, null, org.mockito.Mockito.mock(com.kcserver.vermietung.service.VermietungAenderungsprotokoll.class));
         var buchung = new Buchung(); buchung.setId(20L); buchung.setBuchungsnummer("2026-020");
         buchung.setStatus(status); buchung.setMieter(new Person()); buchung.setMietobjekt(new Mietobjekt());
         buchung.setAnreise(LocalDateTime.of(2026, 10, 1, 14, 0)); buchung.setAbreise(LocalDateTime.of(2026, 10, 2, 14, 0));

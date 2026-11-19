@@ -23,7 +23,7 @@ public class StammdatenMergeService {
  private final VermietungAenderungsprotokoll protokoll;
  private final ObjectMapper mapper;
  private final Validator validator;
- private static final List<String> MIETER=List.of("vorname","name","email","telefon","telefonFestnetz","strasse","plz","ort","countryCode","organisation","bankName","iban","bic","kontoinhaber","airbnb");
+ private static final List<String> MIETER_FELDER=List.of("vorname","name","email","telefon","telefonFestnetz","strasse","plz","ort","countryCode","organisation","bankName","iban","bic","kontoinhaber","airbnb");
  private static final List<String> VERANSTALTER=List.of("name","abk","strasse","plz","ort","countryCode","bankName","iban","bic","kontoinhaberId");
  public record Auftrag(Long quelle,Long ziel,Map<String,Boolean> ausQuelle,String fingerprint) {}
  public record Vorschau(Object quelle,Object ziel,List<String> felder,List<Map<String,Object>> buchungen,boolean zielGeschuetzt,String fingerprint) {}
@@ -38,7 +38,7 @@ public class StammdatenMergeService {
   pruefe(quelle,ziel);Object q,z;boolean geschuetzt;List<Buchung> rows;
   if(person){var a=miet(quelle);var b=miet(ziel);q=mieterService.get(quelle);z=mieterService.get(ziel);geschuetzt=b.getPerson().isKjfpSichtbar();rows=beziehungen(true,a.getPerson().getId());}
   else{var a=verein(quelle);var b=verein(ziel);q=veranstalterService.lesen(quelle);z=veranstalterService.lesen(ziel);geschuetzt=b.isKjfpVerein()||b.isHausverein();rows=beziehungen(false,a.getId());}
-  var list=liste(rows);return new Vorschau(q,z,person?MIETER:VERANSTALTER,list,geschuetzt,hash(Arrays.asList(q,z,list,geschuetzt)));
+  var list=liste(rows);return new Vorschau(q,z,person?MIETER_FELDER:VERANSTALTER,list,geschuetzt,hash(Arrays.asList(q,z,list,geschuetzt)));
  }
  @SuppressWarnings("unchecked") public Vorschau zusammenfuehren(boolean person,Auftrag a){
   pruefe(a.quelle(),a.ziel());
@@ -57,7 +57,7 @@ public class StammdatenMergeService {
   }
   List<Buchung> rows;
   if(person){var source=miet(a.quelle());var target=miet(a.ziel());
-   if(!vorher.zielGeschuetzt()){var input=mapper.convertValue(z.entrySet().stream().filter(e->MIETER.contains(e.getKey())||e.getKey().equals("aktiv")).collect(java.util.stream.Collectors.toMap(Map.Entry::getKey,e->e.getValue()==null?"":e.getValue())),MieterSaveDTO.class);if(!validator.validate(input).isEmpty())throw fehler("Bitte gültige Zielstammdaten auswählen.");mieterService.update(target.getId(),input);}
+   if(!vorher.zielGeschuetzt()){var input=mapper.convertValue(z.entrySet().stream().filter(e->MIETER_FELDER.contains(e.getKey())||e.getKey().equals("aktiv")).collect(java.util.stream.Collectors.toMap(Map.Entry::getKey,e->e.getValue()==null?"":e.getValue())),MieterSaveDTO.class);if(!validator.validate(input).isEmpty())throw fehler("Bitte gültige Zielstammdaten auswählen.");mieterService.update(target.getId(),input);}
    rows=beziehungen(true,source.getPerson().getId());
    for(var row:rows){var b=buchungen.findLockedById(row.getId()).orElseThrow();b.setMieter(target.getPerson());}
    source.setAktiv(false);source.setZusammengefuehrtIn(target.getId());

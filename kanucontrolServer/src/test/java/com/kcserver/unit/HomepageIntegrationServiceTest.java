@@ -31,7 +31,7 @@ class HomepageIntegrationServiceTest {
         factory = Validation.buildDefaultValidatorFactory(); mapper = new ObjectMapper().findAndRegisterModules();
         configs = mock(HomepageAnbindungRepository.class); anfragen = mock(HomepageAnfrageRepository.class);
         buchungen = mock(BuchungRepository.class); buchungService = mock(BuchungService.class); mieterService = mock(MieterService.class);
-        service = new HomepageIntegrationService(configs, anfragen, buchungen, buchungService, mieterService, mapper, factory.getValidator());
+        service = new HomepageIntegrationService(configs, anfragen, buchungen, buchungService, mieterService, mapper, factory.getValidator(), org.mockito.Mockito.mock(com.kcserver.core.repository.VereinRepository.class));
         Mietobjekt objekt = new Mietobjekt(); objekt.setId(7L); objekt.setBezeichnung("Bootshaus");
         objekt.setAnreisezeit(LocalTime.of(16, 0)); objekt.setAbreisezeit(LocalTime.of(14, 0));
         config = new HomepageAnbindung(); config.setMietobjektId(7L); config.setMietobjekt(objekt);
@@ -57,6 +57,64 @@ class HomepageIntegrationServiceTest {
         assertFalse(factory.getValidator().validate(mapper.treeToValue(data,Anfrage.class)).isEmpty());
         data.remove("veranstalterDaten");
         assertFalse(factory.getValidator().validate(mapper.treeToValue(data,Anfrage.class)).isEmpty());
+    }
+    private Anfrage organisationsAnfrage() throws Exception {
+        var data=(com.fasterxml.jackson.databind.node.ObjectNode)mapper.valueToTree(request(UUID.randomUUID(),2L,"Name"));
+        var v=data.putObject("veranstalterDaten");
+        v.put("name","Testverein");v.put("strasse","Testweg 1");v.put("plz","12345");v.put("ort","Testort");v.put("countryCode","DE");
+        v.put("bankName","Testbank");v.put("iban","DE89370400440532013000");v.put("bic","COBADEFFXXX");
+        return mapper.treeToValue(data,Anfrage.class);
+    }
+    private com.kcserver.core.repository.VereinRepository vereine() {
+        return (com.kcserver.core.repository.VereinRepository)org.springframework.test.util.ReflectionTestUtils.getField(service,"veranstalterRepository");
+    }
+    private com.kcserver.core.entity.Verein passenderVerein() {
+        var v=new com.kcserver.core.entity.Verein();v.setId(77L);v.setKjfpVerein(true);v.setName("Testverein");
+        v.setStrasse("Testweg 1");v.setPlz("12345");v.setOrt("Testort");v.setCountryCode(com.kcserver.kjfp.enumtype.CountryCode.DE);
+        v.setBankName("Testbank");v.setIban("DE89370400440532013000");v.setBic("COBADEFFXXX");return v;
+    }
+    private void erfolgreicheBuchung() {
+        var m=new MieterDTO();m.setPersonId(55L);when(mieterService.create(any())).thenReturn(m);
+        var b=new BuchungDTO();b.setId(99L);b.setBuchungsnummer("2026-099");when(buchungService.create(any())).thenReturn(b);
+        when(buchungen.findById(99L)).thenReturn(Optional.of(new Buchung()));
+        when(vereine().save(any())).thenAnswer(i->{var v=(com.kcserver.core.entity.Verein)i.getArgument(0);v.setId(78L);return v;});
+    }
+    @Test void vorhandenerKjfpVeranstalterWirdNurBeiVollstaendigerUebereinstimmungWiederverwendet() throws Exception {
+        erfolgreicheBuchung();var v=passenderVerein();when(vereine().findAll()).thenReturn(List.of(v));
+        service.anfrage(7L,"verein-homepage",organisationsAnfrage());
+        var booking=ArgumentCaptor.forClass(BuchungDTO.class);verify(buchungService).create(booking.capture());
+        assertEquals(77L,booking.getValue().getVeranstalterVereinId());verify(vereine(),never()).save(any());
+        assertTrue(v.isKjfpVerein());assertEquals("Testverein",v.getName());
+        var person=ArgumentCaptor.forClass(MieterSaveDTO.class);verify(mieterService).create(person.capture());
+        assertNull(person.getValue().getIban());assertNull(person.getValue().getBankName());
+    }
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings={"name","strasse","plz","ort","countryCode","iban","bankName","bic","merged"})
+    void abweichenderOderZusammengefuehrterVereinWirdNichtUeberschrieben(String field) throws Exception {
+        erfolgreicheBuchung();var existing=passenderVerein();
+        switch(field){
+            case "name"->existing.setName("Anderer Verein");case "strasse"->existing.setStrasse("Andere Straße");
+            case "plz"->existing.setPlz("99999");case "ort"->existing.setOrt("Anderer Ort");
+            case "countryCode"->existing.setCountryCode(com.kcserver.kjfp.enumtype.CountryCode.FR);
+            case "iban"->existing.setIban("DE12500105170648489890");case "bankName"->existing.setBankName("Andere Bank");
+            case "bic"->existing.setBic("DEUTDEFFXXX");case "merged"->existing.setVermietungZusammengefuehrtIn(123L);
+            default->throw new AssertionError(field);
+        }
+        when(vereine().findAll()).thenReturn(List.of(existing));
+        service.anfrage(7L,"verein-homepage",organisationsAnfrage());
+        var created=ArgumentCaptor.forClass(com.kcserver.core.entity.Verein.class);verify(vereine()).save(created.capture());
+        assertNotSame(existing,created.getValue());assertFalse(created.getValue().isKjfpVerein());
+        assertEquals("Testverein",created.getValue().getName());assertEquals("DE89370400440532013000",created.getValue().getIban());
+        var booking=ArgumentCaptor.forClass(BuchungDTO.class);verify(buchungService).create(booking.capture());
+        assertEquals(78L,booking.getValue().getVeranstalterVereinId());
+        assertTrue(existing.isKjfpVerein());
+    }
+    @Test void mehrereExakteVeranstalterTrefferVerhindernBuchungsanlage() throws Exception {
+        erfolgreicheBuchung();when(vereine().findAll()).thenReturn(List.of(passenderVerein(),passenderVerein()));
+        Anfrage request=organisationsAnfrage();
+        var error=assertThrows(ResponseStatusException.class,()->service.anfrage(7L,"verein-homepage",request));
+        assertEquals(409,error.getStatusCode().value());verify(buchungService,never()).create(any());
+        verify(vereine(),never()).save(any());verify(anfragen,never()).saveAndFlush(any());
     }
     @AfterEach void close() { factory.close(); }
     private Anfrage request(UUID id, long version, String name) {

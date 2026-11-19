@@ -6,8 +6,8 @@ import org.springframework.stereotype.Service;
 /**
  * Production implementation.
  *
- * Tenant schemas are NOT created automatically.
- * Provisioning is currently handled explicitly in tests only.
+ * Valid JWT tenants are initialized on first use.
+ * Existing schemas are migrated at startup.
  */
 @Service
 @Profile("!junit")

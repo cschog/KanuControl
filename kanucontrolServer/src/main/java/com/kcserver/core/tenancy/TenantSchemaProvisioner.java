@@ -120,7 +120,7 @@ public class TenantSchemaProvisioner {
     private void createSchema(String schema) {
 
         jdbcTemplate.execute(
-                "CREATE SCHEMA IF NOT EXISTS \"" + schema + "\""
+                "CREATE SCHEMA IF NOT EXISTS " + TenantSchemaName.quoted(schema)
         );
     }
 
@@ -206,11 +206,6 @@ public class TenantSchemaProvisioner {
      */
     private void validateSchemaName(String schema) {
 
-        if (schema == null || !schema.matches("[a-z][a-z0-9_]*")) {
-
-            throw new IllegalArgumentException(
-                    "Ungültiger Tenant-Schema-Name: " + schema
-            );
-        }
+        TenantSchemaName.requireValid(schema);
     }
 }

@@ -35,7 +35,7 @@ import java.util.*;
 @Service
 @Transactional
 public class BuchungService {
-    @Autowired private VermietungAenderungsprotokoll aenderungsprotokoll;
+    private final VermietungAenderungsprotokoll aenderungsprotokoll;
     public BuchungDTO stornoZuruecknehmen(Long id) {
         return executeStatusTransaction(() -> {
             var b=buchungRepository.findLockedById(id).orElseThrow(()->new IllegalArgumentException("Buchung nicht gefunden."));
@@ -95,9 +95,11 @@ public class BuchungService {
             VerbrauchsabrechnungService verbrauchsabrechnungService,
             BuchungVerbrauchskostenRepository buchungVerbrauchskostenRepository,
             BuchungFinanzbewegungRepository buchungFinanzbewegungRepository,
-            HomepageStatusMailService statusMailService
+            HomepageStatusMailService statusMailService,
+            VermietungAenderungsprotokoll aenderungsprotokoll
     ) {
         this.buchungRepository = buchungRepository;
+        this.aenderungsprotokoll = aenderungsprotokoll;
         this.statusMailService = statusMailService;
         this.mieterRepository = mieterRepository;
         this.buchungsnummerCounterRepository =
@@ -324,7 +326,7 @@ public class BuchungService {
         boolean rabattAuswahlUnveraendert =
                 Objects.equals(buchung.getRabattart(), dto.getRabattart())
                         && Objects.equals(buchung.getRabattwertTyp(), dto.getRabattwertTyp())
-                        && Objects.equals(buchung.getRabattwert(), dto.getRabattwert());
+                        && gleicherRabattwert(buchung.getRabattwert(), dto.getRabattwert());
 
         Person mieter = getMieter(dto.getMieterId());
 
@@ -1344,6 +1346,11 @@ public class BuchungService {
                         position.getMietbereich().getId()
                 )
         );
+    }
+
+    private static boolean gleicherRabattwert(BigDecimal bisher, BigDecimal neu) {
+        // Reine Scale-Unterschiede dürfen bestehende Rabattsnapshots nicht verwerfen.
+        return bisher == null ? neu == null : neu != null && bisher.compareTo(neu) == 0;
     }
 
     private void berechneBuchungsrabatt(

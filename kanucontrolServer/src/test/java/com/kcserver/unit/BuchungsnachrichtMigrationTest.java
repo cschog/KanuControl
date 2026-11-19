@@ -1,4 +1,5 @@
 package com.kcserver.unit;
+import static com.kcserver.support.MigrationSqlAssertions.assertSqlState;
 import liquibase.*;
 import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
@@ -18,7 +19,7 @@ class BuchungsnachrichtMigrationTest {
     try(var rs=c.createStatement().executeQuery("SELECT pdf FROM vermietung_nachrichtenentwurf")){assertTrue(rs.next());assertArrayEquals(new byte[]{1,2,3},rs.getBytes(1));}
     c.commit();c.setAutoCommit(false);c.createStatement().executeUpdate("UPDATE vermietung_nachrichtenentwurf SET ausgefuehrt=true");c.rollback();try(var rs=c.createStatement().executeQuery("SELECT ausgefuehrt FROM vermietung_nachrichtenentwurf")){assertTrue(rs.next());assertFalse(rs.getBoolean(1));}c.setAutoCommit(true);
     c.createStatement().executeUpdate("DELETE FROM buchung WHERE id=1");try(var rs=c.createStatement().executeQuery("SELECT COUNT(*) FROM vermietung_nachrichtenentwurf")){assertTrue(rs.next());assertEquals(0,rs.getInt(1));}
-    lb.rollback(1,new Contexts(),new LabelExpression());assertThrows(SQLException.class,()->c.createStatement().executeQuery("SELECT * FROM vermietung_nachrichtenentwurf"));assertThrows(SQLException.class,()->c.createStatement().executeQuery("SELECT storno_datum FROM buchung"));
+    lb.rollback(1,new Contexts(),new LabelExpression());assertSqlState(c, "SELECT * FROM vermietung_nachrichtenentwurf", "42S02");assertSqlState(c, "SELECT storno_datum FROM buchung", "42S22");
    }
   }
  }

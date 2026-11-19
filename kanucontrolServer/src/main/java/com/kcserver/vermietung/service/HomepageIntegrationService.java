@@ -27,8 +27,7 @@ public class HomepageIntegrationService {
     private final MieterService mieterService;
     private final ObjectMapper mapper;
     private final Validator validator;
-    @org.springframework.beans.factory.annotation.Autowired
-    private com.kcserver.core.repository.VereinRepository veranstalterRepository;
+    private final com.kcserver.core.repository.VereinRepository veranstalterRepository;
 
     private HomepageAnbindung zugang(Long id, String clientId, boolean lock) {
         HomepageAnbindung config = (lock ? anbindungen.lockById(id) : anbindungen.findById(id))

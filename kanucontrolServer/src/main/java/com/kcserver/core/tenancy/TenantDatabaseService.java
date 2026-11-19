@@ -14,10 +14,11 @@ public class TenantDatabaseService {
     private DataSource dataSource;
 
     public void ensureSchemaExists(String schemaName) {
+        String identifier = TenantSchemaName.quoted(schemaName);
         try (Connection connection = dataSource.getConnection();
              Statement statement = connection.createStatement()) {
             // Create the schema if it doesn't exist
-            statement.execute(String.format("CREATE SCHEMA IF NOT EXISTS %s`", schemaName));
+            statement.execute("CREATE SCHEMA IF NOT EXISTS " + identifier);
             System.out.println("Schema ensured: " + schemaName);
         } catch (Exception e) {
             throw new RuntimeException("Failed to ensure schema: " + schemaName, e);

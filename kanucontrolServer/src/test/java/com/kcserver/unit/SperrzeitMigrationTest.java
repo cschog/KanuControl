@@ -1,4 +1,5 @@
 package com.kcserver.unit;
+import static com.kcserver.support.MigrationSqlAssertions.assertSqlState;
 import liquibase.*;
 import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
@@ -21,13 +22,13 @@ class SperrzeitMigrationTest {
             var lb=migrate(c,"CLUB_A");
             String insert="INSERT INTO mietobjekt_sperrzeit (mietobjekt_id,von,bis,ganztaegig,grund,created_at) VALUES (%s,'2027-05-21 00:00:00','2027-05-22 00:00:00',true,'Wartung',CURRENT_TIMESTAMP)";
             c.createStatement().execute(insert.formatted(7));
-            assertThrows(SQLException.class,()->c.createStatement().execute(insert.formatted(999)));
+            assertSqlState(c, insert.formatted(999), "23506");
             migrate(c,"CLUB_B");
             try(var rs=c.createStatement().executeQuery("SELECT count(*) FROM mietobjekt_sperrzeit")){assertTrue(rs.next());assertEquals(0,rs.getInt(1));}
             c.createStatement().execute("DELETE FROM CLUB_A.mietobjekt WHERE id=7");
             try(var rs=c.createStatement().executeQuery("SELECT count(*) FROM CLUB_A.mietobjekt_sperrzeit")){assertTrue(rs.next());assertEquals(0,rs.getInt(1));}
             c.setSchema("CLUB_A");lb.rollback(1,new Contexts(),new LabelExpression());
-            assertThrows(SQLException.class,()->c.createStatement().executeQuery("SELECT * FROM CLUB_A.mietobjekt_sperrzeit"));
+            assertSqlState(c, "SELECT * FROM CLUB_A.mietobjekt_sperrzeit", "42S02");
         }
     }
 }

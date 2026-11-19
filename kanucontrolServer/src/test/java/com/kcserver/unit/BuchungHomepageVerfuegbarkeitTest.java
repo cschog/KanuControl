@@ -23,7 +23,7 @@ class BuchungHomepageVerfuegbarkeitTest {
             mock(com.kcserver.kjfp.repository.PersonRepository.class), mock(com.kcserver.core.repository.VereinRepository.class),
             objekte, bereiche, mock(MietpreisRepository.class), mock(MietbereichRabattRepository.class),
             mock(ZaehlerRepository.class), mock(ZaehlerstandRepository.class), mock(com.kcserver.vermietung.service.VerbrauchsabrechnungService.class),
-            mock(BuchungVerbrauchskostenRepository.class), mock(BuchungFinanzbewegungRepository.class), mock(com.kcserver.vermietung.service.HomepageStatusMailService.class));
+            mock(BuchungVerbrauchskostenRepository.class), mock(BuchungFinanzbewegungRepository.class), mock(com.kcserver.vermietung.service.HomepageStatusMailService.class), org.mockito.Mockito.mock(com.kcserver.vermietung.service.VermietungAenderungsprotokoll.class));
         Mietobjekt objekt = new Mietobjekt(); objekt.setId(7L); objekt.setAnreisezeit(LocalTime.of(16,0)); objekt.setAbreisezeit(LocalTime.of(14,0));
         when(objekte.findById(7L)).thenReturn(Optional.of(objekt));
         eg = new Mietbereich(); eg.setId(10L); eg.setBezeichnung("EG"); eg.setMietobjekt(objekt); eg.setBestand(1);

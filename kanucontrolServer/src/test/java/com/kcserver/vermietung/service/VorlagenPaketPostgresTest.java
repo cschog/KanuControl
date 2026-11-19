@@ -1,4 +1,5 @@
 package com.kcserver.vermietung.service;
+import static com.kcserver.support.MigrationSqlAssertions.assertSqlState;
 
 import com.kcserver.vermietung.entity.*;
 import com.kcserver.vermietung.repository.*;
@@ -67,7 +68,12 @@ class VorlagenPaketPostgresTest {
         var cancelled=svc(b).hochladen(exported);svc(b).abbrechen(cancelled.id());assertEquals(410,assertThrows(ResponseStatusException.class,()->svc(b).lesen(cancelled.id())).getStatusCode().value());
     }
     @Test void atomarKonflikteRollbackUndMigration()throws Exception{
-        Long target=objekt(a,"Bootshaus");var s=svc(a);var d=s.hochladen(VorlagenPaketTest.paket(true));s.planen(d.id(),plan(target,true));var preview=s.vorschau(d.id());assertEquals(4,preview.vorlagen().size());assertTrue(preview.status().getFirst().erfolgreich());
+        Long target=objekt(a,"Bootshaus");var s=svc(a);var d=s.hochladen(VorlagenPaketTest.paket(true));s.planen(d.id(),plan(target,true));var preview=s.vorschau(d.id());
+        // BEI_ABRECHNUNG and OHNE_ABRECHNUNG render identically for this template and are deduplicated.
+        assertEquals(3,preview.vorlagen().size());
+        assertEquals(Set.of("ANZAHLUNG","GESAMTMIETE_VORAUS","BEI_ABRECHNUNG"),preview.vorlagen().stream()
+                .map(p->p.szenario().split(",",2)[0]).collect(java.util.stream.Collectors.toSet()));
+        assertTrue(preview.status().getFirst().erfolgreich());
         // Genuine database rollback after the service has flushed individual rows.
         var tx=new TransactionTemplate(a.getBean(PlatformTransactionManager.class));assertThrows(IllegalStateException.class,()->tx.execute(status->{s.uebernehmen(d.id());throw new IllegalStateException("Fehler nach Writes");}));
         assertEquals(0,a.getBean(MietobjektVorlageRepository.class).count());assertEquals(0,a.getBean(MandantenBriefpapierRepository.class).count());
@@ -78,7 +84,7 @@ class VorlagenPaketPostgresTest {
         var kept=repo.findById(1L).orElseThrow();s.planen(next.id(),replace);s.vorschau(next.id());s.uebernehmen(next.id());var after=repo.findById(1L).orElseThrow();assertTrue(after.getVersion()>kept.getVersion());assertArrayEquals(kept.getPdf(),after.getPdf());assertEquals(kept.getGruss(),after.getGruss());
         try(var c=DriverManager.getConnection(url+"&currentSchema="+sb)){c.createStatement().execute("DROP TABLE vermietung_vorlagenimport");var db=DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(c));db.setDefaultSchemaName(sb);var lb=new Liquibase("db/changelog/changes/20261110-01-vorlagenpakete.xml",new ClassLoaderResourceAccessor(),db);lb.update(new Contexts(),new LabelExpression());
         var migrated=new VorlagenImport();migrated.setId(UUID.randomUUID().toString());migrated.setBenutzer("migration-test");migrated.setTenant(sb);migrated.setAblauf(java.time.Instant.now().plusSeconds(60));migrated.setPaketHash("a".repeat(64));b.getBean(VorlagenImportRepository.class).saveAndFlush(migrated);assertTrue(b.getBean(VorlagenImportRepository.class).findById(migrated.getId()).isPresent());
-        lb.rollback(1,new Contexts(),new LabelExpression());assertThrows(SQLException.class,()->c.createStatement().executeQuery("SELECT * FROM vermietung_vorlagenimport"));}
+        lb.rollback(1,new Contexts(),new LabelExpression());assertSqlState(c, "SELECT * FROM vermietung_vorlagenimport", "42P01");}
     }
     @Test void paralleleNeuanlagePlanwechselUndUngepruefteVerwaltung()throws Exception{
         Long target=objekt(a,"Bootshaus");var s=svc(a);var d=s.hochladen(VorlagenPaketTest.paket(false));s.planen(d.id(),plan(target,false));

@@ -1,4 +1,5 @@
 package com.kcserver.unit;
+import static com.kcserver.support.MigrationSqlAssertions.assertSqlState;
 
 import liquibase.*;
 import liquibase.database.DatabaseFactory;
@@ -36,7 +37,7 @@ class BankverbindungMigrationTest {
             try(var rs=c.createStatement().executeQuery("SELECT bank_alternativ_iban FROM mietobjekt")) {assertTrue(rs.next());assertNull(rs.getString(1));}
             try(var rs=c.createStatement().executeQuery("SELECT bankverbindung_auswahl FROM CLUB_A.buchung")) {assertTrue(rs.next());assertEquals("ALTERNATIV",rs.getString(1));}
             c.setSchema("CLUB_A");lb.rollback(1,new Contexts(),new LabelExpression());
-            assertThrows(SQLException.class,()->c.createStatement().executeQuery("SELECT bankverbindung_auswahl FROM buchung"));
+            assertSqlState(c, "SELECT bankverbindung_auswahl FROM buchung", "42S22");
             try(var rs=c.createStatement().executeQuery("SELECT id FROM mietobjekt")) {assertTrue(rs.next());assertEquals(7,rs.getLong(1));}
         }
     }

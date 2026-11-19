@@ -31,7 +31,7 @@ class BuchungBankauswahlTest {
         when(buchungen.saveAndFlush(any())).thenAnswer(i->{Buchung b=i.getArgument(0);b.setId(1L);return b;});
         service=new BuchungService(buchungen,mieter,counters,personen,mock(com.kcserver.core.repository.VereinRepository.class),objekte,
             mock(MietbereichRepository.class),mock(MietpreisRepository.class),mock(MietbereichRabattRepository.class),mock(ZaehlerRepository.class),mock(ZaehlerstandRepository.class),
-            mock(VerbrauchsabrechnungService.class),mock(BuchungVerbrauchskostenRepository.class),bewegungen, mock(com.kcserver.vermietung.service.HomepageStatusMailService.class));
+            mock(VerbrauchsabrechnungService.class),mock(BuchungVerbrauchskostenRepository.class),bewegungen, mock(com.kcserver.vermietung.service.HomepageStatusMailService.class), org.mockito.Mockito.mock(com.kcserver.vermietung.service.VermietungAenderungsprotokoll.class));
     }
 
     private BuchungDTO eingabe() {

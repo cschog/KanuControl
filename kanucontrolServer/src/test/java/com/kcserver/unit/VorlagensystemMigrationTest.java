@@ -1,4 +1,5 @@
 package com.kcserver.unit;
+import static com.kcserver.support.MigrationSqlAssertions.assertSqlState;
 import liquibase.*;
 import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
@@ -17,10 +18,10 @@ class VorlagensystemMigrationTest {
     var lb=new Liquibase("db/changelog/changes/20261109-01-vorlagensystem.xml",new ClassLoaderResourceAccessor(),db);lb.update(new Contexts(),new LabelExpression());
     try(var insert=c.prepareStatement("INSERT INTO vermietung_briefpapier(id,version,pdf,gruss) VALUES(1,0,?,?)")){insert.setBytes(1,new byte[]{1,2,3});insert.setString(2,schema);insert.executeUpdate();}
     c.createStatement().execute("INSERT INTO vermietung_vorlage(version,mietobjekt_id,vorgang,inhalt) VALUES(0,7,'RESERVIERUNG','{}')");
-    assertThrows(SQLException.class,()->c.createStatement().execute("INSERT INTO vermietung_vorlage(version,mietobjekt_id,vorgang,inhalt) VALUES(0,7,'RESERVIERUNG','{}')"));
+    assertSqlState(c, "INSERT INTO vermietung_vorlage(version,mietobjekt_id,vorgang,inhalt) VALUES(0,7,'RESERVIERUNG','{}')", "23505");
     if(schema.equals("CLUB_B")){
      try(var rs=c.createStatement().executeQuery("SELECT gruss,pdf FROM CLUB_A.vermietung_briefpapier")){assertTrue(rs.next());assertEquals("CLUB_A",rs.getString(1));assertArrayEquals(new byte[]{1,2,3},rs.getBytes(2));}
-     lb.rollback(1,new Contexts(),new LabelExpression());assertThrows(SQLException.class,()->c.createStatement().executeQuery("SELECT * FROM vermietung_briefpapier"));
+     lb.rollback(1,new Contexts(),new LabelExpression());assertSqlState(c, "SELECT * FROM vermietung_briefpapier", "42S02");
      try(var rs=c.createStatement().executeQuery("SELECT gruss FROM CLUB_A.vermietung_briefpapier")){assertTrue(rs.next());assertEquals("CLUB_A",rs.getString(1));}
     }
    }

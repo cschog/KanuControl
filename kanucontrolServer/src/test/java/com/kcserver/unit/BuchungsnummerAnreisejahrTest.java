@@ -29,7 +29,7 @@ class BuchungsnummerAnreisejahrTest {
         when(buchungen.saveAndFlush(any())).thenAnswer(i->{Buchung b=i.getArgument(0);b.setId(1L);return b;});
         service=new BuchungService(buchungen,mieter,counters,personen,mock(com.kcserver.core.repository.VereinRepository.class),objekte,
             mock(MietbereichRepository.class),mock(MietpreisRepository.class),mock(MietbereichRabattRepository.class),mock(ZaehlerRepository.class),mock(ZaehlerstandRepository.class),
-            mock(VerbrauchsabrechnungService.class),mock(BuchungVerbrauchskostenRepository.class),mock(BuchungFinanzbewegungRepository.class), mock(com.kcserver.vermietung.service.HomepageStatusMailService.class));
+            mock(VerbrauchsabrechnungService.class),mock(BuchungVerbrauchskostenRepository.class),mock(BuchungFinanzbewegungRepository.class), mock(com.kcserver.vermietung.service.HomepageStatusMailService.class), org.mockito.Mockito.mock(com.kcserver.vermietung.service.VermietungAenderungsprotokoll.class));
     }
     private BuchungDTO neu(int jahr) {
         var dto=new BuchungDTO();dto.setMieterId(1L);dto.setMietobjektId(7L);dto.setAnreise(LocalDateTime.of(jahr,6,10,16,0));dto.setAbreise(LocalDateTime.of(jahr,6,12,14,0));dto.setPositionen(List.of());

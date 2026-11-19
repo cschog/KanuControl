@@ -23,7 +23,17 @@ public class JahresabrechnungService {
  public record Uebersicht(int aktuellesJahr,List<Dokument> dokumente) {}
  public record Vorschau(int jahr,String fingerprint,String pdfBase64,BigDecimal miete,BigDecimal saldo) {}
  public record Auftrag(String fingerprint) {}
- private record Entwurf(BuchungFinanzenDTO finanzen,byte[] pdf,String fingerprint) {}
+ private static final class Entwurf {
+  private final BuchungFinanzenDTO finanzen;
+  private final byte[] pdf;
+  private final String fingerprint;
+  private Entwurf(BuchungFinanzenDTO finanzen,byte[] pdf,String fingerprint){
+   this.finanzen=finanzen;this.pdf=pdf;this.fingerprint=fingerprint;
+  }
+  private BuchungFinanzenDTO finanzen(){return finanzen;}
+  private byte[] pdf(){return pdf;}
+  private String fingerprint(){return fingerprint;}
+ }
  private static LocalDate heute(){return LocalDate.now(ZoneId.of("Europe/Berlin"));}
  private Dokument dto(VermietungAbrechnung e){return new Dokument(e.getId(),e.getAbrechnungsJahr(),e.getErstellt(),e.getPdf().length>0);}
  public Uebersicht list(Long id){

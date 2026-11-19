@@ -25,7 +25,7 @@ class BuchungStatusBenachrichtigungTest {
             mock(com.kcserver.kjfp.repository.PersonRepository.class),mock(com.kcserver.core.repository.VereinRepository.class),
             mock(MietobjektRepository.class),mock(MietbereichRepository.class),mock(MietpreisRepository.class),mock(MietbereichRabattRepository.class),
             mock(ZaehlerRepository.class),mock(ZaehlerstandRepository.class),mock(VerbrauchsabrechnungService.class),
-            mock(BuchungVerbrauchskostenRepository.class),mock(BuchungFinanzbewegungRepository.class),mails);
+            mock(BuchungVerbrauchskostenRepository.class),mock(BuchungFinanzbewegungRepository.class),mails, org.mockito.Mockito.mock(com.kcserver.vermietung.service.VermietungAenderungsprotokoll.class));
         preparedStatus=mock(HomepageStatusMailService.StatusMail.class);
         when(mails.statusVorbereiten(any(),any(),any(),anyString())).thenReturn(preparedStatus);
         buchung=new Buchung();buchung.setStatus(Buchungsstatus.ANFRAGE);buchung.setId(1L);buchung.setHerkunft("DIREKT");

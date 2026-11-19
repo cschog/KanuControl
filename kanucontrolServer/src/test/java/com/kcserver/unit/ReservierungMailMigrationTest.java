@@ -1,4 +1,5 @@
 package com.kcserver.unit;
+import static com.kcserver.support.MigrationSqlAssertions.assertSqlState;
 import liquibase.*;
 import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
@@ -24,7 +25,7 @@ class ReservierungMailMigrationTest {
     c.createStatement().execute("UPDATE buchung SET reservierung_mail_fehler=NULL,reservierung_mail_gesendet_am=CURRENT_TIMESTAMP");
     if(schema.equals("CLUB_B")) {
      lb.rollback(1,new Contexts(),new LabelExpression());
-     assertThrows(SQLException.class,()->c.createStatement().executeQuery("SELECT reservierung_mail_gesendet_am FROM buchung"));
+     assertSqlState(c, "SELECT reservierung_mail_gesendet_am FROM buchung", "42S22");
      try(var rs=c.createStatement().executeQuery("SELECT reservierung_mail_gesendet_am FROM CLUB_A.buchung")) {assertTrue(rs.next());assertNotNull(rs.getObject(1));}
     }
    }
