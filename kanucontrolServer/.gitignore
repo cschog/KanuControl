@@ -23,5 +23,6 @@ target/
 # OS specific
 .DS_Store
 Thumbs.db
-# Lokale SonarQube-Exporte
+# Lokale SonarQube-Caches und Exporte
+.sonar/
 sonarqube-issues.json
