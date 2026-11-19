@@ -38,6 +38,7 @@ public class MieterService {
         buchungRepository.findAll().forEach(b -> buchungen
                 .computeIfAbsent(b.getMieter().getId(), ignored -> new ArrayList<>()).add(b));
         return mieterRepository.findAllByOrderByPersonNameAscPersonVornameAsc().stream()
+                .filter(m -> m.getZusammengefuehrtIn()==null)
                 .map(m -> toDto(m, buchungen.getOrDefault(m.getPerson().getId(), List.of())))
                 .toList();
     }
@@ -82,6 +83,7 @@ public class MieterService {
 
     public MieterDTO update(Long id, MieterSaveDTO dto) {
         Mieter mieter = findLocked(id);
+        if(mieter.getZusammengefuehrtIn()!=null)throw new ResponseStatusException(HttpStatus.CONFLICT,"Dieser Mieter wurde bereits zusammengeführt.");
         apply(mieter.getPerson(), dto);
         mieter.setAirbnb(dto.isAirbnb());
         if (dto.getAktiv() != null) mieter.setAktiv(dto.getAktiv());
@@ -100,6 +102,8 @@ public class MieterService {
                     "Der Mieter kann nicht gelöscht werden, solange noch Buchungen zugeordnet sind. "
                     + "Bitte zuerst alle zugehörigen Buchungen löschen. Das gilt auch für stornierte und abgeschlossene Buchungen.");
         }
+        if(mieter.getZusammengefuehrtIn()!=null || mieterRepository.findAllByOrderByPersonNameAscPersonVornameAsc().stream().anyMatch(m->id.equals(m.getZusammengefuehrtIn())))
+            throw new ResponseStatusException(HttpStatus.CONFLICT,"Ein zusammengeführter Datensatz bleibt als technische Zuordnung erhalten.");
         // Die Person kann zugleich in KJFP verwendet werden. Nur den Mietereintrag löschen.
         mieterRepository.delete(mieter);
         mieterRepository.flush();

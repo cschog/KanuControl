@@ -22,6 +22,8 @@ import java.util.List;
 @Table(name = "verein")
 public class Verein extends Auditable {
 
+    @Column(name="vermietung_zusammengefuehrt_in") private Long vermietungZusammengefuehrtIn;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @EqualsAndHashCode.Include

@@ -116,14 +116,9 @@ public class VerbrauchsabrechnungService {
                 )
         ));
 
-        List<Verbrauchskosten> konfigurationen =
-                verbrauchskostenRepository
-                        .findByMietobjektIdOrderByIdAsc(
-                                buchung.getMietobjekt().getId()
-                        )
-                        .stream()
-                        .filter(Verbrauchskosten::isAktiv)
-                        .toList();
+        var konfigurationen = VerbrauchspreisAuswahl.zumDatum(
+                verbrauchskostenRepository.findByMietobjektIdOrderByIdAsc(buchung.getMietobjekt().getId()),
+                anreiseZeitpunkt.toLocalDate());
 
         List<BuchungVerbrauchskosten> snapshots = new ArrayList<>();
 
@@ -131,8 +126,9 @@ public class VerbrauchsabrechnungService {
          * Erst alle Positionen berechnen.
          * Bei einem Fehler wird noch nichts gespeichert oder gelöscht.
          */
-        for (Verbrauchskosten basis : konfigurationen) {
-            Verbrauchskosten konfiguration = basis.zumDatum(anreiseZeitpunkt.toLocalDate());
+        for (var auswahl : konfigurationen) {
+            if (auswahl.hinweis() != null) throw new IllegalArgumentException(auswahl.hinweis());
+            Verbrauchskosten konfiguration = auswahl.konfiguration();
 
             if (konfiguration.getAbrechnungsart()
                     == com.kcserver.vermietung.enumtype.Verbrauchsabrechnungsart.ZAEHLERSTAND) {
@@ -348,14 +344,9 @@ public class VerbrauchsabrechnungService {
                 )
         ));
 
-        List<Verbrauchskosten> konfigurationen =
-                verbrauchskostenRepository
-                        .findByMietobjektIdOrderByIdAsc(
-                                buchung.getMietobjekt().getId()
-                        )
-                        .stream()
-                        .filter(Verbrauchskosten::isAktiv)
-                        .toList();
+        var konfigurationen = VerbrauchspreisAuswahl.zumDatum(
+                verbrauchskostenRepository.findByMietobjektIdOrderByIdAsc(buchung.getMietobjekt().getId()),
+                anreiseZeitpunkt.toLocalDate());
 
         /*
          * Die gebuchten Mietbereiche bestimmen, welche Zähler
@@ -381,15 +372,14 @@ public class VerbrauchsabrechnungService {
                     ));
         }
 
-        for (Verbrauchskosten basis : konfigurationen) {
-            Verbrauchskosten konfiguration;
-            try {
-                konfiguration = basis.zumDatum(anreiseZeitpunkt.toLocalDate());
-            } catch (IllegalArgumentException ex) {
+        for (var auswahl : konfigurationen) {
+            if (auswahl.hinweis() != null) {
+                var basis = auswahl.basis();
                 ergebnis.add(fehlerVorschau(null, null, basis.getBezeichnung(), basis.getVerbrauchsart(),
-                        basis.getAbrechnungsart(), basis.getMengeneinheit(), null, ex.getMessage()));
+                        basis.getAbrechnungsart(), basis.getMengeneinheit(), null, auswahl.hinweis()));
                 continue;
             }
+            Verbrauchskosten konfiguration = auswahl.konfiguration();
 
             switch (konfiguration.getAbrechnungsart()) {
 

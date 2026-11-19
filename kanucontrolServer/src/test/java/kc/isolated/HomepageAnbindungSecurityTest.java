@@ -17,6 +17,7 @@ import static org.mockito.Mockito.*;
 class HomepageAnbindungSecurityTest {
     @Configuration @EnableMethodSecurity(proxyTargetClass = true)
     static class Config {
+        @Bean com.kcserver.core.repository.VereinRepository veranstalterRepository(){return mock(com.kcserver.core.repository.VereinRepository.class);}
         @Bean com.kcserver.vermietung.service.HomepageIntegrationService integrationService() {
             return mock(com.kcserver.vermietung.service.HomepageIntegrationService.class);
         }

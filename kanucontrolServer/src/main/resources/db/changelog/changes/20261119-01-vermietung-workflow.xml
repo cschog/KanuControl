@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+ <changeSet id="20261119-01-vermietung-workflow" author="codex">
+  <createTable tableName="vermietung_aenderung">
+   <column name="id" type="BIGINT" autoIncrement="true"><constraints primaryKey="true" nullable="false"/></column>
+   <column name="zeitpunkt" type="TIMESTAMP WITH TIME ZONE"><constraints nullable="false"/></column>
+   <column name="benutzer" type="VARCHAR(255)"><constraints nullable="false"/></column>
+   <column name="aktion" type="VARCHAR(255)"><constraints nullable="false"/></column>
+   <column name="daten" type="TEXT"><constraints nullable="false"/></column>
+  </createTable>
+  <addColumn tableName="mieter"><column name="zusammengefuehrt_in" type="BIGINT"/></addColumn>
+  <addColumn tableName="verein"><column name="vermietung_zusammengefuehrt_in" type="BIGINT"/></addColumn>
+  <addForeignKeyConstraint baseTableName="mieter" baseColumnNames="zusammengefuehrt_in" referencedTableName="mieter" referencedColumnNames="id" constraintName="fk_mieter_merge_ziel"/>
+  <addForeignKeyConstraint baseTableName="verein" baseColumnNames="vermietung_zusammengefuehrt_in" referencedTableName="verein" referencedColumnNames="id" constraintName="fk_veranstalter_merge_ziel"/>
+  <rollback><dropForeignKeyConstraint baseTableName="verein" constraintName="fk_veranstalter_merge_ziel"/><dropForeignKeyConstraint baseTableName="mieter" constraintName="fk_mieter_merge_ziel"/><dropColumn tableName="verein" columnName="vermietung_zusammengefuehrt_in"/><dropColumn tableName="mieter" columnName="zusammengefuehrt_in"/><dropTable tableName="vermietung_aenderung"/></rollback>
+ </changeSet>
+ <changeSet id="20261119-02-bestaetigung-zahlungsmodalitaeten" author="codex">
+  <sql><![CDATA[
+   UPDATE vermietung_vorlage ziel SET inhalt=replace(quelle.inhalt,'Reservierungsbestätigung','Buchungsbestätigung'), version=ziel.version+1
+   FROM vermietung_vorlage quelle WHERE ziel.mietobjekt_id=quelle.mietobjekt_id AND ziel.vorgang='BESTAETIGUNG' AND quelle.vorgang='RESERVIERUNG';
+   INSERT INTO vermietung_vorlage(mietobjekt_id,vorgang,inhalt,version)
+   SELECT q.mietobjekt_id,'BESTAETIGUNG',replace(q.inhalt,'Reservierungsbestätigung','Buchungsbestätigung'),0 FROM vermietung_vorlage q
+   WHERE q.vorgang='RESERVIERUNG' AND NOT EXISTS(SELECT 1 FROM vermietung_vorlage z WHERE z.mietobjekt_id=q.mietobjekt_id AND z.vorgang='BESTAETIGUNG');
+  ]]></sql>
+  <!-- Restore customized templates from the pre-rollout tenant backup if rolling back. -->
+ </changeSet>
+</databaseChangeLog>

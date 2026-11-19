@@ -71,8 +71,8 @@ public class BuchungsnachrichtService {
             hints.add("Die Rechnung berücksichtigt bisher gebuchte Zahlungen und Verrechnungen. Eine noch offene Kaution wird hier nicht automatisch verrechnet.");
         }else{
             var extra=new HashMap<String,String>();var wahr=EnumSet.noneOf(Bedingung.class);Abrechnungsbereich tabelle=null;
-            if(ziel==Buchungsstatus.STORNIERT){var st=Stornoberechnung.berechnen(heute(),b.getAnreise().toLocalDate(),f.bewegungen());extra.putAll(daten.stornoDaten(b,st));
-                wahr.add(st.erstattung().signum()>0?Bedingung.STORNO_ERSTATTUNG_POSITIV:st.einbehalt().signum()>0?Bedingung.STORNO_EINBEHALT_POSITIV:Bedingung.STORNO_OHNE_ZAHLUNG);tabelle=daten.stornoTabelle(st,f.bewegungen());}
+            if(ziel==Buchungsstatus.STORNIERT){var st=Stornoberechnung.berechnen(b.getStatus()==Buchungsstatus.STORNIERT && b.getStornoDatum()!=null?b.getStornoDatum():heute(),b.getAnreise().toLocalDate(),f.bewegungen());extra.putAll(daten.stornoDaten(b,st));
+                wahr.addAll(st.bedingungen());tabelle=daten.stornoTabelle(st,f.bewegungen());}
             result=vorlagen.erstellenVorgang(b,daten.basis(b,heute()),null,vorgang,extra,wahr,tabelle);
         }
         String email=b.getMieter()==null?null:b.getMieter().getEmail();
@@ -104,7 +104,9 @@ public class BuchungsnachrichtService {
     private Buchung buchung(Long id){return buchungen.findLockedById(id).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Buchung fehlt."));}
     private BuchungsnachrichtEntwurf entwurf(Long buchung,String id){return entwuerfe.gesperrt(id,user(),TenantContext.getCurrentTenant(),buchung).filter(e->!e.isUnabhaengig()).orElseThrow(()->new ResponseStatusException(HttpStatus.GONE,"Entwurf nicht verfügbar oder einem anderen Benutzer/Mandanten zugeordnet."));}
     private List<AblesungBestaetigungDTO> ablesungen(BuchungsnachrichtEntwurf e){return Arrays.asList(lesen(e.getAblesungen(),AblesungBestaetigungDTO[].class));}
-    private List<BuchungVerbrauchskosten> snapshots(Buchung b,BuchungsnachrichtEntwurf e){return e.getZiel()==Buchungsstatus.ABGESCHLOSSEN?verbrauch.berechneSnapshots(b,ablesungen(e)):null;}
+    private List<BuchungVerbrauchskosten> snapshots(Buchung b,BuchungsnachrichtEntwurf e){return e.getZiel()==Buchungsstatus.ABGESCHLOSSEN?(b.getStatus()==Buchungsstatus.ABGESCHLOSSEN?verbrauchGespeichert(b):verbrauch.berechneSnapshots(b,ablesungen(e))):null;}
+    @org.springframework.beans.factory.annotation.Autowired private BuchungVerbrauchskostenRepository gespeicherterVerbrauch;
+    private List<BuchungVerbrauchskosten> verbrauchGespeichert(Buchung b){return gespeicherterVerbrauch.findByBuchungIdOrderByIdAsc(b.getId());}
     private void offen(BuchungsnachrichtEntwurf e){if(e.isAusgefuehrt())throw konflikt("Diese Aktion wurde bereits ausgeführt. Für erneuten Versand den gespeicherten Versuch prüfen.");if(e.getAblauf().isBefore(Instant.now()))throw konflikt("Entwurf abgelaufen. Bitte neu erstellen.");}
     private static ResponseStatusException konflikt(String s){return new ResponseStatusException(HttpStatus.CONFLICT,s);}
     /** Includes addresses, routing, raw snapshots/confirmations, exact finance and template revisions. No JPA recursion. */
@@ -121,7 +123,7 @@ public class BuchungsnachrichtService {
             values.add(papierstand==null?null:Arrays.asList(papierstand.getVersion(),papierstand.getPdf()==null?null:hash(papierstand.getPdf()),papierstand.getBild()==null?null:hash(papierstand.getBild()),papierstand.getGruss()));
             if(!e.isUnabhaengig() && !e.isOhneMail())values.add(mails.nachrichtVorschau(b,"", ""));values.add(e.isUnabhaengig()?daten.dokumentBasis(b,e.getDatum()):daten.basis(b,e.getDatum()));
         }
-        if(b.getVeranstalter()!=null){var v=b.getVeranstalter();values.add(Arrays.asList(v.getId(),v.getName(),v.getStrasse(),v.getPlz(),v.getOrt(),v.getCountryCode()));}
+        if(b.getVeranstalter()!=null){var v=b.getVeranstalter();values.add(Arrays.asList(v.getId(),v.getName(),v.getStrasse(),v.getPlz(),v.getOrt(),v.getCountryCode(),v.getBankName(),v.getIban(),v.getBic()));}
         if(snapshots!=null)for(var v:snapshots)values.add(Arrays.asList(v.getVerbrauchskostenId(),v.getZaehlerId(),v.getBezeichnung(),v.getPreis(),v.getKosten(),v.getAnfangsstand(),v.getEndstand(),v.getAnfangsablesung(),v.getEndablesung(),v.getMengeneinheit(),v.getAbrechnungstage()));
         values.add(b.getFruehereBuchungsnummer());
         if(e.isUnabhaengig())values.add(verbrauch.berechneVorschau(b));
@@ -136,8 +138,9 @@ public class BuchungsnachrichtService {
         extra.put("erstattung",VorlagenService.geld(f.saldo().negate().max(java.math.BigDecimal.ZERO)));
         var person=b.getMieter();
         extra.put("mieter_bank_name",Objects.toString(person.getBankName(),""));extra.put("mieter_bank_iban",Objects.toString(person.getIban(),""));extra.put("mieter_bank_bic",Objects.toString(person.getBic(),""));extra.put("mieter_kontoinhaber",Objects.toString(person.getKontoinhaber(),""));
+        extra.putAll(Buchungsadressat.erstattungskonto(b));
         if(art==Buchungsstatus.ABGESCHLOSSEN)extra.put("zahlungsfrist",heute().plusDays(14).format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy")));
-        if(art==Buchungsstatus.STORNIERT)extra.putAll(daten.stornoDaten(b,Stornoberechnung.berechnen(heute(),b.getAnreise().toLocalDate(),f.bewegungen()),false));
+        if(art==Buchungsstatus.STORNIERT)extra.putAll(daten.stornoDaten(b,Stornoberechnung.berechnen(b.getStatus()==Buchungsstatus.STORNIERT && b.getStornoDatum()!=null?b.getStornoDatum():heute(),b.getAnreise().toLocalDate(),f.bewegungen()),false));
         return vorlagen.erstellenVorgang(b,daten.dokumentBasis(b,heute()),null,BuchungsnachrichtDaten.vorgang(art),extra,wahr,null,false);
     }
     String dokumentDatenstand(Buchung b,BuchungsnachrichtEntwurf e){return zustand(b,e,null);}
@@ -147,15 +150,15 @@ public class BuchungsnachrichtService {
     }
     public Ansicht erstellen(Long id,Start request){user();return tx.execute(status->{
         if(request==null || request.ziel()==null)throw fehler("Zielstatus fehlt.");
-        var b=buchung(id);buchungsservice.pruefeStatuswechsel(b,request.ziel());
+        var b=buchung(id);if(b.getStatus()==Buchungsstatus.STORNIERT)throw fehler("Bitte Stornierung zurücknehmen verwenden.");buchungsservice.pruefeStatuswechsel(b,request.ziel());
         var f=finanzen.toDto(b);BuchungsnachrichtDaten.zahlungsplanPruefen(b,request.ziel(),f.bewegungen());
         var e=new BuchungsnachrichtEntwurf();e.setBenutzer(user());e.setTenant(TenantContext.getCurrentTenant());e.setBuchungId(id);
         e.setQuelle(b.getStatus());e.setZiel(request.ziel());e.setDatum(heute());e.setAblauf(Instant.now().plusSeconds(1800));
-        e.setOhneMail(dokumentlos(b) || BuchungsnachrichtDaten.ohneMail(b.getStatus(),request.ziel()) || (request.ziel()==Buchungsstatus.ABGESCHLOSSEN && !Boolean.TRUE.equals(request.sendEmail())));e.setAblesungen(json(request.ablesungen()==null?List.of():request.ablesungen()));
+        e.setOhneMail(dokumentlos(b) || BuchungsnachrichtDaten.ohneMail(b.getStatus(),request.ziel()) || (request.ziel()==Buchungsstatus.BESTAETIGT && Boolean.FALSE.equals(request.sendEmail())) || (request.ziel()==Buchungsstatus.ABGESCHLOSSEN && !Boolean.TRUE.equals(request.sendEmail())));e.setAblesungen(json(request.ablesungen()==null?List.of():request.ablesungen()));
         e.setDateiname("Buchung_"+id+"_"+BuchungsnachrichtDaten.vorgang(request.ziel())+".pdf");
         var sn=snapshots(b,e);
         if(!dokumentlos(b) && request.ziel()==Buchungsstatus.ABGESCHLOSSEN){
-            buchungsservice.pruefeKautionsabschluss(b);
+            if(b.getStatus()!=Buchungsstatus.ABGESCHLOSSEN)buchungsservice.pruefeKautionsabschluss(b);
             var old=rechnungen.findByBuchungIdOrderByRevisionDesc(id);e.setRechnungRevision(old.isEmpty()?1:old.getFirst().getRevision()+1);
             e.setErsetztDokumentId(old.isEmpty()?null:old.getFirst().getId());String grund=Objects.toString(request.korrekturgrund(),"").strip();
             if(grund.length()>1000)throw fehler("Der Korrekturgrund darf höchstens 1000 Zeichen enthalten.");e.setKorrekturgrund(grund);
@@ -167,7 +170,7 @@ public class BuchungsnachrichtService {
             else {
                 var extra=new HashMap<String,String>();var wahr=EnumSet.noneOf(Bedingung.class);Abrechnungsbereich tabelle=null;
                 if(e.getZiel()==Buchungsstatus.STORNIERT){var st=Stornoberechnung.berechnen(e.getDatum(),b.getAnreise().toLocalDate(),f.bewegungen());e.setStorno(json(st));extra.putAll(daten.stornoDaten(b,st));
-                    wahr.add(st.erstattung().signum()>0?Bedingung.STORNO_ERSTATTUNG_POSITIV:st.einbehalt().signum()>0?Bedingung.STORNO_EINBEHALT_POSITIV:Bedingung.STORNO_OHNE_ZAHLUNG);tabelle=daten.stornoTabelle(st,f.bewegungen());}
+                    wahr.addAll(st.bedingungen());tabelle=daten.stornoTabelle(st,f.bewegungen());}
                 result=vorlagen.erstellenVorgang(b,daten.basis(b,e.getDatum()),null,BuchungsnachrichtDaten.vorgang(e.getZiel()),extra,wahr,tabelle);
             }
             e.setBetreff(result.betreff());e.setMailtext(result.mailtext());e.setOriginalPdf(result.pdf().clone());e.setPdf(result.pdf().clone());

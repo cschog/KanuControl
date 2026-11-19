@@ -18,7 +18,6 @@ public class BuchungFinanzenService {
  public BuchungFinanzenService(BuchungRepository b,BuchungFinanzbewegungRepository m,BuchungVerbrauchskostenRepository v,VerbrauchsabrechnungService va){buchungen=b;bewegungen=m;verbrauch=v;verbrauchsabrechnungService=va;}
  @Transactional(readOnly=true) public List<BuchungFinanzenDTO> getAll(){
   return buchungen.findAll().stream()
-   .filter(b -> b.getStatus() != Buchungsstatus.ABGELEHNT)
    .map(this::toDto)
    .sorted(Comparator.comparing(BuchungFinanzenDTO::anreise,Comparator.nullsLast(Comparator.naturalOrder())).reversed())
    .toList();
@@ -53,8 +52,8 @@ public class BuchungFinanzenService {
  public BuchungFinanzenDTO add(Long buchungId,FinanzbewegungSaveDTO dto){
   Buchung b=buchungen.findLockedById(buchungId).orElseThrow(()->new IllegalArgumentException("Buchung nicht gefunden: "+buchungId));
   if(Zahlungsplan.ohneAbrechnung(b)) throw new IllegalArgumentException("Bei Ohne Abrechnung sind keine Zahlungsbewegungen vorgesehen.");
-  if(b.getStatus()==Buchungsstatus.STORNIERT && b.getStornoEinbehalt()!=null && b.getStornoEinbehalt().signum()>0 && dto.art()==Finanzbewegungsart.RUECKZAHLUNG)
-   throw new IllegalArgumentException("Die kurzfristige Stornierung sieht keine Erstattung vor. Der gespeicherte Einbehalt ist verbindlich.");
+  if(b.getStatus()==Buchungsstatus.STORNIERT && b.getStornoEinbehalt()!=null && b.getStornoEinbehalt().signum()>0 && dto.art()==Finanzbewegungsart.RUECKZAHLUNG && dto.kategorie()!=Finanzkategorie.KAUTION)
+   throw new IllegalArgumentException("Bei kurzfristiger Stornierung bleiben Mietzahlungen einbehalten. Eine gezahlte Kaution kann zurückgezahlt werden.");
   if(b.getBuchungsquelle()==Buchungsquelle.AIRBNB && (dto.kategorie()==Finanzkategorie.ANZAHLUNG || dto.kategorie()==Finanzkategorie.KAUTION)) throw new IllegalArgumentException("Airbnb-Buchungen haben keine Anzahlung und Kaution.");
   if(dto.art()==Finanzbewegungsart.VERRECHNUNG && dto.kategorie()!=Finanzkategorie.KAUTION) throw new IllegalArgumentException("Verrechnungen können nur von der Kaution ausgehen.");
   if(dto.art()==Finanzbewegungsart.RUECKZAHLUNG || dto.art()==Finanzbewegungsart.VERRECHNUNG) {
@@ -62,15 +61,34 @@ public class BuchungFinanzenService {
     .filter(m->m.getKategorie()==dto.kategorie())
     .map(m->m.getArt()==Finanzbewegungsart.EINGANG?m.getBetrag():m.getArt()==Finanzbewegungsart.RUECKZAHLUNG?m.getBetrag().negate():(dto.kategorie()==Finanzkategorie.VERBRAUCHSKOSTEN?m.getBetrag():m.getBetrag().negate()))
     .reduce(BigDecimal.ZERO,BigDecimal::add);
+   if(b.getStatus()==Buchungsstatus.STORNIERT && dto.art()==Finanzbewegungsart.RUECKZAHLUNG && dto.kategorie()==Finanzkategorie.KAUTION)
+    verfuegbar=Stornoberechnung.verbleibendeKaution(bewegungen.findByBuchungIdOrderByDatumAscIdAsc(buchungId).stream().map(Stornoberechnung::dto).toList());
    if(dto.betrag().compareTo(verfuegbar)>0) throw new IllegalArgumentException("Der Betrag übersteigt den verfügbaren Betrag von "+verfuegbar+" €.");
+  }
+  if(b.getStatus()==Buchungsstatus.STORNIERT && dto.art()==Finanzbewegungsart.RUECKZAHLUNG && dto.kategorie()==Finanzkategorie.KAUTION){
+   var history=bewegungen.findByBuchungIdOrderByDatumAscIdAsc(buchungId).stream().map(Stornoberechnung::dto).toList();
+   b.setStornoEinbehalt(Stornoberechnung.aktuellerEinbehalt(b,history));
   }
   saveMove(b,dto.kategorie(),dto.art(),dto.betrag(),dto.datum(),dto.bemerkung());
   if(dto.art()==Finanzbewegungsart.VERRECHNUNG && dto.kategorie()==Finanzkategorie.KAUTION)
    saveMove(b,Finanzkategorie.VERBRAUCHSKOSTEN,Finanzbewegungsart.VERRECHNUNG,dto.betrag(),dto.datum(),"Verrechnung aus Kaution"+(dto.bemerkung()==null||dto.bemerkung().isBlank()?"":": "+dto.bemerkung()));
   return toDto(b);
  }
+ public BuchungFinanzenDTO entfernen(Long id,List<Long> ids){
+  var b=buchungen.findLockedById(id).orElseThrow(()->new IllegalArgumentException("Buchung nicht gefunden."));
+  if(ids==null || ids.isEmpty() || ids.size()>500 || new HashSet<>(ids).size()!=ids.size())throw new IllegalArgumentException("Bitte gültige Zahlungen auswählen.");
+  var alle=bewegungen.findByBuchungIdOrderByDatumAscIdAsc(id);
+  var auswahl=alle.stream().filter(m->ids.contains(m.getId())).toList();
+  if(auswahl.size()!=ids.size())throw new IllegalArgumentException("Eine Zahlung gehört nicht zur Buchung oder wurde bereits gelöscht. Bitte neu laden.");
+  var transfer=new HashMap<LocalDate,BigDecimal>();
+  for(var m:auswahl)if(m.getArt()==Finanzbewegungsart.VERRECHNUNG)
+   transfer.merge(m.getDatum(),m.getKategorie()==Finanzkategorie.KAUTION?m.getBetrag().negate():m.getBetrag(),BigDecimal::add);
+  if(transfer.values().stream().anyMatch(v->v.signum()!=0))throw new IllegalArgumentException("Bitte beide Positionen einer Kautionsverrechnung gemeinsam auswählen.");
+  bewegungen.deleteAll(auswahl);bewegungen.flush();b.setAbrechnungRevision(b.getAbrechnungRevision()+1);
+  return toDto(b);
+ }
  private void saveMove(Buchung b,Finanzkategorie k,Finanzbewegungsart a,BigDecimal amount,LocalDate date,String note){
-  BuchungFinanzbewegung m=new BuchungFinanzbewegung(); m.setBuchung(b);m.setKategorie(k);m.setArt(a);m.setBetrag(amount.setScale(2,RoundingMode.HALF_UP));m.setDatum(date);m.setBemerkung(note);bewegungen.save(m);
+  BuchungFinanzbewegung m=new BuchungFinanzbewegung(); m.setBuchung(b);m.setKategorie(k);m.setArt(a);m.setBetrag(amount.setScale(2,RoundingMode.HALF_UP));m.setDatum(date);m.setBemerkung(note);bewegungen.save(m);b.setAbrechnungRevision(b.getAbrechnungRevision()+1);
  }
  public BuchungFinanzenDTO toDto(Buchung b){return toDto(b,null);}
  public BuchungFinanzenDTO toDto(Buchung b,List<BuchungVerbrauchskosten> berechneteSnapshots){
@@ -99,7 +117,7 @@ public class BuchungFinanzenService {
    utilities=BigDecimal.ZERO;
   }
   List<FinanzbewegungDTO> history=bewegungen.findByBuchungIdOrderByDatumAscIdAsc(b.getId()).stream().map(m->new FinanzbewegungDTO(m.getId(),m.getKategorie(),m.getArt(),m.getBetrag(),m.getDatum(),m.getBemerkung())).toList();
-  return new BuchungFinanzenDTO(b.getId(),b.getBuchungsnummer(),PersonName.givenFirst(b.getMieter().getName(), b.getMieter().getVorname()),b.getMietobjekt().getBezeichnung(),b.getBuchungsquelle(),b.getStatus().name(),b.getAnreise()==null?null:b.getAnreise().toLocalDate(),b.getAbreise()==null?null:b.getAbreise().toLocalDate(),b.isUnbefristet(),!Zahlungsplan.ohneAbrechnung(b)&&b.getBuchungsquelle()==Buchungsquelle.DIREKT?zero(b.getAnzahlungBetrag()):BigDecimal.ZERO,!Zahlungsplan.ohneAbrechnung(b)&&b.getBuchungsquelle()==Buchungsquelle.DIREKT?zero(b.getKautionBetrag()):BigDecimal.ZERO,mietkosten,mietrabatt,rent,utilities,verbrauchVorschauVollstaendig,history,EntschaedigungPositionService.rows(b),EntschaedigungPositionService.sum(b),b.getStornoEinbehalt());
+  return new BuchungFinanzenDTO(b.getId(),b.getBuchungsnummer(),PersonName.givenFirst(b.getMieter().getName(), b.getMieter().getVorname()),b.getMietobjekt().getBezeichnung(),b.getBuchungsquelle(),b.getStatus().name(),b.getAnreise()==null?null:b.getAnreise().toLocalDate(),b.getAbreise()==null?null:b.getAbreise().toLocalDate(),b.isUnbefristet(),!Zahlungsplan.ohneAbrechnung(b)&&b.getBuchungsquelle()==Buchungsquelle.DIREKT?zero(b.getAnzahlungBetrag()):BigDecimal.ZERO,!Zahlungsplan.ohneAbrechnung(b)&&b.getBuchungsquelle()==Buchungsquelle.DIREKT?zero(b.getKautionBetrag()):BigDecimal.ZERO,mietkosten,mietrabatt,rent,utilities,verbrauchVorschauVollstaendig,history,EntschaedigungPositionService.rows(b),EntschaedigungPositionService.sum(b),Stornoberechnung.aktuellerEinbehalt(b,history));
  }
  private BigDecimal zero(BigDecimal x){return x==null?BigDecimal.ZERO:x;}
 }

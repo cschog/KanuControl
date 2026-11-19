@@ -28,7 +28,7 @@ class BuchungStatusBenachrichtigungTest {
             mock(BuchungVerbrauchskostenRepository.class),mock(BuchungFinanzbewegungRepository.class),mails);
         preparedStatus=mock(HomepageStatusMailService.StatusMail.class);
         when(mails.statusVorbereiten(any(),any(),any(),anyString())).thenReturn(preparedStatus);
-        buchung=new Buchung();buchung.setId(1L);buchung.setHerkunft("DIREKT");
+        buchung=new Buchung();buchung.setStatus(Buchungsstatus.ANFRAGE);buchung.setId(1L);buchung.setHerkunft("DIREKT");
         Mietobjekt objekt=new Mietobjekt();objekt.setId(7L);buchung.setMietobjekt(objekt);buchung.setMieter(new com.kcserver.core.entity.Person());
         buchung.setAnreise(LocalDateTime.now().plusDays(5));buchung.setAbreise(LocalDateTime.now().plusDays(7));
         when(repository.findLockedById(1L)).thenReturn(Optional.of(buchung));when(repository.save(any())).thenAnswer(i->i.getArgument(0));

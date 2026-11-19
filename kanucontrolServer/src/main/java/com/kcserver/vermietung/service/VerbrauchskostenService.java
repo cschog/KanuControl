@@ -86,7 +86,6 @@ public class VerbrauchskostenService {
         verbrauchskosten.setAbrechnungsart(dto.getAbrechnungsart());
         verbrauchskosten.setMengeneinheit(dto.getMengeneinheit());
         verbrauchskosten.setPreis(verbrauchskosten.getPreise().get(verbrauchskosten.getPreise().size() - 1).getPreis());
-        verbrauchskosten.setAktiv(dto.isAktiv());
 
         return toDTO(verbrauchskostenRepository.save(verbrauchskosten));
     }
@@ -193,7 +192,6 @@ public class VerbrauchskostenService {
                         : null
         );
         verbrauchskosten.setPreis(verbrauchskosten.getPreise().get(verbrauchskosten.getPreise().size() - 1).getPreis());
-        verbrauchskosten.setAktiv(dto.isAktiv());
     }
 
     private void uebernehmePreise(VerbrauchskostenDTO dto, Verbrauchskosten entity) {

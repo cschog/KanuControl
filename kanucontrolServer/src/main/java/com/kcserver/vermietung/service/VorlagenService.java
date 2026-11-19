@@ -108,7 +108,7 @@ public class VorlagenService {
         wahr.add(b.getAnreise().toLocalDate().isBefore(heute.plusWeeks(8))?Bedingung.STORNO_UNTER_56_TAGEN:Bedingung.STORNO_AB_56_TAGEN);
         wahr.add(Bedingung.valueOf("ZAHLUNG_"+b.getZahlungsvariante().name()));
         d.put("organisation",Buchungsadressat.organisation(b));
-        if(vorgang==Vorgang.BESTAETIGUNG || b.getBuchungsquelle()==com.kcserver.vermietung.enumtype.Buchungsquelle.AIRBNB){wahr.remove(Bedingung.ANZAHLUNG_POSITIV);wahr.remove(Bedingung.RESTMIETE_POSITIV);wahr.remove(Bedingung.KAUTION_POSITIV);wahr.remove(Bedingung.ZAHLUNG_GESAMTMIETE_VORAUS);}
+        if(b.getBuchungsquelle()==com.kcserver.vermietung.enumtype.Buchungsquelle.AIRBNB){wahr.remove(Bedingung.ANZAHLUNG_POSITIV);wahr.remove(Bedingung.RESTMIETE_POSITIV);wahr.remove(Bedingung.KAUTION_POSITIV);wahr.remove(Bedingung.ZAHLUNG_GESAMTMIETE_VORAUS);}
         if(miete.signum()==0)wahr.remove(Bedingung.ZAHLUNG_GESAMTMIETE_VORAUS);
         if(b.getFruehereBuchungsnummer()!=null && !b.getFruehereBuchungsnummer().isBlank())wahr.add(Bedingung.FRUEHERE_BUCHUNGSNUMMER_VORHANDEN);
         d.putAll(extra);wahr.addAll(bedingungen);
@@ -140,7 +140,7 @@ public class VorlagenService {
         return beispielVorschau(objektId,vorgang,entwurf,ogGebucht,kurzfristig,papierEntwurf(version,gruss,pdf,bild,bildEntfernen));
     }
     public static List<String> szenarien(Vorgang vorgang){return switch(vorgang){
-        case RESERVIERUNG -> List.of("ANZAHLUNG","GESAMTMIETE_VORAUS","BEI_ABRECHNUNG","OHNE_ABRECHNUNG");
+        case RESERVIERUNG, BESTAETIGUNG -> List.of("ANZAHLUNG","GESAMTMIETE_VORAUS","BEI_ABRECHNUNG","OHNE_ABRECHNUNG");
         case ABGERECHNET -> List.of("RESTZAHLUNG","ERSTATTUNG","AUSGEGLICHEN");
         case STORNIERUNG -> List.of("STORNO_FRUEH","STORNO_KURZ","STORNO_OHNE_ZAHLUNG");
         default -> List.of("STANDARD");};}
@@ -153,7 +153,7 @@ public class VorlagenService {
     }
     private Ergebnis beispielVorschau(Long objektId,Vorgang vorgang,Vorlage entwurf,boolean ogGebucht,boolean kurzfristig,MandantenBriefpapier papier){
         return beispielVorschau(objektId,vorgang,entwurf,ogGebucht,kurzfristig,papier,
-            vorgang==Vorgang.RESERVIERUNG?(kurzfristig?"GESAMTMIETE_VORAUS":"ANZAHLUNG"):vorgang==Vorgang.ABGERECHNET?"ERSTATTUNG":vorgang==Vorgang.STORNIERUNG?(kurzfristig?"STORNO_KURZ":"STORNO_FRUEH"):"STANDARD");
+            (vorgang==Vorgang.RESERVIERUNG || vorgang==Vorgang.BESTAETIGUNG)?(kurzfristig?"GESAMTMIETE_VORAUS":"ANZAHLUNG"):vorgang==Vorgang.ABGERECHNET?"ERSTATTUNG":vorgang==Vorgang.STORNIERUNG?(kurzfristig?"STORNO_KURZ":"STORNO_FRUEH"):"STANDARD");
     }
     private Ergebnis beispielVorschau(Long objektId,Vorgang vorgang,Vorlage entwurf,boolean ogGebucht,boolean kurzfristig,MandantenBriefpapier papier,String szenario) {
         var objekt=objekte.findById(objektId).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Mietobjekt nicht gefunden."));
@@ -187,14 +187,15 @@ public class VorlagenService {
         if(szenario.equals("GESAMTMIETE_VORAUS"))wahr.add(Bedingung.ZAHLUNG_GESAMTMIETE_VORAUS);
         if(szenario.equals("OHNE_ABRECHNUNG")){wahr.add(Bedingung.ZAHLUNG_OHNE_ABRECHNUNG);wahr.remove(Bedingung.KAUTION_POSITIV);d.put("mietbetrag","0,00");d.put("kaution","0,00");}
         if(szenario.equals("BEI_ABRECHNUNG")){wahr.add(Bedingung.ZAHLUNG_BEI_ABRECHNUNG);wahr.remove(Bedingung.KAUTION_POSITIV);}
-        if(vorgang==Vorgang.BESTAETIGUNG)wahr.remove(Bedingung.KAUTION_POSITIV);
         BigDecimal saldo=szenario.equals("RESTZAHLUNG")?new BigDecimal("100.00"):szenario.equals("AUSGEGLICHEN")?BigDecimal.ZERO:ogGebucht?new BigDecimal("-99.00"):new BigDecimal("-349.00");
         if(vorgang==Vorgang.ABGERECHNET){d.put("mietbetrag",ogGebucht?"765,00":"515,00");d.put("kaution","0,00");wahr.remove(Bedingung.KAUTION_POSITIV);d.put("zahlungsfrist",datum.format(heute.plusDays(14)));d.put("saldo",geld(saldo));d.put("erstattung",geld(saldo.negate().max(BigDecimal.ZERO)));d.put("restzahlung",geld(saldo.max(BigDecimal.ZERO)));wahr.add(saldo.signum()<0?Bedingung.ERSTATTUNG_POSITIV:saldo.signum()>0?Bedingung.RESTZAHLUNG_POSITIV:Bedingung.AUSGEGLICHEN);}
-        d.put("stornodatum",datum.format(heute));d.put("storno_gezahlter_betrag",szenario.equals("STORNO_OHNE_ZAHLUNG")?"0,00":"1000,00");d.put("storno_bereits_erstattet","0,00");d.put("storno_erstattung",szenario.equals("STORNO_FRUEH")?"1000,00":"0,00");d.put("storno_einbehalt",szenario.equals("STORNO_KURZ")?"1000,00":"0,00");
+        d.put("stornodatum",datum.format(heute));d.put("storno_gezahlter_betrag",szenario.equals("STORNO_OHNE_ZAHLUNG")?"0,00":"1000,00");d.put("storno_bereits_erstattet","0,00");d.put("storno_erstattung",szenario.equals("STORNO_FRUEH")?"1000,00":szenario.equals("STORNO_KURZ")?"250,00":"0,00");d.put("storno_einbehalt",szenario.equals("STORNO_KURZ")?"750,00":"0,00");
         if(vorgang==Vorgang.STORNIERUNG){
             wahr.remove(Bedingung.STORNO_UNTER_56_TAGEN);wahr.remove(Bedingung.STORNO_AB_56_TAGEN);
             wahr.add(szenario.equals("STORNO_KURZ")?Bedingung.STORNO_UNTER_56_TAGEN:Bedingung.STORNO_AB_56_TAGEN);
-            wahr.add(szenario.equals("STORNO_FRUEH")?Bedingung.STORNO_ERSTATTUNG_POSITIV:szenario.equals("STORNO_KURZ")?Bedingung.STORNO_EINBEHALT_POSITIV:Bedingung.STORNO_OHNE_ZAHLUNG);
+            if(szenario.equals("STORNO_FRUEH") || szenario.equals("STORNO_KURZ"))wahr.add(Bedingung.STORNO_ERSTATTUNG_POSITIV);
+            if(szenario.equals("STORNO_KURZ"))wahr.add(Bedingung.STORNO_EINBEHALT_POSITIV);
+            if(szenario.equals("STORNO_OHNE_ZAHLUNG"))wahr.add(Bedingung.STORNO_OHNE_ZAHLUNG);
         }
         var absaetze=texte(v,d,wahr);
         var gruss=ersetzen(papier.getGruss(),d);

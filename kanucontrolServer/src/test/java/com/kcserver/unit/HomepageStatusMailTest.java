@@ -33,7 +33,7 @@ class HomepageStatusMailTest {
         when(senders.getIfAvailable()).thenReturn(sender);
         smtp=new com.kcserver.vermietung.config.SmtpMailProperties();smtp.setEnabled(true);smtp.setFrom("vermietung@example.org");
         service=new HomepageStatusMailService(mails,configs,factory.getValidator(),senders,smtp);
-        buchung=new Buchung();buchung.setId(1L);buchung.setBuchungsjahr(2027);buchung.setLaufendeNummer(1);
+        buchung=new Buchung();buchung.setStatus(Buchungsstatus.ANFRAGE);buchung.setId(1L);buchung.setBuchungsjahr(2027);buchung.setLaufendeNummer(1);
         buchung.setHerkunft("HOMEPAGE");buchung.setAnreise(LocalDateTime.of(2027,6,10,16,0));buchung.setAbreise(LocalDateTime.of(2027,6,12,14,0));
         Person person=new Person();person.setVorname("Erika");person.setEmail("erika@example.org");buchung.setMieter(person);
         Mietobjekt objekt=new Mietobjekt();objekt.setId(7L);objekt.setBezeichnung("Bootshaus");buchung.setMietobjekt(objekt);

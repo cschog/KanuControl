@@ -359,3 +359,11 @@ databaseChangeLog:
   - include:
       file: changes/20261117-01-verbrauchspreise.xml
       relativeToChangelogFile: true
+
+  - include:
+      file: changes/20261119-01-vermietung-workflow.xml
+      relativeToChangelogFile: true
+
+  - include:
+      file: changes/20261119-02-jahresabrechnung.xml
+      relativeToChangelogFile: true

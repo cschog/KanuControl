@@ -12,6 +12,8 @@ import java.util.List;
 public class BuchungFinanzenController {
  private final BuchungFinanzenService service;
  public BuchungFinanzenController(BuchungFinanzenService service){this.service=service;}
+ public record Auswahl(@jakarta.validation.constraints.NotEmpty @jakarta.validation.constraints.Size(max=500) List<@jakarta.validation.constraints.NotNull Long> ids) {}
+ @PostMapping("/{buchungId}/bewegungen/entfernen") public ApiResponse<BuchungFinanzenDTO> entfernen(@PathVariable Long buchungId,@RequestBody @Valid Auswahl auswahl){return ApiResponse.of(service.entfernen(buchungId,auswahl.ids()));}
  @GetMapping public ApiResponse<List<BuchungFinanzenDTO>> getAll(){return new ApiResponse<>(service.getAll(),List.of());}
  @PostMapping("/{buchungId}/bewegungen") public ApiResponse<BuchungFinanzenDTO> add(@PathVariable Long buchungId,@RequestBody @Valid FinanzbewegungSaveDTO dto){return new ApiResponse<>(service.add(buchungId,dto),List.of());}
  @GetMapping("/{buchungId}") public ApiResponse<BuchungFinanzenDTO> getById(@PathVariable Long buchungId){return new ApiResponse<>(service.getById(buchungId),List.of());}

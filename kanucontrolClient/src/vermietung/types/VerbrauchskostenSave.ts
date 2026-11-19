@@ -7,5 +7,4 @@ export interface VerbrauchskostenSave {
   mengeneinheit: string | null;
   preis: number;
   preise?: Verbrauchspreis[];
-  aktiv: boolean;
 }

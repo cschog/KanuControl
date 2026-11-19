@@ -26,7 +26,7 @@ const createInitialForm = (buchungsquelle: Buchungsquelle = "DIREKT"): BuchungSa
   entschaedigungen: [],
   mieterId: 0,
   veranstalterVereinId: undefined,
-  status: "ANFRAGE",
+  status: "RESERVIERT",
   buchungsquelle,
   anzahlJugendliche: null,
   jugendAlterVon: null,

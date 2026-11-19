@@ -1,3 +1,4 @@
+import StammdatenMergeDialog from "@/vermietung/components/verwaltung/StammdatenMergeDialog";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { COUNTRIES } from "@/kjfp/api/enums/CountryCode";
 import PostalCodeAutocomplete from "@/core/components/common/PostalCodeAutocomplete";
@@ -35,6 +36,7 @@ function MieterFehler({ text }: { text: string }) {
 }
 
 export default function MieterPage() {
+  const [merge,setMerge]=useState(false);
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -367,6 +369,8 @@ export default function MieterPage() {
           </Grid>
         </Paper>
     )}
+    {detailOpen && !edit && selected && <Button onClick={()=>setMerge(true)}>Mieter zusammenführen</Button>}
+    {merge && selected && <StammdatenMergeDialog art="mieter" id={selected.id} onClose={()=>setMerge(false)} onDone={()=>{setMerge(false);setSelectedId(null);void reload();setSuccess("Mieter wurden zusammengeführt.");}}/>}
     {detailOpen && !loading && <BottomActionBar
       left={edit ? [
         { label: saving ? "Wird gespeichert …" : "Speichern", variant: "contained", onClick: () => void save(), disabled: saving || deleting || !form.name.trim() || !form.vorname.trim() },

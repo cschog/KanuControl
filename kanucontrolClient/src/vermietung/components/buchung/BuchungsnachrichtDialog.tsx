@@ -63,7 +63,7 @@ export default function BuchungsnachrichtDialog({buchung,ziel,entwurfId,onClose,
   return confirmReadings?readings.map(v=>({zaehlerId:v.zaehlerId!,anreise:pruefbuchung!.anreise,abreise:pruefbuchung!.abreise,anfangsablesung:v.anfangsablesung!,endablesung:v.endablesung!,anfangsstand:v.anfangsstand!,endstand:v.endstand!})):[];
  }
  const abschlussBereit=!!pruefbuchung&&!!finanzen&&!readingsLoading&&incompleteReadings.length===0&&(readings.length===0||confirmReadings);
- async function createDraft(){accept((await apiClient.post<Entwurf>(base,{ziel:zielstatus,ablesungen:bestaetigteAblesungen(),sendEmail:completion?sendEmail:undefined})).data);}
+ async function createDraft(){accept((await apiClient.post<Entwurf>(base,{ziel:zielstatus,ablesungen:bestaetigteAblesungen(),sendEmail:completion||zielstatus==="BESTAETIGT"?sendEmail:undefined})).data);}
  async function erstellen(){
   if(completion&&!abschlussBereit)return;
   await run(createDraft);
@@ -92,6 +92,7 @@ export default function BuchungsnachrichtDialog({buchung,ziel,entwurfId,onClose,
     </Typography>)}
    </Stack>}
    {!draft&&<>
+    {zielstatus==="BESTAETIGT"&&!dokumentlos&&<TextField select label="E-Mail bei Bestätigung" value={sendEmail?"MIT_MAIL":"OHNE_MAIL"} disabled={busy} onChange={e=>setSendEmail(e.target.value==="MIT_MAIL")} helperText={sendEmail?"Die Bestätigung mit PDF wird nach deiner Prüfung an den Mieter gesendet. Bankdaten sind optional.":"Die Buchung wird ohne E-Mail bestätigt. Bankdaten sind dafür nicht erforderlich."}><MenuItem value="OHNE_MAIL">Ohne E-Mail bestätigen</MenuItem><MenuItem value="MIT_MAIL">Mit Bestätigungsmail</MenuItem></TextField>}
     {completion&&<>{!dokumentlos&&<TextField select label="Mailversand beim Abschluss" value={buchung.buchungsquelle!=="AIRBNB"&&sendEmail?"MIT_MAIL":"OHNE_MAIL"} disabled={busy || buchung.buchungsquelle==="AIRBNB"} onChange={e=>setSendEmail(e.target.value==="MIT_MAIL")} helperText={buchung.buchungsquelle==="AIRBNB"?"Abschluss ohne PDF und Mailversand.":"Die letzte Rechnung wird gespeichert. Ohne Mailversand ist keine E-Mail-Adresse des Mieters erforderlich."}><MenuItem value="MIT_MAIL">Mit Mailversand abschließen</MenuItem><MenuItem value="OHNE_MAIL">Ohne Mailversand abschließen</MenuItem></TextField>}<Alert severity="info">{kostenlos?"Die Verbrauchswerte werden für spätere Auswertungen gespeichert. Es entstehen keine Kosten, keine Rechnung und keine E-Mail.":"Vor dem Abschluss werden die Verbrauchswerte geprüft. Die aktuelle Abschlussrechnung ersetzt die vorherige PDF-Fassung."}</Alert>
      {readingsLoading&&<Typography role="status">Aktuelle Verbrauchswerte werden geladen …</Typography>}
      {!readingsLoading&&!pruefbuchung&&<Alert severity="warning">Die aktuellen Verbrauchswerte konnten nicht geladen werden. Bitte erneut laden, bevor die Vorschau erstellt wird.</Alert>}
@@ -119,10 +120,10 @@ export default function BuchungsnachrichtDialog({buchung,ziel,entwurfId,onClose,
      </Stack></Box>}
      <Button disabled={busy||readingsLoading} onClick={()=>{setPruefbuchung(null);setConfirmReadings(false);setPruefungRevision(v=>v+1);}}>Verbrauchswerte erneut laden</Button>
     </>}
-    <Button variant="outlined" disabled={busy||(completion&&(!abschlussBereit||!kautionAbschlussBereit))} onClick={()=>void erstellen()}>{completion?dokumentlos?"Verbrauchswerte prüfen und Abschluss vorbereiten":sendEmail?"Abschlussmail und PDF öffnen":"Abschlussrechnung öffnen":"Nachrichtenvorschau erstellen"}</Button>
+    <Button variant="outlined" disabled={busy||(completion&&(!abschlussBereit||!kautionAbschlussBereit))} onClick={()=>void erstellen()}>{completion?dokumentlos?"Verbrauchswerte prüfen und Abschluss vorbereiten":sendEmail?"Abschlussmail und PDF öffnen":"Abschlussrechnung öffnen":zielstatus==="BESTAETIGT"&&!sendEmail?"Bestätigung ohne E-Mail prüfen":"Nachrichtenvorschau erstellen"}</Button>
    </>}
    {draft&&<>
-    {draft.ohneMail?<Alert severity="info">{completion?dokumentlos?"Abschluss ohne Rechnung und Mailversand. Die Verbrauchswerte werden gespeichert.":"Abschluss ohne Mailversand: Die letzte Rechnung wird gespeichert.":"Statusänderung ohne Mailversand. Die geforderte Anzahlung beziehungsweise Vorauszahlung wird geprüft; die spätere Restmiete löst keine zusätzliche Nachricht aus."}</Alert>:<>
+    {draft.ohneMail?<Alert severity="info">{completion?dokumentlos?"Abschluss ohne Rechnung und Mailversand. Die Verbrauchswerte werden gespeichert.":"Abschluss ohne Mailversand: Die letzte Rechnung wird gespeichert.":"Statusänderung ohne Mailversand. Bankdaten sind für diese Bestätigung nicht erforderlich."}</Alert>:<>
      {draft.routing?.testmodus&&<Alert severity="warning">Testumleitung aktiv. Angezeigt werden die tatsächlichen Versandempfänger.</Alert>}
      <Typography>Von: {draft.routing?.absender} · An: {draft.routing?.empfaenger}{draft.routing?.cc?` · Kopie: ${draft.routing.cc}`:""}{draft.routing?.replyTo?` · Antwort an: ${draft.routing.replyTo}`:""}</Typography>
      {draft.routing?.testmodus && <Typography>Versandbetreff: {draft.routing.betreff}</Typography>}

@@ -1,3 +1,4 @@
+import Altanfragen from "@/vermietung/components/buchung/Altanfragen";
 import { formatPersonName } from "@/core/utils/personName";
 import AblesungBestaetigungDialog from "@/vermietung/components/buchung/AblesungBestaetigungDialog";
 // src/vermietung/pages/BuchungenView.tsx
@@ -448,6 +449,7 @@ if (showForm) {
 
   return (
     <Box sx={{ p: 3 }}>
+      <Altanfragen onChanged={async()=>{await reload();}}/>
       {mieterIdFilter !== null && <Alert severity="info" sx={{ mb: 2 }} action={<Button color="inherit" onClick={() => {
         setSearchParams(current => { const next = new URLSearchParams(current); next.delete("mieterId"); return next; });
       }}>Mieterfilter aufheben</Button>}>
@@ -533,7 +535,7 @@ if (showForm) {
             sx={{ width: { xs: "100%", sm: 230 } }}
           >
             <MenuItem value="ALLE">Alle Status</MenuItem>
-            {Object.entries(BUCHUNGSSTATUS_LABELS).map(([value, label]) => (
+            {Object.entries(BUCHUNGSSTATUS_LABELS).filter(([value])=>value!=="ANFRAGE").map(([value, label]) => (
               <MenuItem key={value} value={value}>{label}</MenuItem>
             ))}
           </TextField>

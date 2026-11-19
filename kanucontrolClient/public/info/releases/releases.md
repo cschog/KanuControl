@@ -1,3 +1,31 @@
+# Was ist neu? – KanuControl 2.4.1
+
+**Quellstand: 19. November 2026 · Client und Server: 2.4.1**
+
+- Unbefristete Buchungen erhalten einen eigenen Jahresabschluss. Die Jahresabrechnung kann jederzeit im laufenden Kalenderjahr erstellt werden, wenn die Buchung im Abrechnungsjahr beginnt oder bereits läuft. Buchungsstatus, fehlendes Enddatum und Kalenderbelegung bleiben erhalten.
+- Eine Vorschau zeigt die vereinbarte Miete und die Mietzahlungen/Anzahlungen mit Zahlungsdatum im Abrechnungsjahr. Es erfolgt keine zeitanteilige Kürzung. Kaution und Verbrauchskosten sind nicht Teil der Jahresabrechnung; der Jahresabschluss löst keine Rückzahlung und keine E-Mail aus.
+- Für jedes Jahr gibt es ein aktuelles Dokument. Eine erneute Erstellung ersetzt das PDF desselben Jahres, etwa nach einer Zahlungskorrektur. Abrechnungen anderer Jahre bleiben getrennte Jahresabschlüsse. Airbnb und „Ohne Abrechnung“ erhalten einen Jahresabschluss ohne PDF.
+- Reservierungen können ohne Bankdaten und ohne Bestätigungsmail bestätigt werden. Die Kaution wird auch bei kurzfristiger Stornierung vollständig zur Rückzahlung berücksichtigt; bereits erfolgte Erstattungen werden abgezogen. Der alte Status „Anfrage“ erscheint nicht im Buchungskalender.
+- Ergänzt die Vermietungsabläufe: Homepage-Reservierung mit separater Eingangsbestätigung, Wiederherstellung stornierter Buchungen als bestätigt, Zahlungskorrekturen auch nach Abschluss sowie Stammdaten-Zusammenführung.
+
+Beim Serverstart wird die zusätzliche Mandantenmigration `20261119-02-jahresabrechnung.xml` für die getrennten Jahresabrechnungen ausgeführt. Bestehende Abschlussrechnungen bleiben erhalten. Kein Deployment ausgeführt.
+
+---
+
+# Was ist neu? – KanuControl 2.3.2
+
+**Quellstand: 17. November 2026 · Client und Server: 2.3.2**
+
+- Die Verbrauchsabrechnung wählt je Mietobjekt und Verbrauchsart genau den Preis, dessen Zeitraum den Anreisetag enthält. Dieser Preis gilt für den gesamten Aufenthalt.
+- Historische Preise dürfen als getrennte Positionen erfasst bleiben. Positionen mit früheren oder späteren Zeiträumen werden automatisch ausgelassen; ein Zusammenführen ist nicht nötig. Mehrere Preiszeiträume innerhalb einer Position werden weiterhin unterstützt.
+- Aktiv-Schalter und Aktiv-Status entfallen bei Verbrauchskosten. Auch bisher inaktive Preise werden anhand ihrer Zeiträume berücksichtigt.
+- Fehlende oder sich überschneidende Preise werden je Verbrauchsart verständlich gemeldet und verhindern eine unvollständige oder doppelte Abrechnung. Bezeichnung und Mengeneinheit machen aus überlappenden Preisen keine getrennten Verbrauchsarten.
+- Abgeschlossene Buchungen behalten ihre gespeicherten Verbrauchskosten. Die Prüfung der zur Buchung gehörenden Zählerstände bleibt bestehen.
+
+Es ist keine zusätzliche Datenmigration nötig. Bestehende Preiszeiträume können unverändert verwendet werden. Sind bisher inaktive doppelte Einträge vorhanden, müssen deren Zeiträume bereinigt werden. Kein Deployment ausgeführt.
+
+---
+
 # Was ist neu? – KanuControl 2.3.1
 
 **Quellstand: 17. November 2026 · Client und Server: 2.3.1**

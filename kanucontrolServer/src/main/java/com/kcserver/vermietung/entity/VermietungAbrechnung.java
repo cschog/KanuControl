@@ -7,6 +7,7 @@ import java.time.Instant;
 public class VermietungAbrechnung {
  @Id @GeneratedValue(strategy=GenerationType.IDENTITY) private Long id;
  @ManyToOne(fetch=FetchType.LAZY,optional=false) @JoinColumn(name="buchung_id",nullable=false) private Buchung buchung;
+ @Column(name="abrechnungs_jahr") private Integer abrechnungsJahr;
  @Column(nullable=false) private int revision;
  @Column(nullable=false) private Instant erstellt;
  @Column(nullable=false,length=1000) private String korrekturgrund;

@@ -31,12 +31,24 @@ public final class VorlagenModell {
     public static String normalisieren(String text) {
         return text == null ? null : text.replace("\r\n", "\n").replace('\r', '\n');
     }
+    /** Known legacy standard wording only; individual wording remains editable. No database write. */
+    private static String stornoText(String text) {
+        if(text==null)return null;
+        return text.replace("Da die Stornierung mindestens 56 Tage vor Mietbeginn erfolgt, werden alle geleisteten Zahlungen zurückerstattet.",
+                "Gemäß der Stornoregel werden die erstattbaren Zahlungen zurückgezahlt. Eine gezahlte Kaution wird unabhängig von der Stornierungsfrist erstattet.")
+            .replace("Nach der vereinbarten Stornoregel werden die geleisteten Zahlungen nicht erstattet.",
+                "Nach der vereinbarten Stornoregel werden Mietzahlungen einbehalten. Eine gezahlte Kaution wird zurückgezahlt.")
+            .replace("Bei Stornierung weniger als 56 Tage vor Mietbeginn werden keine geleisteten Zahlungen erstattet.",
+                "Bei Stornierung weniger als 56 Tage vor Mietbeginn werden Mietzahlungen einbehalten. Eine gezahlte Kaution wird unabhängig von der Stornierungsfrist zurückgezahlt.")
+            .replace("Innerhalb von 56 Tagen erfolgt keine Erstattung.",
+                "Innerhalb von 56 Tagen werden Mietzahlungen einbehalten; eine gezahlte Kaution wird zurückgezahlt.");
+    }
     public static Vorlage normalisieren(Vorlage v) {
         if (v == null) return null;
         // Keep single-line fields unchanged so validation still rejects header/title breaks.
-        return new Vorlage(v.version(), v.betreff(), normalisieren(v.mailtext()), v.bloecke() == null ? null :
-            v.bloecke().stream().map(b -> b == null ? null : new Block(b.titel(), normalisieren(b.text()), b.bedingung(),
-                b.varianten() == null ? null : b.varianten().stream().map(x -> x == null ? null : new Variante(x.bedingung(), normalisieren(x.text()))).toList())).toList(), normalisieren(v.anrede()));
+        return new Vorlage(v.version(), v.betreff(), stornoText(normalisieren(v.mailtext())), v.bloecke() == null ? null :
+            v.bloecke().stream().map(b -> b == null ? null : new Block(b.titel(), stornoText(normalisieren(b.text())), b.bedingung(),
+                b.varianten() == null ? null : b.varianten().stream().map(x -> x == null ? null : new Variante(x.bedingung(), stornoText(normalisieren(x.text())))).toList())).toList(), normalisieren(v.anrede()));
     }
     public static void pruefeText(String text, boolean leerErlaubt) {
         text = normalisieren(text);

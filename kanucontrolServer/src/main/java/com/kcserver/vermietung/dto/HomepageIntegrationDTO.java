@@ -24,13 +24,30 @@ public final class HomepageIntegrationDTO {
             @NotNull @AssertTrue Boolean hausregelnAkzeptiert, @NotNull @AssertTrue Boolean datenschutzGelesen,
             @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL) @Size(max=255) String bankName,
             @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL) @Size(max=34) @com.kcserver.core.validation.ValidIban String iban,
-            @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL) @Pattern(regexp="[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?") String bic) {
+            @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL) @Pattern(regexp="[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?") String bic,
+            @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL) @Size(max=255) String kontoinhaber,
+            @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL) @Valid VeranstalterDaten veranstalterDaten) {
+        public Anfrage(java.util.UUID anfrageId, Long konfigurationVersion, Auswahl auswahl, String vorname, String name, String email, String telefon, String strasse, String plz, String ort, String countryCode, String veranstalter, String bemerkung, Integer anzahlJugendliche, Integer jugendAlterVon, Integer jugendAlterBis, Integer anzahlErwachsene, Boolean hausregelnAkzeptiert, Boolean datenschutzGelesen, String bankName, String iban, String bic, String kontoinhaber) { this(anfrageId, konfigurationVersion, auswahl, vorname, name, email, telefon, strasse, plz, ort, countryCode, veranstalter, bemerkung, anzahlJugendliche, jugendAlterVon, jugendAlterBis, anzahlErwachsene, hausregelnAkzeptiert, datenschutzGelesen, bankName, iban, bic, kontoinhaber, null); }
+        @AssertTrue(message="Bitte Bankverbindung des Mieters oder vollständige Veranstalterdaten angeben.")
+        @com.fasterxml.jackson.annotation.JsonIgnore
+        public boolean isBankdatenVollstaendig() {
+            return veranstalterDaten != null || bankName != null && !bankName.isBlank() && iban != null && !iban.isBlank()
+                && bic != null && !bic.isBlank() && kontoinhaber != null && !kontoinhaber.isBlank();
+        }
         public Anfrage {
-            bankName=optional(bankName);iban=bankCode(iban);bic=bankCode(bic);
+            bankName=optional(bankName);iban=bankCode(iban);bic=optional(bic);
+            bic=bic==null?null:bic.toUpperCase(java.util.Locale.ROOT);
+            kontoinhaber=optional(kontoinhaber);
         }
         private static String optional(String value) { return value==null || value.isBlank()?null:value.strip(); }
         private static String bankCode(String value) { var text=optional(value);return text==null?null:text.replaceAll("\\s+", "").toUpperCase(java.util.Locale.ROOT); }
     }
+    public record VeranstalterDaten(@NotBlank @Size(min=2,max=100) String name,
+            @NotBlank @Size(max=200) String strasse, @NotBlank @Size(max=20) String plz,
+            @NotBlank @Size(max=120) String ort, @NotBlank @Pattern(regexp="[A-Z]{2}") String countryCode,
+            @NotBlank @Size(max=255) String bankName,
+            @NotBlank @Size(max=34) @com.kcserver.core.validation.ValidIban String iban,
+            @NotBlank @Pattern(regexp="[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?") String bic) {}
     public record Bereich(Long id, String bezeichnung, String beschreibung, int bestand,
             String mengeneinheit, String berechnungsart, BigDecimal einzelpreis, List<Long> erforderlicheIds) {}
     public record Katalog(Long konfigurationVersion, String bezeichnung, String mietobjekt,
@@ -45,5 +62,6 @@ public final class HomepageIntegrationDTO {
     public record Verfuegbarkeit(boolean verfuegbar, String hinweis) {}
     /** Nur für den authentifizierten Homepage-Server; Empfänger nicht öffentlich ausgeben. */
     public record Bestaetigung(Long buchungId, String buchungsnummer, String status,
-            boolean gastBestaetigung, boolean verwaltungsBenachrichtigung, String empfaengerEmail, String mietumfang) {}
+            boolean gastBestaetigung, boolean verwaltungsBenachrichtigung, String empfaengerEmail, String mietumfang,
+            String mietobjekt) {}
 }

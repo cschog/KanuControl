@@ -1,3 +1,4 @@
+import { waehleVerbrauchspreise } from "@/vermietung/utils/verbrauchspreise";
 import MieterProfilLink from "../mieter/MieterProfilLink";
 import { formatPersonName } from "@/core/utils/personName";
 // src/vermietung/components/buchung/BuchungBaseForm.tsx
@@ -357,7 +358,7 @@ export const BuchungBaseForm: React.FC<Props> = ({
       return;
     }
     getVerbrauchskosten(form.mietobjektId).then(rows => {
-      if (aktiv) setVerbrauchKonfiguration(rows.filter(row => row.aktiv));
+      if (aktiv) setVerbrauchKonfiguration(rows);
     }).catch(() => { if (aktiv) setVerbrauchLadefehler(true); });
     return () => { aktiv = false; };
   }, [form.mietobjektId, kostenlos, form.buchungsquelle]);
@@ -367,6 +368,7 @@ export const BuchungBaseForm: React.FC<Props> = ({
   const zeitraum = `${datum(form.anreise)} – ${form.unbefristet ? "ohne Enddatum" : datum(form.abreise)}`;
   const rabattLabel = { KEIN_RABATT: "kein Rabatt", VEREIN: "Vereinsrabatt", VERBAND: "Verbandsrabatt", INDIVIDUELL: "individueller Rabatt" }[form.rabattart];
   const mietpreisLabel = !form.positionen.length ? "noch keine Mietbereiche gewählt" : !form.anreise || (!form.unbefristet && !form.abreise) ? "Zeitraum noch nicht vollständig" : gesamtpreisVollstaendig ? formatPreis(mietpreisNachRabatt) : "noch nicht vollständig ermittelt";
+  const verbrauchPreisAuswahl = waehleVerbrauchspreise(verbrauchKonfiguration ?? [], form.anreise?.slice(0, 10));
   const schaeden = form.entschaedigungen ?? [];
   const schaedenSumme = schaeden.reduce((sum, row) => sum + Math.round(row.einzelpreis * 100) * row.anzahl / 100, 0);
   const verbrauchRows = buchungsstatus === "ABGESCHLOSSEN" ? verbrauchskosten ?? [] : verbrauchskostenVorschau ?? [];
@@ -941,7 +943,7 @@ export const BuchungBaseForm: React.FC<Props> = ({
           <Alert severity="info">Für Airbnb-Buchungen werden keine Anzahlung und keine Kaution erhoben.</Alert>
         ) : null}
 
-        {!kostenlos && buchungsstatus === "ANFRAGE" && form.buchungsquelle === "DIREKT" && form.zahlungsvariante !== "GESAMTMIETE_VORAUS" && form.anreise && (() => {
+        {!kostenlos && buchungsstatus === "RESERVIERT" && form.buchungsquelle === "DIREKT" && form.zahlungsvariante !== "GESAMTMIETE_VORAUS" && form.anreise && (() => {
           const heute = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Berlin" }).format(new Date());
           return (Date.parse(form.anreise.slice(0, 10)) - Date.parse(heute)) / 86400000 < (mietobjekt?.kurzfristgrenzeTage ?? 42) && (mietobjekt?.kurzfristgrenzeTage ?? 42) > 0;
         })() && <Alert severity="info" action={<button type="button" disabled={!buchungsdatenEditierbar} onClick={() => onChange("zahlungsvariante", "GESAMTMIETE_VORAUS")}>Übernehmen</button>}>Kurzfristige Anfrage: Gesamtmiete im Voraus empfohlen.</Alert>}
@@ -967,14 +969,13 @@ export const BuchungBaseForm: React.FC<Props> = ({
               {verbrauchLadefehler ? <Alert severity="error">Verbrauchspositionen konnten nicht geladen werden.</Alert>
                 : verbrauchKonfiguration === null ? <Typography>Noch nicht erfasst · Verbrauchspositionen werden geladen …</Typography>
                 : verbrauchKonfiguration.length === 0 ? <Typography>Keine Verbrauchspositionen für diese Buchung</Typography>
-                : verbrauchKonfiguration.map(k => {
-                    const anreise = form.anreise?.slice(0, 10);
-                    const preis = anreise ? k.preise?.find(p => p.gueltigVon <= anreise && (!p.gueltigBis || p.gueltigBis >= anreise))?.preis : undefined;
-                    return <Box key={k.id}>
+                : verbrauchPreisAuswahl.map(({ konfiguration: k, preis, hinweis }) => <Box key={k.verbrauchsart}>
                     <Typography fontWeight={600}>{k.bezeichnung}</Typography>
-                    <Typography variant="body2">{preis == null ? "Kein gültiger Preis zum Anreisedatum" : k.abrechnungsart === "ZAEHLERSTAND" ? `Zählerstand · ${formatPreis(preis)} je ${k.mengeneinheit || "Einheit"}` : k.abrechnungsart === "TAGESPREIS" ? `Tagespreis · ${formatPreis(preis)}` : `Pauschale · ${formatPreis(preis)}`}</Typography>
-                    <Typography variant="body2" color="text.secondary">Noch nicht erfasst</Typography>
-                  </Box>;})}
+                    {hinweis || preis == null ? <Alert severity="error">{hinweis}</Alert> : <>
+                      <Typography variant="body2">{k.abrechnungsart === "ZAEHLERSTAND" ? `Zählerstand · ${formatPreis(preis)} je ${k.mengeneinheit || "Einheit"}` : k.abrechnungsart === "TAGESPREIS" ? `Tagespreis · ${formatPreis(preis)}` : `Pauschale · ${formatPreis(preis)}`}</Typography>
+                      <Typography variant="body2" color="text.secondary">Noch nicht erfasst</Typography>
+                    </>}
+                  </Box>)}
             </Box>
           ) : form.buchungsquelle === "AIRBNB" ? (
             <Typography variant="body2" color="text.secondary">

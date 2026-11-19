@@ -1,3 +1,4 @@
+import ZahlungenAuswahl from "@/vermietung/components/buchung/ZahlungenAuswahl";
 import { useEffect, useMemo, useState } from "react";
 import { Accordion, AccordionDetails, AccordionSummary, Alert, Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField, Typography, Checkbox, FormControlLabel, MenuItem } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
@@ -60,6 +61,11 @@ function kautionVerrechnet(row: BuchungFinanzen) {
     .filter((b) => b.kategorie === "KAUTION" && b.art === "VERRECHNUNG")
     .reduce((sum, b) => sum + b.betrag, 0);
 }
+function stornoKautionVerfuegbar(row: BuchungFinanzen) {
+  const cash=row.bewegungen.reduce((s,m)=>s+(m.art==="EINGANG"?m.betrag:m.art==="RUECKZAHLUNG"?-m.betrag:0),0);
+  const kaution=row.bewegungen.filter(m=>m.kategorie==="KAUTION").reduce((s,m)=>s+(m.art==="EINGANG"?m.betrag:m.art==="RUECKZAHLUNG"?-m.betrag:0),0);
+  return Math.max(0,Math.min(cash,kaution));
+}
 function kautionZurueckzuzahlen(row: BuchungFinanzen) {
   const rueckgezahlt = row.bewegungen
     .filter((b) => b.kategorie === "KAUTION" && b.art === "RUECKZAHLUNG")
@@ -93,7 +99,7 @@ function offeneSumme(row: BuchungFinanzen, category: Finanzkategorie) {
 function statusText(row: BuchungFinanzen) {
   if (row.buchungsstatus === "STORNIERT") return "Storniert";
   if (row.buchungsstatus === "ABRECHENBAR") return "Abrechenbar";
-  if (row.buchungsstatus === "ABGESCHLOSSEN") return "Abgerechnet";
+  if (row.buchungsstatus === "ABGESCHLOSSEN") return row.saldo > 0.005 ? "Abgerechnet · Betrag offen" : row.saldo < -0.005 ? "Abgerechnet · Erstattung offen" : "Abgerechnet · Ausgeglichen";
   const targets = kategorien.map((k) => soll(row, k.key)).filter((x) => x > 0);
   if (targets.length === 0) return row.buchungsstatus === "ANFRAGE" ? "Anfrage" : "Offen";
   const totalDue = targets.reduce((a, b) => a + b, 0);
@@ -151,7 +157,7 @@ const AbrechnungPage = () => {
     const vorschlag = type === "VERRECHNUNG" && row.verbrauchVorschauVollstaendig
       ? Math.min(Math.max(0, paidFor(row, "KAUTION")), Math.max(0, offeneSumme(row, "VERBRAUCHSKOSTEN")))
       : type === "RUECKZAHLUNG" && category === "KAUTION"
-        ? kautionZurueckzuzahlen(row)
+        ? row.buchungsstatus === "STORNIERT" ? stornoKautionVerfuegbar(row) : kautionZurueckzuzahlen(row)
         : 0;
     setDialog({row,category}); setArt(type); setBetrag(vorschlag > 0 ? vorschlag.toFixed(2) : ""); setBemerkung(""); setDatum(new Date().toLocaleDateString("sv-SE")); setSaveError(null);
   };
@@ -219,7 +225,7 @@ const AbrechnungPage = () => {
                 <Typography variant="caption" color="text.secondary">{row.buchungsstatus === "STORNIERT" ? "Einbehalt" : "Umsatz"}</Typography>
                 <Typography fontWeight={700}>{betragLabel(row.buchungsstatus === "STORNIERT" ? row.stornoEinbehalt ?? 0 : row.abrechnungGesamt)}</Typography>
               </Box>
-              <Chip label={statusText(row)} color={statusText(row) === "Abgerechnet" ? "success" : statusText(row) === "Angezahlt" ? "info" : "default"} />
+              <Chip label={statusText(row)} color={statusText(row) === "Abgerechnet · Ausgeglichen" ? "success" : statusText(row).includes("offen") ? "warning" : statusText(row) === "Angezahlt" ? "info" : "default"} />
             </Stack>
           </Stack>
         </AccordionSummary>
@@ -248,8 +254,8 @@ const AbrechnungPage = () => {
           );
         })()}
         {row.buchungsstatus === "STORNIERT" ? <Stack spacing={1}>
-          <Alert severity="info">Verbindlicher Einbehalt: {betragLabel(row.stornoEinbehalt ?? 0)}. Die Stornierungsnachricht bucht keine Überweisung. Tatsächlich ausgeführte Erstattungen hier erfassen.</Alert>
-          {kategorien.map(category => { const verfuegbar = paidFor(row, category.key); return verfuegbar > 0 ? <Stack key={category.key} direction="row" spacing={1} alignItems="center"><Typography>{category.label}: {betragLabel(verfuegbar)} verbleibend</Typography>{!(row.stornoEinbehalt ?? 0) && <Button onClick={() => openDialog(row, category.key, "RUECKZAHLUNG")}>Ausgeführte Rückzahlung erfassen</Button>}</Stack> : null; })}
+          <Alert severity="info">Einbehalt ohne erstattbare Kaution: {betragLabel(row.stornoEinbehalt ?? 0)}. Eine gezahlte Kaution wird auch bei kurzfristiger Stornierung erstattet. Die Stornierungsnachricht bucht keine Überweisung. Tatsächlich ausgeführte Erstattungen hier erfassen.</Alert>
+          {kategorien.map(category => { const verfuegbar = category.key === "KAUTION" ? stornoKautionVerfuegbar(row) : paidFor(row, category.key); return verfuegbar > 0 ? <Stack key={category.key} direction="row" spacing={1} alignItems="center"><Typography>{category.label}: {betragLabel(verfuegbar)} verbleibend</Typography>{(!(row.stornoEinbehalt ?? 0) || category.key === "KAUTION") && <Button onClick={() => openDialog(row, category.key, "RUECKZAHLUNG")}>Ausgeführte Rückzahlung erfassen</Button>}</Stack> : null; })}
         </Stack> : <Stack spacing={1}>
           {kategorien.map((category) => {
             const due=soll(row,category.key);
@@ -297,7 +303,8 @@ const AbrechnungPage = () => {
           <Typography fontWeight={600}>Entschädigung gesamt: {betragLabel(row.entschaedigungSoll)}</Typography>
           <Typography variant="body2">Für Zahlung und Kautionsverrechnung im Soll der Verbrauchskosten enthalten.</Typography>
         </Box>}
-        {row.bewegungen.length > 0 && <Box sx={{mt:2}}><Typography variant="subtitle2">Bewegungen</Typography>{row.bewegungen.map((m)=><Typography key={m.id} variant="body2" color="text.secondary">{datumLabel(m.datum)} · {kategorien.find(k=>k.key===m.kategorie)?.label} · {bewegungsLabel(m)} {betragLabel(m.betrag)}{m.bemerkung ? ` · ${m.bemerkung}` : ""}</Typography>)}</Box>}
+        <Button sx={{mt:2}} startIcon={<AddIcon/>} onClick={()=>openDialog(row,"MIETE","EINGANG")}>Zahlung erfassen</Button>
+        {row.bewegungen.length > 0 && <ZahlungenAuswahl row={row} onChanged={laden}/>}
         </AccordionDetails></Accordion>)}
       {!loading && !error && sortiert.length === 0 && <Alert severity="info">{rows.length === 0 ? "Es gibt noch keine Buchungen." : "Keine Buchungen für die gewählten Filter gefunden."}</Alert>}
     </Stack>
@@ -305,6 +312,8 @@ const AbrechnungPage = () => {
       <DialogTitle>{art==="EINGANG"?"Zahlungseingang erfassen":art==="RUECKZAHLUNG"?"Rückzahlung erfassen":"Kaution mit Verbrauchskosten verrechnen"}</DialogTitle>
       <DialogContent><Stack spacing={2} sx={{pt:1}}>
         <Typography>{dialog?.row.buchungsnummer} · {dialog?.row.mieter} · {kategorien.find(k=>k.key===dialog?.category)?.label}</Typography>
+        <TextField select label="Zahlungsposition" value={dialog?.category??"MIETE"} disabled={saving} onChange={e=>setDialog(current=>current?{...current,category:e.target.value as Finanzkategorie}:null)}>{kategorien.map(k=><MenuItem key={k.key} value={k.key}>{k.label}</MenuItem>)}</TextField>
+        <TextField select label="Bewegung" value={art} disabled={saving} onChange={e=>setArt(e.target.value as Finanzbewegungsart)}><MenuItem value="EINGANG">Zahlungseingang</MenuItem><MenuItem value="RUECKZAHLUNG">Ausgeführte Rückzahlung</MenuItem><MenuItem value="VERRECHNUNG">Kautionsverrechnung</MenuItem></TextField>
         <TextField
           label="Betrag (€)"
           type="number"

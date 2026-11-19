@@ -67,7 +67,7 @@ class ReservierungMailTest {
     }
     @Test void vorschauIstReadOnlyUndSendetNicht() {
         var repo=mock(BuchungRepository.class);var mails=mock(HomepageStatusMailService.class);var versand=mock(ReservierungsversandService.class);
-        var b=ReservierungsbestaetigungTest.beispiel();when(repo.findById(11L)).thenReturn(Optional.of(b));
+        var b=ReservierungsbestaetigungTest.beispiel();b.setStatus(Buchungsstatus.ANFRAGE);when(repo.findById(11L)).thenReturn(Optional.of(b));
         var controller=new ReservierungsbestaetigungController(repo,mails,versand);
         assertEquals("no-store",controller.vorschau(11L).getHeaders().getCacheControl());
         assertEquals(Buchungsstatus.ANFRAGE,b.getStatus());verify(mails).reservierungVorschau(b);

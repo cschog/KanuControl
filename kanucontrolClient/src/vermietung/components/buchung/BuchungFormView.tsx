@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import BuchungsnummerAendern from "./BuchungsnummerAendern";
+import VorlagenVersandarchiv from "./VorlagenVersandarchiv";
 import Abrechnungsdokumente from "./Abrechnungsdokumente";
+import Jahresabrechnungen from "./Jahresabrechnungen";
+import { BuchungAbrechnungUebersicht } from "./BuchungAbrechnungUebersicht";
 import { buchungBereiche, buchungSpeicherFehler, type BuchungBereich, type BereichFehler } from "./buchungBereiche";
 import { getApiErrorMessage } from "@/kjfp/api/utils/apiError";
 // src/vermietung/components/anmeldung/BuchungFormView.tsx
@@ -76,14 +79,20 @@ export const BuchungFormView: React.FC<Props> = ({
 }) => {
   const formularRef = useRef<HTMLFormElement>(null);
   const [expanded, setExpanded] = useState<BuchungBereich[]>(buchung ? ['aufenthalt'] : ['mieter', 'aufenthalt']);
+  const [abrechnung, setAbrechnung] = useState(false);
   const [bereichFehler, setBereichFehler] = useState<BereichFehler>({});
   const [speicherFehler, setSpeicherFehler] = useState('');
   const [speichert, setSpeichert] = useState(false);
   useEffect(() => {
     setExpanded(buchung?.id ? ['aufenthalt'] : ['mieter', 'aufenthalt']);
-    setBereichFehler({}); setSpeicherFehler('');
+    setAbrechnung(false); setBereichFehler({}); setSpeicherFehler('');
   }, [buchung?.id, neueBuchungsquelle]);
-  const [, setDokumentRevision] = useState(0);
+  const prepareAbrechnung = () => {
+    setAbrechnung(true);
+    setExpanded(['verbrauch', 'schaeden']);
+    requestAnimationFrame(() => document.getElementById('buchung-verbrauch-kopf')?.scrollIntoView({ block: 'start', behavior: 'smooth' }));
+  };
+  const [dokumentRevision, setDokumentRevision] = useState(0);
   const {
     form,
     update,
@@ -105,7 +114,7 @@ export const BuchungFormView: React.FC<Props> = ({
     );
   }
 
-  const status = buchung ? statusAnzeige[buchung.status] : statusAnzeige.ANFRAGE;
+  const status = buchung ? statusAnzeige[buchung.status] : statusAnzeige.RESERVIERT;
 
   const save = async () => {
     if (speichert) return;
@@ -176,9 +185,9 @@ export const BuchungFormView: React.FC<Props> = ({
           key={`${buchung.id}-${buchung.buchungsnummer}`} nummer={buchung.buchungsnummer} onSave={onBuchungsnummerChange}
         />}
         {buchung?.herkunft === "HOMEPAGE" && <Chip label="Homepage-Anfrage" variant="outlined" />}
-        {buchung && !editMode && (
-          <Button variant="outlined" startIcon={<PaymentsIcon />} onClick={onOpenFinanzen}>
-            Zur Abrechnung
+        {buchung && !editMode && buchung.status !== "ABGELEHNT" && buchung.status !== "STORNIERT" && (
+          <Button variant="outlined" startIcon={<PaymentsIcon />} onClick={prepareAbrechnung}>
+            Abrechnung vorbereiten
           </Button>
         )}
       </Box>
@@ -195,8 +204,7 @@ export const BuchungFormView: React.FC<Props> = ({
           expanded={expanded}
           onExpandedChange={setExpanded}
           bereichFehler={bereichFehler}
-          buchungId={buchung?.id}
-          abrechnung={buchung?.status === "ABRECHENBAR" || buchung?.status === "ABGESCHLOSSEN"}
+          abrechnung={abrechnung}
           verbrauchVeraltet={!!buchung && (form.anreise !== buchung.anreise || form.abreise !== buchung.abreise || form.unbefristet !== buchung.unbefristet)}
           form={form}
           neueBuchung={!buchung}
@@ -224,8 +232,11 @@ export const BuchungFormView: React.FC<Props> = ({
       </Box>
 
       {buchung?.stornoDatum && <Typography sx={{ my: 2 }}>Storniert am {buchung.stornoDatum} · angekündigte Erstattung: {(buchung.stornoErstattung ?? 0).toLocaleString("de-DE", { style: "currency", currency: "EUR" })} · verbindlicher Einbehalt: {(buchung.stornoEinbehalt ?? 0).toLocaleString("de-DE", { style: "currency", currency: "EUR" })}. Tatsächliche Überweisungen werden separat in den Finanzen erfasst.</Typography>}
+      {abrechnung && buchung && <Box sx={{ mt: 2 }}><BuchungAbrechnungUebersicht id={buchung.id} revision={buchung} ungespeichert={editMode} onFinanzen={onOpenFinanzen} /></Box>}
       {speicherFehler && <Alert severity="error" role="alert" sx={{ my: 2 }}>{speicherFehler}</Alert>}
-      {buchung && buchung.buchungsquelle!=="AIRBNB" && buchung.zahlungsvariante!=="OHNE_ABRECHNUNG" && !editMode && <Abrechnungsdokumente key={`${buchung.id}-${buchung.status}-${buchung.abrechnungRevision}-${buchung.abschlussRevision}`} id={buchung.id} ausstellbar={buchung.status === "ABGESCHLOSSEN" && buchung.abrechnungRevision === buchung.abschlussRevision}/>}
+      {buchung && !editMode && <Jahresabrechnungen key={`${buchung.id}-${buchung.abrechnungRevision}`} id={buchung.id} status={buchung.status} unbefristet={buchung.unbefristet}/>}
+      {buchung && !buchung.unbefristet && buchung.buchungsquelle !== "AIRBNB" && buchung.zahlungsvariante !== "OHNE_ABRECHNUNG" && !editMode && <Abrechnungsdokumente key={`${buchung.id}-${buchung.status}-${buchung.abrechnungRevision}-${buchung.abschlussRevision}`} id={buchung.id} ausstellbar={buchung.status === "ABGESCHLOSSEN"}/>}
+      {buchung && !editMode && <VorlagenVersandarchiv key={`${buchung.id}-${buchung.status}-${buchung.abschlussRevision}-${buchung.reservierungMailGesendetAm}-${buchung.reservierungMailFehler}-${dokumentRevision}`} id={buchung.id} refresh={!!buchung.reservierungMailGesendetAm} />}
       <BuchungActionBar
         buchung={buchung ?? undefined}
         buchungId={buchung?.id}
@@ -234,7 +245,7 @@ export const BuchungFormView: React.FC<Props> = ({
         reservierungMailFehler={buchung?.reservierungMailFehler}
         onDokumentVersandt={() => setDokumentRevision(v => v + 1)}
         onRefresh={onRefresh}
-        status={buchung?.status ?? "ANFRAGE"}
+        status={buchung?.status ?? "RESERVIERT"}
         editMode={editMode}
         notifyByEmail={buchung !== null}
         abschlussErforderlich={!!buchung && buchung.abrechnungRevision !== buchung.abschlussRevision}

@@ -20,7 +20,6 @@ import {
   Typography,
   IconButton,
   Tooltip,
-  Chip,
 } from "@mui/material";
 
 import type { SelectChangeEvent } from "@mui/material";
@@ -248,6 +247,11 @@ export default function VerbrauchskostenVerwaltung() {
             Verbrauchskosten
           </Typography>
 
+          <Alert severity="info" sx={{ mb: 2 }}>
+            Maßgebend ist der Anreisetag der Buchung. Je Verbrauchsart wird genau ein passender Preis verwendet;
+            frühere und spätere Zeiträume werden automatisch ausgelassen. Eine Aktivierung ist nicht erforderlich.
+          </Alert>
+
           {isMobile ? (
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
               {verbrauchskosten.map((item) => (
@@ -264,12 +268,10 @@ export default function VerbrauchskostenVerwaltung() {
                       {item.bezeichnung}
                     </Typography>
 
-                    <Chip
-                      size="small"
-                      label={item.aktiv ? "Aktiv" : "Inaktiv"}
-                      color={item.aktiv ? "success" : "default"}
-                    />
+
                   </Box>
+
+                  <Typography variant="body2" color="text.secondary">{{ STROM: "Strom", GAS: "Gas", WASSER: "Wasser" }[item.verbrauchsart]}</Typography>
 
                   <Box sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 1 }}>
                     <Box
@@ -327,10 +329,10 @@ export default function VerbrauchskostenVerwaltung() {
                 <TableHead>
                   <TableRow>
                     <TableCell>Bezeichnung</TableCell>
+                    <TableCell>Verbrauchsart</TableCell>
                     <TableCell>Abrechnungsart</TableCell>
                     <TableCell>Mengeneinheit</TableCell>
                     <TableCell align="right">Preis</TableCell>
-                    <TableCell align="center">Status</TableCell>
                     <TableCell align="right">Aktionen</TableCell>
                   </TableRow>
                 </TableHead>
@@ -339,6 +341,7 @@ export default function VerbrauchskostenVerwaltung() {
                   {verbrauchskosten.map((item) => (
                     <TableRow key={item.id} hover>
                       <TableCell>{item.bezeichnung}</TableCell>
+                      <TableCell>{{ STROM: "Strom", GAS: "Gas", WASSER: "Wasser" }[item.verbrauchsart]}</TableCell>
 
                       <TableCell>{formatAbrechnungsart(item)}</TableCell>
 
@@ -348,13 +351,7 @@ export default function VerbrauchskostenVerwaltung() {
                         {renderPreise(item)}
                       </TableCell>
 
-                      <TableCell align="center">
-                        <Chip
-                          size="small"
-                          label={item.aktiv ? "Aktiv" : "Inaktiv"}
-                          color={item.aktiv ? "success" : "default"}
-                        />
-                      </TableCell>
+
 
                       <TableCell align="right">
                         <Tooltip title="Verbrauchskosten ändern">

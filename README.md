@@ -2,7 +2,7 @@
 
 Webbasierte Vereins-, Veranstaltungs- und Vermietungsverwaltung für Kanuvereine und Kanuverbände.
 
-**Client und Server:** 2.3.1 · **Versionsstand:** 17. November 2026
+**Client und Server:** 2.4.1 · **Versionsstand:** 19. November 2026
 
 Versionsschema und gemeinsames Hochzählen: [docs/Versionierung.md](docs/Versionierung.md).
 

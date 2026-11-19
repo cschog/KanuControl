@@ -32,13 +32,14 @@ public class VeranstalterService {
         return vereine.findAll((root,query,cb)->cb.or(
             cb.like(cb.lower(root.get("name")),"%"+term+"%"),
             cb.like(cb.lower(root.get("abk")),"%"+term+"%")))
-            .stream().map(v -> {var d=dto(v);d.setBuchungen(anzahl.getOrDefault(v.getId(),0L));return d;}).sorted(java.util.Comparator.comparing(VeranstalterDTO::getName)).toList();
+            .stream().filter(v->v.getVermietungZusammengefuehrtIn()==null).map(v -> {var d=dto(v);d.setBuchungen(anzahl.getOrDefault(v.getId(),0L));return d;}).sorted(java.util.Comparator.comparing(VeranstalterDTO::getName)).toList();
     }
     @Transactional(readOnly=true)
     public VeranstalterDTO lesen(Long id) { VorlagenService.tenant(); return dtoMitBuchungen(organisation(id)); }
     public VeranstalterDTO speichern(Long id, VeranstalterDTO d) {
         VorlagenService.tenant();
         Verein v=id==null?new Verein():organisation(id);
+        if(v.getVermietungZusammengefuehrtIn()!=null)throw new ResponseStatusException(HttpStatus.CONFLICT,"Dieser Veranstalter wurde bereits zusammengeführt.");
         if(id==null)v.setKjfpVerein(false);
         String name=d.getName().strip(), abk=d.getAbk().strip();
         vereine.findByAbkAndName(abk,name).ifPresent(other->{
@@ -59,6 +60,8 @@ public class VeranstalterService {
         VorlagenService.tenant();
         Verein verein = vereine.findLockedById(id).orElseThrow(() ->
             new ResponseStatusException(HttpStatus.NOT_FOUND, "Veranstalter nicht gefunden."));
+        if(verein.getVermietungZusammengefuehrtIn()!=null || vereine.findAll().stream().anyMatch(v->id.equals(v.getVermietungZusammengefuehrtIn())))
+            throw new ResponseStatusException(HttpStatus.CONFLICT,"Ein zusammengeführter Datensatz bleibt als technische Zuordnung erhalten.");
         // Alle Buchungen berücksichtigen, einschließlich stornierter und abgeschlossener.
         if (buchungen.countByVeranstalterId(id) > 0) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,

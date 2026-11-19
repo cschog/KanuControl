@@ -63,6 +63,7 @@ public class Verbrauchskosten extends Auditable {
         return kopie;
     }
 
+    /** Kompatibilitätsfeld für ältere Clients; die Preiswahl erfolgt ausschließlich nach Datum. */
     @Column(nullable = false)
     private boolean aktiv = true;
 }

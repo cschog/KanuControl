@@ -9,6 +9,11 @@ import static com.kcserver.vermietung.service.VorlagenModell.fehler;
 /** Document addressee only. Email routing always uses the renter separately. */
 public final class Buchungsadressat {
     private Buchungsadressat() {}
+    public static java.util.Map<String,String> erstattungskonto(Buchung b) {
+        var p=b.getMieter();var v=b.getVeranstalter();
+        String inhaber=v==null?(leer(p.getKontoinhaber()).isBlank()?com.kcserver.core.util.PersonName.givenFirst(p.getName(),p.getVorname()):p.getKontoinhaber()):v.getName();
+        return java.util.Map.of("mieter_bank_name",leer(v==null?p.getBankName():v.getBankName()),"mieter_bank_iban",leer(v==null?p.getIban():v.getIban()),"mieter_bank_bic",leer(v==null?p.getBic():v.getBic()),"mieter_kontoinhaber",leer(inhaber));
+    }
     public static Map<String,String> felder(Buchung b) {
         var p=b.getMieter();
         if(p==null)throw fehler("Mieter fehlt.");

@@ -12,6 +12,8 @@ import lombok.Setter;
 @Entity
 @Table(name = "mieter", uniqueConstraints = @UniqueConstraint(name = "uk_mieter_person", columnNames = "person_id"))
 public class Mieter {
+    @Column(name="zusammengefuehrt_in") private Long zusammengefuehrtIn;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+ <changeSet id="20261119-02-jahresabrechnung" author="codex">
+  <sql>
+   ALTER TABLE vermietung_abrechnung ADD COLUMN abrechnungs_jahr INTEGER;
+   ALTER TABLE vermietung_abrechnung ADD CONSTRAINT ck_abrechnungs_jahr CHECK(abrechnungs_jahr BETWEEN 1900 AND 2998);
+   ALTER TABLE vermietung_abrechnung DROP CONSTRAINT vermietung_abrechnung_buchung_id_revision_key;
+   CREATE UNIQUE INDEX uq_abrechnung_abschluss ON vermietung_abrechnung(buchung_id,revision) WHERE abrechnungs_jahr IS NULL;
+   CREATE UNIQUE INDEX uq_abrechnung_jahr ON vermietung_abrechnung(buchung_id,abrechnungs_jahr) WHERE abrechnungs_jahr IS NOT NULL;
+  </sql>
+ </changeSet>
+</databaseChangeLog>

@@ -31,8 +31,9 @@ interface Props {
 
 const wochentage = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
-const statusLabel: Record<Buchung["status"], string> = {
-  ANFRAGE: "Anfrage",
+type KalenderBuchung = Buchung & { status: Exclude<Buchung["status"], "ANFRAGE"> };
+
+const statusLabel: Record<KalenderBuchung["status"], string> = {
   RESERVIERT: "Reserviert",
   BESTAETIGT: "Bestätigt",
   ABRECHENBAR: "Abrechenbar",
@@ -41,8 +42,7 @@ const statusLabel: Record<Buchung["status"], string> = {
   STORNIERT: "Storniert",
 };
 
-const statusFarbe: Record<Buchung["status"], "warning" | "success" | "info" | "error" | "default"> = {
-  ANFRAGE: "warning",
+const statusFarbe: Record<KalenderBuchung["status"], "warning" | "success" | "info" | "error" | "default"> = {
   RESERVIERT: "warning",
   BESTAETIGT: "success",
   ABRECHENBAR: "info",
@@ -58,7 +58,7 @@ const mietobjektFarbe = (mietobjektId: number) =>
 const formatUhrzeit = (datum: string) => dayjs(datum).format("HH:mm");
 
 function BuchungChip({ buchung, onSelect, fullWidth = false }: {
-  buchung: Buchung;
+  buchung: KalenderBuchung;
   onSelect: (buchung: Buchung) => void;
   fullWidth?: boolean;
 }) {
@@ -110,6 +110,7 @@ function BuchungChip({ buchung, onSelect, fullWidth = false }: {
 }
 
 export default function Buchungskalender({ objekte, buchungen, onSelect, canCreateRange, onCreateRange }: Props) {
+  const sichtbareBuchungen = useMemo(() => buchungen.filter((b): b is KalenderBuchung => b.status !== "ANFRAGE"), [buchungen]);
   const [sperren, setSperren] = useState<(Sperrzeit & { objektId: number })[]>([]);
   const [sperrfehler, setSperrfehler] = useState<string | null>(null);
   const objektKey = objekte.map(o => o.id).sort((a, b) => a - b).join(",");
@@ -165,10 +166,10 @@ export default function Buchungskalender({ objekte, buchungen, onSelect, canCrea
   );
 
   const buchungenNachTag = useMemo(() => {
-    const ergebnis = new Map<string, Buchung[]>();
+    const ergebnis = new Map<string, KalenderBuchung[]>();
 
     for (const tag of tage) {
-      const tagBuchungen = buchungen.filter((buchung) => {
+      const tagBuchungen = sichtbareBuchungen.filter((buchung) => {
         const anreise = dayjs(buchung.anreise);
         const abreise = dayjs(buchung.abreise);
         return (
@@ -182,10 +183,10 @@ export default function Buchungskalender({ objekte, buchungen, onSelect, canCrea
     }
 
     return ergebnis;
-  }, [buchungen, tage]);
+  }, [sichtbareBuchungen, tage]);
 
   const mietobjekte = Array.from(
-    new Map(buchungen.map((buchung) => [buchung.mietobjektId, buchung.mietobjektBezeichnung])).entries(),
+    new Map(sichtbareBuchungen.map((buchung) => [buchung.mietobjektId, buchung.mietobjektBezeichnung])).entries(),
   );
 
   return (
@@ -260,7 +261,7 @@ export default function Buchungskalender({ objekte, buchungen, onSelect, canCrea
       </Typography>
 
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 1.5 }}>
-        {(Object.keys(statusLabel) as Buchung["status"][]).map((status) => (
+        {(Object.keys(statusLabel) as KalenderBuchung["status"][]).map((status) => (
           <Chip key={status} size="small" color={statusFarbe[status]} label={statusLabel[status]} />
         ))}
         <Chip size="small" label="Gesperrt" sx={{ bgcolor: "grey.700", color: "common.white" }} />
@@ -288,7 +289,7 @@ export default function Buchungskalender({ objekte, buchungen, onSelect, canCrea
       )}
 
       <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-        Reservierte und bestätigte Buchungen belegen ihre ausgewählten Mietbereiche. Anfragen sind sichtbar, blockieren die Buchbarkeit aber nicht.
+        Reservierte und bestätigte Buchungen belegen ihre ausgewählten Mietbereiche.
       </Typography>
 
       <Stack spacing={1} sx={{ display: { xs: "flex", sm: "none" } }}>

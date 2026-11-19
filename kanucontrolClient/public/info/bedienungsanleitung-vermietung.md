@@ -179,6 +179,11 @@ Vor dem Abschließen muss die Kaution geklärt sein. Noch nicht zurückgezahlte 
 
 Unter **Verwaltung → Verbrauchskosten** und **Zählerverwaltung** werden Verbrauchsarten, Preise und Zähler eingerichtet. Zähler können den relevanten Mietbereichen zugeordnet werden.
 
+**Preiswahl ab Version 2.3.2:** Historische Preise können jeweils als eigene Zeile mit „Gültig von“ und optionalem „Gültig bis“ erfasst werden. Mehrere Zeiträume innerhalb einer Position sind ebenfalls möglich. Die Abrechnung verwendet je Mietobjekt und Verbrauchsart (Strom, Gas, Wasser) genau den Preis, der am Anreisetag gültig war, für die gesamte Buchung. Beginn und Ende zählen einschließlich; ein leeres Ende bedeutet unbegrenzt. Frühere und spätere Zeiträume werden automatisch ausgelassen. Beispiel: Eine Buchung ab 14.10.2022 verwendet den Preis des Zeitraums 01.01.2022–30.06.2026, auch wenn die Abrechnung erst später erstellt wird.
+
+Eine Aktivierung oder Deaktivierung ist für Verbrauchspreise nicht mehr vorgesehen. Auch frühere inaktive Einträge werden nach ihren Zeiträumen ausgewählt. Die **Verbrauchsart** ist für die Zuordnung maßgebend, nicht die frei gewählte Bezeichnung. Je Verbrauchsart darf am Anreisetag nur ein Preis gelten. Lücken und Überschneidungen blockieren den Abschluss mit einem Hinweis; gleiche Preise in zwei überlappenden Zeilen werden nicht doppelt berechnet. Wenn eine Verbrauchsart für das Mietobjekt gar nicht eingerichtet ist, entsteht dafür keine Position. Bereits abgeschlossene Abrechnungen behalten ihre gespeicherten Werte.
+
+
 Erfasse für eine Buchung die benötigten Zählerstände und prüfe die Verbrauchskostenvorschau. Beim Abschließen werden die Verbrauchskosten geprüft und gespeichert. Werden Daten nachträglich korrigiert, öffne die Abrechnung wieder und schließe sie nach der Prüfung erneut ab.
 
 ### Entfernte Ablesungen für die Abrechnung freigeben
@@ -322,3 +327,12 @@ Das Monatsdiagramm stellt Verbrauch und Buchungsanteil gegenüber. Schraffierte 
 Das Streudiagramm verwendet nur vollständige, gemessene Intervalle im gewählten Zeitraum. Jeder Punkt vergleicht den Buchungsanteil mit dem gemessenen Verbrauch pro 24 Stunden desselben Intervalls. Pearson r wird erst bei mindestens drei Intervallen mit Unterschieden in Buchungsanteil und Verbrauchsrate angezeigt. Geschätzte Monatsstücke werden nicht als unabhängige Messpunkte gezählt. Ein Zusammenhang beweist keine Ursache; insbesondere bei Gas beeinflussen Wetter und Heizverhalten den Verbrauch.
 
 Der Zeitstrahl und die aufklappbare Intervalltabelle zeigen die zugehörigen Buchungsnummern. Maßgeblich ist die aktuelle Zuordnung der Zähler zu Mietbereichen. Wird ein Zähler über mehrere Mietobjekte geteilt, umfasst seine Auswertung auch deren zugeordnete Buchungen und trägt einen entsprechenden Hinweis. Der gemessene Gesamtverbrauch eines gemeinsamen Zählers lässt sich ohne zusätzliche Messungen nicht auf die einzelnen Objekte aufteilen. Diese Übersicht verändert keine Verbrauchsabrechnung und keine Zählerstände.
+
+
+## Jahresabrechnung bei unbefristeten Buchungen
+
+Bei einer gespeicherten Buchung ohne Enddatum steht im Anzeigemodus der Bereich **Jahresabrechnungen** zur Verfügung. „Jahresabrechnung [Jahr] prüfen und abschließen“ öffnet die Vorschau. Nach der Prüfung speichert „Jahr abschließen – ohne E-Mail“ den Jahresabschluss. Das geht jederzeit im laufenden Kalenderjahr, wenn die Buchung im Abrechnungsjahr beginnt oder bereits läuft. Stornierte und abgelehnte Buchungen werden nicht auf diesem Weg abgerechnet.
+
+Die Buchung bleibt unbefristet und behält ihren bisherigen Status und ihre Kalenderbelegung. Der Jahresabschluss rechnet die vereinbarte Miete ohne zeitanteilige Kürzung ab. Er berücksichtigt Mietzahlungen und Anzahlungen nach ihrem Zahlungsdatum im Kalenderjahr. Zahlungen anderer Jahre, Kaution und Verbrauchskosten werden nicht eingerechnet. Eine Kaution wird dadurch nicht zurückgezahlt und das Mietverhältnis wird nicht beendet. Für eine tatsächliche Schlussabrechnung ist weiterhin ein tatsächliches Enddatum erforderlich.
+
+Die PDF-Vorschau verwendet die bestehende Abrechnungsvorlage und das Mandanten-Briefpapier. Es wird keine E-Mail automatisch versendet. Für Airbnb und „Ohne Abrechnung“ wird nur der Jahresabschluss ohne PDF gespeichert. Ein vorhandenes Dokument kann für das laufende Jahr neu erstellt werden und ersetzt dann die bisherige Fassung dieses Jahres. Abrechnungen anderer Kalenderjahre bleiben separat abrufbar. Nach Änderungen an Zahlungen, Mietpreisen oder Vorlagen muss die Vorschau erneut geprüft werden.

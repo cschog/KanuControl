@@ -35,6 +35,19 @@ import java.util.*;
 @Service
 @Transactional
 public class BuchungService {
+    @Autowired private VermietungAenderungsprotokoll aenderungsprotokoll;
+    public BuchungDTO stornoZuruecknehmen(Long id) {
+        return executeStatusTransaction(() -> {
+            var b=buchungRepository.findLockedById(id).orElseThrow(()->new IllegalArgumentException("Buchung nicht gefunden."));
+            if(b.getStatus()!=Buchungsstatus.STORNIERT)throw new IllegalArgumentException("Nur stornierte Buchungen können reaktiviert werden.");
+            var vorher=Map.of("buchungId",id,"vorher","STORNIERT","nachher","BESTAETIGT",
+                "stornoDatum",Objects.toString(b.getStornoDatum(),""),"stornoErstattung",Objects.toString(b.getStornoErstattung(),""),"stornoEinbehalt",Objects.toString(b.getStornoEinbehalt(),""));
+            var result=aendereStatusPersistiert(id,Buchungsstatus.BESTAETIGT,List.of(),false,null);
+            aenderungsprotokoll.schreiben("STORNIERUNG_ZURUECKGENOMMEN",vorher);
+            return result;
+        }).buchung();
+    }
+
 
     private record StatusAenderung(BuchungDTO buchung, Buchungsstatus alterStatus,
             HomepageStatusMailService.ReservierungMail reservierung, HomepageStatusMailService.StatusMail statusMail) {}
@@ -210,7 +223,9 @@ public class BuchungService {
         buchung.setAbreise(abreise);
         SperrzeitService.pruefe(mietobjekt, anreise, abreise);
 
-        buchung.setStatus(Buchungsstatus.ANFRAGE);
+        // New saved bookings reserve their period immediately. The object lock above
+        // serializes this capacity check with concurrent booking creation.
+        buchung.setStatus(Buchungsstatus.RESERVIERT);
 
         vergebeBuchungsnummer(buchung);
 
@@ -228,6 +243,8 @@ public class BuchungService {
         validiereMietbereichVoraussetzungen(buchung);
         berechneBuchungsrabatt(buchung, dto, false);
         if(dto.getEntschaedigungen()!=null) entschaedigungPositionService.sync(buchung,dto.getEntschaedigungen());
+
+        pruefeBestand(buchung, buchung.getId());
 
         buchungRepository.flush();
 
@@ -418,6 +435,8 @@ public class BuchungService {
         }
 
         berechneBuchungsrabatt(buchung, dto, rabattAuswahlUnveraendert);
+        if (Zahlungsplan.ohneAbrechnung(buchung) && buchung.getStatus() == Buchungsstatus.ABGESCHLOSSEN)
+            buchung.setAbschlussRevision(buchung.getAbrechnungRevision());
 
         buchungRepository.flush();
 
@@ -658,6 +677,8 @@ public class BuchungService {
         // oder die neue Buchungsverknüpfung gespeichert wird.
         Person person = personRepository.findLockedById(mieterId)
                 .orElseThrow(() -> new IllegalArgumentException("Mieter nicht gefunden: " + mieterId));
+        if(mieterRepository.findByPersonId(mieterId).map(m->m.getZusammengefuehrtIn()!=null).orElse(false))
+            throw new IllegalArgumentException("Der Mieter wurde zusammengeführt. Bitte die Mieterauswahl neu laden.");
         if (!person.isKjfpSichtbar() && !mieterRepository.existsByPersonId(mieterId)) {
             throw new IllegalArgumentException("Der ausgewählte Mieter ist nicht mehr vorhanden. Bitte die Mieterauswahl neu laden.");
         }
@@ -687,7 +708,8 @@ public class BuchungService {
             return null;
         }
 
-        return vereinRepository.findById(vereinId)
+        return vereinRepository.findLockedById(vereinId)
+                .filter(v->v.getVermietungZusammengefuehrtIn()==null)
                 .orElseThrow(() ->
                         new IllegalArgumentException(
                                 "Veranstalter nicht gefunden: " + vereinId
@@ -730,7 +752,9 @@ public class BuchungService {
         );
 
         dto.setStatus(buchung.getStatus());
-        dto.setStornoDatum(buchung.getStornoDatum());dto.setStornoErstattung(buchung.getStornoErstattung());dto.setStornoEinbehalt(buchung.getStornoEinbehalt());
+        dto.setStornoDatum(buchung.getStornoDatum());dto.setStornoErstattung(buchung.getStornoErstattung());dto.setStornoEinbehalt(buchung.getStatus()==Buchungsstatus.STORNIERT
+                ? Stornoberechnung.aktuellerEinbehalt(buchung,buchungFinanzbewegungRepository.findByBuchungIdOrderByDatumAscIdAsc(buchung.getId()).stream().map(Stornoberechnung::dto).toList())
+                : buchung.getStornoEinbehalt());
         dto.setBuchungsquelle(buchung.getBuchungsquelle());
         dto.setRabattart(buchung.getRabattart());
         dto.setRabattwertTyp(buchung.getRabattwertTyp());
@@ -838,7 +862,7 @@ public class BuchungService {
 
 
         dto.setVerbrauchskosten(
-                (buchungVerbrauchskostenRepository
+                (Zahlungsplan.ohneAbrechnung(buchung) ? java.util.stream.Stream.<BuchungVerbrauchskosten>empty() : buchungVerbrauchskostenRepository
                         .findByBuchungIdOrderByIdAsc(buchung.getId())
                         .stream())
                         .map(kosten -> new BuchungVerbrauchskostenDTO(
@@ -1029,7 +1053,7 @@ public class BuchungService {
          * Die Verbrauchsabrechnung muss erfolgreich sein,
          * bevor der Status geändert wird.
          */
-        if (neuerStatus == Buchungsstatus.ABGESCHLOSSEN) {
+        if (neuerStatus == Buchungsstatus.ABGESCHLOSSEN && alterStatus != Buchungsstatus.ABGESCHLOSSEN) {
             pruefeKautionsabschluss(buchung);
             if (bestaetigungen == null || bestaetigungen.isEmpty()) {
                 verbrauchsabrechnungService.berechneUndSpeichere(buchung);
@@ -1045,6 +1069,9 @@ public class BuchungService {
             buchung.setReservierungMailFehler("Der Versand wurde angefordert, ist aber noch nicht bestätigt. Bei einem abgebrochenen Versand bitte vor Wiederholung den Postausgang prüfen.");
         }
         if(neuerStatus==Buchungsstatus.ABGESCHLOSSEN)buchung.setAbschlussRevision(buchung.getAbrechnungRevision());
+        if(alterStatus==Buchungsstatus.STORNIERT && neuerStatus==Buchungsstatus.BESTAETIGT){
+            buchung.setStornoDatum(null);buchung.setStornoErstattung(null);buchung.setStornoEinbehalt(BigDecimal.ZERO);
+        }
         buchung.setStatus(neuerStatus);
 
         return new StatusAenderung(toDetailDTO(buchungRepository.save(buchung)), alterStatus, reservierung, statusMail);
@@ -1155,8 +1182,6 @@ public class BuchungService {
                 .subtract(zurueckgezahlt)
                 .subtract(verrechnet)
                 .subtract(mietRueckzahlungAusKaution);
-        // Nach einer Verrechnung weist die Abschlussrechnung den verbleibenden
-        // Kautionsbetrag als Erstattung aus. Eine echte Rückzahlung wird separat gebucht.
         if (kautionssaldo.signum() < 0 || kautionssaldo.signum() > 0 && verrechnet.signum() <= 0) {
             throw new IllegalArgumentException(
                     "Die Buchung kann erst abgeschlossen werden, wenn die "
@@ -1206,7 +1231,8 @@ public class BuchungService {
             case ABGESCHLOSSEN ->
                     neuerStatus == Buchungsstatus.ABRECHENBAR;
 
-            case ABGELEHNT, STORNIERT -> false;
+            case STORNIERT -> neuerStatus == Buchungsstatus.BESTAETIGT;
+            case ABGELEHNT -> false;
         };
     }
 

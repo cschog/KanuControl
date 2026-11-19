@@ -27,6 +27,8 @@ public class HomepageIntegrationService {
     private final MieterService mieterService;
     private final ObjectMapper mapper;
     private final Validator validator;
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.kcserver.core.repository.VereinRepository veranstalterRepository;
 
     private HomepageAnbindung zugang(Long id, String clientId, boolean lock) {
         HomepageAnbindung config = (lock ? anbindungen.lockById(id) : anbindungen.findById(id))
@@ -66,7 +68,7 @@ public class HomepageIntegrationService {
         pruefeAuswahl(config, auswahl);
         try {
             buchungService.pruefeHomepageVerfuegbarkeit(id, auswahl.anreise(), auswahl.abreise(), positionen(auswahl));
-            return new Verfuegbarkeit(true, "Der gewünschte Zeitraum ist derzeit verfügbar. Eine Anfrage reserviert noch keinen Termin.");
+            return new Verfuegbarkeit(true, "Der gewünschte Zeitraum ist derzeit verfügbar.");
         } catch (IllegalArgumentException ex) {
             return new Verfuegbarkeit(false, ex.getMessage());
         }
@@ -124,10 +126,34 @@ public class HomepageIntegrationService {
         kontakt.setVorname(dto.vorname()); kontakt.setName(dto.name()); kontakt.setEmail(dto.email());
         kontakt.setTelefon(dto.telefon()); kontakt.setStrasse(dto.strasse()); kontakt.setPlz(dto.plz());
         kontakt.setOrt(dto.ort()); kontakt.setCountryCode(dto.countryCode());
-        kontakt.setBankName(dto.bankName()); kontakt.setIban(dto.iban()); kontakt.setBic(dto.bic());
+        if (dto.veranstalterDaten() == null) {
+            kontakt.setBankName(dto.bankName()); kontakt.setIban(dto.iban()); kontakt.setBic(dto.bic());
+            kontakt.setKontoinhaber(dto.kontoinhaber());
+        }
         MieterDTO mieter = mieterService.create(kontakt);
         buchung.setMieterId(mieter.getPersonId()); buchung.setMietobjektId(id);
         buchung.setBuchungsquelle(Buchungsquelle.DIREKT);
+        if (dto.veranstalterDaten() != null) {
+            var v = dto.veranstalterDaten();
+            // Reuse only an exact full match; never overwrite existing KJFP/shared master data.
+            var matches = veranstalterRepository.findAll().stream().filter(x -> x.getVermietungZusammengefuehrtIn()==null).filter(x ->
+                Objects.equals(x.getName(),v.name()) && Objects.equals(x.getStrasse(),v.strasse())
+                && Objects.equals(x.getPlz(),v.plz()) && Objects.equals(x.getOrt(),v.ort())
+                && x.getCountryCode().name().equals(v.countryCode()) && Objects.equals(x.getIban(),v.iban())
+                && Objects.equals(x.getBankName(),v.bankName()) && Objects.equals(x.getBic(),v.bic())).toList();
+            if (matches.size()>1) throw new ResponseStatusException(HttpStatus.CONFLICT,"Mehrere passende Veranstalter vorhanden. Bitte die Vermietung kontaktieren.");
+            com.kcserver.core.entity.Verein organisation;
+            if (matches.size()==1) organisation=matches.getFirst();
+            else {
+                organisation=new com.kcserver.core.entity.Verein(); organisation.setKjfpVerein(false);
+                organisation.setName(v.name()); organisation.setAbk("HP"+UUID.randomUUID().toString().substring(0,8));
+                organisation.setStrasse(v.strasse()); organisation.setPlz(v.plz()); organisation.setOrt(v.ort());
+                organisation.setCountryCode(com.kcserver.kjfp.enumtype.CountryCode.valueOf(v.countryCode()));
+                organisation.setBankName(v.bankName()); organisation.setIban(v.iban()); organisation.setBic(v.bic());
+                organisation=veranstalterRepository.save(organisation);
+            }
+            buchung.setVeranstalterVereinId(organisation.getId());
+        }
         buchung.setAnreise(dto.auswahl().anreise().atTime(config.getMietobjekt().getAnreisezeit()));
         buchung.setAbreise(dto.auswahl().abreise().atTime(config.getMietobjekt().getAbreisezeit()));
         buchung.setPositionen(positionen(dto.auswahl()));
@@ -137,11 +163,11 @@ public class HomepageIntegrationService {
         BuchungDTO saved = buchungService.create(buchung);
         Buchung entity = buchungen.findById(saved.getId()).orElseThrow();
         entity.setHerkunft("HOMEPAGE");
-        Bestaetigung antwort = new Bestaetigung(saved.getId(), saved.getBuchungsnummer(), "ANFRAGE",
-                config.isGastBestaetigung(), config.isVerwaltungsBenachrichtigung(), config.getEmpfaengerEmail(),
+        Bestaetigung antwort = new Bestaetigung(saved.getId(), saved.getBuchungsnummer(), "RESERVIERT",
+                true, config.isVerwaltungsBenachrichtigung(), config.getEmpfaengerEmail(),
                 saved.getPositionen() == null ? "" : saved.getPositionen().stream()
                     .map(p -> p.getAnzahl() + " × " + p.getMietbereichBezeichnung())
-                    .collect(java.util.stream.Collectors.joining(", ")));
+                    .collect(java.util.stream.Collectors.joining(", ")), config.getMietobjekt().getBezeichnung());
         HomepageAnfrage protokoll = new HomepageAnfrage();
         protokoll.setMietobjektId(id); protokoll.setAnfrageId(dto.anfrageId().toString());
         protokoll.setPayloadHash(hash); protokoll.setAntwortJson(json(antwort)); protokoll.setCreatedAt(Instant.now());

@@ -1,3 +1,4 @@
+import StammdatenMergeDialog from "@/vermietung/components/verwaltung/StammdatenMergeDialog";
 import { useEffect, useState } from "react";
 import { Alert, Box, Button, CircularProgress, Paper, Stack, Typography, MenuItem, TextField, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from "@mui/material";
 import type { SortingState } from "@tanstack/react-table";
@@ -13,6 +14,7 @@ import { getApiErrorMessage } from "@/kjfp/api/utils/apiError";
 import { searchVeranstalter, saveVeranstalter, deleteVeranstalter } from "@/vermietung/api/veranstalterApi";
 
 export default function VeranstalterPage() {
+  const [merge,setMerge]=useState(false);
   const [search, setSearch] = useState("");
   const [buchungsfilter, setBuchungsfilter] = useState<"MIT" | "ALLE" | "OHNE">("MIT");
   const [sorting, setSorting] = useState<SortingState>([{ id: "name", desc: false }]);
@@ -116,6 +118,8 @@ export default function VeranstalterPage() {
       </>}
     </Paper>
 
+    {selected?.id && !editing && <Button onClick={()=>setMerge(true)}>Veranstalter zusammenführen</Button>}
+    {merge && selected?.id && <StammdatenMergeDialog art="veranstalter" id={selected.id} onClose={()=>setMerge(false)} onDone={()=>{setMerge(false);setSelected(null);setRefresh(n=>n+1);setSuccess("Veranstalter wurden zusammengeführt.");}}/>}
     <Dialog open={deleteOpen} onClose={() => { if (!deleting) setDeleteOpen(false); }} aria-labelledby="veranstalter-delete-title" maxWidth="sm" fullWidth>
       <DialogTitle id="veranstalter-delete-title">Veranstalter löschen?</DialogTitle>
       <DialogContent>

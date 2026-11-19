@@ -123,6 +123,9 @@ public class BuchungController {
     ) {
     }
 
+    @PostMapping("/{id}/stornierung-zuruecknehmen")
+    public ApiResponse<BuchungDTO> stornoZuruecknehmen(@PathVariable Long id) { return ApiResponse.of(buchungService.stornoZuruecknehmen(id)); }
+
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(

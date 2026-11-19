@@ -60,7 +60,7 @@ public class Buchung extends Auditable {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private Buchungsstatus status = Buchungsstatus.ANFRAGE;
+    private Buchungsstatus status = Buchungsstatus.RESERVIERT;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "buchungsquelle", nullable = false, length = 20)

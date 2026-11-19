@@ -74,7 +74,7 @@ function Einstellungen({ objektId }: { objektId: number }) {
           Ein ausgewählter Mietbereich ist nicht mehr vorhanden.
           <Button disabled={busy} onClick={() => change({ mietbereichIds: form.mietbereichIds.filter(id => bereiche.some(b => b.id === id)) })}>Auswahl bereinigen</Button>
         </Alert>}
-        <Typography variant="body2">Exportiert werden reservierte und bestätigte Buchungen sowie Sperrzeiten des Mietobjekts. Anfragen sowie abgelehnte und stornierte Buchungen werden nicht exportiert. Der Feed enthält keine Namen oder internen Gründe.</Typography>
+        <Typography variant="body2">Exportiert werden reservierte und bestätigte Buchungen sowie Sperrzeiten des Mietobjekts. Abgelehnte und stornierte Buchungen werden nicht exportiert. Der Feed enthält keine Namen oder internen Gründe.</Typography>
         <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
           <Button variant="contained" disabled={busy || !dirty} onClick={() => void save(false)}>Einstellungen speichern</Button>
           <Button variant="outlined" disabled={busy || !form.aktiv} onClick={() => {
@@ -114,7 +114,7 @@ export default function AirbnbExportVerwaltung() {
   return <Stack spacing={2}>
     <Typography variant="h6">Airbnb-Kalenderexport</Typography>
     <Typography>KC → Airbnb: Kalenderdaten werden als iCal-Abonnement bereitgestellt. Airbnb-Buchungen werden hier noch nicht nach KC übernommen.</Typography>
-    <Alert severity="info">Airbnb aktualisiert importierte Kalender normalerweise alle drei Stunden. Unter Airbnb → Kalender → Verfügbarkeit → Kalender verknüpfen kannst du den iCal-Link hinzufügen und den Abruf manuell aktualisieren.</Alert>
+    <Alert severity="info">Die interne Belegung ist sofort gespeichert. Airbnb übernimmt Änderungen erst beim nächsten eigenen iCal-Abruf; ein erfolgreicher Abruf oder eine externe Sperre kann von KanuControl nicht bestätigt werden. Unter Airbnb → Kalender → Verfügbarkeit → Kalender verknüpfen kannst du den iCal-Link hinzufügen und den Abruf manuell aktualisieren.</Alert>
     {error && <Alert severity="error">{error}</Alert>}
     {loading ? <CircularProgress /> : objekte.length === 0 ? <Typography>Bitte zuerst ein Mietobjekt anlegen.</Typography> : <>
       <TextField select label="Mietobjekt" value={selected} onChange={e => setSelected(Number(e.target.value))}>

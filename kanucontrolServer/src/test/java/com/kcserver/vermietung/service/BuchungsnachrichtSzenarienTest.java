@@ -18,18 +18,18 @@ class BuchungsnachrichtSzenarienTest {
   var p=new MandantenBriefpapier();p.setPdf(getClass().getResourceAsStream("/pdf/Briefpapier_Bootshaus.pdf").readAllBytes());p.setGruss("Mit freundlichen Grüßen\nHildegard Schog");p.setVersion(1L);when(pr.findById(1L)).thenReturn(Optional.of(p));var o=new Mietobjekt();o.setId(1L);o.setBezeichnung("Bootshaus");when(or.findById(1L)).thenReturn(Optional.of(o));
   var service=new VorlagenService(pr,vr,or,new ObjectMapper());
   for(var entry:paket.manifest().vorlagen())for(String s:VorlagenService.szenarien(entry.vorgang()))for(boolean og:new boolean[]{false,true}){
-   var v=paket.vorlagen().get(entry.mietobjekt()+"/"+entry.vorgang());var result=service.beispielVorschauSzenario(1L,entry.vorgang(),v,og,s.equals("GESAMTMIETE_VORAUS")||s.equals("STORNO_KURZ"),s,false,null,null,null,null,false);
+   var v=paket.vorlagen().get(entry.mietobjekt()+"/"+(entry.vorgang()==Vorgang.BESTAETIGUNG?Vorgang.RESERVIERUNG:entry.vorgang()));var result=service.beispielVorschauSzenario(1L,entry.vorgang(),v,og,s.equals("GESAMTMIETE_VORAUS")||s.equals("STORNO_KURZ"),s,false,null,null,null,null,false);
    try(var doc=Loader.loadPDF(result.pdf())){var text=new PDFTextStripper().getText(doc);
     if(s.equals("RESTZAHLUNG")){assertTrue(text.contains("Bitte überweist die noch offene Restzahlung"));assertFalse(text.contains("Die Rückerstattung"));}
     if(s.equals("ERSTATTUNG")){assertTrue(text.contains("Die Rückerstattung"));assertFalse(text.contains("Bitte überweist die noch offene Restzahlung"));}
     if(s.equals("AUSGEGLICHEN")){assertTrue(text.contains("Die Abrechnung ist ausgeglichen"));assertFalse(text.contains("Die Rückerstattung"));assertFalse(text.contains("Bitte überweist die noch offene Restzahlung"));}
-    if(s.equals("STORNO_FRUEH")){assertTrue(text.contains("werden alle geleisteten Zahlungen"));assertTrue(text.contains("Kontoinhaber:"));}
-    if(s.equals("STORNO_KURZ")){assertTrue(text.contains("Einbehalt beträgt"));assertFalse(text.contains("Kontoinhaber:"));}
+    if(s.equals("STORNO_FRUEH")){assertTrue(text.contains("erstattbaren Zahlungen"));assertTrue(text.contains("Kontoinhaber:"));}
+    if(s.equals("STORNO_KURZ")){assertTrue(text.contains("Einbehalt beträgt"));assertTrue(text.contains("Kontoinhaber:"));assertTrue(text.contains("250,00"));assertTrue(text.contains("750,00"));assertFalse(text.contains("mindestens 56 Tage"));}
     if(s.equals("STORNO_OHNE_ZAHLUNG")){assertTrue(text.contains("kein noch zu erstattender Betrag"));assertFalse(text.contains("Kontoinhaber:"));}
     if(s.equals("ANZAHLUNG"))assertTrue(text.contains("überweist die Anzahlung"));
     if(s.equals("GESAMTMIETE_VORAUS")){assertTrue(text.contains("überweist die Gesamtmiete"));assertFalse(text.contains("überweist die Anzahlung"));}
     if(s.equals("BEI_ABRECHNUNG"))assertFalse(text.contains("Bitte überweist"));
-    if(entry.vorgang()==Vorgang.BESTAETIGUNG)assertFalse(text.contains("Bitte überweist"));
+    if(entry.vorgang()==Vorgang.BESTAETIGUNG && (s.equals("BEI_ABRECHNUNG")||s.equals("OHNE_ABRECHNUNG")))assertFalse(text.contains("Bitte überweist"));
    }
    String export=System.getProperty("kc.preview.dir");if(export!=null && !og){var dir=java.nio.file.Path.of(export);java.nio.file.Files.createDirectories(dir);java.nio.file.Files.write(dir.resolve(entry.vorgang()+"_"+s+".pdf"),result.pdf());}
   }

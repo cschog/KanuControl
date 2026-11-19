@@ -3,13 +3,11 @@ import { isAxiosError } from "axios";
 import {
   Alert,
   Button,
-  Checkbox,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   FormControl,
-  FormControlLabel,
   InputLabel,
   MenuItem,
   Select,
@@ -39,7 +37,6 @@ export default function VerbrauchskostenDialog({ open, verbrauchskosten, onClose
   const [abrechnungsart, setAbrechnungsart] = useState<Verbrauchsabrechnungsart>("PAUSCHALE");
   const [mengeneinheit, setMengeneinheit] = useState("");
   const [preise, setPreise] = useState<{gueltigVon: string; gueltigBis: string; preis: string}[]>([]);
-  const [aktiv, setAktiv] = useState(true);
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +52,6 @@ export default function VerbrauchskostenDialog({ open, verbrauchskosten, onClose
     setMengeneinheit(verbrauchskosten?.mengeneinheit ?? "");
     setPreise((verbrauchskosten?.preise ?? [{ gueltigVon: "0001-01-01", gueltigBis: null, preis: verbrauchskosten?.preis ?? 0 }])
       .map(p => ({ ...p, gueltigBis: p.gueltigBis ?? "", preis: String(p.preis) })));
-    setAktiv(verbrauchskosten?.aktiv ?? true);
     setError(null);
   }, [open, verbrauchskosten]);
 
@@ -110,7 +106,6 @@ export default function VerbrauchskostenDialog({ open, verbrauchskosten, onClose
         mengeneinheit: abrechnungsart === "ZAEHLERSTAND" ? mengeneinheit.trim() : null,
         preis: Number(preise[0].preis.replace(",", ".")),
         preise: preise.map(p => ({ gueltigVon: p.gueltigVon, gueltigBis: p.gueltigBis || null, preis: Number(p.preis.replace(",", ".")) })),
-        aktiv,
       });
 
       onClose();
@@ -181,7 +176,7 @@ export default function VerbrauchskostenDialog({ open, verbrauchskosten, onClose
             />
           )}
 
-          <Alert severity="info">Für die gesamte Buchung gilt der Preis am Anreisetag. Ein neuer Beginn begrenzt den vorherigen Preis automatisch.</Alert>
+          <Alert severity="info">Für jede Verbrauchsart gilt der Preis am Anreisetag für die gesamte Buchung. Für einen weiteren Preis mit eigenem Gültigkeitszeitraum eine neue Verbrauchskostenposition anlegen. Die Zeiträume derselben Verbrauchsart dürfen sich nicht überschneiden.</Alert>
           {preise.map((p, index) => (
             <Stack key={index} spacing={1} sx={{ border: 1, borderColor: "divider", p: 2, borderRadius: 1 }}>
               <TextField label="Gültig von" type="date" value={p.gueltigVon} required
@@ -196,14 +191,8 @@ export default function VerbrauchskostenDialog({ open, verbrauchskosten, onClose
               <Button disabled={saving || preise.length === 1} onClick={() => setPreise(ps => ps.filter((_, i) => i !== index))}>Preis entfernen</Button>
             </Stack>
           ))}
-          <Button disabled={saving} onClick={() => setPreise(ps => [...ps, { gueltigVon: "", gueltigBis: "", preis: "0" }])}>Preis hinzufügen (auch rückwirkend)</Button>
 
-          <FormControlLabel
-            control={
-              <Checkbox checked={aktiv} onChange={(event) => setAktiv(event.target.checked)} />
-            }
-            label="Aktiv"
-          />
+
         </Stack>
       </DialogContent>
 

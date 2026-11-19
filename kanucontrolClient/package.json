@@ -2,13 +2,14 @@
   "name": "kanucontrol-client",
   "private": true,
   "type": "module",
-  "version": "2.3.1",
+  "version": "2.4.1",
   "scripts": {
     "dev": "vite --config vite.config.mts",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test:kjfp": "node tests/run-kjfp.mjs"
+    "test:kjfp": "node tests/run-kjfp.mjs",
+    "test:verbrauchspreise": "node --test tests/verbrauchspreise/check.mjs"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

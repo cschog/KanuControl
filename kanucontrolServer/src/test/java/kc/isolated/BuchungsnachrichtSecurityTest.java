@@ -13,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 class BuchungsnachrichtSecurityTest {
  @Configuration @EnableMethodSecurity(proxyTargetClass=true) static class Config{
+  @Bean com.kcserver.vermietung.repository.BuchungVerbrauchskostenRepository gespeicherterVerbrauch(){return mock(com.kcserver.vermietung.repository.BuchungVerbrauchskostenRepository.class);}
   @Bean BuchungsnachrichtService service(){return mock(BuchungsnachrichtService.class);}
   @Bean BuchungsnachrichtController controller(BuchungsnachrichtService s){return new BuchungsnachrichtController(s);}
  }
